@@ -24,7 +24,7 @@ namespace Resin
             if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
         }
 
-        public void Add(int docId, string field, string value)
+        public void Write(int docId, string field, string value)
         {
             int fieldId;
             if (!_fieldIndex.TryGetValue(field, out fieldId))
@@ -42,27 +42,11 @@ namespace Resin
             var terms = _analyzer.Analyze(value);
             for(int position = 0; position < terms.Length; position++)
             {
-                fw.Add(docId, terms[position], position);
+                fw.Write(docId, terms[position], position);
             }
-            var docIndexFileName = Path.Combine(_directory, docId + ".doc");
-            var fieldFiles = Directory.GetFiles(_directory, docId + "_" + fieldId + "_*").OrderByDescending(f => f).ToList();
-            string fieldFileName;
-            if (fieldFiles.Count == 0)
+            using (var dw = new DocumentWriter(Path.Combine(_directory, docId + ".d")))
             {
-                fieldFileName = Path.Combine(_directory, docId + "_" + fieldId + "_0.doc");
-            }
-            else
-            {
-                fieldFileName = Path.Combine(_directory, docId + "_" + fieldId + "_" + fieldFiles.Count + ".doc");
-            }
-            File.WriteAllText(fieldFileName, string.Format("{0}:{1}", field, value));
-            if (File.Exists(docIndexFileName))
-            {
-                File.AppendAllText(docIndexFileName, fieldFileName + "\r\n");
-            }
-            else
-            {
-                File.WriteAllText(docIndexFileName, fieldFileName + "\r\n");
+                dw.Write(field, value);
             }
         }
 

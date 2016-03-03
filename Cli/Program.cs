@@ -30,12 +30,13 @@ namespace Resin
                     {
                         foreach (var field in doc.Fields)
                         {
-                            w.Add(doc.Id, field.Key, field.Value);
+                            w.Write(doc.Id, field.Key, field.Value);
                         }
                         Console.SetCursorPosition(cursorPos, Console.CursorTop);
-                        Console.Write(--left + new String(' ', docs.Count.ToString().Length));
+                        Console.Write(--left + new String('\t', 5));
                     }    
                 }
+                Console.WriteLine("");
                 Console.WriteLine("Index created in " + timer.Elapsed);
             }
             else if (args[0].ToLower() == "query")
@@ -43,6 +44,7 @@ namespace Resin
                 var timer = new Stopwatch();
                 timer.Start();
                 var dir = args[Array.IndexOf(args, "--dir") + 1];
+                if(Directory.Exists(dir)) Directory.Delete(dir, true);
                 var scanner = new DocumentScanner(dir);
                 var reader = new IndexReader(scanner);
                 var q = args[Array.IndexOf(args, "-q") + 1].Split(':');

@@ -15,27 +15,13 @@ namespace Resin
 
         public IEnumerable<IDictionary<string, IList<string>>> GetDocuments(string field, string value)
         {
-            //var docs = new List<IDictionary<string, IList<string>>>(); 
             foreach(var docId in _scanner.GetDocIds(field, value))
             {
-                var doc = new Dictionary<string, IList<string>>();
-                var docIndex = File.ReadAllLines(Path.Combine(_scanner.Dir, docId + ".doc"));
-                foreach (var fileName in docIndex)
+                var fileName = Path.Combine(_scanner.Dir, docId + ".d");
+                using (var file = File.OpenRead(fileName))
                 {
-                    var file = File.ReadAllText(fileName).Split(':');
-                    var fieldName = file[0];
-                    var fieldValue = file[1];
-                    IList<string> values;
-                    if (doc.TryGetValue(fieldName, out values))
-                    {
-                        values.Add(fieldValue);
-                    }
-                    else
-                    {
-                        doc.Add(fieldName, new List<string>{fieldValue});
-                    }
+                    yield return Serializer.Deserialize<Dictionary<string, IList<string>>>(file);
                 }
-                yield return doc;
             }
         }
     }

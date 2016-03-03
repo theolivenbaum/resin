@@ -18,7 +18,7 @@ namespace Resin
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
         }
 
-        public void Add(int docId, string termValue, int position)
+        public void Write(int docId, string termValue, int position)
         {
             IDictionary<int, IList<int>> docs;
             if (!_terms.TryGetValue(termValue, out docs))

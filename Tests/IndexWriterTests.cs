@@ -13,8 +13,8 @@ namespace Tests
             const string dir = "c:\\temp\\resin_tests\\Can_write_one_field";
             using (var iw = new IndexWriter(dir, new Analyzer()))
             {
-                iw.Add(0, "title", "Hello World!");
-                iw.Add(1, "title", "Goodbye Cruel World.");
+                iw.Write(0, "title", "Hello World!");
+                iw.Write(1, "title", "Goodbye Cruel World.");
             }
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.idx").Length);
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.fld").Length);
@@ -26,8 +26,8 @@ namespace Tests
             const string dir = "c:\\temp\\resin_tests\\Can_write_two_fields";
             using (var iw = new IndexWriter(dir, new Analyzer()))
             {
-                iw.Add(0, "title", "Hello World!");
-                iw.Add(0, "body", "Once upon a time there was a man and a woman.");
+                iw.Write(0, "title", "Hello World!");
+                iw.Write(0, "body", "Once upon a time there was a man and a woman.");
             }
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.idx").Length);
             Assert.AreEqual(2, Directory.GetFiles(dir, "*.fld").Length);
@@ -39,13 +39,13 @@ namespace Tests
             const string dir = "c:\\temp\\resin_tests\\Can_append_one_field";
             using (var iw = new IndexWriter(dir, new Analyzer()))
             {
-                iw.Add(0, "title", "Hello World!");
-                iw.Add(1, "title", "Goodbye Cruel World.");
+                iw.Write(0, "title", "Hello World!");
+                iw.Write(1, "title", "Goodbye Cruel World.");
             }
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.fld").Length);
             using (var iw = new IndexWriter(dir, new Analyzer(), overwrite:false))
             {
-                iw.Add(2, "title", "The End");
+                iw.Write(2, "title", "The End");
             }
             Assert.AreEqual(2, Directory.GetFiles(dir, "*.fld").Length);
         }
@@ -56,14 +56,14 @@ namespace Tests
             const string dir = "c:\\temp\\resin_tests\\Can_append_two_fields";
             using (var iw = new IndexWriter(dir, new Analyzer()))
             {
-                iw.Add(0, "title", "Hello World!");
-                iw.Add(0, "body", "Once upon a time there was a man and a woman.");
+                iw.Write(0, "title", "Hello World!");
+                iw.Write(0, "body", "Once upon a time there was a man and a woman.");
             }
             Assert.AreEqual(2, Directory.GetFiles(dir, "*.fld").Length);
             using (var iw = new IndexWriter(dir, new Analyzer(), overwrite:false))
             {
-                iw.Add(1, "title", "Goodbye Cruel World.");
-                iw.Add(1, "body", "Once upon a time there was a cat and a dog.");
+                iw.Write(1, "title", "Goodbye Cruel World.");
+                iw.Write(1, "body", "Once upon a time there was a cat and a dog.");
             }
             Assert.AreEqual(4, Directory.GetFiles(dir, "*.fld").Length);
         }

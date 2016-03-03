@@ -20,8 +20,8 @@ namespace Tests
             if (File.Exists(fileName)) File.Delete(fileName);
             using (var fw = new FieldWriter(fileName))
             {
-                fw.Add(0, "hello", 0);
-                fw.Add(5, "world", 1);
+                fw.Write(0, "hello", 0);
+                fw.Write(5, "world", 1);
             }
             var reader = FieldReader.Load(fileName);
             var helloPositionsForDocId0 = reader.GetDocPosition("hello")[0];
@@ -39,11 +39,11 @@ namespace Tests
             if (File.Exists(field1)) File.Delete(field1);
             using (var fw = new FieldWriter(field0))
             {
-                fw.Add(0, "hello", 0);
+                fw.Write(0, "hello", 0);
             }
             using (var fw = new FieldWriter(field1))
             {
-                fw.Add(5, "world", 1);
+                fw.Write(5, "world", 1);
             }
         }
     }

@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Analyzer.cs" />
+    <Compile Include="DocumentWriter.cs" />
     <Compile Include="FieldReader.cs" />
     <Compile Include="DocumentScanner.cs" />
     <Compile Include="IndexWriter.cs" />

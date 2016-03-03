@@ -14,8 +14,8 @@ namespace Tests
             const string dir = "c:\\temp\\resin_tests\\Can_read_index";
             using (var iw = new IndexWriter(dir, new Analyzer()))
             {
-                iw.Add(0, "title", "Hello World!");
-                iw.Add(1, "title", "Goodbye Cruel World.");
+                iw.Write(0, "title", "Hello World!");
+                iw.Write(1, "title", "Goodbye Cruel World.");
             }
             var reader = new IndexReader(new DocumentScanner(dir));
             var docs = reader.GetDocuments("title", "world").ToList();

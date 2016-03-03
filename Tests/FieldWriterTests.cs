@@ -20,8 +20,8 @@ namespace Tests
             if (File.Exists(fileName)) File.Delete(fileName);
             using (var fw = new FieldWriter(fileName))
             {
-                fw.Add(0, "hello", 0);
-                fw.Add(0, "world", 1);
+                fw.Write(0, "hello", 0);
+                fw.Write(0, "world", 1);
             }
             Assert.IsTrue(File.Exists(fileName));
         }
