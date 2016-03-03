@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.40629.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resin", "Resin\Resin.csproj", "{2BE53BD7-0454-4289-AF1B-E1781C983EC3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{FF84114A-C58C-4E65-B25F-DB49AB98A4F7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cli", "Cli\Cli.csproj", "{61294CF9-8B5F-44F1-8A65-743728A04AE4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2BE53BD7-0454-4289-AF1B-E1781C983EC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BE53BD7-0454-4289-AF1B-E1781C983EC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BE53BD7-0454-4289-AF1B-E1781C983EC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BE53BD7-0454-4289-AF1B-E1781C983EC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF84114A-C58C-4E65-B25F-DB49AB98A4F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF84114A-C58C-4E65-B25F-DB49AB98A4F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF84114A-C58C-4E65-B25F-DB49AB98A4F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF84114A-C58C-4E65-B25F-DB49AB98A4F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61294CF9-8B5F-44F1-8A65-743728A04AE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61294CF9-8B5F-44F1-8A65-743728A04AE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61294CF9-8B5F-44F1-8A65-743728A04AE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61294CF9-8B5F-44F1-8A65-743728A04AE4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
