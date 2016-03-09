@@ -12,7 +12,7 @@ namespace Resin
         private readonly Analyzer _analyzer;
         private readonly bool _overwrite;
         private readonly IDictionary<string, int> _fieldIndex; 
-        private readonly IDictionary<int, FieldWriter> _fieldWriters;
+        private readonly IDictionary<int, FieldFile> _fieldWriters;
 
         public IndexWriter(string directory, Analyzer analyzer, bool overwrite = true)
         {
@@ -20,11 +20,31 @@ namespace Resin
             _analyzer = analyzer;
             _overwrite = overwrite;
             _fieldIndex = new Dictionary<string, int>();
-            _fieldWriters = new Dictionary<int, FieldWriter>();
+            _fieldWriters = new Dictionary<int, FieldFile>();
             if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
         }
 
-        public void Write(int docId, string field, string value)
+        public void Write(IEnumerable<Document> docs)
+        {
+            foreach (var batch in docs.IntoBatches(1000))
+            {
+                foreach (var doc in batch)
+                {
+                    Write(doc);
+                }
+                Flush();
+            }
+        }
+
+        public void Write(Document doc)
+        {
+            foreach (var field in doc.Fields)
+            {
+                Write(doc.Id, field.Key, field.Value);
+            }
+        }
+
+        private void Write(int docId, string field, string value)
         {
             int fieldId;
             if (!_fieldIndex.TryGetValue(field, out fieldId))
@@ -32,11 +52,11 @@ namespace Resin
                 fieldId = GetNextFreeFieldId();
                 _fieldIndex.Add(field, fieldId);
             }
-            FieldWriter fw;
+            FieldFile fw;
             if (!_fieldWriters.TryGetValue(fieldId, out fw))
             {
                 var fileName = Path.Combine(_directory, fieldId + ".fld");
-                fw = new FieldWriter(fileName);
+                fw = new FieldFile(fileName);
                 _fieldWriters.Add(fieldId, fw);
             }
             var terms = _analyzer.Analyze(value);
@@ -44,7 +64,7 @@ namespace Resin
             {
                 fw.Write(docId, terms[position], position);
             }
-            using (var dw = new DocumentWriter(Path.Combine(_directory, docId + ".d")))
+            using (var dw = new DocumentFile(Path.Combine(_directory, docId + ".d")))
             {
                 dw.Write(field, value);
             }
@@ -64,7 +84,7 @@ namespace Resin
             return _fieldIndex.Count;
         }
 
-        public void Dispose()
+        private void Flush()
         {
             foreach (var fw in _fieldWriters.Values)
             {
@@ -97,7 +117,7 @@ namespace Resin
                         }
                         else
                         {
-                            fieldIds = new List<int>{entry.Value};
+                            fieldIds = new List<int> { entry.Value };
                             fieldIndex.Add(entry.Key, fieldIds);
                         }
                     }
@@ -109,7 +129,7 @@ namespace Resin
                     {
                         fieldIndex.Add(entry.Key, new List<int> { entry.Value });
                     }
-                } 
+                }
             }
 
             var tmpFile = Path.Combine(_directory, "field.idx.tmp");
@@ -117,7 +137,7 @@ namespace Resin
             {
                 Serializer.Serialize(fs, fieldIndex);
             }
-            if(File.Exists(indexFileName)) File.Delete(indexFileName);
+            if (File.Exists(indexFileName)) File.Delete(indexFileName);
             File.Move(tmpFile, indexFileName);
             var indexedFields = fieldIndex.Values.SelectMany(l => l).ToList();
             foreach (var file in Directory.GetFiles(_directory, "*.fld"))
@@ -125,6 +145,11 @@ namespace Resin
                 var fieldId = int.Parse(Path.GetFileNameWithoutExtension(file));
                 if (!indexedFields.Contains(fieldId)) File.Delete(file);
             }
+        }
+
+        public void Dispose()
+        {
+            Flush();
         }
     }
 }

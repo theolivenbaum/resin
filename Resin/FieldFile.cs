@@ -5,12 +5,12 @@ using ProtoBuf;
 
 namespace Resin
 {
-    public class FieldWriter : IDisposable
+    public class FieldFile : IDisposable
     {
         private readonly string _fileName;
         private readonly IDictionary<string, IDictionary<int, IList<int>>> _terms;
 
-        public FieldWriter(string fileName)
+        public FieldFile(string fileName)
         {
             _fileName = fileName;
             _terms = new Dictionary<string, IDictionary<int, IList<int>>>();
@@ -18,13 +18,13 @@ namespace Resin
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
         }
 
-        public void Write(int docId, string token, int position)
+        public void Write(int docId, string termValue, int position)
         {
             IDictionary<int, IList<int>> docs;
-            if (!_terms.TryGetValue(token, out docs))
+            if (!_terms.TryGetValue(termValue, out docs))
             {
                 docs = new Dictionary<int, IList<int>> {{docId, new List<int> {position}}};
-                _terms.Add(token, docs);
+                _terms.Add(termValue, docs);
             }
             else
             {

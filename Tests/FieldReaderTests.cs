@@ -18,7 +18,7 @@ namespace Tests
         {
             const string fileName = "c:\\temp\\resin_tests\\Can_read_field_file\\0.fld";
             if (File.Exists(fileName)) File.Delete(fileName);
-            using (var fw = new FieldWriter(fileName))
+            using (var fw = new FieldFile(fileName))
             {
                 fw.Write(0, "hello", 0);
                 fw.Write(5, "world", 1);
@@ -37,11 +37,11 @@ namespace Tests
             const string field1 = "c:\\temp\\resin_tests\\Can_merge_two_positive_field_files\\1.fld";
             if (File.Exists(field0)) File.Delete(field0);
             if (File.Exists(field1)) File.Delete(field1);
-            using (var fw = new FieldWriter(field0))
+            using (var fw = new FieldFile(field0))
             {
                 fw.Write(0, "hello", 0);
             }
-            using (var fw = new FieldWriter(field1))
+            using (var fw = new FieldFile(field1))
             {
                 fw.Write(5, "world", 1);
             }

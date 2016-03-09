@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Resin;
 
@@ -17,7 +18,14 @@ namespace Tests
             {
                 for (int i = 0; i < segments.Length; i++)
                 {
-                    writer.Write(i, "title", string.Join(" ", segments.Take(segments.Length - i)));
+                    writer.Write(new Document
+                    {
+                        Id = i, 
+                        Fields = new Dictionary<string, string>
+                        {
+                            {"title", string.Join(" ", segments.Take(segments.Length - i))}
+                        }
+                    });
                 }
             }
             var scanner = new DocumentScanner(dir);

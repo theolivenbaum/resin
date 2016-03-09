@@ -11,6 +11,13 @@ namespace Resin
     {
         static void Main(string[] args)
         {
+            var count = 0;
+            foreach (var line in File.ReadLines(@"d:\wikipedia\wikipedia.json"))
+            {
+                File.AppendAllText(@"d:\0.json", line + "\r\n");
+                count++;
+                if (count > 10) break;
+            }
             if (args[0].ToLower() == "read")
             {
                 var fileName = args[Array.IndexOf(args, "--file") + 1];
@@ -18,22 +25,18 @@ namespace Resin
                 var json = File.ReadAllText(fileName);
                 var docs = JsonConvert.DeserializeObject<List<Document>>(json);
                 Console.WriteLine("Read {0}. Found {1} docs.", fileName, docs.Count);
-                var left = docs.Count;
-                Console.Write("Left to write: ");
+                Console.Write("Wrote: ");
                 var cursorPos = Console.CursorLeft;
-                Console.Write(left);
+                var done = 0;
                 var timer = new Stopwatch();
                 timer.Start();
                 using (var w = new IndexWriter(dir, new Analyzer()))
                 {
                     foreach (var doc in docs)
                     {
-                        foreach (var field in doc.Fields)
-                        {
-                            w.Write(doc.Id, field.Key, field.Value);
-                        }
+                        w.Write(doc);
                         Console.SetCursorPosition(cursorPos, Console.CursorTop);
-                        Console.Write(--left + new String('\t', 5));
+                        Console.Write(++done);
                     }    
                 }
                 Console.WriteLine("");
@@ -62,11 +65,5 @@ namespace Resin
                 Console.WriteLine("rn.exe query --dir c:\\my_index -q field:value");
             }
         }
-    }
-
-    public class Document
-    {
-        public int Id { get; set; }
-        public IDictionary<string, string> Fields { get; set; } 
     }
 }
