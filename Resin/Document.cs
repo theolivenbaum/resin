@@ -25,4 +25,11 @@ namespace Resin
         public int FieldId { get; set; }
         public IList<string> Values { get; set; }
     }
+
+    public class FieldFileEntry
+    {
+        public int DocId { get; set; }
+        public int FieldId { get; set; }
+        public string Value { get; set; }
+    }
 }

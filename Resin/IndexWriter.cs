@@ -14,9 +14,10 @@ namespace Resin
         private readonly Analyzer _analyzer;
         private readonly bool _overwrite;
         private readonly IDictionary<string, int> _fieldIndex; 
-        private readonly IDictionary<int, FieldFile> _fieldWriters;
-        private readonly IDictionary<int, DocumentFile> _docWriters;
+        private readonly IDictionary<int, FieldFile> _fieldFiles;
+        private readonly IDictionary<int, DocumentFile> _docFiles;
         private readonly TaskQueue<DocumentInfo> _docQueue;
+        private readonly TaskQueue<FieldFileEntry> _fieldQueue;
 
         public IndexWriter(string directory, Analyzer analyzer, bool overwrite = true)
         {
@@ -24,20 +25,22 @@ namespace Resin
             _analyzer = analyzer;
             _overwrite = overwrite;
             _fieldIndex = new Dictionary<string, int>();
-            _fieldWriters = new Dictionary<int, FieldFile>();
-            _docWriters = new Dictionary<int, DocumentFile>();
-            _docQueue = new TaskQueue<DocumentInfo>(1, ConsumeDocQueue);
+            _fieldFiles = new Dictionary<int, FieldFile>();
+            _docFiles = new Dictionary<int, DocumentFile>();
+            _docQueue = new TaskQueue<DocumentInfo>(1, WriteToDocFile);
+            _fieldQueue = new TaskQueue<FieldFileEntry>(1, WriteToFieldFile);
             if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
         }
 
         public void Write(Document doc)
         {
+            // Make sure there is a document file
             DocumentFile df;
-            if (!_docWriters.TryGetValue(doc.Id, out df))
+            if (!_docFiles.TryGetValue(doc.Id, out df))
             {
                 var fileName = Path.Combine(_directory, doc.Id + ".d");
                 df = new DocumentFile(fileName);
-                _docWriters.Add(doc.Id, df);
+                _docFiles.Add(doc.Id, df);
             }
 
             var docInfo = new DocumentInfo
@@ -49,6 +52,7 @@ namespace Resin
 
             foreach (var field in docInfo.Fields)
             {
+                // Make sure there is a file for each field
                 int fieldId;
                 if (!_fieldIndex.TryGetValue(field.Key, out fieldId))
                 {
@@ -58,11 +62,11 @@ namespace Resin
                 field.Value.FieldId = fieldId;
 
                 FieldFile ff;
-                if (!_fieldWriters.TryGetValue(fieldId, out ff))
+                if (!_fieldFiles.TryGetValue(fieldId, out ff))
                 {
                     var fileName = Path.Combine(_directory, fieldId + ".fld");
                     ff = new FieldFile(fileName);
-                    _fieldWriters.Add(fieldId, ff);
+                    _fieldFiles.Add(fieldId, ff);
                 }
             }
 
@@ -70,27 +74,29 @@ namespace Resin
 
         }
 
-        private void ConsumeDocQueue(DocumentInfo doc)
+        private void WriteToDocFile(DocumentInfo doc)
         {
+            var docFile = _docFiles[doc.Id];
             foreach (var field in doc.Fields)
             {
-                var docWriter = _docWriters[doc.Id];
                 foreach (var value in field.Value.Values)
                 {
-                    docWriter.Write(field.Key, value);
-                    WriteToFieldFile(doc.Id, field.Value.FieldId, value);
+                    docFile.Write(field.Key, value);
+                    _fieldQueue.Enqueue(new FieldFileEntry{DocId = doc.Id, FieldId = field.Value.FieldId, Value = value});
                 }
             }
+            //TODO: FLUSH?
         }
 
-        private void WriteToFieldFile(int docId, int fieldId, string value)
+        private void WriteToFieldFile(FieldFileEntry field)
         {
-            var terms = _analyzer.Analyze(value);
+            var fieldFile = _fieldFiles[field.FieldId];
+            var terms = _analyzer.Analyze(field.Value);
             for(int position = 0; position < terms.Length; position++)
             {
-                _fieldWriters[fieldId].Write(docId, terms[position], position);
+                fieldFile.Write(field.DocId, terms[position], position);
             }
-           
+            //TODO: FLUSH?
         }
 
         private int GetNextFreeFieldId()
@@ -110,12 +116,13 @@ namespace Resin
         private void Flush()
         {
             _docQueue.Dispose();
+            _fieldQueue.Dispose();
 
-            foreach (var w in _fieldWriters.Values)
+            foreach (var w in _fieldFiles.Values)
             {
                 w.Dispose();
             }
-            foreach (var w in _docWriters.Values)
+            foreach (var w in _docFiles.Values)
             {
                 w.Dispose();
             }

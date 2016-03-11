@@ -25,14 +25,14 @@ namespace Resin.WikipediaJsonParser
                     if((string)source["type"] != "item") continue;
 
                     var docId = count + skip;
-                    var id = (string) source["id"];
+                    var id = new[]{(string) source["id"]};
                     var labelsToken = source["labels"]["en"];
                     var labelToken = labelsToken == null ? null : labelsToken["value"];
-                    var label = labelToken == null ? "" : labelToken.Value<string>();
+                    var label = labelToken == null ? new string[0] : new[]{labelToken.Value<string>()};
                     var descriptionToken = source["descriptions"]["en"];
-                    var description = descriptionToken == null ? "" : source["descriptions"]["en"]["value"].Value<string>();
+                    var description = descriptionToken == null ? new string[0] : new[]{source["descriptions"]["en"]["value"].Value<string>()};
                     var aliasesToken = source["aliases"]["en"];
-                    var aliases = aliasesToken == null ? "" : String.Join(" ", aliasesToken.Select(t=>t["value"].Value<string>()));
+                    var aliases = aliasesToken == null ? new string[0] : new []{String.Join(" ", aliasesToken.Select(t => t["value"].Value<string>()))};
                     var fields = JObject.FromObject(new 
                     {
                         id, label, description, aliases
