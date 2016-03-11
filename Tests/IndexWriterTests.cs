@@ -9,7 +9,7 @@ namespace Tests
     public class IndexWriterTests
     {
         [Test]
-        public void Can_overwrite_one_field()
+        public void Can_write_one_field()
         {
             const string dir = "c:\\temp\\resin_tests\\Can_write_one_field";
             using (var w = new IndexWriter(dir, new Analyzer()))
@@ -17,17 +17,17 @@ namespace Tests
                 w.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, string>
+                    Fields = new Dictionary<string, IList<string>>
                     {
-                        {"title", "Hello World!"}
+                        {"title", new []{"Hello World!"}}
                     }
                 });
                 w.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, string>
+                    Fields = new Dictionary<string, IList<string>>
                     {
-                        {"title", "Goodbye Cruel World."}
+                        {"title", new []{"Goodbye Cruel World."}}
                     }
                 });
             }
@@ -36,7 +36,7 @@ namespace Tests
         }
 
         [Test]
-        public void Can_overwrite_two_fields()
+        public void Can_write_two_fields()
         {
             const string dir = "c:\\temp\\resin_tests\\Can_write_two_fields";
             using (var w = new IndexWriter(dir, new Analyzer()))
@@ -44,10 +44,10 @@ namespace Tests
                 w.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, string>
+                    Fields = new Dictionary<string, IList<string>>
                     {
-                        {"title", "Hello World!"},
-                        {"body", "Once upon a time there was a man and a woman."}
+                        {"title", new []{"Hello World!"}},
+                        {"body", new []{"Once upon a time there was a man and a woman."}}
                     }
                 });
             }
@@ -64,17 +64,17 @@ namespace Tests
                 w.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, string>
+                    Fields = new Dictionary<string, IList<string>>
                     {
-                        {"title", "Hello World!"},
+                        {"title", new []{"Hello World!"}},
                     }
                 });
                 w.Write(new Document
                 {
                     Id = 1,
-                    Fields = new Dictionary<string, string>
+                    Fields = new Dictionary<string, IList<string>>
                     {
-                        {"title", "Goodbye Cruel World."},
+                        {"title", new []{"Goodbye Cruel World."}},
                     }
                 });
             }
@@ -84,13 +84,13 @@ namespace Tests
                 w.Write(new Document
                 {
                     Id = 2,
-                    Fields = new Dictionary<string, string>
+                    Fields = new Dictionary<string, IList<string>>
                     {
-                        {"title", "The End"},
+                        {"title", new []{"The End"}},
                     }
                 });
             }
-            Assert.AreEqual(2, Directory.GetFiles(dir, "*.fld").Length);
+            Assert.AreEqual(1, Directory.GetFiles(dir, "*.fld").Length);
         }
 
         [Test]
@@ -102,10 +102,10 @@ namespace Tests
                 w.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, string>
+                    Fields = new Dictionary<string, IList<string>>
                     {
-                        {"title", "Hello World!"},
-                        {"body", "Once upon a time there was a man and a woman."}
+                        {"title", new []{"Hello World!"}},
+                        {"body", new []{"Once upon a time there was a man and a woman."}}
                     }
                 });
             }
@@ -115,14 +115,14 @@ namespace Tests
                 w.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, string>
+                    Fields = new Dictionary<string, IList<string>>
                     {
-                        {"title", "Goodbye Cruel World."},
-                        {"body", "Once upon a time there was a cat and a dog."}
+                        {"title", new []{"Goodbye Cruel World."}},
+                        {"body", new []{"Once upon a time there was a cat and a dog."}}
                     }
                 });
             }
-            Assert.AreEqual(4, Directory.GetFiles(dir, "*.fld").Length);
+            Assert.AreEqual(2, Directory.GetFiles(dir, "*.fld").Length);
         }
     }
 }

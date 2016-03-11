@@ -17,17 +17,17 @@ namespace Tests
                 w.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, string>
+                    Fields = new Dictionary<string, IList<string>>
                     {
-                        {"title", "Hello World!"}
+                        {"title", new[]{"Hello World!"}}
                     }
                 });
                 w.Write(new Document
                 {
                     Id = 1,
-                    Fields = new Dictionary<string, string>
+                    Fields = new Dictionary<string, IList<string>>
                     {
-                        {"title", "Goodbye Cruel World."}
+                        {"title", new[]{"Goodbye Cruel World."}}
                     }
                 });
             }
@@ -39,7 +39,7 @@ namespace Tests
             docs = reader.GetDocuments("title", "hello").ToList();
 
             Assert.AreEqual(1, docs.Count);
-            Assert.AreEqual("Hello World!", docs[0]["title"][0]);
+            Assert.AreEqual("Hello World!", docs[0].Fields["title"][0]);
 
         }
 

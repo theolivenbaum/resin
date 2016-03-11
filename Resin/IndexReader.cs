@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using ProtoBuf;
 
 namespace Resin
@@ -13,15 +14,48 @@ namespace Resin
             _scanner = scanner;
         }
 
-        public IEnumerable<IDictionary<string, IList<string>>> GetDocuments(string field, string value)
+        public IEnumerable<Document> GetDocuments(string field, string token)
         {
-            foreach(var docId in _scanner.GetDocIds(field, value))
+            var docs = _scanner.GetDocIds(field, token);
+            foreach (var id in docs)
             {
-                var fileName = Path.Combine(_scanner.Dir, docId + ".d");
-                using (var file = File.OpenRead(fileName))
+                //TODO: page
+                yield return GetDocFromDisk(id);
+            }
+        }
+
+        public IEnumerable<Document> GetDocuments(IList<Term> terms)
+        {
+            IList<int> result = null;
+            foreach (var term in terms)
+            {
+                var docs = _scanner.GetDocIds(term.Field, term.Token);
+                if (result == null)
                 {
-                    yield return Serializer.Deserialize<Dictionary<string, IList<string>>>(file);
+                    result = docs;
                 }
+                else
+                {
+                    result = result.Intersect(docs).ToList(); // Intersect == AND
+                }
+            }
+            if (result != null)
+            {
+                foreach (var id in result)
+                {
+                    //TODO: page
+                    yield return GetDocFromDisk(id);
+                } 
+            }
+            
+        }
+
+        private Document GetDocFromDisk(int docId)
+        {
+            var fileName = Path.Combine(_scanner.Dir, docId + ".d");
+            using (var file = File.OpenRead(fileName))
+            {
+                return Document.FromDictionary(docId, Serializer.Deserialize<Dictionary<string, IList<string>>>(file));
             }
         }
     }

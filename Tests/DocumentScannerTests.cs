@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using Resin;
 
@@ -13,28 +12,23 @@ namespace Tests
         {
             const string dir = "c:\\temp\\resin_tests\\Can_read";
             const string text = "we all live in a yellow submarine";
-            var segments = text.Split(' ');
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                for (int i = 0; i < segments.Length; i++)
+                writer.Write(new Document
                 {
-                    writer.Write(new Document
-                    {
-                        Id = i, 
-                        Fields = new Dictionary<string, string>
+                    Fields = new Dictionary<string, IList<string>>
                         {
-                            {"title", string.Join(" ", segments.Take(segments.Length - i))}
+                            {"title", text.Split(' ')}
                         }
-                    });
-                }
+                });
             }
             var scanner = new DocumentScanner(dir);
-            Assert.AreEqual(7, scanner.GetDocIds("title", "we").Count);
-            Assert.AreEqual(6, scanner.GetDocIds("title", "all").Count);
-            Assert.AreEqual(5, scanner.GetDocIds("title", "live").Count);
-            Assert.AreEqual(4, scanner.GetDocIds("title", "in").Count);
-            Assert.AreEqual(3, scanner.GetDocIds("title", "a").Count);
-            Assert.AreEqual(2, scanner.GetDocIds("title", "yellow").Count);
+            Assert.AreEqual(1, scanner.GetDocIds("title", "we").Count);
+            Assert.AreEqual(1, scanner.GetDocIds("title", "all").Count);
+            Assert.AreEqual(1, scanner.GetDocIds("title", "live").Count);
+            Assert.AreEqual(1, scanner.GetDocIds("title", "in").Count);
+            Assert.AreEqual(1, scanner.GetDocIds("title", "a").Count);
+            Assert.AreEqual(1, scanner.GetDocIds("title", "yellow").Count);
             Assert.AreEqual(1, scanner.GetDocIds("title", "submarine").Count);
         }
 

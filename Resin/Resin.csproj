@@ -54,6 +54,8 @@
     <Compile Include="FieldFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IndexReader.cs" />
+    <Compile Include="QueryParser.cs" />
+    <Compile Include="Term.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

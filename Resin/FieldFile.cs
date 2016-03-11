@@ -13,7 +13,18 @@ namespace Resin
         public FieldFile(string fileName)
         {
             _fileName = fileName;
-            _terms = new Dictionary<string, IDictionary<int, IList<int>>>();
+            if (File.Exists(fileName))
+            {
+                using (var file = File.OpenRead(fileName))
+                {
+                    _terms = Serializer.Deserialize<Dictionary<string, IDictionary<int, IList<int>>>>(file);
+                }
+            }
+            else
+            {
+                _terms = new Dictionary<string, IDictionary<int, IList<int>>>();
+            }
+
             var dir = Path.GetDirectoryName(_fileName);
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
         }
@@ -38,12 +49,17 @@ namespace Resin
             }
         }
 
-        public void Dispose()
+        public void Flush()
         {
             using (var fs = File.Create(_fileName))
             {
                 Serializer.Serialize(fs, _terms);
             }
+        }
+
+        public void Dispose()
+        {
+            Flush();
         }
     }
 }
