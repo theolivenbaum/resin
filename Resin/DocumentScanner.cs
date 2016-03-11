@@ -8,7 +8,7 @@ namespace Resin
     public class DocumentScanner
     {
         private readonly string _directory;
-        private readonly IDictionary<string, IList<int>> _fieldIndex;
+        private readonly IDictionary<string, int> _fieldIndex;
 
         public string Dir { get { return _directory; } }
 
@@ -18,17 +18,16 @@ namespace Resin
             var indexFileName = Path.Combine(directory, "field.idx");
             using (var fs = File.OpenRead(indexFileName))
             {
-                _fieldIndex = Serializer.Deserialize<Dictionary<string, IList<int>>>(fs);
+                _fieldIndex = Serializer.Deserialize<Dictionary<string, int>>(fs);
             }
         }
 
         public IList<int> GetDocIds(string field, string value)
         {
-            IList<int> fieldIds;
-            if (_fieldIndex.TryGetValue(field, out fieldIds))
+            int fieldId;
+            if (_fieldIndex.TryGetValue(field, out fieldId))
             {
-                var fileNames = fieldIds.Select(id => Path.Combine(_directory, id + ".fld")).ToArray();
-                var fr = FieldReader.LoadAndMerge(fileNames);
+                var fr = FieldReader.Load(Path.Combine(_directory, fieldId + ".fld"));
                 var positions = fr.GetDocPosition(value);
                 if (positions != null)
                 {
