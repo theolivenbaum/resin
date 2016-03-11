@@ -31,7 +31,7 @@ namespace Tests
                     }
                 });
             }
-            var reader = new IndexReader(new DocumentScanner(dir));
+            var reader = new IndexReader(new Scanner(dir));
             var docs = reader.GetDocuments("title", "world").ToList();
 
             Assert.AreEqual(2, docs.Count);

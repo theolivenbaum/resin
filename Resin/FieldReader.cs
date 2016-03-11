@@ -7,11 +7,11 @@ namespace Resin
 {
     public class FieldReader
     {
-        private readonly IDictionary<string, IDictionary<int, IList<int>>> _field;
+        private readonly IDictionary<string, IDictionary<int, IList<int>>> _terms;
 
-        public FieldReader(IDictionary<string, IDictionary<int, IList<int>>> field)
+        public FieldReader(IDictionary<string, IDictionary<int, IList<int>>> terms)
         {
-            _field = field;
+            _terms = terms;
         }
 
         public static FieldReader LoadAndMerge(params string[] files)
@@ -21,24 +21,24 @@ namespace Resin
             {
                 using (var fs = File.OpenRead(file))
                 {
-                    var field = Serializer.Deserialize<Dictionary<string, IDictionary<int, IList<int>>>>(fs);
+                    var terms = Serializer.Deserialize<Dictionary<string, IDictionary<int, IList<int>>>>(fs);
                     if (aggregated == null)
                     {
-                        aggregated = field;
+                        aggregated = terms;
                     }
                     else
                     {
-                        foreach (var term in field)
+                        foreach (var term in terms)
                         {
                             IDictionary<int, IList<int>> docs;
                             if (aggregated.TryGetValue(term.Key, out docs))
                             {
                                 foreach (var positions in term.Value)
                                 {
-                                    IList<int> pos;
-                                    if (docs.TryGetValue(positions.Key, out pos))
+                                    IList<int> docPos;
+                                    if (docs.TryGetValue(positions.Key, out docPos))
                                     {
-                                        docs[positions.Key] = pos.Concat(positions.Value).ToList();
+                                        docs[positions.Key] = docPos.Concat(positions.Value).ToList();
                                     }
                                     else
                                     {
@@ -57,19 +57,24 @@ namespace Resin
             return new FieldReader(aggregated);
         }
 
+        public ICollection<string> GetAllTerms()
+        {
+            return _terms.Keys;
+        } 
+
         public static FieldReader Load(string fileName)
         {
             using (var file = File.OpenRead(fileName))
             {
-                var field = Serializer.Deserialize<Dictionary<string, IDictionary<int, IList<int>>>>(file);
-                return new FieldReader(field);
+                var terms = Serializer.Deserialize<Dictionary<string, IDictionary<int, IList<int>>>>(file);
+                return new FieldReader(terms);
             }
         }
 
         public IDictionary<int, IList<int>> GetDocPosition(string termValue)
         {
             IDictionary<int, IList<int>> docPositions;
-            if (!_field.TryGetValue(termValue, out docPositions))
+            if (!_terms.TryGetValue(termValue, out docPositions))
             {
                 return null;
             }

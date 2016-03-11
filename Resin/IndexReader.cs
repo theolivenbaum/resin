@@ -7,11 +7,16 @@ namespace Resin
 {
     public class IndexReader
     {
-        private readonly DocumentScanner _scanner;
-
-        public IndexReader(DocumentScanner scanner)
+        private readonly Scanner _scanner;
+        private readonly IDictionary<int, int> _docIdToFileIndex;
+        public IndexReader(Scanner scanner)
         {
             _scanner = scanner;
+            var fileName = Path.Combine(_scanner.Dir, "d.ix");
+            using (var file = File.OpenRead(fileName))
+            {
+                _docIdToFileIndex = Serializer.Deserialize<IDictionary<int, int>>(file);
+            }
         }
 
         public IEnumerable<Document> GetDocuments(string field, string token)
@@ -52,11 +57,15 @@ namespace Resin
 
         private Document GetDocFromDisk(int docId)
         {
-            var fileName = Path.Combine(_scanner.Dir, docId + ".d");
+            var fileId = _docIdToFileIndex[docId];
+            var fileName = Path.Combine(_scanner.Dir, fileId + ".d");
+            Dictionary<int, Dictionary<string, IList<string>>> docs;
             using (var file = File.OpenRead(fileName))
             {
-                return Document.FromDictionary(docId, Serializer.Deserialize<Dictionary<string, IList<string>>>(file));
+                docs = Serializer.Deserialize<Dictionary<int, Dictionary<string, IList<string>>>>(file);
             }
+            var doc = docs[docId];
+            return Document.FromDictionary(docId, doc);
         }
     }
 }

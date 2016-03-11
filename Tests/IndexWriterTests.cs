@@ -31,7 +31,8 @@ namespace Tests
                     }
                 });
             }
-            Assert.AreEqual(1, Directory.GetFiles(dir, "*.idx").Length);
+            Assert.AreEqual(1, Directory.GetFiles(dir, "fld.ix").Length);
+            Assert.AreEqual(1, Directory.GetFiles(dir, "d.ix").Length);
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.fld").Length);
         }
 
@@ -51,7 +52,8 @@ namespace Tests
                     }
                 });
             }
-            Assert.AreEqual(1, Directory.GetFiles(dir, "*.idx").Length);
+            Assert.AreEqual(1, Directory.GetFiles(dir, "fld.ix").Length);
+            Assert.AreEqual(1, Directory.GetFiles(dir, "d.ix").Length);
             Assert.AreEqual(2, Directory.GetFiles(dir, "*.fld").Length);
         }
 
@@ -91,6 +93,8 @@ namespace Tests
                 });
             }
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.fld").Length);
+            Assert.AreEqual(1, Directory.GetFiles(dir, "fld.ix").Length);
+            Assert.AreEqual(1, Directory.GetFiles(dir, "d.ix").Length);
         }
 
         [Test]

@@ -16,9 +16,6 @@ namespace Resin
         private readonly Analyzer _analyzer;
         private readonly IDictionary<string, int> _fieldIndex; 
         private readonly IDictionary<int, FieldFile> _fieldFiles;
-        private readonly IDictionary<int, DocumentFile> _docFiles;
-        //private readonly TaskQueue<DocumentInfo> _docQueue;
-        //private readonly TaskQueue<FieldFileEntry> _fieldQueue;
         private readonly string _fieldIndexFileName;
         private readonly IList<DocumentInfo> _docQueue1;
         private readonly bool _overwrite;
@@ -30,10 +27,7 @@ namespace Resin
             _overwrite = overwrite;
 
             _fieldFiles = new Dictionary<int, FieldFile>();
-            _docFiles = new Dictionary<int, DocumentFile>();
-            //_docQueue = new TaskQueue<DocumentInfo>(1, WriteToDocFile);
-            //_fieldQueue = new TaskQueue<FieldFileEntry>(1, WriteToFieldFile);
-            _fieldIndexFileName = Path.Combine(_directory, "field.idx");
+            _fieldIndexFileName = Path.Combine(_directory, "fld.ix");
             _docQueue1 = new List<DocumentInfo>();
 
             if (!overwrite && File.Exists(_fieldIndexFileName))
@@ -53,15 +47,6 @@ namespace Resin
 
         public void Write(Document doc)
         {
-            // Make sure there is a document file
-            DocumentFile df;
-            if (!_docFiles.TryGetValue(doc.Id, out df))
-            {
-                var fileName = Path.Combine(_directory, doc.Id + ".d");
-                df = new DocumentFile(fileName, _overwrite);
-                _docFiles.Add(doc.Id, df);
-            }
-
             // Prepare the message
             var docInfo = new DocumentInfo
             {
@@ -114,25 +99,30 @@ namespace Resin
 
         private void Flush()
         {
-            var docs = _docQueue1.GroupBy(d=>d.Id).ToList();
-            var fields = new ConcurrentBag<FieldFileEntry>();
-            Parallel.ForEach(docs, doc =>
-            {
-                using (var docFile = _docFiles[doc.Key])
+            //var batches = _docQueue1.GroupBy(d=>d.Id).ToList().IntoBatches(2000).ToList();
+            //var fields = new ConcurrentBag<FieldFileEntry>();
+            var fields = new List<FieldFileEntry>();
+            //Parallel.ForEach(batches, batch =>
+            //foreach (var batch in batches)
+            //{
+                using (var docFile = new MultiDocumentFile(_directory))
                 {
-                    foreach (var d in doc)
+                    foreach (var doc in _docQueue1.GroupBy(d => d.Id).ToList())
                     {
-                        foreach (var field in d.Fields)
+                        foreach (var di in doc)
                         {
-                            foreach (var value in field.Value.Values)
+                            foreach (var field in di.Fields)
                             {
-                                docFile.Write(field.Key, value);
-                                fields.Add(new FieldFileEntry { DocId = d.Id, FieldId = field.Value.FieldId, Value = value });
+                                foreach (var value in field.Value.Values)
+                                {
+                                    docFile.Write(di.Id, field.Key, value);
+                                    fields.Add(new FieldFileEntry {DocId = di.Id, FieldId = field.Value.FieldId, Value = value});
+                                }
                             }
                         }
                     }
                 }
-            });
+            //}
             var groupedFields = fields.GroupBy(f => f.FieldId).ToList();
             Parallel.ForEach(groupedFields, field =>
             {
@@ -148,27 +138,10 @@ namespace Resin
                     }
                 }
             });
-
             using (var fs = File.Create(_fieldIndexFileName))
             {
                 Serializer.Serialize(fs, _fieldIndex);
             }
-
-            
-
-            //var tmpFile = Path.Combine(_directory, "field.idx.tmp");
-            //using (var fs = File.Create(tmpFile))
-            //{
-            //    Serializer.Serialize(fs, fieldIndex);
-            //}
-            //if (File.Exists(indexFileName)) File.Delete(indexFileName);
-            //File.Move(tmpFile, indexFileName);
-            //var indexedFields = fieldIndex.Values.SelectMany(l => l).ToList();
-            //foreach (var file in Directory.GetFiles(_directory, "*.fld"))
-            //{
-            //    var fieldId = int.Parse(Path.GetFileNameWithoutExtension(file));
-            //    if (!indexedFields.Contains(fieldId)) File.Delete(file);
-            //}
         }
 
         public void Dispose()

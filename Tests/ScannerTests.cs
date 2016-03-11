@@ -5,7 +5,7 @@ using Resin;
 namespace Tests
 {
     [TestFixture]
-    public class DocumentScannerTests
+    public class ScannerTests
     {
         [Test]
         public void Can_find()
@@ -22,7 +22,7 @@ namespace Tests
                         }
                 });
             }
-            var scanner = new DocumentScanner(dir);
+            var scanner = new Scanner(dir);
             Assert.AreEqual(1, scanner.GetDocIds("title", "we").Count);
             Assert.AreEqual(1, scanner.GetDocIds("title", "all").Count);
             Assert.AreEqual(1, scanner.GetDocIds("title", "live").Count);

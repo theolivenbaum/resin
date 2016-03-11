@@ -7,6 +7,8 @@ using Newtonsoft.Json;
 
 namespace Resin
 {
+    // write --file e:\wikipedia\wikipedia_resin.json --dir c:\temp\resin\0 --skip 0 --take 10000
+    // query --dir c:\temp\resin\0 -q "label:roman"
     class Program
     {
         static void Main(string[] args)
@@ -26,30 +28,26 @@ namespace Resin
                 var fileName = args[Array.IndexOf(args, "--file") + 1];
                 var dir = args[Array.IndexOf(args, "--dir") + 1];
                 var json = File.ReadAllText(fileName);
-                var docs = JsonConvert.DeserializeObject<List<Document>>(json);
-                var batches = docs.Skip(skip).Take(take).Chunkify(1000);
-                Console.WriteLine("Read {0}. Found {1} docs.", fileName, docs.Count);
+                var docs = JsonConvert.DeserializeObject<List<Document>>(json).Skip(skip).Take(take).ToList();
                 Console.Write("Writing: ");
                 var cursorPos = Console.CursorLeft;
-                var done = 0;
+                var count = 0;
                 var timer = new Stopwatch();
-                foreach (var batch in batches)
+                timer.Start();
+                using (var w = new IndexWriter(dir, new Analyzer(), overwrite:false))
                 {
-                    var ds = batch.ToList();
-                    timer.Start();
-                    using (var w = new IndexWriter(dir, new Analyzer(), overwrite:true))
+                    foreach (var d in docs)
                     {
-                        foreach (var d in ds)
-                        {
-                            w.Write(d);
-                            Console.SetCursorPosition(cursorPos, Console.CursorTop);
-                            Console.Write(++done);
-                        }
+                        Console.SetCursorPosition(cursorPos, Console.CursorTop);
+                        Console.Write(++count);
+                        w.Write(d);
                     }
-                    timer.Stop();
                 }
-                
+                timer.Stop();
                 Console.WriteLine("");
+                Console.WriteLine("Analyzing");
+                var scanner = new Scanner(dir);
+                File.WriteAllLines(Path.Combine(dir, "_label.txt"), scanner.GetAllTerms("label"));
                 Console.WriteLine("Index created in " + timer.Elapsed);
             }
             else if (args[0].ToLower() == "query")
@@ -60,14 +58,14 @@ namespace Resin
                     Console.WriteLine("I need both a directory and a query.");
                     return;
                 }
+
+                var dir = args[Array.IndexOf(args, "--dir") + 1];
+                var q = args[Array.IndexOf(args, "-q") + 1];
+
                 var timer = new Stopwatch();
                 timer.Start();
-                var dir = args[Array.IndexOf(args, "--dir") + 1];
-                var scanner = new DocumentScanner(dir);
-                var reader = new IndexReader(scanner);
-                var q = args[Array.IndexOf(args, "-q") + 1];
-                var terms = new QueryParser(new Analyzer()).Parse(q).ToList();
-                var docs = reader.GetDocuments(terms).ToList(); 
+
+                var docs = new Searcher(dir).Search(q).ToList(); 
                 var position = 0;
                 foreach (var doc in docs)
                 {

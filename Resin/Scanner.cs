@@ -5,17 +5,17 @@ using ProtoBuf;
 
 namespace Resin
 {
-    public class DocumentScanner
+    public class Scanner
     {
         private readonly string _directory;
         private readonly IDictionary<string, int> _fieldIndex;
 
         public string Dir { get { return _directory; } }
 
-        public DocumentScanner(string directory)
+        public Scanner(string directory)
         {
             _directory = directory;
-            var indexFileName = Path.Combine(directory, "field.idx");
+            var indexFileName = Path.Combine(directory, "fld.ix");
             using (var fs = File.OpenRead(indexFileName))
             {
                 _fieldIndex = Serializer.Deserialize<Dictionary<string, int>>(fs);
@@ -38,5 +38,15 @@ namespace Resin
             return Enumerable.Empty<int>().ToList();
         }
 
+        public ICollection<string> GetAllTerms(string field)
+        {
+            int fieldId;
+            if (_fieldIndex.TryGetValue(field, out fieldId))
+            {
+                var f = FieldReader.Load(Path.Combine(_directory, fieldId + ".fld"));
+                return f.GetAllTerms();
+            }
+            return Enumerable.Empty<string>().ToList();
+        } 
     }
 }
