@@ -10,7 +10,7 @@ namespace Tests
         [Test]
         public void Can_find()
         {
-            const string dir = "c:\\temp\\resin_tests\\Can_read";
+            const string dir = "c:\\temp\\resin_tests\\Can_find";
             const string text = "we all live in a yellow submarine";
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {

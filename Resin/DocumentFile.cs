@@ -24,9 +24,6 @@ namespace Resin
             {
                 _doc = new Dictionary<string, IList<string>>();
             }
-
-            var dir = Path.GetDirectoryName(_fileName);
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
         }
 
         public void Write(string fieldName, string fieldValue)
@@ -45,6 +42,8 @@ namespace Resin
 
         private void Flush()
         {
+            var dir = Path.GetDirectoryName(_fileName);
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
             using (var fs = File.Create(_fileName))
             {
                 Serializer.Serialize(fs, _doc);

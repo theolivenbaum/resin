@@ -27,23 +27,26 @@ namespace Resin
                 var dir = args[Array.IndexOf(args, "--dir") + 1];
                 var json = File.ReadAllText(fileName);
                 var docs = JsonConvert.DeserializeObject<List<Document>>(json);
+                var batches = docs.Skip(skip).Take(take).Chunkify(1000);
                 Console.WriteLine("Read {0}. Found {1} docs.", fileName, docs.Count);
                 Console.Write("Writing: ");
                 var cursorPos = Console.CursorLeft;
                 var done = 0;
                 var timer = new Stopwatch();
-                timer.Start();
-                foreach (var batch in docs.Skip(skip).Take(take).IntoBatches(1000))
+                foreach (var batch in batches)
                 {
+                    var ds = batch.ToList();
+                    timer.Start();
                     using (var w = new IndexWriter(dir, new Analyzer(), overwrite:true))
                     {
-                        foreach (var doc in batch)
+                        foreach (var d in ds)
                         {
-                            w.Write(doc);
+                            w.Write(d);
                             Console.SetCursorPosition(cursorPos, Console.CursorTop);
                             Console.Write(++done);
                         }
                     }
+                    timer.Stop();
                 }
                 
                 Console.WriteLine("");

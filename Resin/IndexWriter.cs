@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using ProtoBuf;
 
 namespace Resin
@@ -15,10 +17,11 @@ namespace Resin
         private readonly IDictionary<string, int> _fieldIndex; 
         private readonly IDictionary<int, FieldFile> _fieldFiles;
         private readonly IDictionary<int, DocumentFile> _docFiles;
-        private readonly TaskQueue<DocumentInfo> _docQueue;
-        private readonly TaskQueue<FieldFileEntry> _fieldQueue;
+        //private readonly TaskQueue<DocumentInfo> _docQueue;
+        //private readonly TaskQueue<FieldFileEntry> _fieldQueue;
         private readonly string _fieldIndexFileName;
-        private bool _overwrite;
+        private readonly IList<DocumentInfo> _docQueue1;
+        private readonly bool _overwrite;
 
         public IndexWriter(string directory, Analyzer analyzer, bool overwrite = true)
         {
@@ -28,9 +31,10 @@ namespace Resin
 
             _fieldFiles = new Dictionary<int, FieldFile>();
             _docFiles = new Dictionary<int, DocumentFile>();
-            _docQueue = new TaskQueue<DocumentInfo>(1, WriteToDocFile);
-            _fieldQueue = new TaskQueue<FieldFileEntry>(1, WriteToFieldFile);
+            //_docQueue = new TaskQueue<DocumentInfo>(1, WriteToDocFile);
+            //_fieldQueue = new TaskQueue<FieldFileEntry>(1, WriteToFieldFile);
             _fieldIndexFileName = Path.Combine(_directory, "field.idx");
+            _docQueue1 = new List<DocumentInfo>();
 
             if (!overwrite && File.Exists(_fieldIndexFileName))
             {
@@ -89,32 +93,9 @@ namespace Resin
                 }
             }
 
-            // Hand of the message to the document writer thread
-            _docQueue.Enqueue(docInfo);
+            // Hand over the message to the writer threads
+            _docQueue1.Add(docInfo);
 
-        }
-
-        private void WriteToDocFile(DocumentInfo doc)
-        {
-            var docFile = _docFiles[doc.Id];
-            foreach (var field in doc.Fields)
-            {
-                foreach (var value in field.Value.Values)
-                {
-                    docFile.Write(field.Key, value);
-                    _fieldQueue.Enqueue(new FieldFileEntry{DocId = doc.Id, FieldId = field.Value.FieldId, Value = value});
-                }
-            }
-        }
-
-        private void WriteToFieldFile(FieldFileEntry field)
-        {
-            var fieldFile = _fieldFiles[field.FieldId];
-            var terms = _analyzer.Analyze(field.Value);
-            for(int position = 0; position < terms.Length; position++)
-            {
-                fieldFile.Write(field.DocId, terms[position], position);
-            }
         }
 
         private int GetNextFreeFieldId()
@@ -133,22 +114,47 @@ namespace Resin
 
         private void Flush()
         {
-            _docQueue.Dispose();
-            _fieldQueue.Dispose();
-
-            foreach (var w in _fieldFiles.Values)
+            var docs = _docQueue1.GroupBy(d=>d.Id).ToList();
+            var fields = new ConcurrentBag<FieldFileEntry>();
+            Parallel.ForEach(docs, doc =>
             {
-                w.Dispose();
-            }
-            foreach (var w in _docFiles.Values)
+                using (var docFile = _docFiles[doc.Key])
+                {
+                    foreach (var d in doc)
+                    {
+                        foreach (var field in d.Fields)
+                        {
+                            foreach (var value in field.Value.Values)
+                            {
+                                docFile.Write(field.Key, value);
+                                fields.Add(new FieldFileEntry { DocId = d.Id, FieldId = field.Value.FieldId, Value = value });
+                            }
+                        }
+                    }
+                }
+            });
+            var groupedFields = fields.GroupBy(f => f.FieldId).ToList();
+            Parallel.ForEach(groupedFields, field =>
             {
-                w.Dispose();
-            }
+                using (var fieldFile = _fieldFiles[field.Key])
+                {
+                    foreach (var f in field)
+                    {
+                        var terms = _analyzer.Analyze(f.Value);
+                        for (int position = 0; position < terms.Length; position++)
+                        {
+                            fieldFile.Write(f.DocId, terms[position], position);
+                        }
+                    }
+                }
+            });
 
             using (var fs = File.Create(_fieldIndexFileName))
             {
                 Serializer.Serialize(fs, _fieldIndex);
             }
+
+            
 
             //var tmpFile = Path.Combine(_directory, "field.idx.tmp");
             //using (var fs = File.Create(tmpFile))

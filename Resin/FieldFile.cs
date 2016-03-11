@@ -24,9 +24,6 @@ namespace Resin
             {
                 _terms = new Dictionary<string, IDictionary<int, IList<int>>>();
             }
-
-            var dir = Path.GetDirectoryName(_fileName) ?? string.Empty;
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
         }
 
         public void Write(int docId, string termValue, int position)
@@ -51,6 +48,8 @@ namespace Resin
 
         private void Flush()
         {
+            var dir = Path.GetDirectoryName(_fileName);
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
             using (var fs = File.Create(_fileName))
             {
                 Serializer.Serialize(fs, _terms);
