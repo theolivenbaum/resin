@@ -10,10 +10,10 @@ namespace Resin
         private readonly string _fileName;
         private readonly IDictionary<string, IList<string>> _doc;
  
-        public DocumentFile(string fileName)
+        public DocumentFile(string fileName, bool overwrite)
         {
             _fileName = fileName;
-            if (File.Exists(fileName))
+            if (!overwrite && File.Exists(fileName))
             {
                 using (var file = File.OpenRead(fileName))
                 {
@@ -43,7 +43,7 @@ namespace Resin
             }
         }
 
-        public void Flush()
+        private void Flush()
         {
             using (var fs = File.Create(_fileName))
             {

@@ -35,7 +35,7 @@ namespace Resin
                 timer.Start();
                 foreach (var batch in docs.Skip(skip).Take(take).IntoBatches(1000))
                 {
-                    using (var w = new IndexWriter(dir, new Analyzer(), overwrite:false))
+                    using (var w = new IndexWriter(dir, new Analyzer(), overwrite:true))
                     {
                         foreach (var doc in batch)
                         {

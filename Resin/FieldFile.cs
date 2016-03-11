@@ -10,10 +10,10 @@ namespace Resin
         private readonly string _fileName;
         private readonly IDictionary<string, IDictionary<int, IList<int>>> _terms;
 
-        public FieldFile(string fileName)
+        public FieldFile(string fileName, bool overwrite = true)
         {
             _fileName = fileName;
-            if (File.Exists(fileName))
+            if (!overwrite && File.Exists(fileName))
             {
                 using (var file = File.OpenRead(fileName))
                 {
@@ -25,7 +25,7 @@ namespace Resin
                 _terms = new Dictionary<string, IDictionary<int, IList<int>>>();
             }
 
-            var dir = Path.GetDirectoryName(_fileName);
+            var dir = Path.GetDirectoryName(_fileName) ?? string.Empty;
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
         }
 
@@ -49,7 +49,7 @@ namespace Resin
             }
         }
 
-        public void Flush()
+        private void Flush()
         {
             using (var fs = File.Create(_fileName))
             {
