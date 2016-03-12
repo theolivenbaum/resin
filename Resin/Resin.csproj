@@ -58,6 +58,7 @@
     <Compile Include="IndexReader.cs" />
     <Compile Include="QueryParser.cs" />
     <Compile Include="Searcher.cs" />
+    <Compile Include="TaskQueue.cs" />
     <Compile Include="Term.cs" />
   </ItemGroup>
   <ItemGroup>

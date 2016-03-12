@@ -35,9 +35,9 @@ namespace Resin
                 values.Add(fieldValue);
             }
         }
-        public string Flush()
+        private void Flush()
         {
-            if (_docs.Count == 0) return String.Empty;
+            if (_docs.Count == 0) return;
 
             var ixFileName = Path.Combine(_dir, "d.ix");
             var id = Directory.GetFiles(_dir, "*.d").Length;
@@ -71,7 +71,6 @@ namespace Resin
             {
                 Serializer.Serialize(fs, docIdToFileIndex);
             }
-            return fileName;
         }
 
         public void Dispose()
