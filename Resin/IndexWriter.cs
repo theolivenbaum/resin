@@ -99,30 +99,54 @@ namespace Resin
 
         private void Flush()
         {
-            //var batches = _docQueue1.GroupBy(d=>d.Id).ToList().IntoBatches(2000).ToList();
-            //var fields = new ConcurrentBag<FieldFileEntry>();
             var fields = new List<FieldFileEntry>();
-            //Parallel.ForEach(batches, batch =>
-            //foreach (var batch in batches)
-            //{
-                using (var docFile = new MultiDocumentFile(_directory))
+            string fileName;
+            using (var docFile = new DocumentFile(_directory))
+            {
+                foreach (var doc in _docQueue1.GroupBy(d => d.Id).ToList())
                 {
-                    foreach (var doc in _docQueue1.GroupBy(d => d.Id).ToList())
+                    foreach (var di in doc)
                     {
-                        foreach (var di in doc)
+                        foreach (var field in di.Fields)
                         {
-                            foreach (var field in di.Fields)
+                            foreach (var value in field.Value.Values)
                             {
-                                foreach (var value in field.Value.Values)
-                                {
-                                    docFile.Write(di.Id, field.Key, value);
-                                    fields.Add(new FieldFileEntry {DocId = di.Id, FieldId = field.Value.FieldId, Value = value});
-                                }
+                                docFile.Write(di.Id, field.Key, value);
+                                fields.Add(new FieldFileEntry {DocId = di.Id, FieldId = field.Value.FieldId, Value = value});
                             }
                         }
                     }
                 }
-            //}
+                fileName = docFile.Flush();
+            }
+            Dictionary<int, Dictionary<string, IList<string>>> docs;
+            using (var file = File.OpenRead(fileName))
+            {
+                docs = Serializer.Deserialize<Dictionary<int, Dictionary<string, IList<string>>>>(file);
+            }
+            var chunks = docs.IntoBatches(1000).ToList();
+            if (chunks.Count > 1)
+            {
+                foreach (var chunk in chunks)
+                {
+                    using (var docFile = new DocumentFile(_directory))
+                    {
+                        foreach (var doc in chunk)
+                        {
+                            foreach (var field in doc.Value)
+                            {
+                                foreach (var value in field.Value)
+                                {
+                                    docFile.Write(doc.Key, field.Key, value);
+                                }
+                            }
+                        }
+                        docFile.Flush();
+                    }
+                }
+                File.Delete(fileName);
+            }
+            
             var groupedFields = fields.GroupBy(f => f.FieldId).ToList();
             Parallel.ForEach(groupedFields, field =>
             {
