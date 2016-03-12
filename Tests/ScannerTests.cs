@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Resin;
 
@@ -16,9 +17,9 @@ namespace Tests
             {
                 writer.Write(new Document
                 {
-                    Fields = new Dictionary<string, IList<string>>
+                    Fields = new Dictionary<string, List<string>>
                         {
-                            {"title", text.Split(' ')}
+                            {"title", text.Split(' ').ToList()}
                         }
                 });
             }

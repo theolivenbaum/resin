@@ -1,21 +1,27 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ProtoBuf;
 
 namespace Resin
 {
-    public class IndexReader
+    public class IndexReader : IDisposable
     {
         private readonly Scanner _scanner;
-        private readonly IDictionary<int, int> _docIdToFileIndex;
+        private readonly Dictionary<int, int> _docIdToFileIndex;
+        private readonly string _docIdToFileIndexFileName;
+        private readonly Dictionary<int, Dictionary<string, List<string>>> _docs;
+
         public IndexReader(Scanner scanner)
         {
             _scanner = scanner;
-            var fileName = Path.Combine(_scanner.Dir, "d.ix");
-            using (var file = File.OpenRead(fileName))
+            _docIdToFileIndexFileName = Path.Combine(_scanner.Dir, "d.ix");
+            _docs = new Dictionary<int, Dictionary<string, List<string>>>();
+
+            using (var file = File.OpenRead(_docIdToFileIndexFileName))
             {
-                _docIdToFileIndex = Serializer.Deserialize<IDictionary<int, int>>(file);
+                _docIdToFileIndex = Serializer.Deserialize<Dictionary<int, int>>(file);
             }
         }
 
@@ -24,7 +30,6 @@ namespace Resin
             var docs = _scanner.GetDocIds(field, token);
             foreach (var id in docs)
             {
-                //TODO: page
                 yield return GetDocFromDisk(id);
             }
         }
@@ -48,24 +53,59 @@ namespace Resin
             {
                 foreach (var id in result)
                 {
-                    //TODO: page
                     yield return GetDocFromDisk(id);
                 } 
             }
             
         }
 
+        private int Serialize(int docId, Dictionary<string, List<string>> doc)
+        {
+            var id = Directory.GetFiles(_scanner.Dir, "*.d").Length;
+            var fileName = Path.Combine(_scanner.Dir, id + ".d");
+            File.WriteAllText(fileName, "");
+            var docs = new Dictionary<int, Dictionary<string, List<string>>>();
+            docs.Add(docId, doc);
+            using (var fs = File.Create(fileName))
+            {
+                Serializer.Serialize(fs, docs);
+            }
+            return id;
+        }
+
+        private void Serialize(Dictionary<int, int> docIdToFileIndex)
+        {
+            using (var fs = File.Create(_docIdToFileIndexFileName))
+            {
+                Serializer.Serialize(fs, docIdToFileIndex);
+            }
+        }
+
         private Document GetDocFromDisk(int docId)
         {
-            var fileId = _docIdToFileIndex[docId];
-            var fileName = Path.Combine(_scanner.Dir, fileId + ".d");
-            Dictionary<int, Dictionary<string, IList<string>>> docs;
-            using (var file = File.OpenRead(fileName))
+            Dictionary<string, List<string>> doc;
+            if (!_docs.TryGetValue(docId, out doc))
             {
-                docs = Serializer.Deserialize<Dictionary<int, Dictionary<string, IList<string>>>>(file);
+                var fileId = _docIdToFileIndex[docId];
+                var fileName = Path.Combine(_scanner.Dir, fileId + ".d");
+                Dictionary<int, Dictionary<string, List<string>>> docs;
+                using (var file = File.OpenRead(fileName))
+                {
+                    docs = Serializer.Deserialize<Dictionary<int, Dictionary<string, List<string>>>>(file);
+                }
+                doc = docs[docId];
+                if (docs.Count > 1)
+                {
+                    _docIdToFileIndex[docId] = Serialize(docId, doc);
+                    Serialize(_docIdToFileIndex);
+                }
+                _docs.Add(docId, doc);
             }
-            var doc = docs[docId];
             return Document.FromDictionary(docId, doc);
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

@@ -63,15 +63,24 @@ namespace Resin
                 var q = args[Array.IndexOf(args, "-q") + 1];
 
                 var timer = new Stopwatch();
-                timer.Start();
 
-                var docs = new Searcher(dir).Search(q).ToList(); 
-                var position = 0;
-                foreach (var doc in docs)
+                using (var s = new Searcher(dir))
                 {
-                    Console.WriteLine(string.Join(", ", ++position, doc.Fields["id"][0], doc.Fields["label"][0]));
+                    List<Document> docs = null;
+                    timer.Start();
+                    for (int i = 0; i < 2; i++)
+                    {
+                        docs = s.Search(q).ToList();
+                    }
+                    var elapsed = timer.Elapsed;
+                    var position = 0;
+                    foreach (var doc in docs)
+                    {
+                        Console.WriteLine(string.Join(", ", ++position, doc.Fields["id"][0], doc.Fields["label"][0]));
+                    }
+                    Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed.TotalMilliseconds/2);
                 }
-                Console.WriteLine("{0} results in {1}", docs.Count, timer.Elapsed);
+                
             }
             else
             {

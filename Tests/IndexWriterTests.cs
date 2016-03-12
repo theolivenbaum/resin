@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Resin;
 
@@ -17,17 +18,17 @@ namespace Tests
                 w.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, IList<string>>
+                    Fields = new Dictionary<string, List<string>>
                     {
-                        {"title", new []{"Hello World!"}}
+                        {"title", new []{"Hello World!"}.ToList()}
                     }
                 });
                 w.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, IList<string>>
+                    Fields = new Dictionary<string, List<string>>
                     {
-                        {"title", new []{"Goodbye Cruel World."}}
+                        {"title", new []{"Goodbye Cruel World."}.ToList()}
                     }
                 });
             }
@@ -45,10 +46,10 @@ namespace Tests
                 w.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, IList<string>>
+                    Fields = new Dictionary<string, List<string>>
                     {
-                        {"title", new []{"Hello World!"}},
-                        {"body", new []{"Once upon a time there was a man and a woman."}}
+                        {"title", new []{"Hello World!"}.ToList()},
+                        {"body", new []{"Once upon a time there was a man and a woman."}.ToList()}
                     }
                 });
             }
@@ -66,17 +67,17 @@ namespace Tests
                 w.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, IList<string>>
+                    Fields = new Dictionary<string, List<string>>
                     {
-                        {"title", new []{"Hello World!"}},
+                        {"title", new []{"Hello World!"}.ToList()},
                     }
                 });
                 w.Write(new Document
                 {
                     Id = 1,
-                    Fields = new Dictionary<string, IList<string>>
+                    Fields = new Dictionary<string, List<string>>
                     {
-                        {"title", new []{"Goodbye Cruel World."}},
+                        {"title", new []{"Goodbye Cruel World."}.ToList()},
                     }
                 });
             }
@@ -86,9 +87,9 @@ namespace Tests
                 w.Write(new Document
                 {
                     Id = 2,
-                    Fields = new Dictionary<string, IList<string>>
+                    Fields = new Dictionary<string, List<string>>
                     {
-                        {"title", new []{"The End"}},
+                        {"title", new []{"The End"}.ToList()},
                     }
                 });
             }
@@ -106,10 +107,10 @@ namespace Tests
                 w.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, IList<string>>
+                    Fields = new Dictionary<string, List<string>>
                     {
-                        {"title", new []{"Hello World!"}},
-                        {"body", new []{"Once upon a time there was a man and a woman."}}
+                        {"title", new []{"Hello World!"}.ToList()},
+                        {"body", new []{"Once upon a time there was a man and a woman."}.ToList()}
                     }
                 });
             }
@@ -119,10 +120,10 @@ namespace Tests
                 w.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, IList<string>>
+                    Fields = new Dictionary<string, List<string>>
                     {
-                        {"title", new []{"Goodbye Cruel World."}},
-                        {"body", new []{"Once upon a time there was a cat and a dog."}}
+                        {"title", new []{"Goodbye Cruel World."}.ToList()},
+                        {"body", new []{"Once upon a time there was a cat and a dog."}.ToList()}
                     }
                 });
             }

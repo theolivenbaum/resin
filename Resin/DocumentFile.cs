@@ -61,7 +61,7 @@ namespace Resin
             {
                 var id = Directory.GetFiles(_dir, "*.d").Length;
                 var fileName = Path.Combine(_dir, id + ".d");
-                //File.WriteAllText(fileName, "");
+                File.WriteAllText(fileName, "");
                 using (var fs = File.Create(fileName))
                 {
                     Serializer.Serialize(fs, batch.ToDictionary(x=>x.Key, y=>y.Value));

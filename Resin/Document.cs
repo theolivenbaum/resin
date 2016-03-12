@@ -5,9 +5,9 @@ namespace Resin
     public class Document
     {
         public int Id { get; set; }
-        public IDictionary<string, IList<string>> Fields { get; set; }
+        public Dictionary<string, List<string>> Fields { get; set; }
 
-        public static Document FromDictionary(int docId, IDictionary<string, IList<string>> fields)
+        public static Document FromDictionary(int docId, Dictionary<string, List<string>> fields)
         {
             return new Document{Id = docId, Fields = fields};
         }

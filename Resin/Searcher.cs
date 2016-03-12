@@ -1,9 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Resin
 {
-    public class Searcher
+    public class Searcher : IDisposable
     {
         private readonly QueryParser _parser;
         private readonly IndexReader _reader;
@@ -18,6 +19,11 @@ namespace Resin
         {
             var terms = _parser.Parse(query).ToList();
             return _reader.GetDocuments(terms); 
-        } 
+        }
+
+        public void Dispose()
+        {
+            _reader.Dispose();
+        }
     }
 }
