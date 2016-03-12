@@ -9,12 +9,15 @@ namespace Resin
     {
         private readonly string _directory;
         private readonly IDictionary<string, int> _fieldIndex;
+        private readonly IDictionary<string, FieldReader> _fieldReaders; 
 
         public string Dir { get { return _directory; } }
 
         public Scanner(string directory)
         {
             _directory = directory;
+            _fieldReaders = new Dictionary<string, FieldReader>();
+
             var indexFileName = Path.Combine(directory, "fld.ix");
             using (var fs = File.OpenRead(indexFileName))
             {
@@ -27,15 +30,34 @@ namespace Resin
             int fieldId;
             if (_fieldIndex.TryGetValue(field, out fieldId))
             {
-                var fr = FieldReader.Load(Path.Combine(_directory, fieldId + ".fld"));
-                var positions = fr.GetDocPosition(value);
-                if (positions != null)
+                var reader = GetReader(field);
+                if (reader != null)
                 {
-                    var ordered = positions.OrderByDescending(d => d.Value.Count).Select(d => d.Key).ToList();
-                    return ordered;    
-                }                
+                    var positions = reader.GetDocPosition(value);
+                    if (positions != null)
+                    {
+                        var ordered = positions.OrderByDescending(d => d.Value.Count).Select(d => d.Key).ToList();
+                        return ordered;
+                    }
+                }
             }
             return Enumerable.Empty<int>().ToList();
+        }
+
+        private FieldReader GetReader(string field)
+        {
+            int fieldId;
+            if (_fieldIndex.TryGetValue(field, out fieldId))
+            {
+                FieldReader reader;
+                if (!_fieldReaders.TryGetValue(field, out reader))
+                {
+                    reader = FieldReader.Load(Path.Combine(_directory, fieldId + ".fld"));
+                    _fieldReaders.Add(field, reader);
+                }
+                return reader;
+            }
+            return null;
         }
 
         public ICollection<string> GetAllTerms(string field)
