@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using ProtoBuf;
 
 namespace Resin
@@ -40,15 +41,6 @@ namespace Resin
             if (_docs.Count == 0) return;
 
             var ixFileName = Path.Combine(_dir, "d.ix");
-            var id = Directory.GetFiles(_dir, "*.d").Length;
-            var fileName = Path.Combine(_dir, id + ".d");
-            if (!Directory.Exists(_dir)) Directory.CreateDirectory(_dir);
-            File.WriteAllText(fileName, "");
-            
-            using (var fs = File.Create(fileName))
-            {
-                Serializer.Serialize(fs, _docs);
-            }
 
             IDictionary<int, int> docIdToFileIndex;
             if (File.Exists(ixFileName))
@@ -61,16 +53,31 @@ namespace Resin
             else
             {
                 docIdToFileIndex = new Dictionary<int, int>();
+                if (!Directory.Exists(_dir)) Directory.CreateDirectory(_dir);
             }
-            foreach (var docId in _docs.Keys)
+            
+            var batches = _docs.IntoBatches(10000).ToList();
+            foreach (var batch in batches)
             {
-                docIdToFileIndex[docId] = id;
+                var id = Directory.GetFiles(_dir, "*.d").Length;
+                var fileName = Path.Combine(_dir, id + ".d");
+                //File.WriteAllText(fileName, "");
+                using (var fs = File.Create(fileName))
+                {
+                    Serializer.Serialize(fs, batch.ToDictionary(x=>x.Key, y=>y.Value));
+                }
+                foreach (var docId in batch)
+                {
+                    docIdToFileIndex[docId.Key] = id;
+                }
             }
-            _docs.Clear();
+
             using (var fs = File.Create(ixFileName))
             {
                 Serializer.Serialize(fs, docIdToFileIndex);
             }
+
+            _docs.Clear();
         }
 
         public void Dispose()
