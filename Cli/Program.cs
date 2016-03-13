@@ -34,7 +34,7 @@ namespace Resin
                 var count = 0;
                 var timer = new Stopwatch();
                 timer.Start();
-                using (var w = new IndexWriter(dir, new Analyzer(), overwrite:false))
+                using (var w = new IndexWriter(dir, new Analyzer()))
                 {
                     foreach (var d in docs)
                     {

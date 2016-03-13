@@ -12,20 +12,18 @@ namespace Resin
         private readonly IDictionary<string, int> _fieldIndex; 
         private readonly IDictionary<int, FieldFile> _fieldFiles;
         private readonly string _fieldIndexFileName;
-        private readonly bool _overwrite;
         private readonly DocumentFile _docFile;
 
-        public IndexWriter(string directory, Analyzer analyzer, bool overwrite = true)
+        public IndexWriter(string directory, Analyzer analyzer)
         {
             _directory = directory;
             _analyzer = analyzer;
-            _overwrite = overwrite;
 
             _docFile = new DocumentFile(directory);
             _fieldFiles = new Dictionary<int, FieldFile>();
             _fieldIndexFileName = Path.Combine(_directory, "fld.ix");
 
-            if (!overwrite && File.Exists(_fieldIndexFileName))
+            if (File.Exists(_fieldIndexFileName))
             {
                 using (var fs = File.OpenRead(_fieldIndexFileName))
                 {
@@ -55,7 +53,7 @@ namespace Resin
                 if (!_fieldFiles.TryGetValue(fieldId, out ff))
                 {
                     var fileName = Path.Combine(_directory, fieldId + ".fld");
-                    ff = new FieldFile(fileName, _overwrite);
+                    ff = new FieldFile(fileName);
                     _fieldFiles.Add(fieldId, ff);
                 }
                 foreach (var value in field.Value)

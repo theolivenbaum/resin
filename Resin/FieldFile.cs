@@ -10,10 +10,10 @@ namespace Resin
         private readonly string _fileName;
         private readonly IDictionary<string, IDictionary<int, IList<int>>> _terms;
 
-        public FieldFile(string fileName, bool overwrite = true)
+        public FieldFile(string fileName)
         {
             _fileName = fileName;
-            if (!overwrite && File.Exists(fileName))
+            if (File.Exists(fileName))
             {
                 using (var file = File.OpenRead(fileName))
                 {

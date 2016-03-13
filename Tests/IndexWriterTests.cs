@@ -82,7 +82,7 @@ namespace Tests
                 });
             }
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.fld").Length);
-            using (var w = new IndexWriter(dir, new Analyzer(), overwrite:false))
+            using (var w = new IndexWriter(dir, new Analyzer()))
             {
                 w.Write(new Document
                 {
@@ -115,7 +115,7 @@ namespace Tests
                 });
             }
             Assert.AreEqual(2, Directory.GetFiles(dir, "*.fld").Length);
-            using (var w = new IndexWriter(dir, new Analyzer(), overwrite:false))
+            using (var w = new IndexWriter(dir, new Analyzer()))
             {
                 w.Write(new Document
                 {

@@ -11,7 +11,7 @@ using Resin;
 namespace Tests
 {
     [TestFixture]
-    public class FieldWriterTests
+    public class FieldFileTests
     {
         [Test]
         public void Can_create_field_file()
