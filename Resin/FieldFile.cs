@@ -8,6 +8,8 @@ namespace Resin
     public class FieldFile : IDisposable
     {
         private readonly string _fileName;
+
+        // terms/docids/positions
         private readonly IDictionary<string, IDictionary<int, IList<int>>> _terms;
 
         public FieldFile(string fileName)

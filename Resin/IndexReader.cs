@@ -12,7 +12,9 @@ namespace Resin
         private readonly Dictionary<int, int> _docIdToFileIndex;
         private readonly string _docIdToFileIndexFileName;
         private readonly Dictionary<int, Dictionary<string, List<string>>> _docs;
-        private readonly Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>> _docFiles; 
+        private readonly Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>> _docFiles;
+
+        public Scanner Scanner { get { return _scanner; } }
 
         public IndexReader(Scanner scanner)
         {
@@ -84,29 +86,30 @@ namespace Resin
 
         private Document GetDocFromDisk(int docId)
         {
-            Dictionary<string, List<string>> doc;
-            if (!_docs.TryGetValue(docId, out doc))
+            Dictionary<string, List<string>> dic;
+            if (!_docs.TryGetValue(docId, out dic))
             {
                 var fileId = _docIdToFileIndex[docId];
-                Dictionary<int, Dictionary<string, List<string>>> docs;
-                if (!_docFiles.TryGetValue(fileId, out docs))
+                Dictionary<int, Dictionary<string, List<string>>> dics;
+                if (!_docFiles.TryGetValue(fileId, out dics))
                 {
                     var fileName = Path.Combine(_scanner.Dir, fileId + ".d");
                     using (var file = File.OpenRead(fileName))
                     {
-                        docs = Serializer.Deserialize<Dictionary<int, Dictionary<string, List<string>>>>(file);
+                        dics = Serializer.Deserialize<Dictionary<int, Dictionary<string, List<string>>>>(file);
                     }
-                    _docFiles.Add(fileId, docs);
-                    if (docs.Count > 1)
+                    _docFiles.Add(fileId, dics);
+                    if (dics.Count > 1000)
                     {
-                        _docIdToFileIndex[docId] = Serialize(docId, doc);
+                        _docIdToFileIndex[docId] = Serialize(docId, dic);
                         Serialize(_docIdToFileIndex);
                     }
                 }
-                doc = docs[docId];
-                _docs.Add(docId, doc);
+                dic = dics[docId];
+                _docs.Add(docId, dic);
             }
-            return Document.FromDictionary(docId, doc);
+            var d = Document.FromDictionary(docId, dic);
+            return d;
         }
 
         public void Dispose()

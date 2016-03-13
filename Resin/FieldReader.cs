@@ -7,6 +7,7 @@ namespace Resin
 {
     public class FieldReader
     {
+        // terms/docids/positions
         private readonly IDictionary<string, IDictionary<int, IList<int>>> _terms;
 
         public FieldReader(IDictionary<string, IDictionary<int, IList<int>>> terms)

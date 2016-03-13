@@ -9,7 +9,7 @@ namespace Tests
     public class ScannerTests
     {
         [Test]
-        public void Can_find()
+        public void Can_scan()
         {
             const string dir = "c:\\temp\\resin_tests\\Can_find";
             const string text = "we all live in a yellow submarine";
@@ -32,6 +32,5 @@ namespace Tests
             Assert.AreEqual(1, scanner.GetDocIds("title", "yellow").Count);
             Assert.AreEqual(1, scanner.GetDocIds("title", "submarine").Count);
         }
-
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Resin
 {
@@ -9,6 +10,8 @@ namespace Resin
 
         public static Document FromDictionary(int docId, Dictionary<string, List<string>> fields)
         {
+            if (fields == null) throw new ArgumentNullException("fields");
+
             return new Document{Id = docId, Fields = fields};
         }
     }

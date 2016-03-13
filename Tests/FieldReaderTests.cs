@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using Resin;
 
@@ -28,23 +23,6 @@ namespace Tests
             var worldPositionsForDocId5 = reader.GetDocPosition("world")[5];
             Assert.AreEqual(0, helloPositionsForDocId0.First());
             Assert.AreEqual(1, worldPositionsForDocId5.First());
-        }
-
-        [Test]
-        public void Can_merge_two_positive_field_files()
-        {
-            const string field0 = "c:\\temp\\resin_tests\\Can_merge_two_positive_field_files\\0.fld";
-            const string field1 = "c:\\temp\\resin_tests\\Can_merge_two_positive_field_files\\1.fld";
-            if (File.Exists(field0)) File.Delete(field0);
-            if (File.Exists(field1)) File.Delete(field1);
-            using (var fw = new FieldFile(field0))
-            {
-                fw.Write(0, "hello", 0);
-            }
-            using (var fw = new FieldFile(field1))
-            {
-                fw.Write(5, "world", 1);
-            }
         }
     }
 }

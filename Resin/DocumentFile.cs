@@ -9,6 +9,8 @@ namespace Resin
     public class DocumentFile : IDisposable
     {
         private readonly string _dir;
+
+        // docid/fields/values
         private readonly IDictionary<int, IDictionary<string, IList<string>>> _docs;
 
         public DocumentFile(string dir)

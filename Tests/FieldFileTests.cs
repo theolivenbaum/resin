@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using NUnit.Framework;
 using Resin;
 
@@ -14,16 +8,52 @@ namespace Tests
     public class FieldFileTests
     {
         [Test]
-        public void Can_create_field_file()
+        public void Can_read_write()
         {
-            const string fileName = "c:\\temp\\resin_tests\\Can_create_field_file\\0.fld";
+            const string fileName = "c:\\temp\\resin_tests\\FieldFileTests\\Can_read_write\\0.fld";
             if (File.Exists(fileName)) File.Delete(fileName);
-            using (var fw = new FieldFile(fileName))
+            using (var writer = new FieldFile(fileName))
             {
-                fw.Write(0, "hello", 0);
-                fw.Write(0, "world", 1);
+                writer.Write(0, "Hello", 0);
+                writer.Write(0, "World!", 1);
             }
+
             Assert.IsTrue(File.Exists(fileName));
+
+            var reader = FieldReader.Load(fileName);
+            var terms = reader.GetAllTerms();
+
+            Assert.IsTrue(terms.Contains("Hello"));
+            Assert.IsTrue(terms.Contains("World!"));
+        }
+
+        [Test]
+        public void Can_append()
+        {
+            const string fileName = "c:\\temp\\resin_tests\\FieldFileTests\\Can_append\\0.fld";
+            if (File.Exists(fileName)) File.Delete(fileName);
+
+            using (var writer = new FieldFile(fileName))
+            {
+                writer.Write(0, "Hello", 0);
+            }
+
+            var terms = FieldReader.Load(fileName).GetAllTerms();
+
+            Assert.AreEqual(1, terms.Count);
+            Assert.IsTrue(terms.Contains("Hello"));
+            Assert.IsFalse(terms.Contains("World!"));
+
+            using (var writer = new FieldFile(fileName))
+            {
+                writer.Write(0, "World!", 1);
+            }
+
+            terms = FieldReader.Load(fileName).GetAllTerms();
+
+            Assert.AreEqual(2, terms.Count);
+            Assert.IsTrue(terms.Contains("Hello"));
+            Assert.IsTrue(terms.Contains("World!"));
         }
     }
 }

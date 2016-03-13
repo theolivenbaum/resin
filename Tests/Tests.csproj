@@ -50,8 +50,7 @@
     <Compile Include="FieldReaderTests.cs" />
     <Compile Include="FieldFileTests.cs" />
     <Compile Include="ScannerTests.cs" />
-    <Compile Include="IndexReaderTests.cs" />
-    <Compile Include="IndexWriterTests.cs" />
+    <Compile Include="IndexTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
