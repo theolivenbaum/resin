@@ -47,6 +47,8 @@ All data structures are serialized using protobuf-net.
 
 "Oh, that's pretty cewl."
 
+Yeah, I know, it's a great framework and apparently a great protocol. I found it by googling "serialize binary c# fast".
+
 The citizens
 
 For indexing we need something that can analyze text, an Analyzer. Also, something that can write index files and store documents, an IndexWriter, FieldFile and a DocumentFile. 
