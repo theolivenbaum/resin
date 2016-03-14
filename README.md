@@ -128,4 +128,27 @@ That means more than one document fit into a document file. A whole list of them
 [Code](https://github.com/kreeben/resin/blob/master/Resin/DocumentFile.cs)
 
 ##IndexWriter
-Background story coming soon, but have a look at the [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs).
+
+There's not much to it:
+
+	public void Write(Document doc)
+	{
+	    foreach (var field in doc.Fields)
+	    {
+	        foreach (var value in field.Value)
+	        {
+	            // persist the value of the field, as-is, by writing to a document file
+
+	            var terms = _analyzer.Analyze(value);
+	            foreach(var term in terms)
+	            {
+	            	// store the doc ID, token and its position in a field file
+	            }
+	        }
+	    }
+	}
+
+[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs)
+[Little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/IndexTests.cs)
+
+Background story coming soon, but have a look at the [QueryParser](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs).
