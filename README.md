@@ -3,7 +3,7 @@ It's a search framework you can reason about. It's simplistic but very capable. 
 
 ##How to build your own full-text search in c#, yeah
 
-This will not about Lucene so much as it is a guide to follow if you want to build your own search in c#, or just something to get ideas from if you are into information retrieval. Yet to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early to that this document certainly is about Lucene. Although I can buy into that notion I would still like to say that this will be mostly about how I built my own searcher-thingie that can index 1M english wikipedia articles in aproximately 20 minutes and then respond to multi-criteria term-based queries towards that index in the tens of milliseconds.
+This will not about Lucene so much as it is a guide to follow if you want to build your own search in c#, or just something to get ideas from if you are into information retrieval. Yet to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early to that this document certainly is about Lucene. Although I can buy into that notion I would still like to say that this will be mostly about how I built my own searcher-thingie that can index 1M english wikipedia articles in aproximately 20 minutes and then respond to multi-criteria term-based queries towards that index ~~in the tens of milliseconds~~ under a millisecond.
 
 ##Why?
 
