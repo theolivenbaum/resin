@@ -278,5 +278,7 @@ Less than a millisecond apparently. Here's what went down:
 	    Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed.TotalMilliseconds);
 	}
 
+![alt text](https://github.com/kreeben/resin/blob/master/screenshot2.PNG "The Snipping Tool. Why no text capabilities?")
+
 ##Roadmap
 Resin is around 800 locs, does term-based queries really fast and indexing within decent timeframes. In the next release there will be improvements to the query parsing. I don't see anything wrong with the Lucene query language. I will also try to achieve prefix based matching with the help of a [DAWG](https://en.wikipedia.org/wiki/Directed_acyclic_word_graph).
