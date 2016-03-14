@@ -40,9 +40,10 @@ No sir I did not know that. The reason is because even though I will never be lo
 
 "Oh, binary? Why not text, why not JSON?"
 
-Because converting binary into the kind of object graph I need at querying time is faster.
+Because converting binary into the kind of object graph we need at querying time is faster.
 
 "Well do you have specs for the binary file formats? Because if you're making up your own file format you got to have that. I mean, you just have to. Isn't that right? Kenny, isn't that right?"
+
 All data structures are serialized using protobuf-net.
 
 "Oh, that's pretty cewl."
