@@ -111,5 +111,21 @@ That means that if we know what field file to look in, we can find the answer to
 	}
 	return docPositions;
 
+[Code](https://github.com/kreeben/resin/blob/master/Resin/FieldFile.cs)
+[Little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/FieldFileTests.cs)
+
 ##DocumentFile
-Background story coming soon, but have a look at the [DocumentFile](https://github.com/kreeben/resin/blob/master/Resin/DocumentFile.cs).
+
+Documents should be persisted. Because if not, then what will return in the response to a query? Lucene sometimes skips the part about fetching the fields of the documents in a search result because that's what you told it to do. Those queries execute very fast. But you should at least be returning documents where one of its fields have been deserialized, otherwise the resut of your full-text query is not very interesting. For now, in Resin, all fields are always returned.
+
+I can't show you how the document file looks on disk, but the in-memory equivalent is this graph:
+
+	// docid/fields/values
+    private readonly IDictionary<int, IDictionary<string, IList<string>>> _docs;
+
+That means more than one document fit into a document file. A whole list of them would fit. We should probably make the files relatively small in doc count so that the deserialization, which needs to be done at query time, is done swiftly.
+
+[Code](https://github.com/kreeben/resin/blob/master/Resin/DocumentFile.cs)
+
+##IndexWriter
+Background story coming soon, but have a look at the [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs).
