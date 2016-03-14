@@ -1,7 +1,7 @@
 # Resin
 ##How to build your own full-text search in c# to replace Lucene.net
 
-This article is not about Lucene but a guide to follow if you want to build your own searcher-thingie in c#, or just something to get ideas from if you are into information retrieval. Yet to Google this article is very much about Lucene, so much so that querying it's enourmous index with the criteria "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early too that this document certainly is about Lucene. Although I can buy into that notion I would still like to say that this will be mostly about how I built my own searcher-thingie.
+This piece is not about Lucene so much as it is a guide to follow if you want to build your own searcher-thingie in c#, or just something to get ideas from if you are into information retrieval. Yet to Google this article is very much about Lucene, so much so that querying it's enourmous index with the criteria "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early too that this document certainly is about Lucene. Although I can buy into that notion I would still like to say that this will be mostly about how I built my own searcher-thingie.
 
 ##Why?
 
@@ -68,7 +68,7 @@ An IndexReader and a FieldReader will make it possible for a Scanner to get a li
 			_tokenSeparators = tokenSeparators ?? new[]
 			{
 				' ', '.', ',', ';', ':', '!', '"', '&', '?', '#', '*', '+', '|', '=', '-', '_', '@', '\'',
-				'<', '>', 'ì', 'î', '¥', '`', '(', ')', '[', ']', '{', '}', '/', '\\',
+				'<', '>', '‚Äú', '‚Äù', '¬¥', '`', '(', ')', '[', ']', '{', '}', '/', '\\',
 				'\r', '\n', '\t'
 			};
 		}
