@@ -22,15 +22,15 @@ Lists with points are a boring read. Here's something to lighten up your mood an
 
 In this story there are documents with fields such as title and author and there are tokens, which is what you get when you chop up into pieces, or analyze, the values of those fields. There is also a task at hand, which is to be able to find any document by supplying any token it contains. If many documents contain that token then all of those documents shall be fetched and arranged in the order of relevance, the most relevant first. 
 
-You find yourself in front of a huge stack of documents that reaches over you head, a couple of months worth of unopened mail, and from the documents in that pile you want to be able to produce a small, neat little dosier (as shallow as possible actually) of bills that absolutely, positively must be payed today. So you analyze all of the documents by splitting up the value of each field into tokens, making them lower-case, normalizing the text that you will later scan through, making this process easier which is good because you want the scanning to go fast later on. In an index you keep track of all of the tokens and their positions inside of the documents making it easy to find anything containing a certain token.
+You find yourself in front of a huge stack of documents that reaches over you head, a couple of months worth of unopened mail, and from the documents in that pile you want to be able to produce a small, neat little dosier (as shallow as possible actually) of bills that absolutely, positively must be payed today. So you analyze all of the documents by splitting up the value of each field into tokens, making them lower-case, normalizing the text that you will later scan through, making that process easier which is good because you want the scanning to go fast later on. In an index you keep track of all of the tokens and their positions inside of the documents making it easy to find anything containing a certain token.
 
-Later that day you start querying the index with tokens, one at a time, such as "pay" and "bill". Invoices and letters from your friend Bill surfaces.
+Later that day you start querying the index with tokens such as "pay" and "bill", one at a time. Invoices and letters from your friend Bill surface.
 
 You realize that you need to be able to select documents based on more than one criteria so you introduce the concept of "AND" into your querying process which intersects the results of a multi-criteria query, giving you a small, neat little dosier of bills to pay. You then create and witness a new open-source project gaining immensly in popularity eventually leading to the point where you can acctually pay those bills. But by then, even though you used the same criteria the dosier became a little fatter and did not contain the same bills. Stuff had happened. The indexed had changed. Good thing you got payed. The end.
 
 ###More requirements
 
-We need to be able to swiftly index documents without taking up too much memory or disk space. We need to be able to query that index for documents and get them back in exactly the same shape they were in before we started analyzing them. The process of retrieving information, querying, must be fast. Not Lucene-fast, but fast. The time it takes to understand the query, perform the scan and then retrieve the documents from disk must be below a second, preferably tens of milliseconds (like Lucene) or at least around a couple of hundred milliseconds. We need to be able to update the index, add new documents and remove old ones. Even though we could be thinking about the values of fields as being objects, any Object, any IComparable even, that would actually make even more sense, to start with we will only solve the querying part, not the custom sorting of results that Lucene is capable of. Therefore we don't need our values to be of type IComparable, they can be strings.
+We need to be able to swiftly index documents without taking up too much memory or disk space. We need to be able to query that index for documents and get them back in exactly the same shape they were in before we started analyzing them. The process of querying must be fast. Not Lucene-fast, but fast. The time it takes to understand the query, perform the scan and then retrieve the documents from disk must be below a second, preferably tens of milliseconds (like Lucene) or at least around a couple of hundred milliseconds. We need to be able to update the index, add new documents and remove old ones. Even though we could be thinking about the values of fields as being objects, any Object, any IComparable even, that would actually make even more sense, to start with we will only solve the querying part, not the custom sorting of results that Lucene is capable of. Therefore we don't need our values to be of type IComparable, they can be strings.
 
 ###The heckler
 
@@ -116,14 +116,14 @@ That means that if we know what field file to look in, we can find the answer to
 
 ##DocumentFile
 
-Documents should be persisted. Because if not, then what will return in response to a query? Lucene sometimes skips the part about fetching the fields of the documents in a search result because that's what you told it to do. Those queries execute very fast. But you should at least be returning documents where one of its fields have been deserialized, otherwise the resut of your full-text query is not very interesting. For now, in Resin, all fields are always returned.
+Documents should be persisted. Because if not, what will be returned in response to a query? Lucene sometimes skips the part about fetching the fields of the documents in a search result because that's what you told it to do. Those queries execute very fast. But you should at least be returning documents where one of its fields have been deserialized, otherwise the result of your full-text query is not very interesting. For now, in Resin, all fields are always returned.
 
-I can't show you how the document file looks on disk, but the in-memory equivalent is this graph:
+How the file looks on disk is not very interesting. The in-memory equivalent is this:
 
 	// docid/fields/values
-    private readonly IDictionary<int, IDictionary<string, IList<string>>> _docs;
+	private readonly IDictionary<int, IDictionary<string, IList<string>>> _docs;
 
-That means more than one document fit into a document file. A whole list of them would fit. We should probably make the files relatively small in doc count so that the deserialization, which needs to be done at query time, is done swiftly.
+That means more than one document fit into a document file. A whole list of them would fit.
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/DocumentFile.cs)
 
