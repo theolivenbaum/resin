@@ -129,7 +129,7 @@ That means more than one document fit into a document file. A whole list of them
 
 ##IndexWriter
 
-There's not much to it:
+Store the documents. But first analyze them and create field files that are queryable. There's not much to it:
 
 	public void Write(Document doc)
 	{
@@ -151,4 +151,81 @@ There's not much to it:
 [Code](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs)
 [Little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/IndexTests.cs)
 
-Background story coming soon, but have a look at the [QueryParser](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs).
+## QueryParser
+With our current parser we can interpret "title:Rambo", also "title:first title:blood". The last query is what lucene decompiles this query into: "title:first blood". We will try to mimic this later on but for now let's work with the decompiled format. Btw, anyone may dig in and fix the parser.
+
+	var q = query.Split(' ').Select(t => t.Split(':'));
+
+##FieldReader
+
+You have already seen the in-memory representation of the field file:
+
+	// terms/docids/positions
+    private readonly IDictionary<string, IDictionary<int, IList<int>>> _terms;
+
+A field reader can do this:
+
+	var terms = reader.GetAllTerms();
+	var docPos = reader.GetDocPosition(string token);
+
+## Scanner
+
+After a good parsing we get back a list of terms. A term is a field and a value, e.g. "title:rambo". 
+
+All that we know, as a search framework, is called "a lexicon".
+
+At the back of that lexicon is an index, the field file. A scanner scans the index and if it finds a match it returns all of the information we have about the connection between that token and the documents from where it originates, a list of postings: 
+
+	public IList<int> GetDocIds(string field, string value)
+    {
+        int fieldId;
+        if (_fieldIndex.TryGetValue(field, out fieldId))
+        {
+            var reader = GetReader(field);
+            if (reader != null)
+            {
+                var positions = reader.GetDocPosition(value);
+                if (positions != null)
+                {
+                    var ordered = positions.OrderByDescending(d => d.Value.Count).Select(d => d.Key).ToList();
+                    return ordered;
+                }
+            }
+        }
+        return Enumerable.Empty<int>().ToList();
+    }
+
+Oh and there was also our ranking algorith did you spot it? Go back.
+
+Here's the ranking mechanism:
+
+	var ordered = positions.OrderByDescending(d => d.Value.Count).Select(d => d.Key).ToList();
+	return ordered;
+
+Any improvements here though must be done with performance in mind, because nobody want to wait around for the scoring to complete if it's not really, really fast.
+
+## IndexReader
+
+The IndexReader needs a scanner. The results of a scan is a list of document ids. IndexReader resolves the document and returns that instead of the id.
+
+	public IEnumerable<Document> GetDocuments(string field, string token)
+	{
+		var docs = _scanner.GetDocIds(field, token);
+		foreach (var id in docs)
+		{
+			yield return GetDocFromDisk(id); // deserialization might take a while if it's a heavy document
+		}
+	}
+
+##Searcher
+
+Finally, the searcher, a helper that takes an IndexReader and a QueryParser, accepting unparsed queries, lazily returning a list of documents:
+
+	public IEnumerable<Document> Search(string query)
+    {
+        var terms = _parser.Parse(query).ToList();
+        return _reader.GetDocuments(terms);
+    }
+
+##Roadmap
+It's around 800 locs, does term-based queries really fast, decent indexing (~500-1000 wikipedia documents per second). In the next release there will be improvements to the query parsing. I don't see anything wrong with the Lucene query language. I will also try to achieve prefix based matching with the help of a [DAWG](https://en.wikipedia.org/wiki/Directed_acyclic_word_graph).
