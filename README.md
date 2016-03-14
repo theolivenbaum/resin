@@ -240,6 +240,7 @@ Finally, the searcher, a helper that takes an IndexReader and a QueryParser, acc
 2. Use the [WikipediaJsonParser](https://github.com/kreeben/resin/blob/master/Resin.WikipediaJsonParser/Program.cs) to extract as many documents as you want. In a cmd window:
 
 	cd path_to_resin_repo\Resin.WikipediaJsonParser\bin\debug
+	
 	rnw c:\downloads\wikipedia.json 0 1000000
 
 This will generate a new file: wikipedia_resin.json. We skipped 0 documents and populated it with 1M.
@@ -247,6 +248,7 @@ This will generate a new file: wikipedia_resin.json. We skipped 0 documents and 
 3. Create an index. In a cmd window:
 	
 	cd path_to_resin_repo\Cli\bin\Debug
+
 	rn write --file c:\downloads\wikipedia_resin.json --dir c:\temp\resin\wikipedia --skip 0 --take 1000000
 
 4. After 20 minutes or so, do this:  
