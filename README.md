@@ -59,7 +59,25 @@ An IndexReader and a FieldReader will make it possible for a Scanner to get a li
 
 Analyzer
 
-[Analyser.cs]
+	public class Analyzer
+	{
+		private readonly char[] _tokenSeparators;
+
+		public Analyzer(char[] tokenSeparators = null)
+		{
+			_tokenSeparators = tokenSeparators ?? new[]
+			{
+				' ', '.', ',', ';', ':', '!', '"', '&', '?', '#', '*', '+', '|', '=', '-', '_', '@', '\'',
+				'<', '>', '“', '”', '´', '`', '(', ')', '[', ']', '{', '}', '/', '\\',
+				'\r', '\n', '\t'
+			};
+		}
+
+		public string[] Analyze(string value)
+		{
+			return value.ToLowerInvariant().Split(_tokenSeparators, StringSplitOptions.RemoveEmptyEntries);
+		}
+	}
 
 We use an analyzer to produce normalized tokens from text. The text "Hello world" could be normalized into new[]{"hello", "world"} if we lower-cased the text and used the separators ' ' and '!'. By tokenizing the text of a field we make the individual tokens queryable. Had we not, the query "title:Rambo" would produce zero documents (no movie in the whole world actually has the title "Rambo") but querying "title:Rambo title:Blood" would produce one hit. But only if you are scanning a database of Swedish movie titles because the original movie title was "First Blood". Swedish Media Institue (it's called something else, sorry, I forget) changed the title to the more declarative "Rambo: First Blood". This was perhaps to not confuse the Swedish audience as to which of the characters will say, at least once in the movie that "I didn't first blood, THEY drew first blood!", because that's Rambo's line, clarified right there in the title, for us lucky Swedes. I wonder, in the English language, does anything pertaining to nationality have to start with a captial letter?
 
