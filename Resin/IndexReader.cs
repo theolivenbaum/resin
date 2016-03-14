@@ -62,20 +62,6 @@ namespace Resin
             }
         }
 
-        private int SaveInHotFile(int docId, Dictionary<string, List<string>> doc)
-        {
-            var id = Directory.GetFiles(_scanner.Dir, "*.d").Length;
-            var fileName = Path.Combine(_scanner.Dir, id + ".d");
-            File.WriteAllText(fileName, "");
-            var docs = new Dictionary<int, Dictionary<string, List<string>>>();
-            docs.Add(docId, doc);
-            using (var fs = File.Create(fileName))
-            {
-                Serializer.Serialize(fs, docs);
-            }
-            return id;
-        }
-
         private void Serialize(Dictionary<int, int> docIdToFileIndex)
         {
             using (var fs = File.Create(_docIdToFileIndexFileName))
