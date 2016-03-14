@@ -1,5 +1,5 @@
 # Resin
-It's a search framework you can reason about. It is not built upon Lucene.
+It's a search framework you can reason about. It's simplistic but very capable. It is not built upon Lucene.
 
 ##How to build your own full-text search in c# to replace Lucene.net
 
@@ -11,12 +11,12 @@ This will not about Lucene so much as it is a guide to follow if you want to bui
 - You wonder why it's so damn fast
 - You wonder what parts of the Lucene.net design is there because of (java) legacy and if the design might be improved upon or simplified
 - You sometimes wish that building and querying an index was surrounded by even less code, perhaps by leaning towards conventions you yourself have built up throughout the years of using Lucene
-- You wonder what would happen if the .net community gathered around a .net project instead of a line-by-line java port, because soemtimes you want to understand why your search is behaving the way it does but you find the architecture behind Lucene to be extremely complex and you are scared to even look at the source code, not that complexity is neccessarily a java legacy. Some dotnetpeople also suffer from over engineering everything they touch. Did anyone notice what happened to Umbraco 5? Too early?
+- You wonder what would happen if the .net community gathered around a .net project instead of a line-by-line java port, because soemtimes you'd like to understand why your search is acting the way it does but you find the architecture behind Lucene to be complex and you are scared to even look at the source code, not that complexity is neccessarily a java legacy. Some dotnetpeople also suffer from over engineering everything they touch. Did anyone notice what happened to Umbraco 5? (Too early?)
 - The Lucene.net team has proven that a .net runtime hosted on a windows machine provides a wonderful environment for a creature such as a full-text search framework to live and enjoy itself but it makes you a little bit sad that they will always be a couple of years behind the core Lucene team
 - You are just genuinely curious about the whole domain of information retrieval, perhaps because it is a small domain, relatively easy to grasp and at it's basic level the math is not frightening, and you see it as one of the tools taking us closer to IR's older cousin AI
 - You want to pretend you are building something smart and AI-like and neural networks scare you worse than long, cold hotel corridors and kids riding their pedal cars up and down the carpets of an otherwise empty luxury estate
 
-Lists with points are a boring read. Here's something to lighten up your mood.
+Lists with points are a boring read. Here's something to lighten up your mood and then there's some code. At the end there will be a fully functional full-text search lib. Skip to [here](#citizens) to make this an even shorter read. 
 
 ###The very short story of the small domain of full-text search
 
@@ -50,6 +50,7 @@ All data structures are serialized using protobuf-net.
 
 Yeah, I know, it's a great framework and apparently a great protocol. I found it by googling "serialize binary c# fast". For Google's sake I find myself tokenizing my queries for him. I do the same when I text, email to my friends, again, to make life easier on Google, old chap.
 
+<a name="citizens"></a>
 ###The citizens (all first class)
 
 For indexing we need something that can analyze text, an [Analyzer](https://github.com/kreeben/resin/blob/master/Resin/Analyzer.cs). Also, something that can write index files and store documents, an [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs), [FieldFile](https://github.com/kreeben/resin/blob/master/Resin/FieldFile.cs) and a [DocumentFile](https://github.com/kreeben/resin/blob/master/Resin/DocumentFile.cs). 
