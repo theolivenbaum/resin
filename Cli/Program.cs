@@ -78,7 +78,7 @@ namespace Resin
                     {
                         Console.WriteLine(string.Join(", ", ++position, doc.Fields["id"][0], doc.Fields["label"][0]));
                     }
-                    Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed.TotalMilliseconds/2);
+                    Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed.TotalMilliseconds);
                 }
                 
             }
