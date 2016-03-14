@@ -99,12 +99,12 @@ The analysis you want to do both at indexing and querying time is to acctually t
 ##FieldFile
 Tokens are stored in a field file. A field file is an index of all the tokens in a field. Tokens are stored together with postings. Postings are pointers to documents. Our postings contain the document ID and the positions the token takes within that document.
 
-That means that if we know what field file to look in, we can find the answer to the query "title:rambo" by opening one field file, deserializing the contents of the file into this:
+That means that if we know what field file to look in, we can find the answer to the query "title:rambo" by opening one field file, deserialize the contents of the file into this:
 
 	// terms/docids/positions
 	IDictionary<string, IDictionary<int, IList<int>>> _terms = DeserializeFieldFile(fileName);;
 	
-	// And then we can find the document IDs. This operation does not take long.
+	// ...and then we can find the document IDs. This operation does not take long.
 	IDictionary<int, IList<int>> docPositions;
 	if (!_terms.TryGetValue(token, out docPositions))
 	{
