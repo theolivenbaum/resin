@@ -49,7 +49,7 @@ All data structures are serialized using protobuf-net.
 
 "Oh, that's pretty cewl."
 
-Yeah, I know, it's a great framework and apparently a great protocol. I found it by googling "serialize binary c# fast". For Googles sake I find myself tokenizing my queries for him. I do the same when I text, email to my friends, again, to make life easier on Google. Old chap.
+Yeah, I know, it's a great framework and apparently a great protocol. I found it by googling "serialize binary c# fast". For Googles sake I find myself tokenizing my queries for him. I do the same when I text, email to my friends, again, to make life easier on Google, old chap.
 
 ###The citizens
 
