@@ -1,9 +1,9 @@
-# resin
-How to build your own full-text search in c# to replace Lucene.net
+# Resin
+##How to build your own full-text search in c# to replace Lucene.net
 
 This article is not about Lucene but a guide to follow if you want to build your own searcher-thingie in c#, or just something to get ideas from if you are into information retrieval. Yet to Google this article is very much about Lucene, so much so that querying it's enourmous index with the criteria "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early too that this document certainly is about Lucene. Although I can buy into that notion I would still like to say that this will be mostly about how I built my own searcher-thingie.
 
-Why?
+###Why?
 
 If you question me on the merits of building your own full-text search, there is already a well-known and very capable tool out there, Lucene.net, well, this whole article could fall apart or on it's head. But ok, let's see, there's this:
 
@@ -18,7 +18,7 @@ If you question me on the merits of building your own full-text search, there is
 
 Here's something to lighten up your mood.
 
-The very short story of the small domain of full-text search
+###The very short story of the small domain of full-text search
 
 In this story there are documents with fields such as title and author and there are tokens, which is what you get when you chop up into pieces, or analyze, the values of those fields. There is also a task at hand, which is to be able to find any document by supplying any token it contains. If many documents contain that token then all of those documents shall be fetched and arranged in the order of relevance, the most relevant first. 
 
@@ -28,11 +28,11 @@ Later that day you start querying the index with tokens, one at a time, such as 
 
 You realize that you need to be able to select documents based on more than one criteria so you introduce the concept of "AND" into your querying process which intersects the results of a multi-criteria query, giving you a small, neat little dosier of bills to pay. You then create and witness a new open-source project gaining immensly in popularity eventually leading to the point where you can acctually pay those bills. But by then, even though you used the same criteria the dosier became a little fatter and did not contain the same bills. Stuff had happened. Good thing you got payed. The end.
 
-The requirements
+###The requirements
 
 We need to be able to swiftly index documents without taking up too much memory or disk space. We need to be able to query that index for documents and get them back in exactly the same shape they were in before we started analyzing them. The process of retrieving information, querying, must be fast. Not Lucene-fast, but fast. The time it takes to understand the query, perform the scan and then retrieve the documents from disk must be below a second, preferably tens of milliseconds (like Lucene) or at least around a couple of hundred milliseconds. We need to be able to update the index, add new documents and remove old ones. Even though we could be thinking about the values of fields being objects, any Object, any IComparable even, that would make even more sense, to start with we will only solve the querying part, not the custom sorting of results that Lucene is capable of. Therefore we don't need our values to be typeof(Object), they can be strings.
 
-The heckler
+###The heckler
 
 "You said that the scanning process needs to be fast yet you make the tokens lower-case. Don't you know that comparing with ordinal invariant culture and in upper case is faster?"
 
@@ -49,7 +49,7 @@ All data structures are serialized using protobuf-net.
 
 Yeah, I know, it's a great framework and apparently a great protocol. I found it by googling "serialize binary c# fast".
 
-The citizens
+###The citizens
 
 For indexing we need something that can analyze text, an Analyzer. Also, something that can write index files and store documents, an IndexWriter, FieldFile and a DocumentFile. 
 
@@ -57,7 +57,7 @@ For querying we will need to be able to parse multi-criteria queries such as "ti
 
 An IndexReader and a FieldReader will make it possible for a Scanner to get a list of document IDs containing the tokens at hand. A DocumentReader will assist in fetching the documents, in the state they were in at indexing time, from disk.
 
-Analyzer
+##The Analyzer
 
 	public class Analyzer
 	{
