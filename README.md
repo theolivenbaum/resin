@@ -202,7 +202,7 @@ Here's the ranking mechanism:
 	var ordered = positions.OrderByDescending(d => d.Value.Count).Select(d => d.Key).ToList();
 	return ordered;
 
-Any improvements here though must be done with performance in mind, because nobody want to wait around for the scoring to complete if it's not really, really fast.
+It orders the result based on how many times a token exists within the document. It doesn't care about where in the document although we gave it that information. Instead, it cares only about how many times a token exists.
 
 ## IndexReader
 
