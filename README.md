@@ -14,7 +14,7 @@ If you question me on the merits of building your own full-text search, there is
 - You wonder what would happen if the .net community gathered around a .net project instead of a line-by-line java port, because soemtimes you want to understand why your search is behaving the way it does but you find the architecture behind Lucene to be extremely complex and you are scared to even look at the source code, not that complexity is neccessarily a java legacy. Some dotnetpeople also suffer from over engineering everything they touch. Did anyone notice what happened to Umbraco 5?
 - The Lucene.net team has proven that a .net runtime hosted on a windows machine provides a wonderful environment for a creature such as a full-text search framework to live and enjoy itself but it makes you a little bit sad that they will always be a couple of years behind the core Lucene team
 - You are just genuinely curious about the whole domain of information retrieval, perhaps because it is a small domain, relatively easy to grasp and at it's basic level the math is not frightening, and you see it as one of the tools taking us closer to IR's older cousin AI
-- You want to pretend you are building something smart and AI-like and neural networks scare you worse than long, cold hotel corridors with kids riding their pedal cars up and down the carpets of an otherwise empty luxury estate
+- You want to pretend you are building something smart and AI-like and neural networks scare you worse than long, cold hotel corridors and kids riding their pedal cars up and down the carpets of an otherwise empty luxury estate
 
 Lists with points are a boring read. Here's something to lighten up your mood.
 
