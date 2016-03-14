@@ -257,5 +257,26 @@ This will generate a new file: wikipedia_resin.json. We skipped 0 documents and 
 
 ![alt text](https://github.com/kreeben/resin/blob/master/screenshot.PNG "I have an SSD. The index was warmed up prior to the query.")
 
+Less than a millisecond apparently. Here's what went down:
+
+	var timer = new Stopwatch();
+	
+	using (var s = new Searcher(dir))
+	{
+	    for (int i = 0; i < 1; i++)
+	    {
+	        s.Search(q).ToList();
+	    }
+	    timer.Start();
+	    var docs = s.Search(q).ToList();
+	    var elapsed = timer.Elapsed;
+	    var position = 0;
+	    foreach (var doc in docs)
+	    {
+	        Console.WriteLine(string.Join(", ", ++position, doc.Fields["id"][0], doc.Fields["label"][0]));
+	    }
+	    Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed.TotalMilliseconds);
+	}
+
 ##Roadmap
-It's around 800 locs, does term-based queries really fast and indexing within decent timeframes. In the next release there will be improvements to the query parsing. I don't see anything wrong with the Lucene query language. I will also try to achieve prefix based matching with the help of a [DAWG](https://en.wikipedia.org/wiki/Directed_acyclic_word_graph).
+Resin is around 800 locs, does term-based queries really fast and indexing within decent timeframes. In the next release there will be improvements to the query parsing. I don't see anything wrong with the Lucene query language. I will also try to achieve prefix based matching with the help of a [DAWG](https://en.wikipedia.org/wiki/Directed_acyclic_word_graph).
