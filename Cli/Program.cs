@@ -66,12 +66,12 @@ namespace Resin
 
                 using (var s = new Searcher(dir))
                 {
-                    List<Document> docs = null;
-                    timer.Start();
-                    for (int i = 0; i < 2; i++)
+                    for (int i = 0; i < 1; i++)
                     {
-                        docs = s.Search(q).ToList();
+                        s.Search(q).ToList();
                     }
+                    timer.Start();
+                    var docs = s.Search(q).ToList();
                     var elapsed = timer.Elapsed;
                     var position = 0;
                     foreach (var doc in docs)

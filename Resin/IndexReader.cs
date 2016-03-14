@@ -62,7 +62,7 @@ namespace Resin
             }
         }
 
-        private int Serialize(int docId, Dictionary<string, List<string>> doc)
+        private int SaveInHotFile(int docId, Dictionary<string, List<string>> doc)
         {
             var id = Directory.GetFiles(_scanner.Dir, "*.d").Length;
             var fileName = Path.Combine(_scanner.Dir, id + ".d");
@@ -93,23 +93,27 @@ namespace Resin
                 Dictionary<int, Dictionary<string, List<string>>> dics;
                 if (!_docFiles.TryGetValue(fileId, out dics))
                 {
-                    var fileName = Path.Combine(_scanner.Dir, fileId + ".d");
-                    using (var file = File.OpenRead(fileName))
-                    {
-                        dics = Serializer.Deserialize<Dictionary<int, Dictionary<string, List<string>>>>(file);
-                    }
+                    dics = ReadDocFile(Path.Combine(_scanner.Dir, fileId + ".d"));
                     _docFiles.Add(fileId, dics);
-                    if (dics.Count > 1000)
-                    {
-                        _docIdToFileIndex[docId] = Serialize(docId, dic);
-                        Serialize(_docIdToFileIndex);
-                    }
+                    //if (dics.Count > 1000)
+                    //{
+                    //    _docIdToFileIndex[docId] = Serialize(docId, dic);
+                    //    Serialize(_docIdToFileIndex);
+                    //}
                 }
                 dic = dics[docId];
                 _docs.Add(docId, dic);
             }
             var d = Document.FromDictionary(docId, dic);
             return d;
+        }
+
+        private Dictionary<int, Dictionary<string, List<string>>> ReadDocFile(string fileName)
+        {
+            using (var file = File.OpenRead(fileName))
+            {
+                return Serializer.Deserialize<Dictionary<int, Dictionary<string, List<string>>>>(file);
+            }
         }
 
         public void Dispose()

@@ -58,7 +58,7 @@ namespace Resin
                 if (!Directory.Exists(_dir)) Directory.CreateDirectory(_dir);
             }
             
-            var batches = _docs.IntoBatches(10000).ToList();
+            var batches = _docs.IntoBatches(1000).ToList();
             foreach (var batch in batches)
             {
                 var id = Directory.GetFiles(_dir, "*.d").Length;

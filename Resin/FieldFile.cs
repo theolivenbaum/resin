@@ -28,13 +28,13 @@ namespace Resin
             }
         }
 
-        public void Write(int docId, string termValue, int position)
+        public void Write(int docId, string token, int position)
         {
             IDictionary<int, IList<int>> docs;
-            if (!_terms.TryGetValue(termValue, out docs))
+            if (!_terms.TryGetValue(token, out docs))
             {
                 docs = new Dictionary<int, IList<int>> {{docId, new List<int> {position}}};
-                _terms.Add(termValue, docs);
+                _terms.Add(token, docs);
             }
             else
             {
