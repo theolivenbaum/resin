@@ -151,7 +151,7 @@ Store the documents. But first analyze them and create field files that are quer
 [Code](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs) and a [little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/IndexTests.cs)
 
 ## QueryParser
-With our current parser we can interpret "title:Rambo", also "title:first title:blood". The last query is what lucene decompiles this query into: "title:first blood". We will try to mimic this later on but for now let's work with the decompiled format. Btw, anyone may dig in and fix the parser.
+With our current parser we can interpret "title:Rambo", also "title:first title:blood". The last query is what lucene decompiles this query into: "title:first blood". We will try to mimic this later on but for now let's work with the decompiled format.
 
 	var q = query.Split(' ').Select(t => t.Split(':'));
 
