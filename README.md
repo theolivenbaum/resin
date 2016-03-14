@@ -16,7 +16,7 @@ If you question me on the merits of building your own full-text search, there is
 - You are just genuinely curious about the whole domain of information retrieval, perhaps because it is a small domain, relatively easy to grasp and at it's basic level the math is not frightening, and you see it as one of the tools taking us closer to IR's older cousin AI
 - You want to pretend you are building something smart and AI-like and neural networks scares you worse than long, cold hotel corridors with kids riding their pedal cars up and down the carpets of an otherwise empty luxury estate
 
-Here's something to lighten up your mood.
+Lists with points are a boring read. Here's something to lighten up your mood.
 
 ###The very short story of the small domain of full-text search
 
