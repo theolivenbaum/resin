@@ -26,7 +26,7 @@ You find yourself in front of a huge stack of documents that reaches over you he
 
 Later that day you start querying the index with tokens, one at a time, such as "pay" and "bill". Invoices and letters from your friend Bill surfaces.
 
-You realize that you need to be able to select documents based on more than one criteria so you introduce the concept of "AND" into your querying process which intersects the results of a multi-criteria query, giving you a small, neat little dosier of bills to pay. You then create and witness a new open-source project gaining immensly in popularity eventually leading to the point where you can acctually pay those bills. But by then, even though you used the same criteria the dosier became a little fatter and did not contain the same bills. Stuff had happened. Good thing you got payed. The end.
+You realize that you need to be able to select documents based on more than one criteria so you introduce the concept of "AND" into your querying process which intersects the results of a multi-criteria query, giving you a small, neat little dosier of bills to pay. You then create and witness a new open-source project gaining immensly in popularity eventually leading to the point where you can acctually pay those bills. But by then, even though you used the same criteria the dosier became a little fatter and did not contain the same bills. Stuff had happened. The indexed had changed. Good thing you got payed. The end.
 
 ###The requirements
 
