@@ -3,7 +3,7 @@
 
 This article is not about Lucene but a guide to follow if you want to build your own searcher-thingie in c#, or just something to get ideas from if you are into information retrieval. Yet to Google this article is very much about Lucene, so much so that querying it's enourmous index with the criteria "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early too that this document certainly is about Lucene. Although I can buy into that notion I would still like to say that this will be mostly about how I built my own searcher-thingie.
 
-###Why?
+##Why?
 
 If you question me on the merits of building your own full-text search, there is already a well-known and very capable tool out there, Lucene.net, well, this whole article could fall apart or on it's head. But ok, let's see, there's this:
 
