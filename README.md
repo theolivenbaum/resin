@@ -1,12 +1,11 @@
 # Resin
-It's a search framework you can reason about. It rhymes well with but is not built upon Lucene.
+It's a search framework you can reason about. It is not built upon Lucene.
+
 ##How to build your own full-text search in c# to replace Lucene.net
 
-This piece is not about Lucene so much as it is a guide to follow if you want to build your own searcher-thingie in c#, or just something to get ideas from if you are into information retrieval. Yet to Google this article is very much about Lucene, so much so that querying it's enourmous index with the criteria "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early to that this document certainly is about Lucene. Although I can buy into that notion I would still like to say that this will be mostly about how I built my own searcher-thingie that can index 1M english wikipedia articles in aproximately 20 minutes and then respond to multi-criteria term-based queries towards that index in the tens of milliseconds.
+This will not about Lucene so much as it is a guide to follow if you want to build your own search in c#, or just something to get ideas from if you are into information retrieval. Yet to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early to that this document certainly is about Lucene. Although I can buy into that notion I would still like to say that this will be mostly about how I built my own searcher-thingie that can index 1M english wikipedia articles in aproximately 20 minutes and then respond to multi-criteria term-based queries towards that index in the tens of milliseconds.
 
 ##Why?
-
-If you question me on the merits of building your own full-text search, there is already a well-known and very capable tool out there, Lucene.net, well, this whole article could fall apart or on it's head. But ok, let's see, there's this:
 
 - You like Lucene and you're curious about the decisions behind the Lucene design and the reasons as to why it looks the way it does
 - You wonder why it's so damn fast
@@ -51,7 +50,7 @@ All data structures are serialized using protobuf-net.
 
 Yeah, I know, it's a great framework and apparently a great protocol. I found it by googling "serialize binary c# fast". For Google's sake I find myself tokenizing my queries for him. I do the same when I text, email to my friends, again, to make life easier on Google, old chap.
 
-###The citizens
+###The citizens (all first class)
 
 For indexing we need something that can analyze text, an [Analyzer](https://github.com/kreeben/resin/blob/master/Resin/Analyzer.cs). Also, something that can write index files and store documents, an [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs), [FieldFile](https://github.com/kreeben/resin/blob/master/Resin/FieldFile.cs) and a [DocumentFile](https://github.com/kreeben/resin/blob/master/Resin/DocumentFile.cs). 
 
@@ -80,6 +79,7 @@ An [IndexReader](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.
 			return value.ToLowerInvariant().Split(_tokenSeparators, StringSplitOptions.RemoveEmptyEntries);
 		}
 	}
+	
 	[Test]
         public void Can_analyze()
         {
@@ -111,8 +111,7 @@ That means that if we know what field file to look in, we can find the answer to
 	}
 	return docPositions;
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/FieldFile.cs)
-[Little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/FieldFileTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/FieldFile.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/FieldFileTests.cs)
 
 ##DocumentFile
 
@@ -148,8 +147,7 @@ Store the documents. But first analyze them and create field files that are quer
 	    }
 	}
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs)
-[Little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/IndexTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs) and a [little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/IndexTests.cs)
 
 ## QueryParser
 With our current parser we can interpret "title:Rambo", also "title:first title:blood". The last query is what lucene decompiles this query into: "title:first blood". We will try to mimic this later on but for now let's work with the decompiled format. Btw, anyone may dig in and fix the parser.
@@ -167,6 +165,8 @@ A field reader can do this:
 
 	var terms = reader.GetAllTerms();
 	var docPos = reader.GetDocPosition(string token);
+
+[Code](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/TestsFieldReaderTests.cs)
 
 ## Scanner
 
@@ -204,6 +204,8 @@ Here's the ranking mechanism:
 
 It orders the result based on how many times a token exists within the document. It doesn't care about where in the document although we gave it that information. Instead, for now, it cares only about how many times a token exists.
 
+[Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/ScannerTests.cs)
+
 ## IndexReader
 
 The IndexReader needs a scanner. The results of a scan is a list of document ids. IndexReader resolves the document and returns that instead of the id.
@@ -217,6 +219,8 @@ The IndexReader needs a scanner. The results of a scan is a list of document ids
 		}
 	}
 
+[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/IndexTests.cs)
+
 ##Searcher
 
 Finally, the searcher, a helper that takes an IndexReader and a QueryParser, accepting unparsed queries, lazily returning a list of documents:
@@ -226,6 +230,8 @@ Finally, the searcher, a helper that takes an IndexReader and a QueryParser, acc
         var terms = _parser.Parse(query).ToList();
         return _reader.GetDocuments(terms);
     }
+
+[Code](https://github.com/kreeben/resin/blob/master/Resin/Searcher.cs) 
 
 ##Roadmap
 It's around 800 locs, does term-based queries really fast, decent indexing (~500-1000 wikipedia documents per second). In the next release there will be improvements to the query parsing. I don't see anything wrong with the Lucene query language. I will also try to achieve prefix based matching with the help of a [DAWG](https://en.wikipedia.org/wiki/Directed_acyclic_word_graph).
