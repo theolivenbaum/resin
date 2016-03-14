@@ -166,7 +166,7 @@ A field reader can do this:
 	var terms = reader.GetAllTerms();
 	var docPos = reader.GetDocPosition(string token);
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/TestsFieldReaderTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/FieldReaderTests.cs)
 
 ## Scanner
 
