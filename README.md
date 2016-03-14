@@ -5,7 +5,7 @@ This article is not about Lucene but a guide to follow if you want to build your
 
 Why?
 
-If you question me on the merits of building your own full-text search, when there is already a well-known and very capable tool out there, Lucene.net, well, this whole article kind of falls apart or on it's head. But ok, let's see, there's this:
+If you question me on the merits of building your own full-text search, there is already a well-known and very capable tool out there, Lucene.net, well, this whole article kind of falls apart or on it's head. But ok, let's see, there's this:
 
 - You like Lucene and you're curious about the decisions behind the Lucene design and the reasons as to why it looks the way it does
 - You wonder why it's so damn fast
