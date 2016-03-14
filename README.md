@@ -249,11 +249,11 @@ This will generate a new file: wikipedia_resin.json. We skipped 0 documents and 
 	cd path_to_resin_repo\Cli\bin\Debug
 	rn write --file c:\downloads\wikipedia_resin.json --dir c:\temp\resin\wikipedia --skip 0 --take 1000000
 
-After 20 minutes or so, do this:  
+4. After 20 minutes or so, do this:  
 
 	rn query --dir c:\temp\resin\wikipedia -q "label:ringo"
 
-![alt text](https://github.com/kreeben/resin/raw/master/screenshot.png "I have an SSD. The index was warmed up prior to the query.")
+![alt text](https://github.com/kreeben/resin/blob/master/screenshot.PNG "I have an SSD. The index was warmed up prior to the query.")
 
 ##Roadmap
 It's around 800 locs, does term-based queries really fast and indexing within decent timeframes. In the next release there will be improvements to the query parsing. I don't see anything wrong with the Lucene query language. I will also try to achieve prefix based matching with the help of a [DAWG](https://en.wikipedia.org/wiki/Directed_acyclic_word_graph).
