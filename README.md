@@ -94,4 +94,4 @@ Another thing we hope to achieve by analysing the text in the documents is to be
 
 The analysis you want to do both at indexing and querying time is to acctually try to understand the contents of the text, that a "Tree" is the same thing as a "tree" and in the same ball park at least as "trees". What we are doing however in Analyzer.cs is very rudimentary type of analysis. We are simply identifying the individual words. We could go further, investigate if any of those words are kind of the same, because although "trees" != "tree" their concepts intersect so much so that in the interest of full-text search they could and maybe should be one and the same concept. Anyway, identifying and normalizing the words will be fine for now.
 
-Next, the FieldWriter.
+Coming soon: the FieldWriter.
