@@ -14,7 +14,7 @@ If you question me on the merits of building your own full-text search, there is
 - You wonder what would happen if the .net community gathered around a .net project instead of a line-by-line java port, because soemtimes you want to understand why your search is behaving the way it does but you find the architecture behind Lucene to be extremely complex and you are scared to even look at the source code, not that complexity is neccessarily a java legacy. Some dotnetpeople also suffer from over engineering everything they touch. Did anyone notice what happened to Umbraco 5?
 - The Lucene.net team has proven that a .net runtime hosted on a windows machine provides a wonderful environment for a creature such as a full-text search framework to live and enjoy itself but it makes you a little bit sad that they will always be a couple of years behind the core Lucene team
 - You are just genuinely curious about the whole domain of information retrieval, perhaps because it is a small domain, relatively easy to grasp and at it's basic level the math is not frightening, and you see it as one of the tools taking us closer to IR's older cousin AI
-- You want to pretend you are building something smart and AI-like and neural networks scares you worse than long, cold hotel corridors with kids riding their pedal cars up and down the carpets of an otherwise empty luxury estate
+- You want to pretend you are building something smart and AI-like and neural networks scare you worse than long, cold hotel corridors with kids riding their pedal cars up and down the carpets of an otherwise empty luxury estate
 
 Lists with points are a boring read. Here's something to lighten up your mood.
 
@@ -28,7 +28,7 @@ Later that day you start querying the index with tokens, one at a time, such as 
 
 You realize that you need to be able to select documents based on more than one criteria so you introduce the concept of "AND" into your querying process which intersects the results of a multi-criteria query, giving you a small, neat little dosier of bills to pay. You then create and witness a new open-source project gaining immensly in popularity eventually leading to the point where you can acctually pay those bills. But by then, even though you used the same criteria the dosier became a little fatter and did not contain the same bills. Stuff had happened. The indexed had changed. Good thing you got payed. The end.
 
-###The requirements
+###More requirements
 
 We need to be able to swiftly index documents without taking up too much memory or disk space. We need to be able to query that index for documents and get them back in exactly the same shape they were in before we started analyzing them. The process of retrieving information, querying, must be fast. Not Lucene-fast, but fast. The time it takes to understand the query, perform the scan and then retrieve the documents from disk must be below a second, preferably tens of milliseconds (like Lucene) or at least around a couple of hundred milliseconds. We need to be able to update the index, add new documents and remove old ones. Even though we could be thinking about the values of fields as being objects, any Object, any IComparable even, that would actually make even more sense, to start with we will only solve the querying part, not the custom sorting of results that Lucene is capable of. Therefore we don't need our values to be of type IComparable, they can be strings.
 
@@ -54,7 +54,7 @@ Yeah, I know, it's a great framework and apparently a great protocol. I found it
 
 For indexing we need something that can analyze text, an Analyzer. Also, something that can write index files and store documents, an IndexWriter, FieldFile and a DocumentFile. 
 
-For querying we will need to be able to parse multi-criteria queries such as "title:Rambo title:Blood", in other words a QueryParser. The important questions for the parser to answer are what fields do we need to scan and what's the tokens that should match. Unlike Lucene, the convention I will be following is to interpret the space between two criterias such as the space character between "Rambo title:" in the query "title:Rambo title:First Blood" meaning "AND" instead of "OR". In other words the query "title:Rambo title:Blood" will be parsed into "please find documents containing rambo AND blood in their title".
+For querying we will need to be able to parse multi-criteria queries such as "title:Rambo title:Blood", in other words a QueryParser. The important questions for the parser to answer are what fields do we need to scan and what's the tokens that should match. Unlike Lucene, the convention I will be following is to interpret the space between two criterias such as the space character between "Rambo title:" in the query "title:Rambo title:Blood" meaning "AND" instead of "OR". In other words the query "title:Rambo title:Blood" will be parsed into "please find documents containing rambo AND blood in their title".
 
 An IndexReader and a FieldReader will make it possible for a Scanner to get a list of document IDs containing the tokens at hand. A DocumentReader will assist in fetching the documents, in the state they were in at indexing time, from disk.
 
