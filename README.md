@@ -116,7 +116,7 @@ That means that if we know what field file to look in, we can find the answer to
 
 ##DocumentFile
 
-Documents should be persisted. Because if not, then what will return in the response to a query? Lucene sometimes skips the part about fetching the fields of the documents in a search result because that's what you told it to do. Those queries execute very fast. But you should at least be returning documents where one of its fields have been deserialized, otherwise the resut of your full-text query is not very interesting. For now, in Resin, all fields are always returned.
+Documents should be persisted. Because if not, then what will return in response to a query? Lucene sometimes skips the part about fetching the fields of the documents in a search result because that's what you told it to do. Those queries execute very fast. But you should at least be returning documents where one of its fields have been deserialized, otherwise the resut of your full-text query is not very interesting. For now, in Resin, all fields are always returned.
 
 I can't show you how the document file looks on disk, but the in-memory equivalent is this graph:
 
