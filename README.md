@@ -205,7 +205,7 @@ Here's the ranking mechanism:
 
 It orders the result based on how many times a token exists within the document. It doesn't care about where in the document although we gave it that information. Instead, for now, it cares only about how many times a token exists.
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/ScannerTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/ScannerTests.cs)
 
 ## IndexReader
 
@@ -220,7 +220,7 @@ The IndexReader needs a scanner. The results of a scan is a list of document ids
 		}
 	}
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/IndexTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/IndexTests.cs)
 
 ##Searcher
 
