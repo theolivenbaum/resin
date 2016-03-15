@@ -281,4 +281,12 @@ Less than a millisecond apparently. Here's what went down:
 ![alt text](https://github.com/kreeben/resin/blob/master/screenshot2.PNG "The Snipping Tool. Why no text capabilities?")
 
 ##Roadmap
-Resin is around 800 locs, does term-based queries really fast and indexing within decent timeframes. In the next release there will be improvements to the query parsing. I don't see anything wrong with the Lucene query language. I will also try to achieve prefix based matching with the help of a [DAWG](https://en.wikipedia.org/wiki/Directed_acyclic_word_graph).
+###Implement query language and implement prefix search
+Resin is around 800 locs at the moment, does term-based queries really fast and indexing within decent timeframes. In the next release there will be improvements to the query parsing. I don't see anything wrong with the Lucene query language. I will also try to achieve prefix based matching with the help of a [DAWG](https://en.wikipedia.org/wiki/Directed_acyclic_word_graph).
+
+###Fuzzy
+The term-based search that is currently implemented is extremly fast because once you have deserialized the indexes (happens for example when you initialize a Searcher) the scan, the resolve of the document, they are all hash-table look-ups. Perfectly scalable too.
+The problem of fuzzy querying may be seen as a problem of finding out which tokens to look for. If you create an ngram-index from the lexicon and ngram the query token the same way and look up the terms for those grams, filter out junk the Levenstein way, what is left are the term-based queries. So a fuzzy query would add one more step to the querying pipeline
+
+###Ranking
+If that goes well then what is left is the ranking algorithm. That should be tons of fun. That's where the Lucene core team is at.
