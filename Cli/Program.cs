@@ -68,17 +68,17 @@ namespace Resin
                 {
                     for (int i = 0; i < 1; i++)
                     {
-                        s.Search(q).ToList();
+                        s.Search("label:definetly_not_in_the_lexicon").ToList(); // warm up the "label" field
                     }
                     timer.Start();
                     var docs = s.Search(q).ToList();
-                    var elapsed = timer.Elapsed;
+                    var elapsed = timer.Elapsed.TotalMilliseconds;
                     var position = 0;
                     foreach (var doc in docs)
                     {
                         Console.WriteLine(string.Join(", ", ++position, doc.Fields["id"][0], doc.Fields["label"][0]));
                     }
-                    Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed.TotalMilliseconds);
+                    Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed);
                 }
                 
             }
