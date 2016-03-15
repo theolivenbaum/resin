@@ -3,7 +3,7 @@ It's a search framework you can reason about. It's simplistic but very capable. 
 
 ##How to build your own full-text search in c#, yeah
 
-This will not about Lucene so much as it is a guide to follow if you want to build your own search in c#, or just something to get ideas from if you are into information retrieval. Yet to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early to that this document certainly is about Lucene. Although I can buy into that notion I would still like to say that this will be mostly about how I built my own searcher-thingie that can index 1M english wikipedia articles in approximately 20 minutes and then respond to multi-criteria term-based queries towards that index ~~in the tens of milliseconds~~ under a millisecond.
+This is not about Lucene so much as it is a guide to follow if you want to build your own search in c#, or just something to get ideas from if you are into information retrieval. Yet to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early to that this document certainly is about Lucene. Although I can buy into that notion I would still like to say that this will be mostly about how I built my own searcher-thingie that can index 1M english wikipedia articles in approximately 20 minutes and then respond to multi-criteria term-based queries towards that index ~~in the tens of milliseconds~~ under a millisecond.
 
 ##Why?
 
@@ -12,7 +12,7 @@ This will not about Lucene so much as it is a guide to follow if you want to bui
 - You wonder what parts of the Lucene.net design is there because of (java) legacy and if the design might be improved upon or simplified
 - You sometimes wish that building and querying an index was surrounded by even less code, perhaps by leaning towards conventions you yourself have built up throughout the years of using Lucene
 - You wonder what would happen if the .net community gathered around a .net project instead of a line-by-line java port, because sometimes you'd like to understand why your search is acting the way it does but you find the architecture behind Lucene to be complex and you are scared to even look at the source code, not that complexity is neccessarily a java legacy. Some dotnetpeople also suffer from over engineering everything they touch. Did anyone notice what happened to Umbraco 5? (Too early?)
-- The Lucene.net team has proven that a .net runtime hosted on a windows machine provides a wonderful environment for a creature such as a full-text search framework to live and enjoy itself but it makes you a little bit sad that they will always be a couple of years behind the core Lucene team
+- The Lucene.net team has proven that a .net runtime hosted on a windows machine provides a wonderful environment for a creature such as a full-text search framework to live and enjoy itself in but it makes you a little bit sad that they will always be a couple of years behind the core Lucene team
 - You are just genuinely curious about the whole domain of information retrieval, perhaps because it is a small domain, relatively easy to grasp and at it's basic level the math is not frightening, and you see it as one of the tools taking us closer to IR's older cousin AI
 - You want to pretend you are building something smart and AI-like and neural networks scare you worse than long, cold hotel corridors and kids riding their pedal cars up and down the carpets of an otherwise empty luxury estate
 
@@ -48,14 +48,14 @@ All data structures are serialized using protobuf-net.
 
 "Oh, that's pretty cewl."
 
-Yeah, I know, it's a great framework and apparently a great protocol. I found it by googling "serialize binary c# fast". For Google's sake I find myself tokenizing my queries for him. I do the same when I text, email to my friends, again, to make life easier on Google, old chap.
+Yeah, I know, it's a great framework and apparently a great protocol. I found it by googling "serialize binary c# fast".
 
 <a name="citizens"></a>
 ###The citizens (all first class)
 
-For indexing we need something that can analyze text, an [Analyzer](https://github.com/kreeben/resin/blob/master/Resin/Analyzer.cs). Also, something that can write index files and store documents, an [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs), [FieldFile](https://github.com/kreeben/resin/blob/master/Resin/FieldFile.cs) and a [DocumentFile](https://github.com/kreeben/resin/blob/master/Resin/DocumentFile.cs). 
+We need something that can analyze text, an [Analyzer](https://github.com/kreeben/resin/blob/master/Resin/Analyzer.cs). Also, something that can write index files and store documents, an [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs), [FieldFile](https://github.com/kreeben/resin/blob/master/Resin/FieldFile.cs) and a [DocumentFile](https://github.com/kreeben/resin/blob/master/Resin/DocumentFile.cs). 
 
-For querying we will need to be able to parse multi-criteria queries such as "title:Rambo title:Blood", in other words a [QueryParser](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs). The important questions for the parser to answer are what fields do we need to scan and what's the tokens that should match. Unlike Lucene, the convention I will be following is to interpret the space between two criterias such as the space character between "Rambo title:" in the query "title:Rambo title:Blood" to mean "AND" instead of "OR". In other words the query "title:Rambo title:Blood" will be parsed into "please find documents containing rambo AND blood in their title", or in a more machine-like language "scan the field named title for the tokens rambo and blood and return the intersection of their postings".
+We will need to be able to parse multi-criteria queries such as "title:Rambo title:Blood", in other words a [QueryParser](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs). The important questions for the parser to answer are what fields do we need to scan and what's the tokens that should match. Unlike Lucene, the convention I will be following is to interpret the space between two criterias such as the space character between "Rambo title:" in the query "title:Rambo title:Blood" to mean "AND" instead of "OR". In other words the query "title:Rambo title:Blood" will be parsed into "please find documents containing rambo AND blood in their title", or in a more machine-like language "scan the field named title for the tokens rambo and blood and return the intersection of their postings".
 
 An [IndexReader](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and a [FieldReader](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) will make it possible for a [Scanner](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) to get a list of document IDs containing the tokens at hand. A DocumentReader will assist in fetching the documents, in the state they were in at indexing time, from disk.
 
@@ -102,7 +102,7 @@ Tokens are stored in a field file. A field file is an index of all the tokens in
 That means that if we know what field file to look in, we can find the answer to the query "title:rambo" by opening one field file, deserialize the contents of the file into this:
 
 	// terms/docids/positions
-	IDictionary<string, IDictionary<int, IList<int>>> _terms = DeserializeFieldFile(fileName);;
+	IDictionary<string, IDictionary<int, IList<int>>> _terms = DeserializeFieldFile(fileName);
 	
 	// ...and then we can find the document IDs. This operation does not take long.
 	IDictionary<int, IList<int>> docPositions;
@@ -116,20 +116,23 @@ That means that if we know what field file to look in, we can find the answer to
 
 ##DocumentFile
 
-Documents should be persisted. Because if not, what will be returned in response to a query? Lucene sometimes skips the part about fetching the fields of the documents in a search result because that's what you told it to do. Those queries execute very fast. But you should at least be returning documents where one of its fields have been deserialized, otherwise the result of your full-text query is not very interesting. For now, in Resin, all fields are always returned.
+Documents should be persisted. Because if not, what will be returned in response to a query? Lucene sometimes skips the part about fetching the fields of the documents in a search result because that's what you told it to do. Those queries execute very fast. You usually return documents where at least one of its fields have been deserialized though, otherwise the result of your full-text query will not make very much sense. For now, in Resin, all fields are always returned.
 
 How the file looks on disk is not very interesting. The in-memory equivalent is this:
 
 	// docid/fields/values
 	private readonly IDictionary<int, IDictionary<string, IList<string>>> _docs;
 
-That means more than one document fit into a document file. A whole list of them would fit.
+That means more than one document fit into a document file. A whole list of them would fit. Imagine how it looks in-memory. I mean I can only guess the shape but it looks to be covering a large area of your RAM. It's a huge tree of stuff. Almost as wierd-looking as the term grahp, remember:
+
+	// terms/docids/positions
+	IDictionary<string, IDictionary<int, IList<int>>> _terms;
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/DocumentFile.cs)
 
 ##IndexWriter
 
-Store the documents. But first analyze them and create field files that are queryable. There's not much to it:
+Store the documents. But also analyze them and create field files that are queryable. There's not much to it:
 
 	public void Write(Document doc)
 	{
@@ -160,7 +163,7 @@ With our current parser we can interpret "title:Rambo", also "title:first title:
 You have already seen the in-memory representation of the field file:
 
 	// terms/docids/positions
-    private readonly IDictionary<string, IDictionary<int, IList<int>>> _terms;
+	private readonly IDictionary<string, IDictionary<int, IList<int>>> _terms;
 
 A field reader can do this:
 
@@ -198,12 +201,12 @@ At the back of that lexicon is an index, the field file. A scanner scans the ind
 
 Oh and there was also our ranking algorith did you spot it? Go back.
 
-Here's the ranking mechanism:
+Here's the ranking:
 
 	var ordered = positions.OrderByDescending(d => d.Value.Count).Select(d => d.Key).ToList();
 	return ordered;
 
-It orders the result based on how many times a token exists within the document. It doesn't care about where in the document although we gave it that information. Instead, for now, it cares only about how many times a token exists.
+It orders the result based on how many times a token exists within the document. It doesn't care about where in the document although we did give it that information. Instead, for now, it cares only about how many times a token exists.
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/ScannerTests.cs)
 
@@ -269,24 +272,33 @@ Less than a millisecond apparently. Here's what went down:
 	    }
 	    timer.Start();
 	    var docs = s.Search(q).ToList();
-	    var elapsed = timer.Elapsed;
+	    var elapsed = timer.Elapsed.TotalMilliseconds;
 	    var position = 0;
 	    foreach (var doc in docs)
 	    {
 	        Console.WriteLine(string.Join(", ", ++position, doc.Fields["id"][0], doc.Fields["label"][0]));
 	    }
-	    Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed.TotalMilliseconds);
+	    Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed);
 	}
 
 ![alt text](https://github.com/kreeben/resin/blob/master/screenshot2.PNG "The Snipping Tool. Why no text capabilities?")
 
 ##Roadmap
-###Implement query language and implement prefix search
-Resin is around 800 locs at the moment, does term-based queries really fast and indexing within decent timeframes. In the next release there will be improvements to the query parsing. I don't see anything wrong with the Lucene query language. I will also try to achieve prefix based matching with the help of a [DAWG](https://en.wikipedia.org/wiki/Directed_acyclic_word_graph).
+###Query language
+Resin is around 800 locs at the moment, does term-based queries really fast and indexing within decent timeframes. In the next release there will be improvements to the query parsing. I don't see anything wrong with the Lucene query language. 
+
+###Prefix search
+I will also try to achieve prefix based matching with the help of a [DAWG](https://en.wikipedia.org/wiki/Directed_acyclic_word_graph).
 
 ###Fuzzy
-The term-based search that is currently implemented is extremly fast because once you have deserialized the indexes the scan, the resolve of the document, they are all hash-table look-ups. Perfectly scalable too.
-The problem of both prefix and fuzzy querying may be seen as a problem of finding out which tokens to look for. If you create an ngram-index from the lexicon and ngram the query token the same way and look up the terms for those grams, filter out junk the [Levenstein](https://en.wikipedia.org/wiki/Levenshtein_distance) way, what is left are the term-based queries. So a fuzzy query would add one more step to the querying pipeline
+The term-based search that is currently implemented is extremly fast because once you have deserialized the indexes the scan, the resolve of the document, they are all hash-table look-ups.
+
+The problem of both prefix and fuzzy querying may be seen as a problem of finding out which tokens to look for. 
+
+If you create an ngram-index from the lexicon and ngram the query token the same way and look up the terms for those grams, filter out junk the [Levenstein](https://en.wikipedia.org/wiki/Levenshtein_distance) way, what is left are the term-based queries. Such a fuzzy query implementation would add a couple of steps to the querying pipeline.
 
 ###Ranking
 If that goes well then what is left is the ranking algorithm. That should be tons of fun. That's where the [Lucene core team](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) is at.
+
+###Multi-index searching
+Lucene does it. It's pretty useful. It has a cool factor to it. Resin needs it.
