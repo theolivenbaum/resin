@@ -45,9 +45,6 @@ namespace Resin
                 }
                 timer.Stop();
                 Console.WriteLine("");
-                Console.WriteLine("Analyzing");
-                var scanner = new Scanner(dir);
-                File.WriteAllLines(Path.Combine(dir, "_label.txt"), scanner.GetAllTerms("label"));
                 Console.WriteLine("Index created in " + timer.Elapsed);
             }
             else if (args[0].ToLower() == "query")
@@ -81,6 +78,18 @@ namespace Resin
                     Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed);
                 }
                 
+            }
+            else if (args[0].ToLower() == "analyze")
+            {
+                if (Array.IndexOf(args, "--field") == -1 || Array.IndexOf(args, "--dir") == -1)
+                {
+                    Console.WriteLine("I need a directory and a field.");
+                    return;
+                }
+                var dir = args[Array.IndexOf(args, "--dir") + 1];
+                var field = args[Array.IndexOf(args, "--field") + 1];
+                var scanner = new Scanner(dir);
+                File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), scanner.GetAllTerms("label"));
             }
             else
             {
