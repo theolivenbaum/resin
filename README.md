@@ -289,4 +289,4 @@ The term-based search that is currently implemented is extremly fast because onc
 The problem of fuzzy querying may be seen as a problem of finding out which tokens to look for. If you create an ngram-index from the lexicon and ngram the query token the same way and look up the terms for those grams, filter out junk the [Levenstein](https://en.wikipedia.org/wiki/Levenshtein_distance) way, what is left are the term-based queries. So a fuzzy query would add one more step to the querying pipeline
 
 ###Ranking
-If that goes well then what is left is the ranking algorithm. That should be tons of fun. That's where the [Lucene core team}(http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) is at.
+If that goes well then what is left is the ranking algorithm. That should be tons of fun. That's where the [Lucene core team](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) is at.
