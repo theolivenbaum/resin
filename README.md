@@ -1,7 +1,9 @@
 # Resin
 It's a search framework you can reason about. It's simplistic but very capable. It is not built upon Lucene.
 
-##How to build your own full-text search in c#, yeah
+##How to build your own full-text search in c#, yeah!
+
+Did you know that you're not allowed to end a markdown line with the character #?
 
 Here's some guidance I could have used when I started building search frameworks. Resin is the 4th iteration I've done. The codebase, it's pieces, get smaller and simpler each round. Use this to get some ideas from if you are into information retrieval. The nerd factor on that last sentence is completely off the charts, I'm well aware, thank you.
 
