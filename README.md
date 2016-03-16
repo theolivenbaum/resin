@@ -290,8 +290,6 @@ Less than a millisecond apparently. Here's what went down:
 	    Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed);
 	}
 
-![alt text](https://github.com/kreeben/resin/blob/master/screenshot2.PNG "The Snipping Tool. Why no text capabilities?")
-
 Here is another test, this time the documents aren't pre-cached in the warmup:
 
 	var timer = new Stopwatch();
