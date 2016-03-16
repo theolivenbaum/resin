@@ -297,7 +297,7 @@ Here is another test, this time the documents aren't pre-cached in the warmup:
 	{
 	    for (int i = 0; i < 1; i++)
 	    {
-	        s.Search("label:definetly_not_in_the_lexicon").ToList(); // warm up the "label" field
+	        s.Search("label:definetlynotinthelexicon").ToList(); // warm up the "label" field
 	    }
 	    timer.Start();
 	    var docs = s.Search(q).ToList();
