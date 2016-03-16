@@ -38,7 +38,7 @@ You realize that you need to be able to select documents based on more than one 
 
 ###Here's what you need
 
-You need to be able to swiftly index documents without taking up too much memory or disk space. You need to be able to query that index for documents and get them back in exactly the same shape they were in before we started analyzing them. The process of querying must be fast. Not Lucene-fast, but fast. The time it takes to understand the query, perform the scan and then retrieve the documents from disk must be below a second, preferably tens of milliseconds (like Lucene) or at least around a couple of hundred milliseconds. We need to be able to update the index, add new documents and remove old ones. 
+You need to be able to swiftly index documents without taking up too much memory or disk space. You need to be able to query that index for documents and get them back in exactly the same shape they were in before you started analyzing them. The process of querying must be fast. Not Lucene-fast, but fast. The time it takes to understand the query, perform the scan and then retrieve the documents from disk must be below a second, preferably tens of milliseconds (like Lucene) or at least around a couple of hundred milliseconds. You need to be able to update the index, add new documents and remove old ones. 
 
 Even though you could be thinking about the values of fields as being objects, any Object, any IComparable even, that would actually make even more sense, to start with you will only solve the querying part, not the custom sorting of results that Lucene is capable of. Therefore you don't need our values to be of type IComparable, they can be strings.
 
