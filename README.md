@@ -3,9 +3,13 @@ It's a search framework you can reason about. It's simplistic but very capable. 
 
 ##How to build your own full-text search in c#, yeah
 
-This is not about Lucene so much as it is a guide to follow if you want to build your own search in c#, or just something to get ideas from if you are into information retrieval. Yet to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early to that this document certainly is about Lucene. Although I can buy into that notion I would still like to say that this will be mostly about how I built my own searcher-thingie that can index 1M english wikipedia articles in approximately 20 minutes and then respond to multi-criteria term-based queries towards that index ~~in the tens of milliseconds~~ under a millisecond.
+Here's some guidance I could have used when I started building search frameworks. Resin is the 4th or 5th iteration I've done. The codebase, it's pieces, get smaller and simpler each round. Use this to get some ideas from if you are into information retrieval.
+
+To Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early to that this document certainly is about Lucene. Although I can buy into that notion I would still like to say that this will be mostly about how I built my own searcher-thingie that can index 1M english wikipedia articles in approximately 20 minutes and then respond to multi-criteria term-based queries towards that index ~~in the tens of milliseconds~~ under a millisecond.
 
 ##Why?
+
+You mean why build a search framework? Well,
 
 - You like Lucene and you're curious about the decisions behind the Lucene design and the reasons as to why it looks the way it does
 - You wonder why it's so damn fast
@@ -16,7 +20,9 @@ This is not about Lucene so much as it is a guide to follow if you want to build
 - You are just genuinely curious about the whole domain of information retrieval, perhaps because it is a small domain, relatively easy to grasp and at it's basic level the math is not frightening, and you see it as one of the tools taking us closer to IR's older cousin AI
 - You want to pretend you are building something smart and AI-like and neural networks scare you worse than long, cold hotel corridors and kids riding their pedal cars up and down the carpets of an otherwise empty luxury estate
 
-Lists with points are a boring read. Here's something to lighten up your mood and then there's some code. At the end there will be a fully functional full-text search lib. Skip to [here](#citizens) to make this an even shorter read. 
+Lists with points are a boring read. Here's something to lighten up your mood and then there's some code. At the end there will be a fully functional full-text search lib. 
+
+Skip to [here](#citizens) to make this an even shorter read. 
 
 ###The very short story of the small domain of full-text search
 
@@ -28,9 +34,11 @@ Later that day you start querying the index with tokens such as "pay" and "bill"
 
 You realize that you need to be able to select documents based on more than one criteria so you introduce the concept of "AND" into your querying process which intersects the results of a multi-criteria query, giving you a small, neat little dosier of bills to pay. You then create and witness a new open-source project gaining immensly in popularity eventually leading to the point where you can acctually pay those bills. But by then, even though you used the same criteria the dosier became a little fatter and did not contain the same bills. Stuff had happened. The indexed had changed. Good thing you got payed. The end.
 
-###More requirements
+###Here's what you need
 
-We need to be able to swiftly index documents without taking up too much memory or disk space. We need to be able to query that index for documents and get them back in exactly the same shape they were in before we started analyzing them. The process of querying must be fast. Not Lucene-fast, but fast. The time it takes to understand the query, perform the scan and then retrieve the documents from disk must be below a second, preferably tens of milliseconds (like Lucene) or at least around a couple of hundred milliseconds. We need to be able to update the index, add new documents and remove old ones. Even though we could be thinking about the values of fields as being objects, any Object, any IComparable even, that would actually make even more sense, to start with we will only solve the querying part, not the custom sorting of results that Lucene is capable of. Therefore we don't need our values to be of type IComparable, they can be strings.
+You need to be able to swiftly index documents without taking up too much memory or disk space. You need to be able to query that index for documents and get them back in exactly the same shape they were in before we started analyzing them. The process of querying must be fast. Not Lucene-fast, but fast. The time it takes to understand the query, perform the scan and then retrieve the documents from disk must be below a second, preferably tens of milliseconds (like Lucene) or at least around a couple of hundred milliseconds. We need to be able to update the index, add new documents and remove old ones. 
+
+Even though you could be thinking about the values of fields as being objects, any Object, any IComparable even, that would actually make even more sense, to start with you will only solve the querying part, not the custom sorting of results that Lucene is capable of. Therefore you don't need our values to be of type IComparable, they can be strings.
 
 ###The heckler
 
@@ -48,14 +56,14 @@ All data structures are serialized using protobuf-net.
 
 "Oh, that's pretty cewl."
 
-Yeah, I know, it's a great framework and apparently a great protocol. I found it by googling "serialize binary c# fast".
+Yeah, I know, it's a great framework and apparently a great protocol. Found it by googling "serialize binary c# fast".
 
 <a name="citizens"></a>
 ###The citizens (all first class)
 
 We need something that can analyze text, an [Analyzer](https://github.com/kreeben/resin/blob/master/Resin/Analyzer.cs). Also, something that can write index files and store documents, an [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs), [FieldFile](https://github.com/kreeben/resin/blob/master/Resin/FieldFile.cs) and a [DocumentFile](https://github.com/kreeben/resin/blob/master/Resin/DocumentFile.cs). 
 
-We will need to be able to parse multi-criteria queries such as "title:Rambo title:Blood", in other words a [QueryParser](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs). The important questions for the parser to answer are what fields do we need to scan and what's the tokens that should match. Unlike Lucene, the convention I will be following is to interpret the space between two criterias such as the space character between "Rambo title:" in the query "title:Rambo title:Blood" to mean "AND" instead of "OR". In other words the query "title:Rambo title:Blood" will be parsed into "please find documents containing rambo AND blood in their title", or in a more machine-like language "scan the field named title for the tokens rambo and blood and return the intersection of their postings".
+We will need to be able to parse multi-criteria queries such as "title:Rambo title:Blood", in other words a [QueryParser](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs). The important questions for the parser to answer are what fields do we need to scan and what's the tokens that should match. A space character between two query terms such as the space  between "Rambo title:" in the query "title:Rambo title:Blood" will be interpreted as "AND". In other words the query "title:Rambo title:Blood" will be parsed into "please find documents that has both rambo AND blood in the title", or in a more machine-like language "scan the field named title for the tokens rambo and blood and return the intersection of their postings".
 
 An [IndexReader](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and a [FieldReader](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) will make it possible for a [Scanner](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) to get a list of document IDs containing the tokens at hand. A DocumentReader will assist in fetching the documents, in the state they were in at indexing time, from disk.
 
@@ -90,7 +98,9 @@ An [IndexReader](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.
             Assert.AreEqual("world", terms[1]);
         }
 
-We use an analyzer to produce normalized tokens from text. The text "Hello World!" may be normalized into new[]{"hello", "world"} if we lower-case the text and split it up at characters ' ' and '!'. By tokenizing the text of a field we make the individual tokens insensitive to casing, queryable. Had we not only exact matches to the verbatim text can be made at runtime, if we want the querying to go fast. The query "title:Rambo" would produce zero documents (no movie in the whole world actually has the title "Rambo") but querying "title:Rambo\\: First Blood" would produce one hit. But only if you are scanning a database of Swedish movie titles because the original movie title was "First Blood". Swedish Media Institue (it's called something else, sorry, I forget) changed the title to the more declarative "Rambo: First Blood". This was perhaps to not confuse the Swedish audience as to which of the characters in this movie will say, at least once in the movie that "I didn't first blood, THEY drew first blood!", because that's Rambo's line, clarified right there in the title, for us lucky Swedes.
+An analyzer produces normalized tokens from text. The text "Hello World!" may be normalized into new[]{"hello", "world"} if we lower-case the text and split it up at characters ' ' and '!'. By tokenizing the text of a field we make the individual tokens insensitive to casing, queryable. Had we not only exact matches to the verbatim text can be made at runtime, if we want the querying to go fast. The query "title:Rambo" would produce zero documents (no movie in the whole world actually has the title "Rambo") but querying "title:Rambo\\: First Blood" would produce one hit. 
+
+But only if you are scanning a database of Swedish movie titles because the original movie title was "First Blood". Swedish Media Institue (it's called something else, sorry, I forget) changed the title to the more declarative "Rambo: First Blood". This was perhaps to not confuse the Swedish audience as to which of the characters in this movie will say, at least once in the movie that "I didn't first blood, THEY drew first blood!", because that's Rambo's line, clarified right there in the title, for us lucky Swedes.
 
 Another thing we hope to achieve by analyzing text is to normalize between the words used when querying and the words in the documents so that matches can be produced consistently. 
 
@@ -116,14 +126,12 @@ That means that if we know what field file to look in, we can find the answer to
 
 ##DocumentFile
 
-Documents should be persisted. Because if not, what will be returned in response to a query? Lucene sometimes skips the part about fetching the fields of the documents in a search result because that's what you told it to do. Those queries execute very fast. You usually return documents where at least one of its fields have been deserialized though, otherwise the result of your full-text query will not make very much sense. For now, in Resin, all fields are always returned.
-
-How the file looks on disk is not very interesting. The in-memory equivalent is this:
+Documents are persisted on disk. How they look on disk is not very interesting. The in-memory equivalent of a document file is this:
 
 	// docid/fields/values
 	private readonly IDictionary<int, IDictionary<string, IList<string>>> _docs;
 
-That means more than one document fit into a document file. A whole list of them would fit. Imagine how it looks in-memory. I mean I can only guess the shape but it looks to be covering a large area of your RAM. It's a huge tree of stuff. Almost as wierd-looking as the term grahp, remember:
+That means more than one document fit into a document file. A whole list of them would fit. Imagine how it looks in-memory. I mean I can only guess the shape but it looks to be covering a large area of your RAM. It's a huge tree of stuff. Almost as wierd-looking as the term graph:
 
 	// terms/docids/positions
 	IDictionary<string, IDictionary<int, IList<int>>> _terms;
