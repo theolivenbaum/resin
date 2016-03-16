@@ -256,7 +256,7 @@ Finally, the searcher, a helper that takes an IndexReader and a QueryParser, acc
 	
 	rnw c:\downloads\wikipedia.json 0 1000000
 
-	This will generate a new file: wikipedia_resin.json. We skipped 0 documents and populated it with 1M.
+	This will generate a new file: wikipedia_resin.json. I skipped 0 documents from the wikipedia file and populated the resin json file with 1M.
 
 3. Create an index. In a cmd window:
 	
