@@ -89,7 +89,7 @@ namespace Resin
                 var dir = args[Array.IndexOf(args, "--dir") + 1];
                 var field = args[Array.IndexOf(args, "--field") + 1];
                 var scanner = new Scanner(dir);
-                File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), scanner.GetAllTerms("label"));
+                File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), scanner.GetAllTokens("label"));
             }
             else
             {

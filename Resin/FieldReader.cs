@@ -6,12 +6,12 @@ namespace Resin
 {
     public class FieldReader
     {
-        // terms/docids/positions
-        private readonly IDictionary<string, IDictionary<int, IList<int>>> _terms;
+        // tokens/docids/positions
+        private readonly IDictionary<string, IDictionary<int, IList<int>>> _tokens;
 
-        public FieldReader(IDictionary<string, IDictionary<int, IList<int>>> terms)
+        public FieldReader(IDictionary<string, IDictionary<int, IList<int>>> tokens)
         {
-            _terms = terms;
+            _tokens = tokens;
         }
 
         public static FieldReader Load(string fileName)
@@ -23,15 +23,15 @@ namespace Resin
             }
         }
 
-        public ICollection<string> GetAllTerms()
+        public ICollection<string> GetAllTokens()
         {
-            return _terms.Keys;
+            return _tokens.Keys;
         } 
 
         public IDictionary<int, IList<int>> GetDocPosition(string token)
         {
             IDictionary<int, IList<int>> docPositions;
-            if (!_terms.TryGetValue(token, out docPositions))
+            if (!_tokens.TryGetValue(token, out docPositions))
             {
                 return null;
             }

@@ -140,7 +140,7 @@ namespace Tests
 
             using (var reader = new IndexReader(new Scanner(dir)))
             {
-                var terms = reader.Scanner.GetAllTerms("title");
+                var terms = reader.Scanner.GetAllTokens("title");
 
                 Assert.AreEqual(2, terms.Count);
                 Assert.IsTrue(terms.Contains("hello"));
@@ -172,7 +172,7 @@ namespace Tests
 
             using (var reader = new IndexReader(new Scanner(dir)))
             {
-                var terms = reader.Scanner.GetAllTerms("title");
+                var terms = reader.Scanner.GetAllTokens("title");
 
                 Assert.AreEqual(3, terms.Count);
                 Assert.IsTrue(terms.Contains("hello"));

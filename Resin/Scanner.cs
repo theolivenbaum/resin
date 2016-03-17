@@ -60,13 +60,13 @@ namespace Resin
             return null;
         }
 
-        public ICollection<string> GetAllTerms(string field)
+        public ICollection<string> GetAllTokens(string field)
         {
             int fieldId;
             if (_fieldIndex.TryGetValue(field, out fieldId))
             {
                 var f = FieldReader.Load(Path.Combine(_directory, fieldId + ".fld"));
-                return f.GetAllTerms();
+                return f.GetAllTokens();
             }
             return Enumerable.Empty<string>().ToList();
         } 

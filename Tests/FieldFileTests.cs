@@ -21,7 +21,7 @@ namespace Tests
             Assert.IsTrue(File.Exists(fileName));
 
             var reader = FieldReader.Load(fileName);
-            var terms = reader.GetAllTerms();
+            var terms = reader.GetAllTokens();
 
             Assert.IsTrue(terms.Contains("Hello"));
             Assert.IsTrue(terms.Contains("World!"));
@@ -38,7 +38,7 @@ namespace Tests
                 writer.Write(0, "Hello", 0);
             }
 
-            var terms = FieldReader.Load(fileName).GetAllTerms();
+            var terms = FieldReader.Load(fileName).GetAllTokens();
 
             Assert.AreEqual(1, terms.Count);
             Assert.IsTrue(terms.Contains("Hello"));
@@ -49,7 +49,7 @@ namespace Tests
                 writer.Write(0, "World!", 1);
             }
 
-            terms = FieldReader.Load(fileName).GetAllTerms();
+            terms = FieldReader.Load(fileName).GetAllTokens();
 
             Assert.AreEqual(2, terms.Count);
             Assert.IsTrue(terms.Contains("Hello"));

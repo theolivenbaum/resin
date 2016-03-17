@@ -9,8 +9,8 @@ namespace Resin
     {
         private readonly string _fileName;
 
-        // terms/docids/positions
-        private readonly IDictionary<string, IDictionary<int, IList<int>>> _terms;
+        // tokens/docids/positions
+        private readonly IDictionary<string, IDictionary<int, IList<int>>> _tokens;
 
         public FieldFile(string fileName)
         {
@@ -19,22 +19,22 @@ namespace Resin
             {
                 using (var file = File.OpenRead(fileName))
                 {
-                    _terms = Serializer.Deserialize<Dictionary<string, IDictionary<int, IList<int>>>>(file);
+                    _tokens = Serializer.Deserialize<Dictionary<string, IDictionary<int, IList<int>>>>(file);
                 }
             }
             else
             {
-                _terms = new Dictionary<string, IDictionary<int, IList<int>>>();
+                _tokens = new Dictionary<string, IDictionary<int, IList<int>>>();
             }
         }
 
         public void Write(int docId, string token, int position)
         {
             IDictionary<int, IList<int>> docs;
-            if (!_terms.TryGetValue(token, out docs))
+            if (!_tokens.TryGetValue(token, out docs))
             {
                 docs = new Dictionary<int, IList<int>> {{docId, new List<int> {position}}};
-                _terms.Add(token, docs);
+                _tokens.Add(token, docs);
             }
             else
             {
@@ -54,7 +54,7 @@ namespace Resin
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
             using (var fs = File.Create(_fileName))
             {
-                Serializer.Serialize(fs, _terms);
+                Serializer.Serialize(fs, _tokens);
             }
         }
 

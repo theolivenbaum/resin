@@ -20,7 +20,6 @@ namespace Resin
     {
         public int Id { get; set; }
         public IDictionary<string, FieldInfo> Fields { get; set; }
-
     }
 
     public class FieldInfo

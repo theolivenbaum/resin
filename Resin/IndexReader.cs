@@ -62,14 +62,6 @@ namespace Resin
             }
         }
 
-        private void Serialize(Dictionary<int, int> docIdToFileIndex)
-        {
-            using (var fs = File.Create(_docIdToFileIndexFileName))
-            {
-                Serializer.Serialize(fs, docIdToFileIndex);
-            }
-        }
-
         private Document GetDocFromDisk(int docId)
         {
             Dictionary<string, List<string>> dic;
@@ -81,11 +73,6 @@ namespace Resin
                 {
                     dics = ReadDocFile(Path.Combine(_scanner.Dir, fileId + ".d"));
                     _docFiles.Add(fileId, dics);
-                    //if (dics.Count > 1000)
-                    //{
-                    //    _docIdToFileIndex[docId] = Serialize(docId, dic);
-                    //    Serialize(_docIdToFileIndex);
-                    //}
                 }
                 dic = dics[docId];
                 _docs.Add(docId, dic);
