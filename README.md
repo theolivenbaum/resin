@@ -334,10 +334,3 @@ If that goes well then what is left is the ranking algorithm. That should be ton
 
 ###Multi-index searching
 Lucene does it. It's pretty useful. It has a cool factor to it. Resin needs it.
-
-## Please, do contribute
-To this readme or to the code. After having read the readme you shall understand four things: what is IR, what is full-text search, what is Lucene and what is Resin.
-
-Regarding the code, c# is a language that allows for extremely simple and beautiful designs. Extremely simple and pretty lines of code surrounded by the least amount of distraction will help in understanding first the smaller things and then how they fit toghether with the big picture in much less time than if the code is poorly constructed. I'm not saying all my code is that way. I'm saying that it's what I strive for.
-
-Start by using the keyword "var". Everywhere! Types are inferred. Use great names for your variables and parameters. Don't think about different parts of the design as living in different layers. Think of everything in one plane, partners, cogwheels. Prove it to us in a test. Awsome!
