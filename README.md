@@ -176,7 +176,7 @@ You have already seen the in-memory representation of the field file:
 
 A field reader can do this:
 
-	var terms = reader.GetAllTokens();
+	var tokens = reader.GetAllTokens();
 	var docPos = reader.GetDocPosition(string token);
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/FieldReaderTests.cs)
