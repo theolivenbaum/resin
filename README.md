@@ -3,8 +3,6 @@ It's a search framework you can reason about. It's simplistic but very capable. 
 
 ##How to build your own full-text search in c#, yeah!
 
-Did you know that you're not allowed to end a markdown line with the character #?
-
 Here's some guidance I could have used when I started building search frameworks. Resin is the 4th iteration I've done. The codebase, it's pieces, get smaller and simpler each round. Use this to get some ideas from if you are into information retrieval. The nerd factor on that last sentence is completely off the charts, I'm well aware, thank you.
 
 To Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early to that this document certainly is about Lucene. I buy that but would still like to say, this will be mostly about how I built my own indexer-searcher thing that can index 1M english wikipedia articles in approximately 20 minutes and then respond to multi-criteria term-based queries towards that index ~~in the tens of milliseconds~~ under a millisecond.
