@@ -20,7 +20,7 @@ You mean why build a search framework? Well,
 - You are just genuinely curious about the whole domain of information retrieval, perhaps because it is a small domain, relatively easy to grasp and at it's basic level the math is not frightening, and you see it as one of the tools taking us closer to IR's older cousin AI
 - You want to pretend you are building something smart and AI-like and neural networks scare you worse than long, cold hotel corridors and kids riding their pedal cars up and down the carpets of an otherwise empty luxury estate
 
-Lists with points are a boring read. Here's something to lighten up your mood and then there's some code. At the end there will be a fully functional full-text search lib. 
+Lists with points are a boring read. Here's something to lighten up your mood and then there's some code. At the end there will be a fully functional full-text search CLI. I will explain how to use that to create a Resin index from a Wikipedia dump and then how to query that index. There will be measurements on how Resin behaves in a fully cached state and in a partially cached state. 
 
 Skip to [here](#citizens) to make this an even shorter read. 
 
