@@ -19,7 +19,7 @@ namespace Resin
             _docs = new Dictionary<int, IDictionary<string, IList<string>>>();
         }
 
-        public void Write(int docId, string fieldName, string fieldValue)
+        public void Write(int docId, string field, string text)
         {
             IDictionary<string, IList<string>> doc;
             if (!_docs.TryGetValue(docId, out doc))
@@ -28,14 +28,14 @@ namespace Resin
                 _docs.Add(docId, doc);
             }
             IList<string> values;
-            if (!doc.TryGetValue(fieldName, out values))
+            if (!doc.TryGetValue(field, out values))
             {
-                values = new List<string> { fieldValue };
-                doc.Add(fieldName, values);
+                values = new List<string> { text };
+                doc.Add(field, values);
             }
             else
             {
-                values.Add(fieldValue);
+                values.Add(text);
             }
         }
         private void Flush()
@@ -61,14 +61,15 @@ namespace Resin
             var batches = _docs.IntoBatches(1000).ToList();
             foreach (var batch in batches)
             {
+                var docs = batch.ToList();
                 var id = Directory.GetFiles(_dir, "*.d").Length;
                 var fileName = Path.Combine(_dir, id + ".d");
                 File.WriteAllText(fileName, "");
                 using (var fs = File.Create(fileName))
                 {
-                    Serializer.Serialize(fs, batch.ToDictionary(x=>x.Key, y=>y.Value));
+                    Serializer.Serialize(fs, docs.ToDictionary(x => x.Key, y => y.Value));
                 }
-                foreach (var docId in batch)
+                foreach (var docId in docs)
                 {
                     docIdToFileIndex[docId.Key] = id;
                 }
