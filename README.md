@@ -132,7 +132,7 @@ Documents are persisted on disk. How they look on disk is not very interesting. 
 	// docid/fields/values
 	private readonly IDictionary<int, IDictionary<string, IList<string>>> _docs;
 
-That means more than one document fit into a document file. A whole list of them would fit. Imagine how it looks in-memory. I mean I can only guess the shape but it looks to be covering a large area of your RAM. It's a huge tree of stuff. Almost as wierd-looking as the token graph:
+That means more than one document fit into a document file. A whole list of them would fit. Imagine how it looks in-memory. I mean I can only guess the shape but it looks to be covering a large area of your RAM. It's a huge tree of stuff. Almost as wierd-looking as the token structure:
 
 	// tokens/docids/positions
 	IDictionary<string, IDictionary<int, IList<int>>> _tokens;
