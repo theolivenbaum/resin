@@ -112,12 +112,12 @@ Tokens are stored in a field file. A field file is an index of all the tokens in
 
 That means that if we know what field file to look in, we can find the answer to the query "title:rambo" by opening one field file, deserialize the contents of the file into this:
 
-	// terms/docids/positions
-	IDictionary<string, IDictionary<int, IList<int>>> _terms = DeserializeFieldFile(fileName);
+	// tokens/docids/positions
+	IDictionary<string, IDictionary<int, IList<int>>> _tokens = DeserializeFieldFile(fileName);
 	
 	// ...and then we can find the document IDs. This operation does not take long.
 	IDictionary<int, IList<int>> docPositions;
-	if (!_terms.TryGetValue(token, out docPositions))
+	if (!_tokens.TryGetValue(token, out docPositions))
 	{
 	    return null;
 	}
@@ -132,10 +132,10 @@ Documents are persisted on disk. How they look on disk is not very interesting. 
 	// docid/fields/values
 	private readonly IDictionary<int, IDictionary<string, IList<string>>> _docs;
 
-That means more than one document fit into a document file. A whole list of them would fit. Imagine how it looks in-memory. I mean I can only guess the shape but it looks to be covering a large area of your RAM. It's a huge tree of stuff. Almost as wierd-looking as the term graph:
+That means more than one document fit into a document file. A whole list of them would fit. Imagine how it looks in-memory. I mean I can only guess the shape but it looks to be covering a large area of your RAM. It's a huge tree of stuff. Almost as wierd-looking as the token graph:
 
-	// terms/docids/positions
-	IDictionary<string, IDictionary<int, IList<int>>> _terms;
+	// tokens/docids/positions
+	IDictionary<string, IDictionary<int, IList<int>>> _tokens;
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/DocumentFile.cs)
 
@@ -151,8 +151,8 @@ Store the documents. But also analyze them and create field files that are query
 	        {
 	            // persist the value of the field, as-is, by writing to a document file
 
-	            var terms = _analyzer.Analyze(value);
-	            foreach(var term in terms)
+	            var tokens = _analyzer.Analyze(value);
+	            foreach(var token in tokens)
 	            {
 	            	// store the doc ID, token and its position in a field file
 	            }
@@ -171,12 +171,12 @@ With our current parser we can interpret "title:Rambo", also `title:first title:
 
 You have already seen the in-memory representation of the field file:
 
-	// terms/docids/positions
-	private readonly IDictionary<string, IDictionary<int, IList<int>>> _terms;
+	// tokens/docids/positions
+	private readonly IDictionary<string, IDictionary<int, IList<int>>> _tokens;
 
 A field reader can do this:
 
-	var terms = reader.GetAllTerms();
+	var terms = reader.GetAllTokens();
 	var docPos = reader.GetDocPosition(string token);
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/FieldReaderTests.cs)
