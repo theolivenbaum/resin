@@ -269,7 +269,7 @@ Finally, the searcher, a helper that takes an IndexReader and a QueryParser, acc
 
 ![alt text](https://github.com/kreeben/resin/blob/master/screenshot.PNG "I have an SSD. The index was warmed up prior to the query.")
 
-Less than a millisecond apparently. Here's what went down:
+Less than a millisecond apparently. That's more than a couple of orders of magitude faster than Lucene. Here's what went down:
 
 	var timer = new Stopwatch();
 	using (var s = new Searcher(dir))
