@@ -60,10 +60,10 @@ namespace Resin
                 {
                     _docFile.Write(doc.Id, field.Key, value);
 
-                    var terms = _analyzer.Analyze(value);
-                    for (int position = 0; position < terms.Length; position++)
+                    var tokens = _analyzer.Analyze(value);
+                    for (int position = 0; position < tokens.Length; position++)
                     {
-                        ff.Write(doc.Id, terms[position], position);
+                        ff.Write(doc.Id, tokens[position], position);
                     }
                 }
             }
