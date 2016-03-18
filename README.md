@@ -345,6 +345,6 @@ Lucene does it extremly well because of it's file format and because it's indice
 ###Multi-index searching
 Lucene does it. It's pretty useful. It has a cool factor to it. Resin needs it.
 
-## Even though this is about Resin to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results.
+#### Even though this is about Resin to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results.
 
 If you read all the way to here you now know a whole lot about Lucene. The point being: even when doing the wrong thing or seing the problem at hand as needing a less naive solution than you are willing to provide you can end up achieving the right thing, like Google.
