@@ -127,12 +127,19 @@ That means that if we know what field file to look in, we can find the answer to
 
 ##DocumentFile
 
-Documents are persisted on disk. How they look on disk is not very interesting. The in-memory equivalent of a document file is this:
+Documents are persisted on disk. How they look on disk is not very interesting. 
+
+The in-memory equivalent of a document file is this:
 
 	// docid/fields/values
 	private readonly IDictionary<int, IDictionary<string, IList<string>>> _docs;
 
-That means more than one document fit into a document file. A whole list of them would fit. Imagine how it looks in-memory. I mean I can only guess the shape but it looks to be covering a large area of your RAM. It's a huge tree of stuff. Almost as wierd-looking as the token structure:
+Here is a document on its own:
+
+	// fields/values
+	IDictionary<string, IList<string>> doc;
+
+More than one document fit into a document file. A whole list of them would fit. Imagine how it looks in-memory. I mean I can only guess the shape but it looks to be covering a large area of your RAM. It's a huge tree of stuff. Almost as wierd-looking as the other huge tree of stuff, the token structure:
 
 	// tokens/docids/positions
 	IDictionary<string, IDictionary<int, IList<int>>> _tokens;
