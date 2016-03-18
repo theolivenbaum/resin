@@ -339,7 +339,7 @@ If you create an ngram-index from the lexicon and ngram the query token the same
 ###Ranking
 If that goes well then what is left is the ranking algorithm. That should be tons of fun. That's where the [Lucene core team](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) is at.
 
-###Writing to an index while it is in use
+###Writing to an index in use
 Lucene does it extremly well because of it's file format and because it's indices are easily mergable. It sees an update as "first create new index then merge with the current index then refresh the index reader".
 
 ###Multi-index searching
