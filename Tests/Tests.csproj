@@ -49,6 +49,7 @@
     <Compile Include="AnalyzerTests.cs" />
     <Compile Include="FieldReaderTests.cs" />
     <Compile Include="FieldFileTests.cs" />
+    <Compile Include="QueryParserTests.cs" />
     <Compile Include="ScannerTests.cs" />
     <Compile Include="IndexTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

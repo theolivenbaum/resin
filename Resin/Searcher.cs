@@ -21,6 +21,7 @@ namespace Resin
             return _reader.GetDocuments(terms); 
         }
 
+
         public void Dispose()
         {
             _reader.Dispose();
