@@ -1,0 +1,1 @@
+Resin.WikipediaJsonParser\bin\Release\rnw.exe %*
