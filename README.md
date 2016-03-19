@@ -224,7 +224,7 @@ Here's the ranking:
 	var ordered = positions.OrderByDescending(d => d.Value.Count).Select(d => d.Key).ToList();
 	return ordered;
 
-It orders the result based on how many times a token exists within the document. It doesn't care about where in the document although we did give it that information. Instead, for now, it cares only about how many times a token exists.
+It is a scan to see if the token exists at all in a document. It doesn't care about how many times or where in the document although we did give it that information. Instead, for now, it cares only about if it exists.
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/ScannerTests.cs)
 
