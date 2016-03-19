@@ -60,16 +60,22 @@ namespace Resin
                 var q = args[Array.IndexOf(args, "-q") + 1];
 
                 var timer = new Stopwatch();
-
+                timer.Start();
                 using (var s = new Searcher(dir))
                 {
+                    Console.WriteLine("Searcher initialized in {0} ms", timer.ElapsedMilliseconds);
+
+                    timer.Restart();
                     for (int i = 0; i < 1; i++)
                     {
                         s.Search(q).ToList(); // warm up the "label" field
                     }
-                    timer.Start();
+                    Console.WriteLine("Warm-up in {0} ms\r\n", timer.ElapsedMilliseconds);
+
+                    timer.Restart();
                     var docs = s.Search(q).ToList();
                     var elapsed = timer.Elapsed.TotalMilliseconds;
+                    
                     var position = 0;
                     foreach (var doc in docs)
                     {
