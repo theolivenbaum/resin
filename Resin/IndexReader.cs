@@ -10,8 +10,7 @@ namespace Resin
     {
         private readonly Scanner _scanner;
         private readonly Dictionary<int, int> _docIdToFileIndex;
-        private readonly Dictionary<int, Dictionary<string, List<string>>> _docs; // cache
-        private readonly Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>> _docFiles; // cache (again?)
+        private readonly Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>> _docFiles; // cache
 
         public Scanner Scanner { get { return _scanner; } }
 
@@ -19,7 +18,6 @@ namespace Resin
         {
             _scanner = scanner;
             var docIdToFileIndexFileName = Path.Combine(_scanner.Dir, "d.ix");
-            _docs = new Dictionary<int, Dictionary<string, List<string>>>();
             _docFiles = new Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>>();
 
             using (var file = File.OpenRead(docIdToFileIndexFileName))
@@ -84,19 +82,14 @@ namespace Resin
 
         private Document GetDocFromDisk(DocumentScore doc)
         {
-            Dictionary<string, List<string>> dic;
-            if (!_docs.TryGetValue(doc.DocId, out dic))
+            var fileId = _docIdToFileIndex[doc.DocId];
+            Dictionary<int, Dictionary<string, List<string>>> dics;
+            if (!_docFiles.TryGetValue(fileId, out dics))
             {
-                var fileId = _docIdToFileIndex[doc.DocId];
-                Dictionary<int, Dictionary<string, List<string>>> dics;
-                if (!_docFiles.TryGetValue(fileId, out dics))
-                {
-                    dics = ReadDocFile(Path.Combine(_scanner.Dir, fileId + ".d"));
-                    _docFiles.Add(fileId, dics);
-                }
-                dic = dics[doc.DocId];
-                _docs.Add(doc.DocId, dic);
+                dics = ReadDocFile(Path.Combine(_scanner.Dir, fileId + ".d"));
+                _docFiles.Add(fileId, dics);
             }
+            var dic = dics[doc.DocId];
             var d = Document.FromDictionary(doc.DocId, dic);
             return d;
         }
