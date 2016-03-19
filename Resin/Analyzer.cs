@@ -20,8 +20,7 @@ namespace Resin
 
         public Analyzer(char[] tokenSeparators)
         {
-            if(tokenSeparators==null)
-                throw new ArgumentNullException(nameof(tokenSeparators));
+            if (tokenSeparators == null) throw new ArgumentNullException("tokenSeparators");
             _tokenSeparators = tokenSeparators;
         }
 
