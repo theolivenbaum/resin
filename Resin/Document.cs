@@ -15,23 +15,4 @@ namespace Resin
             return new Document{Id = docId, Fields = fields};
         }
     }
-
-    public class DocumentInfo
-    {
-        public int Id { get; set; }
-        public IDictionary<string, FieldInfo> Fields { get; set; }
-    }
-
-    public class FieldInfo
-    {
-        public int FieldId { get; set; }
-        public IList<string> Values { get; set; }
-    }
-
-    public class FieldFileEntry
-    {
-        public int DocId { get; set; }
-        public int FieldId { get; set; }
-        public string Value { get; set; }
-    }
 }

@@ -19,8 +19,8 @@ namespace Tests
                 fw.Write(5, "world", 1);
             }
             var reader = FieldReader.Load(fileName);
-            var helloPositionsForDocId0 = reader.GetDocPosition("hello")[0];
-            var worldPositionsForDocId5 = reader.GetDocPosition("world")[5];
+            var helloPositionsForDocId0 = reader.GetPostings("hello")[0];
+            var worldPositionsForDocId5 = reader.GetPostings("world")[5];
             Assert.AreEqual(0, helloPositionsForDocId0.First());
             Assert.AreEqual(1, worldPositionsForDocId5.First());
         }

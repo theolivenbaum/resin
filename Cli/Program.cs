@@ -65,7 +65,7 @@ namespace Resin
                 {
                     for (int i = 0; i < 1; i++)
                     {
-                        s.Search("label:definetlynotinthelexicon").ToList(); // warm up the "label" field
+                        s.Search(q).ToList(); // warm up the "label" field
                     }
                     timer.Start();
                     var docs = s.Search(q).ToList();

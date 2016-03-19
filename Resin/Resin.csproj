@@ -49,6 +49,7 @@
     <Compile Include="Analyzer.cs" />
     <Compile Include="BatchHelper.cs" />
     <Compile Include="Document.cs" />
+    <Compile Include="DocumentScore.cs" />
     <Compile Include="FieldReader.cs" />
     <Compile Include="DocumentFile.cs" />
     <Compile Include="IAnalyzer.cs" />

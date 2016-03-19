@@ -56,6 +56,8 @@ namespace Resin
                     ff = new FieldFile(fileName);
                     _fieldFiles.Add(fieldId, ff);
                 }
+                
+                var docTokensAndTheirPositions = new Dictionary<string, List<int>>();
                 foreach (var value in field.Value)
                 {
                     _docFile.Write(doc.Id, field.Key, value);
@@ -63,7 +65,22 @@ namespace Resin
                     var tokens = _analyzer.Analyze(value);
                     for (int position = 0; position < tokens.Length; position++)
                     {
-                        ff.Write(doc.Id, tokens[position], position);
+                        var token = tokens[position];
+                        List<int> positions;
+                        if (!docTokensAndTheirPositions.TryGetValue(token, out positions))
+                        {
+                            positions = new List<int>();
+                            docTokensAndTheirPositions.Add(token, positions);
+                        }
+                        positions.Add(position);
+                    }
+                }
+
+                foreach(var tokenAndItsPositions in docTokensAndTheirPositions)
+                {
+                    foreach (var position in tokenAndItsPositions.Value)
+                    {
+                        ff.Write(doc.Id, tokenAndItsPositions.Key, position);
                     }
                 }
             }

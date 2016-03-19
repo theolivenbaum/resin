@@ -10,6 +10,65 @@ namespace Tests
     public class IndexTests
     {
         [Test]
+        public void Can_find()
+        {
+            const string dir = "c:\\temp\\resin_tests\\Can_find";
+            if (Directory.Exists(dir)) Directory.Delete(dir, true);
+            var analyzer = new Analyzer();
+            var parser = new QueryParser(analyzer);
+
+            using (var w = new IndexWriter(dir, analyzer))
+            {
+                w.Write(new Document
+                {
+                    Id = 0,
+                    Fields = new Dictionary<string, List<string>>
+                    {
+                        {"title", new[]{"a"}.ToList()}
+                    }
+                });
+                w.Write(new Document
+                {
+                    Id = 1,
+                    Fields = new Dictionary<string, List<string>>
+                    {
+                        {"title", new[]{"a b"}.ToList()}
+                    }
+                });
+                w.Write(new Document
+                {
+                    Id = 2,
+                    Fields = new Dictionary<string, List<string>>
+                    {
+                        {"title", new[]{"a b c"}.ToList()}
+                    }
+                });
+            }
+            using (var reader = new IndexReader(new Scanner(dir)))
+            {
+                var docs = reader.GetDocuments("title", "a").ToList();
+
+                Assert.AreEqual(3, docs.Count);
+
+                docs = reader.GetDocuments("title", "b").ToList();
+
+                Assert.AreEqual(2, docs.Count);
+
+                docs = reader.GetDocuments("title", "c").ToList();
+
+                Assert.AreEqual(1, docs.Count);
+
+                docs = reader.GetDocuments(parser.Parse("title:a +title:b").ToList()).ToList();
+
+                Assert.AreEqual(2, docs.Count);
+
+                docs = reader.GetDocuments(parser.Parse("title:a +title:b +title:c").ToList()).ToList();
+
+                Assert.AreEqual(1, docs.Count);
+            }
+        }
+
+        [Test]
         public void Can_write_one_field()
         {
             const string dir = "c:\\temp\\resin_tests\\Can_write_one_field";
@@ -59,64 +118,7 @@ namespace Tests
             Assert.AreEqual(2, Directory.GetFiles(dir, "*.fld").Length);
         }
 
-        [Test]
-        public void Can_find()
-        {
-            const string dir = "c:\\temp\\resin_tests\\Can_read_index";
-
-            var analyzer = new Analyzer();
-            var parser = new QueryParser(analyzer);
-
-            using (var w = new IndexWriter(dir, analyzer))
-            {
-                w.Write(new Document
-                {
-                    Id = 0,
-                    Fields = new Dictionary<string, List<string>>
-                    {
-                        {"title", new[]{"a"}.ToList()}
-                    }
-                });
-                w.Write(new Document
-                {
-                    Id = 1,
-                    Fields = new Dictionary<string, List<string>>
-                    {
-                        {"title", new[]{"a b"}.ToList()}
-                    }
-                });
-                w.Write(new Document
-                {
-                    Id = 2,
-                    Fields = new Dictionary<string, List<string>>
-                    {
-                        {"title", new[]{"a b c"}.ToList()}
-                    }
-                });
-            }
-            using (var reader = new IndexReader(new Scanner(dir)))
-            {
-                var docs = reader.GetDocuments("title", "a").ToList();
-
-                Assert.AreEqual(3, docs.Count);
-
-                docs = reader.GetDocuments("title", "b").ToList();
-
-                Assert.AreEqual(2, docs.Count);
-
-                docs = reader.GetDocuments("title", "c").ToList();
-
-                Assert.AreEqual(1, docs.Count);
-
-                docs = reader.GetDocuments(parser.Parse("title:a title:b").ToList()).ToList();
-
-                Assert.AreEqual(2, docs.Count);
-
-                docs = reader.GetDocuments(parser.Parse("title:a title:b title:c").ToList()).ToList();
-
-                Assert.AreEqual(1, docs.Count);
-            }
-        }
+        
 
         [Test]
         public void Can_append_to_one_field()

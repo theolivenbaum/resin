@@ -11,7 +11,32 @@ namespace Tests
         [Test]
         public void Can_scan()
         {
-            const string dir = "c:\\temp\\resin_tests\\Can_find";
+            const string dir = "c:\\temp\\resin_tests\\Can_scan";
+            const string text = "we all live in a yellow submarine";
+            using (var writer = new IndexWriter(dir, new Analyzer()))
+            {
+                writer.Write(new Document
+                {
+                    Fields = new Dictionary<string, List<string>>
+                        {
+                            {"title", new[]{text}.ToList()}
+                        }
+                });
+            }
+            var scanner = new Scanner(dir);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term {Field = "title", Token = "we", And = true}).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "all", And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "live", And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "in", And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "a", And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "yellow", And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "submarine", And = true }).ToList().Count);
+        }
+
+        [Test]
+        public void Can_scan_document_with_multiple_values()
+        {
+            const string dir = "c:\\temp\\resin_tests\\Can_scan_document_with_multiple_values";
             const string text = "we all live in a yellow submarine";
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
@@ -24,13 +49,13 @@ namespace Tests
                 });
             }
             var scanner = new Scanner(dir);
-            Assert.AreEqual(1, scanner.GetDocIds("title", "we").Count);
-            Assert.AreEqual(1, scanner.GetDocIds("title", "all").Count);
-            Assert.AreEqual(1, scanner.GetDocIds("title", "live").Count);
-            Assert.AreEqual(1, scanner.GetDocIds("title", "in").Count);
-            Assert.AreEqual(1, scanner.GetDocIds("title", "a").Count);
-            Assert.AreEqual(1, scanner.GetDocIds("title", "yellow").Count);
-            Assert.AreEqual(1, scanner.GetDocIds("title", "submarine").Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "we", And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "all", And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "live", And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "in", And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "a", And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "yellow", And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "submarine", And = true }).ToList().Count);
         }
     }
 }

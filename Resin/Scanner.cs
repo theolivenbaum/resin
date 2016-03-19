@@ -25,23 +25,24 @@ namespace Resin
             }
         }
 
-        public IList<int> GetDocIds(string field, string value)
+        public IEnumerable<DocumentScore> GetDocIds(Term term)
         {
             int fieldId;
-            if (_fieldIndex.TryGetValue(field, out fieldId))
+            if (_fieldIndex.TryGetValue(term.Field, out fieldId))
             {
-                var reader = GetReader(field);
+                var reader = GetReader(term.Field);
                 if (reader != null)
                 {
-                    var positions = reader.GetDocPosition(value);
-                    if (positions != null)
+                    var postings = reader.GetPostings(term.Token);
+                    if (postings != null)
                     {
-                        var ordered = positions.OrderByDescending(d => d.Value.Count).Select(d => d.Key).ToList();
-                        return ordered;
+                        foreach (var posting in postings)
+                        {
+                            yield return new DocumentScore {DocId = posting.Key, Value = posting.Value.Count};
+                        }
                     }
                 }
             }
-            return Enumerable.Empty<int>().ToList();
         }
 
         private FieldReader GetReader(string field)

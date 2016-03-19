@@ -28,14 +28,14 @@ namespace Resin
             return _tokens.Keys;
         } 
 
-        public IDictionary<int, IList<int>> GetDocPosition(string token)
+        public IDictionary<int, IList<int>> GetPostings(string token)
         {
-            IDictionary<int, IList<int>> docPositions;
-            if (!_tokens.TryGetValue(token, out docPositions))
+            IDictionary<int, IList<int>> postings;
+            if (!_tokens.TryGetValue(token, out postings))
             {
                 return null;
             }
-            return docPositions;
+            return postings;
         }
     }
 }

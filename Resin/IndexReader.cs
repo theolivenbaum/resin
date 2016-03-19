@@ -10,20 +10,19 @@ namespace Resin
     {
         private readonly Scanner _scanner;
         private readonly Dictionary<int, int> _docIdToFileIndex;
-        private readonly string _docIdToFileIndexFileName;
-        private readonly Dictionary<int, Dictionary<string, List<string>>> _docs;
-        private readonly Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>> _docFiles;
+        private readonly Dictionary<int, Dictionary<string, List<string>>> _docs; // cache
+        private readonly Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>> _docFiles; // cache (again?)
 
         public Scanner Scanner { get { return _scanner; } }
 
         public IndexReader(Scanner scanner)
         {
             _scanner = scanner;
-            _docIdToFileIndexFileName = Path.Combine(_scanner.Dir, "d.ix");
+            var docIdToFileIndexFileName = Path.Combine(_scanner.Dir, "d.ix");
             _docs = new Dictionary<int, Dictionary<string, List<string>>>();
             _docFiles = new Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>>();
 
-            using (var file = File.OpenRead(_docIdToFileIndexFileName))
+            using (var file = File.OpenRead(docIdToFileIndexFileName))
             {
                 _docIdToFileIndex = Serializer.Deserialize<Dictionary<int, int>>(file);
             }
@@ -31,53 +30,74 @@ namespace Resin
 
         public IEnumerable<Document> GetDocuments(string field, string token)
         {
-            var docs = _scanner.GetDocIds(field, token);
-            foreach (var id in docs)
-            {
-                yield return GetDocFromDisk(id);
-            }
+            var docs = _scanner.GetDocIds(new Term {Field = field, Token = token});
+            return docs.Select(GetDocFromDisk);
         }
 
         public IEnumerable<Document> GetDocuments(IList<Term> terms)
         {
-            IList<int> result = null;
+            IList<DocumentScore> results = null;
             foreach (var term in terms)
             {
-                var docs = _scanner.GetDocIds(term.Field, term.Token);
-                if (result == null)
+                var subResult = _scanner.GetDocIds(term).ToList();
+                if (results == null)
                 {
-                    result = docs;
+                    results = subResult;
                 }
                 else
                 {
-                    result = result.Intersect(docs).ToList(); // Intersect == AND
+                    if (term.And)
+                    {
+                        results = results.Intersect(subResult).ToList();
+                    }
+                    else if (term.Not)
+                    {
+                        results = results.Except(subResult).ToList();
+                    }
+                    else
+                    {
+                        // Or
+                        results = results.Concat(subResult).Distinct().ToList();
+                    }
                 }
             }
-            if (result != null)
+
+            var scored = new List<DocumentScore>();
+            if (results != null)
             {
-                foreach (var id in result)
+                foreach (var doc in results.GroupBy(d=>d.DocId))
                 {
-                    yield return GetDocFromDisk(id);
-                } 
+                    float documentSignificance = 0;
+                    foreach (var subScore in doc)
+                    {
+                        documentSignificance += subScore.Value;
+                    }
+                    scored.Add(new DocumentScore{DocId = doc.Key, Value = documentSignificance});
+                }
+
+                foreach (var doc in scored)
+                {
+                    yield return GetDocFromDisk(doc);
+                }
             }
         }
 
-        private Document GetDocFromDisk(int docId)
+        private Document GetDocFromDisk(DocumentScore doc)
         {
             Dictionary<string, List<string>> dic;
-            if (!_docs.TryGetValue(docId, out dic))
+            if (!_docs.TryGetValue(doc.DocId, out dic))
             {
-                var fileId = _docIdToFileIndex[docId];
+                var fileId = _docIdToFileIndex[doc.DocId];
                 Dictionary<int, Dictionary<string, List<string>>> dics;
                 if (!_docFiles.TryGetValue(fileId, out dics))
                 {
                     dics = ReadDocFile(Path.Combine(_scanner.Dir, fileId + ".d"));
                     _docFiles.Add(fileId, dics);
                 }
-                dic = dics[docId];
-                _docs.Add(docId, dic);
+                dic = dics[doc.DocId];
+                _docs.Add(doc.DocId, dic);
             }
-            var d = Document.FromDictionary(docId, dic);
+            var d = Document.FromDictionary(doc.DocId, dic);
             return d;
         }
 
