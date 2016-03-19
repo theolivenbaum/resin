@@ -2,18 +2,27 @@ using System;
 
 namespace Resin
 {
-    public class Analyzer
+    public class Analyzer:IAnalyzer
     {
+        public static readonly char[] DefaultTokenSeparators =
+        {
+            ' ', '.', ',', ';', ':', '!', '"', '&', '?', '#', '*', '+', '|', '=', '-', '_', '@', '\'',
+            '<', '>', '“', '”', '´', '`', '(', ')', '[', ']', '{', '}', '/', '\\',
+            '\r', '\n', '\t'
+        };
+
         private readonly char[] _tokenSeparators;
 
-        public Analyzer(char[] tokenSeparators = null)
+        public Analyzer() : this(DefaultTokenSeparators)
         {
-            _tokenSeparators = tokenSeparators ?? new[]
-            {
-                ' ', '.', ',', ';', ':', '!', '"', '&', '?', '#', '*', '+', '|', '=', '-', '_', '@', '\'',
-                '<', '>', '“', '”', '´', '`', '(', ')', '[', ']', '{', '}', '/', '\\',
-                '\r', '\n', '\t'
-            };
+
+        }
+
+        public Analyzer(char[] tokenSeparators)
+        {
+            if(tokenSeparators==null)
+                throw new ArgumentNullException(nameof(tokenSeparators));
+            _tokenSeparators = tokenSeparators;
         }
 
         public string[] Analyze(string value)
