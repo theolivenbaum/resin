@@ -97,16 +97,40 @@ namespace Resin
                 var timer = new Stopwatch();
                 timer.Start();
                 var scanner = new Scanner(dir);
-                var tokens = scanner.GetAllTokens(field);
-                Console.WriteLine("Tokens fetched from disk in {0} ms\r\n", timer.ElapsedMilliseconds);
-                //File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens);
-                timer.Restart();
-                var trie = new Trie(tokens);
-                Console.WriteLine("Trie built in {0} ms\r\n", timer.ElapsedMilliseconds);
-                timer.Restart();
-                var words = trie.WordsStartingWith("ring").ToList();
-                Console.WriteLine("Trie scan found {0} words in {1} ms\r\n", words.Count, timer.ElapsedMilliseconds);
-                foreach(var w in words) Console.WriteLine(w);
+                var tokens = scanner.GetAllTokens(field).OrderByDescending(t=>t.Count).ToList();
+                Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
+
+                File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens.Select(t=>string.Format("{0} {1}", t.Token, t.Count)));
+
+                //timer.Restart();
+                //var trie = new Trie(tokens.Select(t=>t.Token));
+                //Console.WriteLine("Trie built in {0} ms\r\n", timer.ElapsedMilliseconds);
+                //timer.Restart();
+                //var words = trie.WordsStartingWith("ring").ToList();
+                //Console.WriteLine("Trie scan found {0} words in {1} ms\r\n", words.Count, timer.ElapsedMilliseconds);
+                //foreach(var w in words) Console.WriteLine(w);
+            }
+            else if (args[0].ToLower() == "about")
+            {
+                var about = File.ReadAllText(@"..\..\..\readme.md");
+                var dir = Path.Combine(Environment.CurrentDirectory, "about");
+                using (var writer = new IndexWriter(dir, new Analyzer()))
+                {
+                    writer.Write(new Document
+                    {
+                        Fields = new Dictionary<string, List<string>>
+                        {
+                            {"body", new List<string> {about}}
+                        }
+                    });
+                }
+                var scanner = new Scanner(dir);
+                var timer = new Stopwatch();
+                timer.Start();
+                var tokens = scanner.GetAllTokens("body").OrderByDescending(t => t.Count).ToList();
+                Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
+
+                File.WriteAllLines(Path.Combine(dir, "_about.txt"), tokens.Select(t => string.Format("{0} {1}", t.Token, t.Count)));
             }
             else
             {

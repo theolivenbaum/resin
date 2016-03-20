@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using ProtoBuf;
 
 namespace Resin
@@ -23,9 +24,13 @@ namespace Resin
             }
         }
 
-        public ICollection<string> GetAllTokens()
+        public IEnumerable<TokenInfo> GetAllTokens()
         {
-            return _tokens.Keys;
+            return _tokens.Select(t=>new TokenInfo
+            {
+                Token = t.Key,
+                Count = t.Value.Values.Select(l=>l.Count).Sum()
+            });
         } 
 
         public IDictionary<int, IList<int>> GetPostings(string token)

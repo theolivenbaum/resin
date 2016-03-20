@@ -61,7 +61,7 @@ namespace Resin
             return null;
         }
 
-        public ICollection<string> GetAllTokens(string field)
+        public IEnumerable<TokenInfo> GetAllTokens(string field)
         {
             int fieldId;
             if (_fieldIndex.TryGetValue(field, out fieldId))
@@ -69,7 +69,22 @@ namespace Resin
                 var f = FieldReader.Load(Path.Combine(_directory, fieldId + ".fld"));
                 return f.GetAllTokens();
             }
-            return Enumerable.Empty<string>().ToList();
+            return Enumerable.Empty<TokenInfo>().ToList();
         } 
+    }
+
+    public struct TokenInfo
+    {
+        public static implicit operator string(TokenInfo ti)
+        {
+            return ti.Token;
+        }
+
+        public static implicit operator TokenInfo(string s)
+        {
+            return new TokenInfo{Token=s};
+        }
+        public string Token;
+        public int Count;
     }
 }

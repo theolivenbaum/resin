@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Resin;
 
@@ -21,7 +22,7 @@ namespace Tests
             Assert.IsTrue(File.Exists(fileName));
 
             var reader = FieldReader.Load(fileName);
-            var terms = reader.GetAllTokens();
+            var terms = reader.GetAllTokens().Select(t => t.Token).ToList();
 
             Assert.IsTrue(terms.Contains("Hello"));
             Assert.IsTrue(terms.Contains("World!"));
@@ -38,7 +39,7 @@ namespace Tests
                 writer.Write(0, "Hello", 0);
             }
 
-            var terms = FieldReader.Load(fileName).GetAllTokens();
+            var terms = FieldReader.Load(fileName).GetAllTokens().Select(t=>t.Token).ToList();
 
             Assert.AreEqual(1, terms.Count);
             Assert.IsTrue(terms.Contains("Hello"));
@@ -49,7 +50,7 @@ namespace Tests
                 writer.Write(0, "World!", 1);
             }
 
-            terms = FieldReader.Load(fileName).GetAllTokens();
+            terms = FieldReader.Load(fileName).GetAllTokens().Select(t => t.Token).ToList();
 
             Assert.AreEqual(2, terms.Count);
             Assert.IsTrue(terms.Contains("Hello"));
