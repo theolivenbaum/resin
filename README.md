@@ -363,7 +363,7 @@ Lucene does it. It's pretty useful. It has a cool factor to it. Resin needs it.
 
 If you read all the way to here you know a lot about Lucene. Not so much about John Rambo though. If Google hade seen the movie he would not have sent you here. The point being: even when doing the wrong thing or seing the problem at hand as in need of a less naive solution than you are willing to provide you can end up acheiving something close to the right thing, which is kind of what Google is doing.
 
-Search is not rocket science. What comes next is, not really rocket sciense either, it's something else. An AI has bene built and it has the knowledge of the Google index plus all the extra data it's collected when you googled, gmailed, youtubed or g plus-plused. Wouldn't it be better if we built a search service based on the knowledge _we_ chose and then, together, built an AI based on _that_, instead of what Google think is okay to base an AI on? Today that AI is not very smart. Who here thinks it will get smarter by the day? Thus, the great importance of mergeable Resin indices. Because we could all
+Search is not rocket science. What comes next is, not really rocket science either, it's something else. An AI has been built and it has the knowledge of the Google index plus all the extra data it's collected when you googled, gmailed, g-doced, youtubed or g++ed. Wouldn't it be better if we built a search service based on the knowledge _we_ choose and then, together, built an AI based on _that_, instead of what Google think is okay to base an AI on? Today the gAI is not very smart. Who here thinks it will get smarter by the day? Thus, the great importance of mergeable Resin indices. Because we could all
 
 1. Finish up Resin
 2. Create a Resin indexing bot
