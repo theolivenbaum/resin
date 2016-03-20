@@ -377,3 +377,207 @@ Search is not rocket science. What comes next is, not really rocket science eith
 10. Profit!
 
 Oh you don't think it can be done? Let there be another search engine war! All in good fun of course.
+
+## Final analysis
+
+The top 100 tokens of this readme, in the order of their frequency (from [this file](https://github.com/kreeben/resin/blob/prefix/_about.txt):
+
+the 346
+
+a 210
+
+to 162
+
+of 156
+
+and 152
+
+you 130
+
+that 120
+
+resin 110
+
+in 110
+
+it 102
+
+is 92
+
+s 80
+
+be 70
+
+var 56
+
+i 54
+
+lucene 52
+
+documents 52
+
+https 52
+
+index 50
+
+tokens 50
+
+this 48
+
+as 48
+
+field 48
+
+com 48
+
+are 46
+
+github 46
+
+kreeben 46
+
+blob 46
+
+master 46
+
+if 44
+
+document 44
+
+cs 44
+
+we 42
+
+will 40
+
+query 40
+
+title 40
+
+at 38
+
+file 38
+
+text 36
+
+search 36
+
+an 36
+
+string 34
+
+not 32
+
+up 32
+
+can 30
+
+about 30
+
+for 30
+
+token 30
+
+querying 28
+
+with 28
+
+0 28
+
+int 28
+
+what 26
+
+because 26
+
+rambo 26
+
+on 24
+
+there 24
+
+t 24
+
+from 22
+
+into 22
+
+even 22
+
+so 22
+
+wikipedia 22
+
+then 22
+
+by 22
+
+fields 22
+
+all 22
+
+value 22
+
+new 22
+
+blood 22
+
+here 20
+
+but 20
+
+fast 20
+
+or 20
+
+code 20
+
+they 20
+
+first 20
+
+need 20
+
+terms 20
+
+idictionary 20
+
+docs 20
+
+doc 20
+
+have 18
+
+would 18
+
+d 18
+
+little 18
+
+positions 18
+
+analyzer 18
+
+return 18
+
+very 16
+
+how 16
+
+your 16
+
+one 16
+
+like 16
+
+than 16
+
+also 16
+
+analyze 16
+
+able 16
+
+scan 16
+
+public 16
