@@ -361,4 +361,17 @@ Lucene does it. It's pretty useful. It has a cool factor to it. Resin needs it.
 
 #### Even though this is about Resin to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results.
 
-If you read all the way to here you now know a whole lot about Lucene. The point being: even when doing the wrong thing or seing the problem at hand as needing a less naive solution than you are willing to provide you can end up achieving the right thing, like Google.
+If you read all the way to here you now know a whole lot about Lucene. Not so much about John Rambo though. If Google hade seen the movie he would not have sent you here. The point being: even when doing the wrong thing or seing the problem at hand as needing a less naive solution than you are willing to provide you can end up achieving something close to the right thing, which is kind of what Google is doing.
+
+Search is not rocket science. What comes next is. An AI will be built and it will have the knowledge of the Google index plus all the extra data it's collected when you googled, gmailed, youtubed or g plus-plused. Wouldn't it be better if we built a search service based on the knowledge _we_ chose and then, together, built an AI based on _that_, instead of what Google thinks is okay to base an AI on? Thus, the great importance of mergeable Resin indices. Because we could all
+
+1. Finish up Resin
+2. Create a Resin indexing bot
+3. Make that index searchable for everyone
+4. Make that index and the usage data that we choose to collect public, completely open and available to anyone
+5. Tell people that by using Chrome you are feeding the Google AI. By using Firefox you are feeding noone.
+6. Tell research teams and others who use Resin to upload theis indices to the Resin server, because then their index can then be queried in conjunction with other Resin indices that are already there, including its Great Web Index and its Scary Usage Data.
+7. See how the media is now interested in the topic of privacy
+8. Watch how Google's significance lowers.
+9. Watch the laws change to give us more privacy, bacause now it is clear to everyone how much data Google have been collecting on you and have been using to drive and feed an AI. Oh yeah and Bing also. Bad Bing!
+10. Profit!
