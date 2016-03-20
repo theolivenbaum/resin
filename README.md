@@ -103,10 +103,15 @@ An analyzer produces normalized tokens from text. `var text = "Hello World!"` ma
 But only if you are scanning a database of Swedish movie titles because the original movie title was "First Blood". Swedish Media Institue (it's called something else, sorry, I forget) changed the title to the more declarative "Rambo: First Blood". This is probably what happened:
 
 Guy: The americans have sent us a new movie.
+
 Boss: That's it called?
+
 g: First blood!
+
 b: First blood? What kind of silly name is that? Who's it about?
+
 g: There's this guy, Rambo.
+
 b: Rambo! What great name! Put THAT in the title. I'm feeling also this might be a franchise.
 
 Another thing we hope to achieve by analyzing text is to normalize between the words used when querying and the words in the documents so that matches can be produced consistently. 
