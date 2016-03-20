@@ -100,7 +100,14 @@ An [IndexReader](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.
 
 An analyzer produces normalized tokens from text. `var text = "Hello World!"` may be normalized into `new[]{"hello", "world"}` if we lower-case it and split it up at characters ' ' and '!'. By tokenizing the text of a field we make the individual tokens insensitive to casing, queryable. Had we not only exact matches to the verbatim text can be made at runtime, if we want the querying to go fast. The query "title:Rambo" would produce zero documents (no movie in the whole world actually has the title "Rambo") but querying "title:Rambo\\: First Blood" would produce one hit. 
 
-But only if you are scanning a database of Swedish movie titles because the original movie title was "First Blood". Swedish Media Institue (it's called something else, sorry, I forget) changed the title to the more declarative "Rambo: First Blood". This was perhaps to not confuse the Swedish audience as to which of the characters in this movie will say, at least once in the movie that "I didn't first blood, THEY drew first blood!", because that's Rambo's line, clarified right there in the title, for us lucky Swedes.
+But only if you are scanning a database of Swedish movie titles because the original movie title was "First Blood". Swedish Media Institue (it's called something else, sorry, I forget) changed the title to the more declarative "Rambo: First Blood". This is probably what happened:
+
+Guy: The americans have sent us a new movie.
+Boss: That's it called?
+g: First blood!
+b: First blood? What kind of silly name is that? Who's it about?
+g: There's this guy, Rambo.
+b: Rambo! What great name! Put THAT in the title. I'm feeling also this might be a franchise.
 
 Another thing we hope to achieve by analyzing text is to normalize between the words used when querying and the words in the documents so that matches can be produced consistently. 
 
