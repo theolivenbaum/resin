@@ -116,6 +116,8 @@ b: Rambo! What great name! Put THAT in title. I'm feeling also this might be a f
 
 Another thing we hope to achieve by analyzing text is to normalize between the words used when querying and the words in the documents so that matches can be produced consistently. 
 
+I don't speak like that btw. They speak russian or something. So go back to the original voice.
+
 ### Deep analysis
 The analysis you want to do both at indexing and querying time is to acctually try to understand the contents of the text, that a "Tree" is the same thing as a "tree" and a component of "trees". What if you could also pick up themes and subcontexts?
 
