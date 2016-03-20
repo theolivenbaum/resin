@@ -272,16 +272,14 @@ Finally, the searcher, a helper that takes an IndexReader and a QueryParser, acc
 1. Download a Wikipedia JSON dump [here](https://dumps.wikimedia.org/wikidatawiki/entities/)
 2. Use the [WikipediaJsonParser](https://github.com/kreeben/resin/blob/master/Resin.WikipediaJsonParser/Program.cs) to extract as many documents as you want. In a cmd window:
 
-	cd path_to_resin_repo\Resin.WikipediaJsonParser\bin\debug
+	cd path_to_resin_repo
 	
 	rnw c:\downloads\wikipedia.json 0 1000000
 
-	This will generate a new file: wikipedia_resin.json. I skipped 0 documents from the wikipedia file and populated the resin json file with 1M.
+	This will generate a new file: wikipedia_resin.json. 0 documents was skipped and 1M taken from the wikipedia file.
 
-3. Create an index. In a cmd window:
+3. Create an index:
 	
-	cd path_to_resin_repo\Cli\bin\Debug
-
 	rn write --file c:\downloads\wikipedia_resin.json --dir c:\temp\resin\wikipedia --skip 0 --take 1000000
 
 4. After 3 minutes or so, do this:  
