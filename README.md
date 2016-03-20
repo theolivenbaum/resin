@@ -370,10 +370,10 @@ Search is not rocket science. What comes next is, not really rocket sciense eith
 3. Promote that service and make that index not only searchable for everyone but
 4. Make that index and the usage data that we choose to collect public, completely open in a format available to anyone
 5. Tell people that by using Chrome you are feeding the Google AI. By using Firefox you are feeding noone. We can even build a new browser. Browser wars are fun, especially to web devs.
-6. Tell research teams and others who use Resin to upload theis indices to the Resin server, because then their index can then be queried in conjunction with other Resin indices that are already there, including its Great Web Index and its Scary Usage Data.
+6. Tell research teams and others who use Resin to upload theis indices to the Resin server, because then their index can then be queried in conjunction with other Resin indices that are already there, including its Great Web Index and its Scary Usage Data. This doesn't seem to scale well at all. Good, right?
 7. See how the media is now interested in the topic of privacy
 8. Watch how Google's significance lowers.
-9. Watch the laws change to give us more privacy, bacause now it is clear to everyone how much data Google have been collecting on you and have been using to drive and feed an AI. Oh yeah and Bing also. Bad Bing!
+9. Watch the laws change to give us more privacy, because by now it is clear to everyone how much data Google have been collecting on you and have been using to drive and feed an AI with. Oh yeah and Bing also. Bad Bing!
 10. Profit!
 
 Oh you don't think it can be done? Let there be another search engine war! All in good fun of course.
