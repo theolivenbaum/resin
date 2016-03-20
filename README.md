@@ -104,7 +104,7 @@ But only if you are scanning a database of Swedish movie titles because the orig
 
 Guy: The americans have sent us a new movie.
 
-Boss: That's it called?
+Boss: What's it called?
 
 g: First blood!
 
