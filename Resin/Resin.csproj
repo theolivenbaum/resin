@@ -61,6 +61,7 @@
     <Compile Include="QueryParser.cs" />
     <Compile Include="Searcher.cs" />
     <Compile Include="Term.cs" />
+    <Compile Include="Trie.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

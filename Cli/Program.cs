@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Newtonsoft.Json;
 
 namespace Resin
@@ -81,9 +82,8 @@ namespace Resin
                     {
                         Console.WriteLine(string.Join(", ", ++position, doc.Fields["id"][0], doc.Fields["label"][0]));
                     }
-                    Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed);
+                    Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed);                  
                 }
-                
             }
             else if (args[0].ToLower() == "analyze")
             {
@@ -94,8 +94,19 @@ namespace Resin
                 }
                 var dir = args[Array.IndexOf(args, "--dir") + 1];
                 var field = args[Array.IndexOf(args, "--field") + 1];
+                var timer = new Stopwatch();
+                timer.Start();
                 var scanner = new Scanner(dir);
-                File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), scanner.GetAllTokens("label"));
+                var tokens = scanner.GetAllTokens(field);
+                Console.WriteLine("Tokens fetched from disk in {0} ms\r\n", timer.ElapsedMilliseconds);
+                //File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens);
+                timer.Restart();
+                var trie = new Trie(tokens);
+                Console.WriteLine("Trie built in {0} ms\r\n", timer.ElapsedMilliseconds);
+                timer.Restart();
+                var words = trie.WordsStartingWith("ring").ToList();
+                Console.WriteLine("Trie scan found {0} words in {1} ms\r\n", words.Count, timer.ElapsedMilliseconds);
+                foreach(var w in words) Console.WriteLine(w);
             }
             else
             {

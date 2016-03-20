@@ -9,6 +9,8 @@ namespace Resin
         private readonly QueryParser _parser;
         private readonly IndexReader _reader;
 
+        public IndexReader Reader { get { return _reader; } }
+
         public Searcher(string dir)
         {
             _reader = new IndexReader(new Scanner(dir));

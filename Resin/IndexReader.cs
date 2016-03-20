@@ -10,7 +10,8 @@ namespace Resin
     {
         private readonly Scanner _scanner;
         private readonly Dictionary<int, int> _docIdToFileIndex;
-        private readonly Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>> _docFiles; // cache
+
+        private readonly Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>> _docFiles; // doc cache
 
         public Scanner Scanner { get { return _scanner; } }
 
