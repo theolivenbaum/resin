@@ -351,7 +351,7 @@ The problem of both prefix and fuzzy querying may be seen as a problem of findin
 If you create an ngram-index from the lexicon and ngram the query token the same way and look up the terms for those grams, filter out junk the [Levenstein](https://en.wikipedia.org/wiki/Levenshtein_distance) way, what is left are the term-based queries. Such a Lucene-inspired fuzzy query implementation would add a couple of steps to the querying pipeline and those steps would be all about finding out which terms to scan for.
 
 ###Ranking
-If that goes well then what is left is the ranking algorithm. That should be tons of fun. That's where the [Lucene core team](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) is at.
+If that goes well then what is left in our [MVP](https://en.wikipedia.org/wiki/Minimum_viable_product) is the ranking algorithm. That should be tons of fun. That's where the [Lucene core team](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) is at.
 
 ###Writing to an index in use
 Lucene does it extremly well because of it's file format and because it's indices are easily mergable. It sees an update as "first create new index then merge with the current index then refresh the index reader".
