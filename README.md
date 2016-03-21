@@ -80,7 +80,7 @@ Not:
 
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
-Go directly to an [introduction&#8628;](#citizens) of the parts that make up Resin.  
+Contribute frequently. Go directly to an [introduction&#8628;](#citizens) of the parts that make up Resin.  
                   
 ##How to build your own full-text search in c#, yeah!
 
