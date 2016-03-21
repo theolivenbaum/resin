@@ -1,7 +1,7 @@
 # Resin
 It's a a full-text search framework you can reason about. It's simplistic and very capable. It is not built upon Lucene.
 
-To the [code&#8628;](#citizens)  
+Go directly to an [introduction&#8628;](#citizens) of the parts that make up Resin. 
 To that [thing I said about AI&#8628;](#point)
 
 ##How to build your own full-text search in c#, yeah!
