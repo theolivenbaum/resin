@@ -27,12 +27,56 @@ namespace Resin
             }
         }
 
+        [Obsolete]
         public IEnumerable<Document> GetDocuments(string field, string token)
         {
             var docs = _scanner.GetDocIds(new Term {Field = field, Token = token});
             return docs.Select(GetDocFromDisk);
         }
 
+        public IEnumerable<DocumentScore> GetScoredResult(IEnumerable<Term> terms)
+        {
+            IList<DocumentScore> results = null;
+            foreach (var term in terms)
+            {
+                var subResult = _scanner.GetDocIds(term).ToList();
+                if (results == null)
+                {
+                    results = subResult;
+                }
+                else
+                {
+                    if (term.And)
+                    {
+                        results = results.Intersect(subResult).ToList();
+                    }
+                    else if (term.Not)
+                    {
+                        results = results.Except(subResult).ToList();
+                    }
+                    else
+                    {
+                        // Or
+                        results = results.Concat(subResult).Distinct().ToList();
+                    }
+                }
+            }
+
+            if (results != null)
+            {
+                foreach (var doc in results.GroupBy(d => d.DocId))
+                {
+                    float documentSignificance = 0;
+                    foreach (var subScore in doc)
+                    {
+                        documentSignificance += subScore.Value;
+                    }
+                    yield return new DocumentScore { DocId = doc.Key, Value = documentSignificance };
+                }
+            }
+        }
+
+        [Obsolete]
         public IEnumerable<Document> GetDocuments(IList<Term> terms)
         {
             IList<DocumentScore> results = null;
@@ -81,7 +125,7 @@ namespace Resin
             }
         }
 
-        private Document GetDocFromDisk(DocumentScore doc)
+        public Document GetDocFromDisk(DocumentScore doc)
         {
             var fileId = _docIdToFileIndex[doc.DocId];
             Dictionary<int, Dictionary<string, List<string>>> dics;

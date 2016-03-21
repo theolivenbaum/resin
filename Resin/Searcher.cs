@@ -21,10 +21,14 @@ namespace Resin
             _parser = parser;
         }
 
-        public IEnumerable<Document> Search(string query)
+        public Result Search(string query, int page = 0, int size = 20)
         {
-            var terms = _parser.Parse(query).ToList();
-            return _reader.GetDocuments(terms); 
+            var skip = page*size;
+            var terms = _parser.Parse(query);
+            var scored = _reader.GetScoredResult(terms).ToList();
+            var paged = scored.Skip(skip).Take(size);
+            var docs = paged.Select(s=>_reader.GetDocFromDisk(s));
+            return new Result { Docs = docs, Total = scored.Count };
         }
 
 
@@ -32,5 +36,11 @@ namespace Resin
         {
             _reader.Dispose();
         }
+    }
+
+    public class Result
+    {
+        public IEnumerable<Document> Docs { get; set; }
+        public int Total { get; set; }
     }
 }
