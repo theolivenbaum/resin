@@ -1,6 +1,9 @@
 # Resin
 It's a a full-text search framework you can reason about. It's simplistic and very capable. It is not built upon Lucene.
 
+To the [code](#citizens)
+To the [point](#point)
+
 ##How to build your own full-text search in c#, yeah!
 
 Here's some guidance I could have used when I started building search frameworks. Resin is the 4th iteration I've done. The codebase, it's pieces, get smaller and simpler each round. Use this to get some ideas from if you are into information retrieval. The nerd factor on that last sentence is completely off the charts, I'm well aware, thank you.
@@ -340,6 +343,7 @@ If that goes well then what is left in our [MVP](https://en.wikipedia.org/wiki/M
 ###Writing to an index in use
 Lucene does it extremly well because of it's file format and because it's indices are easily mergable. It sees an update as "first create new index then merge with the current index then refresh the index reader".
 
+<a name="point"></a>
 ###Multi-index searching
 Lucene does it. It's pretty useful. It has a cool factor to it. Resin needs it.
 
