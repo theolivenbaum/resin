@@ -380,7 +380,7 @@ Oh you don't think it can be done? Let there be another search engine war! All i
 
 ## Final analysis
 
-The top 100 tokens of this document, in the order of their frequency, making "the" the most important word. If you filter out the stop words you see more clearly the main concepts.
+The top 100 tokens of this document, in the order of their frequency, making "the" the most important word. If you filter out some common words, stop words, you see more clearly the main concepts. 
 
 the 346
 
@@ -416,7 +416,7 @@ __lucene__ 52
 
 __documents__ 52
 
-__https__ 52 (markdown links)
+https 52 (markdown links)
 
 __index__ 50
 
@@ -428,23 +428,23 @@ as 48
 
 __field__ 48
 
-com 48
+com 48 (markdown links)
 
 are 46
 
-__github__ 46 (markdown links)
+github 46 (markdown links)
 
-__kreeben__ 46 (markdown links)
+kreeben 46 (markdown links)
 
-__blob__ 46 (markdown links)
+blob 46 (markdown links)
 
-__master__ 46 (markdown links)
+master 46 (markdown links)
 
 if 44
 
 __document__ 44
 
-__cs__ 44
+cs 44
 
 we 42
 
@@ -470,17 +470,17 @@ __not__ 32
 
 __up__ 32
 
-__can__ 30
+can 30
 
-__about__ 30
+about 30
 
-__for__ 30
+for 30
 
 __token__ 30
 
 __querying__ 28
 
-__with__ 28
+with 28
 
 0 28
 
@@ -494,21 +494,21 @@ __rambo__ 26
 
 on 24
 
-__there__ 24
+there 24
 
 t 24
 
-__from__ 22
+from 22
 
-__into__ 22
+into 22
 
-__even__ 22
+even 22
 
 so 22
 
 __wikipedia__ 22
 
-__then__ 22
+then 22
 
 by 22
 
@@ -522,7 +522,7 @@ __new__ 22
 
 __blood__ 22
 
-__here__ 20
+here 20
 
 but 20
 
@@ -532,7 +532,7 @@ or 20
 
 __code__ 20
 
-__they__ 20
+they 20
 
 __first__ 20
 
@@ -546,9 +546,9 @@ __docs__ 20
 
 __doc__ 20
 
-__have__ 18
+have 18
 
-__would__ 18
+would 18
 
 d 18
 
@@ -562,17 +562,17 @@ __return__ 18
 
 __very__ 16
 
-__how__ 16
+how 16
 
-__your__ 16
+your 16
 
 __one__ 16
 
 __like__ 16
 
-__than__ 16
+than 16
 
-__also__ 16
+also 16
 
 __analyze__ 16
 
