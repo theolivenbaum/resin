@@ -106,7 +106,8 @@ Analyze your index:
 	var scanner = new Scanner(dir);
 	var tokens = scanner.GetAllTokens(field).OrderByDescending(t=>t.Count).ToList();
 	File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens
-		.Select(t=>string.Format("{0} {1}", t.Token, t.Count)));
+		.Select(t=>string.Format(
+			"{0} {1}", t.Token, t.Count)));
   
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
