@@ -47,6 +47,7 @@ Here is a huge number of those documents:
 
 Add them to a Resin index:
 
+	var dir = @"c:\MyResinIndices\0";
 	using (var writer = new IndexWriter(dir, new Analyzer()))
 	{
 		foreach (var doc in docs)
@@ -98,7 +99,13 @@ All fields are queryable and the whole document returned in the result:
 	var aliases = doc.Fields["aliases"].First();
 	// Print "cosmos The Universe existence space outerspace"
 	Console.WriteLine(aliases);
-  
+
+Analyze your index:
+
+	var field = "label";
+	var scanner = new Scanner(dir);
+        var tokens = scanner.GetAllTokens(field).OrderByDescending(t=>t.Count).ToList();
+        File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens.Select(t=>string.Format("{0} {1}", t.Token, t.Count)));
   
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
