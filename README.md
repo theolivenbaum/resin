@@ -206,7 +206,7 @@ b: First blood? What kind of silly name is that? Who's it about?
 
 g: Well, there's this guy, Rambo, he...
 
-b: Rambo! What great name! Put THAT in title. I'm feeling also this might be a franchise.
+b: Rambo! What great name! Put THAT in title. I'm feeling also this might be franchise.
 
 Another thing we hope to achieve by analyzing text is to normalize between the words used when querying and the words in the documents so that matches can be produced consistently. 
 
