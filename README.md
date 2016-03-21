@@ -1,8 +1,8 @@
 # Resin
 It's a a full-text search framework you can reason about. It's simplistic and very capable. It is not built upon Lucene.
 
-To the [code](#citizens)
-To the [point](#point)
+- To the [code](#citizens)
+- To the [point](#point)
 
 ##How to build your own full-text search in c#, yeah!
 
