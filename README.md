@@ -78,6 +78,13 @@ Not:
 
 	var docs = searcher.Search("label:universe -aliases:cosmos").ToList();
 
+Only a few at a time:
+	
+	var page = 0;
+	var size = 10;
+	var docs = searcher.Search("label:univ*", page, size).ToList();
+
+
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
 Contribute frequently. Go directly to an [introduction&#8628;](#citizens) of the parts that make up Resin.  
