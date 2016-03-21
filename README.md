@@ -380,7 +380,7 @@ Oh you don't think it can be done? Let there be another search engine war! All i
 
 ## Final analysis
 
-The top 100 tokens of this readme, in the order of their frequency (from [this file](https://github.com/kreeben/resin/blob/prefix/_about.txt):
+The top 100 tokens of this document, in the order of their frequency, making "the" the most important word. If you filter out the stop words you see more clearly the main concepts.
 
 the 346
 
@@ -396,7 +396,7 @@ you 130
 
 that 120
 
-resin 110
+__resin__ 110
 
 in 110
 
@@ -412,172 +412,172 @@ var 56
 
 i 54
 
-lucene 52
+__lucene__ 52
 
-documents 52
+__documents__ 52
 
-https 52
+__https__ 52 (markdown links)
 
-index 50
+__index__ 50
 
-tokens 50
+__tokens__ 50
 
 this 48
 
 as 48
 
-field 48
+__field__ 48
 
 com 48
 
 are 46
 
-github 46
+__github__ 46 (markdown links)
 
-kreeben 46
+__kreeben__ 46 (markdown links)
 
-blob 46
+__blob__ 46 (markdown links)
 
-master 46
+__master__ 46 (markdown links)
 
 if 44
 
-document 44
+__documen__t 44
 
-cs 44
+__cs__ 44
 
 we 42
 
 will 40
 
-query 40
+__query__ 40
 
-title 40
+__title__ 40
 
 at 38
 
-file 38
+__file__ 38
 
-text 36
+__text__ 36
 
-search 36
+__search__ 36
 
 an 36
 
-string 34
+__string__ 34
 
-not 32
+__not__ 32
 
-up 32
+__up__ 32
 
-can 30
+__can__ 30
 
-about 30
+__about__ 30
 
-for 30
+__for__ 30
 
-token 30
+__token__ 30
 
-querying 28
+__querying__ 28
 
-with 28
+__with__ 28
 
 0 28
 
-int 28
+__int__ 28
 
-what 26
+__what__ 26
 
-because 26
+__because__ 26
 
-rambo 26
+__rambo__ 26
 
 on 24
 
-there 24
+__there__ 24
 
 t 24
 
-from 22
+__from__ 22
 
-into 22
+__into__ 22
 
-even 22
+__even__ 22
 
 so 22
 
-wikipedia 22
+__wikipedia__ 22
 
-then 22
+__then__ 22
 
 by 22
 
-fields 22
+__fields__ 22
 
-all 22
+__all__ 22
 
-value 22
+__value__ 22
 
-new 22
+__new__ 22
 
-blood 22
+__blood__ 22
 
-here 20
+__here__ 20
 
 but 20
 
-fast 20
+__fast__ 20
 
 or 20
 
-code 20
+__code__ 20
 
-they 20
+__they__ 20
 
-first 20
+__first__ 20
 
-need 20
+__need__ 20
 
-terms 20
+__terms__ 20
 
-idictionary 20
+__idictionary__ 20
 
-docs 20
+__docs__ 20
 
-doc 20
+__doc__ 20
 
-have 18
+__have__ 18
 
-would 18
+__would__ 18
 
 d 18
 
-little 18
+__little__ 18
 
-positions 18
+__positions__ 18
 
-analyzer 18
+__analyzer__ 18
 
-return 18
+__return__ 18
 
-very 16
+__very__ 16
 
-how 16
+__how__ 16
 
-your 16
+__your__ 16
 
-one 16
+__one__ 16
 
-like 16
+__like__ 16
 
-than 16
+__than__ 16
 
-also 16
+__also__ 16
 
-analyze 16
+__analyze__ 16
 
-able 16
+__able__ 16
 
-scan 16
+__scan__ 16
 
-public 16
+__public__ 16
