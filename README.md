@@ -23,7 +23,7 @@ Here is a document:
 	  "Id": 1
 	}
 
-It can be serialized into a [Resin.Document](https://github.com/kreeben/resin/blob/master/Resin/Document.cs):
+It can be deserialized into a [Resin.Document](https://github.com/kreeben/resin/blob/master/Resin/Document.cs):
 
 	namespace Resin
 	{
