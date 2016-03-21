@@ -12,9 +12,13 @@ namespace Resin
         public IndexReader Reader { get { return _reader; } }
 
         public Searcher(string dir)
+            : this(new IndexReader(new Scanner(dir)), new QueryParser(new Analyzer()))
+        {}
+
+        public Searcher(IndexReader reader, QueryParser parser)
         {
-            _reader = new IndexReader(new Scanner(dir));
-            _parser = new QueryParser(new Analyzer());
+            _reader = reader;
+            _parser = parser;
         }
 
         public IEnumerable<Document> Search(string query)
