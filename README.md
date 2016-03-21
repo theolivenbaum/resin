@@ -41,9 +41,9 @@ It can be deserialized into a [Resin.Document](https://github.com/kreeben/resin/
 	    }
 	}
 
-Here is a bunch of those documents:
+Here is a huge number of those documents:
 
-	var docs = GetHugeNumberDocs();
+	var docs = GetHugeNumberOfDocs();
 
 Add them to a Resin index:
 
