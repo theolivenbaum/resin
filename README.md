@@ -43,13 +43,13 @@ It can be deserialized into a [Resin.Document](https://github.com/kreeben/resin/
 
 Here is a bunch of those documents:
 
-	var wikipediaDocs = GetWikipediaDocs();
+	var docs = GetDocs();
 
 Add them to a Resin index:
 
 	using (var writer = new IndexWriter(dir, new Analyzer()))
 	{
-		foreach (var doc in wikipediaDocs)
+		foreach (var doc in docs)
 		{
 			writer.Write(doc);
 		}
