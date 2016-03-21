@@ -64,31 +64,21 @@ Query that index (matching the whole term):
 
 Prefix query:
 
-	using (var searcher = new Searcher(dir))
-	{
-		var docs = searcher.Search("label:univ*").ToList();
-	}
+	var docs = searcher.Search("label:univ*").ToList();
 
 And:
 
-	using (var searcher = new Searcher(dir))
-	{
-		var docs = searcher.Search("label:universe +aliases:cosmos").ToList();
-	}
+	var docs = searcher.Search("label:universe +aliases:cosmos").ToList();
 
 Or:
 
-	using (var searcher = new Searcher(dir))
-	{
-		var docs = searcher.Search("label:universe aliases:cosmos").ToList();
-	}
+	var docs = searcher.Search("label:universe aliases:cosmos").ToList();
 
 Not:
 
-	using (var searcher = new Searcher(dir))
-	{
-		var docs = searcher.Search("label:universe -aliases:cosmos").ToList();
-	}
+	var docs = searcher.Search("label:universe -aliases:cosmos").ToList();
+
+Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
 Go directly to an [introduction&#8628;](#citizens) of the parts that make up Resin.  
                   
