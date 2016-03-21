@@ -82,7 +82,7 @@ Only a few at a time:
 	
 	var page = 0;
 	var size = 10;
-	var result = searcher.Search("label:univ*", page, size).ToList();
+	var result = searcher.Search("label:univ*", page, size);
 	var totalNumberOfHits = result.Total;
 	var docs = result.Docs.ToList(); // Will contain a maximum of 10 docs
 
