@@ -379,12 +379,13 @@ Finally, the searcher, a helper that takes an IndexReader and a QueryParser, acc
 
 Less than a millisecond apparently. That's more than a couple of orders of magitude faster than Lucene. Here's what went down:
 
+	var q = args[Array.IndexOf(args, "-q") + 1];
 	var timer = new Stopwatch();
 	using (var s = new Searcher(dir))
 	{
 	    for (int i = 0; i < 1; i++)
 	    {
-	        s.Search(q).ToList(); // this heats up the "label" field and pre-caches the documents
+	        s.Search(q).Docs.ToList(); // this heats up the "label" field and pre-caches the documents
 	    }
 	    timer.Start();
 	    var docs = s.Search(q).ToList();
@@ -399,12 +400,13 @@ Less than a millisecond apparently. That's more than a couple of orders of magit
 
 Here is another test, this time the documents aren't pre-cached in the warmup:
 
+	var q = args[Array.IndexOf(args, "-q") + 1];
 	var timer = new Stopwatch();
 	using (var s = new Searcher(dir))
 	{
 	    for (int i = 0; i < 1; i++)
 	    {
-	        s.Search("label:definetlynotinthelexicon").ToList(); // warm up the "label" field
+	        s.Search(q); // warm up the "label" field
 	    }
 	    timer.Start();
 	    var docs = s.Search(q).ToList();
