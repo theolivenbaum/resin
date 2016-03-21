@@ -1,8 +1,79 @@
 # Resin
 It's a a full-text search framework you can reason about. It's simplistic and very capable. It is not built upon Lucene.
 
-Go directly to an [introduction&#8628;](#citizens) of the parts that make up Resin.  
+##A quick usage guide
 
+Here is a document:
+
+	{
+	  "Fields": {
+		"id": [
+		  "Q1"
+		],
+		"label": [
+		  "universe"
+		],
+		"description": [
+		  "totality of planets, stars, galaxies, intergalactic space, or all matter or all energy"
+		],
+		"aliases": [
+		  "cosmos The Universe existence space outerspace"
+		]
+	  },
+	  "Id": 1
+	}
+
+It can be serialized into a [Resin.Document](https://github.com/kreeben/resin/blob/master/Resin/Document.cs). Here are a bunch of those documents:
+
+	var wikipediaDocs = GetWikipediaDocs();
+
+Add documents to index:
+
+	using (var writer = new IndexWriter(dir, new Analyzer()))
+	{
+		foreach (var doc in wikipediaDocs)
+		{
+			writer.Write(doc);
+		}
+	}
+
+Query that index (matching the whole term):
+
+	using (var searcher = new Searcher(dir))
+	{
+		var docs = s.Search("label:universe").ToList();
+	}
+
+Prefix query:
+
+	using (var searcher = new Searcher(dir))
+	{
+		var docs = s.Search("label:univ*").ToList();
+	}
+
+And:
+
+	using (var searcher = new Searcher(dir))
+	{
+		var docs = s.Search("label:universe +aliases:cosmos").ToList();
+	}
+
+Or:
+
+	using (var searcher = new Searcher(dir))
+	{
+		var docs = s.Search("label:universe aliases:cosmos").ToList();
+	}
+
+Not:
+
+	using (var searcher = new Searcher(dir))
+	{
+		var docs = s.Search("label:universe -aliases:cosmos").ToList();
+	}
+
+Go directly to an [introduction&#8628;](#citizens) of the parts that make up Resin.  
+                  
 ##How to build your own full-text search in c#, yeah!
 
 Here's some guidance I could have used when I started building search frameworks. Resin is the 4th iteration I've done. The codebase, it's pieces, get smaller and simpler each round. Use this to get some ideas from if you are into information retrieval. The nerd factor on that last sentence is completely off the charts, I'm well aware, thank you.

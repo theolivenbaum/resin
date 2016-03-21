@@ -13,8 +13,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resin.WikipediaJsonParser",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CADD803B-57D9-4430-A5BE-9E66805FFFC3}"
 	ProjectSection(SolutionItems) = preProject
+		example.document.json = example.document.json
+		LICENSE = LICENSE
 		README.md = README.md
+		rn-write.bat = rn-write.bat
+		rn.bat = rn.bat
+		rnw.bat = rnw.bat
 		screenshot.PNG = screenshot.PNG
+		screenshot2.PNG = screenshot2.PNG
+		screenshot3.PNG = screenshot3.PNG
+		screenshot4.PNG = screenshot4.PNG
 	EndProjectSection
 EndProject
 Global
