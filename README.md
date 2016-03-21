@@ -1,5 +1,5 @@
 # Resin
-It's a a full-text search framework you can reason about. It's simplistic and very capable. It is not built upon Lucene.
+It's a full-text search framework you can reason about. It's simplistic and very capable. It is not built upon Lucene.
 
 ##A quick usage guide
 
