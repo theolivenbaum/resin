@@ -41,7 +41,7 @@ It can be deserialized into a [Resin.Document](https://github.com/kreeben/resin/
 	    }
 	}
 
-Here is a huge number of those documents:
+Here's a huge number of documents:
 
 	var docs = GetHugeNumberOfDocs();
 
