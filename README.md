@@ -23,7 +23,25 @@ Here is a document:
 	  "Id": 1
 	}
 
-It can be serialized into a [Resin.Document](https://github.com/kreeben/resin/blob/master/Resin/Document.cs). Here are a bunch of those documents:
+It can be serialized into a [Resin.Document](https://github.com/kreeben/resin/blob/master/Resin/Document.cs):
+
+	namespace Resin
+	{
+	    public class Document
+	    {
+	        public int Id { get; set; }
+	        public Dictionary<string, List<string>> Fields { get; set; }
+	
+	        public static Document FromDictionary(int docId, Dictionary<string, List<string>> fields)
+	        {
+	            if (fields == null) throw new ArgumentNullException("fields");
+	
+	            return new Document{Id = docId, Fields = fields};
+	        }
+	    }
+	}
+
+Here is a bunch of those documents:
 
 	var wikipediaDocs = GetWikipediaDocs();
 
