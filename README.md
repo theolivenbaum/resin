@@ -59,30 +59,46 @@ Query that index (matching the whole term):
 
 	using (var searcher = new Searcher(dir))
 	{
-		var docs = searcher.Search("label:universe").ToList();
+		var result = searcher.Search("label:universe");
 	}
 
 Prefix query:
 
-	var docs = searcher.Search("label:univ*").ToList();
+	var result = searcher.Search("label:univ*");
 
 And:
 
-	var docs = searcher.Search("label:universe +aliases:cosmos").ToList();
+	var result = searcher.Search("label:universe +aliases:cosmos");
 
 Or:
 
-	var docs = searcher.Search("label:universe aliases:cosmos").ToList();
+	var result = searcher.Search("label:universe aliases:cosmos");
 
 Not:
 
-	var docs = searcher.Search("label:universe -aliases:cosmos").ToList();
+	var result = searcher.Search("label:universe -aliases:cosmos");
 
 Only a few at a time:
 	
 	var page = 0;
 	var size = 10;
-	var docs = searcher.Search("label:univ*", page, size).ToList();
+	var result = searcher.Search("label:univ*", page, size).ToList();
+	var totalNumberOfHits = result.Total;
+	var docs = result.docs;
+
+Only one:
+
+	var result = searcher.Search("id:Q1");
+	var doc = result.Docs.First();
+
+All fields are queryable and the whole document returned in the result:
+
+	var result = searcher.Search("id:Q1");
+	var doc = result.Docs.First();
+	var aliases = doc.Fields["aliases"].First();
+	// Print "cosmos The Universe existence space outerspace"
+	Console.WriteLine(aliases);
+
 
 
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
