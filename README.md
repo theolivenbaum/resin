@@ -192,7 +192,7 @@ An [IndexReader](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.
             Assert.AreEqual("world", terms[1]);
         }
 
-An analyzer produces normalized tokens from text. `var text = "Hello World!"` may be normalized into `new[]{"hello", "world"}` if we lower-case it and split it up at characters ' ' and '!'. By tokenizing the text of a field we make the individual tokens insensitive to casing, queryable. Had we not only exact matches to the verbatim text can be made at runtime, if we want the querying to go fast. The query "title:Rambo" would produce zero documents (no movie in the whole world actually has the title "Rambo") but querying "title:Rambo\\: First Blood" would produce one hit. 
+An analyzer produces normalized tokens from text. `var text = "Hello World!"` may be normalized into `new[]{"hello", "world"}` if we lower-case it and split it up at characters ` ` and `!`. By tokenizing the text of a field we make the individual tokens insensitive to casing, queryable. Had we not only exact matches to the verbatim text can be made at runtime, if we want the querying to go fast. The query "title:Rambo" would produce zero documents (no movie in the whole world actually has the title "Rambo") but querying "title:Rambo\\: First Blood" would produce one hit. 
 
 But only if you are scanning a database of Swedish movie titles because the original movie title was "First Blood". Swedish Media Institue (it's called something else, sorry, I forget) changed the title to the more declarative "Rambo: First Blood". This is probably what happened:
 
@@ -213,7 +213,7 @@ Another thing we hope to achieve by analyzing text is to normalize between the w
 I don't speak like that btw. They were definitely not swedish, maybe russian or ukranian. So go back to the voice you had originally in your head.
 
 ### Deep analysis
-The analysis you want to do both at indexing and querying time is to acctually try to understand the contents of the text, that a "Tree" is the same thing as a "tree" and a component of "trees". What if you could also pick up themes and subcontexts?
+The analysis you want to do both at indexing and querying time is to acctually try to understand the contents of the text, that a "Tree" is the same thing as a "tree" and a component of "trees". What if you could also pick up on themes and subcontexts?
 
 What we are doing however in Analyzer.cs is very rudimentary type of analysis. We are simply identifying the individual words. We could go further, investigate if any of those words are kind of the same, because although "trees" != "tree" their concepts intersect so much so that in the interest of full-text search they could and maybe should be one and the same concept. Anyway, identifying and normalizing the words will be fine for now.
 
@@ -332,7 +332,7 @@ Here's the ranking:
 	var ordered = positions.OrderByDescending(d => d.Value.Count).Select(d => d.Key).ToList();
 	return ordered;
 
-It is a scan to see if the token exists at all in a document. It doesn't care about how many times or where in the document although we did give it that information. Instead, for now, it cares only about if it exists.
+It is a scan to see if the token exists at all in a document. It doesn't care about how many times or where in the document although we did give it that information. It will soon be replaced but for now, it cares only about if a token exists in a document.
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/ScannerTests.cs)
 
@@ -384,7 +384,7 @@ Finally, the searcher, a helper that takes an IndexReader and a QueryParser, acc
 
 ![alt text](https://github.com/kreeben/resin/blob/master/screenshot.PNG "I have an SSD. The index was warmed up prior to the query.")
 
-Less than a millisecond apparently. That's more than a couple of orders of magitude faster than Lucene. Here's what went down:
+A little less than a millisecond apparently. A couple of orders of magitude faster than Lucene. Here's what went down:
 
 	var q = args[Array.IndexOf(args, "-q") + 1];
 	var timer = new Stopwatch();
@@ -395,7 +395,7 @@ Less than a millisecond apparently. That's more than a couple of orders of magit
 	        s.Search(q).Docs.ToList(); // this heats up the "label" field and pre-caches the documents
 	    }
 	    timer.Start();
-	    var docs = s.Search(q).ToList();
+	    var docs = s.Search(q).Docs.ToList(); // Fetch docs from disk
 	    var elapsed = timer.Elapsed.TotalMilliseconds;
 	    var position = 0;
 	    foreach (var doc in docs)
@@ -416,7 +416,7 @@ Here is another test, this time the documents aren't pre-cached in the warmup:
 	        s.Search(q); // warm up the "label" field
 	    }
 	    timer.Start();
-	    var docs = s.Search(q).ToList();
+	    var docs = s.Search(q).Docs.ToList(); // Fetch docs from disk
 	    var elapsed = timer.Elapsed.TotalMilliseconds;
 	    var position = 0;
 	    foreach (var doc in docs)
@@ -430,8 +430,9 @@ Here is another test, this time the documents aren't pre-cached in the warmup:
 
 ##Roadmap
 
-###Query language
-AND, OR, NOT (+- ), prefix* and fuzzy~ [implemented here](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs)
+###Query language interpreter
+AND, OR, NOT (+- ), prefix* and fuzzy~ [implemented here](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs).
+TODO: nested clauses
 
 ###Prefix search
 Implemented currently as a Trie scan [here](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs#L41).
@@ -439,7 +440,7 @@ Implemented currently as a Trie scan [here](https://github.com/kreeben/resin/blo
 Here's an example of a prefix search towards and index of 1M english wikipedia docs:
 ![alt text](https://github.com/kreeben/resin/blob/master/screenshot4.PNG "Trie's are fast")
 
-Coming up:
+More TODO:
 
 ###Fuzzy
 The term-based search that is currently implemented is extremly fast because once you have deserialized the indexes the scan, the resolve of the document, they are all hash-table look-ups.
