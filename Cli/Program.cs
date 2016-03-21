@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Newtonsoft.Json;
 
 namespace Resin
@@ -122,46 +121,46 @@ namespace Resin
                 Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
                 File.WriteAllLines(Path.Combine(dir, "_about.txt"), tokens.Select(t => string.Format("{0} {1}", t.Token, t.Count)));
             }
-            else if (args[0].ToLower() == "trie")
-            {
-                if (Array.IndexOf(args, "--dir") == -1)
-                {
-                    Console.WriteLine("I need a directory.");
-                    return;
-                }
-                const string q = "ring";
-                const string field = "label";
-                var dir = args[Array.IndexOf(args, "--dir") + 1];
-                var timer = new Stopwatch();
-                var scanner = new Scanner(dir);
+            //else if (args[0].ToLower() == "trie")
+            //{
+            //    if (Array.IndexOf(args, "--dir") == -1)
+            //    {
+            //        Console.WriteLine("I need a directory.");
+            //        return;
+            //    }
+            //    const string q = "ring";
+            //    const string field = "label";
+            //    var dir = args[Array.IndexOf(args, "--dir") + 1];
+            //    var timer = new Stopwatch();
+            //    var scanner = new Scanner(dir);
 
-                timer.Restart();
-                var tokens = scanner.GetAllTokens(field).Select(t=>t.Token).ToList();
-                Console.WriteLine("Tokens fetched from disk in {0} ms.\r\n", timer.ElapsedMilliseconds);
+            //    timer.Restart();
+            //    var tokens = scanner.GetAllTokens(field).Select(t=>t.Token).ToList();
+            //    Console.WriteLine("Tokens fetched from disk in {0} ms.\r\n", timer.ElapsedMilliseconds);
                 
-                timer.Restart();
-                var trie = new Trie(tokens);
-                Console.WriteLine("Trie built in {0} ms\r\n", timer.ElapsedMilliseconds);
+            //    timer.Restart();
+            //    var trie = new Trie(tokens);
+            //    Console.WriteLine("Trie built in {0} ms\r\n", timer.ElapsedMilliseconds);
                 
-                timer.Restart();
-                var words = trie.WordsStartingWith(q).ToList();
-                Console.WriteLine("Trie scan found {0} words in {1} ms. The first 20:\r\n", words.Count, timer.ElapsedMilliseconds);
-                foreach (var w in words.Take(20)) Console.WriteLine(w);
-                var fileName = Path.Combine(dir, "field.tri");
+            //    timer.Restart();
+            //    var words = trie.GetTokens(q).ToList();
+            //    Console.WriteLine("Trie scan found {0} words in {1} ms. The first 20:\r\n", words.Count, timer.ElapsedMilliseconds);
+            //    foreach (var w in words.Take(20)) Console.WriteLine(w);
+            //    var fileName = Path.Combine(dir, "field.tri");
                 
-                timer.Restart();
-                trie.Save(fileName);
-                Console.WriteLine("Trie serialized in {0} ms\r\n", timer.ElapsedMilliseconds);
+            //    timer.Restart();
+            //    trie.Save(fileName);
+            //    Console.WriteLine("Trie serialized in {0} ms\r\n", timer.ElapsedMilliseconds);
                 
-                timer.Restart();
-                trie = Trie.Load(fileName);
-                Console.WriteLine("Trie deserialized in {0} ms\r\n", timer.ElapsedMilliseconds);
+            //    timer.Restart();
+            //    trie = Trie.Load(fileName);
+            //    Console.WriteLine("Trie deserialized in {0} ms\r\n", timer.ElapsedMilliseconds);
                 
-                timer.Restart();
-                words = trie.WordsStartingWith(q).ToList();
-                Console.WriteLine("Trie scan found {0} words in {1} ms. The first 20:\r\n", words.Count, timer.ElapsedMilliseconds);
-                foreach (var w in words.Take(20)) Console.WriteLine(w);
-            }
+            //    timer.Restart();
+            //    words = trie.GetTokens(q).ToList();
+            //    Console.WriteLine("Trie scan found {0} words in {1} ms. The first 20:\r\n", words.Count, timer.ElapsedMilliseconds);
+            //    foreach (var w in words.Take(20)) Console.WriteLine(w);
+            //}
             else
             {
                 Console.WriteLine("usage:");

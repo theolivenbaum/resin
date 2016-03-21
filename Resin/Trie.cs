@@ -46,7 +46,10 @@ namespace Resin
         public Trie(string text, Trie parent)
         {
             if (parent == null) throw new ArgumentNullException("parent");
-            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("text");
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                throw new ArgumentException("text");
+            }
 
             Value = text[0];
 
@@ -75,7 +78,7 @@ namespace Resin
             }
         }
 
-        public IEnumerable<string> WordsStartingWith(string prefix)
+        public IEnumerable<string> GetTokens(string prefix)
         {
             var words = new List<string>();
             Trie child;
@@ -105,6 +108,21 @@ namespace Resin
                 {
                     child.Scan(originalPrefix, prefix.Substring(1), ref words);
                 }
+            }
+        }
+
+        public void AppendToDescendants(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("text");
+            Trie child;
+            if (!Children.TryGetValue(text[0], out child))
+            {
+                child = new Trie(text, this);
+                Children.Add(text[0], child);
+            }
+            else
+            {
+                child.Append(text);
             }
         }
 

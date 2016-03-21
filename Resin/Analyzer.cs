@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace Resin
 {
@@ -15,7 +16,6 @@ namespace Resin
 
         public Analyzer() : this(DefaultTokenSeparators)
         {
-
         }
 
         public Analyzer(char[] tokenSeparators)
@@ -24,9 +24,11 @@ namespace Resin
             _tokenSeparators = tokenSeparators;
         }
 
-        public string[] Analyze(string value)
+        public string[] Analyze(string value) // TODO: could be made lazy
         {
-            return value.ToLowerInvariant().Split(_tokenSeparators, StringSplitOptions.RemoveEmptyEntries);
+            var analyzed = value.ToLowerInvariant().Split(_tokenSeparators);
+            var cleansed = analyzed.Select(t=>t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)).ToArray(); // I have no idea why I have to be trimming. I just split by 'space'. Wierd.
+            return cleansed;
         }
     }
 }

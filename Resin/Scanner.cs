@@ -33,14 +33,27 @@ namespace Resin
                 var reader = GetReader(term.Field);
                 if (reader != null)
                 {
-                    var postings = reader.GetPostings(term.Token);
-                    if (postings != null)
-                    {
-                        foreach (var posting in postings)
-                        {
-                            yield return new DocumentScore {DocId = posting.Key, Value = posting.Value.Count};
-                        }
-                    }
+                    if (term.Prefix) return GetDocIdsByPrefix(term, reader);
+                    return GetDocIdsExact(term, reader);
+                }
+            }
+            return Enumerable.Empty<DocumentScore>();
+        }
+
+        private IEnumerable<DocumentScore> GetDocIdsByPrefix(Term term, FieldReader reader)
+        {
+            var terms = reader.GetTokens(term.Token).Select(token => new Term { Field = term.Field, Token = token }).ToList();
+            return terms.SelectMany(t => GetDocIdsExact(t, reader));
+        }
+
+        private IEnumerable<DocumentScore> GetDocIdsExact(Term term, FieldReader reader)
+        {
+            var postings = reader.GetPostings(term.Token);
+            if (postings != null)
+            {
+                foreach (var posting in postings)
+                {
+                    yield return new DocumentScore { DocId = posting.Key, Value = posting.Value.Count };
                 }
             }
         }
@@ -75,15 +88,6 @@ namespace Resin
 
     public struct TokenInfo
     {
-        public static implicit operator string(TokenInfo ti)
-        {
-            return ti.Token;
-        }
-
-        public static implicit operator TokenInfo(string s)
-        {
-            return new TokenInfo{Token=s};
-        }
         public string Token;
         public int Count;
     }
