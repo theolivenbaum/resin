@@ -2,7 +2,6 @@
 It's a a full-text search framework you can reason about. It's simplistic and very capable. It is not built upon Lucene.
 
 Go directly to an [introduction&#8628;](#citizens) of the parts that make up Resin.  
-To that [thing I said about AI&#8628;](#point)
 
 ##How to build your own full-text search in c#, yeah!
 
@@ -320,15 +319,17 @@ Here is another test, this time the documents aren't pre-cached in the warmup:
 ![alt text](https://github.com/kreeben/resin/blob/master/screenshot3.PNG "Docs weren't in the cache.")
 
 ##Roadmap
-Resin is around 800 locs at the moment, fast at indexing and term-based queries.
-
-Coming up:
 
 ###Query language
-I don't see anything wrong with the Lucene query language. 
+AND, OR, NOT (+- ), prefix* and fuzzy~ [implemented here](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs)
 
 ###Prefix search
-I will also try to achieve prefix based matching with the help of a [DAWG](https://en.wikipedia.org/wiki/Directed_acyclic_word_graph).
+Implemented currently as a Trie scan [here](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs#L41).
+
+Here's an example of a prefix search:
+![alt text](https://github.com/kreeben/resin/blob/master/screenshot4.PNG "Trie's are fast")
+
+Coming up:
 
 ###Fuzzy
 The term-based search that is currently implemented is extremly fast because once you have deserialized the indexes the scan, the resolve of the document, they are all hash-table look-ups.
