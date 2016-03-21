@@ -3,7 +3,7 @@ It's a a full-text search framework you can reason about. It's simplistic and ve
 
 ##A quick usage guide
 
-Here is a document:
+Here is a really interesting document:
 
 	{
 	  "Fields": {
@@ -45,7 +45,7 @@ Here is a bunch of those documents:
 
 	var wikipediaDocs = GetWikipediaDocs();
 
-Add documents to index:
+Add them to a Resin index:
 
 	using (var writer = new IndexWriter(dir, new Analyzer()))
 	{
