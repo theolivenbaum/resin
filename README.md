@@ -361,13 +361,13 @@ Thus, the great importance of mergeable Resin indices. Because we could all
 2. Create a Resin indexing bot, promote that service and make that index not only searchable for everyone but
 3. Make it and its usage data public, completely open in a format available to anyone
 4. Inform that by using Chrome you are feeding the Google AI. By using Firefox you are feeding noone. We can even build a new browser. Browser wars are fun, especially to web devs.
-5. Encourage research teams and others who use Resin to upload theis indices to the Resin server, because then they can query it distributively and have queries that span across theirs and other indices, including the Great Web Index and its Scary Usage Data. None of this seem so scale very well, does it? Good, right?
+5. Encourage research teams and others who use Resin to upload theis indices to the Resin server, because then they can query it distributively and have queries that span across theirs and other indices, including the Great Web Index and its Usage Data. Sharing of indices, the Facebook of Data, anyone can tap into its knowledge. The vastness of the data Facebook and Google have been collecting on us and on what we know would be nothing compared to what the Resin Index would contain if we deliberately made adding and sharing of knowledge an easy task. None of this seem so scale very well, does it?  
 7. Watch how the media is now interested in the topic of privacy
 8. Witness how Google's significance lowers.
-9. Make sure the laws change to give us more privacy, because by now it is clear to everyone how much data Google have been collecting on you and have been using to drive and feed an AI with. Oh yeah and Bing also. Bad Bing!
+9. Ensure the laws change to give us more privacy, because by now it is clear to everyone how much data Google have been collecting on you and have been using to drive and feed an AI with. Oh yeah and Bing also. Bad Bing!
 10. Profit!
 
-Oh you don't think it can be done? Let there be another search engine war! All in good fun of course.
+Don't think it can be done? Let there be another search engine war! All in good fun of course.
 
 ## Final analysis
 
