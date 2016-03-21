@@ -21,7 +21,15 @@ namespace Resin
             _parser = parser;
         }
 
-        public Result Search(string query, int page = 0, int size = 20)
+        public Result Search(string query)
+        {
+            var terms = _parser.Parse(query);
+            var scored = _reader.GetScoredResult(terms).ToList();
+            var docs = scored.Select(s => _reader.GetDocFromDisk(s));
+            return new Result { Docs = docs, Total = scored.Count };
+        }
+
+        public Result Search(string query, int page, int size)
         {
             var skip = page*size;
             var terms = _parser.Parse(query);
@@ -30,8 +38,7 @@ namespace Resin
             var docs = paged.Select(s=>_reader.GetDocFromDisk(s));
             return new Result { Docs = docs, Total = scored.Count };
         }
-
-
+        
         public void Dispose()
         {
             _reader.Dispose();
