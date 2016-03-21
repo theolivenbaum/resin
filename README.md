@@ -42,24 +42,6 @@ You need to be able to swiftly index documents without taking up too much memory
 
 Even though you could be thinking about the values of fields as being objects, any Object, any IComparable even, that would actually make even more sense, to start with you will only solve the querying part, not the custom sorting of results that Lucene is capable of. Therefore you don't need your values to be of type IComparable, they can be strings.
 
-###The heckler
-
-"You said that the scanning process needs to be fast yet you make the tokens lower-case. Don't you know that comparing with ordinal invariant culture and in upper case is faster?"
-
-No sir I did not know that. The reason is because even though I will never be looking directly into an index file, there would be no use, it's binary and I'm not that smart, I cannot stand knowing that those tokens lie there on my disk, screaming, like they're in pain or something.
-
-"Oh, binary? Why not text, why not JSON?"
-
-Because converting binary into the kind of object graph we need at querying time is faster.
-
-"Well do you have specs for the binary file formats? Because if you're making up your own file format you got to have that. I mean, you just have to. Isn't that right? Kenny, isn't that right?"
-
-All data structures are serialized using protobuf-net.
-
-"Oh, that's pretty cewl."
-
-Yeah, I know, it's a great framework and apparently a great protocol. Found it by googling "serialize binary c# fast".
-
 <a name="citizens"></a>
 ###FIrst class citizens
 
@@ -361,21 +343,22 @@ Lucene does it extremly well because of it's file format and because it's indice
 ###Multi-index searching
 Lucene does it. It's pretty useful. It has a cool factor to it. Resin needs it.
 
-#### Even though this is about Resin to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results.
+##### Even though this is about Resin to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results.
 
 If you read all the way to here you know a lot about Lucene. Not so much about John Rambo though. If Google hade seen the movie he would not have sent you here. The point being: even when doing the wrong thing or seing the problem at hand as in need of a less naive solution than you are willing to provide you can end up acheiving something close to the right thing, which is kind of what Google is doing.
 
-Search is not rocket science. What comes next is, not really rocket science either, it's something else. An AI has been built and it has the knowledge of the Google index plus all the extra data it's collected when you googled, gmailed, g-doced, youtubed or g++ed. Wouldn't it be better if we built a search service based on the knowledge _we_ choose and then, together, built an AI based on _that_, instead of what Google think is okay to base an AI on? Today the gAI is not very smart. Who here thinks it will get smarter by the day? Thus, the great importance of mergeable Resin indices. Because we could all
+Search is not rocket science. What comes next is, not really rocket science either, it's something else. An AI has been built and it has the knowledge of the Google index plus all the extra data it's collected when you googled, gmailed, g-doced, youtubed or g++ed. Google Now knows where you are at, who you are there with, where you are going after that, and where you will sleep tonight (TM). Wouldn't it be better if we built a search service based on the knowledge _we_ choose and then, together, built an AI based on _that_, instead of what Google think it's okay to base an AI on? Today the g-AI is not very smart. Who here thinks it will get smarter by the day? 
 
-1. Finish up Resin
-2. Create a Resin indexing bot
-3. Promote that service and make that index not only searchable for everyone but
-4. Make that index and the usage data that we choose to collect public, completely open in a format available to anyone
-5. Tell people that by using Chrome you are feeding the Google AI. By using Firefox you are feeding noone. We can even build a new browser. Browser wars are fun, especially to web devs.
-6. Tell research teams and others who use Resin to upload theis indices to the Resin server, because then they can query it distributively and have queries that span across theirs and other indices, including the Great Web Index and its Scary Usage Data. None of this seem so scale very well, does it? Good, right?
-7. See how the media is now interested in the topic of privacy
-8. Watch how Google's significance lowers.
-9. Watch the laws change to give us more privacy, because by now it is clear to everyone how much data Google have been collecting on you and have been using to drive and feed an AI with. Oh yeah and Bing also. Bad Bing!
+Thus, the great importance of mergeable Resin indices. Because we could all
+
+1. Finish up Resin (or a similar project, Lucene comes to mind)
+2. Create a Resin indexing bot, promote that service and make that index not only searchable for everyone but
+3. Make it and its usage data public, completely open in a format available to anyone
+4. Inform that by using Chrome you are feeding the Google AI. By using Firefox you are feeding noone. We can even build a new browser. Browser wars are fun, especially to web devs.
+5. Encourage research teams and others who use Resin to upload theis indices to the Resin server, because then they can query it distributively and have queries that span across theirs and other indices, including the Great Web Index and its Scary Usage Data. None of this seem so scale very well, does it? Good, right?
+7. Watch how the media is now interested in the topic of privacy
+8. Witness how Google's significance lowers.
+9. Make sure the laws change to give us more privacy, because by now it is clear to everyone how much data Google have been collecting on you and have been using to drive and feed an AI with. Oh yeah and Bing also. Bad Bing!
 10. Profit!
 
 Oh you don't think it can be done? Let there be another search engine war! All in good fun of course.
