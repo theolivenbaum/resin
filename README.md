@@ -43,7 +43,7 @@ It can be deserialized into a [Resin.Document](https://github.com/kreeben/resin/
 
 Here is a bunch of those documents:
 
-	var docs = GetDocs();
+	var docs = GetHugeNumberDocs();
 
 Add them to a Resin index:
 
@@ -84,7 +84,7 @@ Only a few at a time:
 	var size = 10;
 	var result = searcher.Search("label:univ*", page, size).ToList();
 	var totalNumberOfHits = result.Total;
-	var docs = result.docs;
+	var docs = result.Docs.ToList(); // Will contain a maximum of 10 docs
 
 Only one:
 
@@ -98,9 +98,8 @@ All fields are queryable and the whole document returned in the result:
 	var aliases = doc.Fields["aliases"].First();
 	// Print "cosmos The Universe existence space outerspace"
 	Console.WriteLine(aliases);
-
-
-
+  
+  
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
 Contribute frequently. Go directly to an [introduction&#8628;](#citizens) of the parts that make up Resin.  
