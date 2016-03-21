@@ -1,49 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
+using ProtoBuf;
 
 namespace Resin
 {
+    [ProtoContract]
     public class Trie
     {
-        public IDictionary<char, Trie> Children { get; set; }
-        public Trie Parent { get; set; }
+        [ProtoMember(1)]
         public char Value { get; set; }
+
+        [ProtoMember(2)]
         public bool Eow { get; set; }
 
-        public IEnumerable<string> WordsStartingWith(string prefix)
-        {
-            if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
+        [ProtoMember(3, DataFormat = DataFormat.Group)]
+        public IDictionary<char, Trie> Children { get; set; }
 
-            if (Parent == null)
-            {
-                Trie child;
-                if (Children.TryGetValue(prefix[0], out child))
-                {
-                    return child.WordsStartingWith(prefix);
-                }  
-            }
-            else if (prefix.Length == 1 && prefix[0] == Value)
-            {
-                return Descendants().Where(t => t.Eow).Select(t => t.Path());
-            }
-            else if (prefix[0] == Value)
-            {
-                Trie child;
-                if (prefix.Length > 1 && Children.TryGetValue(prefix[1], out child))
-                {
-                    return child.WordsStartingWith(prefix.Substring(1));
-                }
-            }
-            return Enumerable.Empty<string>();
-        } 
-
-        public IEnumerable<Trie> Descendants()
+        public Trie()
         {
-            return Children.Values.SelectMany(c=>new []{c}.Concat(c.Descendants()));
+            Children = new Dictionary<char, Trie>();
         }
 
-        public Trie(IEnumerable<string> words)
+        public Trie(IList<string> words)
         {
             if (words == null) throw new ArgumentNullException("words");
 
@@ -70,8 +49,8 @@ namespace Resin
             if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("text");
 
             Value = text[0];
+
             Children = new Dictionary<char, Trie>();
-            Parent = parent;
 
             if (text.Length > 1)
             {
@@ -96,6 +75,39 @@ namespace Resin
             }
         }
 
+        public IEnumerable<string> WordsStartingWith(string prefix)
+        {
+            var words = new List<string>();
+            Trie child;
+            if (Children.TryGetValue(prefix[0], out child))
+            {
+                child.Scan(prefix, prefix, ref words);
+            }
+            return words;
+        }
+
+        private void Scan(string originalPrefix, string prefix, ref List<string> words)
+        {
+            if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
+
+            if (prefix.Length == 1 && prefix[0] == Value)
+            {
+                if (Eow) words.Add(originalPrefix);
+                foreach (var node in Children.Values)
+                {
+                    node.Scan(originalPrefix+node.Value, new string(new []{node.Value}), ref words);
+                }
+            }
+            else if (prefix[0] == Value)
+            {
+                Trie child;
+                if (Children.TryGetValue(prefix[1], out child))
+                {
+                    child.Scan(originalPrefix, prefix.Substring(1), ref words);
+                }
+            }
+        }
+
         public void Append(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("text");
@@ -117,21 +129,20 @@ namespace Resin
             }
         }
 
-        public string Path()
+        public void Save(string fileName)
         {
-            return new string(PathAsChars().ToArray());
+            using (var fs = File.Create(fileName))
+            {
+                Serializer.Serialize(fs, this);
+            }
         }
 
-        public IEnumerable<char> PathAsChars()
+        public static Trie Load(string fileName)
         {
-            var path = new List<Trie>();
-            var cursor = this;
-            while (cursor != null)
+            using (var file = File.OpenRead(fileName))
             {
-                path.Add(cursor);
-                cursor = cursor.Parent;
+                return Serializer.Deserialize<Trie>(file);
             }
-            return path.Select(n => n.Value).Reverse();
         }
     }
 }
