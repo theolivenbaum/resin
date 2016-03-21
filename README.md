@@ -326,7 +326,7 @@ AND, OR, NOT (+- ), prefix* and fuzzy~ [implemented here](https://github.com/kre
 ###Prefix search
 Implemented currently as a Trie scan [here](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs#L41).
 
-Here's an example of a prefix search:
+Here's an example of a prefix search towards and index of 1M english wikipedia docs:
 ![alt text](https://github.com/kreeben/resin/blob/master/screenshot4.PNG "Trie's are fast")
 
 Coming up:
