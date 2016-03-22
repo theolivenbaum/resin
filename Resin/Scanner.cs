@@ -33,7 +33,12 @@ namespace Resin
                 var reader = GetReader(term.Field);
                 if (reader != null)
                 {
-                    if (term.Prefix) return GetDocIdsByPrefix(term, reader);
+                    if (term.Prefix)
+                    {
+                        term.Boost = 1;
+                        return GetDocIdsByPrefix(term, reader);
+                    }
+                    term.Boost = 2;
                     return GetDocIdsExact(term, reader);
                 }
             }
@@ -54,7 +59,7 @@ namespace Resin
             {
                 foreach (var doc in postings)
                 {
-                    yield return new DocumentScore { DocId = doc.Key, Value = doc.Value };
+                    yield return new DocumentScore { DocId = doc.Key, Value = doc.Value*term.Boost };
                 }
             }
         }
