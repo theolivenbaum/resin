@@ -502,7 +502,7 @@ Thus, the great importance of mergeable Resin indices. Because we could all
 1. Finish up Resin (or a similar project, Lucene comes to mind)
 2. Create a Resin indexing bot, promote that service and make that index not only searchable for everyone but
 3. Make it and its usage data public, completely open in a format available to anyone
-4. Inform that by using Chrome you are feeding the Google AI. By using Firefox you are feeding noone. We can even build a new browser. Browser wars are fun, especially to web devs.
+4. Inform that by using Chrome you are feeding the Google AI. By using Firefox you are feeding noone. We can even build a new browser. Browser wars are fun, especially to web devs. *
 5. Encourage research teams and others who use Resin to upload theis indices to the Resin server, because then they can query it distributively and have queries that span across theirs and other indices, including the Great Web Index and its Usage Data. Sharing of indices, the Facebook of Data, anyone can tap into its knowledge. The vastness of the data Facebook and Google have been collecting on us and on what we know would be nothing compared to what the Resin Index would contain if we deliberately made adding and sharing of knowledge an easy task. 
 7. Watch how the media is now interested in the topic of privacy
 8. Witness how Google's significance lowers.
@@ -510,6 +510,8 @@ Thus, the great importance of mergeable Resin indices. Because we could all
 10. Profit!
 
 Don't think it can be done? Let there be another search engine war! All in good fun of course.
+
+*) I'm using Chrome, in the always-signed-in mode. It knows _ALL_ of my passwords, to everything. I have instant access to docs, gmail and calendar. I tick "remember me" whenever I can. The browser itself it just great. It's just an awsome browser. I love it. Damn you Google.
 
 ## Final analysis
 
