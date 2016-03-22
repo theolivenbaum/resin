@@ -80,7 +80,7 @@ It's a full-text search framework you can reason about. It's simplistic and very
 
 	var result = searcher.Search("id:Q1");
 	var doc = result.Docs.First();
-	var aliases = doc.Fields["aliases"].First();
+	var aliases = doc.Fields["aliases"].First(); // Each field contains a list of values
 	// Print "cosmos The Universe existence space outerspace"
 	Console.WriteLine(aliases);
 
