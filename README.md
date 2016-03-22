@@ -149,7 +149,7 @@ You mean why build a search framework? Well,
  
 *) They were on to something though. They saw great gains in representing anything and everything as a node. Had they pulled it of, perhaps they could have by using less abstractions, Umbraco would have been easy to reason about and then to refine even further. They might not have a problem with their architecture today, they're at v.7, but to me, Umbraco 5 was the Matrix 2 of the c# community.
 
-Lists with points are a boring read. Here's something to lighten up your mood and then there's some code. At the end there will be a fully functional full-text search CLI. I will explain how to use that to create a Resin index from a Wikipedia dump and then how to query that index. There will be measurements on how Resin behaves in a fully cached state and in a partially cached state. 
+Here's something to lighten up your mood and then there's some code. At the end there will be a fully functional full-text search CLI. I will explain how to use that to create a Resin index from a Wikipedia dump and then how to query that index. There will be measurements on how Resin behaves in a fully cached state and in a partially cached state. 
 
 Skip to [here&#8628;](#citizens) to make this an even shorter read. 
 
