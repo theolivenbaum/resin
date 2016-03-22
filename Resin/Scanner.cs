@@ -37,7 +37,7 @@ namespace Resin
                     {
                         return GetDocIdsByPrefix(term, reader);
                     }
-                    term.Boost = 2;
+                    term.InternalBoost = 2;
                     return GetDocIdsExact(term, reader);
                 }
             }
@@ -50,7 +50,7 @@ namespace Resin
             var first = terms.FirstOrDefault();
             if (first != null && first.Token==term.Token)
             {
-                first.Boost = 2;
+                first.InternalBoost = 2;
             }
             return terms.SelectMany(t => GetDocIdsExact(t, reader));
         }
@@ -62,7 +62,7 @@ namespace Resin
             {
                 foreach (var doc in postings)
                 {
-                    yield return new DocumentScore { DocId = doc.Key, Value = doc.Value*term.Boost };
+                    yield return new DocumentScore { DocId = doc.Key, Value = doc.Value*term.InternalBoost+term.Boost };
                 }
             }
         }
