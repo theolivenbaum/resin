@@ -3,7 +3,7 @@ It's a full-text search framework you can reason about. It's simplistic and very
 
 ##A quick usage guide
 
-####Here is a really interesting document
+####Here's an interesting document
 
 	{
 	  "Fields": {
