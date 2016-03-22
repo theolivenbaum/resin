@@ -449,7 +449,7 @@ Here is another test, this time the documents aren't pre-cached in the warmup:
 ##Roadmap
 
 ###Query language interpreter
-AND, OR, NOT (+- ), prefix* and fuzzy~ [implemented here](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs).
+AND, OR, NOT (+ -), prefix* and fuzzy~ [implemented here](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs).
 TODO: nested clauses
 
 ###Prefix search
