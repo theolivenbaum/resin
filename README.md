@@ -170,7 +170,7 @@ Even though you could be thinking about the values of fields as being objects, a
 <a name="citizens" id="citizens"></a>
 ###FIrst class citizens
 
-To be able to call ourselves a full-text search framework we need something that can analyze text, an [Analyzer](https://github.com/kreeben/resin/blob/master/Resin/Analyzer.cs). Also, something that can write index files and store documents, an [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs), [FieldFile](https://github.com/kreeben/resin/blob/master/Resin/FieldFile.cs) and a [DocumentFile](https://github.com/kreeben/resin/blob/master/Resin/DocumentFile.cs). 
+To be able to call ourselves a full-text search framework we need something that can analyze text, an [Analyzer](https://github.com/kreeben/resin/blob/master/Resin/Analyzer.cs). Also, something that can write index files and store documents, an [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs), [FieldWriter](https://github.com/kreeben/resin/blob/master/Resin/FieldWriter.cs) and a [DocumentWriter](https://github.com/kreeben/resin/blob/master/Resin/DocumentWriter.cs). 
 
 We will need to be able to parse multi-criteria queries such as "title:Rambo +title:Blood", in other words a [QueryParser](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs). The important questions for the parser to answer are what fields do we need to scan and what are the tokens that should match. A space character between two query terms such as the space  between "Rambo title:" in the query `title:Rambo title:Blood` will be interpreted as `OR`, a plus sign as `AND`, a minus sign as `NOT`. In other words that query will be parsed into "please find documents that has both rambo AND blood in the title", or in a more machine-like language `scan the field named title for the tokens rambo and blood and return the intersection of their postings`.
 
@@ -232,7 +232,7 @@ The analysis you want to do both at indexing and querying time is to acctually t
 
 What we are doing however in Analyzer.cs is very rudimentary type of analysis. We are simply identifying the individual words. We could go further, investigate if any of those words are kind of the same, because although "trees" != "tree" their concepts intersect so much so that in the interest of full-text search they could and maybe should be one and the same concept. Anyway, identifying and normalizing the words will be fine for now.
 
-##FieldFile
+##FieldWriter
 Tokens are stored in a field file. A field file is an index of all the tokens in a field. Tokens are stored together with postings. Postings are pointers to documents. Our postings contain the document ID and the positions the token takes within that document.
 
 That means that if we know what field file to look in, we can find the answer to the query "title:rambo" by opening one field file, deserialize the contents of the file into this:
@@ -248,9 +248,9 @@ That means that if we know what field file to look in, we can find the answer to
 	}
 	return docPositions;
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/FieldFile.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/FieldFileTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/FieldWriter.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/FieldWriterTests.cs)
 
-##DocumentFile
+##DocumentWriter
 
 Documents are persisted on disk. How they look on disk is not very interesting. 
 
@@ -269,7 +269,7 @@ More than one document fit into a document file. A whole list of them would fit.
 	// tokens/docids/positions
 	IDictionary<string, IDictionary<int, IList<int>>> _tokens;
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/DocumentFile.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/DocumentWriter.cs)
 
 ##IndexWriter
 
@@ -559,7 +559,7 @@ __index__ 50
 
 __tokens__ 50
 
-this 48
+__this__ 48
 
 as 48
 
@@ -585,7 +585,7 @@ cs 44
 
 we 42
 
-will 40
+__will__ 40
 
 __query__ 40
 
@@ -607,9 +607,9 @@ __not__ 32
 
 __up__ 32
 
-can 30
+__can__ 30
 
-about 30
+__about__ 30
 
 for 30
 
@@ -683,9 +683,9 @@ __docs__ 20
 
 __doc__ 20
 
-have 18
+__have__ 18
 
-would 18
+__would__ 18
 
 d 18
 
@@ -699,17 +699,17 @@ __return__ 18
 
 __very__ 16
 
-how 16
+__how__ 16
 
-your 16
+__your__ 16
 
 __one__ 16
 
 __like__ 16
 
-than 16
+__than__ 16
 
-also 16
+__also__ 16
 
 __analyze__ 16
 

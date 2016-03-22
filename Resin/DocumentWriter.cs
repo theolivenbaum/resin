@@ -1,62 +1,91 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
+using System.Linq;
 using ProtoBuf;
 
 namespace Resin
 {
     public class DocumentWriter : IDisposable
     {
-        private readonly string _fileName;
-        private readonly IDictionary<string, IList<string>> _doc;
-        private readonly string _lockFile;
+        private readonly string _dir;
 
+        // docid/fields/values
+        private readonly IDictionary<int, IDictionary<string, IList<string>>> _docs;
 
-        public DocumentWriter(string fileName)
+        public DocumentWriter(string dir)
         {
-            _fileName = fileName;
-            //_lockFile = fileName + ".lock";
+            _dir = dir;
+            _docs = new Dictionary<int, IDictionary<string, IList<string>>>();
+        }
 
-            //while (File.Exists(_lockFile))
-            //{
-            //    Thread.Sleep(1);
-            //}
-            //File.WriteAllText(_lockFile, string.Empty);
-            if (File.Exists(fileName))
+        public void Write(int docId, string field, string text)
+        {
+            IDictionary<string, IList<string>> doc;
+            if (!_docs.TryGetValue(docId, out doc))
             {
-                using (var file = File.OpenRead(fileName))
+                doc = new Dictionary<string, IList<string>>();
+                _docs.Add(docId, doc);
+            }
+            IList<string> values;
+            if (!doc.TryGetValue(field, out values))
+            {
+                values = new List<string> { text };
+                doc.Add(field, values);
+            }
+            else
+            {
+                values.Add(text);
+            }
+        }
+        private void Flush()
+        {
+            if (_docs.Count == 0) return;
+
+            var ixFileName = Path.Combine(_dir, "d.ix");
+
+            IDictionary<int, int> docIdToFileIndex;
+            if (File.Exists(ixFileName))
+            {
+                using (var file = File.OpenRead(ixFileName))
                 {
-                    _doc = Serializer.Deserialize<Dictionary<string, IList<string>>>(file);
+                    docIdToFileIndex = Serializer.Deserialize<IDictionary<int, int>>(file);
                 }
             }
             else
             {
-                _doc = new Dictionary<string, IList<string>>();
+                docIdToFileIndex = new Dictionary<int, int>();
+                if (!Directory.Exists(_dir)) Directory.CreateDirectory(_dir);
             }
-        }
+            
+            var batches = _docs.IntoBatches(1000).ToList();
+            foreach (var batch in batches)
+            {
+                var docs = batch.ToList();
+                var id = Directory.GetFiles(_dir, "*.d").Length;
+                var fileName = Path.Combine(_dir, id + ".d");
+                File.WriteAllText(fileName, "");
+                using (var fs = File.Create(fileName))
+                {
+                    Serializer.Serialize(fs, docs.ToDictionary(x => x.Key, y => y.Value));
+                }
+                foreach (var docId in docs)
+                {
+                    docIdToFileIndex[docId.Key] = id;
+                }
+            }
 
-        public void Write(string fieldName, string fieldValue)
-        {
-            IList<string> values;
-            if (!_doc.TryGetValue(fieldName, out values))
+            using (var fs = File.Create(ixFileName))
             {
-                values = new List<string> {fieldValue};
-                _doc.Add(fieldName, values);
+                Serializer.Serialize(fs, docIdToFileIndex);
             }
-            else
-            {
-                values.Add(fieldValue);
-            }
+
+            _docs.Clear();
         }
 
         public void Dispose()
         {
-            using (var fs = File.Create(_fileName))
-            {
-                Serializer.Serialize(fs, _doc);
-            }
-            //File.Delete(_lockFile);
+            Flush();
         }
     }
 }

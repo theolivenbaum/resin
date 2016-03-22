@@ -6,14 +6,14 @@ using Resin;
 namespace Tests
 {
     [TestFixture]
-    public class FieldFileTests
+    public class FieldWriterTests
     {
         [Test]
         public void Can_read_write()
         {
-            const string fileName = "c:\\temp\\resin_tests\\FieldFileTests\\Can_read_write\\0.fld";
+            const string fileName = "c:\\temp\\resin_tests\\FieldWriterTests\\Can_read_write\\0.fld";
             if (File.Exists(fileName)) File.Delete(fileName);
-            using (var writer = new FieldFile(fileName))
+            using (var writer = new FieldWriter(fileName))
             {
                 writer.Write(0, "Hello", 0);
                 writer.Write(0, "World!", 1);
@@ -31,10 +31,10 @@ namespace Tests
         [Test]
         public void Can_append()
         {
-            const string fileName = "c:\\temp\\resin_tests\\FieldFileTests\\Can_append\\0.fld";
+            const string fileName = "c:\\temp\\resin_tests\\FieldWriterTests\\Can_append\\0.fld";
             if (File.Exists(fileName)) File.Delete(fileName);
 
-            using (var writer = new FieldFile(fileName))
+            using (var writer = new FieldWriter(fileName))
             {
                 writer.Write(0, "Hello", 0);
             }
@@ -45,7 +45,7 @@ namespace Tests
             Assert.IsTrue(terms.Contains("Hello"));
             Assert.IsFalse(terms.Contains("World!"));
 
-            using (var writer = new FieldFile(fileName))
+            using (var writer = new FieldWriter(fileName))
             {
                 writer.Write(0, "World!", 1);
             }

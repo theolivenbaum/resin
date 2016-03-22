@@ -10,17 +10,17 @@ namespace Resin
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private readonly IDictionary<string, int> _fieldIndex; 
-        private readonly IDictionary<int, FieldFile> _fieldFiles;
+        private readonly IDictionary<int, FieldWriter> _fieldWriters;
         private readonly string _fieldIndexFileName;
-        private readonly DocumentFile _docFile;
+        private readonly DocumentWriter _docWriter;
 
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
             _directory = directory;
             _analyzer = analyzer;
 
-            _docFile = new DocumentFile(directory);
-            _fieldFiles = new Dictionary<int, FieldFile>();
+            _docWriter = new DocumentWriter(directory);
+            _fieldWriters = new Dictionary<int, FieldWriter>();
             _fieldIndexFileName = Path.Combine(_directory, "fld.ix");
 
             if (File.Exists(_fieldIndexFileName))
@@ -49,18 +49,18 @@ namespace Resin
                     _fieldIndex.Add(field.Key, fieldId);
                 }
 
-                FieldFile ff;
-                if (!_fieldFiles.TryGetValue(fieldId, out ff))
+                FieldWriter fw;
+                if (!_fieldWriters.TryGetValue(fieldId, out fw))
                 {
                     var fileName = Path.Combine(_directory, fieldId + ".fld");
-                    ff = new FieldFile(fileName);
-                    _fieldFiles.Add(fieldId, ff);
+                    fw = new FieldWriter(fileName);
+                    _fieldWriters.Add(fieldId, fw);
                 }
                 
                 var docTokensAndTheirPositions = new Dictionary<string, List<int>>();
                 foreach (var value in field.Value)
                 {
-                    _docFile.Write(doc.Id, field.Key, value);
+                    _docWriter.Write(doc.Id, field.Key, value);
 
                     var tokens = _analyzer.Analyze(value);
                     for (int position = 0; position < tokens.Length; position++)
@@ -80,7 +80,7 @@ namespace Resin
                 {
                     foreach (var position in tokenAndItsPositions.Value)
                     {
-                        ff.Write(doc.Id, tokenAndItsPositions.Key, position);
+                        fw.Write(doc.Id, tokenAndItsPositions.Key, position);
                     }
                 }
             }
@@ -93,9 +93,9 @@ namespace Resin
 
         private void Flush()
         {
-            _docFile.Dispose();
+            _docWriter.Dispose();
 
-            foreach (var fieldFile in _fieldFiles)
+            foreach (var fieldFile in _fieldWriters)
             {
                 fieldFile.Value.Dispose();
             }

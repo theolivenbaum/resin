@@ -48,7 +48,7 @@
   <ItemGroup>
     <Compile Include="AnalyzerTests.cs" />
     <Compile Include="FieldReaderTests.cs" />
-    <Compile Include="FieldFileTests.cs" />
+    <Compile Include="FieldWriterTests.cs" />
     <Compile Include="QueryParserTests.cs" />
     <Compile Include="ScannerTests.cs" />
     <Compile Include="IndexTests.cs" />
