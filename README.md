@@ -130,7 +130,7 @@ Contribute frequently. Go directly to an [introduction&#8628;](#citizens) of the
                   
 ##How to build your own full-text search in c#, yeah!
 
-Here's some guidance I could have used when I started building search frameworks. Resin is the 4th iteration I've done. The codebase, it's pieces, get smaller and simpler each round. Use this to get some ideas from if you are into information retrieval. The nerd factor on that last sentence is completely off the charts, I'm well aware, thank you.
+Here's some guidance I could have used when I started building search frameworks. Resin is the 6th iteration I've done. The codebase, it's pieces, get smaller and simpler each round. Use this to get some ideas from if you are into information retrieval. The nerd factor on that last sentence is completely off the charts, I'm well aware, thank you.
 
 Even though this is about Resin to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early to that this document certainly is about Lucene. I buy that but would still like to say, this will be mostly about how I built my own indexer-searcher thing that can _index 1M english wikipedia articles in approximately 3 minutes and then respond to multi-criteria term or prefix based queries towards that index in less than a tenth of a millisecond_. That's on my 3 year old i5 laptop. It's really thin. An orange Lenovo Yoga 2 Pro. Just sayin'.
 
