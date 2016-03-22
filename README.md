@@ -142,12 +142,12 @@ You mean why build a search framework? Well,
 - You wonder why it's so damn fast
 - You wonder what parts of the Lucene.net design is there because of (java) legacy and if the design might be improved upon or simplified
 - You sometimes wish that building and querying an index was surrounded by even less code, perhaps by leaning towards conventions you yourself have built up throughout the years of using Lucene
-- You wonder what would happen if the .net community gathered around a .net project instead of a line-by-line java port, because sometimes you'd like to understand why your search is acting the way it does but you find the architecture behind Lucene to be complex and you are scared to even look at the source code, not that complexity is neccessarily a java legacy. Some dotnetpeople also suffer from over engineering everything they touch. A really good read on this topic is the Umbraco 5 codebase. It's very big and funny. *
+- You wonder what would happen if the .net community gathered around a .net project instead of a line-by-line java port, because sometimes you'd like to understand why your search is acting the way it does but you find the architecture behind Lucene to be complex and you are scared to even look at the source code, not that complexity is neccessarily a java legacy. Some dotnetpeople also suffer from over engineering everything they touch. A really good read on this topic is the Umbraco 5 codebase. It's very big and funny. (*)
 - The Lucene.net team has proven that a .net runtime hosted on a windows machine provides a wonderful environment for a creature such as a full-text search framework to live and enjoy itself in but it makes you a little bit sad that they will always be a couple of years behind the core Lucene team
 - You are just genuinely curious about the whole domain of information retrieval, perhaps because it is a small domain, relatively easy to grasp and at it's basic level the math is not frightening, and you see it as one of the tools taking us closer to IR's older cousin AI
 - You want to pretend you are building something smart and AI-like and neural networks scare you worse than long, cold hotel corridors and kids riding their pedal cars up and down the carpets of an otherwise empty luxury estate
  
-*) They were on to something though. They saw great gains in representing anything and everything as a node. Had they pulled it of, perhaps they could have by using less abstractions, Umbraco would have been easy to reason about and then to refine even further. They might not have a problem with their architecture today, they're at v.7, but to me, Umbraco 5 was the Matrix 2 of the c# community.
+(*) They were on to something though. They saw great gains in representing anything and everything as a node. Had they pulled it of, perhaps they could have by using less abstractions, Umbraco would have been easy to reason about and then to refine even further. They might not have a problem with their architecture today, they're at v.7, but to me, Umbraco 5 was the Matrix 2 of the c# community.
 
 Here's something to lighten up your mood and then there's some code. At the end there will be a fully functional full-text search CLI. I will explain how to use that to create a Resin index from a Wikipedia dump and then how to query that index. There will be measurements on how Resin behaves in a fully cached state and in a partially cached state. 
 
@@ -504,7 +504,7 @@ Thus, the great importance of mergeable Resin indices. Because we could all
 1. Finish up Resin (or a similar project, Lucene comes to mind)
 2. Create a Resin indexing bot, promote that service and make that index not only searchable for everyone but
 3. Make it and its usage data public, completely open in a format available to anyone
-4. Inform that by using Chrome you are feeding the Google AI. By using Firefox you are feeding noone. We can even build a new browser. Browser wars are fun, especially to web devs. *
+4. Inform that by using Chrome you are feeding the Google AI. By using Firefox you are feeding noone. We can even build a new browser. Browser wars are fun, especially to web devs. (*)
 5. Encourage research teams and others who use Resin to upload theis indices to the Resin server, because then they can query it distributively and have queries that span across theirs and other indices, including the Great Web Index and its Usage Data. Sharing of indices, the Facebook of Data, anyone can tap into its knowledge. The vastness of the data Facebook and Google have been collecting on us and on what we know would be nothing compared to what the Resin Index would contain if we deliberately made adding and sharing of knowledge an easy task. 
 7. Watch how the media is now interested in the topic of privacy
 8. Witness how Google's significance lowers.
@@ -512,9 +512,10 @@ Thus, the great importance of mergeable Resin indices. Because we could all
 10. Profit!
 
 Don't think it can be done? Let there be another search engine war! All in good fun of course.
-
-*) I'm using Chrome, in the always-signed-in mode. It knows _ALL_ of my passwords, to everything. I have instant access to docs, gmail and calendar. I tick "remember me" whenever I can. The browser itself is just great. It's just an awsome browser, the most solid piece of software I have ever used. I love it and I trust it to never crash on me. It's like it's an operating system of itself, one that never fails. ** Damn you Google.
-**) If Windows would fail under the payload of Chrome or due to some other process, Chrome probably says "Windows, out of the way please, I got this" and saves the whole crash from propagating down into the kernel causing a blue screen, saving the day. Proof? Well, where are the blue screens nowadays?
+  
+(*) I'm using Chrome, in the always-signed-in mode. It knows _ALL_ of my passwords, to everything. I have instant access to docs, gmail and calendar. I tick "remember me" whenever I can. The browser itself is just great. It's just an awsome browser, the most solid piece of software I have ever used. I love it and I trust it to never crash on me. It's like it's an operating system of itself, one that never fails. (**) Damn you Google.
+  
+(**) If Windows would fail under the payload of Chrome or due to some other process, Chrome probably says "Windows, out of the way please, I got this" and saves the whole crash from propagating down into the kernel causing a blue screen, saving the day. I haven't seen a blue screen since I installed it what does that mean?
 
 ## Final analysis
 
