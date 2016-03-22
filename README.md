@@ -3,7 +3,7 @@ It's a full-text search framework you can reason about. It's simplistic and very
 
 ##A quick usage guide
 
-Here is a really interesting document:
+####Here is a really interesting document
 
 	{
 	  "Fields": {
@@ -23,11 +23,11 @@ Here is a really interesting document:
 	  "Id": 1
 	}
 
-Here's a huge number of documents:
+####Here's a huge number of documents
 
 	var docs = GetHugeNumberOfDocs();
 
-Add them to a Resin index:
+####Add them to a Resin index
 
 	var dir = @"c:\MyResinIndices\0";
 	using (var writer = new IndexWriter(dir, new Analyzer()))
@@ -38,30 +38,30 @@ Add them to a Resin index:
 		}
 	}
 
-Query that index (matching the whole term):
+####Query that index (matching the whole term)
 
 	using (var searcher = new Searcher(dir))
 	{
 		var result = searcher.Search("label:universe");
 	}
 
-Prefix query:
+####Prefix query
 
 	var result = searcher.Search("label:univ*");
 
-And:
+####And
 
 	var result = searcher.Search("label:universe +aliases:cosmos");
 
-Or:
+####Or
 
 	var result = searcher.Search("label:universe aliases:cosmos");
 
-Not:
+####Not
 
 	var result = searcher.Search("label:universe -aliases:cosmos");
 
-Only a few at a time:
+####Only a few at a time
 	
 	var page = 0;
 	var size = 10;
@@ -69,12 +69,12 @@ Only a few at a time:
 	var totalNumberOfHits = result.Total;
 	var docs = result.Docs.ToList(); // Will contain a maximum of 10 docs
 
-Only one:
+####Only one
 
 	var result = searcher.Search("id:Q1");
 	var doc = result.Docs.First();
 
-All fields are queryable and the whole document returned in the result:
+####All fields queryable, whole document returned
 
 	var result = searcher.Search("id:Q1");
 	var doc = result.Docs.First();
@@ -82,7 +82,7 @@ All fields are queryable and the whole document returned in the result:
 	// Print "cosmos The Universe existence space outerspace"
 	Console.WriteLine(aliases);
 
-Analyze your index:
+####Analyze your index
 
 	var field = "label";
 	var scanner = new Scanner(dir);
@@ -90,6 +90,12 @@ Analyze your index:
 	File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens
 		.Select(t=>string.Format(
 			"{0} {1}", t.Token, t.Count)));
+
+####There is also a CLI
+
+![alt text](https://github.com/kreeben/resin/blob/master/screenshot5.PNG "The Cli.")
+
+More on the CLI [here&#8628;](#cli).
   
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
@@ -136,7 +142,7 @@ You need to be able to swiftly index documents without taking up too much memory
 
 Even though you could be thinking about the values of fields as being objects, any Object, any IComparable even, that would actually make even more sense, to start with you will only solve the querying part, not the custom sorting of results that Lucene is capable of. Therefore you don't need your values to be of type IComparable, they can be strings.
 
-<a name="citizens"></a>
+<a name="citizens" id="citizens"></a>
 ###FIrst class citizens
 
 To be able to call ourselves a full-text search framework we need something that can analyze text, an [Analyzer](https://github.com/kreeben/resin/blob/master/Resin/Analyzer.cs). Also, something that can write index files and store documents, an [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs), [FieldFile](https://github.com/kreeben/resin/blob/master/Resin/FieldFile.cs) and a [DocumentFile](https://github.com/kreeben/resin/blob/master/Resin/DocumentFile.cs). 
@@ -347,6 +353,7 @@ Finally, the searcher, a helper that takes an IndexReader and a QueryParser, acc
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/Searcher.cs) 
 
+<a name="cli" id="cli"></a>
 ## Test spin
 
 1. Download a Wikipedia JSON dump [here](https://dumps.wikimedia.org/wikidatawiki/entities/)
@@ -439,7 +446,7 @@ If that goes well then what is left in our [MVP](https://en.wikipedia.org/wiki/M
 ###Writing to an index in use
 Lucene does it extremly well because of it's file format and because it's indices are easily mergable. It sees an update as "first create new index then merge with the current index then refresh the index reader".
 
-<a name="point"></a>
+<a name="point" id="point"></a>
 ###Multi-index searching
 Lucene does it. It's pretty useful. It has a cool factor to it. Resin needs it.
 
