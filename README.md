@@ -483,7 +483,7 @@ Shard the index and connect each subindex to each other in a network of nodes.
 
 <a name="point" id="point"></a>
 ###Multi-index searching
-Lucene does it. It's pretty useful. It has a cool factor to it. Resin needs it.
+Lucene does it. It's very useful. Resin needs it.
 
 ##### Even though this is about Resin to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results.
 
