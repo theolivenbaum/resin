@@ -93,6 +93,31 @@ It's a full-text search framework you can reason about. It's simplistic and very
 		.Select(t=>string.Format(
 			"{0} {1}", t.Token, t.Count)));
 
+####Resin is fast because
+
+	using (var searcher = new Searcher(dir))
+	{
+		// This loads and caches the token index for the "label" field
+		var result = searcher.Search("label:universe");
+		
+		//This loads and caches the document
+		var doc1 = result.Docs.First();
+		
+		// The following query requires 
+		// - one hashtable lookup towards the field file index to find the field ID
+		// - one hashtable lookup towards the token index to find the doc IDs
+		// - for each doc ID: one hashtable lookup towards the doc cache
+		var doc2 = searcher.Search("label:universe").Docs.First();
+		
+		// The following prefix query requires 
+		// - one hashtable lookup towards the field file index to find the field ID
+		// - one Trie scan to find matching tokens
+		// - for each token: one hashtable lookup towards the token index to find the doc IDs
+		// - append the results of the scan (as if the tokens are joined by "OR")
+		// - for each doc ID: one hashtable lookup towards the doc cache
+		var doc3 = searcher.Search("label:univ*").Docs.First();
+	}	
+
 ####There is also a CLI
 
 ![alt text](https://github.com/kreeben/resin/blob/master/screenshot5.PNG "The Cli.")
@@ -126,7 +151,7 @@ You mean why build a search framework? Well,
 
 Lists with points are a boring read. Here's something to lighten up your mood and then there's some code. At the end there will be a fully functional full-text search CLI. I will explain how to use that to create a Resin index from a Wikipedia dump and then how to query that index. There will be measurements on how Resin behaves in a fully cached state and in a partially cached state. 
 
-Skip to [here](#citizens) to make this an even shorter read. 
+Skip to [here&#8628;](#citizens) to make this an even shorter read. 
 
 ###The very short story of the small domain of full-text search
 
@@ -324,7 +349,7 @@ Here's the ranking:
 	var ordered = positions.OrderByDescending(d => d.Value.Count).Select(d => d.Key).ToList();
 	return ordered;
 
-It is a scan to see if the token exists at all in a document. It doesn't care about how many times or where in the document although we did give it that information. It will soon be replaced but for now, it cares only about if a token exists in a document.
+It is a scan to see if the token exists at all in a document. It doesn't care about how many times or where in the document although we did give it that information. This naive alorithm will soon be replaced to take into account the term and document frequency to give each hit a proper score.
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/ScannerTests.cs)
 
