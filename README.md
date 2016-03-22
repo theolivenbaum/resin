@@ -98,14 +98,14 @@ It's a full-text search framework you can reason about. It's simplistic and very
 		// This loads and caches the token index for the "label" field
 		var result = searcher.Search("label:universe");
 		
-		//This loads and caches the document
+		//This executes the query, loads and caches the documents (one in this case, the first)
 		var doc1 = result.Docs.First();
 		
 		// The following query requires 
 		// - one hashtable lookup towards the field file index to find the field ID
 		// - one hashtable lookup towards the token index to find the doc IDs
 		// - for each doc ID: one hashtable lookup towards the doc cache
-		var doc2 = searcher.Search("label:universe").Docs.First();
+		var docs = searcher.Search("label:universe").Docs.ToList();
 		
 		// The following prefix query requires 
 		// - one hashtable lookup towards the field file index to find the field ID
@@ -113,7 +113,7 @@ It's a full-text search framework you can reason about. It's simplistic and very
 		// - for each token: one hashtable lookup towards the token index to find the doc IDs
 		// - append the results of the scan (as if the tokens are joined by "OR")
 		// - for each doc ID: one hashtable lookup towards the doc cache
-		var doc3 = searcher.Search("label:univ*").Docs.First();
+		docs = searcher.Search("label:univ*").Docs.ToList();
 	}	
 
 ####There is also a CLI
