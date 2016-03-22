@@ -475,7 +475,7 @@ Lucene does it extremly well because of it's file format and because it's indice
 
 ###Scaling
 
-Service-orient the different parts of Resin. Make scanning, scoring and resolving of documents each a service of its own. Increase caching abilities. Use bare-metal.
+Service-orient the different parts of Resin. Make scanning, scoring and resolving of documents each a service of its own. Increase caching abilities. Buy Gb network and use bare-metal.
 
 ### Extreme scaling
 
