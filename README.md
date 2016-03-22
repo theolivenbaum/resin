@@ -413,7 +413,7 @@ A little less than a millisecond apparently. A couple of orders of magitude fast
 	        s.Search(q).Docs.ToList(); // this heats up the "label" field and pre-caches the documents
 	    }
 	    timer.Start();
-	    var docs = s.Search(q).Docs.ToList(); // Fetch docs from disk
+	    var docs = s.Search(q).Docs.ToList(); // Fetch docs from cache
 	    var elapsed = timer.Elapsed.TotalMilliseconds;
 	    var position = 0;
 	    foreach (var doc in docs)
