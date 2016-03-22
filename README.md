@@ -465,7 +465,7 @@ The term-based search that is currently implemented is extremly fast because onc
 
 The problem of both prefix and fuzzy querying may be seen as a problem of finding out which tokens to look for. 
 
-If you create an ngram-index from the lexicon and ngram the query token the same way and look up the terms for those grams, filter out junk the [Levenstein](https://en.wikipedia.org/wiki/Levenshtein_distance) way, what is left are the term-based queries. Such a Lucene-inspired fuzzy query implementation would add a couple of steps to the querying pipeline and those steps would be all about finding out which terms to scan for.
+If you create an ngram-index from the lexicon and ngram the query token the same way and look up the terms for those grams, calculate the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) way, what is left are the term-based queries. Such a Lucene-inspired fuzzy query implementation would add a couple of steps to the querying pipeline and those steps would be all about finding out which terms to scan for.
 
 ###Ranking
 If that goes well then what is left in our [MVP](https://en.wikipedia.org/wiki/Minimum_viable_product) is the ranking algorithm. That should be tons of fun. That's where the [Lucene core team](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) is at.
@@ -483,7 +483,7 @@ If you read all the way to here you know a lot about Lucene. Not so much about J
 
 Search is not rocket science. A good friend of mine used to say: search is just an algorithm. Another guy I used to work with used to say: remember, that code that you're looking at and that scare you because you don't understand it yet, it is just some code, written by some guy.
 
-- Two very wise men
+_-Two very wise men_
 
 What comes next is not really rocket science either, it's something else. An AI has been built and it has the knowledge of the Google index plus all the extra data it's collected when you googled, gmailed, g-doced, youtubed or g++ed. Google Now knows where you are at, who you are there with, where you are going after that, and where you will sleep tonight (TM). It could play you like a game of Go if it wanted to.
 
