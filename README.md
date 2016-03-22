@@ -233,20 +233,20 @@ The analysis you want to do both at indexing and querying time is to acctually t
 What we are doing however in Analyzer.cs is very rudimentary type of analysis. We are simply identifying the individual words. We could go further, investigate if any of those words are kind of the same, because although "trees" != "tree" their concepts intersect so much so that in the interest of full-text search they could and maybe should be one and the same concept. Anyway, identifying and normalizing the words will be fine for now.
 
 ##FieldWriter
-Tokens are stored in a field file. A field file is an index of all the tokens in a field. Tokens are stored together with postings. Postings are pointers to documents. Our postings contain the document ID and the positions the token takes within that document.
+Tokens are stored in a field file. A field file is an index of all the tokens in a field. Tokens are stored together with postings. Postings are pointers to documents. Our postings contain the document ID and how many times the token exists within that document, its document frequency.
 
-That means that if we know what field file to look in, we can find the answer to the query "title:rambo" by opening one field file, deserialize the contents of the file into this:
+That means that if we know what field file to look in, we can find the answer to the query "title:rambo" by opening the file, deserialize the contents into this:
 
-	// tokens/docids/positions
-	IDictionary<string, IDictionary<int, IList<int>>> _tokens = DeserializeFieldFile(fileName);
+	// tokens/docids/doc frequency
+        private readonly IDictionary<string, IDictionary<int, int>> _tokens = DeserializeFieldFile(fileName);
 	
 	// ...and then we can find the document IDs. This operation does not take long.
-	IDictionary<int, IList<int>> docPositions;
-	if (!_tokens.TryGetValue(token, out docPositions))
+	IDictionary<int, int> postings;
+	if (!_tokens.TryGetValue(token, out postings))
 	{
-	    return null;
+		return null;
 	}
-	return docPositions;
+	return postings;
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/FieldWriter.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/FieldWriterTests.cs)
 
@@ -264,10 +264,7 @@ Here is a document on its own:
 	// fields/values
 	IDictionary<string, IList<string>> doc;
 
-More than one document fit into a document file. A whole list of them would fit. Imagine how it looks in-memory. I mean I can only guess the shape but it looks to be covering a large area of your RAM. It's a huge tree of stuff. Almost as wierd-looking as the other huge tree of stuff, the token structure:
-
-	// tokens/docids/positions
-	IDictionary<string, IDictionary<int, IList<int>>> _tokens;
+More than one document fit into a document file. A whole list of them would fit. Imagine how it looks in-memory. I mean I can only guess the shape but it looks to be covering a large area of your RAM. It's a huge tree of stuff. 
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/DocumentWriter.cs)
 
@@ -303,8 +300,8 @@ With our current parser we can interpret "title:Rambo", also `title:first title:
 
 You have already seen the in-memory representation of the field file:
 
-	// tokens/docids/positions
-	private readonly IDictionary<string, IDictionary<int, IList<int>>> _tokens;
+	// tokens/docids/doc frequency
+	private readonly IDictionary<string, IDictionary<int, int>> _tokens;
 
 A field reader can do this:
 
@@ -319,35 +316,27 @@ After a good parsing we get back a list of terms. A term is a field and a token,
 
 All that we know, as a search framework, is called "a lexicon".
 
-At the back of that lexicon is an index, the field file. A scanner scans the index and if it finds a match it returns all of the information we have about the connection between that token and the documents from where it originates, a list of postings: 
+At the back of that lexicon is an index, the field file. A scanner scans the index and if it finds a match it returns the doc IDs and a score: 
 
-	public IList<int> GetDocIds(string field, string value)
-    {
-        int fieldId;
-        if (_fieldIndex.TryGetValue(field, out fieldId))
-        {
-            var reader = GetReader(field);
-            if (reader != null)
-            {
-                var positions = reader.GetDocPosition(value);
-                if (positions != null)
-                {
-                    var ordered = positions.OrderByDescending(d => d.Value.Count).Select(d => d.Key).ToList();
-                    return ordered;
-                }
-            }
-        }
-        return Enumerable.Empty<int>().ToList();
-    }
-
-Oh and there was also our ranking algorith did you spot it? Go back.
-
-Here's the ranking:
-
-	var ordered = positions.OrderByDescending(d => d.Value.Count).Select(d => d.Key).ToList();
-	return ordered;
-
-It is a scan to see if the token exists at all in a document. It doesn't care about how many times or where in the document although we did give it that information. This naive alorithm will soon be replaced to take into account the term and document frequency to give each hit a proper score.
+	public IEnumerable<DocumentScore> GetDocIds(Term term)
+	{
+	    int fieldId;
+	    if (_fieldIndex.TryGetValue(term.Field, out fieldId))
+	    {
+	        var reader = GetReader(term.Field);
+	        if (reader != null)
+	        {
+	            if (term.Prefix)
+	            {
+	                term.Boost = 1;
+	                return GetDocIdsByPrefix(term, reader);
+	            }
+	            term.Boost = 2;
+	            return GetDocIdsExact(term, reader);
+	        }
+	    }
+	    return Enumerable.Empty<DocumentScore>();
+	}
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/ScannerTests.cs)
 
