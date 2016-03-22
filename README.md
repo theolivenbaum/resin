@@ -513,7 +513,7 @@ Thus, the great importance of mergeable Resin indices. Because we could all
 
 Don't think it can be done? Let there be another search engine war! All in good fun of course.
 
-*) I'm using Chrome, in the always-signed-in mode. It knows _ALL_ of my passwords, to everything. I have instant access to docs, gmail and calendar. I tick "remember me" whenever I can. The browser itself it just great. It's just an awsome browser. I love it. Damn you Google.
+*) I'm using Chrome, in the always-signed-in mode. It knows _ALL_ of my passwords, to everything. I have instant access to docs, gmail and calendar. I tick "remember me" whenever I can. The browser itself it just great. It's just an awsome browser, the most solid piece of software I have ever used. I love it and I trust it to never crash on me. It's like it's an operating system of itself, one that never fails. Damn you Google.
 
 ## Final analysis
 
