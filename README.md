@@ -493,7 +493,9 @@ Search is not rocket science. A good friend of mine used to say: search is just 
 
 _-Two very wise men_
 
-What comes next is not really rocket science either, it's something else. An AI has been built and it has the knowledge of the Google index plus all the extra data it's collected when you googled, gmailed, g-doced, youtubed or g++ed. Google Now knows where you are at, who you are there with, where you are going after that, and where you will sleep tonight (TM). It could play you like a game of Go if it wanted to.
+What comes next is not really rocket science either, it's something else. An AI has been built and it has the knowledge of the Google index plus all the extra data it's collected when you googled, gmailed, g-doced, youtubed or g++ed. Google Now knows where you are at, who you are there with, where you are going after that, and where you will sleep tonight (TM). It could play you like a game of Go if it wanted to. 
+
+It's good at pattern matching. It knows you have quit your job before it's announced on LinkedIn because these days you seem to be Googling from home, not from the office. And a lot of those emails contained the token "recruitment".
 
 Wouldn't it be better if we built a search service based on the knowledge _we_ choose and then, together, built an AI based on _that_, instead of what Google think it's okay to base an AI on? Today the g-AI is not very smart. Who here thinks it will get smarter by the day? 
 
