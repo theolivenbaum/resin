@@ -145,7 +145,7 @@ You mean why build a search framework? Well,
 - You are just genuinely curious about the whole domain of information retrieval, perhaps because it is a small domain, relatively easy to grasp and at it's basic level the math is not frightening, and you see it as one of the tools taking us closer to IR's older cousin AI
 - You want to pretend you are building something smart and AI-like and neural networks scare you worse than long, cold hotel corridors and kids riding their pedal cars up and down the carpets of an otherwise empty luxury estate
  
-(*) They were on to something though. They saw great gains in representing anything and everything as a node. Had they pulled it of, perhaps they could have by using less abstractions, Umbraco would have been easy to reason about and then to refine even further. They might not have a problem with their architecture today, they're at v.7, but to me, Umbraco 5 was the Matrix 2 of the c# community.
+(*) They were on to something though. They saw great gains in representing anything and everything as a node. Had they pulled it of, perhaps they could have by using less abstractions, Umbraco would have been easy to reason about and then to refine even further.
 
 Here's something to lighten up your mood and then there's some code. At the end there will be a fully functional full-text search CLI. I will explain how to use that to create a Resin index from a Wikipedia dump and then how to query that index. There will be measurements on how Resin behaves in a fully cached state and in a partially cached state. 
 
