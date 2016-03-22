@@ -458,7 +458,7 @@ Implemented currently as a Trie scan [here](https://github.com/kreeben/resin/blo
 Here's an example of a prefix search towards and index of 1M english wikipedia docs:
 ![alt text](https://github.com/kreeben/resin/blob/master/screenshot4.PNG "Trie's are fast")
 
-More TODO:
+####Other things to do:
 
 ###Fuzzy
 The term-based search that is currently implemented is extremly fast because once you have deserialized the indexes the scan, the resolve of the document, they are all hash-table look-ups.
@@ -472,6 +472,14 @@ If that goes well then what is left in our [MVP](https://en.wikipedia.org/wiki/M
 
 ###Writing to an index in use
 Lucene does it extremly well because of it's file format and because it's indices are easily mergable. It sees an update as "first create new index then merge with the current index then refresh the index reader".
+
+###Scaling
+
+Service-orient the different parts of Resin. Make scanning, scoring and resolving of documents each a service of its own. Increase caching abilities. Use bare-metal.
+
+### Extreme scaling
+
+Shard the index and connect each subindex to each other in a network of nodes.
 
 <a name="point" id="point"></a>
 ###Multi-index searching
@@ -495,7 +503,7 @@ Thus, the great importance of mergeable Resin indices. Because we could all
 2. Create a Resin indexing bot, promote that service and make that index not only searchable for everyone but
 3. Make it and its usage data public, completely open in a format available to anyone
 4. Inform that by using Chrome you are feeding the Google AI. By using Firefox you are feeding noone. We can even build a new browser. Browser wars are fun, especially to web devs.
-5. Encourage research teams and others who use Resin to upload theis indices to the Resin server, because then they can query it distributively and have queries that span across theirs and other indices, including the Great Web Index and its Usage Data. Sharing of indices, the Facebook of Data, anyone can tap into its knowledge. The vastness of the data Facebook and Google have been collecting on us and on what we know would be nothing compared to what the Resin Index would contain if we deliberately made adding and sharing of knowledge an easy task. None of this seem so scale very well, does it?  
+5. Encourage research teams and others who use Resin to upload theis indices to the Resin server, because then they can query it distributively and have queries that span across theirs and other indices, including the Great Web Index and its Usage Data. Sharing of indices, the Facebook of Data, anyone can tap into its knowledge. The vastness of the data Facebook and Google have been collecting on us and on what we know would be nothing compared to what the Resin Index would contain if we deliberately made adding and sharing of knowledge an easy task. 
 7. Watch how the media is now interested in the topic of privacy
 8. Witness how Google's significance lowers.
 9. Ensure the laws change to give us more privacy, because by now it is clear to everyone how much data Google have been collecting on you and have been using to drive and feed an AI with. Oh yeah and Bing also. Bad Bing!
