@@ -17,6 +17,9 @@ namespace Resin
         [ProtoMember(3, DataFormat = DataFormat.Group)]
         public IDictionary<char, Trie> Children { get; set; }
 
+        [ProtoMember(4)]
+        public bool Root { get; set; }
+
         public Trie()
         {
             Children = new Dictionary<char, Trie>();
@@ -26,26 +29,17 @@ namespace Resin
         {
             if (words == null) throw new ArgumentNullException("words");
 
+            Root = true;
             Children = new Dictionary<char, Trie>();
 
             foreach (var word in words)
             {
-                Trie child;
-                if (!Children.TryGetValue(word[0], out child))
-                {
-                    child = new Trie(word, this);
-                    Children.Add(word[0], child);
-                }
-                else
-                {
-                    child.Append(word);
-                }
+                InsertOrAppend(word);
             }
         }
 
-        public Trie(string text, Trie parent)
+        public Trie(string text)
         {
-            if (parent == null) throw new ArgumentNullException("parent");
             if (string.IsNullOrWhiteSpace(text))
             {
                 throw new ArgumentException("text");
@@ -60,16 +54,7 @@ namespace Resin
                 var overflow = text.Substring(1);
                 if (overflow.Length > 0)
                 {
-                    Trie child;
-                    if (!Children.TryGetValue(overflow[0], out child))
-                    {
-                        child = new Trie(overflow, this);
-                        Children.Add(overflow[0], child);
-                    }
-                    else
-                    {
-                        child.Append(overflow);
-                    }
+                    InsertOrAppend(overflow);
                 }
             }
             else
@@ -95,6 +80,7 @@ namespace Resin
 
             if (prefix.Length == 1 && prefix[0] == Value)
             {
+                // The scan has reached its destination. Find words derived from this node.
                 if (Eow) words.Add(originalPrefix);
                 foreach (var node in Children.Values)
                 {
@@ -114,36 +100,36 @@ namespace Resin
         public void AppendToDescendants(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("text");
-            Trie child;
-            if (!Children.TryGetValue(text[0], out child))
-            {
-                child = new Trie(text, this);
-                Children.Add(text[0], child);
-            }
-            else
-            {
-                child.Append(text);
-            }
+
+            InsertOrAppend(text);
         }
 
         public void Append(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("text");
             if (text[0] != Value) throw new ArgumentOutOfRangeException("text");
+            if (Root) throw new InvalidOperationException("Use AppendToDescendants instead, if you are appending to the tree from the root.");
 
             var overflow = text.Substring(1);
             if (overflow.Length > 0)
             {
-                Trie child;
-                if (!Children.TryGetValue(overflow[0], out child))
-                {
-                    child = new Trie(overflow, this);
-                    Children.Add(overflow[0], child);
-                }
-                else
-                {
-                    child.Append(overflow);
-                }
+                InsertOrAppend(overflow);
+            }
+        }
+
+        private void InsertOrAppend(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("text");
+
+            Trie child;
+            if (!Children.TryGetValue(text[0], out child))
+            {
+                child = new Trie(text);
+                Children.Add(text[0], child);
+            }
+            else
+            {
+                child.Append(text);
             }
         }
 
