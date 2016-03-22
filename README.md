@@ -485,7 +485,7 @@ Shard the index and connect each subindex to each other in a network of nodes.
 ###Multi-index searching
 Lucene does it. It's very useful. Resin needs it.
 
-##### Even though this is about Resin to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results.
+##### Even though this is about Resin to Google this article is very much about Lucene
 
 If you read all the way to here you know a lot about Lucene. Not so much about John Rambo though. If Google hade seen the movie he would not have sent you here. The point being: even when doing the wrong thing or seing the problem at hand as in need of a less naive solution than you are willing to provide you can end up acheiving something close to the right thing, which is kind of what Google is doing.
 
