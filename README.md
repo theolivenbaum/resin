@@ -211,7 +211,7 @@ An analyzer produces normalized tokens from text. `var text = "Hello World!"` ma
 
 But only if you are scanning a database of Swedish movie titles because the original movie title was "First Blood". Swedish Media Institue (it's called something else, sorry, I forget) changed the title to the more declarative "Rambo: First Blood". This is probably what happened:
 
-Guy: The americans have sent us new movie.
+Guy: Americans have sent us new movie.
 
 Boss: What's it called?
 
