@@ -1,7 +1,9 @@
+using System.Collections.Generic;
+
 namespace Resin
 {
     public interface IAnalyzer
     {
-        string[] Analyze(string value);
+        IEnumerable<string> Analyze(string value);
     }
 }

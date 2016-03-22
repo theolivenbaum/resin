@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using ProtoBuf;
 
 namespace Resin
@@ -62,8 +63,8 @@ namespace Resin
                 {
                     _docWriter.Write(doc.Id, field.Key, value);
 
-                    var tokens = _analyzer.Analyze(value);
-                    for (int position = 0; position < tokens.Length; position++)
+                    var tokens = _analyzer.Analyze(value).ToList();
+                    for (int position = 0; position < tokens.Count; position++)
                     {
                         var token = tokens[position];
                         List<int> positions;

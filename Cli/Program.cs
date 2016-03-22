@@ -7,8 +7,6 @@ using Newtonsoft.Json;
 
 namespace Resin
 {
-    // write --file e:\wikipedia\wikipedia_resin.json --dir c:\temp\resin\0 --skip 0 --take 10000
-    // query --dir c:\temp\resin\0 -q "label:roman"
     class Program
     {
         static void Main(string[] args)
@@ -34,7 +32,7 @@ namespace Resin
                 var count = 0;
                 var timer = new Stopwatch();
                 timer.Start();
-                using (var w = new IndexWriter(dir, new Analyzer()))
+                using (var w = new IndexWriter(dir, new Analyzer(stopwords:new []{"the", "a", "an", "to", "of", "on", "and", "that", "in", "it", "is", "be", "as", "if", "we", "at", "for"})))
                 {
                     foreach (var d in docs)
                     {
@@ -130,6 +128,8 @@ namespace Resin
                 Console.WriteLine("usage:");
                 Console.WriteLine("rn.exe write --file source.json --dir c:\\target_dir");
                 Console.WriteLine("rn.exe query --dir c:\\my_index -q field:value");
+                Console.WriteLine("rn.exe analyze --dir c:\\my_index -field field_name");
+                Console.WriteLine("rn.exe about");
             }
         }
     }
