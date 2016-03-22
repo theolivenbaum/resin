@@ -12,6 +12,11 @@ namespace Resin
 
         public int Boost { get; set; }
 
+        public Term()
+        {
+            Boost = 1;
+        }
+
         public override string ToString()
         {
             return string.Format("{0}:{1}", Field, Token);

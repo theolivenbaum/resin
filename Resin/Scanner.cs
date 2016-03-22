@@ -35,7 +35,6 @@ namespace Resin
                 {
                     if (term.Prefix)
                     {
-                        term.Boost = 1;
                         return GetDocIdsByPrefix(term, reader);
                     }
                     term.Boost = 2;
@@ -47,8 +46,12 @@ namespace Resin
 
         private IEnumerable<DocumentScore> GetDocIdsByPrefix(Term term, FieldReader reader)
         {
-            var terms = new[] {new Term {Field = term.Field, Token = term.Token}} // first try an exact match on the prefix token, as "OR"
-                .Concat(reader.GetTokens(term.Token).Select(token => new Term {Field = term.Field, Token = token}));
+            var terms = reader.GetTokens(term.Token).Select(token => new Term {Field = term.Field, Token = token}).ToList();
+            var first = terms.FirstOrDefault();
+            if (first != null && first.Token==term.Token)
+            {
+                first.Boost = 2;
+            }
             return terms.SelectMany(t => GetDocIdsExact(t, reader));
         }
 

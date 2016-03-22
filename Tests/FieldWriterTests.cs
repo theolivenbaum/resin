@@ -36,25 +36,25 @@ namespace Tests
 
             using (var writer = new FieldWriter(fileName))
             {
-                writer.Write(0, "Hello", 0);
+                writer.Write(0, "hello", 1);
             }
 
             var terms = FieldReader.Load(fileName).GetAllTokens().Select(t=>t.Token).ToList();
 
             Assert.AreEqual(1, terms.Count);
-            Assert.IsTrue(terms.Contains("Hello"));
-            Assert.IsFalse(terms.Contains("World!"));
+            Assert.IsTrue(terms.Contains("hello"));
+            Assert.IsFalse(terms.Contains("world"));
 
             using (var writer = new FieldWriter(fileName))
             {
-                writer.Write(0, "World!", 1);
+                writer.Write(0, "world", 1);
             }
 
             terms = FieldReader.Load(fileName).GetAllTokens().Select(t => t.Token).ToList();
 
             Assert.AreEqual(2, terms.Count);
-            Assert.IsTrue(terms.Contains("Hello"));
-            Assert.IsTrue(terms.Contains("World!"));
+            Assert.IsTrue(terms.Contains("hello"));
+            Assert.IsTrue(terms.Contains("world"));
         }
     }
 }
