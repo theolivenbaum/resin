@@ -26,14 +26,7 @@ namespace Resin
                 _docIdToFileIndex = Serializer.Deserialize<Dictionary<int, int>>(file);
             }
         }
-
-        [Obsolete]
-        public IEnumerable<Document> GetDocuments(string field, string token)
-        {
-            var docs = _scanner.GetDocIds(new Term {Field = field, Token = token});
-            return docs.Select(GetDocFromDisk);
-        }
-
+        
         public IEnumerable<DocumentScore> GetScoredResult(IEnumerable<Term> terms)
         {
             IList<DocumentScore> results = null;
@@ -64,63 +57,9 @@ namespace Resin
 
             if (results != null)
             {
-                foreach (var doc in results.GroupBy(d => d.DocId))
+                foreach (var group in results.GroupBy(d => d.DocId))
                 {
-                    float documentSignificance = 0;
-                    foreach (var subScore in doc)
-                    {
-                        documentSignificance += subScore.Value;
-                    }
-                    yield return new DocumentScore { DocId = doc.Key, Value = documentSignificance };
-                }
-            }
-        }
-
-        [Obsolete]
-        public IEnumerable<Document> GetDocuments(IList<Term> terms)
-        {
-            IList<DocumentScore> results = null;
-            foreach (var term in terms)
-            {
-                var subResult = _scanner.GetDocIds(term).ToList();
-                if (results == null)
-                {
-                    results = subResult;
-                }
-                else
-                {
-                    if (term.And)
-                    {
-                        results = results.Intersect(subResult).ToList();
-                    }
-                    else if (term.Not)
-                    {
-                        results = results.Except(subResult).ToList();
-                    }
-                    else
-                    {
-                        // Or
-                        results = results.Concat(subResult).Distinct().ToList();
-                    }
-                }
-            }
-
-            var scored = new List<DocumentScore>();
-            if (results != null)
-            {
-                foreach (var doc in results.GroupBy(d=>d.DocId))
-                {
-                    float documentSignificance = 0;
-                    foreach (var subScore in doc)
-                    {
-                        documentSignificance += subScore.Value;
-                    }
-                    scored.Add(new DocumentScore{DocId = doc.Key, Value = documentSignificance});
-                }
-
-                foreach (var doc in scored)
-                {
-                    yield return GetDocFromDisk(doc);
+                    yield return new DocumentScore { DocId = group.Key, Value = group.Sum(s=>s.Value) };
                 }
             }
         }

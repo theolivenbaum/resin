@@ -42,7 +42,8 @@ namespace Resin
 
         private IEnumerable<DocumentScore> GetDocIdsByPrefix(Term term, FieldReader reader)
         {
-            var terms = reader.GetTokens(term.Token).Select(token => new Term { Field = term.Field, Token = token }).ToList();
+            var terms = new[] {new Term {Field = term.Field, Token = term.Token}} // first try an exact match on the prefix token, as "OR"
+                .Concat(reader.GetTokens(term.Token).Select(token => new Term {Field = term.Field, Token = token}));
             return terms.SelectMany(t => GetDocIdsExact(t, reader));
         }
 

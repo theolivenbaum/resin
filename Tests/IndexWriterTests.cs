@@ -7,67 +7,8 @@ using Resin;
 namespace Tests
 {
     [TestFixture]
-    public class IndexTests
+    public class IndexWriterTests
     {
-        [Test]
-        public void Can_find()
-        {
-            const string dir = "c:\\temp\\resin_tests\\Can_find";
-            if (Directory.Exists(dir)) Directory.Delete(dir, true);
-            var analyzer = new Analyzer();
-            var parser = new QueryParser(analyzer);
-
-            using (var w = new IndexWriter(dir, analyzer))
-            {
-                w.Write(new Document
-                {
-                    Id = 0,
-                    Fields = new Dictionary<string, List<string>>
-                    {
-                        {"title", new[]{"a"}.ToList()}
-                    }
-                });
-                w.Write(new Document
-                {
-                    Id = 1,
-                    Fields = new Dictionary<string, List<string>>
-                    {
-                        {"title", new[]{"a b"}.ToList()}
-                    }
-                });
-                w.Write(new Document
-                {
-                    Id = 2,
-                    Fields = new Dictionary<string, List<string>>
-                    {
-                        {"title", new[]{"a b c"}.ToList()}
-                    }
-                });
-            }
-            using (var reader = new IndexReader(new Scanner(dir)))
-            {
-                var docs = reader.GetDocuments("title", "a").ToList();
-
-                Assert.AreEqual(3, docs.Count);
-
-                docs = reader.GetDocuments("title", "b").ToList();
-
-                Assert.AreEqual(2, docs.Count);
-
-                docs = reader.GetDocuments("title", "c").ToList();
-
-                Assert.AreEqual(1, docs.Count);
-
-                docs = reader.GetDocuments(parser.Parse("title:a +title:b").ToList()).ToList();
-
-                Assert.AreEqual(2, docs.Count);
-
-                docs = reader.GetDocuments(parser.Parse("title:a +title:b +title:c").ToList()).ToList();
-
-                Assert.AreEqual(1, docs.Count);
-            }
-        }
-
         [Test]
         public void Can_write_one_field()
         {
@@ -140,6 +81,7 @@ namespace Tests
 
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.fld").Length);
 
+            var parser = new QueryParser(new Analyzer());
             using (var reader = new IndexReader(new Scanner(dir)))
             {
                 var terms = reader.Scanner.GetAllTokens("title").Select(t => t.Token).ToList();
@@ -148,12 +90,11 @@ namespace Tests
                 Assert.IsTrue(terms.Contains("hello"));
                 Assert.IsTrue(terms.Contains("world"));
 
-                var docs = reader.GetDocuments("title", "world").ToList();
+                var docs = reader.GetScoredResult(parser.Parse("title:world")).ToList();
 
                 Assert.AreEqual(1, docs.Count);
-                Assert.AreEqual("Hello World!", docs[0].Fields["title"][0]);
 
-                docs = reader.GetDocuments("title", "cruel").ToList();
+                docs = reader.GetScoredResult(parser.Parse("title:cruel")).ToList();
 
                 Assert.AreEqual(0, docs.Count);
             }
@@ -181,16 +122,13 @@ namespace Tests
                 Assert.IsTrue(terms.Contains("world"));
                 Assert.IsTrue(terms.Contains("cruel"));
 
-                var docs = reader.GetDocuments("title", "world").ToList();
+                var docs = reader.GetScoredResult(parser.Parse("title:world")).ToList();
 
                 Assert.AreEqual(2, docs.Count);
-                Assert.AreEqual("Hello World!", docs[0].Fields["title"][0]);
-                Assert.AreEqual("Hello Cruel World!", docs[1].Fields["title"][0]);
 
-                docs = reader.GetDocuments("title", "cruel").ToList();
+                docs = reader.GetScoredResult(parser.Parse("title:cruel")).ToList();
 
                 Assert.AreEqual(1, docs.Count);
-                Assert.AreEqual("Hello Cruel World!", docs[0].Fields["title"][0]);
             }
         }
 

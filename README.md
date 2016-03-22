@@ -292,7 +292,7 @@ Store the documents. But also analyze them and create field files that are query
 	    }
 	}
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs) and a [little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/IndexTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs) and a [little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/IndexWriterTests.cs)
 
 ## QueryParser
 With our current parser we can interpret "title:Rambo", also `title:first title:blood`. The last query is what lucene decompiles this query into: `title:first blood`. We will try to mimic this later on but for now let's work with the decompiled format.
@@ -364,7 +364,7 @@ The IndexReader needs a scanner. The results of a scan is a list of document ids
 		}
 	}
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/IndexTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/IndexReaderTests.cs)
 
 ##Searcher
 
