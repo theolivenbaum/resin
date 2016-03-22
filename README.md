@@ -23,8 +23,6 @@ It's a full-text search framework you can reason about. It's simplistic and very
 	  "Id": 1
 	}
 
-"or all matter or all energy". Wow!
-
 ####Here's a huge number of documents
 
 	var docs = GetHugeNumberOfDocs();
