@@ -7,12 +7,12 @@ namespace Resin
 {
     public class FieldReader
     {
-        // tokens/docids/positions
-        private readonly IDictionary<string, IDictionary<int, IList<int>>> _tokens;
+        // tokens/docids/doc frequency
+        private readonly IDictionary<string, IDictionary<int, int>> _tokens;
 
         private readonly Trie _trie;
 
-        public FieldReader(IDictionary<string, IDictionary<int, IList<int>>> tokens, Trie trie)
+        public FieldReader(IDictionary<string, IDictionary<int,int>> tokens, Trie trie)
         {
             _tokens = tokens;
             _trie = trie;
@@ -24,7 +24,7 @@ namespace Resin
             var trie = Trie.Load(trieFileName);
             using (var file = File.OpenRead(fileName))
             {
-                var terms = Serializer.Deserialize<Dictionary<string, IDictionary<int, IList<int>>>>(file);
+                var terms = Serializer.Deserialize<Dictionary<string, IDictionary<int, int>>>(file);
                 return new FieldReader(terms, trie);
             }
         }
@@ -34,7 +34,7 @@ namespace Resin
             return _tokens.Select(t=>new TokenInfo
             {
                 Token = t.Key,
-                Count = t.Value.Values.Select(l=>l.Count).Sum()
+                Count = t.Value.Values.Sum()
             });
         }
 
@@ -43,9 +43,9 @@ namespace Resin
             return _trie.GetTokens(prefix);
         } 
 
-        public IDictionary<int, IList<int>> GetPostings(string token)
+        public IDictionary<int, int> GetPostings(string token)
         {
-            IDictionary<int, IList<int>> postings;
+            IDictionary<int, int> postings;
             if (!_tokens.TryGetValue(token, out postings))
             {
                 return null;

@@ -58,31 +58,21 @@ namespace Resin
                     _fieldWriters.Add(fieldId, fw);
                 }
                 
-                var docTokensAndTheirPositions = new Dictionary<string, List<int>>();
+                var docTokenFrequencies = new Dictionary<string, int>();
                 foreach (var value in field.Value)
                 {
                     _docWriter.Write(doc.Id, field.Key, value);
 
-                    var tokens = _analyzer.Analyze(value).ToList();
-                    for (int position = 0; position < tokens.Count; position++)
+                    foreach (var token in _analyzer.Analyze(value))
                     {
-                        var token = tokens[position];
-                        List<int> positions;
-                        if (!docTokensAndTheirPositions.TryGetValue(token, out positions))
-                        {
-                            positions = new List<int>();
-                            docTokensAndTheirPositions.Add(token, positions);
-                        }
-                        positions.Add(position);
+                        if (docTokenFrequencies.ContainsKey(token)) docTokenFrequencies[token] += 1;
+                        else docTokenFrequencies.Add(token, 1);
                     }
                 }
 
-                foreach(var tokenAndItsPositions in docTokensAndTheirPositions)
+                foreach(var token in docTokenFrequencies)
                 {
-                    foreach (var position in tokenAndItsPositions.Value)
-                    {
-                        fw.Write(doc.Id, tokenAndItsPositions.Key, position);
-                    }
+                    fw.Write(doc.Id, token.Key, token.Value);
                 }
             }
         }

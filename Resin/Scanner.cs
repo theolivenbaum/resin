@@ -52,9 +52,9 @@ namespace Resin
             var postings = reader.GetPostings(term.Token);
             if (postings != null)
             {
-                foreach (var posting in postings)
+                foreach (var doc in postings)
                 {
-                    yield return new DocumentScore { DocId = posting.Key, Value = posting.Value.Count };
+                    yield return new DocumentScore { DocId = doc.Key, Value = doc.Value };
                 }
             }
         }

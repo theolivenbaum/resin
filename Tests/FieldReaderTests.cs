@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Linq;
 using NUnit.Framework;
 using Resin;
 
@@ -15,14 +14,12 @@ namespace Tests
             if (File.Exists(fileName)) File.Delete(fileName);
             using (var fw = new FieldWriter(fileName))
             {
-                fw.Write(0, "hello", 0);
-                fw.Write(5, "world", 1);
+                fw.Write(0, "hello", 5);
+                fw.Write(5, "hello", 99);
             }
             var reader = FieldReader.Load(fileName);
-            var helloPositionsForDocId0 = reader.GetPostings("hello")[0];
-            var worldPositionsForDocId5 = reader.GetPostings("world")[5];
-            Assert.AreEqual(0, helloPositionsForDocId0.First());
-            Assert.AreEqual(1, worldPositionsForDocId5.First());
+            Assert.AreEqual(5, reader.GetPostings("hello")[0]);
+            Assert.AreEqual(99, reader.GetPostings("hello")[5]);
         }
     }
 }

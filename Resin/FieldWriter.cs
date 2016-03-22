@@ -7,8 +7,8 @@ namespace Resin
 {
     public class FieldWriter : IDisposable
     {
-        // tokens/docids/positions
-        private readonly IDictionary<string, IDictionary<int, IList<int>>> _tokens;
+        // tokens/docids/doc frequency
+        private readonly IDictionary<string, IDictionary<int, int>> _tokens;
 
         private readonly Trie _trie;
         private readonly string _tokenFileName;
@@ -21,12 +21,12 @@ namespace Resin
             {
                 using (var file = File.OpenRead(fileName))
                 {
-                    _tokens = Serializer.Deserialize<Dictionary<string, IDictionary<int, IList<int>>>>(file);
+                    _tokens = Serializer.Deserialize<Dictionary<string, IDictionary<int, int>>>(file);
                 }
             }
             else
             {
-                _tokens = new Dictionary<string, IDictionary<int, IList<int>>>();
+                _tokens = new Dictionary<string, IDictionary<int, int>>();
             }
             _trieFileName = fileName + ".tri";
             if (File.Exists(_trieFileName))
@@ -39,24 +39,18 @@ namespace Resin
             }
         }
 
-        public void Write(int docId, string token, int position)
+        public void Write(int docId, string token, int docFrequency)
         {
-            IDictionary<int, IList<int>> docs;
+            IDictionary<int, int> docs;
             if (!_tokens.TryGetValue(token, out docs))
             {
-                docs = new Dictionary<int, IList<int>> {{docId, new List<int> {position}}};
+                docs = new Dictionary<int, int> { { docId, docFrequency } };
                 _tokens.Add(token, docs);
                 _trie.AppendToDescendants(token);
             }
             else
             {
-                IList<int> positions;
-                if (!docs.TryGetValue(docId, out positions))
-                {
-                    positions = new List<int>();
-                    docs.Add(docId, positions);
-                }
-                positions.Add(position);
+                docs[docId] = docFrequency;
             }
         }
 
