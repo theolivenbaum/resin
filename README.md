@@ -487,7 +487,7 @@ Lucene does it. It's very useful. Resin needs it.
 
 ##### Even though this is about Resin to Google this article is very much about Lucene
 
-If you read all the way to here you know a lot about Lucene. Not so much about John Rambo though. If Google hade seen the movie he would not have sent you here. The point being: even when doing the wrong thing or seing the problem at hand as in need of a less naive solution than you are willing to provide you can end up acheiving something close to the right thing, which is kind of what Google is doing.
+If you read all the way to here you know a lot about Lucene. Not so much about John Rambo though. If Google hade seen the movie he would have not sent you here. The point being: even when doing the wrong thing or seing the problem at hand as in need of a less naive solution than you are willing to provide you can end up acheiving something close to the right thing, which is kind of what Google is doing.
 
 Search is not rocket science. A good friend of mine used to say: search is just an algorithm. Another guy I used to work with used to say: remember, that code that you're looking at and that scare you because you don't understand it yet, it is just some code, written by some guy.
 
