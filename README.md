@@ -436,6 +436,6 @@ Shard and connect each subindex to each other in a network of nodes. Call me, I'
 
 ####Google scale
 
-Service-orient the different parts of Resin and make query parsing, calculating of execution plans, scanning, scoring and resolving of documents each a service of its own. Distribute those services across a machine park, grouped by function. Have redundance and scalability within each group. Here is where .Net and Resin will show its real strengths. 
+Service-orient the different parts of Resin and make query parsing, calculating of execution plans, scanning, scoring and resolving of documents each a service of its own. Distribute those services across a machine park, grouped by function. Have redundance and scalability within each group. Here is where .Net and Resin will show its real strengths. Service-orientation with [Nancy](https://github.com/NancyFx/Nancy), messaging with [protobuf-net](https://github.com/mgravell/protobuf-net), GC provided by Microsoft. ;)
 
 To the [top&#10548;](#top)
