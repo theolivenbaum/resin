@@ -24,7 +24,7 @@ namespace Resin
         public Result Search(string query)
         {
             var terms = _parser.Parse(query);
-            var scored = _reader.GetScoredResult(terms).OrderByDescending(d=>d.TermFrequency).ToList();
+            var scored = _reader.GetScoredResult(terms).OrderByDescending(d=>d.Score).ToList();
             var docs = scored.Select(s => _reader.GetDoc(s));
             return new Result { Docs = docs, Total = scored.Count };
         }
@@ -33,7 +33,7 @@ namespace Resin
         {
             var skip = page*size;
             var terms = _parser.Parse(query);
-            var scored = _reader.GetScoredResult(terms).OrderByDescending(d => d.TermFrequency).ToList();
+            var scored = _reader.GetScoredResult(terms).OrderByDescending(d => d.Score).ToList();
             var paged = scored.Skip(skip).Take(size);
             var docs = paged.Select(s=>_reader.GetDoc(s));
             return new Result { Docs = docs, Total = scored.Count };
