@@ -1,5 +1,5 @@
 # Resin
-It's a full-text search framework you can reason about. It's simplistic and very capable. It is not built upon Lucene.
+It's a full-text search framework you can reason about. It's simplistic and capable. It is not built upon Lucene.
 
 ##A quick usage guide
 
@@ -109,7 +109,7 @@ It's a full-text search framework you can reason about. It's simplistic and very
 		
 		// The following prefix query requires 
 		// - one hashtable lookup towards the field file index to find the field ID
-		// - one Trie scan to find matching tokens
+		// - one [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs) scan to find matching tokens
 		// - for each token: one hashtable lookup towards the token index to find the doc IDs
 		// - append the results of the scan (as if the tokens are joined by "OR")
 		// - for each doc ID: one hashtable lookup towards the doc cache
@@ -126,49 +126,8 @@ Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register 
 
 Contribute frequently. Go directly to an [introduction&#8628;](#citizens) of the parts that make up Resin.  
                   
-##How to build your own full-text search in c#, yeah!
-
-Here's some guidance I could have used when I started building search frameworks. Resin is the 6th iteration I've done. The codebase, it's pieces, get smaller and simpler each round. Use this to get some ideas from if you are into information retrieval. The nerd factor on that last sentence is completely off the charts, I'm well aware, thank you.
-
-Even though this is about Resin to Google this article is very much about Lucene, so much so that querying it's enourmous index with the term "body:lucene" will render this document in it's results. One could argue that since Lucene is being brought up and very early to that this document certainly is about Lucene. I buy that but would still like to say, this will be mostly about how I built my own indexer-searcher thing that can _index 1M english wikipedia articles in approximately 3 minutes and then respond to multi-criteria term or prefix based queries towards that index in less than a tenth of a millisecond_. That's on my 3 year old i5 laptop. It's really thin. An orange Lenovo Yoga 2 Pro. Just sayin'.
-
-##Why?
-
-You mean why build a search framework? Well,
-
-- You like Lucene and you're curious about the decisions behind the Lucene design and the reasons as to why it looks the way it does
-- You wonder why it's so damn fast
-- You wonder what parts of the Lucene.net design is there because of (java) legacy and if the design might be improved upon or simplified
-- You sometimes wish that building and querying an index was surrounded by even less code, perhaps by leaning towards conventions you yourself have built up throughout the years of using Lucene
-- You wonder what would happen if the .net community gathered around a .net project instead of a line-by-line java port, because sometimes you'd like to understand why your search is acting the way it does but you find the architecture behind Lucene to be complex and you are scared to even look at the source code, not that complexity is neccessarily a java legacy. Some dotnetpeople also suffer from over engineering everything they touch. A really good read on this topic is the Umbraco 5 codebase. It's very big and funny. (*)
-- The Lucene.net team has proven that a .net runtime hosted on a windows machine provides a wonderful environment for a creature such as a full-text search framework to live and enjoy itself in but it makes you a little bit sad that they will always be a couple of years behind the core Lucene team
-- You are just genuinely curious about the whole domain of information retrieval, perhaps because it is a small domain, relatively easy to grasp and at it's basic level the math is not frightening, and you see it as one of the tools taking us closer to IR's older cousin AI
-- You want to pretend you are building something smart and AI-like and neural networks scare you worse than long, cold hotel corridors and kids riding their pedal cars up and down the carpets of an otherwise empty luxury estate
- 
-(*) They were on to something though. They saw great gains in representing anything and everything as a node. Had they pulled it of, perhaps they could have by using less abstractions, Umbraco would have been easy to reason about and then to refine even further.
-
-Here's something to lighten up your mood and then there's some code. At the end there will be a fully functional full-text search CLI. I will explain how to use that to create a Resin index from a Wikipedia dump and then how to query that index. There will be measurements on how Resin behaves in a fully cached state and in a partially cached state. 
-
-Skip to [here&#8628;](#citizens) to make this an even shorter read. 
-
-###The very short story of the small domain of full-text search
-
-In this story there are documents with fields such as title and author and there are tokens, which is what you get when you chop up into pieces, or analyze, the values of those fields. There is also a task at hand, which is to be able to find any document by supplying any token it contains. If many documents contain that token then all of those documents shall be fetched and arranged in the order of relevance, the most relevant first. 
-
-You find yourself in front of a huge stack of documents that reaches over you head, a couple of months worth of unopened mail, and from the documents in that pile you want to be able to produce a small, neat little dosier (as shallow as possible actually) of bills that absolutely, positively must be payed today. So you analyze all of the documents by splitting up the value of each field into tokens, making them lower-case, normalizing the text that you will later scan through, making that process easier which is good because you want the scanning to go fast later on. In an index you keep track of all of the tokens and their positions inside of the documents making it easy to find anything containing a certain token.
-
-Later that day you start querying the index with tokens such as "pay" and "bill", one at a time. Invoices and letters from your friend Bill surface.
-
-You realize that you need to be able to select documents based on more than one criteria so you introduce the concept of "AND" into your querying process which intersects the results of a multi-criteria query, giving you a small, neat little dosier of bills to pay. You then create and witness a new open-source project gaining immensly in popularity eventually leading to the point where you can acctually pay those bills. But by then, even though you used the same criteria the dosier became a little fatter and did not contain the same bills. Stuff had happened. The indexed had changed. Good thing you got payed. The end.
-
-###Here's what you need
-
-You need to be able to swiftly index documents without taking up too much memory or disk space. You need to be able to query that index for documents and get them back in exactly the same shape they were in before you started analyzing them. The process of querying must be fast. Not Lucene-fast, but fast. The time it takes to understand the query, perform the scan and then retrieve the documents from disk must be below a second, preferably tens of milliseconds (like Lucene) or at least around a couple of hundred milliseconds. You need to be able to update the index, add new documents and remove old ones. 
-
-Even though you could be thinking about the values of fields as being objects, any Object, any IComparable even, that would actually make even more sense, to start with you will only solve the querying part, not the custom sorting of results that Lucene is capable of. Therefore you don't need your values to be of type IComparable, they can be strings.
-
 <a name="citizens" id="citizens"></a>
-###FIrst class citizens
+##First class citizens
 
 To be able to call ourselves a full-text search framework we need something that can analyze text, an [Analyzer](https://github.com/kreeben/resin/blob/master/Resin/Analyzer.cs). Also, something that can write index files and store documents, an [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs), [FieldWriter](https://github.com/kreeben/resin/blob/master/Resin/FieldWriter.cs) and a [DocumentWriter](https://github.com/kreeben/resin/blob/master/Resin/DocumentWriter.cs). 
 
@@ -176,7 +135,7 @@ We will need to be able to parse multi-criteria queries such as "title:Rambo +ti
 
 An [IndexReader](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and a [FieldReader](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) will make it possible for a [Scanner](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) to get a list of document IDs containing the tokens at hand. A DocumentReader will assist in fetching the documents, in the state they were in at indexing time, from disk.
 
-##The Analyzer
+####The Analyzer
 
 	public class Analyzer
 	{
@@ -227,12 +186,12 @@ Another thing we hope to achieve by analyzing text is to normalize between the w
 
 I don't speak like that btw. They were definitely not swedish, maybe russian or ukranian. So go back to the voice you had originally in your head.
 
-### Deep analysis
+##### Deep analysis
 The analysis you want to do both at indexing and querying time is to acctually try to understand the contents of the text, that a "Tree" is the same thing as a "tree" and a component of "trees". What if you could also pick up on themes and subcontexts?
 
 What we are doing however in Analyzer.cs is very rudimentary type of analysis. We are simply identifying the individual words. We could go further, investigate if any of those words are kind of the same, because although "trees" != "tree" their concepts intersect so much so that in the interest of full-text search they could and maybe should be one and the same concept. Anyway, identifying and normalizing the words will be fine for now.
 
-##FieldWriter
+####FieldWriter
 Tokens are stored in a field file. A field file is an index of all the tokens in a field. Tokens are stored together with postings. Postings are pointers to documents. Our postings contain the document ID and how many times the token exists within that document, its document frequency.
 
 That means that if we know what field file to look in, we can find the answer to the query "title:rambo" by opening the file, deserialize the contents into this:
@@ -250,7 +209,7 @@ That means that if we know what field file to look in, we can find the answer to
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/FieldWriter.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/FieldWriterTests.cs)
 
-##DocumentWriter
+####DocumentWriter
 
 Documents are persisted on disk. How they look on disk is not very interesting. 
 
@@ -268,7 +227,7 @@ More than one document fit into a document file. A whole list of them would fit.
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/DocumentWriter.cs)
 
-##IndexWriter
+####IndexWriter
 
 Store the documents. But also analyze them and create field files that are queryable. There's not much to it:
 
@@ -291,7 +250,7 @@ Store the documents. But also analyze them and create field files that are query
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs) and a [little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/IndexWriterTests.cs)
 
-## QueryParser
+#### QueryParser
 With our current parser we can interpret "title:Rambo", also `title:first title:blood`. The last query is what lucene decompiles this query into: `title:first blood`. We will try to mimic this later on but for now let's work with the decompiled format.
 
 	var q = query.Split(' ').Select(t => t.Split(':'));
@@ -310,7 +269,7 @@ A field reader can do this:
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/FieldReaderTests.cs)
 
-## Scanner
+#### Scanner
 
 After a good parsing we get back a list of terms. A term is a field and a token, e.g. "title:rambo". 
 
@@ -340,7 +299,7 @@ At the back of that lexicon is an index, the field file. A scanner scans the ind
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/ScannerTests.cs)
 
-## IndexReader
+#### IndexReader
 
 The IndexReader needs a scanner. The results of a scan is a list of document ids. IndexReader resolves the document and returns that instead of the id.
 
@@ -355,7 +314,7 @@ The IndexReader needs a scanner. The results of a scan is a list of document ids
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and [a little bit of testing](https://github.com/kreeben/resin/blob/master/Tests/IndexReaderTests.cs)
 
-##Searcher
+####Searcher
 
 Finally, the searcher, a helper that takes an IndexReader and a QueryParser, accepting unparsed queries, lazily returning a list of documents:
 
@@ -435,74 +394,42 @@ Here is another test, this time the documents aren't pre-cached in the warmup:
 
 ##Roadmap
 
-###Query language interpreter
+####Query language interpreter
 AND, OR, NOT (+ -), prefix* and fuzzy~ [implemented here](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs).
 TODO: nested clauses
 
-###Prefix search
+####Prefix search
 Implemented currently as a Trie scan [here](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs#L41).
 
 Here's an example of a prefix search towards and index of 1M english wikipedia docs:
 ![alt text](https://github.com/kreeben/resin/blob/master/screenshot4.PNG "Trie's are fast")
 
-####Other things to do:
+#####Other things to do:
 
-###Fuzzy
+####Fuzzy
 The term-based search that is currently implemented is extremly fast because once you have deserialized the indexes the scan, the resolve of the document, they are all hash-table look-ups.
 
 The problem of both prefix and fuzzy querying may be seen as a problem of finding out which tokens to look for. 
 
 If you create an ngram-index from the lexicon and ngram the query token the same way and look up the terms for those grams, calculate the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance), what is left are the term-based queries. Such a Lucene-inspired fuzzy query implementation would add a couple of steps to the querying pipeline and those steps would be all about finding out which terms to scan for.
 
-###Ranking
+####Ranking
 If that goes well then what is left in our [MVP](https://en.wikipedia.org/wiki/Minimum_viable_product) is the ranking algorithm. That should be tons of fun. That's where the [Lucene core team](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) is at.
 
-###Writing to an index in use
+####Writing to an index in use
 Lucene does it extremly well because of it's file format and because it's indices are easily mergable. It sees an update as "first create new index then merge with the current index then refresh the index reader".
 
-###Scaling
+####Scaling
 
 Service-orient the different parts of Resin. Make scanning, scoring and resolving of documents each a service of its own. Increase caching abilities. Buy Gb network and use bare-metal.
 
-### Extreme scaling
+####Extreme scaling
 
 Shard the index and connect each subindex to each other in a network of nodes.
 
 <a name="point" id="point"></a>
-###Multi-index searching
-Lucene does it. It's very useful. Resin needs it.
-
-##### Even though this is about Resin to Google this article is very much about Lucene
-
-If you read all the way to here you know a lot about Lucene. Not so much about John Rambo though. If Google hade seen the movie he would have not sent you here. The point being: even when doing the wrong thing or seing the problem at hand as in need of a less naive solution than you are willing to provide you can end up acheiving something close to the right thing, which is kind of what Google is doing.
-
-Search is not rocket science. A good friend of mine used to say: search is just an algorithm. Another guy I used to work with used to say: remember, that code that you're looking at and that scare you because you don't understand it yet, it is just some code, written by some guy.
-
-_-Two very wise men_
-
-What comes next is not really rocket science either, it's something else. An AI has been built and it has the knowledge of the Google index plus all the extra data it's collected when you googled, gmailed, g-doced, youtubed or g++ed. Google Now knows where you are at, who you are there with, where you are going after that, and where you will sleep tonight (TM). It could play you like a game of Go if it wanted to. 
-
-It's good at pattern matching. It knows you have quit your job before it's announced on LinkedIn because these days you seem to be Googling from home, not from the office. And a lot of those emails contained the token "recruitment".
-
-Wouldn't it be better if we built a search service based on the knowledge _we_ choose and then, together, built an AI based on _that_, instead of what Google think it's okay to base an AI on? Today the g-AI is not very smart. Who here thinks it will get smarter by the day? 
-
-Thus, the great importance of mergeable Resin indices. Because we could all
-
-1. Finish up Resin (or a similar project, Lucene comes to mind)
-2. Create a Resin indexing bot, promote that service and make that index not only searchable for everyone but
-3. Make it and its usage data public, completely open in a format available to anyone
-4. Inform that by using Chrome you are feeding the Google AI. By using Firefox you are feeding noone. We can even build a new browser. Browser wars are fun, especially to web devs. (*)
-5. Encourage research teams and others who use Resin to upload theis indices to the Resin server, because then they can query it distributively and have queries that span across theirs and other indices, including the Great Web Index and its Usage Data. Sharing of indices, the Facebook of Data, anyone can tap into its knowledge. The vastness of the data Facebook and Google have been collecting on us and on what we know would be nothing compared to what the Resin Index would contain if we deliberately made adding and sharing of knowledge an easy task. 
-7. Watch how the media is now interested in the topic of privacy
-8. Witness how Google's significance lowers.
-9. Ensure the laws change to give us more privacy, because by now it is clear to everyone how much data Google have been collecting on you and have been using to drive and feed an AI with. Oh yeah and Bing also. Bad Bing!
-10. Profit!
-
-Don't think it can be done? Let there be another search engine war! All in good fun of course.
-  
-(*) I'm using Chrome, in the always-signed-in mode. It knows _ALL_ of my passwords, to everything. I have instant access to docs, gmail and calendar. I tick "remember me" whenever I can. The browser itself is just great. It's just an awsome browser, the most solid piece of software I have ever used. I love it and I trust it to never crash on me. It's like it's an operating system of itself, one that never fails. (**) Damn you Google.
-  
-(**) If Windows would fail under the payload of Chrome or due to some other process, Chrome probably says "Windows, out of the way please, I got this" and saves the whole crash from propagating down into the kernel causing a blue screen, saving the day. I haven't seen a blue screen since I installed it what does that mean?
+####Multi-index searching
+Lucene does it. It's useful. Resin needs it.
 
 ## Final analysis
 
