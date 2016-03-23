@@ -200,8 +200,8 @@ Tokens are stored in a field file. A field file is an index of all the tokens in
 
 That means that if we know what field file to look in, we can find the answer to the query "title:rambo" by opening the file, deserialize the contents into this:
 
-	// tokens/docids/doc frequency
-        private readonly IDictionary<string, IDictionary<int, int>> _tokens = DeserializeFieldFile(fileName);
+	// tokens/docids/term frequency
+	private readonly IDictionary<string, IDictionary<int, int>> _tokens = DeserializeFieldFile(fileName);
 	
 	// ...and then we can find the document IDs. This operation does not take long.
 	IDictionary<int, int> postings;
@@ -265,12 +265,13 @@ With our current parser we can interpret "title:Rambo", also `title:first title:
 
 You have already seen the in-memory representation of the field file:
 
-	// tokens/docids/doc frequency
+	// tokens/docids/term frequency
 	private readonly IDictionary<string, IDictionary<int, int>> _tokens;
 
 A field reader can do this:
 
 	var tokens = reader.GetAllTokens();
+	var tokensThatStartsWith = reader.GetTokens(prefix);
 	var docPos = reader.GetDocPosition(string token);
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/FieldReaderTests.cs)
@@ -281,32 +282,31 @@ After a good parsing we get back a list of terms. A term is a field and a token,
 
 All that we know, as a search framework, is called "a lexicon".
 
-At the back of that lexicon is an index, the field file. A scanner scans the index and if it finds a match it returns the doc IDs and a score: 
+At the back of that lexicon is an index, the field file. A scanner scans the index and if it finds a match it returns the doc IDs and the term frequencies: 
 
-  public IEnumerable<DocumentScore> GetDocIds(Term term)
-  {
-      int fieldId;
-      if (_fieldIndex.TryGetValue(term.Field, out fieldId))
-      {
-          var reader = GetReader(term.Field);
-          if (reader != null)
-          {
-              if (term.Prefix)
-              {
-                  return GetDocIdsByPrefix(term, reader);
-              }
-              return GetDocIdsExact(term, reader);
-          }
-      }
-      return Enumerable.Empty<DocumentScore>
-        ();
-        }
+	public IEnumerable<DocumentScore> GetDocIds(Term term)
+	{
+		int fieldId;
+		if (_fieldIndex.TryGetValue(term.Field, out fieldId))
+		{
+		  var reader = GetReader(term.Field);
+		  if (reader != null)
+		  {
+		      if (term.Prefix)
+		      {
+		          return GetDocIdsByPrefix(term, reader);
+		      }
+		      return GetDocIdsExact(term, reader);
+		  }
+		}
+		return Enumerable.Empty<DocumentScore>();
+	}
 
-        [Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/ScannerTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/ScannerTests.cs)
 
-        #### IndexReader
+#### IndexReader
 
-        The IndexReader needs a scanner. The results of a scan is a list of document ids. IndexReader scores the hits by calculating the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) for the terms in the query:
+The IndexReader needs a scanner. The results of a scan is a list of document ids. IndexReader scores the hits by calculating the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) for the terms in the query:
 
         public IEnumerable<DocumentScore> GetScoredResult(IEnumerable<Term> terms)
 
@@ -317,12 +317,12 @@ At the back of that lexicon is an index, the field file. A scanner scans the ind
 Finally, the searcher, a helper that takes an IndexReader and a QueryParser, accepting unparsed queries, lazily returning a list of documents:
 
 	public IEnumerable<Document> Search(string query)
-  {
-    var terms = _parser.Parse(query);
-    var scored = _reader.GetScoredResult(terms).OrderByDescending(d=>d.TermFrequency).ToList();
-    var docs = scored.Select(s => _reader.GetDocFromDisk(s));
-    return new Result { Docs = docs, Total = scored.Count };
-  }
+	{
+		var terms = _parser.Parse(query);
+		var scored = _reader.GetScoredResult(terms).OrderByDescending(d=>d.TermFrequency).ToList();
+		var docs = scored.Select(s => _reader.GetDocFromDisk(s));
+		return new Result { Docs = docs, Total = scored.Count };
+	}
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/Searcher.cs) 
 
