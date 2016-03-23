@@ -136,11 +136,11 @@ The [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs).
 <a name="relevance" id="relevance"></a>
 ##Relevance
 
-Expect the scoring to follow the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) scheme with the following addition from [bm25](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/):
+Expect the scoring to follow the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) scheme:
 
 `IDF = log ( numDocs / docFreq + 1) + 1`
 
-and with the standard Lucene augumented term frequency `sqrt(TF)`.
+and with the standard Lucene augumented term frequency `sqrt(TF)` (a scheme that will [soon](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) be legacy).
 
 <a name="citizens" id="citizens"></a>
 ##First class citizens
