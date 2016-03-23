@@ -35,7 +35,7 @@ namespace Resin
                 var termHits = _scanner.GetDocIds(term).ToList();
                 if (termHits.Count == 0) continue;
 
-                var idf = Math.Log((double) TotalNumberOfDocs/(1+termHits.Count));
+                var idf = Math.Log((double) TotalNumberOfDocs/(1+termHits.Count)) + 1;
                 
                 if (hits.Count == 0)
                 {
@@ -43,8 +43,7 @@ namespace Resin
                     {
                         foreach (var doc in termHits)
                         {
-                            var tfidf = doc.TermFrequency * idf;
-                            doc.Score = tfidf;
+                            doc.Score = Math.Sqrt(doc.TermFrequency) * idf;
                         }
                         hits = termHits.ToDictionary(h => h.DocId, h => h);
                     }
@@ -59,8 +58,7 @@ namespace Resin
                             DocumentScore score;
                             if (hits.TryGetValue(doc.DocId, out score))
                             {
-                                var tfidf = doc.TermFrequency*idf;
-                                score.Score += tfidf;
+                                score.Score += Math.Sqrt(doc.TermFrequency) * idf;
                                 aggr.Add(score.DocId, score);
                             }
                         }
@@ -77,12 +75,12 @@ namespace Resin
                     {
                         foreach (var doc in termHits)
                         {
-                            var tfidf = doc.TermFrequency * idf;
-                            doc.Score = tfidf;
+                            doc.Score = Math.Sqrt(doc.TermFrequency) * idf;
+
                             DocumentScore score;
                             if (hits.TryGetValue(doc.DocId, out score))
                             {
-                                score.Score += tfidf;
+                                score.Score += doc.Score;
                             }
                             else
                             {
