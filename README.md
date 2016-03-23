@@ -6,7 +6,7 @@ It's a full-text search framework you can reason about. It's simplistic and capa
 [First class citizens](#citizens)  
 [The CLI](#cli)  
 [Roadmap](#roadmap)  
-[In large scale](#scale)  
+[At large scale](#scale)  
 
 <a name="usage" id="usage"></a>
 ##Quick usage guide
