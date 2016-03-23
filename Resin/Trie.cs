@@ -22,6 +22,7 @@ namespace Resin
 
         public Trie()
         {
+            Root = true;
             Children = new Dictionary<char, Trie>();
         }
 
@@ -34,7 +35,7 @@ namespace Resin
 
             foreach (var word in words)
             {
-                InsertOrAppend(word);
+                AppendToDescendants(word);
             }
         }
 
@@ -54,7 +55,7 @@ namespace Resin
                 var overflow = text.Substring(1);
                 if (overflow.Length > 0)
                 {
-                    InsertOrAppend(overflow);
+                    AppendToDescendants(overflow);
                 }
             }
             else
@@ -101,26 +102,6 @@ namespace Resin
         {
             if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("text");
 
-            InsertOrAppend(text);
-        }
-
-        public void Append(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("text");
-            if (text[0] != Value) throw new ArgumentOutOfRangeException("text");
-            if (Root) throw new InvalidOperationException("Use AppendToDescendants instead, if you are appending to the tree from the root.");
-
-            var overflow = text.Substring(1);
-            if (overflow.Length > 0)
-            {
-                InsertOrAppend(overflow);
-            }
-        }
-
-        private void InsertOrAppend(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("text");
-
             Trie child;
             if (!Children.TryGetValue(text[0], out child))
             {
@@ -130,6 +111,19 @@ namespace Resin
             else
             {
                 child.Append(text);
+            }
+        }
+
+        public void Append(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("text");
+            if (text[0] != Value) throw new ArgumentOutOfRangeException("text");
+            if (Root) throw new InvalidOperationException("When appending from the root, use AppendToDescendants.");
+
+            var overflow = text.Substring(1);
+            if (overflow.Length > 0)
+            {
+                AppendToDescendants(overflow);
             }
         }
 
