@@ -25,7 +25,7 @@ namespace Resin
         {
             var terms = _parser.Parse(query);
             var scored = _reader.GetScoredResult(terms).OrderByDescending(d=>d.TermFrequency).ToList();
-            var docs = scored.Select(s => _reader.GetDocFromDisk(s));
+            var docs = scored.Select(s => _reader.GetDoc(s));
             return new Result { Docs = docs, Total = scored.Count };
         }
 
@@ -35,7 +35,7 @@ namespace Resin
             var terms = _parser.Parse(query);
             var scored = _reader.GetScoredResult(terms).OrderByDescending(d => d.TermFrequency).ToList();
             var paged = scored.Skip(skip).Take(size);
-            var docs = paged.Select(s=>_reader.GetDocFromDisk(s));
+            var docs = paged.Select(s=>_reader.GetDoc(s));
             return new Result { Docs = docs, Total = scored.Count };
         }
         

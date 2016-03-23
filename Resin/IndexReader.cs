@@ -48,7 +48,6 @@ namespace Resin
                         }
                         hits = termHits.ToDictionary(h => h.DocId, h => h);
                     }
-                    
                 }
                 else
                 {
@@ -96,7 +95,7 @@ namespace Resin
             return hits.Values;
         }
 
-        public Document GetDocFromDisk(DocumentScore doc)
+        public Document GetDoc(DocumentScore doc)
         {
             var fileId = _docIdToFileIndex[doc.DocId];
             Dictionary<int, Dictionary<string, List<string>>> dics;
