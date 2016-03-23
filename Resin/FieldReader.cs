@@ -7,7 +7,7 @@ namespace Resin
 {
     public class FieldReader
     {
-        // tokens/docids/doc frequency
+        // tokens/docids/term frequency
         private readonly IDictionary<string, IDictionary<int, int>> _tokens;
 
         private readonly Trie _trie;

@@ -10,10 +10,10 @@ namespace Resin
     {
         private readonly Scanner _scanner;
         private readonly Dictionary<int, int> _docIdToFileIndex;
-
         private readonly Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>> _docFiles; // doc cache
 
         public Scanner Scanner { get { return _scanner; } }
+        public int TotalNumberOfDocs { get { return _docIdToFileIndex.Count; } }
 
         public IndexReader(Scanner scanner)
         {
@@ -26,42 +26,74 @@ namespace Resin
                 _docIdToFileIndex = Serializer.Deserialize<Dictionary<int, int>>(file);
             }
         }
-        
+
         public IEnumerable<DocumentScore> GetScoredResult(IEnumerable<Term> terms)
         {
-            IList<DocumentScore> results = null;
+            var hits = new Dictionary<int, DocumentScore>();
             foreach (var term in terms)
             {
-                var subResult = _scanner.GetDocIds(term).ToList();
-                if (results == null)
+                var termHits = _scanner.GetDocIds(term).ToList();
+                if (termHits.Count == 0) continue;
+
+                var idf = Math.Log((double) TotalNumberOfDocs/(1+termHits.Count));
+                
+                if (hits.Count == 0)
                 {
-                    results = subResult;
+                    if (!term.Not)
+                    {
+                        foreach (var doc in termHits)
+                        {
+                            var tfidf = doc.TermFrequency * idf;
+                            doc.Score = tfidf;
+                        }
+                        hits = termHits.ToDictionary(h => h.DocId, h => h);
+                    }
+                    
                 }
                 else
                 {
                     if (term.And)
                     {
-                        results = results.Intersect(subResult).ToList();
+                        var aggr = new Dictionary<int, DocumentScore>();
+                        foreach (var doc in termHits)
+                        {
+                            DocumentScore score;
+                            if (hits.TryGetValue(doc.DocId, out score))
+                            {
+                                var tfidf = doc.TermFrequency*idf;
+                                score.Score += tfidf;
+                                aggr.Add(score.DocId, score);
+                            }
+                        }
+                        hits = aggr;
                     }
                     else if (term.Not)
                     {
-                        results = results.Except(subResult).ToList();
+                        foreach (var doc in termHits)
+                        {
+                            hits.Remove(doc.DocId);
+                        }
                     }
-                    else
+                    else // Or
                     {
-                        // Or
-                        results = results.Concat(subResult).Distinct().ToList();
+                        foreach (var doc in termHits)
+                        {
+                            var tfidf = doc.TermFrequency * idf;
+                            doc.Score = tfidf;
+                            DocumentScore score;
+                            if (hits.TryGetValue(doc.DocId, out score))
+                            {
+                                score.Score += tfidf;
+                            }
+                            else
+                            {
+                                hits.Add(doc.DocId, doc);
+                            }
+                        }
                     }
                 }
             }
-
-            if (results != null)
-            {
-                foreach (var group in results.GroupBy(d => d.DocId))
-                {
-                    yield return new DocumentScore { DocId = group.Key, Value = group.Sum(s=>s.Value) };
-                }
-            }
+            return hits.Values;
         }
 
         public Document GetDocFromDisk(DocumentScore doc)

@@ -5,7 +5,8 @@ namespace Resin
     public class DocumentScore : IEquatable<DocumentScore>
     {
         public int DocId { get; set; }
-        public float Value { get; set; }
+        public float TermFrequency { get; set; }
+        public double Score { get; set; }
 
         public int CompareTo(DocumentScore other)
         {

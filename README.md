@@ -117,16 +117,12 @@ It's a full-text search framework you can reason about. It's simplistic and capa
 		docs = searcher.Search("label:univ*").Docs.ToList();
 	}	
 
-####There is also a CLI
-
-![alt text](https://github.com/kreeben/resin/blob/master/screenshot5.PNG "The Cli.")
-
-More on the CLI [here&#10549;](#cli).
-  
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
-Contribute frequently. Go directly to an [introduction&#10549;](#citizens) of the parts that make up Resin.  
-                  
+Contribute frequently. Go directly to an [introduction&#10549;](#citizens) of the parts that make up Resin.
+
+Use the [CLI&#10549;](#cli) to build, query and analyze your index.
+
 <a name="citizens" id="citizens"></a>
 ##First class citizens
 
@@ -287,40 +283,32 @@ All that we know, as a search framework, is called "a lexicon".
 
 At the back of that lexicon is an index, the field file. A scanner scans the index and if it finds a match it returns the doc IDs and a score: 
 
-	public IEnumerable<DocumentScore> GetDocIds(Term term)
-	{
-	    int fieldId;
-	    if (_fieldIndex.TryGetValue(term.Field, out fieldId))
-	    {
-	        var reader = GetReader(term.Field);
-	        if (reader != null)
-	        {
-	            if (term.Prefix)
-	            {
-	                term.Boost = 1;
-	                return GetDocIdsByPrefix(term, reader);
-	            }
-	            term.Boost = 2;
-	            return GetDocIdsExact(term, reader);
-	        }
-	    }
-	    return Enumerable.Empty<DocumentScore>();
-	}
+  public IEnumerable<DocumentScore> GetDocIds(Term term)
+  {
+      int fieldId;
+      if (_fieldIndex.TryGetValue(term.Field, out fieldId))
+      {
+          var reader = GetReader(term.Field);
+          if (reader != null)
+          {
+              if (term.Prefix)
+              {
+                  return GetDocIdsByPrefix(term, reader);
+              }
+              return GetDocIdsExact(term, reader);
+          }
+      }
+      return Enumerable.Empty<DocumentScore>
+        ();
+        }
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/ScannerTests.cs)
+        [Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/ScannerTests.cs)
 
-#### IndexReader
+        #### IndexReader
 
-The IndexReader needs a scanner. The results of a scan is a list of document ids. IndexReader resolves the document and returns that instead of the id.
+        The IndexReader needs a scanner. The results of a scan is a list of document ids. IndexReader scores the hits by calculating the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) for the terms in the query:
 
-	public IEnumerable<Document> GetDocuments(string field, string token)
-	{
-		var docs = _scanner.GetDocIds(field, token);
-		foreach (var id in docs)
-		{
-			yield return GetDocFromDisk(id); // deserialization might take a while if it's a heavy document
-		}
-	}
+        public IEnumerable<DocumentScore> GetScoredResult(IEnumerable<Term> terms)
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/IndexReaderTests.cs)
 
@@ -329,10 +317,12 @@ The IndexReader needs a scanner. The results of a scan is a list of document ids
 Finally, the searcher, a helper that takes an IndexReader and a QueryParser, accepting unparsed queries, lazily returning a list of documents:
 
 	public IEnumerable<Document> Search(string query)
-    {
-        var terms = _parser.Parse(query).ToList();
-        return _reader.GetDocuments(terms);
-    }
+  {
+    var terms = _parser.Parse(query);
+    var scored = _reader.GetScoredResult(terms).OrderByDescending(d=>d.TermFrequency).ToList();
+    var docs = scored.Select(s => _reader.GetDocFromDisk(s));
+    return new Result { Docs = docs, Total = scored.Count };
+  }
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/Searcher.cs) 
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using ProtoBuf;
 
 namespace Resin
@@ -58,19 +57,19 @@ namespace Resin
                     _fieldWriters.Add(fieldId, fw);
                 }
                 
-                var docTokenFrequencies = new Dictionary<string, int>();
+                var termFrequencies = new Dictionary<string, int>();
                 foreach (var value in field.Value)
                 {
                     _docWriter.Write(doc.Id, field.Key, value);
 
                     foreach (var token in _analyzer.Analyze(value))
                     {
-                        if (docTokenFrequencies.ContainsKey(token)) docTokenFrequencies[token] += 1;
-                        else docTokenFrequencies.Add(token, 1);
+                        if (termFrequencies.ContainsKey(token)) termFrequencies[token] += 1;
+                        else termFrequencies.Add(token, 1);
                     }
                 }
 
-                foreach(var token in docTokenFrequencies)
+                foreach(var token in termFrequencies)
                 {
                     fw.Write(doc.Id, token.Key, token.Value);
                 }

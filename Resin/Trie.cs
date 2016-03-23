@@ -22,7 +22,12 @@ namespace Resin
 
         public Trie()
         {
-            Root = true;
+            Children = new Dictionary<char, Trie>();
+        }
+
+        public Trie(bool isRoot)
+        {
+            Root = isRoot;
             Children = new Dictionary<char, Trie>();
         }
 

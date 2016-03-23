@@ -51,7 +51,7 @@ namespace Tests
                 });
             }
             var scanner = new Scanner(dir);
-            var score = scanner.GetDocIds(new Term {Field = "title", Token = "hello", And = true}).OrderByDescending(d=>d.Value).ToList();
+            var score = scanner.GetDocIds(new Term {Field = "title", Token = "hello", And = true}).OrderByDescending(d=>d.TermFrequency).ToList();
 
             Assert.AreEqual(3, score.Count);
 

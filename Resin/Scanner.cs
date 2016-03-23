@@ -37,7 +37,6 @@ namespace Resin
                     {
                         return GetDocIdsByPrefix(term, reader);
                     }
-                    term.InternalBoost = 2;
                     return GetDocIdsExact(term, reader);
                 }
             }
@@ -47,12 +46,7 @@ namespace Resin
         private IEnumerable<DocumentScore> GetDocIdsByPrefix(Term term, FieldReader reader)
         {
             var terms = reader.GetTokens(term.Token).Select(token => new Term {Field = term.Field, Token = token}).ToList();
-            var first = terms.FirstOrDefault();
-            if (first != null && first.Token==term.Token)
-            {
-                first.InternalBoost = 2;
-            }
-            return terms.SelectMany(t => GetDocIdsExact(t, reader));
+            return terms.SelectMany(t => GetDocIdsExact(t, reader)).GroupBy(d=>d.DocId).Select(g=>g.OrderByDescending(x=>x.TermFrequency).First());
         }
 
         private IEnumerable<DocumentScore> GetDocIdsExact(Term term, FieldReader reader)
@@ -62,7 +56,7 @@ namespace Resin
             {
                 foreach (var doc in postings)
                 {
-                    yield return new DocumentScore { DocId = doc.Key, Value = doc.Value*term.InternalBoost+term.Boost };
+                    yield return new DocumentScore { DocId = doc.Key, TermFrequency = doc.Value };
                 }
             }
         }

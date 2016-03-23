@@ -7,7 +7,7 @@ namespace Resin
 {
     public class FieldWriter : IDisposable
     {
-        // tokens/docids/doc frequency
+        // tokens/docids/term frequency
         private readonly IDictionary<string, IDictionary<int, int>> _tokens;
 
         private readonly Trie _trie;
@@ -35,22 +35,22 @@ namespace Resin
             }
             else
             {
-                _trie = new Trie();
+                _trie = new Trie(isRoot:true);
             }
         }
 
-        public void Write(int docId, string token, int docFrequency)
+        public void Write(int docId, string token, int frequency)
         {
             IDictionary<int, int> docs;
             if (!_tokens.TryGetValue(token, out docs))
             {
-                docs = new Dictionary<int, int> { { docId, docFrequency } };
+                docs = new Dictionary<int, int> { { docId, frequency } };
                 _tokens.Add(token, docs);
                 _trie.AppendToDescendants(token);
             }
             else
             {
-                docs[docId] = docFrequency;
+                docs[docId] = frequency;
             }
         }
 
