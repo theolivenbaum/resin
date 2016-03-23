@@ -1,7 +1,7 @@
 # Resin
 It's a full-text search framework you can reason about. It's simplistic and capable. It is not built upon Lucene.
 
-##A quick usage guide
+##Quick usage guide
 
 ####Here's an interesting document
 
@@ -255,7 +255,7 @@ With our current parser we can interpret "title:Rambo", also `title:first title:
 
 	var q = query.Split(' ').Select(t => t.Split(':'));
 
-##FieldReader
+####FieldReader
 
 You have already seen the in-memory representation of the field file:
 
