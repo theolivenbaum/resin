@@ -196,7 +196,7 @@ The analysis you want to do both at indexing and querying time is to acctually t
 
 What we are doing however in Analyzer.cs is very rudimentary type of analysis. We are simply identifying the individual words. We could go further, investigate if any of those words are kind of the same, because although "trees" != "tree" their concepts intersect so much so that in the interest of full-text search they could and maybe should be one and the same concept. Anyway, identifying and normalizing the words will be fine for now.
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/Analyzer.cs) and tests](https://github.com/kreeben/resin/blob/master/Tests/AnalyzerTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/Analyzer.cs) and [tests](https://github.com/kreeben/resin/blob/master/Tests/AnalyzerTests.cs)
 
 ####FieldWriter
 Tokens are stored in a field file. A field file is an index of all the tokens in a field. Tokens are stored together with postings. Postings are pointers to documents. Our postings contain the document ID and how many times the token exists within that document, its document frequency.
@@ -255,14 +255,14 @@ Store the documents. But also analyze them and create field files that are query
 	    }
 	}
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs) and [tests](https://github.com/kreeben/resin/blob/master/Tests/IndexWriterTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/IndexWriterTests.cs)
 
 #### QueryParser
 With our current parser we can interpret "title:Rambo", also `title:first title:blood`. The last query is what lucene decompiles this query into: `title:first blood`. We will try to mimic this later on but for now let's work with the decompiled format.
 
 	var q = query.Split(' ').Select(t => t.Split(':'));
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs) and tests](https://github.com/kreeben/resin/blob/master/Tests/QueryParserTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/QueryParserTests.cs)
 
 ####FieldReader
 
@@ -276,7 +276,7 @@ A field reader can do this:
 	var tokens = reader.GetAllTokens();
 	var docPos = reader.GetDocPosition(string token);
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) and [tests](https://github.com/kreeben/resin/blob/master/Tests/FieldReaderTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/FieldReaderTests.cs)
 
 #### Scanner
 
@@ -306,7 +306,7 @@ At the back of that lexicon is an index, the field file. A scanner scans the ind
 	    return Enumerable.Empty<DocumentScore>();
 	}
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and [tests](https://github.com/kreeben/resin/blob/master/Tests/ScannerTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/ScannerTests.cs)
 
 #### IndexReader
 
@@ -321,7 +321,7 @@ The IndexReader needs a scanner. The results of a scan is a list of document ids
 		}
 	}
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and [tests](https://github.com/kreeben/resin/blob/master/Tests/IndexReaderTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/IndexReaderTests.cs)
 
 ####Searcher
 
