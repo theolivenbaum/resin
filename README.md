@@ -3,7 +3,7 @@
 It's a full-text search framework you can reason about. It's simplistic and capable. It is not built upon Lucene.
 
 [Quick usage guide](#usage)  
-[Relevance](#relevance)  
+[Relevance (tf-idf)](#relevance)  
 [First class citizens](#citizens)  
 [The CLI](#cli)  
 [Roadmap](#roadmap)  
@@ -140,7 +140,9 @@ Expect the scoring to follow the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80
 
 `IDF = log ( numDocs / docFreq + 1) + 1`
 
-and with the standard Lucene augumented term frequency `sqrt(TF)` (a scheme that will [soon](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) be legacy).
+and with the standard Lucene augumented term frequency `sqrt(TF)` (a scheme that will [soon](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) be legacy for them):
+
+`score = IDF*sqrt(TF)`
 
 <a name="citizens" id="citizens"></a>
 ##First class citizens
