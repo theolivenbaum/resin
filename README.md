@@ -422,15 +422,20 @@ Lucene does it extremly well because of it's file format and because it's indice
 
 <a name="point" id="point"></a>
 ####Multi-index searching
-Lucene does it. It's useful. Resin needs it.
+Handle queries that span two or more indices.
 
 ##Scaling
 
-Service-orient the different parts of Resin. Make scanning, scoring and resolving of documents each a service of its own. Increase caching abilities. Buy Gb network and use bare-metal.
+Increase caching abilities with more RAM. Increase response and write times with faster CPU's and disks. 
 
 ####Extreme scaling
 
+Buy Gb network and use bare-metal.
 Shard the index and connect each subindex to each other in a network of nodes.
+
+####Google scale
+
+Service-orient the different parts of Resin and make query parsing, calculating of execution plans, scanning, scoring and resolving of documents each a service of its own. Distribute those services across a machine park, grouped by function. Have redundance and scalability within each group.
 
 ## Final analysis
 
