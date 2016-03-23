@@ -427,15 +427,15 @@ Handle queries that span two or more indices.
 <a name="scale" id="scale"></a>
 ##Scaling
 
-Increase caching abilities with more RAM. Increase response and write times with faster CPU's and disks. 
+Increase responses per second by with more RAM and more caching abilities, faster CPU's and solid disks. 
 
 ####Extreme scaling
 
 Buy Gb network and use bare-metal.
-Shard the index and connect each subindex to each other in a network of nodes.
+Shard and connect each subindex to each other in a network of nodes. Call me, I'll show you.
 
 ####Google scale
 
-Service-orient the different parts of Resin and make query parsing, calculating of execution plans, scanning, scoring and resolving of documents each a service of its own. Distribute those services across a machine park, grouped by function. Have redundance and scalability within each group.
+Service-orient the different parts of Resin and make query parsing, calculating of execution plans, scanning, scoring and resolving of documents each a service of its own. Distribute those services across a machine park, grouped by function. Have redundance and scalability within each group. Here is where .Net and Resin will show its real strengths. 
 
 To the [top&#10548;](#top)
