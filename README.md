@@ -2,6 +2,13 @@
 # Resin
 It's a full-text search framework you can reason about. It's simplistic and capable. It is not built upon Lucene.
 
+[Quick usage guide](#usage)  
+[First class citizens](#citizens)  
+[The CLI](#cli)  
+[Roadmap](#roadmap)  
+[In large scale](#scale)  
+
+<a name="usage" id="usage"></a>
 ##Quick usage guide
 
 ####Here's an interesting document
@@ -110,12 +117,14 @@ It's a full-text search framework you can reason about. It's simplistic and capa
 		
 		// The following prefix query requires 
 		// - one hashtable lookup towards the field file index to find the field ID
-		// - one [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs) scan to find matching tokens
+		// - one Trie scan * to find matching tokens
 		// - for each token: one hashtable lookup towards the token index to find the doc IDs
 		// - append the results of the scan (as if the tokens are joined by "OR")
 		// - for each doc ID: one hashtable lookup towards the doc cache
 		docs = searcher.Search("label:univ*").Docs.ToList();
 	}	
+
+The [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs).
 
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
@@ -392,6 +401,7 @@ Here is another test, this time the documents aren't pre-cached in the warmup:
 
 ![alt text](https://github.com/kreeben/resin/blob/master/screenshot3.PNG "Docs weren't in the cache.")
 
+<a name="roadmap" id="roadmap"></a>
 ##Roadmap
 
 ####Query language interpreter
@@ -411,10 +421,10 @@ Refine the scoring. The current scoring scheme is [tf-idf](https://en.wikipedia.
 ####Writing to an index in use, solving concurrency issues
 Lucene does it well because of it's file format and because it's indices are easily mergable.
 
-<a name="point" id="point"></a>
 ####Multi-index searching
 Handle queries that span two or more indices.
 
+<a name="scale" id="scale"></a>
 ##Scaling
 
 Increase caching abilities with more RAM. Increase response and write times with faster CPU's and disks. 
