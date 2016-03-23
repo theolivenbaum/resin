@@ -137,36 +137,43 @@ An [IndexReader](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.
 
 ####The Analyzer
 
-	public class Analyzer
+	public IEnumerable<string> Analyze(string value)
 	{
-		private readonly char[] _tokenSeparators;
-
-		public Analyzer(char[] tokenSeparators = null)
-		{
-			_tokenSeparators = tokenSeparators ?? new[]
-			{
-				' ', '.', ',', ';', ':', '!', '"', '&', '?', '#', '*', '+', '|', '=', '-', '_', '@', '\'',
-				'<', '>', '“', '”', '´', '`', '(', ')', '[', ']', '{', '}', '/', '\\',
-				'\r', '\n', '\t'
-			};
-		}
-
-		public string[] Analyze(string value)
-		{
-			return value.ToLowerInvariant().Split(_tokenSeparators, StringSplitOptions.RemoveEmptyEntries);
-		}
+	    var token = new List<char>();
+	    foreach (var c in value.ToLower(_culture))
+	    {
+	        if (IsSeparator(c))
+	        {
+	            if (token.Count > 0)
+	            {
+	                var tok = new string(token.ToArray());
+	                if (!_stopwords.Contains(tok)) yield return tok;
+	                token.Clear();
+	            }
+	        }
+	        else
+	        {
+	            token.Add(c);
+	        }
+	    }
+	    if (token.Count > 0)
+	    {
+	        var tok = new string(token.ToArray());
+	        yield return tok;
+	    }
 	}
 	
-	[Test]
-        public void Can_analyze()
-        {
-            var terms = new Analyzer().Analyze("Hello!World?");
-            Assert.AreEqual(2, terms.Length);
-            Assert.AreEqual("hello", terms[0]);
-            Assert.AreEqual("world", terms[1]);
-        }
+	private bool IsSeparator(char c)
+	{
+	    return
+	        char.IsControl(c) ||
+	        char.IsPunctuation(c) ||
+	        char.IsSeparator(c) ||
+	        char.IsWhiteSpace(c) ||
+	        _tokenSeparators.Contains(c);
+	}
 
-An analyzer produces normalized tokens from text. `var text = "Hello World!"` may be normalized into `new[]{"hello", "world"}` if we lower-case it and split it up at characters ` ` and `!`. By tokenizing the text of a field we make the individual tokens insensitive to casing, queryable. Had we not only exact matches to the verbatim text can be made at runtime, if we want the querying to go fast. The query "title:Rambo" would produce zero documents (no movie in the whole world actually has the title "Rambo") but querying "title:Rambo\\: First Blood" would produce one hit. 
+An analyzer produces normalized tokens from text. `var text = "Hello World!"` may be normalized into `{"hello", "world"}` if we lower-case it and split it up at characters ` ` and `!`. By tokenizing the text of a field we make the individual tokens insensitive to casing, queryable. Had we not only exact matches to the verbatim text can be made at runtime, if we want the querying to go fast. The query "title:Rambo" would produce zero documents (no movie in the whole world actually has the title "Rambo") but querying "title:Rambo\\: First Blood" would produce one hit. 
 
 But only if you are scanning a database of Swedish movie titles because the original movie title was "First Blood". Swedish Media Institue (it's called something else, sorry, I forget) changed the title to the more declarative "Rambo: First Blood". This is probably what happened:
 
@@ -183,8 +190,6 @@ g: Well, there's this guy, Rambo, he...
 b: Rambo! What great name! Put THAT in title. I'm feeling also this might be franchise.
 
 Another thing we hope to achieve by analyzing text is to normalize between the words used when querying and the words in the documents so that matches can be produced consistently. 
-
-I don't speak like that btw. They were definitely not swedish, maybe russian or ukranian. So go back to the voice you had originally in your head.
 
 ##### Deep analysis
 The analysis you want to do both at indexing and querying time is to acctually try to understand the contents of the text, that a "Tree" is the same thing as a "tree" and a component of "trees". What if you could also pick up on themes and subcontexts?
