@@ -427,7 +427,7 @@ Handle queries that span two or more indices.
 <a name="scale" id="scale"></a>
 ##Scaling
 
-Increase responses per second by with more RAM and more caching abilities, faster CPU's and solid disks. 
+Increase responses per second with more RAM and more caching abilities, faster CPU's and solid disks. 
 
 ####Extreme scaling
 
