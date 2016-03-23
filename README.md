@@ -3,10 +3,17 @@
 It's a full-text search framework you can reason about. It's simplistic and capable. It is not built upon Lucene.
 
 [Quick usage guide](#usage)  
+[Relevance](#relevance)  
 [First class citizens](#citizens)  
 [The CLI](#cli)  
 [Roadmap](#roadmap)  
 [At large scale](#scale)  
+
+Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).  
+
+Contribute frequently. Go directly to an [introduction&#10549;](#citizens) of the parts that make up Resin.  
+
+Use the [CLI&#10549;](#cli) to build, query and analyze your index.  
 
 <a name="usage" id="usage"></a>
 ##Quick usage guide
@@ -124,13 +131,16 @@ It's a full-text search framework you can reason about. It's simplistic and capa
 		docs = searcher.Search("label:univ*").Docs.ToList();
 	}	
 
-The [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs).
+The [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs).  
 
-Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
+<a name="relevance" id="relevance"></a>
+##Relevance
 
-Contribute frequently. Go directly to an [introduction&#10549;](#citizens) of the parts that make up Resin.
+Expect the scoring to follow the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) scheme with the following addition from [bm25](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/):
 
-Use the [CLI&#10549;](#cli) to build, query and analyze your index.
+`IDF = log ( numDocs / docFreq + 1) + 1`
+
+and with the standard Lucene augumented term frequency `sqrt(TF)`.
 
 <a name="citizens" id="citizens"></a>
 ##First class citizens
