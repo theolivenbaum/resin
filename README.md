@@ -407,14 +407,6 @@ Here is another test, this time the documents aren't pre-cached in the warmup:
 AND, OR, NOT (+ -), prefix* and fuzzy~ [implemented here](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs).
 TODO: nested clauses
 
-####Prefix search
-Implemented currently as a Trie scan [here](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs#L41).
-
-Here's an example of a prefix search towards and index of 1M english wikipedia docs:
-![alt text](https://github.com/kreeben/resin/blob/master/screenshot4.PNG "Trie's are fast")
-
-#####Other things to do:
-
 ####Fuzzy
 The term-based search that is currently implemented is extremly fast because once you have deserialized the indexes the scan, the resolve of the document, they are all hash-table look-ups.
 
@@ -428,17 +420,17 @@ If that goes well then what is left in our [MVP](https://en.wikipedia.org/wiki/M
 ####Writing to an index in use
 Lucene does it extremly well because of it's file format and because it's indices are easily mergable. It sees an update as "first create new index then merge with the current index then refresh the index reader".
 
-####Scaling
+<a name="point" id="point"></a>
+####Multi-index searching
+Lucene does it. It's useful. Resin needs it.
+
+##Scaling
 
 Service-orient the different parts of Resin. Make scanning, scoring and resolving of documents each a service of its own. Increase caching abilities. Buy Gb network and use bare-metal.
 
 ####Extreme scaling
 
 Shard the index and connect each subindex to each other in a network of nodes.
-
-<a name="point" id="point"></a>
-####Multi-index searching
-Lucene does it. It's useful. Resin needs it.
 
 ## Final analysis
 
