@@ -192,7 +192,13 @@ An [IndexReader](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.
 	        _tokenSeparators.Contains(c);
 	}
 
-An analyzer produces normalized tokens from text. `var text = "Hello World!"` may be normalized into `{"hello", "world"}` if we lower-case it and split it up at characters ` ` and `!`. By tokenizing the text of a field we make the individual tokens insensitive to casing, queryable. Had we not only exact matches to the verbatim text can be made at runtime, if we want the querying to go fast. The query "title:Rambo" would produce zero documents (no movie in the whole world actually has the title "Rambo") but querying "title:Rambo\\: First Blood" would produce one hit. 
+The least thing we can do in an Analyzer is to inspect each character of each token it's been given. We could let .net do that for us (string.Split) or we can sweep over the string ourselves.
+
+Once we have a character in our hands we need to figure out if it's information or if it's something that separates two tokens or if it's noice.
+
+When we have assembled something that to us looks like a clean, normalized, noice-free token, before we include it in the result, we  check to see if this token is something that you consider to be irrelevant.
+
+By tokenizing the text of a field we make the individual tokens insensitive to casing, queryable. Had we not only exact matches to the verbatim text can be made at runtime, if we want the querying to go fast. The query "title:Rambo" would produce zero documents (no movie in the whole world actually has the title "Rambo") but querying "title:Rambo\\: First Blood" would produce one hit. 
 
 But only if you are scanning a database of Swedish movie titles because the original movie title was "First Blood". Swedish Media Institue (it's called something else, sorry, I forget) changed the title to the more declarative "Rambo: First Blood". This is probably what happened:
 
