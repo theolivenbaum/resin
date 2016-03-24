@@ -12,17 +12,17 @@ namespace Tests
         {
             var trie = new Trie(new[] {"tree"});
 
-            Assert.IsFalse(trie.GetTokens("tree").Contains("trees"));
+            Assert.IsFalse(trie.FindWords("tree").Contains("trees"));
 
-            Assert.AreEqual(1, trie.GetTokens("tree").Count());
-            Assert.AreEqual(0, trie.GetTokens("trees").Count());
+            Assert.AreEqual(1, trie.FindWords("tree").Count());
+            Assert.AreEqual(0, trie.FindWords("trees").Count());
 
-            trie.AppendToDescendants("trees");
+            trie.AddWord("trees");
 
-            Assert.IsTrue(trie.GetTokens("tree").Contains("trees"));
+            Assert.IsTrue(trie.FindWords("tree").Contains("trees"));
 
-            Assert.AreEqual(2, trie.GetTokens("tree").Count());
-            Assert.AreEqual(1, trie.GetTokens("trees").Count());
+            Assert.AreEqual(2, trie.FindWords("tree").Count());
+            Assert.AreEqual(1, trie.FindWords("trees").Count());
         }
 
         [Test]
@@ -30,23 +30,23 @@ namespace Tests
         {
             var trie = new Trie(new[] { "tree", "treat", "treaty", "treating", "pre", "prefix" });
 
-            Assert.AreEqual(4, trie.GetTokens("tre").Count());
-            Assert.AreEqual(1, trie.GetTokens("tree").Count());
-            Assert.AreEqual(3, trie.GetTokens("trea").Count());
-            Assert.AreEqual(3, trie.GetTokens("treat").Count());
-            Assert.AreEqual(1, trie.GetTokens("treaty").Count());
-            Assert.AreEqual(1, trie.GetTokens("treati").Count());
-            Assert.AreEqual(1, trie.GetTokens("treatin").Count());
-            Assert.AreEqual(1, trie.GetTokens("treating").Count());
-            Assert.AreEqual(0, trie.GetTokens("treatings").Count());
+            Assert.AreEqual(4, trie.FindWords("tre").Count());
+            Assert.AreEqual(1, trie.FindWords("tree").Count());
+            Assert.AreEqual(3, trie.FindWords("trea").Count());
+            Assert.AreEqual(3, trie.FindWords("treat").Count());
+            Assert.AreEqual(1, trie.FindWords("treaty").Count());
+            Assert.AreEqual(1, trie.FindWords("treati").Count());
+            Assert.AreEqual(1, trie.FindWords("treatin").Count());
+            Assert.AreEqual(1, trie.FindWords("treating").Count());
+            Assert.AreEqual(0, trie.FindWords("treatings").Count());
 
-            Assert.AreEqual(2, trie.GetTokens("pre").Count());
-            Assert.AreEqual(1, trie.GetTokens("pref").Count());
+            Assert.AreEqual(2, trie.FindWords("pre").Count());
+            Assert.AreEqual(1, trie.FindWords("pref").Count());
 
-            Assert.IsTrue(trie.GetTokens("tre").Contains("tree"));
-            Assert.IsTrue(trie.GetTokens("tre").Contains("treat"));
-            Assert.IsTrue(trie.GetTokens("tre").Contains("treaty"));
-            Assert.IsTrue(trie.GetTokens("tre").Contains("treating"));
+            Assert.IsTrue(trie.FindWords("tre").Contains("tree"));
+            Assert.IsTrue(trie.FindWords("tre").Contains("treat"));
+            Assert.IsTrue(trie.FindWords("tre").Contains("treaty"));
+            Assert.IsTrue(trie.FindWords("tre").Contains("treating"));
         }
 
         [Test]
@@ -54,18 +54,18 @@ namespace Tests
         {
             var trie = new Trie(new[] { "tree", "treaty", "treating", "pre", "prefix" });
 
-            Assert.AreEqual(3, trie.GetTokens("tre").Count());
-            Assert.AreEqual(1, trie.GetTokens("tree").Count());
-            Assert.AreEqual(2, trie.GetTokens("pre").Count());
-            Assert.AreEqual(1, trie.GetTokens("pref").Count());
+            Assert.AreEqual(3, trie.FindWords("tre").Count());
+            Assert.AreEqual(1, trie.FindWords("tree").Count());
+            Assert.AreEqual(2, trie.FindWords("pre").Count());
+            Assert.AreEqual(1, trie.FindWords("pref").Count());
 
             trie.Save("serialize.tri");
             trie = Trie.Load("serialize.tri");
 
-            Assert.AreEqual(3, trie.GetTokens("tre").Count());
-            Assert.AreEqual(1, trie.GetTokens("tree").Count());
-            Assert.AreEqual(2, trie.GetTokens("pre").Count());
-            Assert.AreEqual(1, trie.GetTokens("pref").Count());
+            Assert.AreEqual(3, trie.FindWords("tre").Count());
+            Assert.AreEqual(1, trie.FindWords("tree").Count());
+            Assert.AreEqual(2, trie.FindWords("pre").Count());
+            Assert.AreEqual(1, trie.FindWords("pref").Count());
         }
     }
 }

@@ -9,126 +9,108 @@ namespace Resin
     public class Trie
     {
         [ProtoMember(1)]
-        public char Value { get; set; }
+        private readonly char _value;
 
         [ProtoMember(2)]
-        public bool Eow { get; set; }
+        private readonly bool _eow;
 
         [ProtoMember(3, DataFormat = DataFormat.Group)]
-        public IDictionary<char, Trie> Children { get; set; }
-
-        [ProtoMember(4)]
-        public bool Root { get; set; }
+        private readonly IDictionary<char, Trie> _children;
 
         public Trie()
         {
-            Children = new Dictionary<char, Trie>();
+            _children = new Dictionary<char, Trie>();
         }
 
-        public Trie(bool isRoot)
-        {
-            Root = isRoot;
-            Children = new Dictionary<char, Trie>();
-        }
-
-        public Trie(IList<string> words)
+        public Trie(IList<string> words) : this()
         {
             if (words == null) throw new ArgumentNullException("words");
 
-            Root = true;
-            Children = new Dictionary<char, Trie>();
-
             foreach (var word in words)
             {
-                AppendToDescendants(word);
+                AddWord(word);
             }
         }
 
-        public Trie(string text)
+        private Trie(string text) : this()
         {
-            if (string.IsNullOrWhiteSpace(text))
-            {
-                throw new ArgumentException("text");
-            }
+            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("word");
 
-            Value = text[0];
-
-            Children = new Dictionary<char, Trie>();
+            _value = text[0];
 
             if (text.Length > 1)
             {
                 var overflow = text.Substring(1);
                 if (overflow.Length > 0)
                 {
-                    AppendToDescendants(overflow);
+                    AddWord(overflow);
                 }
             }
             else
             {
-                Eow = true;
+                _eow = true;
             }
         }
 
-        public IEnumerable<string> GetTokens(string prefix)
+        public IEnumerable<string> FindWords(string prefix)
         {
             var words = new List<string>();
             Trie child;
-            if (Children.TryGetValue(prefix[0], out child))
+            if (_children.TryGetValue(prefix[0], out child))
             {
-                child.Scan(prefix, prefix, ref words);
+                child.Scan(prefix, prefix, words);
             }
             return words;
         }
 
-        private void Scan(string originalPrefix, string prefix, ref List<string> words)
+        private void Scan(string originalPrefix, string prefix, List<string> words)
         {
             if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
 
-            if (prefix.Length == 1 && prefix[0] == Value)
+            if (prefix.Length == 1 && prefix[0] == _value)
             {
                 // The scan has reached its destination. Find words derived from this node.
-                if (Eow) words.Add(originalPrefix);
-                foreach (var node in Children.Values)
+                if (_eow) words.Add(originalPrefix);
+                foreach (var node in _children.Values)
                 {
-                    node.Scan(originalPrefix+node.Value, new string(new []{node.Value}), ref words);
+                    node.Scan(originalPrefix+node._value, new string(new []{node._value}), words);
                 }
             }
-            else if (prefix[0] == Value)
+            else if (prefix[0] == _value)
             {
                 Trie child;
-                if (Children.TryGetValue(prefix[1], out child))
+                if (_children.TryGetValue(prefix[1], out child))
                 {
-                    child.Scan(originalPrefix, prefix.Substring(1), ref words);
+                    child.Scan(originalPrefix, prefix.Substring(1), words);
                 }
             }
         }
 
-        public void AppendToDescendants(string text)
+        public void AddWord(string word)
         {
-            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("text");
+            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 
             Trie child;
-            if (!Children.TryGetValue(text[0], out child))
+            if (!_children.TryGetValue(word[0], out child))
             {
-                child = new Trie(text);
-                Children.Add(text[0], child);
+                child = new Trie(word);
+                _children.Add(word[0], child);
             }
             else
             {
-                child.Append(text);
+                child.Append(word);
             }
         }
 
-        public void Append(string text)
+        private void Append(string text)
         {
-            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("text");
-            if (text[0] != Value) throw new ArgumentOutOfRangeException("text");
-            if (Root) throw new InvalidOperationException("When appending from the root, use AppendToDescendants.");
+            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("word");
+            if (text[0] != _value) throw new ArgumentOutOfRangeException("text");
 
             var overflow = text.Substring(1);
             if (overflow.Length > 0)
             {
-                AppendToDescendants(overflow);
+                AddWord(overflow);
             }
         }
 

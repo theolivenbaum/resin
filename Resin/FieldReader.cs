@@ -40,7 +40,7 @@ namespace Resin
 
         public IEnumerable<string> GetTokens(string prefix)
         {
-            return _trie.GetTokens(prefix);
+            return _trie.FindWords(prefix);
         } 
 
         public IDictionary<int, int> GetPostings(string token)

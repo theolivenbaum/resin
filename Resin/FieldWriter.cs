@@ -35,7 +35,7 @@ namespace Resin
             }
             else
             {
-                _trie = new Trie(isRoot:true);
+                _trie = new Trie();
             }
         }
 
@@ -46,7 +46,7 @@ namespace Resin
             {
                 docs = new Dictionary<int, int> { { docId, frequency } };
                 _tokens.Add(token, docs);
-                _trie.AppendToDescendants(token);
+                _trie.AddWord(token);
             }
             else
             {
