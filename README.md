@@ -20,9 +20,9 @@ __[At large scale](#scale)__
 
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
-Contribute frequently. Go directly to an [introduction&#10549;](#citizens) of the parts that make up Resin.  
+Contribute frequently. Go directly to an [introduction](#citizens) of the parts that make up Resin.  
 
-Use the [CLI&#10549;](#cli) to build, query and analyze your index.  
+Use the [CLI](#cli) to build, query and analyze your index.  
 
 <a name="usage" id="usage"></a>
 ##Quick usage guide
