@@ -4,7 +4,7 @@ It's a full-text search framework you can reason about. It's simplistic and capa
 
 [Quick usage guide](#usage)  
 [Relevance (tf-idf)](#relevance)  
-[First class citizens](#citizens)  
+[Why so few classes?](#citizens)  
 [The CLI](#cli)  
 [Roadmap](#roadmap)  
 [At large scale](#scale)  
@@ -146,7 +146,7 @@ and with the standard Lucene augumented term frequency `sqrt(TF)` (a scheme that
 `score = IDF*sqrt(TF)`
 
 <a name="citizens" id="citizens"></a>
-##First class citizens
+##Resin's first class citizens
 
 To be able to call ourselves a full-text search framework we need something that can analyze text, an [Analyzer](https://github.com/kreeben/resin/blob/master/Resin/Analyzer.cs). Also, something that can write index files and store documents, an [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs), [FieldWriter](https://github.com/kreeben/resin/blob/master/Resin/FieldWriter.cs) and a [DocumentWriter](https://github.com/kreeben/resin/blob/master/Resin/DocumentWriter.cs). 
 
