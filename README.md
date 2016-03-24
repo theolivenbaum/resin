@@ -145,7 +145,7 @@ Expect the scoring to follow the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80
 
 `IDF = log ( numDocs / docFreq + 1) + 1`
 
-and with the standard Lucene augumented term frequency `sqrt(TF)` (a scheme that will [soon](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) be legacy for them):
+and with the standard Lucene augumented term frequency `sqrt(TF)` (a formula [about to become legacy](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) for them):
 
 `score = IDF*sqrt(TF)`
 
