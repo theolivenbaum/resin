@@ -18,6 +18,7 @@ namespace Resin
         public IndexReader(Scanner scanner)
         {
             _scanner = scanner;
+
             var docIdToFileIndexFileName = Path.Combine(_scanner.Dir, "d.ix");
             _docFiles = new Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>>();
 
@@ -35,7 +36,7 @@ namespace Resin
                 var termHits = _scanner.GetDocIds(term).ToList();
                 if (termHits.Count == 0) continue;
 
-                var idf = Math.Log((double) TotalNumberOfDocs/(1+termHits.Count)) + 1;
+                var scorer = new Tfidf(TotalNumberOfDocs, termHits.Count);
                 
                 if (hits.Count == 0)
                 {
@@ -43,7 +44,7 @@ namespace Resin
                     {
                         foreach (var doc in termHits)
                         {
-                            doc.Score = Math.Sqrt(doc.TermFrequency) * idf;
+                            scorer.Score(doc);
                         }
                         hits = termHits.ToDictionary(h => h.DocId, h => h);
                     }
@@ -55,11 +56,11 @@ namespace Resin
                         var aggr = new Dictionary<int, DocumentScore>();
                         foreach (var doc in termHits)
                         {
-                            DocumentScore score;
-                            if (hits.TryGetValue(doc.DocId, out score))
+                            DocumentScore dscore;
+                            if (hits.TryGetValue(doc.DocId, out dscore))
                             {
-                                score.Score += Math.Sqrt(doc.TermFrequency) * idf;
-                                aggr.Add(score.DocId, score);
+                                scorer.Score(dscore);
+                                aggr.Add(dscore.DocId, dscore);
                             }
                         }
                         hits = aggr;
@@ -75,7 +76,7 @@ namespace Resin
                     {
                         foreach (var doc in termHits)
                         {
-                            doc.Score = Math.Sqrt(doc.TermFrequency) * idf;
+                            scorer.Score(doc);
 
                             DocumentScore score;
                             if (hits.TryGetValue(doc.DocId, out score))
