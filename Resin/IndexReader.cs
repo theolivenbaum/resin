@@ -60,6 +60,7 @@ namespace Resin
                             if (hits.TryGetValue(doc.DocId, out dscore))
                             {
                                 scorer.Score(dscore);
+                                dscore.Score += doc.Score;
                                 aggr.Add(dscore.DocId, dscore);
                             }
                         }
