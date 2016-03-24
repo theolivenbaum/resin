@@ -20,27 +20,21 @@ namespace Resin
 
         public IEnumerable<string> Analyze(string value)
         {
-            var token = new List<char>();
-            foreach (var c in value.ToLower(_culture))
+            int token = 0;
+            var lowerStr = value.ToLower(_culture);
+            for (int i = 0; i < lowerStr.Length; ++i)
             {
-                if (IsSeparator(c))
+                if (!IsSeparator(lowerStr[i])) continue;
+                if (token < i)
                 {
-                    if (token.Count > 0)
-                    {
-                        var tok = new string(token.ToArray());
-                        if (!_stopwords.Contains(tok)) yield return tok;
-                        token.Clear();
-                    }
+                    var tok = lowerStr.Substring(token, i - token);
+                    if (!_stopwords.Contains(tok)) yield return tok;
                 }
-                else
-                {
-                    token.Add(c);
-                }
+                token = i + 1;
             }
-            if (token.Count > 0)
+            if (token < lowerStr.Length)
             {
-                var tok = new string(token.ToArray());
-                yield return tok;
+                yield return lowerStr.Substring(token);
             }
         }
 
