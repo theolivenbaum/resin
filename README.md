@@ -1,15 +1,18 @@
 <a name="top" id="top"></a>
 # Resin
-It's a full-text search framework you can reason about. It's simplistic and capable. It is not built upon Lucene.
+A fast full-text search lib. It's simplistic and capable. Not built on Lucene.
 
-[Quick usage guide](#usage)  
-[Relevance (tf-idf)](#relevance)  
-[Why so few classes?](#citizens)  
-[The CLI](#cli)  
-[Roadmap](#roadmap)  
-[At large scale](#scale)  
+####Querying a Resin index containing 1M Wikipedia documents
+![alt text](https://github.com/kreeben/resin/blob/master/how-fast.png "Resin is this fast with 1M wikipedia docs")  
 
-Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).  
+[Quick usage guide](#usage)
+[Relevance (tf-idf)](#relevance)
+[Why so few classes?](#citizens)
+[The CLI](#cli)
+[Roadmap](#roadmap)
+[At large scale](#scale)
+
+Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
 Contribute frequently. Go directly to an [introduction&#10549;](#citizens) of the parts that make up Resin.  
 

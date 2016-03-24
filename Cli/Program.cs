@@ -79,7 +79,7 @@ namespace Resin
                     timer.Restart();
                     var result = s.Search(q, page, size);
                     var docs = result.Docs;
-                    Console.WriteLine("Scan in {0} ms\r\n", timer.ElapsedMilliseconds);
+                    Console.WriteLine("Scan and scoring in {0}\r\n", timer.Elapsed);
                     var position = 0+(page*size);
                     timer.Restart();
                     foreach (var doc in docs)
