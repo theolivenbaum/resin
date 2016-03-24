@@ -253,7 +253,7 @@ That means that if we know what field file to look in, we can find the answer to
 
 ####DocumentWriter
 
-Documents are persisted on disk. How they look on disk is not very interesting. 
+Documents are persisted on disk.
 
 The in-memory equivalent of a document file is this:
 
