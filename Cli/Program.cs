@@ -54,6 +54,9 @@ namespace Resin
                     return;
                 }
 
+                var total = new Stopwatch();
+                total.Start();
+
                 var dir = args[Array.IndexOf(args, "--dir") + 1];
                 var q = args[Array.IndexOf(args, "-q") + 1];
                 var page = 0;
@@ -64,27 +67,29 @@ namespace Resin
                 timer.Start();
                 using (var s = new Searcher(dir))
                 {
-                    Console.WriteLine("Searcher initialized in {0} ms", timer.ElapsedMilliseconds);
+                    Console.WriteLine("\r\nDocument index loaded in {0} ms", timer.ElapsedMilliseconds);
 
                     timer.Restart();
                     for (int i = 0; i < 1; i++)
                     {
-                        s.Search(q, page, size).Docs.ToList(); // warm up the "label" field
+                        s.Search(q, page, size); // warm up the "label" field
                     }
-                    Console.WriteLine("Warm-up in {0} ms\r\n", timer.ElapsedMilliseconds);
+                    Console.WriteLine("Term index loaded in {0} ms", timer.ElapsedMilliseconds);
 
                     timer.Restart();
                     var result = s.Search(q, page, size);
-                    var docs = result.Docs.ToList();
-                    var elapsed = timer.Elapsed.TotalMilliseconds;
-                    
+                    var docs = result.Docs;
+                    Console.WriteLine("Scan in {0} ms\r\n", timer.ElapsedMilliseconds);
                     var position = 0+(page*size);
+                    timer.Restart();
                     foreach (var doc in docs)
                     {
                         Console.WriteLine(string.Join(", ", ++position, doc.Fields["id"][0], doc.Fields["label"][0]));
                     }
-                    Console.WriteLine("\r\n{0} results of {1} in {2} ms", docs.Count, result.Total, elapsed);                  
+                    Console.WriteLine("\r\n{0} results of {1}\r\nDocs loaded from disk in {2} ms", position, result.Total, timer.ElapsedMilliseconds);
                 }
+                Console.WriteLine("Total time elapsed: {0}", total.Elapsed);
+
             }
             else if (args[0].ToLower() == "analyze")
             {
