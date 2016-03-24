@@ -206,7 +206,7 @@ The least thing we can do in an Analyzer is to inspect each character of each to
 
 Once we have a character in our hands we need to figure out if it's information or if it's something that separates two tokens or if it's noice.
 
-When we have assembled something that to us looks like a clean, normalized, noice-free token, before we include it in the result, we  check to see if this token is something that you consider to be irrelevant.
+When we have assembled something that to us looks like a clean, normalized, noice-free token, before we include it in the result, we  check to see if this token is something that you consider to be irrelevant, in which case we shall give that string to the garbage collector and forget it ever existed. The GC might think that's a perfectly good string and it shall keep it. I don't know. But we don't want it. In fact, if we ever see that string again, in a query, we will once again throw it to the garbage. GC will say, perhaps, "hey, there's that perfectly good string again. What's goin' on?".
 
 By tokenizing the text of a field we make the individual tokens insensitive to casing, queryable. Had we not only exact matches to the verbatim text can be made at runtime, if we want the querying to go fast. The query "title:Rambo" would produce zero documents (no movie in the whole world actually has the title "Rambo") but querying "title:Rambo\\: First Blood" would produce one hit. 
 
