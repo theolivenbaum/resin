@@ -8,6 +8,26 @@ namespace Tests
     public class TrieTests
     {
         [Test]
+        public void Remove()
+        {
+            var trie = new Trie(new[] { "tree", "trees", "paprika" });
+
+            Assert.True(trie.FindWords("paprika").Contains("paprika"));
+            Assert.True(trie.FindWords("tree").Contains("trees"));
+
+            trie.Remove("paprika");
+
+            Assert.False(trie.FindWords("paprika").Contains("paprika"));
+            Assert.True(trie.FindWords("tree").Contains("tree"));
+            Assert.True(trie.FindWords("tree").Contains("trees"));
+
+            trie.Remove("tree");
+
+            Assert.False(trie.FindWords("tree").Contains("tree"));
+            Assert.True(trie.FindWords("tree").Contains("trees"));
+        }
+
+        [Test]
         public void Append()
         {
             var trie = new Trie(new[] {"tree"});

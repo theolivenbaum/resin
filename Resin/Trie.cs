@@ -12,7 +12,7 @@ namespace Resin
         private readonly char _value;
 
         [ProtoMember(2)]
-        private readonly bool _eow;
+        private bool _eow;
 
         [ProtoMember(3, DataFormat = DataFormat.Group)]
         private readonly IDictionary<char, Trie> _children;
@@ -127,6 +127,25 @@ namespace Resin
             using (var file = File.OpenRead(fileName))
             {
                 return Serializer.Deserialize<Trie>(file);
+            }
+        }
+
+        public void Remove(string word)
+        {
+            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
+
+            Trie child;
+            if (_children.TryGetValue(word[0], out child))
+            {
+                if (child._children.Count == 0)
+                {
+                    _children.Remove(child._value);
+                }
+                else
+                {
+                    child._eow = false;
+                }
+                if (word.Length > 1) child.Remove(word.Substring(1));
             }
         }
     }
