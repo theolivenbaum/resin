@@ -1,0 +1,1 @@
+rnw.bat e:\wikipedia\wikipedia.json 2000000 2000000
