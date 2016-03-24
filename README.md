@@ -253,7 +253,7 @@ That means that if we know what field file to look in, we can find the answer to
 
 ####DocumentWriter
 
-Documents are persisted on disk as protobuf messages:
+Documents (and field structures) are persisted on disk as [protobuf](https://en.wikipedia.org/wiki/Protocol_Buffers) messages:
 
 	using (var fs = File.Create(fileName))
 	{
