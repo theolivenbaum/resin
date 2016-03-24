@@ -12,19 +12,19 @@ namespace Tests
         {
             var trie = new Trie(new[] { "tree", "trees", "paprika" });
 
-            Assert.True(trie.FindWords("paprika").Contains("paprika"));
-            Assert.True(trie.FindWords("tree").Contains("trees"));
+            Assert.True(trie.StartingWith("paprika").Contains("paprika"));
+            Assert.True(trie.StartingWith("tree").Contains("trees"));
 
             trie.Remove("paprika");
 
-            Assert.False(trie.FindWords("paprika").Contains("paprika"));
-            Assert.True(trie.FindWords("tree").Contains("tree"));
-            Assert.True(trie.FindWords("tree").Contains("trees"));
+            Assert.False(trie.StartingWith("paprika").Contains("paprika"));
+            Assert.True(trie.StartingWith("tree").Contains("tree"));
+            Assert.True(trie.StartingWith("tree").Contains("trees"));
 
             trie.Remove("tree");
 
-            Assert.False(trie.FindWords("tree").Contains("tree"));
-            Assert.True(trie.FindWords("tree").Contains("trees"));
+            Assert.False(trie.StartingWith("tree").Contains("tree"));
+            Assert.True(trie.StartingWith("tree").Contains("trees"));
         }
 
         [Test]
@@ -32,17 +32,17 @@ namespace Tests
         {
             var trie = new Trie(new[] {"tree"});
 
-            Assert.IsFalse(trie.FindWords("tree").Contains("trees"));
+            Assert.IsFalse(trie.StartingWith("tree").Contains("trees"));
 
-            Assert.AreEqual(1, trie.FindWords("tree").Count());
-            Assert.AreEqual(0, trie.FindWords("trees").Count());
+            Assert.AreEqual(1, trie.StartingWith("tree").Count());
+            Assert.AreEqual(0, trie.StartingWith("trees").Count());
 
-            trie.AddWord("trees");
+            trie.Add("trees");
 
-            Assert.IsTrue(trie.FindWords("tree").Contains("trees"));
+            Assert.IsTrue(trie.StartingWith("tree").Contains("trees"));
 
-            Assert.AreEqual(2, trie.FindWords("tree").Count());
-            Assert.AreEqual(1, trie.FindWords("trees").Count());
+            Assert.AreEqual(2, trie.StartingWith("tree").Count());
+            Assert.AreEqual(1, trie.StartingWith("trees").Count());
         }
 
         [Test]
@@ -50,23 +50,23 @@ namespace Tests
         {
             var trie = new Trie(new[] { "tree", "treat", "treaty", "treating", "pre", "prefix" });
 
-            Assert.AreEqual(4, trie.FindWords("tre").Count());
-            Assert.AreEqual(1, trie.FindWords("tree").Count());
-            Assert.AreEqual(3, trie.FindWords("trea").Count());
-            Assert.AreEqual(3, trie.FindWords("treat").Count());
-            Assert.AreEqual(1, trie.FindWords("treaty").Count());
-            Assert.AreEqual(1, trie.FindWords("treati").Count());
-            Assert.AreEqual(1, trie.FindWords("treatin").Count());
-            Assert.AreEqual(1, trie.FindWords("treating").Count());
-            Assert.AreEqual(0, trie.FindWords("treatings").Count());
+            Assert.AreEqual(4, trie.StartingWith("tre").Count());
+            Assert.AreEqual(1, trie.StartingWith("tree").Count());
+            Assert.AreEqual(3, trie.StartingWith("trea").Count());
+            Assert.AreEqual(3, trie.StartingWith("treat").Count());
+            Assert.AreEqual(1, trie.StartingWith("treaty").Count());
+            Assert.AreEqual(1, trie.StartingWith("treati").Count());
+            Assert.AreEqual(1, trie.StartingWith("treatin").Count());
+            Assert.AreEqual(1, trie.StartingWith("treating").Count());
+            Assert.AreEqual(0, trie.StartingWith("treatings").Count());
 
-            Assert.AreEqual(2, trie.FindWords("pre").Count());
-            Assert.AreEqual(1, trie.FindWords("pref").Count());
+            Assert.AreEqual(2, trie.StartingWith("pre").Count());
+            Assert.AreEqual(1, trie.StartingWith("pref").Count());
 
-            Assert.IsTrue(trie.FindWords("tre").Contains("tree"));
-            Assert.IsTrue(trie.FindWords("tre").Contains("treat"));
-            Assert.IsTrue(trie.FindWords("tre").Contains("treaty"));
-            Assert.IsTrue(trie.FindWords("tre").Contains("treating"));
+            Assert.IsTrue(trie.StartingWith("tre").Contains("tree"));
+            Assert.IsTrue(trie.StartingWith("tre").Contains("treat"));
+            Assert.IsTrue(trie.StartingWith("tre").Contains("treaty"));
+            Assert.IsTrue(trie.StartingWith("tre").Contains("treating"));
         }
 
         [Test]
@@ -74,18 +74,40 @@ namespace Tests
         {
             var trie = new Trie(new[] { "tree", "treaty", "treating", "pre", "prefix" });
 
-            Assert.AreEqual(3, trie.FindWords("tre").Count());
-            Assert.AreEqual(1, trie.FindWords("tree").Count());
-            Assert.AreEqual(2, trie.FindWords("pre").Count());
-            Assert.AreEqual(1, trie.FindWords("pref").Count());
+            Assert.AreEqual(3, trie.StartingWith("tre").Count());
+            Assert.AreEqual(1, trie.StartingWith("tree").Count());
+            Assert.AreEqual(2, trie.StartingWith("pre").Count());
+            Assert.AreEqual(1, trie.StartingWith("pref").Count());
 
             trie.Save("serialize.tri");
             trie = Trie.Load("serialize.tri");
 
-            Assert.AreEqual(3, trie.FindWords("tre").Count());
-            Assert.AreEqual(1, trie.FindWords("tree").Count());
-            Assert.AreEqual(2, trie.FindWords("pre").Count());
-            Assert.AreEqual(1, trie.FindWords("pref").Count());
+            Assert.AreEqual(3, trie.StartingWith("tre").Count());
+            Assert.AreEqual(1, trie.StartingWith("tree").Count());
+            Assert.AreEqual(2, trie.StartingWith("pre").Count());
+            Assert.AreEqual(1, trie.StartingWith("pref").Count());
+        }
+    }
+
+    [TestFixture]
+    public class LevenshteinTests
+    {
+        [Test]
+        public void Can_calculate_distance()
+        {
+            Assert.AreEqual(0, Levenshtein.Distance("rambo", "rambo"));
+
+            Assert.AreEqual(1, Levenshtein.Distance("rambo", "ramb")); // 1 del
+            Assert.AreEqual(2, Levenshtein.Distance("rambo", "amb")); // 2 del
+            Assert.AreEqual(3, Levenshtein.Distance("rambo", "am")); // 3 del
+
+            Assert.AreEqual(1, Levenshtein.Distance("rambo", "rxmbo")); // 1 sub
+            Assert.AreEqual(2, Levenshtein.Distance("rambo", "xxmbo")); // 2 sub
+            Assert.AreEqual(3, Levenshtein.Distance("rambo", "xxmbx")); // 3 sub
+
+            Assert.AreEqual(1, Levenshtein.Distance("rambo", "rambos")); // 1 ins
+            Assert.AreEqual(2, Levenshtein.Distance("rambo", "arambos")); // 2 ins
+            Assert.AreEqual(3, Levenshtein.Distance("rambo", "arammbos")); // 3 ins
         }
     }
 }

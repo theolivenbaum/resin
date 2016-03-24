@@ -28,7 +28,7 @@ namespace Resin
 
             foreach (var word in words)
             {
-                AddWord(word);
+                Add(word);
             }
         }
 
@@ -43,7 +43,7 @@ namespace Resin
                 var overflow = text.Substring(1);
                 if (overflow.Length > 0)
                 {
-                    AddWord(overflow);
+                    Add(overflow);
                 }
             }
             else
@@ -52,7 +52,7 @@ namespace Resin
             }
         }
 
-        public IEnumerable<string> FindWords(string prefix)
+        public IEnumerable<string> StartingWith(string prefix)
         {
             var words = new List<string>();
             Trie child;
@@ -86,7 +86,7 @@ namespace Resin
             }
         }
 
-        public void AddWord(string word)
+        public void Add(string word)
         {
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 
@@ -110,7 +110,7 @@ namespace Resin
             var overflow = text.Substring(1);
             if (overflow.Length > 0)
             {
-                AddWord(overflow);
+                Add(overflow);
             }
         }
 
@@ -147,6 +147,56 @@ namespace Resin
                 }
                 if (word.Length > 1) child.Remove(word.Substring(1));
             }
+        }
+    }
+
+    public static class Levenshtein
+    {
+        public static int Distance(string a, string b)
+        {
+            if (string.IsNullOrEmpty(a))
+            {
+                if (!string.IsNullOrEmpty(b))
+                {
+                    return b.Length;
+                }
+                return 0;
+            }
+
+            if (string.IsNullOrEmpty(b))
+            {
+                if (!string.IsNullOrEmpty(a))
+                {
+                    return a.Length;
+                }
+                return 0;
+            }
+
+            int[,] d = new int[a.Length + 1, b.Length + 1];
+
+            for (int i = 0; i <= d.GetUpperBound(0); i += 1)
+            {
+                d[i, 0] = i;
+            }
+
+            for (int i = 0; i <= d.GetUpperBound(1); i += 1)
+            {
+                d[0, i] = i;
+            }
+
+            for (int i = 1; i <= d.GetUpperBound(0); i += 1)
+            {
+                for (int j = 1; j <= d.GetUpperBound(1); j += 1)
+                {
+                    var cost = Convert.ToInt32(a[i - 1] != b[j - 1]);
+
+                    var min1 = d[i - 1, j] + 1;
+                    var min2 = d[i, j - 1] + 1;
+                    var min3 = d[i - 1, j - 1] + cost;
+                    d[i, j] = Math.Min(Math.Min(min1, min2), min3);
+                }
+            }
+            return d[d.GetUpperBound(0), d.GetUpperBound(1)];
         }
     }
 }
