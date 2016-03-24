@@ -129,7 +129,8 @@ Use the [CLI&#10549;](#cli) to build, query and analyze your index.
 		// - append the results of the scan (as if the tokens are joined by "OR")
 		// - for each doc ID: one hashtable lookup towards the doc cache
 		docs = searcher.Search("label:univ*").Docs.ToList();
-	}	
+		
+	}// Caches are released	
 
 The [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs).  
 
@@ -284,11 +285,14 @@ With our current parser we can interpret "title:Rambo", also `title:first title:
 
 ####FieldReader
 
-You have already seen the in-memory representation of the field file:
+The complete in-memory representation of the field file:
 
 	// tokens/docids/term frequency
 	private readonly IDictionary<string, IDictionary<int, int>> _tokens;
-
+	
+	// the char's of the tokens, arranged in a tree structure
+	private readonly Trie _trie;
+	
 A field reader can do this:
 
 	var tokens = reader.GetAllTokens();
