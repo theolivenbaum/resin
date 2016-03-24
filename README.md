@@ -111,31 +111,32 @@ Use the [CLI&#10549;](#cli) to build, query and analyze your index.
 
 ####Resin is fast because
 
-	using (var searcher = new Searcher(dir))
+	using (var searcher = new Searcher(dir)) // Initializing the searcher loads the document index
 	{
-		// This loads and caches the token index for the "label" field
-		var result = searcher.Search("label:universe");
+		// This loads and caches the term indices for the "id" and "label" fields
+		var result = searcher.Search("id:Q1 label:Q1");
 		
-		//This executes the query, loads and caches the documents (one in this case, the first)
+		// This executes the query.
+		// Resin loads the doc from disk and caches it
 		var doc1 = result.Docs.First();
 		
 		// The following query requires 
-		// - one hashtable lookup towards the field file index to find the field ID
-		// - one hashtable lookup towards the token index to find the doc IDs
-		// - for each doc ID: one hashtable lookup towards the doc cache
+		// - a hashtable lookup towards the field file index to find the field ID
+		// - a hashtable lookup towards the term index to find the doc IDs
+		// - for each doc ID: a hashtable lookup towards the doc cache
 		var docs = searcher.Search("label:universe").Docs.ToList();
 		
 		// The following prefix query requires 
-		// - one hashtable lookup towards the field file index to find the field ID
-		// - one Trie scan * to find matching tokens
-		// - for each token: one hashtable lookup towards the token index to find the doc IDs
+		// - a hashtable lookup towards the field file index to find the field ID
+		// - a Trie scan (*) to find matching terms
+		// - for each term: a hashtable lookup towards the term index to find the doc IDs
 		// - append the results of the scan (as if the tokens are joined by "OR")
 		// - for each doc ID: one hashtable lookup towards the doc cache
 		docs = searcher.Search("label:univ*").Docs.ToList();
 		
-	}// Caches are released	
-
-The [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs).  
+	}// Caches are released	 
+  
+(*) The [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs).  
 
 <a name="relevance" id="relevance"></a>
 ##Relevance
