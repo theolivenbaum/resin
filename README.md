@@ -253,7 +253,12 @@ That means that if we know what field file to look in, we can find the answer to
 
 ####DocumentWriter
 
-Documents are persisted on disk.
+Documents are persisted on disk as protobuf messages:
+
+	using (var fs = File.Create(fileName))
+	{
+	    Serializer.Serialize(fs, docs); // protobuf-net serialization
+	}
 
 The in-memory equivalent of a document file is this:
 
@@ -264,8 +269,6 @@ Here is a document on its own:
 
 	// fields/values
 	IDictionary<string, IList<string>> doc;
-
-More than one document fit into a document file. A whole list of them would fit. Imagine how it looks in-memory. I mean I can only guess the shape but it looks to be covering a large area of your RAM. It's a huge tree of stuff. 
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/DocumentWriter.cs)
 
