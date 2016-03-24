@@ -1,6 +1,6 @@
 <a name="top" id="top"></a>
 # Resin
-A fast full-text search lib, simplistic and capable, that is not built on Lucene.
+Fast full-text search that is not built on Lucene.
 
 ####Querying a Resin index containing 1M Wikipedia documents
 ![alt text](https://github.com/kreeben/resin/blob/master/how-fast.png "Resin is this fast with 1M wikipedia docs")  
