@@ -5,12 +5,18 @@ A fast full-text search lib, simplistic and capable, that is not built on Lucene
 ####Querying a Resin index containing 1M Wikipedia documents
 ![alt text](https://github.com/kreeben/resin/blob/master/how-fast.png "Resin is this fast with 1M wikipedia docs")  
 
-[Quick usage guide](#usage)  
-[Relevance (tf-idf)](#relevance)  
-[Why so few classes?](#citizens)  
-[The CLI](#cli)  
-[Roadmap](#roadmap)  
-[At large scale](#scale)  
+__[Quick usage guide](#usage)__
+
+__[Relevance (tf-idf)](#relevance)__
+
+__[Why so few classes?](#citizens)__
+
+__[The CLI](#cli)__
+
+__[Roadmap](#roadmap)__
+
+__[At large scale](#scale)__
+
 
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
