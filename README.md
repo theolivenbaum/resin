@@ -147,7 +147,7 @@ Use the [CLI&#10549;](#cli) to build, query and analyze your index.
 <a name="relevance" id="relevance"></a>
 ##Relevance
 
-Expect the scoring to follow the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) scheme:
+Expect the scoring [implemented here](https://github.com/kreeben/resin/blob/master/Resin/Tfidf.cs) to follow the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) scheme:
 
 `IDF = log ( numDocs / docFreq + 1) + 1`
 
