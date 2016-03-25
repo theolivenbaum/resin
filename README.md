@@ -4,6 +4,8 @@ Fast full-text search, the quick and easy way.
 
 Solve your full-text search problem with a code base derived during the last seven years from iteratively refactoring Lucene.Net down to what is now _a fast and efficient search framework made up of around 10 small classes_, leaving legacy code and java inheritance behind, making it possible for the .Net community to eventually catch up with the Lucene core team. 
 
+When looking at the problem of search for a long time you come to realize, there is only one right way to solve the issue of information retreival. This is the easiest way.
+
 ####Within 1M Wikipedia documents, find those that contain the label `starr` (or similar):
 ![alt text](https://github.com/kreeben/resin/blob/master/how-fast.png "Resin is this fast with 1M wikipedia docs")  
 
