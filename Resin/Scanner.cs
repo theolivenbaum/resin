@@ -37,10 +37,20 @@ namespace Resin
                     {
                         return GetDocIdsByPrefix(term, reader);
                     }
+                    if (term.Fuzzy)
+                    {
+                        return GetDocIdsFuzzy(term, reader);
+                    }
                     return GetDocIdsExact(term, reader);
                 }
             }
             return Enumerable.Empty<DocumentScore>();
+        }
+
+        private IEnumerable<DocumentScore> GetDocIdsFuzzy(Term term, FieldReader reader)
+        {
+            var terms = reader.GetSimilarTokens(term.Token, term.Edits).Select(token => new Term { Field = term.Field, Token = token }).ToList();
+            return terms.SelectMany(t => GetDocIdsExact(t, reader)).GroupBy(d => d.DocId).Select(g => g.OrderByDescending(x => x.TermFrequency).First());
         }
 
         private IEnumerable<DocumentScore> GetDocIdsByPrefix(Term term, FieldReader reader)

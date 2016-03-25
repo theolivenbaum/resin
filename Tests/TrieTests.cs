@@ -10,82 +10,120 @@ namespace Tests
         [Test]
         public void Remove()
         {
-            var trie = new Trie(new[] { "tree", "trees", "paprika" });
+            var words = new Trie(new[] { "tree", "trees", "paprika" });
 
-            Assert.True(trie.StartingWith("paprika").Contains("paprika"));
-            Assert.True(trie.StartingWith("tree").Contains("trees"));
+            Assert.True(words.Prefixed("paprika").Contains("paprika"));
+            Assert.True(words.Prefixed("tree").Contains("trees"));
 
-            trie.Remove("paprika");
+            words.Remove("paprika");
 
-            Assert.False(trie.StartingWith("paprika").Contains("paprika"));
-            Assert.True(trie.StartingWith("tree").Contains("tree"));
-            Assert.True(trie.StartingWith("tree").Contains("trees"));
+            Assert.False(words.Prefixed("paprika").Contains("paprika"));
+            Assert.True(words.Prefixed("tree").Contains("tree"));
+            Assert.True(words.Prefixed("tree").Contains("trees"));
 
-            trie.Remove("tree");
+            words.Remove("tree");
 
-            Assert.False(trie.StartingWith("tree").Contains("tree"));
-            Assert.True(trie.StartingWith("tree").Contains("trees"));
+            Assert.False(words.Prefixed("tree").Contains("tree"));
+            Assert.True(words.Prefixed("tree").Contains("trees"));
         }
 
         [Test]
-        public void Append()
+        public void Add()
         {
-            var trie = new Trie(new[] {"tree"});
+            var words = new Trie(new[] {"tree"});
 
-            Assert.IsFalse(trie.StartingWith("tree").Contains("trees"));
+            Assert.IsFalse(words.Prefixed("tree").Contains("trees"));
 
-            Assert.AreEqual(1, trie.StartingWith("tree").Count());
-            Assert.AreEqual(0, trie.StartingWith("trees").Count());
+            Assert.AreEqual(1, words.Prefixed("tree").Count());
+            Assert.AreEqual(0, words.Prefixed("trees").Count());
 
-            trie.Add("trees");
+            words.Add("trees");
 
-            Assert.IsTrue(trie.StartingWith("tree").Contains("trees"));
+            Assert.IsTrue(words.Prefixed("tree").Contains("trees"));
 
-            Assert.AreEqual(2, trie.StartingWith("tree").Count());
-            Assert.AreEqual(1, trie.StartingWith("trees").Count());
+            Assert.AreEqual(2, words.Prefixed("tree").Count());
+            Assert.AreEqual(1, words.Prefixed("trees").Count());
         }
 
         [Test]
-        public void GetTokens()
+        public void SimilarTo()
         {
-            var trie = new Trie(new[] { "tree", "treat", "treaty", "treating", "pre", "prefix" });
+            var words = new Trie(new[] { "tree", "treat", "treaty", "treating", "pre" });
 
-            Assert.AreEqual(4, trie.StartingWith("tre").Count());
-            Assert.AreEqual(1, trie.StartingWith("tree").Count());
-            Assert.AreEqual(3, trie.StartingWith("trea").Count());
-            Assert.AreEqual(3, trie.StartingWith("treat").Count());
-            Assert.AreEqual(1, trie.StartingWith("treaty").Count());
-            Assert.AreEqual(1, trie.StartingWith("treati").Count());
-            Assert.AreEqual(1, trie.StartingWith("treatin").Count());
-            Assert.AreEqual(1, trie.StartingWith("treating").Count());
-            Assert.AreEqual(0, trie.StartingWith("treatings").Count());
+            Assert.True(words.Similar("tre", 0).Count() == 0);
 
-            Assert.AreEqual(2, trie.StartingWith("pre").Count());
-            Assert.AreEqual(1, trie.StartingWith("pref").Count());
+            Assert.IsTrue(words.Similar("tre", 1).Contains("tree"));
+            Assert.IsFalse(words.Similar("tre", 1).Contains("treat"));
+            Assert.IsFalse(words.Similar("tre", 1).Contains("treaty"));
+            Assert.IsFalse(words.Similar("tre", 1).Contains("treating"));
+            Assert.IsTrue(words.Similar("tre", 1).Contains("pre"));
 
-            Assert.IsTrue(trie.StartingWith("tre").Contains("tree"));
-            Assert.IsTrue(trie.StartingWith("tre").Contains("treat"));
-            Assert.IsTrue(trie.StartingWith("tre").Contains("treaty"));
-            Assert.IsTrue(trie.StartingWith("tre").Contains("treating"));
+            Assert.IsTrue(words.Similar("tre", 2).Contains("tree"));
+            Assert.IsTrue(words.Similar("tre", 2).Contains("treat"));
+            Assert.IsFalse(words.Similar("tre", 2).Contains("treaty"));
+            Assert.IsFalse(words.Similar("tre", 2).Contains("treating"));
+            Assert.IsTrue(words.Similar("tre", 2).Contains("pre"));
+
+            Assert.IsTrue(words.Similar("tre", 3).Contains("tree"));
+            Assert.IsTrue(words.Similar("tre", 3).Contains("treat"));
+            Assert.IsTrue(words.Similar("tre", 3).Contains("treaty"));
+            Assert.IsFalse(words.Similar("tre", 3).Contains("treating"));
+            Assert.IsTrue(words.Similar("tre", 3).Contains("pre"));
+
+            Assert.IsTrue(words.Similar("tre", 4).Contains("tree"));
+            Assert.IsTrue(words.Similar("tre", 4).Contains("treat"));
+            Assert.IsTrue(words.Similar("tre", 4).Contains("treaty"));
+            Assert.IsFalse(words.Similar("tre", 4).Contains("treating"));
+            Assert.IsTrue(words.Similar("tre", 4).Contains("pre"));
+
+            Assert.IsTrue(words.Similar("tre", 5).Contains("tree"));
+            Assert.IsTrue(words.Similar("tre", 5).Contains("treat"));
+            Assert.IsTrue(words.Similar("tre", 5).Contains("treaty"));
+            Assert.IsTrue(words.Similar("tre", 5).Contains("treating"));
+            Assert.IsTrue(words.Similar("tre", 5).Contains("pre"));
+        }
+
+        [Test]
+        public void WithPrefix()
+        {
+            var words = new Trie(new[] { "tree", "treat", "treaty", "treating", "pre", "prefix" });
+
+            Assert.AreEqual(4, words.Prefixed("tre").Count());
+            Assert.AreEqual(1, words.Prefixed("tree").Count());
+            Assert.AreEqual(3, words.Prefixed("trea").Count());
+            Assert.AreEqual(3, words.Prefixed("treat").Count());
+            Assert.AreEqual(1, words.Prefixed("treaty").Count());
+            Assert.AreEqual(1, words.Prefixed("treati").Count());
+            Assert.AreEqual(1, words.Prefixed("treatin").Count());
+            Assert.AreEqual(1, words.Prefixed("treating").Count());
+            Assert.AreEqual(0, words.Prefixed("treatings").Count());
+
+            Assert.AreEqual(2, words.Prefixed("pre").Count());
+            Assert.AreEqual(1, words.Prefixed("pref").Count());
+
+            Assert.IsTrue(words.Prefixed("tre").Contains("tree"));
+            Assert.IsTrue(words.Prefixed("tre").Contains("treat"));
+            Assert.IsTrue(words.Prefixed("tre").Contains("treaty"));
+            Assert.IsTrue(words.Prefixed("tre").Contains("treating"));
         }
 
         [Test]
         public void Serialize()
         {
-            var trie = new Trie(new[] { "tree", "treaty", "treating", "pre", "prefix" });
+            var words = new Trie(new[] { "tree", "treaty", "treating", "pre", "prefix" });
 
-            Assert.AreEqual(3, trie.StartingWith("tre").Count());
-            Assert.AreEqual(1, trie.StartingWith("tree").Count());
-            Assert.AreEqual(2, trie.StartingWith("pre").Count());
-            Assert.AreEqual(1, trie.StartingWith("pref").Count());
+            Assert.AreEqual(3, words.Prefixed("tre").Count());
+            Assert.AreEqual(1, words.Prefixed("tree").Count());
+            Assert.AreEqual(2, words.Prefixed("pre").Count());
+            Assert.AreEqual(1, words.Prefixed("pref").Count());
 
-            trie.Save("serialize.tri");
-            trie = Trie.Load("serialize.tri");
+            words.Save("serialize.tri");
+            words = Trie.Load("serialize.tri");
 
-            Assert.AreEqual(3, trie.StartingWith("tre").Count());
-            Assert.AreEqual(1, trie.StartingWith("tree").Count());
-            Assert.AreEqual(2, trie.StartingWith("pre").Count());
-            Assert.AreEqual(1, trie.StartingWith("pref").Count());
+            Assert.AreEqual(3, words.Prefixed("tre").Count());
+            Assert.AreEqual(1, words.Prefixed("tree").Count());
+            Assert.AreEqual(2, words.Prefixed("pre").Count());
+            Assert.AreEqual(1, words.Prefixed("pref").Count());
         }
     }
 

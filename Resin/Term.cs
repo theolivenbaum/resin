@@ -10,6 +10,8 @@ namespace Resin
         public bool Prefix { get; set; }
         public bool Fuzzy { get; set; }
 
+        public int Edits { get; set; }
+
         public override string ToString()
         {
             return string.Format("{0}:{1}", Field, Token);

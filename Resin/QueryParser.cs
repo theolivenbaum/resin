@@ -26,6 +26,8 @@ namespace Resin
                 var prefix = false;
                 var fuzzy = false;
 
+                var edits = 0;
+
                 if (0 == termCount++) and = true;
 
                 if (field[0] == '+')
@@ -48,11 +50,12 @@ namespace Resin
                 {
                     value = new string(value.Take(value.Length - 1).ToArray());
                     fuzzy = true;
+                    edits = 1; // TODO: get value from query
                 }
 
                 foreach (var token in _analyzer.Analyze(value))
                 {
-                    yield return new Term {Field = field, Token = token, And = and, Not = not, Prefix = prefix, Fuzzy = fuzzy};
+                    yield return new Term {Field = field, Token = token, And = and, Not = not, Prefix = prefix, Fuzzy = fuzzy, Edits = edits};
                 }
             }
         }
