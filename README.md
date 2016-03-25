@@ -327,7 +327,7 @@ A field reader can do this:
 	var tokens = reader.GetAllTokens();
 	var tokensThatStartWith = reader.GetTokens(prefix);
 	var tokensThatResemble = reader.GetSimilar(word, edits:2);
-	var docPos = reader.GetDocPosition(string token);
+	var docPos = reader.GetPostings(string token);
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/FieldReaderTests.cs)
 
