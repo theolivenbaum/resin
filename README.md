@@ -17,6 +17,7 @@ With a Searcher object already initialized, total time elapsed would have been 9
 * _[The CLI](#cli)_
 * _[Roadmap](#roadmap)_
 * _[At large scale](#scale)_
+* _[File format](#fileformat)_
 
 
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
@@ -478,4 +479,22 @@ Shard and connect each subindex to each other in a network of nodes. Call me, I'
 
 Service-orient the different parts of Resin and make query parsing, calculating of execution plans, scanning, scoring and resolving of documents each a service of its own. Distribute those services across a machine park, grouped by function. Have redundance and scalability within each group. Here is where .Net and Resin will show its real strengths. Service-orientation with [Nancy](https://github.com/NancyFx/Nancy), messaging with [protobuf-net](https://github.com/mgravell/protobuf-net), GC provided by Microsoft. ;)
 
+<a name="fileformat" id"=fileformat></a>
+##Resin file format
+
+All files are protobuf messages.
+
+####Field index
+fld.ix
+
+####Fields (terms and postings)
+*.fld  
+*.fld.tri
+
+####Document index
+d.ix
+
+####Documents
+*.d
+  
 To the [top&#10548;](#top)
