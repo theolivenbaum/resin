@@ -75,7 +75,7 @@ Use the [CLI](#cli) to build, query and analyze your index.
 
 ####Fuzzy
 
-	var result = searcher.Search("label:univ~");
+	var result = searcher.Search("label:univerze~");
 
 ####And
 
