@@ -28,7 +28,7 @@ Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register 
 
 Contribute frequently. Go directly to an [introduction](#citizens) of the parts that make up Resin.  
 
-Use the [CLI](#cli) to build, query and analyze your index.  
+Code or use the [CLI](#cli) to build, query and analyze your index.  
 
 <a name="usage" id="usage"></a>
 ##Quick usage guide
