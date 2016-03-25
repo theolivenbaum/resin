@@ -1,6 +1,8 @@
 <a name="top" id="top"></a>
 # Resin
-Fast full-text search that is not built on Lucene.
+Fast full-text search, the quick and easy way.  
+
+Solve your full-text search problem with a code base derived during the last eight years from iteratively refactoring Lucene.Net down to what is now _a fast search framework made up of around 10 small classes_.
 
 ####Within 1M Wikipedia documents, find those that contain the label `starr` (or similar):
 ![alt text](https://github.com/kreeben/resin/blob/master/how-fast.png "Resin is this fast with 1M wikipedia docs")  
