@@ -1,7 +1,11 @@
+using System;
+
 namespace Resin
 {
     public class Term
     {
+        private int _edits;
+
         public string Field { get; set; }
         public string Token { get; set; }
 
@@ -10,7 +14,12 @@ namespace Resin
         public bool Prefix { get; set; }
         public bool Fuzzy { get; set; }
 
-        public int Edits { get; set; }
+        public int Edits { get { return _edits; } }
+
+        public float Similarity
+        {
+            set { _edits = Convert.ToInt32(Token.Length*(1-value)); }
+        }
 
         public override string ToString()
         {

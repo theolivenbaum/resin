@@ -68,4 +68,33 @@ namespace Tests
             }
         }
     }
+
+    [TestFixture]
+    public class TermTests
+    {
+        [Test]
+        public void Can_calculate_distance_from_similarity()
+        {
+            Assert.AreEqual(6, new Term { Token = "jrambo", Similarity = 0.009f }.Edits);
+            Assert.AreEqual(5, new Term { Token = "jrambo", Similarity = 0.2f }.Edits);
+            Assert.AreEqual(4, new Term { Token = "jrambo", Similarity = 0.3f }.Edits);
+            Assert.AreEqual(3, new Term { Token = "jrambo", Similarity = 0.5f }.Edits);
+            Assert.AreEqual(2, new Term { Token = "jrambo", Similarity = 0.7f }.Edits);
+            Assert.AreEqual(1, new Term { Token = "jrambo", Similarity = 0.8f }.Edits);
+            Assert.AreEqual(1, new Term { Token = "jrambo", Similarity = 0.9f }.Edits);
+            Assert.AreEqual(0, new Term { Token = "jrambo", Similarity = 0.999999f }.Edits);
+
+
+            Assert.AreEqual(1, new Term { Token = "abcde", Similarity = 0.8f }.Edits);
+            Assert.AreEqual(1, new Term { Token = "abcdef", Similarity = 0.8f }.Edits);
+            Assert.AreEqual(1, new Term { Token = "abcdefg", Similarity = 0.8f }.Edits);
+            Assert.AreEqual(2, new Term { Token = "abcdefgh", Similarity = 0.8f }.Edits);
+
+            Assert.AreEqual(2, new Term { Token = "abcde", Similarity = 0.7f }.Edits);
+            Assert.AreEqual(2, new Term { Token = "abcdef", Similarity = 0.7f }.Edits);
+            Assert.AreEqual(2, new Term { Token = "abcdefg", Similarity = 0.7f }.Edits);
+            Assert.AreEqual(2, new Term { Token = "abcdefgh", Similarity = 0.7f }.Edits);
+        }
+
+    }
 }
