@@ -1,6 +1,6 @@
 <a name="top" id="top"></a>
 # Resin
-Solve your full-text search problem or your big data analysis with Resin, a code base derived from seven years of iteratively refactoring Lucene.Net down to what is now __a fast and efficient search framework made up of around 10 small classes__, leaving legacy code and java inheritance behind, making it possible for the .Net community to eventually [catch up](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) with the Lucene core team. 
+Solve your full-text search problem or your big data analysis task with Resin, a code base derived from seven years of iteratively refactoring Lucene.Net down to what is now __a fast and efficient search framework made up of around 10 small classes__, leaving legacy code and java inheritance behind, making it possible for the .Net community to eventually [catch up](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) with the Lucene core team. 
 
 When looking at the problem of search for a long time you come to realize, there is only one right way to solve the issue of information retreival. This is the easiest way.
 
