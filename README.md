@@ -73,6 +73,10 @@ Use the [CLI](#cli) to build, query and analyze your index.
 
 	var result = searcher.Search("label:univ*");
 
+####Fuzzy
+
+	var result = searcher.Search("label:univ~");
+
 ####And
 
 	var result = searcher.Search("label:universe +aliases:cosmos");
@@ -441,14 +445,13 @@ Here is another test, this time the documents aren't pre-cached in the warmup:
 
 ####Query language interpreter
 AND, OR, NOT (+ -), prefix* and fuzzy~ [implemented here](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs).
+
 TODO: nested clauses
 
 ####Fuzzy
-The term-based search that is currently implemented is extremly fast because once you have deserialized the indexes the scan, the resolve of the document, they are all hash-table look-ups.
+Levenshtein Trie scan implemented [here](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs#L55), inspired by [this paper](http://julesjacobs.github.io/2015/06/17/disqus-levenshtein-simple-and-fast.html).
 
-The problem of both prefix and fuzzy querying may be seen as a problem of finding out which tokens to look for. 
-
-If you create an ngram-index from the lexicon and ngram the query token the same way and look up the terms for those grams, calculate the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance), what is left are the term-based queries. Such a Lucene-inspired fuzzy query implementation would add a couple of steps to the querying pipeline and those steps would be all about finding out which terms to scan for.
+TODO: specify similarity in query as number of allowed [edits](https://en.wikipedia.org/wiki/Levenshtein_distance).
 
 ####Scoring
 Refine the scoring. The current scoring scheme is [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).The Lucene core team has just recently grown out of tf-idf and now like [bm25](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) better.
