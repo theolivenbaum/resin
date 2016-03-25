@@ -2,7 +2,7 @@
 # Resin
 Fast full-text search that is not built on Lucene.
 
-####Querying a Resin index containing 1M Wikipedia documents
+####1M Wikipedia documents and the query "label:ring* label:star*"
 ![alt text](https://github.com/kreeben/resin/blob/master/how-fast.png "Resin is this fast with 1M wikipedia docs")  
 
 __[Quick usage guide](#usage)__
