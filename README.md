@@ -6,6 +6,8 @@ When looking at the problem of search for a long time you come to realize, there
 
 ####Within 1M Wikipedia documents, find those that contain the label `starr` (or similar):
 ![alt text](https://github.com/kreeben/resin/blob/master/how-fast.png "Resin is this fast with 1M wikipedia docs")  
+With a Searcher object already initialized, total time elapsed would have been 9.8236 ms (scanning and scoring) + 94 ms (deserialize docs) = `103.8236 ms`. A searcher with a loaded cache would respond in 9.8236 ms (scanning and scoring) + ~0.1 ms (hashtable lookup towards cache) ~ `9.9236 ms`
+
 
 __[Quick usage guide](#usage)__
 
