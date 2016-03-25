@@ -451,7 +451,7 @@ TODO: nested clauses
 ####Fuzzy
 Levenshtein Trie scan implemented [here](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs#L55), inspired by [this paper](http://julesjacobs.github.io/2015/06/17/disqus-levenshtein-simple-and-fast.html).
 
-TODO: specify similarity in query as number of allowed [edits](https://en.wikipedia.org/wiki/Levenshtein_distance).
+TODO: override default similarity in query: `label:starr~0.8`.
 
 ####Scoring
 Refine the scoring. The current scoring scheme is [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).The Lucene core team has just recently grown out of tf-idf and now like [bm25](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) better.
