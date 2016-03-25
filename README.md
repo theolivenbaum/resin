@@ -448,7 +448,7 @@ Here is another test, this time the documents aren't pre-cached in the warmup:
 ####Query language interpreter
 AND, OR, NOT (+ -), prefix* and fuzzy~ [implemented here](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs).
 
-TODO: nested clauses
+TODO: nested clauses, phrases
 
 ####Fuzzy
 Levenshtein Trie scan implemented [here](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs#L55), inspired by [this paper](http://julesjacobs.github.io/2015/06/17/disqus-levenshtein-simple-and-fast.html).
