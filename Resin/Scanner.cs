@@ -49,7 +49,7 @@ namespace Resin
 
         private IEnumerable<DocumentScore> GetDocIdsFuzzy(Term term, FieldReader reader)
         {
-            var terms = reader.GetSimilarTokens(term.Token, term.Edits).Select(token => new Term { Field = term.Field, Token = token }).ToList();
+            var terms = reader.GetSimilar(term.Token, term.Edits).Select(token => new Term { Field = term.Field, Token = token }).ToList();
             return terms.SelectMany(t => GetDocIdsExact(t, reader)).GroupBy(d => d.DocId).Select(g => g.OrderByDescending(x => x.TermFrequency).First());
         }
 
@@ -96,7 +96,17 @@ namespace Resin
                 return f.GetAllTokens();
             }
             return Enumerable.Empty<TokenInfo>().ToList();
-        } 
+        }
+
+        public int DocCount(string field)
+        {
+            var reader = GetReader(field);
+            if (reader != null)
+            {
+                return reader.DocCount;
+            }
+            return 0;
+        }
     }
 
     public struct TokenInfo

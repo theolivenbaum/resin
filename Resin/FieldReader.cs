@@ -9,13 +9,19 @@ namespace Resin
     {
         // tokens/docids/term frequency
         private readonly IDictionary<string, IDictionary<int, int>> _tokens;
-
+        
+        // prefix tree
         private readonly Trie _trie;
 
+        private readonly int _docCount;
+
+        public int DocCount { get { return _docCount; } }
+        
         public FieldReader(IDictionary<string, IDictionary<int,int>> tokens, Trie trie)
         {
             _tokens = tokens;
             _trie = trie;
+            _docCount = _tokens.Values.SelectMany(x => x.Keys).Distinct().ToList().Count;
         }
 
         public static FieldReader Load(string fileName)
@@ -43,7 +49,7 @@ namespace Resin
             return _trie.Prefixed(prefix);
         }
 
-        public IEnumerable<string> GetSimilarTokens(string word, int edits)
+        public IEnumerable<string> GetSimilar(string word, int edits)
         {
             return _trie.Similar(word, edits);
         } 

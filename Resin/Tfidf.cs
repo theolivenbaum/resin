@@ -6,9 +6,9 @@ namespace Resin
     {
         private readonly double _idf;
 
-        public Tfidf(int totalNumberOfDocs, int hitCount)
+        public Tfidf(int docsInCorpus, int hitCount)
         {
-            _idf = Math.Log((double)totalNumberOfDocs / (1 + hitCount)) + 1;
+            _idf = Math.Log((double)docsInCorpus / (1 + hitCount)) + 1;
         }
 
         public void Score(DocumentScore doc)

@@ -13,7 +13,6 @@ namespace Resin
         private readonly Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>> _docFiles; // doc cache
 
         public Scanner Scanner { get { return _scanner; } }
-        public int TotalNumberOfDocs { get { return _docIdToFileIndex.Count; } }
 
         public IndexReader(Scanner scanner)
         {
@@ -36,7 +35,8 @@ namespace Resin
                 var termHits = _scanner.GetDocIds(term).ToList();
                 if (termHits.Count == 0) continue;
 
-                var scorer = new Tfidf(TotalNumberOfDocs, termHits.Count);
+                var docsInCorpus = _scanner.DocCount(term.Field);
+                var scorer = new Tfidf(docsInCorpus, termHits.Count);
                 
                 if (hits.Count == 0)
                 {
