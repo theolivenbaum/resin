@@ -7,9 +7,12 @@ namespace Resin
 {
     public class Scanner
     {
-        private readonly string _directory;
-        private readonly IDictionary<string, int> _fieldIndex;
+        // field/fileid
+        private readonly IDictionary<string, string> _fieldIndex;
+
         private readonly IDictionary<string, FieldReader> _fieldReaders; 
+
+        private readonly string _directory;
 
         public string Dir { get { return _directory; } }
 
@@ -18,16 +21,16 @@ namespace Resin
             _directory = directory;
             _fieldReaders = new Dictionary<string, FieldReader>();
 
-            var indexFileName = Path.Combine(directory, "fld.ix");
+            var indexFileName = Directory.GetFiles(directory, "*.ix").OrderBy(s=>s).FirstOrDefault();
             using (var fs = File.OpenRead(indexFileName))
             {
-                _fieldIndex = Serializer.Deserialize<Dictionary<string, int>>(fs);
+                _fieldIndex = Serializer.Deserialize<Dictionary<string, string>>(fs);
             }
         }
 
         public IEnumerable<DocumentScore> GetDocIds(Term term)
         {
-            int fieldId;
+            string fieldId;
             if (_fieldIndex.TryGetValue(term.Field, out fieldId))
             {
                 var reader = GetReader(term.Field);
@@ -73,7 +76,7 @@ namespace Resin
 
         private FieldReader GetReader(string field)
         {
-            int fieldId;
+            string fieldId;
             if (_fieldIndex.TryGetValue(field, out fieldId))
             {
                 FieldReader reader;
@@ -89,13 +92,8 @@ namespace Resin
 
         public IEnumerable<TokenInfo> GetAllTokens(string field)
         {
-            int fieldId;
-            if (_fieldIndex.TryGetValue(field, out fieldId))
-            {
-                var f = FieldReader.Load(Path.Combine(_directory, fieldId + ".fld"));
-                return f.GetAllTokens();
-            }
-            return Enumerable.Empty<TokenInfo>().ToList();
+            var reader = GetReader(field);
+            return reader == null ? Enumerable.Empty<TokenInfo>() : reader.GetAllTokens();
         }
 
         public int DocCount(string field)

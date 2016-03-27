@@ -9,8 +9,10 @@ namespace Resin
     public class IndexReader : IDisposable
     {
         private readonly Scanner _scanner;
-        private readonly Dictionary<int, int> _docIdToFileIndex;
-        private readonly Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>> _docFiles; // doc cache
+        private readonly Dictionary<int, string> _docIdToFileIndex;
+
+        // doc cache: docfilename/docid/fields/values
+        private readonly Dictionary<string, Dictionary<int, Dictionary<string, List<string>>>> _docFiles; 
 
         public Scanner Scanner { get { return _scanner; } }
 
@@ -18,12 +20,12 @@ namespace Resin
         {
             _scanner = scanner;
 
-            var docIdToFileIndexFileName = Path.Combine(_scanner.Dir, "d.ix");
-            _docFiles = new Dictionary<int, Dictionary<int, Dictionary<string, List<string>>>>();
+            var docixFileName = Directory.GetFiles(scanner.Dir, "*.ix.dix").OrderBy(s => s).FirstOrDefault();
+            _docFiles = new Dictionary<string, Dictionary<int, Dictionary<string, List<string>>>>();
 
-            using (var file = File.OpenRead(docIdToFileIndexFileName))
+            using (var file = File.OpenRead(docixFileName))
             {
-                _docIdToFileIndex = Serializer.Deserialize<Dictionary<int, int>>(file);
+                _docIdToFileIndex = Serializer.Deserialize<Dictionary<int, string>>(file);
             }
         }
 

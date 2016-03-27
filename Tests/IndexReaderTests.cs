@@ -12,7 +12,7 @@ namespace Tests
         [Test]
         public void Can_read()
         {
-            const string dir = "c:\\temp\\resin_tests\\Can_find";
+            var dir = Setup.Dir + "\\indexread\\Can_read";
             if (Directory.Exists(dir)) Directory.Delete(dir, true);
             var analyzer = new Analyzer();
             var parser = new QueryParser(analyzer);
@@ -24,7 +24,7 @@ namespace Tests
                     Id = 0,
                     Fields = new Dictionary<string, List<string>>
                     {
-                        {"title", new[]{"a"}.ToList()}
+                        {"title", new[] {"a"}.ToList()}
                     }
                 });
                 w.Write(new Document
@@ -32,7 +32,7 @@ namespace Tests
                     Id = 1,
                     Fields = new Dictionary<string, List<string>>
                     {
-                        {"title", new[]{"a b"}.ToList()}
+                        {"title", new[] {"a b"}.ToList()}
                     }
                 });
                 w.Write(new Document
@@ -40,7 +40,7 @@ namespace Tests
                     Id = 2,
                     Fields = new Dictionary<string, List<string>>
                     {
-                        {"title", new[]{"a b c"}.ToList()}
+                        {"title", new[] {"a b c"}.ToList()}
                     }
                 });
             }
@@ -75,26 +75,25 @@ namespace Tests
         [Test]
         public void Can_calculate_distance_from_similarity()
         {
-            Assert.AreEqual(6, new Term { Token = "jrambo", Similarity = 0.009f }.Edits);
-            Assert.AreEqual(5, new Term { Token = "jrambo", Similarity = 0.2f }.Edits);
-            Assert.AreEqual(4, new Term { Token = "jrambo", Similarity = 0.3f }.Edits);
-            Assert.AreEqual(3, new Term { Token = "jrambo", Similarity = 0.5f }.Edits);
-            Assert.AreEqual(2, new Term { Token = "jrambo", Similarity = 0.7f }.Edits);
-            Assert.AreEqual(1, new Term { Token = "jrambo", Similarity = 0.8f }.Edits);
-            Assert.AreEqual(1, new Term { Token = "jrambo", Similarity = 0.9f }.Edits);
-            Assert.AreEqual(0, new Term { Token = "jrambo", Similarity = 0.999999f }.Edits);
+            Assert.AreEqual(6, new Term {Token = "jrambo", Similarity = 0.009f}.Edits);
+            Assert.AreEqual(5, new Term {Token = "jrambo", Similarity = 0.2f}.Edits);
+            Assert.AreEqual(4, new Term {Token = "jrambo", Similarity = 0.3f}.Edits);
+            Assert.AreEqual(3, new Term {Token = "jrambo", Similarity = 0.5f}.Edits);
+            Assert.AreEqual(2, new Term {Token = "jrambo", Similarity = 0.7f}.Edits);
+            Assert.AreEqual(1, new Term {Token = "jrambo", Similarity = 0.8f}.Edits);
+            Assert.AreEqual(1, new Term {Token = "jrambo", Similarity = 0.9f}.Edits);
+            Assert.AreEqual(0, new Term {Token = "jrambo", Similarity = 0.999999f}.Edits);
 
 
-            Assert.AreEqual(1, new Term { Token = "abcde", Similarity = 0.8f }.Edits);
-            Assert.AreEqual(1, new Term { Token = "abcdef", Similarity = 0.8f }.Edits);
-            Assert.AreEqual(1, new Term { Token = "abcdefg", Similarity = 0.8f }.Edits);
-            Assert.AreEqual(2, new Term { Token = "abcdefgh", Similarity = 0.8f }.Edits);
+            Assert.AreEqual(1, new Term {Token = "abcde", Similarity = 0.8f}.Edits);
+            Assert.AreEqual(1, new Term {Token = "abcdef", Similarity = 0.8f}.Edits);
+            Assert.AreEqual(1, new Term {Token = "abcdefg", Similarity = 0.8f}.Edits);
+            Assert.AreEqual(2, new Term {Token = "abcdefgh", Similarity = 0.8f}.Edits);
 
-            Assert.AreEqual(2, new Term { Token = "abcde", Similarity = 0.7f }.Edits);
-            Assert.AreEqual(2, new Term { Token = "abcdef", Similarity = 0.7f }.Edits);
-            Assert.AreEqual(2, new Term { Token = "abcdefg", Similarity = 0.7f }.Edits);
-            Assert.AreEqual(2, new Term { Token = "abcdefgh", Similarity = 0.7f }.Edits);
+            Assert.AreEqual(2, new Term {Token = "abcde", Similarity = 0.7f}.Edits);
+            Assert.AreEqual(2, new Term {Token = "abcdef", Similarity = 0.7f}.Edits);
+            Assert.AreEqual(2, new Term {Token = "abcdefg", Similarity = 0.7f}.Edits);
+            Assert.AreEqual(2, new Term {Token = "abcdefgh", Similarity = 0.7f}.Edits);
         }
-
     }
 }

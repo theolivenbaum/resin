@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,8 +5,9 @@ using ProtoBuf;
 
 namespace Resin
 {
-    public class DocumentWriter : IDisposable
+    public class DocumentWriter
     {
+        private bool _flushed;
         private readonly string _dir;
 
         // docid/fields/values
@@ -15,6 +15,8 @@ namespace Resin
 
         public DocumentWriter(string dir)
         {
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
             _dir = dir;
             _docs = new Dictionary<int, IDictionary<string, IList<string>>>();
         }
@@ -38,54 +40,34 @@ namespace Resin
                 values.Add(text);
             }
         }
-        private void Flush()
+
+        public void Flush(string docixFileName)
         {
-            if (_docs.Count == 0) return;
 
-            var ixFileName = Path.Combine(_dir, "d.ix");
-
-            IDictionary<int, int> docIdToFileIndex;
-            if (File.Exists(ixFileName))
-            {
-                using (var file = File.OpenRead(ixFileName))
-                {
-                    docIdToFileIndex = Serializer.Deserialize<IDictionary<int, int>>(file);
-                }
-            }
-            else
-            {
-                docIdToFileIndex = new Dictionary<int, int>();
-                if (!Directory.Exists(_dir)) Directory.CreateDirectory(_dir);
-            }
-            
+            if (_flushed || _docs.Count == 0) return;
+ 
+            var docIdToFileIndex = new Dictionary<int, string>();
             var batches = _docs.IntoBatches(1000).ToList();
             foreach (var batch in batches)
             {
                 var docs = batch.ToList();
-                var id = Directory.GetFiles(_dir, "*.d").Length;
-                var fileName = Path.Combine(_dir, id + ".d");
-                File.WriteAllText(fileName, "");
+                var fileName = Path.Combine(_dir, Path.GetRandomFileName() + ".d");
                 using (var fs = File.Create(fileName))
                 {
                     Serializer.Serialize(fs, docs.ToDictionary(x => x.Key, y => y.Value));
                 }
                 foreach (var docId in docs)
                 {
-                    docIdToFileIndex[docId.Key] = id;
+                    docIdToFileIndex[docId.Key] = fileName;
                 }
             }
 
-            using (var fs = File.Create(ixFileName))
+            using (var fs = File.Create(docixFileName))
             {
                 Serializer.Serialize(fs, docIdToFileIndex);
             }
-
             _docs.Clear();
-        }
-
-        public void Dispose()
-        {
-            Flush();
+            _flushed = true;
         }
     }
 }

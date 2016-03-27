@@ -10,7 +10,7 @@ namespace Tests
         [Test]
         public void Can_read_field_file()
         {
-            const string fileName = "c:\\temp\\resin_tests\\Can_read_field_file\\0.fld";
+            var fileName = Setup.Dir + "\\Can_read_field_file\\0.fld";
             if (File.Exists(fileName)) File.Delete(fileName);
             using (var fw = new FieldWriter(fileName))
             {

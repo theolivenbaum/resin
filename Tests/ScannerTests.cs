@@ -11,7 +11,7 @@ namespace Tests
         [Test]
         public void Can_score()
         {
-            const string dir = "c:\\temp\\resin_tests\\Can_score";
+            const string dir = Setup.Dir + "\\Can_score";
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
                 writer.Write(new Document
@@ -64,7 +64,7 @@ namespace Tests
         [Test]
         public void Can_scan()
         {
-            const string dir = "c:\\temp\\resin_tests\\Can_scan";
+            const string dir = Setup.Dir + "\\Can_scan";
             const string text = "we all live in a yellow submarine";
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
@@ -89,7 +89,7 @@ namespace Tests
         [Test]
         public void Can_scan_document_with_multiple_values()
         {
-            const string dir = "c:\\temp\\resin_tests\\Can_scan_document_with_multiple_values";
+            const string dir = Setup.Dir + "\\Can_scan_document_with_multiple_values";
             const string text = "we all live in a yellow submarine";
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {

@@ -54,6 +54,7 @@
     <Compile Include="DocumentWriter.cs" />
     <Compile Include="IAnalyzer.cs" />
     <Compile Include="Levenshtein.cs" />
+    <Compile Include="Optimizer.cs" />
     <Compile Include="Scanner.cs" />
     <Compile Include="IndexWriter.cs" />
     <Compile Include="FieldWriter.cs" />

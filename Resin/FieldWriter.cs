@@ -7,46 +7,32 @@ namespace Resin
 {
     public class FieldWriter : IDisposable
     {
-        // tokens/docids/term frequency
-        private readonly IDictionary<string, IDictionary<int, int>> _tokens;
+        // terms/docids/term frequency
+        private readonly IDictionary<string, IDictionary<int, int>> _terms;
 
         private readonly Trie _trie;
-        private readonly string _tokenFileName;
+        private readonly string _termsFileName;
         private readonly string _trieFileName;
 
         public FieldWriter(string fileName)
         {
-            _tokenFileName = fileName;
-            if (File.Exists(fileName))
-            {
-                using (var file = File.OpenRead(fileName))
-                {
-                    _tokens = Serializer.Deserialize<Dictionary<string, IDictionary<int, int>>>(file);
-                }
-            }
-            else
-            {
-                _tokens = new Dictionary<string, IDictionary<int, int>>();
-            }
+            var dir = Path.GetDirectoryName(fileName);
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            _termsFileName = fileName;
             _trieFileName = fileName + ".tri";
-            if (File.Exists(_trieFileName))
-            {
-                _trie = Trie.Load(_trieFileName);
-            }
-            else
-            {
-                _trie = new Trie();
-            }
+            _terms = new Dictionary<string, IDictionary<int, int>>();
+            _trie = new Trie();
         }
 
-        public void Write(int docId, string token, int frequency)
+        public void Write(int docId, string term, int frequency)
         {
             IDictionary<int, int> docs;
-            if (!_tokens.TryGetValue(token, out docs))
+            if (!_terms.TryGetValue(term, out docs))
             {
                 docs = new Dictionary<int, int> { { docId, frequency } };
-                _tokens.Add(token, docs);
-                _trie.Add(token);
+                _terms.Add(term, docs);
+                _trie.Add(term);
             }
             else
             {
@@ -56,11 +42,10 @@ namespace Resin
 
         private void Flush()
         {
-            var dir = Path.GetDirectoryName(_tokenFileName);
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-            using (var fs = File.Create(_tokenFileName))
+            
+            using (var fs = File.Create(_termsFileName))
             {
-                Serializer.Serialize(fs, _tokens);
+                Serializer.Serialize(fs, _terms);
             }
             _trie.Save(_trieFileName);
         }
