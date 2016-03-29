@@ -1,1 +1,1 @@
-rnw.bat c:\temp\wikipedia.json d:\wikipedia\wikipedia_resin.json 2000000 1000000
+rnw.bat c:\temp\wikipedia.json d:\wikipedia\wikipedia_resin.json 0 10000000

@@ -21,7 +21,7 @@ namespace Resin.WikipediaJsonParser
             {
                 var cursorPos = Console.CursorLeft;
                 w.WriteLine('[');
-                foreach (var line in File.ReadLines(fileName).Skip(1+skip).Take(length))
+                foreach (var line in File.ReadLines(fileName).Skip(1+skip))
                 {
                     if (line[0] == ']') break;
                     
@@ -46,6 +46,7 @@ namespace Resin.WikipediaJsonParser
                     w.WriteLine(docAsJsonString + ",");
                     Console.SetCursorPosition(cursorPos, Console.CursorTop);
                     Console.Write(count++);
+                    if(count == length) break;
                     
                 }
                 w.WriteLine(']');

@@ -1,20 +1,19 @@
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Threading;
 
 namespace Resin
 {
     public class Analyzer : IAnalyzer
     {
-        private readonly char[] _tokenSeparators;
+        private readonly HashSet<char> _tokenSeparators;
         private readonly HashSet<string> _stopwords;
         private readonly CultureInfo _culture;
 
         public Analyzer(CultureInfo culture = null, char[] tokenSeparators = null, string[] stopwords = null)
         {
             _culture = culture ?? Thread.CurrentThread.CurrentUICulture;
-            _tokenSeparators = tokenSeparators ?? new char[0];
+            _tokenSeparators = new HashSet<char>(tokenSeparators ?? new char[0]);
             _stopwords = new HashSet<string>(stopwords ?? new string[0]);
         }
 

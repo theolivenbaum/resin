@@ -19,21 +19,25 @@ namespace Resin
                     Console.WriteLine("I need both a file and a directory.");
                     return;
                 }
+                Console.Write("Writing: ");
+
                 var take = 1000;
                 var skip = 0;
                 if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
                 if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
                 var fileName = args[Array.IndexOf(args, "--file") + 1];
                 var dir = args[Array.IndexOf(args, "--dir") + 1];
-                var json = File.ReadAllText(fileName);
-                var docs = JsonConvert.DeserializeObject<List<Document>>(json).Skip(skip).Take(take).ToList();
-                Console.Write("Writing: ");
+                var serializer = new JsonSerializer();            
                 var cursorPos = Console.CursorLeft;
                 var count = 0;
+                var stopwords = File.ReadAllLines("stopwords.txt");
                 var timer = new Stopwatch();
-                timer.Start();
-                using (var w = new IndexWriter(dir, new Analyzer(stopwords:new []{"the", "a", "an", "to", "of", "on", "and", "that", "in", "it", "is", "be", "as", "if", "we", "at", "for"})))
+                using (var w = new IndexWriter(dir, new Analyzer(stopwords: stopwords)))
+                using (var re = File.OpenText(fileName))
+                using (var reader = new JsonTextReader(re))
                 {
+                    var docs = serializer.Deserialize<Document[]>(reader).Skip(skip).Take(take);
+                    timer.Start();
                     foreach (var d in docs)
                     {
                         Console.SetCursorPosition(cursorPos, Console.CursorTop);
@@ -41,7 +45,6 @@ namespace Resin
                         w.Write(d);
                     }
                 }
-                timer.Stop();
                 Console.WriteLine("");
                 Console.WriteLine("Index created in " + timer.Elapsed);
             }
@@ -63,9 +66,12 @@ namespace Resin
                 var size = 10;
                 if (Array.IndexOf(args, "-p") > 0) page = int.Parse(args[Array.IndexOf(args, "-p") + 1]);
                 if (Array.IndexOf(args, "-s") > 0) size = int.Parse(args[Array.IndexOf(args, "-s") + 1]);
+                var stopwords = File.ReadAllLines("stopwords.txt");
                 var timer = new Stopwatch();
                 timer.Start();
-                using (var s = new Searcher(dir))
+                var qp = new QueryParser(new Analyzer(stopwords: stopwords));
+                var ir = new IndexReader(dir);
+                using (var s = new Searcher(ir, qp))
                 {
                     Console.WriteLine("\r\nDocument index loaded in {0} ms", timer.ElapsedMilliseconds);
 
@@ -78,15 +84,18 @@ namespace Resin
 
                     timer.Restart();
                     var result = s.Search(q, page, size);
-                    var docs = result.Docs;
                     Console.WriteLine("Scan and scoring in {0}\r\n", timer.Elapsed);
-                    var position = 0+(page*size);
+
                     timer.Restart();
+                    var docs = result.Docs.ToList();
+                    Console.WriteLine("Docs loaded from disk in {0}\r\n", timer.Elapsed);
+
+                    var position = 0+(page*size);
                     foreach (var doc in docs)
                     {
                         Console.WriteLine(string.Join(", ", ++position, doc.Fields["id"], doc.Fields["label"]));
                     }
-                    Console.WriteLine("\r\n{0} results of {1}\r\nDocs loaded from disk in {2} ms", position, result.Total, timer.ElapsedMilliseconds);
+                    Console.WriteLine("\r\n{0} results of {1}", position, result.Total);
                 }
                 Console.WriteLine("Total time elapsed: {0}", total.Elapsed);
 
