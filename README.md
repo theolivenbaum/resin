@@ -165,45 +165,28 @@ An [IndexReader](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.
 
 	public IEnumerable<string> Analyze(string value)
 	{
-	    var token = new List<char>();
-	    foreach (var c in value.ToLower(_culture))
+	    if (value == null) yield break;
+	    int token = 0;
+	    var lowerStr = value.ToLower(_culture);
+	    for (int i = 0; i < lowerStr.Length; ++i)
 	    {
-	        if (IsSeparator(c))
+	        if (!IsSeparator(lowerStr[i])) continue;
+	        if (token < i)
 	        {
-	            if (token.Count > 0)
-	            {
-	                var tok = new string(token.ToArray());
-	                if (!_stopwords.Contains(tok)) yield return tok;
-	                token.Clear();
-	            }
+	            var tok = lowerStr.Substring(token, i - token);
+	            if (!_stopwords.Contains(tok)) yield return tok;
 	        }
-	        else
-	        {
-	            token.Add(c);
-	        }
+	        token = i + 1;
 	    }
-	    if (token.Count > 0)
+	    if (token < lowerStr.Length)
 	    {
-	        var tok = new string(token.ToArray());
-	        yield return tok;
+	        yield return lowerStr.Substring(token);
 	    }
-	}
-	
-	private bool IsSeparator(char c)
-	{
-	    return
-	        char.IsControl(c) ||
-	        char.IsPunctuation(c) ||
-	        char.IsSeparator(c) ||
-	        char.IsWhiteSpace(c) ||
-	        _tokenSeparators.Contains(c);
 	}
 
 The least thing we can do in an Analyzer is to inspect each character of each token it's been given. We could let .net do that for us (string.Split) or we can sweep over the string ourselves.
 
 Once we have a character in our hands we need to figure out if it's information or if it's something that separates two tokens or if it's noice.
-
-When we have assembled something that to us looks like a clean, normalized, noice-free token, before we include it in the result, we  check to see if this token is something that you consider to be irrelevant, in which case we shall give that string to the garbage collector and forget it ever existed. The GC might think that's a perfectly good string and it shall keep it. I don't know. But we don't want it. In fact, if we ever see that string again, in a query, we will once again throw it to the garbage. GC will say, perhaps, "hey, there's that perfectly good string again. What's goin' on?".
 
 By tokenizing the text of a field we make the individual tokens insensitive to casing, queryable. Had we not only exact matches to the verbatim text can be made at runtime, if we want the querying to go fast. The query "title:Rambo" would produce zero documents (no movie in the whole world actually has the title "Rambo") but querying "title:Rambo\\: First Blood" would produce one hit. 
 
@@ -303,10 +286,10 @@ With our current parser we can interpret "title:Rambo", also `title:first title:
 
 The complete in-memory representation of the field file:
 
-	// tokens/docids/term frequency
-	private readonly IDictionary<string, IDictionary<int, int>> _tokens;
+	// terms/docids/term frequency
+	private readonly IDictionary<string, IDictionary<int, int>> _terms;
 	
-	// the char's of the tokens, arranged in a tree structure
+	// the char's of the terms, arranged in a tree structure
 	private readonly Trie _trie;
 	
 A field reader can do this:
@@ -314,9 +297,21 @@ A field reader can do this:
 	var tokens = reader.GetAllTokens();
 	var tokensThatStartWith = reader.GetTokens(prefix);
 	var tokensThatResemble = reader.GetSimilar(word, edits:2);
-	var docPos = reader.GetPostings(string token);
+	var docPos = reader.GetPostings(term);
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/FieldReaderTests.cs)
+
+#### Token and Term
+
+A token is a clean, noice-free, lower-cased or otherwise noramlized piece of text. A term is a token and a field. Tokens are stored within a field file. Terms are what your parsed queries consist of.
+
+A token:
+
+	rambo
+
+A term:
+
+	title:rambo
 
 #### Scanner
 
