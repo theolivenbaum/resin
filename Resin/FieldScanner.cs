@@ -140,10 +140,4 @@ namespace Resin
             return 0;
         }
     }
-
-    public struct TokenInfo
-    {
-        public string Token;
-        public int Count;
-    }
 }

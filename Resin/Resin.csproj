@@ -70,6 +70,7 @@
     <Compile Include="Searcher.cs" />
     <Compile Include="Term.cs" />
     <Compile Include="Tfidf.cs" />
+    <Compile Include="TokenInfo.cs" />
     <Compile Include="Trie.cs" />
   </ItemGroup>
   <ItemGroup>
