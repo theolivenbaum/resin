@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using ProtoBuf;
+using Resin.IO;
 
 namespace Resin
 {
     public class IndexWriter : IDisposable
     {
         // field/fileid
-        private readonly IDictionary<string, string> _fieldIndex;
+        private readonly FixFile _fix;
 
         // field/writer
-        private readonly IDictionary<string, FieldWriter> _fieldWriters;
+        private readonly IDictionary<string, FieldWriter> _fieldWriterCache;
 
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
@@ -25,8 +25,8 @@ namespace Resin
             _directory = directory;
             _analyzer = analyzer;
             _docWriter = new DocumentWriter(_directory);
-            _fieldWriters = new Dictionary<string, FieldWriter>();
-            _fieldIndex = new Dictionary<string, string>();
+            _fieldWriterCache = new Dictionary<string, FieldWriter>();
+            _fix = new FixFile();
         }
 
         public void Write(Document doc)
@@ -34,17 +34,17 @@ namespace Resin
             foreach (var field in doc.Fields)
             {
                 string fieldFileId;
-                if (!_fieldIndex.TryGetValue(field.Key, out fieldFileId))
+                if (!_fix.FieldIndex.TryGetValue(field.Key, out fieldFileId))
                 {
                     fieldFileId = Path.GetRandomFileName();
-                    _fieldIndex.Add(field.Key, fieldFileId);
+                    _fix.FieldIndex.Add(field.Key, fieldFileId);
                 }
 
                 FieldWriter fw;
-                if (!_fieldWriters.TryGetValue(fieldFileId, out fw))
+                if (!_fieldWriterCache.TryGetValue(fieldFileId, out fw))
                 {
                     fw = new FieldWriter(Path.Combine(_directory, fieldFileId + ".f"));
-                    _fieldWriters.Add(fieldFileId, fw);
+                    _fieldWriterCache.Add(fieldFileId, fw);
                 }
                 
                 var termFrequencies = new Dictionary<string, int>();
@@ -81,20 +81,13 @@ namespace Resin
 
             _docWriter.Flush(dixFileName);
 
-            foreach (var writer in _fieldWriters.Values)
+            foreach (var writer in _fieldWriterCache.Values)
             {
-                writer.Dispose();
+                writer.Flush();
             }
 
-            using (var fs = File.Create(fixFileName))
-            {
-                Serializer.Serialize(fs, _fieldIndex);
-            }
-
-            using (var fs = File.Create(ixFileName))
-            {
-                Serializer.Serialize(fs, new Index{DixFileName = dixFileName, FixFileName = fixFileName});
-            }
+            _fix.Save(fixFileName);
+            new IxFile(fixFileName, dixFileName).Save(ixFileName);
             File.Copy(ixFileName, ixFileName.Substring(0, ixFileName.Length-4));
             File.Delete(ixFileName);
             _flushed = true;
@@ -106,12 +99,5 @@ namespace Resin
         }
     }
 
-    [ProtoContract]
-    public class Index
-    {
-        [ProtoMember(1)]
-        public string FixFileName { get; set; }
-        [ProtoMember(2)]
-        public string DixFileName { get; set; }
-    }
+
 }

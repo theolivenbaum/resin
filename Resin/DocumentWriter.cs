@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ProtoBuf;
+using Resin.IO;
 
 namespace Resin
 {
@@ -32,33 +32,26 @@ namespace Resin
             doc[field] = value;
         }
 
-        public void Flush(string docixFileName)
+        public void Flush(string dixFileName)
         {
-
             if (_flushed || _docs.Count == 0) return;
 
             // docid/file
-            var docIdToFileIndex = new Dictionary<int, string>();
+            var dix = new DixFile();
             var batches = _docs.IntoBatches(1000).ToList();
             foreach (var batch in batches)
             {
-                var docs = batch.ToList();
+                var docs = batch.ToDictionary(x => x.Key, y => y.Value);// TODO: fix crash when same doc appears twice in the same batch
+                var d = new DocFile(docs);
                 var fileId = Path.GetRandomFileName();
                 var fileName = Path.Combine(_dir, fileId + ".d");
-                using (var fs = File.Create(fileName))
+                d.Save(fileName);
+                foreach (var docId in d.Docs)
                 {
-                    Serializer.Serialize(fs, docs.ToDictionary(x => x.Key, y => y.Value));
-                }
-                foreach (var docId in docs)
-                {
-                    docIdToFileIndex[docId.Key] = fileId;
+                    dix.DocIdToFileIndex[docId.Key] = fileId;
                 }
             }
-
-            using (var fs = File.Create(docixFileName))
-            {
-                Serializer.Serialize(fs, docIdToFileIndex);
-            }
+            dix.Save(dixFileName);
             _docs.Clear();
             _flushed = true;
         }

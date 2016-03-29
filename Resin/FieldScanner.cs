@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ProtoBuf;
+using Resin.IO;
 
 namespace Resin
 {
@@ -32,17 +32,9 @@ namespace Resin
             var fieldIndex = new Dictionary<string, IList<string>>();
             foreach (var ixFileName in ixIds.Select(id => Path.Combine(directory, id + ".ix")))
             {
-                Index ix;
-                using (var fs = File.OpenRead(ixFileName))
-                {
-                    ix = Serializer.Deserialize<Index>(fs);
-                }
-                IDictionary<string, string> fix;
-                using (var fs = File.OpenRead(ix.FixFileName))
-                {
-                    fix = Serializer.Deserialize<Dictionary<string, string>>(fs);
-                }
-                foreach (var field in fix)
+                var ix = IxFile.Load(ixFileName);
+                var fix = FixFile.Load(ix.FixFileName);
+                foreach (var field in fix.FieldIndex)
                 {
                     IList<string> files;
                     if (fieldIndex.TryGetValue(field.Key, out files))

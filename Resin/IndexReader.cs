@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ProtoBuf;
+using Resin.IO;
 
 namespace Resin
 {
@@ -33,19 +33,10 @@ namespace Resin
 
             foreach (var ixFileName in ixIds.Select(id => Path.Combine(_directory, id + ".ix")))
             {
-                Index ix;
-                using (var fs = File.OpenRead(ixFileName))
-                {
-                    ix = Serializer.Deserialize<Index>(fs);
-                }
+                var ix = IxFile.Load(ixFileName);
+                var dix = DixFile.Load(ix.DixFileName);
 
-                IDictionary<int, string> dix;
-                using (var fs = File.OpenRead(ix.DixFileName))
-                {
-                    dix = Serializer.Deserialize<Dictionary<int, string>>(fs);
-                }
-
-                foreach (var doc in dix)
+                foreach (var doc in dix.DocIdToFileIndex)
                 {
                     List<string> files;
                     if (_docFiles.TryGetValue(doc.Key, out files))
@@ -155,19 +146,11 @@ namespace Resin
             return Document.FromDictionary(docScore.DocId, doc);
         }
 
-        private Dictionary<string, string> GetDoc(string fileName, int docId)
+        private IDictionary<string, string> GetDoc(string fileName, int docId)
         {
-            var docs = ReadDocFile(fileName);
-            Dictionary<string, string> doc;
-            return docs.TryGetValue(docId, out doc) ? doc : null;
-        }
-
-        private Dictionary<int, Dictionary<string, string>> ReadDocFile(string fileName)
-        {
-            using (var file = File.OpenRead(fileName))
-            {
-                return Serializer.Deserialize<Dictionary<int, Dictionary<string, string>>>(file);
-            }
+            var docs = DocFile.Load(fileName);
+            IDictionary<string, string> doc;
+            return docs.Docs.TryGetValue(docId, out doc) ? doc : null;
         }
 
         public void Dispose()

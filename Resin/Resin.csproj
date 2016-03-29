@@ -53,6 +53,12 @@
     <Compile Include="FieldReader.cs" />
     <Compile Include="DocumentWriter.cs" />
     <Compile Include="IAnalyzer.cs" />
+    <Compile Include="IO\DixFile.cs" />
+    <Compile Include="IO\DocFile.cs" />
+    <Compile Include="IO\FieldFile.cs" />
+    <Compile Include="IO\FileBase.cs" />
+    <Compile Include="IO\FixFile.cs" />
+    <Compile Include="IO\IxFile.cs" />
     <Compile Include="Levenshtein.cs" />
     <Compile Include="Optimizer.cs" />
     <Compile Include="FieldScanner.cs" />

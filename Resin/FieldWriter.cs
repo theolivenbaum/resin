@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using ProtoBuf;
+using Resin.IO;
 
 namespace Resin
 {
     public class FieldWriter : IDisposable
     {
         // terms/docids/term frequency
-        private IDictionary<string, IDictionary<int, int>> _terms;
+        private readonly FieldFile _terms;
 
         // prefix tree
-        private Trie _trie;
+        private readonly Trie _trie;
 
         private readonly string _termsFileName;
         private readonly string _trieFileName;
+        private bool _flushed;
 
         public FieldWriter(string fileName)
         {
@@ -23,17 +24,17 @@ namespace Resin
 
             _termsFileName = fileName;
             _trieFileName = fileName + ".tri";
-            _terms = new Dictionary<string, IDictionary<int, int>>();
+            _terms = new FieldFile();
             _trie = new Trie();
         }
 
         public void Write(int docId, string term, int frequency)
         {
             IDictionary<int, int> docs;
-            if (!_terms.TryGetValue(term, out docs))
+            if (!_terms.Terms.TryGetValue(term, out docs))
             {
                 docs = new Dictionary<int, int> { { docId, frequency } };
-                _terms.Add(term, docs);
+                _terms.Terms.Add(term, docs);
                 _trie.Add(term);
             }
             else
@@ -42,13 +43,12 @@ namespace Resin
             }
         }
 
-        private void Flush()
+        public void Flush()
         {
-            using (var fs = File.Create(_termsFileName))
-            {
-                Serializer.Serialize(fs, _terms);
-            }
+            if (_flushed) return;
+            _terms.Save(_termsFileName);
             _trie.Save(_trieFileName);
+            _flushed = true;
         }
 
         public void Dispose()
