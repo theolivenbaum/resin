@@ -1,4 +1,4 @@
-0.ix		fix and dix filenames
+0.ix		fix and dix filenames (generation 0)
 *.fix		field/fileid
 *.dix		docid/filename
 
