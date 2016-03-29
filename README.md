@@ -99,9 +99,8 @@ Code or use the [CLI](#cli) to build, query and analyze your index.
 
 	var result = searcher.Search("id:Q1");
 	var doc = result.Docs.First();
-	var aliases = doc.Fields["aliases"].First(); // Each field contains a list of values
 	// Print "cosmos The Universe existence space outerspace"
-	Console.WriteLine(aliases);
+	Console.WriteLine(doc.Fields["aliases"]);
 
 ####Analyze your index
 
