@@ -41,7 +41,8 @@ Code or use the [CLI](#cli) to build, query and analyze your index.
 	}
 
 ####Here's a huge number of documents
-
+	
+	// Make sure they all have a field "id" (it needs to be unique)
 	var docs = GetHugeNumberOfDocs();
 
 ####Add them to a Resin index
