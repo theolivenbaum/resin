@@ -1,6 +1,6 @@
 <a name="top" id="top"></a>
 # Resin
-Solve your full-text search problem or your big data analysis task with Resin, a code base derived from seven years of iteratively refactoring Lucene.Net down to what is now __a fast and efficient search framework__ made up of around 10 small and comprehensive classes. The intent of leaving legacy code and java inheritance behind is to make it possible for the .Net community to eventually [catch up](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) with the Lucene core team and be able to use cutting-edge search tech. 
+Solve your full-text search problem or your big data analysis task with Resin, a code base derived from seven years of iteratively refactoring Lucene.Net down to what is now __a fast, lean and efficient search framework written specifically for .net__ with great analysis skills and fast response times even to complex queries. Resin is inspired by Lucene but leaves legacy code and java inheritance behind and finally makes it possible for .net programmers to be able to use [cutting-edge search tech](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/).
 
 When looking at the problem of search for a long time you come to realize, there is only one right way to solve the issue of information retreival. Resin shall be the most efficient.
 
@@ -29,24 +29,15 @@ Code or use the [CLI](#cli) to build, query and analyze your index.
 <a name="usage" id="usage"></a>
 ##Quick usage guide
 
-####Here's an interesting document
+####Here's a document
 
 	{
 	  "Fields": {
-		"id": [
-		  "Q1"
-		],
-		"label": [
-		  "universe"
-		],
-		"description": [
-		  "totality of planets, stars, galaxies, intergalactic space, or all matter or all energy"
-		],
-		"aliases": [
-		  "cosmos The Universe existence space outerspace"
-		]
-	  },
-	  "Id": 1
+		"id": "Q1",
+		"label":  "universe",
+		"description": "totality of planets, stars, galaxies, intergalactic space, or all matter or all energy",
+		"aliases": "cosmos The Universe existence space outerspace"
+	  }
 	}
 
 ####Here's a huge number of documents
@@ -153,11 +144,11 @@ Code or use the [CLI](#cli) to build, query and analyze your index.
 <a name="relevance" id="relevance"></a>
 ##Relevance
 
-Expect the scoring [implemented here](https://github.com/kreeben/resin/blob/master/Resin/Tfidf.cs) to follow the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) scheme:
+The scoring [implemented here](https://github.com/kreeben/resin/blob/master/Resin/Tfidf.cs) follows the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) scheme:
 
 `IDF = log ( numDocs / docFreq + 1) + 1`
 
-and with the standard Lucene augumented term frequency `sqrt(TF)` (a formula [about to become legacy](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) for them):
+with the standard Lucene augumented term frequency `sqrt(TF)` (but they're [leaving us in the dust](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/)):
 
 `score = IDF*sqrt(TF)`
 
@@ -168,7 +159,7 @@ To be able to call ourselves a full-text search framework we need something that
 
 We will need to be able to parse multi-criteria queries such as "title:Rambo +title:Blood", in other words a [QueryParser](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs). The important questions for the parser to answer are what fields do we need to scan and what are the tokens that should match. A space character between two query terms such as the space  between "Rambo title:" in the query `title:Rambo title:Blood` will be interpreted as `OR`, a plus sign as `AND`, a minus sign as `NOT`. In other words that query will be parsed into "please find documents that has both rambo AND blood in the title", or in a more machine-like language `scan the field named title for the tokens rambo and blood and return the intersection of their postings`.
 
-An [IndexReader](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and a [FieldReader](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) will make it possible for a [Scanner](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) to get a list of document IDs containing the tokens at hand, then [scoring](https://github.com/kreeben/resin/blob/master/Resin/Tfidf.cs) them. It should then be possible to return the whole set or page that set (skip and take) before fetching the documents from cache or disk.
+An [IndexReader](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and a [FieldReader](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) will make it possible for a [Scanner](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) to get a list of document IDs containing the tokens at hand, then [scoring](https://github.com/kreeben/resin/blob/master/Resin/Tfidf.cs) them. We can then return the whole set or page that set (skip and take) before fetching the documents from cache or disk.
 
 ####The Analyzer
 
@@ -268,13 +259,13 @@ Documents (and field structures) are persisted on disk as [protobuf](https://en.
 
 The in-memory equivalent of a document file is this:
 
-	// docid/fields/values
-	private readonly IDictionary<int, IDictionary<string, IList<string>>> _docs;
+	// docid/fields/value
+	private readonly IDictionary<int, IDictionary<string, string>> _docs;
 
 Here is a document on its own:
 
 	// fields/values
-	IDictionary<string, IList<string>> doc;
+	IDictionary<string, string> doc;
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/DocumentWriter.cs)
 
@@ -359,7 +350,7 @@ At the back of that lexicon is an index, the field file. A scanner scans the ind
 
 The IndexReader needs a scanner. The results of a scan is a list of document ids. IndexReader scores the hits by calculating the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) for the terms in the query:
 
-        public IEnumerable<DocumentScore> GetScoredResult(IEnumerable<Term> terms)
+	public IEnumerable<DocumentScore> GetScoredResult(IEnumerable<Term> terms)
 
 [Code](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/IndexReaderTests.cs)
 
