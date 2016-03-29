@@ -48,7 +48,6 @@ namespace Resin
                 }
                 
                 var termFrequencies = new Dictionary<string, int>();
-                _docWriter.Write(doc.Id, field.Key, field.Value);
 
                 foreach (var token in _analyzer.Analyze(field.Value))
                 {
@@ -61,6 +60,7 @@ namespace Resin
                     fw.Write(doc.Id, token.Key, token.Value);
                 }
             }
+            _docWriter.Write(doc);
         }
 
         public static string ReserveIndexFileName(string dir)

@@ -8,19 +8,19 @@ namespace Resin.IO
     {
         // docid/fields/value
         [ProtoMember(1)]
-        private readonly IDictionary<string, IDictionary<string, string>> _docs;
+        private readonly IDictionary<string, Document> _docs;
 
         public DocFile()
         {
-            _docs = new Dictionary<string, IDictionary<string, string>>();
+            _docs = new Dictionary<string, Document>();
         }
 
-        public DocFile(IDictionary<string, IDictionary<string, string>> docs)
+        public DocFile(IDictionary<string, Document> docs)
         {
             _docs = docs;
         }
 
-        public IDictionary<string, IDictionary<string, string>> Docs
+        public IDictionary<string, Document> Docs
         {
             get { return _docs; }
         }

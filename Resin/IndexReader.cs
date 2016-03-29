@@ -131,7 +131,7 @@ namespace Resin
                     var d = GetDoc(Path.Combine(_directory, file + ".d"), docScore.DocId);
                     if (d != null)
                     {
-                        foreach (var field in d)
+                        foreach (var field in d.Fields)
                         {
                             doc[field.Key] = field.Value; // overwrites former value with latter
                         }
@@ -143,13 +143,13 @@ namespace Resin
                 }
                 _docCache[docScore.DocId] = doc;
             }
-            return Document.FromDictionary(doc);
+            return new Document(doc);
         }
 
-        private IDictionary<string, string> GetDoc(string fileName, string docId)
+        private Document GetDoc(string fileName, string docId)
         {
             var docs = DocFile.Load(fileName);
-            IDictionary<string, string> doc;
+            Document doc;
             return docs.Docs.TryGetValue(docId, out doc) ? doc : null;
         }
 

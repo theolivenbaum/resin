@@ -113,13 +113,11 @@ namespace Resin
                 var dir = Path.Combine(Environment.CurrentDirectory, "about");
                 using (var writer = new IndexWriter(dir, new Analyzer()))
                 {
-                    writer.Write(new Document
-                    {
-                        Fields = new Dictionary<string, string>
+                    writer.Write(new Document(new Dictionary<string, string>
                         {
                             {"body", about}
                         }
-                    });
+                ));
                 }
                 var scanner = FieldScanner.MergeLoad(dir);
                 var timer = new Stopwatch();

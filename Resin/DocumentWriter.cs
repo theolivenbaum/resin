@@ -11,25 +11,19 @@ namespace Resin
         private readonly string _dir;
 
         // docid/fields/value
-        private readonly IDictionary<string, IDictionary<string, string>> _docs;
+        private readonly IDictionary<string, Document> _docs;
 
         public DocumentWriter(string dir)
         {
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
             _dir = dir;
-            _docs = new Dictionary<string, IDictionary<string, string>>();
+            _docs = new Dictionary<string, Document>();
         }
 
-        public void Write(string docId, string field, string value)
+        public void Write(Document doc)
         {
-            IDictionary<string, string> doc;
-            if (!_docs.TryGetValue(docId, out doc))
-            {
-                doc = new Dictionary<string, string>();
-                _docs.Add(docId, doc);
-            }
-            doc[field] = value;
+            _docs[doc.Id] = doc; // TODO: fix overwrite previous doc if same docId appears twice in the session
         }
 
         public void Flush(string dixFileName)
@@ -41,8 +35,7 @@ namespace Resin
             var batches = _docs.IntoBatches(1000).ToList();
             foreach (var batch in batches)
             {
-                var docs = batch.ToDictionary(x => x.Key, y => y.Value);// TODO: fix crash when same doc appears twice in the same batch
-                var d = new DocFile(docs);
+                var d = new DocFile(batch.ToDictionary(x=>x.Key, y=>y.Value));
                 var fileId = Path.GetRandomFileName();
                 var fileName = Path.Combine(_dir, fileId + ".d");
                 d.Save(fileName);

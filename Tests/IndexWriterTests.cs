@@ -15,25 +15,21 @@ namespace Tests
             const string dir = Setup.Dir + "\\Can_update";
             using (var w = new IndexWriter(dir, new Analyzer()))
             {
-                w.Write(new Document
-                {
-                    Fields = new Dictionary<string, string>
+                w.Write(new Document(new Dictionary<string, string>
                     {
                         {"title","hello"},
                         {"id", "0"}
                     }
-                });
+                ));
             }
             using (var w = new IndexWriter(dir, new Analyzer()))
             {
-                w.Write(new Document
-                {
-                    Fields = new Dictionary<string, string>
+                w.Write(new Document(new Dictionary<string, string>
                     {
                         {"title","hello"},
                         {"id", "0"}
                     }
-                });
+                ));
             }
             Assert.AreEqual(16, Directory.GetFiles(dir).Length);
 
@@ -51,22 +47,18 @@ namespace Tests
             const string dir = Setup.Dir + "\\Can_write_one_field";
             using (var w = new IndexWriter(dir, new Analyzer()))
             {
-                w.Write(new Document
-                {
-                    Fields = new Dictionary<string, string>
+                w.Write(new Document(new Dictionary<string, string>
                     {
                         {"title","Hello World!"},
                         {"id", "0"}
                     }
-                });
-                w.Write(new Document
-                {
-                    Fields = new Dictionary<string, string>
+                ));
+                w.Write(new Document(new Dictionary<string, string>
                     {
                         {"title", "Goodbye Cruel World."},
                         {"id", "0"}
                     }
-                });
+                ));
             }
             Assert.AreEqual(8, Directory.GetFiles(dir).Length);
 
@@ -84,15 +76,13 @@ namespace Tests
             const string dir = Setup.Dir + "\\Can_write_two_fields";
             using (var w = new IndexWriter(dir, new Analyzer()))
             {
-                w.Write(new Document
-                {
-                    Fields = new Dictionary<string, string>
+                w.Write(new Document(new Dictionary<string, string>
                     {
                         {"title", "Hello World!"},
                         {"body", "Once upon a time there was a man and a woman."},
                         {"id", "0"}
                     }
-                });
+                ));
             }
             Assert.AreEqual(10, Directory.GetFiles(dir).Length);
 
@@ -114,23 +104,19 @@ namespace Tests
 
             using (var w = new IndexWriter(dir, new Analyzer()))
             {
-                w.Write(new Document
-                {
-                    Fields = new Dictionary<string, string>
+                w.Write(new Document(new Dictionary<string, string>
                     {
                         {"title", "Hello World!"},
                         {"id", "0"}
                     }
-                });
+                ));
 
-                w.Write(new Document
-                {
-                    Fields = new Dictionary<string, string>
+                w.Write(new Document(new Dictionary<string, string>
                     {
                         {"title", "Hello Cruel World!"},
                         {"id", "1"}
                     }
-                });
+                ));
             }
 
             var parser = new QueryParser(new Analyzer());
@@ -155,14 +141,12 @@ namespace Tests
 
             using (var w = new IndexWriter(dir, new Analyzer()))
             {
-                w.Write(new Document
-                {
-                    Fields = new Dictionary<string, string>
+                w.Write(new Document(new Dictionary<string, string>
                     {
                         {"title", "Hello mighty Cruel, cruel World!"},
                         {"id", "0"}
                     }
-                });
+                ));
             }
             using (var reader = new IndexReader(dir))
             {

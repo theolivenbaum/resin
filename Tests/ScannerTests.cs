@@ -14,41 +14,33 @@ namespace Tests
             const string dir = Setup.Dir + "\\Can_score";
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(new Document
-                {
-                    Fields = new Dictionary<string, string>
+                writer.Write(new Document(new Dictionary<string, string>
                         {
                             {"title", "hello hello"},
                             {"id", "0"}
                         }
-                });
+                ));
 
-                writer.Write(new Document
-                {
-                    Fields = new Dictionary<string, string>
+                writer.Write(new Document(new Dictionary<string, string>
                         {
                             {"title", "hello hello hello"},
                             {"id", "1"}
                         }
-                });
+                ));
 
-                writer.Write(new Document
-                {
-                    Fields = new Dictionary<string, string>
+                writer.Write(new Document(new Dictionary<string, string>
                         {
                             {"title", "hello"},
                             {"id", "2"}
                         }
-                });
+                ));
 
-                writer.Write(new Document
-                {
-                    Fields = new Dictionary<string, string>
+                writer.Write(new Document(new Dictionary<string, string>
                         {
                             {"title", "rambo"},
                             {"id", "3"}
                         }
-                });
+                ));
             }
             var scanner = FieldScanner.MergeLoad(dir);
             var score = scanner.GetDocIds(new Term {Field = "title", Token = "hello", And = true}).OrderByDescending(d=>d.TermFrequency).ToList();
@@ -68,14 +60,12 @@ namespace Tests
             const string text = "we all live in a yellow submarine";
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(new Document
-                {
-                    Fields = new Dictionary<string, string>
+                writer.Write(new Document(new Dictionary<string, string>
                         {
                             {"title", text},
                             {"id", "0"}
                         }
-                });
+                ));
             }
             var scanner = FieldScanner.MergeLoad(dir);
             Assert.AreEqual(1, scanner.GetDocIds(new Term {Field = "title", Token = "we", And = true}).ToList().Count);
@@ -94,14 +84,12 @@ namespace Tests
             const string text = "we all live in a yellow submarine";
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(new Document
-                {
-                    Fields = new Dictionary<string, string>
+                writer.Write(new Document(new Dictionary<string, string>
                         {
                             {"title", text},
                             {"id", "0"}
                         }
-                });
+                ));
             }
             var scanner = FieldScanner.MergeLoad(dir);
             Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "we", And = true }).ToList().Count);
