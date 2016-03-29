@@ -19,26 +19,26 @@ namespace Tests
             {
                 w.Write(new Document
                 {
-                    Id = 0,
                     Fields = new Dictionary<string, string>
                     {
-                        {"title", "a"}
+                        {"title", "a"},
+                         {"id", "0"}
                     }
                 });
                 w.Write(new Document
                 {
-                    Id = 1,
                     Fields = new Dictionary<string, string>
                     {
-                        {"title", "a b"}
+                        {"title", "a b"},
+                        {"id", "1"}
                     }
                 });
                 w.Write(new Document
                 {
-                    Id = 2,
                     Fields = new Dictionary<string, string>
                     {
-                        {"title", "a b c"}
+                        {"title", "a b c"},
+                        {"id", "2"}
                     }
                 });
             }

@@ -28,12 +28,12 @@ namespace Resin
             _trie = new Trie();
         }
 
-        public void Write(int docId, string term, int frequency)
+        public void Write(string docId, string term, int frequency)
         {
-            IDictionary<int, int> docs;
+            IDictionary<string, int> docs;
             if (!_terms.Terms.TryGetValue(term, out docs))
             {
-                docs = new Dictionary<int, int> { { docId, frequency } };
+                docs = new Dictionary<string, int> { { docId, frequency } };
                 _terms.Terms.Add(term, docs);
                 _trie.Add(term);
             }

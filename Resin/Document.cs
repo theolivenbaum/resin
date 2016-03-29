@@ -5,14 +5,18 @@ namespace Resin
 {
     public class Document
     {
-        public int Id { get; set; }
+        public string Id
+        {
+            get { return Fields["id"]; }
+        }
+
         public IDictionary<string, string> Fields { get; set; }
 
-        public static Document FromDictionary(int docId, IDictionary<string, string> fields)
+        public static Document FromDictionary(IDictionary<string, string> fields)
         {
             if (fields == null) throw new ArgumentNullException("fields");
 
-            return new Document{Id = docId, Fields = fields};
+            return new Document{Fields = fields};
         }
     }
 }

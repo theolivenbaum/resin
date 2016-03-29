@@ -16,37 +16,37 @@ namespace Tests
             {
                 writer.Write(new Document
                 {
-                    Id = 0,
                     Fields = new Dictionary<string, string>
                         {
-                            {"title", "hello hello"}
+                            {"title", "hello hello"},
+                            {"id", "0"}
                         }
                 });
 
                 writer.Write(new Document
                 {
-                    Id = 1,
                     Fields = new Dictionary<string, string>
                         {
-                            {"title", "hello hello hello"}
+                            {"title", "hello hello hello"},
+                            {"id", "1"}
                         }
                 });
 
                 writer.Write(new Document
                 {
-                    Id = 2,
                     Fields = new Dictionary<string, string>
                         {
-                            {"title", "hello"}
+                            {"title", "hello"},
+                            {"id", "2"}
                         }
                 });
 
                 writer.Write(new Document
                 {
-                    Id = 3,
                     Fields = new Dictionary<string, string>
                         {
-                            {"title", "rambo"}
+                            {"title", "rambo"},
+                            {"id", "3"}
                         }
                 });
             }
@@ -55,9 +55,9 @@ namespace Tests
 
             Assert.AreEqual(3, score.Count);
 
-            Assert.AreEqual(1, score[0].DocId);
-            Assert.AreEqual(0, score[1].DocId);
-            Assert.AreEqual(2, score[2].DocId);
+            Assert.AreEqual("1", score[0].DocId);
+            Assert.AreEqual("0", score[1].DocId);
+            Assert.AreEqual("2", score[2].DocId);
         }
 
 
@@ -72,7 +72,8 @@ namespace Tests
                 {
                     Fields = new Dictionary<string, string>
                         {
-                            {"title", text}
+                            {"title", text},
+                            {"id", "0"}
                         }
                 });
             }
@@ -97,7 +98,8 @@ namespace Tests
                 {
                     Fields = new Dictionary<string, string>
                         {
-                            {"title", text}
+                            {"title", text},
+                            {"id", "0"}
                         }
                 });
             }

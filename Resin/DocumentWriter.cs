@@ -11,17 +11,17 @@ namespace Resin
         private readonly string _dir;
 
         // docid/fields/value
-        private readonly IDictionary<int, IDictionary<string, string>> _docs;
+        private readonly IDictionary<string, IDictionary<string, string>> _docs;
 
         public DocumentWriter(string dir)
         {
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
             _dir = dir;
-            _docs = new Dictionary<int, IDictionary<string, string>>();
+            _docs = new Dictionary<string, IDictionary<string, string>>();
         }
 
-        public void Write(int docId, string field, string value)
+        public void Write(string docId, string field, string value)
         {
             IDictionary<string, string> doc;
             if (!_docs.TryGetValue(docId, out doc))

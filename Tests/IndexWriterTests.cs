@@ -17,10 +17,10 @@ namespace Tests
             {
                 w.Write(new Document
                 {
-                    Id = 0,
                     Fields = new Dictionary<string, string>
                     {
-                        {"title","hello"}
+                        {"title","hello"},
+                        {"id", "0"}
                     }
                 });
             }
@@ -28,20 +28,20 @@ namespace Tests
             {
                 w.Write(new Document
                 {
-                    Id = 0,
                     Fields = new Dictionary<string, string>
                     {
-                        {"title","hello"}
+                        {"title","hello"},
+                        {"id", "0"}
                     }
                 });
             }
-            Assert.AreEqual(12, Directory.GetFiles(dir).Length);
+            Assert.AreEqual(16, Directory.GetFiles(dir).Length);
 
             Assert.AreEqual(2, Directory.GetFiles(dir, "*.ix").Length);
             Assert.AreEqual(2, Directory.GetFiles(dir, "*.dix").Length);
             Assert.AreEqual(2, Directory.GetFiles(dir, "*.fix").Length);
-            Assert.AreEqual(2, Directory.GetFiles(dir, "*.f").Length);
-            Assert.AreEqual(2, Directory.GetFiles(dir, "*.f.tri").Length);
+            Assert.AreEqual(4, Directory.GetFiles(dir, "*.f").Length);
+            Assert.AreEqual(4, Directory.GetFiles(dir, "*.f.tri").Length);
             Assert.AreEqual(2, Directory.GetFiles(dir, "*.d").Length);
         }
 
@@ -53,28 +53,28 @@ namespace Tests
             {
                 w.Write(new Document
                 {
-                    Id = 0,
                     Fields = new Dictionary<string, string>
                     {
-                        {"title","Hello World!"}
+                        {"title","Hello World!"},
+                        {"id", "0"}
                     }
                 });
                 w.Write(new Document
                 {
-                    Id = 0,
                     Fields = new Dictionary<string, string>
                     {
-                        {"title", "Goodbye Cruel World."}
+                        {"title", "Goodbye Cruel World."},
+                        {"id", "0"}
                     }
                 });
             }
-            Assert.AreEqual(6, Directory.GetFiles(dir).Length);
+            Assert.AreEqual(8, Directory.GetFiles(dir).Length);
 
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.ix").Length);
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.dix").Length);
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.fix").Length);
-            Assert.AreEqual(1, Directory.GetFiles(dir, "*.f").Length);
-            Assert.AreEqual(1, Directory.GetFiles(dir, "*.f.tri").Length);
+            Assert.AreEqual(2, Directory.GetFiles(dir, "*.f").Length);
+            Assert.AreEqual(2, Directory.GetFiles(dir, "*.f.tri").Length);
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.d").Length);
         }
 
@@ -86,21 +86,21 @@ namespace Tests
             {
                 w.Write(new Document
                 {
-                    Id = 0,
                     Fields = new Dictionary<string, string>
                     {
                         {"title", "Hello World!"},
-                        {"body", "Once upon a time there was a man and a woman."}
+                        {"body", "Once upon a time there was a man and a woman."},
+                        {"id", "0"}
                     }
                 });
             }
-            Assert.AreEqual(8, Directory.GetFiles(dir).Length);
+            Assert.AreEqual(10, Directory.GetFiles(dir).Length);
 
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.ix").Length);
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.dix").Length);
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.fix").Length);
-            Assert.AreEqual(2, Directory.GetFiles(dir, "*.f").Length);
-            Assert.AreEqual(2, Directory.GetFiles(dir, "*.f.tri").Length);
+            Assert.AreEqual(3, Directory.GetFiles(dir, "*.f").Length);
+            Assert.AreEqual(3, Directory.GetFiles(dir, "*.f.tri").Length);
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.d").Length);
         }
 
@@ -116,19 +116,19 @@ namespace Tests
             {
                 w.Write(new Document
                 {
-                    Id = 0,
                     Fields = new Dictionary<string, string>
                     {
                         {"title", "Hello World!"},
+                        {"id", "0"}
                     }
                 });
 
                 w.Write(new Document
                 {
-                    Id = 1,
                     Fields = new Dictionary<string, string>
                     {
                         {"title", "Hello Cruel World!"},
+                        {"id", "1"}
                     }
                 });
             }
@@ -157,10 +157,10 @@ namespace Tests
             {
                 w.Write(new Document
                 {
-                    Id = 0,
                     Fields = new Dictionary<string, string>
                     {
                         {"title", "Hello mighty Cruel, cruel World!"},
+                        {"id", "0"}
                     }
                 });
             }

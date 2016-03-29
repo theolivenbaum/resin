@@ -17,7 +17,7 @@ namespace Resin
 
         public int DocCount { get { return _docCount; } }
         public Trie Trie { get { return _trie; } }
-        public IDictionary<string, IDictionary<int, int>> Terms { get { return _fieldFile.Terms; } } 
+        public IDictionary<string, IDictionary<string, int>> Terms { get { return _fieldFile.Terms; } } 
 
         public FieldReader(FieldFile terms, Trie trie)
         {
@@ -29,9 +29,9 @@ namespace Resin
             _docCount = _fieldFile.Terms.Values.SelectMany(x => x.Keys).ToList().Distinct().Count();
         }
 
-        public IList<int> Docs()
+        public IList<string> Docs()
         {
-            var docs = new List<int>();
+            var docs = new List<string>();
             foreach (var term in _fieldFile.Terms)
             {
                 docs.AddRange(term.Value.Keys);
@@ -51,7 +51,7 @@ namespace Resin
         {
             foreach (var newTerm in latter._fieldFile.Terms)
             {
-                IDictionary<int, int> t;
+                IDictionary<string, int> t;
                 if (!_fieldFile.Terms.TryGetValue(newTerm.Key, out t))
                 {
                     _fieldFile.Terms.Add(newTerm);
@@ -84,11 +84,11 @@ namespace Resin
         public IEnumerable<string> GetSimilar(string word, int edits)
         {
             return _trie.Similar(word, edits);
-        } 
+        }
 
-        public IDictionary<int, int> GetPostings(string token)
+        public IDictionary<string, int> GetPostings(string token)
         {
-            IDictionary<int, int> postings;
+            IDictionary<string, int> postings;
             if (!_fieldFile.Terms.TryGetValue(token, out postings))
             {
                 return null;

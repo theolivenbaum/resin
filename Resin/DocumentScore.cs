@@ -4,7 +4,7 @@ namespace Resin
 {
     public class DocumentScore : IEquatable<DocumentScore>
     {
-        public int DocId { get; set; }
+        public string DocId { get; set; }
         public float TermFrequency { get; set; }
         public double Score { get; set; }
 

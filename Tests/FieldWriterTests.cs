@@ -14,8 +14,8 @@ namespace Tests
             var fileName = Setup.Dir + "\\Can_read_write\\0.fld";
             using (var writer = new FieldWriter(fileName))
             {
-                writer.Write(0, "Hello", 0);
-                writer.Write(0, "World!", 1);
+                writer.Write("0", "Hello", 0);
+                writer.Write("0", "World!", 1);
             }
 
             Assert.IsTrue(File.Exists(fileName));
@@ -35,7 +35,7 @@ namespace Tests
 
             using (var writer = new FieldWriter(fileName0))
             {
-                writer.Write(0, "hello", 1);
+                writer.Write("0", "hello", 1);
             }
             var terms = FieldReader.Load(fileName0).GetAllTokens().Select(t => t.Token).ToList();
 
@@ -45,7 +45,7 @@ namespace Tests
 
             using (var writer = new FieldWriter(fileName1))
             {
-                writer.Write(0, "world", 1);
+                writer.Write("0", "world", 1);
             }
             terms = FieldReader.Load(fileName0).GetAllTokens().Select(t => t.Token).ToList();
 

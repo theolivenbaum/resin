@@ -11,10 +11,10 @@ namespace Resin
         private readonly FieldScanner _fieldScanner;
 
         // docid/files
-        private readonly Dictionary<int, List<string>> _docFiles;
+        private readonly Dictionary<string, List<string>> _docFiles;
 
         // docid/doc
-        private readonly IDictionary<int, IDictionary<string, string>> _docCache;
+        private readonly IDictionary<string, IDictionary<string, string>> _docCache;
         
         private readonly string _directory;
 
@@ -23,8 +23,8 @@ namespace Resin
         public IndexReader(string directory)
         {
             _directory = directory;
-            _docFiles = new Dictionary<int, List<string>>();
-            _docCache = new Dictionary<int, IDictionary<string, string>>();
+            _docFiles = new Dictionary<string, List<string>>();
+            _docCache = new Dictionary<string, IDictionary<string, string>>();
 
             var ixIds = Directory.GetFiles(_directory, "*.ix")
                 .Where(f => Path.GetExtension(f) != ".tmp")
@@ -54,7 +54,7 @@ namespace Resin
 
         public IEnumerable<DocumentScore> GetScoredResult(IEnumerable<Term> terms)
         {
-            var hits = new Dictionary<int, DocumentScore>();
+            var hits = new Dictionary<string, DocumentScore>();
             foreach (var term in terms)
             {
                 var termHits = _fieldScanner.GetDocIds(term).ToList();
@@ -78,7 +78,7 @@ namespace Resin
                 {
                     if (term.And)
                     {
-                        var aggr = new Dictionary<int, DocumentScore>();
+                        var aggr = new Dictionary<string, DocumentScore>();
                         foreach (var doc in termHits)
                         {
                             DocumentScore dscore;
@@ -143,10 +143,10 @@ namespace Resin
                 }
                 _docCache[docScore.DocId] = doc;
             }
-            return Document.FromDictionary(docScore.DocId, doc);
+            return Document.FromDictionary(doc);
         }
 
-        private IDictionary<string, string> GetDoc(string fileName, int docId)
+        private IDictionary<string, string> GetDoc(string fileName, string docId)
         {
             var docs = DocFile.Load(fileName);
             IDictionary<string, string> doc;

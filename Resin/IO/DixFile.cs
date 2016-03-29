@@ -8,14 +8,14 @@ namespace Resin.IO
     {
         // docid/file
         [ProtoMember(1)]
-        private readonly IDictionary<int, string>_docIdToFileIndex;
+        private readonly IDictionary<string, string>_docIdToFileIndex;
 
         public DixFile()
         {
-            _docIdToFileIndex = new Dictionary<int, string>();
+            _docIdToFileIndex = new Dictionary<string, string>();
         }
 
-        public IDictionary<int, string> DocIdToFileIndex
+        public IDictionary<string, string> DocIdToFileIndex
         {
             get { return _docIdToFileIndex; }
         }
