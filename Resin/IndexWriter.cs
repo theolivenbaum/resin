@@ -43,20 +43,17 @@ namespace Resin
                 FieldWriter fw;
                 if (!_fieldWriters.TryGetValue(fieldFileId, out fw))
                 {
-                    fw = new FieldWriter(Path.Combine(_directory, fieldFileId + ".fld"));
+                    fw = new FieldWriter(Path.Combine(_directory, fieldFileId + ".f"));
                     _fieldWriters.Add(fieldFileId, fw);
                 }
                 
                 var termFrequencies = new Dictionary<string, int>();
-                foreach (var value in field.Value)
-                {
-                    _docWriter.Write(doc.Id, field.Key, value);
+                _docWriter.Write(doc.Id, field.Key, field.Value);
 
-                    foreach (var token in _analyzer.Analyze(value))
-                    {
-                        if (termFrequencies.ContainsKey(token)) termFrequencies[token] += 1;
-                        else termFrequencies.Add(token, 1);
-                    }
+                foreach (var token in _analyzer.Analyze(field.Value))
+                {
+                    if (termFrequencies.ContainsKey(token)) termFrequencies[token] += 1;
+                    else termFrequencies.Add(token, 1);
                 }
 
                 foreach(var token in termFrequencies)
@@ -79,20 +76,27 @@ namespace Resin
             if (_flushed) return;
 
             var ixFileName = ReserveIndexFileName(_directory);
-            var docixFileName = ixFileName.Replace(".tmp", "") + ".dix";
+            var fixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".fix");
+            var dixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".dix");
 
-            _docWriter.Flush(docixFileName);
+            _docWriter.Flush(dixFileName);
 
             foreach (var writer in _fieldWriters.Values)
             {
                 writer.Dispose();
             }
 
-            using (var fs = File.Create(ixFileName))
+            using (var fs = File.Create(fixFileName))
             {
                 Serializer.Serialize(fs, _fieldIndex);
             }
-            File.Copy(ixFileName, ixFileName.Replace(".tmp", ""));
+
+            using (var fs = File.Create(ixFileName))
+            {
+                Serializer.Serialize(fs, new Index{DixFileName = dixFileName, FixFileName = fixFileName});
+            }
+            File.Copy(ixFileName, ixFileName.Substring(0, ixFileName.Length-4));
+            File.Delete(ixFileName);
             _flushed = true;
         }
 
@@ -100,5 +104,14 @@ namespace Resin
         {
             Flush();
         }
+    }
+
+    [ProtoContract]
+    public class Index
+    {
+        [ProtoMember(1)]
+        public string FixFileName { get; set; }
+        [ProtoMember(2)]
+        public string DixFileName { get; set; }
     }
 }

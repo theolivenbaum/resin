@@ -11,7 +11,6 @@ namespace Tests
         public void Can_read_field_file()
         {
             var fileName = Setup.Dir + "\\Can_read_field_file\\0.fld";
-            if (File.Exists(fileName)) File.Delete(fileName);
             using (var fw = new FieldWriter(fileName))
             {
                 fw.Write(0, "hello", 5);

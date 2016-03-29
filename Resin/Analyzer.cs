@@ -20,6 +20,7 @@ namespace Resin
 
         public IEnumerable<string> Analyze(string value)
         {
+            if (value == null) yield break;
             int token = 0;
             var lowerStr = value.ToLower(_culture);
             for (int i = 0; i < lowerStr.Length; ++i)

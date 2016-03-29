@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Resin;
@@ -13,7 +12,6 @@ namespace Tests
         public void Can_read()
         {
             var dir = Setup.Dir + "\\indexread\\Can_read";
-            if (Directory.Exists(dir)) Directory.Delete(dir, true);
             var analyzer = new Analyzer();
             var parser = new QueryParser(analyzer);
 
@@ -22,29 +20,29 @@ namespace Tests
                 w.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, List<string>>
+                    Fields = new Dictionary<string, string>
                     {
-                        {"title", new[] {"a"}.ToList()}
+                        {"title", "a"}
                     }
                 });
                 w.Write(new Document
                 {
                     Id = 1,
-                    Fields = new Dictionary<string, List<string>>
+                    Fields = new Dictionary<string, string>
                     {
-                        {"title", new[] {"a b"}.ToList()}
+                        {"title", "a b"}
                     }
                 });
                 w.Write(new Document
                 {
                     Id = 2,
-                    Fields = new Dictionary<string, List<string>>
+                    Fields = new Dictionary<string, string>
                     {
-                        {"title", new[] {"a b c"}.ToList()}
+                        {"title", "a b c"}
                     }
                 });
             }
-            using (var reader = new IndexReader(new Scanner(dir)))
+            using (var reader = new IndexReader(dir))
             {
                 var docs = reader.GetScoredResult(parser.Parse("title:a")).ToList();
 

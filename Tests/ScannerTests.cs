@@ -17,40 +17,40 @@ namespace Tests
                 writer.Write(new Document
                 {
                     Id = 0,
-                    Fields = new Dictionary<string, List<string>>
+                    Fields = new Dictionary<string, string>
                         {
-                            {"title", new[]{"hello hello"}.ToList()}
+                            {"title", "hello hello"}
                         }
                 });
 
                 writer.Write(new Document
                 {
                     Id = 1,
-                    Fields = new Dictionary<string, List<string>>
+                    Fields = new Dictionary<string, string>
                         {
-                            {"title", new[]{"hello hello hello"}.ToList()}
+                            {"title", "hello hello hello"}
                         }
                 });
 
                 writer.Write(new Document
                 {
                     Id = 2,
-                    Fields = new Dictionary<string, List<string>>
+                    Fields = new Dictionary<string, string>
                         {
-                            {"title", new[]{"hello"}.ToList()}
+                            {"title", "hello"}
                         }
                 });
 
                 writer.Write(new Document
                 {
                     Id = 3,
-                    Fields = new Dictionary<string, List<string>>
+                    Fields = new Dictionary<string, string>
                         {
-                            {"title", new[]{"rambo"}.ToList()}
+                            {"title", "rambo"}
                         }
                 });
             }
-            var scanner = new Scanner(dir);
+            var scanner = FieldScanner.MergeLoad(dir);
             var score = scanner.GetDocIds(new Term {Field = "title", Token = "hello", And = true}).OrderByDescending(d=>d.TermFrequency).ToList();
 
             Assert.AreEqual(3, score.Count);
@@ -70,13 +70,13 @@ namespace Tests
             {
                 writer.Write(new Document
                 {
-                    Fields = new Dictionary<string, List<string>>
+                    Fields = new Dictionary<string, string>
                         {
-                            {"title", new[]{text}.ToList()}
+                            {"title", text}
                         }
                 });
             }
-            var scanner = new Scanner(dir);
+            var scanner = FieldScanner.MergeLoad(dir);
             Assert.AreEqual(1, scanner.GetDocIds(new Term {Field = "title", Token = "we", And = true}).ToList().Count);
             Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "all", And = true }).ToList().Count);
             Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "live", And = true }).ToList().Count);
@@ -95,13 +95,13 @@ namespace Tests
             {
                 writer.Write(new Document
                 {
-                    Fields = new Dictionary<string, List<string>>
+                    Fields = new Dictionary<string, string>
                         {
-                            {"title", text.Split(' ').ToList()}
+                            {"title", text}
                         }
                 });
             }
-            var scanner = new Scanner(dir);
+            var scanner = FieldScanner.MergeLoad(dir);
             Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "we", And = true }).ToList().Count);
             Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "all", And = true }).ToList().Count);
             Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "live", And = true }).ToList().Count);

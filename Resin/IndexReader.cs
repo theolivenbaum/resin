@@ -8,25 +8,57 @@ namespace Resin
 {
     public class IndexReader : IDisposable
     {
-        private readonly Scanner _scanner;
-        private readonly Dictionary<int, string> _docIdToFileIndex;
+        private readonly FieldScanner _fieldScanner;
 
-        // doc cache: docfilename/docid/fields/values
-        private readonly Dictionary<string, Dictionary<int, Dictionary<string, List<string>>>> _docFiles; 
+        // docid/files
+        private readonly Dictionary<int, List<string>> _docFiles;
 
-        public Scanner Scanner { get { return _scanner; } }
+        // docid/doc
+        private readonly IDictionary<int, IDictionary<string, string>> _docCache;
+        
+        private readonly string _directory;
 
-        public IndexReader(Scanner scanner)
+        public FieldScanner FieldScanner { get { return _fieldScanner; } }
+
+        public IndexReader(string directory)
         {
-            _scanner = scanner;
+            _directory = directory;
+            _docFiles = new Dictionary<int, List<string>>();
+            _docCache = new Dictionary<int, IDictionary<string, string>>();
 
-            var docixFileName = Directory.GetFiles(scanner.Dir, "*.ix.dix").OrderBy(s => s).FirstOrDefault();
-            _docFiles = new Dictionary<string, Dictionary<int, Dictionary<string, List<string>>>>();
+            var ixIds = Directory.GetFiles(_directory, "*.ix")
+                .Where(f => Path.GetExtension(f) != ".tmp")
+                .Select(f => int.Parse(Path.GetFileNameWithoutExtension(f)))
+                .OrderBy(i => i).ToList();
 
-            using (var file = File.OpenRead(docixFileName))
+            foreach (var ixFileName in ixIds.Select(id => Path.Combine(_directory, id + ".ix")))
             {
-                _docIdToFileIndex = Serializer.Deserialize<Dictionary<int, string>>(file);
+                Index ix;
+                using (var fs = File.OpenRead(ixFileName))
+                {
+                    ix = Serializer.Deserialize<Index>(fs);
+                }
+
+                IDictionary<int, string> dix;
+                using (var fs = File.OpenRead(ix.DixFileName))
+                {
+                    dix = Serializer.Deserialize<Dictionary<int, string>>(fs);
+                }
+
+                foreach (var doc in dix)
+                {
+                    List<string> files;
+                    if (_docFiles.TryGetValue(doc.Key, out files))
+                    {
+                        files.Add(doc.Value);
+                    }
+                    else
+                    {
+                        _docFiles.Add(doc.Key, new List<string>{doc.Value});
+                    }
+                }
             }
+            _fieldScanner = FieldScanner.MergeLoad(_directory);
         }
 
         public IEnumerable<DocumentScore> GetScoredResult(IEnumerable<Term> terms)
@@ -34,10 +66,10 @@ namespace Resin
             var hits = new Dictionary<int, DocumentScore>();
             foreach (var term in terms)
             {
-                var termHits = _scanner.GetDocIds(term).ToList();
+                var termHits = _fieldScanner.GetDocIds(term).ToList();
                 if (termHits.Count == 0) continue;
 
-                var docsInCorpus = _scanner.DocCount(term.Field);
+                var docsInCorpus = _fieldScanner.DocCount(term.Field);
                 var scorer = new Tfidf(docsInCorpus, termHits.Count);
                 
                 if (hits.Count == 0)
@@ -97,25 +129,44 @@ namespace Resin
             return hits.Values;
         }
 
-        public Document GetDoc(DocumentScore doc)
+        public Document GetDoc(DocumentScore docScore)
         {
-            var fileId = _docIdToFileIndex[doc.DocId];
-            Dictionary<int, Dictionary<string, List<string>>> dics;
-            if (!_docFiles.TryGetValue(fileId, out dics))
+            IDictionary<string, string> doc;
+            if (!_docCache.TryGetValue(docScore.DocId, out doc))
             {
-                dics = ReadDocFile(Path.Combine(_scanner.Dir, fileId + ".d"));
-                _docFiles.Add(fileId, dics);
+                doc = new Dictionary<string, string>();
+                foreach (var file in _docFiles[docScore.DocId])
+                {
+                    var d = GetDoc(Path.Combine(_directory, file + ".d"), docScore.DocId);
+                    if (d != null)
+                    {
+                        foreach (var field in d)
+                        {
+                            doc[field.Key] = field.Value; // overwrites former value with latter
+                        }
+                    }
+                }
+                if (doc.Count == 0)
+                {
+                    throw new ArgumentException("Document missing from index", "docScore");
+                }
+                _docCache[docScore.DocId] = doc;
             }
-            var dic = dics[doc.DocId];
-            var d = Document.FromDictionary(doc.DocId, dic);
-            return d;
+            return Document.FromDictionary(docScore.DocId, doc);
         }
 
-        private Dictionary<int, Dictionary<string, List<string>>> ReadDocFile(string fileName)
+        private Dictionary<string, string> GetDoc(string fileName, int docId)
+        {
+            var docs = ReadDocFile(fileName);
+            Dictionary<string, string> doc;
+            return docs.TryGetValue(docId, out doc) ? doc : null;
+        }
+
+        private Dictionary<int, Dictionary<string, string>> ReadDocFile(string fileName)
         {
             using (var file = File.OpenRead(fileName))
             {
-                return Serializer.Deserialize<Dictionary<int, Dictionary<string, List<string>>>>(file);
+                return Serializer.Deserialize<Dictionary<int, Dictionary<string, string>>>(file);
             }
         }
 

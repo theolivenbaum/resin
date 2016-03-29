@@ -12,7 +12,7 @@ namespace Resin
         public IndexReader Reader { get { return _reader; } }
 
         public Searcher(string dir)
-            : this(new IndexReader(new Scanner(dir)), new QueryParser(new Analyzer()))
+            : this(new IndexReader(dir), new QueryParser(new Analyzer()))
         {}
 
         public Searcher(IndexReader reader, QueryParser parser)

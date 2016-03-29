@@ -5,41 +5,63 @@ using ProtoBuf;
 
 namespace Resin
 {
-    public class Scanner
+    public class FieldScanner
     {
-        // field/fileid
-        private readonly IDictionary<string, string> _fieldIndex;
-
-        private readonly IDictionary<string, FieldReader> _fieldReaders; 
-
         private readonly string _directory;
 
-        public string Dir { get { return _directory; } }
+        // field/files
+        private readonly IDictionary<string, IList<string>> _fieldIndex;
 
-        public Scanner(string directory)
+        // field/reader
+        private readonly IDictionary<string, FieldReader> _readerCache; 
+
+        public FieldScanner(string directory, IDictionary<string, IList<string>> fieldIndex)
         {
+            _readerCache = new Dictionary<string, FieldReader>();
             _directory = directory;
-            _fieldReaders = new Dictionary<string, FieldReader>();
-            _fieldIndex = new Dictionary<string, string>();
+            _fieldIndex = fieldIndex;
+        }
 
-            foreach (var ixFile in Directory.GetFiles(_directory, "*.ix").Where(f => Path.GetExtension(f) != ".tmp").OrderBy(f => f))
+        public static FieldScanner MergeLoad(string directory)
+        {
+            var ixIds = Directory.GetFiles(directory, "*.ix")
+                .Where(f => Path.GetExtension(f) != ".tmp")
+                .Select(f => int.Parse(Path.GetFileNameWithoutExtension(f)))
+                .OrderBy(i => i).ToList();
+
+            var fieldIndex = new Dictionary<string, IList<string>>();
+            foreach (var ixFileName in ixIds.Select(id => Path.Combine(directory, id + ".ix")))
             {
-                Dictionary<string, string> ix;
-                using (var fs = File.OpenRead(ixFile))
+                Index ix;
+                using (var fs = File.OpenRead(ixFileName))
                 {
-                    ix = Serializer.Deserialize<Dictionary<string, string>>(fs);
+                    ix = Serializer.Deserialize<Index>(fs);
                 }
-                foreach (var f in ix)
+                IDictionary<string, string> fix;
+                using (var fs = File.OpenRead(ix.FixFileName))
                 {
-                    _fieldIndex[f.Key] = f.Value;
+                    fix = Serializer.Deserialize<Dictionary<string, string>>(fs);
+                }
+                foreach (var field in fix)
+                {
+                    IList<string> files;
+                    if (fieldIndex.TryGetValue(field.Key, out files))
+                    {
+                        files.Add(field.Value);
+                    }
+                    else
+                    {
+                        fieldIndex.Add(field.Key, new List<string> { field.Value });
+                    }
                 }
             }
+            return new FieldScanner(directory, fieldIndex);
         }
 
         public IEnumerable<DocumentScore> GetDocIds(Term term)
         {
-            string fieldId;
-            if (_fieldIndex.TryGetValue(term.Field, out fieldId))
+            IList<string> fieldFileIds;
+            if (_fieldIndex.TryGetValue(term.Field, out fieldFileIds))
             {
                 var reader = GetReader(term.Field);
                 if (reader != null)
@@ -84,18 +106,30 @@ namespace Resin
 
         private FieldReader GetReader(string field)
         {
-            string fieldId;
-            if (_fieldIndex.TryGetValue(field, out fieldId))
+            FieldReader reader;
+            if (!_readerCache.TryGetValue(field, out reader))
             {
-                FieldReader reader;
-                if (!_fieldReaders.TryGetValue(field, out reader))
+                IList<string> files;
+                if (_fieldIndex.TryGetValue(field, out files))
                 {
-                    reader = FieldReader.Load(Path.Combine(_directory, fieldId + ".fld"));
-                    _fieldReaders.Add(field, reader);
+                    foreach (var file in files)
+                    {
+                        var r = FieldReader.Load(Path.Combine(_directory, file + ".f"));
+                        if (reader == null)
+                        {
+                            reader = r;
+                        }
+                        else
+                        {
+                            reader.Merge(r);
+                        }
+                    }
+                    _readerCache.Add(field, reader);
+                    return reader;
                 }
-                return reader;
+                return null;
             }
-            return null;
+            return reader;
         }
 
         public IEnumerable<TokenInfo> GetAllTokens(string field)

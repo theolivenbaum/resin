@@ -8,9 +8,11 @@ namespace Resin
     public class FieldWriter : IDisposable
     {
         // terms/docids/term frequency
-        private readonly IDictionary<string, IDictionary<int, int>> _terms;
+        private IDictionary<string, IDictionary<int, int>> _terms;
 
-        private readonly Trie _trie;
+        // prefix tree
+        private Trie _trie;
+
         private readonly string _termsFileName;
         private readonly string _trieFileName;
 
@@ -42,7 +44,6 @@ namespace Resin
 
         private void Flush()
         {
-            
             using (var fs = File.Create(_termsFileName))
             {
                 Serializer.Serialize(fs, _terms);

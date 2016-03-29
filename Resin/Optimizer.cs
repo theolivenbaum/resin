@@ -1,22 +1,20 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace Resin
 {
     public class Optimizer
     {
-        private readonly string _ixfileName;
+        private readonly string _directory;
 
-        public Optimizer(string ixfileName)
+        public Optimizer(string directory)
         {
-            _ixfileName = ixfileName;
+            _directory = directory;
         }
 
         public string Optimize()
         {
-            var dir = Path.GetDirectoryName(_ixfileName);
-            var optimizedFileName = IndexWriter.ReserveIndexFileName(dir);
-            // TODO: optimize
-            return optimizedFileName;
+            throw new NotImplementedException();
         }
     }
 }

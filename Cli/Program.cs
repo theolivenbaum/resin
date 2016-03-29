@@ -84,7 +84,7 @@ namespace Resin
                     timer.Restart();
                     foreach (var doc in docs)
                     {
-                        Console.WriteLine(string.Join(", ", ++position, doc.Fields["id"][0], doc.Fields["label"][0]));
+                        Console.WriteLine(string.Join(", ", ++position, doc.Fields["id"], doc.Fields["label"]));
                     }
                     Console.WriteLine("\r\n{0} results of {1}\r\nDocs loaded from disk in {2} ms", position, result.Total, timer.ElapsedMilliseconds);
                 }
@@ -102,7 +102,7 @@ namespace Resin
                 var field = args[Array.IndexOf(args, "--field") + 1];
                 var timer = new Stopwatch();
                 timer.Start();
-                var scanner = new Scanner(dir);
+                var scanner = FieldScanner.MergeLoad(dir);
                 var tokens = scanner.GetAllTokens(field).OrderByDescending(t=>t.Count).ToList();
                 Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
                 File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens.Select(t=>string.Format("{0} {1}", t.Token, t.Count)));
@@ -115,13 +115,13 @@ namespace Resin
                 {
                     writer.Write(new Document
                     {
-                        Fields = new Dictionary<string, List<string>>
+                        Fields = new Dictionary<string, string>
                         {
-                            {"body", new List<string> {about}}
+                            {"body", about}
                         }
                     });
                 }
-                var scanner = new Scanner(dir);
+                var scanner = FieldScanner.MergeLoad(dir);
                 var timer = new Stopwatch();
                 timer.Start();
                 var tokens = scanner.GetAllTokens("body").OrderByDescending(t => t.Count).ToList();

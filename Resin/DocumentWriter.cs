@@ -10,55 +10,48 @@ namespace Resin
         private bool _flushed;
         private readonly string _dir;
 
-        // docid/fields/values
-        private readonly IDictionary<int, IDictionary<string, IList<string>>> _docs;
+        // docid/fields/value
+        private readonly IDictionary<int, IDictionary<string, string>> _docs;
 
         public DocumentWriter(string dir)
         {
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
             _dir = dir;
-            _docs = new Dictionary<int, IDictionary<string, IList<string>>>();
+            _docs = new Dictionary<int, IDictionary<string, string>>();
         }
 
-        public void Write(int docId, string field, string text)
+        public void Write(int docId, string field, string value)
         {
-            IDictionary<string, IList<string>> doc;
+            IDictionary<string, string> doc;
             if (!_docs.TryGetValue(docId, out doc))
             {
-                doc = new Dictionary<string, IList<string>>();
+                doc = new Dictionary<string, string>();
                 _docs.Add(docId, doc);
             }
-            IList<string> values;
-            if (!doc.TryGetValue(field, out values))
-            {
-                values = new List<string> { text };
-                doc.Add(field, values);
-            }
-            else
-            {
-                values.Add(text);
-            }
+            doc[field] = value;
         }
 
         public void Flush(string docixFileName)
         {
 
             if (_flushed || _docs.Count == 0) return;
- 
+
+            // docid/file
             var docIdToFileIndex = new Dictionary<int, string>();
             var batches = _docs.IntoBatches(1000).ToList();
             foreach (var batch in batches)
             {
                 var docs = batch.ToList();
-                var fileName = Path.Combine(_dir, Path.GetRandomFileName() + ".d");
+                var fileId = Path.GetRandomFileName();
+                var fileName = Path.Combine(_dir, fileId + ".d");
                 using (var fs = File.Create(fileName))
                 {
                     Serializer.Serialize(fs, docs.ToDictionary(x => x.Key, y => y.Value));
                 }
                 foreach (var docId in docs)
                 {
-                    docIdToFileIndex[docId.Key] = fileName;
+                    docIdToFileIndex[docId.Key] = fileId;
                 }
             }
 

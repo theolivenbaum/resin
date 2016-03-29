@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ProtoBuf;
@@ -7,27 +8,42 @@ namespace Resin
 {
     public class FieldReader
     {
-        // tokens/docids/term frequency
-        private readonly IDictionary<string, IDictionary<int, int>> _tokens;
+        // terms/docids/term frequency
+        private readonly IDictionary<string, IDictionary<int, int>> _terms;
         
         // prefix tree
         private readonly Trie _trie;
-
+        
         private readonly int _docCount;
 
         public int DocCount { get { return _docCount; } }
-        
-        public FieldReader(IDictionary<string, IDictionary<int,int>> tokens, Trie trie)
+        public Trie Trie { get { return _trie; } }
+        public IDictionary<string, IDictionary<int, int>> Terms { get { return _terms; } } 
+
+        public FieldReader(IDictionary<string, IDictionary<int,int>> terms, Trie trie)
         {
-            _tokens = tokens;
+            if (terms == null) throw new ArgumentNullException("terms");
+            if (trie == null) throw new ArgumentNullException("trie");
+
+            _terms = terms;
             _trie = trie;
-            _docCount = _tokens.Values.SelectMany(x => x.Keys).Distinct().ToList().Count;
+            _docCount = _terms.Values.SelectMany(x => x.Keys).ToList().Distinct().Count();
+        }
+
+        public IList<int> Docs()
+        {
+            var docs = new List<int>();
+            foreach (var term in _terms)
+            {
+                docs.AddRange(term.Value.Keys);
+            }
+            return docs;
         }
 
         public static FieldReader Load(string fileName)
         {
             var trieFileName = fileName + ".tri";
-            var trie = Trie.Load(trieFileName);
+            var trie = Trie.Load(trieFileName); 
             using (var file = File.OpenRead(fileName))
             {
                 var terms = Serializer.Deserialize<Dictionary<string, IDictionary<int, int>>>(file);
@@ -35,9 +51,29 @@ namespace Resin
             }
         }
 
+        public void Merge(FieldReader latter)
+        {
+            foreach (var newTerm in latter._terms)
+            {
+                IDictionary<int, int> t;
+                if (!_terms.TryGetValue(newTerm.Key, out t))
+                {
+                    _terms.Add(newTerm);
+                    _trie.Add(newTerm.Key);
+                }
+                else
+                {
+                    foreach (var posting in newTerm.Value)
+                    {
+                        t[posting.Key] = posting.Value;
+                    }
+                }
+            }
+        }
+
         public IEnumerable<TokenInfo> GetAllTokens()
         {
-            return _tokens.Select(t=>new TokenInfo
+            return _terms.Select(t=>new TokenInfo
             {
                 Token = t.Key,
                 Count = t.Value.Values.Sum()
@@ -57,7 +93,7 @@ namespace Resin
         public IDictionary<int, int> GetPostings(string token)
         {
             IDictionary<int, int> postings;
-            if (!_tokens.TryGetValue(token, out postings))
+            if (!_terms.TryGetValue(token, out postings))
             {
                 return null;
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
@@ -9,11 +10,15 @@ namespace Resin.WikipediaJsonParser
     {
         private static void Main(string[] args)
         {
+            var timer = new Stopwatch();
+            timer.Start();
             var fileName = args[0];
-            var skip = int.Parse(args[1]);
-            var length = int.Parse(args[2]);
-            using (var w = File.CreateText(Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "_resin.json")))
+            var destination = args[1];
+            var skip = int.Parse(args[2]);
+            var length = int.Parse(args[3]);
+            using (var w = File.CreateText(destination))
             {
+                var cursorPos = Console.CursorLeft;
                 var count = 0;
                 w.WriteLine('[');
                 foreach (var line in File.ReadLines(fileName).Skip(1 + skip))
@@ -25,14 +30,14 @@ namespace Resin.WikipediaJsonParser
                     if((string)source["type"] != "item") continue;
 
                     var docId = count + skip;
-                    var id = new[]{(string) source["id"]};
+                    var id = (string) source["id"];
                     var labelsToken = source["labels"]["en"];
                     var labelToken = labelsToken == null ? null : labelsToken["value"];
-                    var label = labelToken == null ? new string[0] : new[]{labelToken.Value<string>()};
+                    var label = labelToken == null ? null : labelToken.Value<string>();
                     var descriptionToken = source["descriptions"]["en"];
-                    var description = descriptionToken == null ? new string[0] : new[]{source["descriptions"]["en"]["value"].Value<string>()};
+                    var description = descriptionToken == null ? null : source["descriptions"]["en"]["value"].Value<string>();
                     var aliasesToken = source["aliases"]["en"];
-                    var aliases = aliasesToken == null ? new string[0] : new []{String.Join(" ", aliasesToken.Select(t => t["value"].Value<string>()))};
+                    var aliases = aliasesToken == null ? null : String.Join(" ", aliasesToken.Select(t => t["value"].Value<string>()));
                     var fields = JObject.FromObject(new 
                     {
                         id, label, description, aliases
@@ -42,11 +47,15 @@ namespace Resin.WikipediaJsonParser
                     doc.Add("Id", docId);
                     var docAsJsonString = doc.ToString();
                     w.WriteLine(docAsJsonString + ",");
-                    Console.WriteLine(docAsJsonString);
+                    //Console.WriteLine(docAsJsonString);
+                    Console.SetCursorPosition(cursorPos, Console.CursorTop);
+                    Console.Write(count);
                     
                 }
                 w.WriteLine(']');
             }
+            Console.WriteLine("\r\ndone in {0}", timer.Elapsed);
         }
+
     }
 }
