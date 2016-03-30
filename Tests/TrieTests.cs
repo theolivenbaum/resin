@@ -117,8 +117,8 @@ namespace Tests
             Assert.AreEqual(2, words.Prefixed("pre").Count());
             Assert.AreEqual(1, words.Prefixed("pref").Count());
 
-            words.Save("serialize.tri");
-            words = Trie.Load("serialize.tri");
+            words.Save(Setup.Dir+"\\serialize.tri");
+            words = Trie.Load(Setup.Dir + "\\serialize.tri");
 
             Assert.AreEqual(3, words.Prefixed("tre").Count());
             Assert.AreEqual(1, words.Prefixed("tree").Count());

@@ -42,36 +42,34 @@ namespace Tests
         }
 
         [Test]
-        public void Can_write_one_field()
+        public void Can_write_field()
         {
-            const string dir = Setup.Dir + "\\Can_write_one_field";
+            const string dir = Setup.Dir + "\\Can_write_field";
             using (var w = new IndexWriter(dir, new Analyzer()))
             {
                 w.Write(new Document(new Dictionary<string, string>
                     {
-                        {"title","Hello World!"},
                         {"id", "0"}
                     }
                 ));
                 w.Write(new Document(new Dictionary<string, string>
                     {
-                        {"title", "Goodbye Cruel World."},
                         {"id", "0"}
                     }
                 ));
             }
-            Assert.AreEqual(8, Directory.GetFiles(dir).Length);
+            Assert.AreEqual(6, Directory.GetFiles(dir).Length);
 
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.ix").Length);
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.dix").Length);
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.fix").Length);
-            Assert.AreEqual(2, Directory.GetFiles(dir, "*.f").Length);
-            Assert.AreEqual(2, Directory.GetFiles(dir, "*.f.tri").Length);
+            Assert.AreEqual(1, Directory.GetFiles(dir, "*.f").Length);
+            Assert.AreEqual(1, Directory.GetFiles(dir, "*.f.tri").Length);
             Assert.AreEqual(1, Directory.GetFiles(dir, "*.d").Length);
         }
 
         [Test]
-        public void Can_write_two_fields()
+        public void Can_write_fields()
         {
             const string dir = Setup.Dir + "\\Can_write_two_fields";
             using (var w = new IndexWriter(dir, new Analyzer()))

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Resin
 {
@@ -23,30 +24,42 @@ namespace Resin
 
                 var take = 1000;
                 var skip = 0;
+
+                var skipped = 0;
+
                 if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
                 if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
+
                 var fileName = args[Array.IndexOf(args, "--file") + 1];
                 var dir = args[Array.IndexOf(args, "--dir") + 1];
-                var serializer = new JsonSerializer();            
                 var cursorPos = Console.CursorLeft;
                 var count = 0;
                 var stopwords = File.ReadAllLines("stopwords.txt");
                 var timer = new Stopwatch();
-                using (var w = new IndexWriter(dir, new Analyzer(stopwords: stopwords)))
-                using (var re = File.OpenText(fileName))
-                using (var reader = new JsonTextReader(re))
+                timer.Start();
+                using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var bs = new BufferedStream(fs))
+                using (var sr = new StreamReader(bs))
+                using (var indexWriter = new IndexWriter(dir, new Analyzer(stopwords: stopwords)))
                 {
-                    var docs = serializer.Deserialize<Document[]>(reader).Skip(skip).Take(take);
-                    timer.Start();
-                    foreach (var d in docs)
+                    string line = sr.ReadLine();
+                    while (skipped++ < skip)
                     {
+                        sr.ReadLine();
+                    }
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        if (line[0] == ']') break;
+                        
+                        var doc = JsonConvert.DeserializeObject<Document>(line.Substring(0, line.Length - 1));
                         Console.SetCursorPosition(cursorPos, Console.CursorTop);
                         Console.Write(++count);
-                        w.Write(d);
+                        indexWriter.Write(doc);
+
+                        if (count == take) break;
                     }
                 }
-                Console.WriteLine("");
-                Console.WriteLine("Index created in " + timer.Elapsed);
+                Console.WriteLine("\r\nIndex created in " + timer.Elapsed);
             }
             else if (args[0].ToLower() == "query")
             {
@@ -73,7 +86,7 @@ namespace Resin
                 var ir = new IndexReader(dir);
                 using (var s = new Searcher(ir, qp))
                 {
-                    Console.WriteLine("\r\nDocument index loaded in {0} ms", timer.ElapsedMilliseconds);
+                    Console.WriteLine("Document index loaded in {0} ms", timer.ElapsedMilliseconds);
 
                     timer.Restart();
                     for (int i = 0; i < 1; i++)

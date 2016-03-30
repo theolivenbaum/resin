@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Resin.WikipediaJsonParser
@@ -42,10 +43,10 @@ namespace Resin.WikipediaJsonParser
                     });
                     var doc = new JObject();
                     doc.Add("Fields", fields);
-                    var docAsJsonString = doc.ToString();
+                    var docAsJsonString = doc.ToString(Formatting.None);
                     w.WriteLine(docAsJsonString + ",");
                     Console.SetCursorPosition(cursorPos, Console.CursorTop);
-                    Console.Write(count++);
+                    Console.Write(++count);
                     if(count == length) break;
                     
                 }

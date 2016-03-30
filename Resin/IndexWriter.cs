@@ -16,7 +16,7 @@ namespace Resin
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private readonly DocumentWriter _docWriter;
-        private bool _flushed;
+        private bool _flushing;
 
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
@@ -66,14 +66,15 @@ namespace Resin
         public static string ReserveIndexFileName(string dir)
         {
             var count = Directory.GetFiles(dir, "*.ix").Length;
-            var fileName = Path.Combine(dir, count + ".ix.tmp");
-            File.WriteAllText(fileName, string.Empty);
+            var fileName = Path.Combine(dir, count + ".ix");
+            File.WriteAllText(fileName+".tmp", string.Empty);
             return fileName;
         }
 
         private void Flush()
         {
-            if (_flushed) return;
+            if (_flushing) return;
+            _flushing = true;
 
             var ixFileName = ReserveIndexFileName(_directory);
             var fixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".fix");
@@ -88,9 +89,6 @@ namespace Resin
 
             _fix.Save(fixFileName);
             new IxFile(fixFileName, dixFileName).Save(ixFileName);
-            File.Copy(ixFileName, ixFileName.Substring(0, ixFileName.Length-4));
-            File.Delete(ixFileName);
-            _flushed = true;
         }
 
         public void Dispose()

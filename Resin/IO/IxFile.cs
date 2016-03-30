@@ -1,4 +1,5 @@
-﻿using ProtoBuf;
+﻿using System.IO;
+using ProtoBuf;
 
 namespace Resin.IO
 {
@@ -20,5 +21,11 @@ namespace Resin.IO
         
         public string FixFileName { get{return _fixFileName;} }
         public string DixFileName { get{return _dixFileName;} }
+
+        public override void Save(string fileName)
+        {
+            File.Delete(fileName+".tmp");
+            base.Save(fileName);
+        }
     }
 }

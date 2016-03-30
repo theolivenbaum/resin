@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using ProtoBuf;
+using Resin.IO;
 
 namespace Resin
 {
     [ProtoContract]
-    public class Trie
+    public class Trie : FileBase<Trie>
     {
         [ProtoMember(1)]
         private readonly char _value;
@@ -132,22 +132,6 @@ namespace Resin
             if (overflow.Length > 0)
             {
                 Add(overflow);
-            }
-        }
-
-        public void Save(string fileName)
-        {
-            using (var fs = File.Create(fileName))
-            {
-                Serializer.Serialize(fs, this);
-            }
-        }
-
-        public static Trie Load(string fileName)
-        {
-            using (var file = File.OpenRead(fileName))
-            {
-                return Serializer.Deserialize<Trie>(file);
             }
         }
 
