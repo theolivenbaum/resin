@@ -7,7 +7,7 @@ namespace Resin
 {
     public class DocumentWriter
     {
-        private bool _flushed;
+        private bool _flushing;
         private readonly string _dir;
 
         // docid/fields/value
@@ -23,12 +23,16 @@ namespace Resin
 
         public void Write(Document doc)
         {
-            _docs[doc.Id] = doc; // TODO: fix overwrite previous doc if same docId appears twice in the session
+            _docs[doc.Id] = doc; // this overwrites previous doc if same docId appears twice in the session
         }
 
         public void Flush(string dixFileName)
         {
-            if (_flushed || _docs.Count == 0) return;
+            if (_flushing) return;
+
+            _flushing = true;
+
+            if (_docs.Count == 0) return;
 
             // docid/file
             var dix = new DixFile();
@@ -46,7 +50,6 @@ namespace Resin
             }
             dix.Save(dixFileName);
             _docs.Clear();
-            _flushed = true;
         }
     }
 }

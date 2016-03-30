@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Resin.IO;
 
 namespace Resin
@@ -17,6 +18,8 @@ namespace Resin
         private readonly IAnalyzer _analyzer;
         private readonly DocumentWriter _docWriter;
         private bool _flushing;
+
+        private static readonly object Sync = new object();
 
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
@@ -63,12 +66,16 @@ namespace Resin
             _docWriter.Write(doc);
         }
 
-        public static string ReserveIndexFileName(string dir)
+        private static string ReserveIndexFileName(string dir)
         {
-            var count = Directory.GetFiles(dir, "*.ix").Length;
-            var fileName = Path.Combine(dir, count + ".ix");
-            File.WriteAllText(fileName+".tmp", string.Empty);
-            return fileName;
+            lock (Sync)
+            {
+                var count = Directory.GetFiles(dir, "*.ix").Count(f => f.EndsWith(".tmp") == false);
+                var fileName = Path.Combine(dir, count + ".ix");
+                File.WriteAllText(fileName + ".tmp", string.Empty);
+                return fileName;                
+            }
+
         }
 
         private void Flush()

@@ -24,8 +24,8 @@ namespace Resin.IO
 
         public override void Save(string fileName)
         {
-            File.Delete(fileName+".tmp");
             base.Save(fileName);
+            File.Delete(fileName + ".tmp");
         }
     }
 }

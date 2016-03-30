@@ -15,7 +15,7 @@ namespace Resin
 
         private readonly string _termsFileName;
         private readonly string _trieFileName;
-        private bool _flushed;
+        private bool _flushing;
 
         public FieldWriter(string fileName)
         {
@@ -45,10 +45,10 @@ namespace Resin
 
         public void Flush()
         {
-            if (_flushed) return;
+            if (_flushing) return;
+            _flushing = true;
             _terms.Save(_termsFileName);
             _trie.Save(_trieFileName);
-            _flushed = true;
         }
 
         public void Dispose()
