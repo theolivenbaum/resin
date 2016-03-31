@@ -42,7 +42,7 @@ The `id` field is mandatory.
 
 ####Add them to a Resin index
 
-	var dir = @"c:\MyResinIndices\0";
+	var dir = @"C:\Users\Yourname\Resin\0";
 	using (var writer = new IndexWriter(dir, new Analyzer()))
 	{
 		foreach (var doc in docs)
