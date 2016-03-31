@@ -2,15 +2,6 @@
 # Resin
 Solve your full-text search problem or your big data analysis task with Resin, a code base derived from iteratively refactoring Lucene.Net down to what is now __a fast, lean and efficient search framework written specifically for .net__ with great analysis skills and fast response times even to complex queries. Resin is multi-cultural and deeply inspired by Lucene but leaves [legacy code and java inheritance](https://lucenenet.apache.org/) behind and finally makes it possible for .net programmers to be able to use cutting-edge search tech.
 
-Here is an efficient and uncomplicated way of retrieving information: 
-
-####Within 1M Wikipedia documents, find those that contain the label `starr` (or similar):
-![alt text](https://github.com/kreeben/resin/blob/master/how-fast.png "Resin is this fast with 1M wikipedia docs")  
-With a Searcher object already initialized, total time elapsed would have been 9.8236 ms (scanning and scoring) + 94 ms (deserialize docs) = `103.8236 ms`. A searcher with a loaded cache would respond in 9.8236 ms (scanning and scoring) + ~0.1 ms (hashtable lookups towards cache) ~ `10 ms` (*)
-
-(*) Three year old i5 thinbook with 8GB RAM and SSD. 
-
-
 * _[Quick usage guide](#usage)_
 * _[Relevance (tf-idf)](#relevance)_
 * _[Why so few classes?](#citizens)_
