@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Resin
@@ -21,21 +20,13 @@ namespace Resin
             _parser = parser;
         }
 
-        public Result Search(string query)
-        {
-            var terms = _parser.Parse(query);
-            var scored = _reader.GetScoredResult(terms).OrderByDescending(d=>d.Score).ToList();
-            var docs = scored.Select(s => _reader.GetDoc(s));
-            return new Result { Docs = docs, Total = scored.Count };
-        }
-
-        public Result Search(string query, int page, int size)
+        public Result Search(string query, int page = 0, int size = 10000)
         {
             var skip = page*size;
             var terms = _parser.Parse(query);
             var scored = _reader.GetScoredResult(terms).OrderByDescending(d => d.Score).ToList();
             var paged = scored.Skip(skip).Take(size);
-            var docs = paged.Select(s=>_reader.GetDoc(s));
+            var docs = paged.Select(s=>_reader.GetDoc(s)).ToList();
             return new Result { Docs = docs, Total = scored.Count };
         }
         
@@ -43,11 +34,5 @@ namespace Resin
         {
             _reader.Dispose();
         }
-    }
-
-    public class Result
-    {
-        public IEnumerable<Document> Docs { get; set; }
-        public int Total { get; set; }
     }
 }
