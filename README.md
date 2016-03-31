@@ -60,8 +60,11 @@ The `id` field is mandatory.
 	}
 	
 #####Server
-
-	var searcher = new SearchClient(name, "http://localhost:1234/");
+	
+	// to start the server, in a cmd window:
+	// cd path_to_resin
+	// rnh.exe --url http://localhost:1234/
+	var searcher = new SearchClient("wikipedia", "http://localhost:1234/");
 	var result = s.Search("label:universe");
 	
 ####Prefix query
