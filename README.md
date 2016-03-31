@@ -315,7 +315,7 @@ A term:
 
 #### Scanner
 
-After a good parsing we get back a list of terms. A term is a field and a token, e.g. "title:rambo". 
+After a good parsing we get back a list of terms.
 
 All that we know, as a search framework, is called "a lexicon".
 
