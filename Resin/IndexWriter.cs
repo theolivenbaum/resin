@@ -12,7 +12,7 @@ namespace Resin
         private readonly FixFile _fix;
 
         // field/writer
-        private readonly IDictionary<string, FieldWriter> _fieldWriterCache;
+        private readonly IDictionary<string, FieldWriter> _fieldWriters;
 
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
@@ -28,7 +28,7 @@ namespace Resin
             _directory = directory;
             _analyzer = analyzer;
             _docWriter = new DocumentWriter(_directory);
-            _fieldWriterCache = new Dictionary<string, FieldWriter>();
+            _fieldWriters = new Dictionary<string, FieldWriter>();
             _fix = new FixFile();
         }
 
@@ -44,10 +44,10 @@ namespace Resin
                 }
 
                 FieldWriter fw;
-                if (!_fieldWriterCache.TryGetValue(fieldFileId, out fw))
+                if (!_fieldWriters.TryGetValue(fieldFileId, out fw))
                 {
                     fw = new FieldWriter(Path.Combine(_directory, fieldFileId + ".f"));
-                    _fieldWriterCache.Add(fieldFileId, fw);
+                    _fieldWriters.Add(fieldFileId, fw);
                 }
                 
                 var termFrequencies = new Dictionary<string, int>();
@@ -89,7 +89,7 @@ namespace Resin
 
             _docWriter.Flush(dixFileName);
 
-            foreach (var writer in _fieldWriterCache.Values)
+            foreach (var writer in _fieldWriters.Values)
             {
                 writer.Flush();
             }
