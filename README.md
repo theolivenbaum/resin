@@ -2,9 +2,6 @@
 # Resin
 Solve your full-text search problem or your big data analysis task with Resin, a code base derived from iteratively refactoring Lucene.Net down to what is now __a fast, lean and efficient search framework written specifically for .net__ with great analysis skills and fast response times even to complex queries. Resin is multi-cultural and deeply inspired by Lucene but leaves [legacy code and java inheritance](https://lucenenet.apache.org/) behind and finally makes it possible for .net programmers to be able to use [cutting-edge search tech](https://lucene.apache.org/).
 
-Keep Resin in your tool belt so you can find out
-`var everythingAbout = new SearchClient("wikipedia", "http://localhost:1234").Search("label:universe label:univ* label:univerze~ -label:miss");`
-
 * _[Quick usage guide](#usage)_
 * _[Relevance (tf-idf)](#relevance)_
 * _[Why so few classes?](#citizens)_
@@ -54,16 +51,15 @@ The `id` field is mandatory.
 ####Query that index (matching the whole term)
 #####In-proc
 
-	using (var searcher = new Searcher(dir))
-	{
-		var result = searcher.Search("label:universe");
-	}
-	
+	var searcher = new Searcher(dir);
+	var result = searcher.Search("label:universe");
+
 #####Server
 	
 	// to start the server, in a cmd window:
 	// cd path_to_resin
 	// rnh.exe --url http://localhost:1234/
+	
 	var searcher = new SearchClient("wikipedia", "http://localhost:1234/");
 	var result = searcher.Search("label:universe");
 	
