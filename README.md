@@ -65,7 +65,7 @@ The `id` field is mandatory.
 	// cd path_to_resin
 	// rnh.exe --url http://localhost:1234/
 	var searcher = new SearchClient("wikipedia", "http://localhost:1234/");
-	var result = s.Search("label:universe");
+	var result = searcher.Search("label:universe");
 	
 ####Prefix query
 
