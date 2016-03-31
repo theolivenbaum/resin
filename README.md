@@ -34,9 +34,10 @@ Code or use the [CLI](#cli) to build, query and analyze your index.
 	  }
 	}
 
+The `id` field is mandatory.  
+
 ####Here's a huge number of documents
 	
-	// Make sure they all have a field "id" (it needs to be unique)
 	var docs = GetHugeNumberOfDocs();
 
 ####Add them to a Resin index
@@ -92,48 +93,53 @@ Code or use the [CLI](#cli) to build, query and analyze your index.
 
 ####All fields queryable, whole document returned
 
+	// Find document "Q1" and print "cosmos The Universe existence space outerspace"
 	var result = searcher.Search("id:Q1");
 	var doc = result.Docs.First();
-	// Print "cosmos The Universe existence space outerspace"
 	Console.WriteLine(doc.Fields["aliases"]);
 
 ####Analyze your index
 
 	var field = "label";
 	var scanner = new Scanner(dir);
-	var tokens = scanner.GetAllTokens(field).OrderByDescending(t=>t.Count).ToList();
-	File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens
-		.Select(t=>string.Format(
-			"{0} {1}", t.Token, t.Count)));
+	var termsOrderedByFreq = scanner.GetAllTokens(field).OrderByDescending(t=>t.Count).ToList();
+	
+	File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), termsOrderedByFreq
+		.Select(t=>string.Format("{0} {1}", t.Token, t.Count)));
 
 ####Querying is fast because
 
 	using (var searcher = new Searcher(dir)) // Initializing the searcher loads the document index
 	{
-		// This loads and caches the term indices for the "id" and "label" fields
+		// This loads and caches the term indices for the "id" and "label" fields:
+		
 		var result = searcher.Search("id:Q1 label:Q1");
 		
-		// This executes the query.
-		// Resin loads the doc from disk and caches it
+		// This executes the query. Resin loads the doc from disk and caches it:
+		
 		var doc1 = result.Docs.First();
 		
 		// The following query requires 
+		//
 		// - a hashtable lookup towards the field file index to find the field ID
 		// - a hashtable lookup towards the term index to find the doc IDs
 		// - for each doc ID: a hashtable lookup towards the doc cache
+		
 		var docs = searcher.Search("label:universe").Docs.ToList();
 		
 		// The following prefix query requires 
+		//
 		// - a hashtable lookup towards the field file index to find the field ID
 		// - a Trie scan (*) to find matching terms
 		// - for each term: a hashtable lookup towards the term index to find the doc IDs
 		// - append the results of the scan (as if the tokens are joined by "OR")
 		// - for each doc ID: one hashtable lookup towards the doc cache
+		
 		docs = searcher.Search("label:univ*").Docs.ToList();
 		
 	}// Caches are released	 
   
-(*) The [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs).  
+(*) The [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs) has a leading role in the querying routine.  
 
 <a name="relevance" id="relevance"></a>
 ##Relevance
