@@ -4,7 +4,7 @@
 _If it's not zero-config it's not Resin._  
 _- Creators of Resin_
 
-Solve your full-text search problem or your big data analysis task with Resin, a code base derived from iteratively refactoring Lucene.Net down to what is now __a fast, lean and efficient search framework written specifically for .net__ with great analysis skills and fast response times even to complex queries. Resin is multi-cultural and deeply inspired by Lucene but leaves [legacy code and java inheritance](https://lucenenet.apache.org/) behind and finally makes it possible for .net programmers to be able to use [cutting-edge search tech](https://lucene.apache.org/).
+Solve your full-text search problem or your big data analysis task with Resin, a code base derived from iteratively refactoring Lucene.Net down to what is now __a fast and light-weighted search framework written specifically for .net__ with great analysis skills and fast response times even to complex queries. Resin is multi-cultural and deeply inspired by Lucene but leaves [legacy code and java inheritance](https://lucenenet.apache.org/) behind and finally makes it possible for .net programmers to be able to use [cutting-edge search tech](https://lucene.apache.org/).
 
 * _[Quick usage guide](#usage)_
 * _[Relevance (tf-idf)](#relevance)_
@@ -14,6 +14,8 @@ Solve your full-text search problem or your big data analysis task with Resin, a
 * _[At large scale](#scale)_
 * _[File format](#fileformat)_
 
+_Functionality that relies heavily on conventions are bound to be unfitting for some and is therefore in need of a little bit of config, which is perfectly fine, as long as that function is not included in Resin. Thank you! :)_  
+_- Future maintainers of Resin_
 
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
@@ -58,9 +60,10 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 
 #####Server
 	
-	// to start the server, in a cmd window:
+	// To start the server, in a cmd window:
 	// cd path_to_resin
 	// rnh.exe --url http://localhost:1234/
+	// You have just started a light-weight search server with solr-like capabilities. Enjoy!
 	
 	var searcher = new SearchClient("wikipedia", "http://localhost:1234/");
 	var result = searcher.Search("label:universe");
