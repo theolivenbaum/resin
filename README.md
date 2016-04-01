@@ -29,7 +29,8 @@ Code or use the [CLI](#cli) to build, query and analyze your index.
 
 [Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config:
 
-	cd path_to_resin
+	git clone git@github.com:kreeben/resin.git
+	cd resin
 	rnh.bat --url http://localhost:1234/
   
 <a name="usage" id="usage"></a>
