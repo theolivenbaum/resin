@@ -468,7 +468,7 @@ Refine the scoring. The current scoring scheme is [tf-idf](https://en.wikipedia.
 ####Write concurrency
 Implemented [here](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs#L81) at indexing time and [here](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs#L53) at querying time. Each write session creates a new, automic index. When refreshing the index reader, new indices are merged with earlier generations and then made searchable as if they were one index.
 
-TODO: handle deletes
+TODO: handle deletes, optimize
 
 ####Multi-index searching
 Handle queries that span two or more indices.
