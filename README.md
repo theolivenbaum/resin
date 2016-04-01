@@ -20,9 +20,8 @@ First and foremost: read about the dependencies you need to [worry about](#depen
 _"Functionality that relies heavily on conventions are  
 bound to be unfitting for some and is therefore in need  
 of a little bit of config, which is perfectly fine,  
-as long as that function is not included in Resin._  
-_Thank you :)"_  
-_- Resin user_
+as long as that function is not included in Resin. Thank you :)"_  
+_- Happy Resin user_
 
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
