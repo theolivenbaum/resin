@@ -23,12 +23,10 @@ Code or use the [CLI](#cli) to build, query and analyze your index.
 ####Here's a document
 
 	{
-	  "Fields": {
 		"_id": "Q1",
 		"label":  "universe",
 		"description": "totality of planets, stars, galaxies, intergalactic space, or all matter or all energy",
 		"aliases": "cosmos The Universe existence space outerspace"
-	  }
 	}
 
 Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is mandatory.  
