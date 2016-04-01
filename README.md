@@ -4,10 +4,6 @@
 _"If it's not zero-config it's not Resin."_  
 _- Creator of Resin_
 
-_"Software that needs to be configured before you can use it as a tool,  
-is not a tool at all."_  
-_- User of software_
-
 [Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config:
 
 	git clone git@github.com:kreeben/resin.git
