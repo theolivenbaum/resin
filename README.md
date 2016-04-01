@@ -36,6 +36,10 @@ Code or use the [CLI](#cli) to build, query and analyze your index.
 <a name="usage" id="usage"></a>
 ##Quick usage guide
 
+	git clone git@github.com:kreeben/resin.git
+
+Open VS and build Resin.sln in "Release" mode. Then follow along if you please. There is no time for coffee, if you don't already have it in your lefty hand, because this will be brief.
+
 ####Here's a document
 
 	{
@@ -78,6 +82,9 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 	
 	var searcher = new SearchClient("wikipedia", "http://localhost:1234/");
 	var result = searcher.Search("label:universe");
+	
+	// To close server, in the same cmd window, type "close" and press enter.
+	// To restart it (release its caches), type "restart" instead.
 	
 ####Prefix query
 
@@ -160,7 +167,9 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 		
 	}// Caches are released	 
   
-(*) The [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs) has a leading role in the querying routine.  
+(*) A [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs) has a leading role in the querying routine.  
+
+Coffee-time!
 
 <a name="relevance" id="relevance"></a>
 ##Relevance
