@@ -515,7 +515,6 @@ Resin infrastructure:
 
 * nancy
 * protobuf-net
-* json.net
 * easyhttp
 * jsonfx
   
