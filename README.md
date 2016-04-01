@@ -23,6 +23,11 @@ Contribute frequently. Go directly to an [introduction](#citizens) of the parts 
 
 Code or use the [CLI](#cli) to build, query and analyze your index.  
 
+[Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config:
+
+	cd path_to_resin
+	rnh.exe --url http://localhost:1234/
+  
 <a name="usage" id="usage"></a>
 ##Quick usage guide
 
@@ -53,6 +58,7 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 	}
 
 ####Query that index (matching the whole term)
+<a name="inproc" id="inproc"></a>
 #####In-proc
 
 	var searcher = new Searcher(dir);
