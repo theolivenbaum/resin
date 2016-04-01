@@ -2,7 +2,7 @@
 # Resin
 
 _If it's not zero-config it's not Resin._  
-_- Creators of Resin_
+_- Creator of Resin_
 
 Solve your full-text search problem or your big data analysis task with Resin, a code base derived from iteratively refactoring Lucene.Net down to what is now __a fast and light-weighted search framework written specifically for .net__ with great analysis skills and fast response times even to complex queries. Resin is multi-cultural and deeply inspired by Lucene but leaves [legacy code and java inheritance](https://lucenenet.apache.org/) behind and finally makes it possible for .net programmers to be able to use [cutting-edge search tech](https://lucene.apache.org/).
 
@@ -22,7 +22,7 @@ bound to be unfitting for some and is therefore in need
 of a little bit of config, which is perfectly fine,  
 as long as that function is not included in Resin._  
 _Thank you! :)_  
-_- Consumers of Resin_
+_- Resin user_
 
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
