@@ -13,7 +13,9 @@ namespace Resin
         private readonly IDictionary<string, IList<string>> _fieldIndex;
 
         // field/reader
-        private readonly IDictionary<string, FieldReader> _readerCache; 
+        private readonly IDictionary<string, FieldReader> _readerCache;
+
+        private static readonly object Sync = new object();
 
         public FieldScanner(string directory, IDictionary<string, IList<string>> fieldIndex)
         {
@@ -101,25 +103,32 @@ namespace Resin
             FieldReader reader;
             if (!_readerCache.TryGetValue(field, out reader))
             {
-                IList<string> files;
-                if (_fieldIndex.TryGetValue(field, out files))
+                lock (Sync)
                 {
-                    foreach (var file in files)
+                    if (!_readerCache.TryGetValue(field, out reader))
                     {
-                        var r = FieldReader.Load(Path.Combine(_directory, file + ".f"));
-                        if (reader == null)
+                        IList<string> files;
+                        if (_fieldIndex.TryGetValue(field, out files))
                         {
-                            reader = r;
+                            foreach (var file in files)
+                            {
+                                var r = FieldReader.Load(Path.Combine(_directory, file + ".f"));
+                                if (reader == null)
+                                {
+                                    reader = r;
+                                }
+                                else
+                                {
+                                    reader.Merge(r);
+                                }
+                            }
+                            _readerCache.Add(field, reader);
+                            return reader;
                         }
-                        else
-                        {
-                            reader.Merge(r);
-                        }
+                        return null;
                     }
-                    _readerCache.Add(field, reader);
-                    return reader;
                 }
-                return null;
+                
             }
             return reader;
         }

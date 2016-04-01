@@ -26,24 +26,27 @@ namespace Resin
                 var searcher = GetSearcher(index);
                 var result = searcher.Search(query, page, size);
                 var resolved = result.Resolve();
-                Log.InfoFormat("query-exec in {0}: {1}", timer.Elapsed, query);
+                Log.InfoFormat("query-exec in {0}: {1} {2}", timer.Elapsed, Request.Method, Request.Url);
                 return resolved;
             };
         }
 
         private Searcher GetSearcher(string name)
         {
-            lock (Sync)
+            var dir = Path.Combine(GetBaseFolder(), name);
+            Searcher searcher;
+            if (!Searchers.TryGetValue(dir, out searcher))
             {
-                var dir = Path.Combine(GetBaseFolder(), name);
-                Searcher searcher;
-                if (!Searchers.TryGetValue(dir, out searcher))
+                lock (Sync)
                 {
-                    searcher = new Searcher(dir);
-                    Searchers.Add(dir, searcher);
+                    if (!Searchers.TryGetValue(dir, out searcher))
+                    {
+                        searcher = new Searcher(dir);
+                        Searchers.Add(dir, searcher);
+                    }
                 }
-                return searcher; 
             }
+            return searcher;           
         }
 
         private static string GetBaseFolder()

@@ -31,8 +31,6 @@ namespace Resin
 
         static void Query(string[] args)
         {
-            var total = new Stopwatch();
-            total.Start();
             var name = args[Array.IndexOf(args, "--name") + 1];
             var q = args[Array.IndexOf(args, "-q") + 1];
             var page = 0;
@@ -49,7 +47,7 @@ namespace Resin
             {
                 Console.WriteLine(string.Join(", ", ++position, doc.id, doc.label));
             }
-            Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, total.Elapsed.TotalMilliseconds);
+            Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, timer.Elapsed.TotalMilliseconds);
         }
 
         static void Analyze(string[] args)

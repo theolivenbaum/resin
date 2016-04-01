@@ -17,6 +17,7 @@ namespace Resin
         private readonly IDictionary<string, IDictionary<string, string>> _docCache;
         
         private readonly string _directory;
+        private static readonly object Sync = new object();
 
         public FieldScanner FieldScanner { get { return _fieldScanner; } }
 
@@ -125,23 +126,29 @@ namespace Resin
             IDictionary<string, string> doc;
             if (!_docCache.TryGetValue(docScore.DocId, out doc))
             {
-                doc = new Dictionary<string, string>();
-                foreach (var file in _docFiles[docScore.DocId])
+                lock (Sync)
                 {
-                    var d = GetDoc(Path.Combine(_directory, file + ".d"), docScore.DocId);
-                    if (d != null)
+                    if (!_docCache.TryGetValue(docScore.DocId, out doc))
                     {
-                        foreach (var field in d.Fields)
+                        doc = new Dictionary<string, string>();
+                        foreach (var file in _docFiles[docScore.DocId])
                         {
-                            doc[field.Key] = field.Value; // overwrites former value with latter
+                            var d = GetDoc(Path.Combine(_directory, file + ".d"), docScore.DocId);
+                            if (d != null)
+                            {
+                                foreach (var field in d.Fields)
+                                {
+                                    doc[field.Key] = field.Value; // overwrites former value with latter
+                                }
+                            }
                         }
+                        if (doc.Count == 0)
+                        {
+                            throw new ArgumentException("Document missing from index", "docScore");
+                        }
+                        _docCache[docScore.DocId] = doc;  
                     }
                 }
-                if (doc.Count == 0)
-                {
-                    throw new ArgumentException("Document missing from index", "docScore");
-                }
-                _docCache[docScore.DocId] = doc;
             }
             return new Document(doc);
         }

@@ -16,7 +16,7 @@ namespace Resin
 
         public DynamicResult Search(string query, int page = 0, int size = 10000)
         {
-            var q = query.Replace(" ", "%20").Replace("+", "%2B");
+            var q = query.Replace(" ", "%20").Replace("+", "%2B").Replace(":", "%3A");
             var url = string.Format("{0}/?query={1}&page={2}&size={3}", _url, q, page, size);
             var response = _http.Get(url);
             var result = response.DynamicBody;
