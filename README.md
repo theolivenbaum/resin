@@ -23,7 +23,7 @@ of a little bit of config, which is perfectly fine,
 as long as that function is not included in Resin. Thank you :)"_  
 _- Happy Resin user_
 
-_"Software that needs to be configured before I can use it as the tool it is supposed to be, is not a tool at all."_
+_"Software that needs to be configured before I can use it as the tool it is supposed to be, is not a tool at all."_  
 _- User_
 
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
