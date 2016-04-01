@@ -79,7 +79,7 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 	var searcher = new SearchClient("wikipedia", "http://localhost:1234/");
 	var result = searcher.Search("label:universe");
 	
-	// To close server, in the same cmd window, type "close" and press enter.
+	// To shut down the server, in the same cmd window, type "stop" and press enter.
 	// To restart it (release its caches), type "restart" instead.
 	
 ####Prefix query
