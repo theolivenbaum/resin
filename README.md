@@ -479,12 +479,11 @@ Handle queries that span two or more indices.
 <a name="scale" id="scale"></a>
 ##Scaling
 
-Increase responses per second with more RAM and more caching abilities, faster CPU's and solid disks. 
+Increase responses per second with more RAM and more caching abilities, faster CPU's and solid disks.
 
 ####Extreme scaling
 
 Buy Gb network and use bare-metal.
-Shard and connect each subindex to each other in a network of nodes. Call me, I'll show you.
 
 ####Google scale
 
