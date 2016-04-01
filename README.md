@@ -468,8 +468,10 @@ TODO: override default similarity in query: `label:starr~0.8`.
 ####Scoring
 Refine the scoring. The current scoring scheme is [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).The Lucene core team has just recently grown out of tf-idf and now like [bm25](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) better.
 
-####Writing to an index in use, solving concurrency issues
-Lucene does it well because of it's file format and because it's indices are easily mergable.
+####Write concurrency
+Implemented [here](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs#L81) at indexing time and [here](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs#L53) at querying time. Each write session creates a new, automic index. When refreshing the index reader, new indices are merged with earlier generations and then made searchable as if they were one index.
+
+TODO: handle deletes
 
 ####Multi-index searching
 Handle queries that span two or more indices.
