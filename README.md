@@ -8,6 +8,12 @@ _"Software that needs to be configured before you can use it
 as the tool it is supposed to be, is not a tool at all."_  
 _- User of software_
 
+[Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config:
+
+	git clone git@github.com:kreeben/resin.git
+	cd resin
+	rnh --url http://localhost:1234/
+
 Solve your full-text search problem or your big data analysis task with Resin, a code base derived from iteratively refactoring Lucene.Net down to what is now __a fast and light-weighted search framework written specifically for .net__ with great analysis skills and fast response times even to complex queries. Resin is multi-cultural and deeply inspired by Lucene but leaves [legacy code and java inheritance](https://lucenenet.apache.org/) behind and finally makes it possible for .net programmers to be able to use [cutting-edge search tech](https://lucene.apache.org/).
 
 First and foremost: read about the dependencies you need to [worry about](#dependencies) before launching your beefed-up search server that serves up 100M documents and that matches Google's capabilities in scale and performance. Spoiler alert: there are none. But read it anyway.
@@ -27,12 +33,6 @@ Contribute frequently. Go directly to an [introduction](#citizens) of the parts 
 
 Code or use the [CLI](#cli) to build, query and analyze your index.  
 
-[Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config:
-
-	git clone git@github.com:kreeben/resin.git
-	cd resin
-	rnh --url http://localhost:1234/
-  
 <a name="usage" id="usage"></a>
 ##Quick usage guide
 
