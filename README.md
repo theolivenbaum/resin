@@ -14,7 +14,11 @@ Solve your full-text search problem or your big data analysis task with Resin, a
 * _[At large scale](#scale)_
 * _[File format](#fileformat)_
 
-_Functionality that relies heavily on conventions are bound to be unfitting for some and is therefore in need of a little bit of config, which is perfectly fine, as long as that function is not included in Resin. Thank you! :)_  
+_Functionality that relies heavily on conventions are  
+bound to be unfitting for some and is therefore in need  
+of a little bit of config, which is perfectly fine,  
+as long as that function is not included in Resin._  
+_Thank you! :)_  
 _- Consumers of Resin_
 
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
