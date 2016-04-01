@@ -24,14 +24,14 @@ Code or use the [CLI](#cli) to build, query and analyze your index.
 
 	{
 	  "Fields": {
-		"id": "Q1",
+		"_id": "Q1",
 		"label":  "universe",
 		"description": "totality of planets, stars, galaxies, intergalactic space, or all matter or all energy",
 		"aliases": "cosmos The Universe existence space outerspace"
 	  }
 	}
 
-The `id` field is mandatory.  
+Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is mandatory.  
 
 ####Here's a huge number of documents
 	
@@ -93,13 +93,13 @@ The `id` field is mandatory.
 
 ####Only one
 
-	var result = searcher.Search("id:Q1");
+	var result = searcher.Search("_id:Q1");
 	var doc = result.Docs.First();
 
 ####All fields queryable, whole document returned
 
 	// Find document "Q1" and print "cosmos The Universe existence space outerspace"
-	var result = searcher.Search("id:Q1");
+	var result = searcher.Search("_id:Q1");
 	var doc = result.Docs.First();
 	Console.WriteLine(doc.Fields["aliases"]);
 
@@ -118,7 +118,7 @@ The `id` field is mandatory.
 	{
 		// This loads and caches the term indices for the "id" and "label" fields:
 		
-		var result = searcher.Search("id:Q1 label:Q1");
+		var result = searcher.Search("_id:Q1 label:Q1");
 		
 		// This executes the query. Resin loads the doc from disk and caches it:
 		
