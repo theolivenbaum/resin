@@ -17,7 +17,7 @@ First and foremost: read about the dependencies you need to [worry about](#depen
 * _[File format](#fileformat)_
 * _[Dependencies](#dependencies)_
 
-_"Functionality that relies heavily on conventions are  
+_"Functionality that relies heavily on conventions is  
 bound to be unfitting for some and is therefore in need  
 of a little bit of config, which is perfectly fine,  
 as long as that function is not included in Resin. Thank you :)"_  
