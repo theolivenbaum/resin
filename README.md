@@ -6,6 +6,8 @@ _- Creators of Resin_
 
 Solve your full-text search problem or your big data analysis task with Resin, a code base derived from iteratively refactoring Lucene.Net down to what is now __a fast and light-weighted search framework written specifically for .net__ with great analysis skills and fast response times even to complex queries. Resin is multi-cultural and deeply inspired by Lucene but leaves [legacy code and java inheritance](https://lucenenet.apache.org/) behind and finally makes it possible for .net programmers to be able to use [cutting-edge search tech](https://lucene.apache.org/).
 
+First and foremost: read about the dependencies you need to [worry about](#dependencies) before launching your beefed-up search server that serves up 100M documents and that matches Google's capabilities in scale and performance. Spoiler alert: there are none. But read it anyway.
+
 * _[Quick usage guide](#usage)_
 * _[Relevance (tf-idf)](#relevance)_
 * _[Why so few classes?](#citizens)_
@@ -13,6 +15,7 @@ Solve your full-text search problem or your big data analysis task with Resin, a
 * _[Roadmap](#roadmap)_
 * _[At large scale](#scale)_
 * _[File format](#fileformat)_
+* _[Dependencies](#dependencies)_
 
 _Functionality that relies heavily on conventions are  
 bound to be unfitting for some and is therefore in need  
@@ -502,5 +505,18 @@ d.ix
 
 ####Documents
 *.d
+  
+<a name="dependencies" id="dependencies"></a>
+##Dependencies
+
+Garbage collected by Microsoft .net 4.5.1.
+
+Resin infrastructure:  
+
+* nancy
+* protobuf-net
+* json.net
+* easyhttp
+* jsonfx
   
 To the [top&#10548;](#top)
