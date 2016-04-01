@@ -473,6 +473,9 @@ TODO: handle deletes, optimize
 ####Multi-index searching
 Handle queries that span two or more indices.
 
+####Out-of-proc indexing
+As of now, indices are created locally.
+
 ####Facetting
 Help!
 
