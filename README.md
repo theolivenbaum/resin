@@ -476,6 +476,9 @@ TODO: handle deletes
 ####Multi-index searching
 Handle queries that span two or more indices.
 
+####Facetting
+Help!
+
 <a name="scale" id="scale"></a>
 ##Scaling
 
