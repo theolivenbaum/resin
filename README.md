@@ -493,15 +493,18 @@ Service-orient the different parts of Resin and make query parsing, calculating 
 
 All files are protobuf messages.
 
+####Index (generation 0)
+0.ix
+
 ####Field index
-fld.ix
+*.fix
 
 ####Fields (terms and postings)
-*.fld  
-*.fld.tri
+*.f  
+*.f.tri
 
 ####Document index
-d.ix
+*.dix
 
 ####Documents
 *.d
