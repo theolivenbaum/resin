@@ -30,7 +30,7 @@ Code or use the [CLI](#cli) to build, query and analyze your index.
 [Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config:
 
 	cd path_to_resin
-	rnh.exe --url http://localhost:1234/
+	rnh.bat --url http://localhost:1234/
   
 <a name="usage" id="usage"></a>
 ##Quick usage guide
@@ -72,7 +72,7 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 	
 	// To start the server, in a cmd window:
 	// cd path_to_resin
-	// rnh.exe --url http://localhost:1234/
+	// rnh.bat --url http://localhost:1234/
 	// You have just started a light-weight search server with solr-like capabilities. Enjoy!
 	
 	var searcher = new SearchClient("wikipedia", "http://localhost:1234/");
