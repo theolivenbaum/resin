@@ -4,7 +4,7 @@
 _"If it's not zero-config it's not Resin."_  
 _- Creator of Resin_
 
-_"Software that needs to be configured before I can use it  
+_"Software that needs to be configured before you can use it  
 as the tool it is supposed to be, is not a tool at all."_  
 _- User of software_
 
