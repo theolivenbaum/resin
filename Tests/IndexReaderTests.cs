@@ -17,24 +17,24 @@ namespace Tests
 
             using (var w = new IndexWriter(dir, analyzer))
             {
-                w.Write(new Document(new Dictionary<string, string>
+                w.Write(new Dictionary<string, string>
                     {
                         {"title", "a"},
-                         {"id", "0"}
+                         {"_id", "0"}
                     }
-                ));
-                w.Write(new Document(new Dictionary<string, string>
+                );
+                w.Write(new Dictionary<string, string>
                     {
                         {"title", "a b"},
-                        {"id", "1"}
+                        {"_id", "1"}
                     }
-                ));
-                w.Write(new Document(new Dictionary<string, string>
+                );
+                w.Write(new Dictionary<string, string>
                     {
                         {"title", "a b c"},
-                        {"id", "2"}
+                        {"_id", "2"}
                     }
-                ));
+                );
             }
             using (var reader = new IndexReader(dir))
             {

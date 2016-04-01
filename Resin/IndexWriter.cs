@@ -32,9 +32,10 @@ namespace Resin
             _fix = new FixFile();
         }
 
-        public void Write(Document doc)
+        public void Write(IDictionary<string, string> doc)
         {
-            foreach (var field in doc.Fields)
+            var document = new Document(doc);
+            foreach (var field in document.Fields)
             {
                 string fieldFileId;
                 if (!_fix.FieldIndex.TryGetValue(field.Key, out fieldFileId))
@@ -49,21 +50,27 @@ namespace Resin
                     fw = new FieldWriter(Path.Combine(_directory, fieldFileId + ".f"));
                     _fieldWriters.Add(fieldFileId, fw);
                 }
-                
                 var termFrequencies = new Dictionary<string, int>();
-
-                foreach (var token in _analyzer.Analyze(field.Value))
+                var analyze = field.Key[0] != '_';
+                if (analyze)
                 {
-                    if (termFrequencies.ContainsKey(token)) termFrequencies[token] += 1;
-                    else termFrequencies.Add(token, 1);
+                    foreach (var token in _analyzer.Analyze(field.Value))
+                    {
+                        if (termFrequencies.ContainsKey(token)) termFrequencies[token] += 1;
+                        else termFrequencies.Add(token, 1);
+                    }
                 }
-
+                else
+                {
+                    if (termFrequencies.ContainsKey(field.Value)) termFrequencies[field.Value] += 1;
+                    else termFrequencies.Add(field.Value, 1);
+                }
                 foreach(var token in termFrequencies)
                 {
-                    fw.Write(doc.Id, token.Key, token.Value);
+                    fw.Write(document.Id, token.Key, token.Value);
                 }
             }
-            _docWriter.Write(doc);
+            _docWriter.Write(document);
         }
 
         private static string ReserveIndexFileName(string dir)

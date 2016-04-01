@@ -29,7 +29,7 @@ namespace Resin.WikipediaJsonParser
                     var source = JObject.Parse(line.Substring(0, line.Length - 1));
                     if((string)source["type"] != "item") continue;
 
-                    var id = (string) source["id"];
+                    var _id = (string) source["id"];
                     var labelsToken = source["labels"]["en"];
                     var labelToken = labelsToken == null ? null : labelsToken["value"];
                     var label = labelToken == null ? null : labelToken.Value<string>();
@@ -39,7 +39,7 @@ namespace Resin.WikipediaJsonParser
                     var aliases = aliasesToken == null ? null : String.Join(" ", aliasesToken.Select(t => t["value"].Value<string>()));
                     var fields = JObject.FromObject(new 
                     {
-                        id, label, description, aliases
+                        _id, label, description, aliases
                     });
                     var doc = new JObject();
                     doc.Add("Fields", fields);

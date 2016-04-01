@@ -15,11 +15,11 @@ namespace Resin
             var dir = Path.Combine(Environment.CurrentDirectory, "about");
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(new Document(new Dictionary<string, string>
+                writer.Write(new Dictionary<string, string>
                         {
                             {"body", about}
                         }
-            ));
+            );
             }
             var scanner = FieldScanner.MergeLoad(dir);
             var timer = new Stopwatch();
@@ -95,7 +95,7 @@ namespace Resin
                 {
                     if (line[0] == ']') break;
 
-                    var doc = JsonConvert.DeserializeObject<Document>(line.Substring(0, line.Length - 1));
+                    var doc = JsonConvert.DeserializeObject<Dictionary<string, string>>(line.Substring(0, line.Length - 1));
                     Console.SetCursorPosition(cursorPos, Console.CursorTop);
                     Console.Write(++count);
                     indexWriter.Write(doc);

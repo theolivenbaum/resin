@@ -17,13 +17,15 @@ namespace Resin
         private readonly IDictionary<string, IDictionary<string, string>> _docCache;
         
         private readonly string _directory;
+        private readonly bool _cacheDocs;
         private static readonly object Sync = new object();
 
         public FieldScanner FieldScanner { get { return _fieldScanner; } }
 
-        public IndexReader(string directory)
+        public IndexReader(string directory, bool cacheDocs = false)
         {
             _directory = directory;
+            _cacheDocs = cacheDocs;
             _docFiles = new Dictionary<string, List<string>>();
             _docCache = new Dictionary<string, IDictionary<string, string>>();
 
@@ -121,7 +123,7 @@ namespace Resin
             return hits.Values;
         }
 
-        public Document GetDoc(DocumentScore docScore)
+        public IDictionary<string, string> GetDoc(DocumentScore docScore)
         {
             IDictionary<string, string> doc;
             if (!_docCache.TryGetValue(docScore.DocId, out doc))
@@ -146,11 +148,11 @@ namespace Resin
                         {
                             throw new ArgumentException("Document missing from index", "docScore");
                         }
-                        _docCache[docScore.DocId] = doc;  
+                        if(_cacheDocs) _docCache[docScore.DocId] = doc;  
                     }
                 }
             }
-            return new Document(doc);
+            return doc;
         }
 
         private Document GetDoc(string fileName, string docId)

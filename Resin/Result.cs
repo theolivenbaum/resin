@@ -5,18 +5,18 @@ namespace Resin
 {
     public class Result
     {
-        public IEnumerable<Document> Docs { get; set; }
+        public IEnumerable<IDictionary<string, string>> Docs { get; set; }
         public int Total { get; set; }
 
-        public EagerResult Resolve()
+        public ResolvedResult Resolve()
         {
             var docs = Docs.ToList();
-            var result = new EagerResult{Docs = docs.Select(d=>d.Fields).ToList(), Total = Total};
+            var result = new ResolvedResult{Docs = docs.ToList(), Total = Total};
             return result;
         }
     }
 
-    public class EagerResult
+    public class ResolvedResult
     {
         public IList<IDictionary<string,string>> Docs { get; set; }
         public int Total { get; set; }

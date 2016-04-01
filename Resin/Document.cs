@@ -9,7 +9,7 @@ namespace Resin
     {
         public string Id
         {
-            get { return Fields["id"]; }
+            get { return Fields["_id"]; }
         }
 
         [ProtoMember(1)] 
