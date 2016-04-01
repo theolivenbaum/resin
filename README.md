@@ -517,7 +517,12 @@ All files are protobuf messages.
 <a name="dependencies" id="dependencies"></a>
 ##Dependencies
 
-Garbage collected by Microsoft .net 4.5.1.
+.net 4.5.1:
+
+* Microsoft.CSharp
+* System
+* System.Core
+* System.Xml
 
 Resin infrastructure:  
 
