@@ -486,6 +486,9 @@ Handle queries that span two or more indices.
 ####Out-of-proc indexing
 As of now, indices are created locally.
 
+####Tooling
+Refine the CLI to a state where you're starting to wish MS SQL Server Management Studio was a command line tool. Oh, the power you shall have.
+
 ####Facetting
 Help!
 
