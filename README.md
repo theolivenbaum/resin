@@ -12,7 +12,7 @@ First and foremost: read about the dependencies you need to [worry about](#depen
 * _[Relevance (tf-idf)](#relevance)_
 * _[Why so few classes?](#citizens)_
 * _[The CLI](#cli)_
-* _[Roadmap](#roadmap)_
+* _[Backlog](#roadmap)_
 * _[At large scale](#scale)_
 * _[File format](#fileformat)_
 * _[Dependencies](#dependencies)_
@@ -453,7 +453,7 @@ Here is another test, this time the documents aren't pre-cached in the warmup:
 ![alt text](https://github.com/kreeben/resin/blob/master/screenshot3.PNG "Docs weren't in the cache.")
 
 <a name="roadmap" id="roadmap"></a>
-##Roadmap
+##Backlog
 
 ####Query language interpreter
 AND, OR, NOT (+ -), prefix* and fuzzy~ [implemented here](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs).
