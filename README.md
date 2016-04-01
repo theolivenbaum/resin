@@ -535,9 +535,15 @@ All files are protobuf messages.
 
 Resin infrastructure:  
 
-* nancy
-* protobuf-net
-* easyhttp
-* jsonfx
-  
+* [nancyfx](https://github.com/NancyFx/Nancy)
+* [protobuf-net](https://github.com/mgravell/protobuf-net)
+* [easyhttp](https://github.com/hhariri/EasyHttp)
+* [jsonfx](https://github.com/jsonfx/jsonfx)
+
+CLI uses:
+
+* [json.net](https://github.com/JamesNK/Newtonsoft.Json)
+
+So little configuration, zero in fact. Excellent software, thank you!
+
 To the [top&#10548;](#top)
