@@ -4,6 +4,10 @@
 _"If it's not zero-config it's not Resin."_  
 _- Creator of Resin_
 
+_"Software that needs to be configured before I can use it  
+as the tool it is supposed to be, is not a tool at all."_  
+_- User of software_
+
 Solve your full-text search problem or your big data analysis task with Resin, a code base derived from iteratively refactoring Lucene.Net down to what is now __a fast and light-weighted search framework written specifically for .net__ with great analysis skills and fast response times even to complex queries. Resin is multi-cultural and deeply inspired by Lucene but leaves [legacy code and java inheritance](https://lucenenet.apache.org/) behind and finally makes it possible for .net programmers to be able to use [cutting-edge search tech](https://lucene.apache.org/).
 
 First and foremost: read about the dependencies you need to [worry about](#dependencies) before launching your beefed-up search server that serves up 100M documents and that matches Google's capabilities in scale and performance. Spoiler alert: there are none. But read it anyway.
@@ -16,10 +20,6 @@ First and foremost: read about the dependencies you need to [worry about](#depen
 * _[At large scale](#scale)_
 * _[File format](#fileformat)_
 * _[Dependencies](#dependencies)_
-
-_"Software that needs to be configured before I can use it  
-as the tool it is supposed to be, is not a tool at all."_  
-_- User of software_
 
 Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
 
