@@ -11,7 +11,7 @@ namespace Resin
     {
         private static readonly IDictionary<string, Searcher> Searchers = new Dictionary<string, Searcher>();
         private static readonly object Sync = new object();
-        private static readonly ILog Log = LogManager.GetLogger(typeof(SearchClient));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(SearchModule));
 
         public SearchModule()
         {
@@ -24,8 +24,8 @@ namespace Resin
                 var page = (int) Request.Query.page;
                 var size = (int)Request.Query.size;
                 var searcher = GetSearcher(index);
-                var result = searcher.Search(query, page, size);
-                var resolved = result.Resolve();
+                var lazyResult = searcher.Search(query, page, size);
+                var resolved = lazyResult.Resolve();
                 Log.InfoFormat("query-exec in {0}: {1} {2}", timer.Elapsed, Request.Method, Request.Url);
                 return resolved;
             };
@@ -57,6 +57,14 @@ namespace Resin
                 path = Directory.GetParent(path).ToString();
             }
             return Path.Combine(path, "Resin");
+        }
+
+        public static void ReleaseCache()
+        {
+            lock (Sync)
+            {
+                Searchers.Clear();
+            }
         }
     }
 }

@@ -32,7 +32,11 @@ namespace Host
                 }
             }
             Log.Info("server stopped");
-            if (input == "restart") Run(args);
+            if (input == "restart")
+            {
+                SearchModule.ReleaseCache();
+                Run(args);
+            }
         }
     }
 }

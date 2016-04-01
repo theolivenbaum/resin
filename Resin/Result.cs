@@ -11,20 +11,20 @@ namespace Resin
         public ResolvedResult Resolve()
         {
             var docs = Docs.ToList();
-            var result = new ResolvedResult{Docs = docs.ToList(), Total = Total};
+            var result = new ResolvedResult{Docs = docs.ToArray(), Total = Total};
             return result;
         }
     }
 
     public class ResolvedResult
     {
-        public IList<IDictionary<string,string>> Docs { get; set; }
+        public IDictionary<string,string>[] Docs { get; set; }
         public int Total { get; set; }
     }
 
     public class DynamicResult
     {
-        public IList<dynamic> Docs { get; set; }
+        public dynamic[] Docs { get; set; }
         public int Total { get; set; }
     }
 }

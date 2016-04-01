@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using log4net;
 using Resin.IO;
 
 namespace Resin
@@ -17,15 +18,14 @@ namespace Resin
         private readonly IDictionary<string, IDictionary<string, string>> _docCache;
         
         private readonly string _directory;
-        private readonly bool _cacheDocs;
         private static readonly object Sync = new object();
+        private static readonly ILog Log = LogManager.GetLogger(typeof(IndexReader));
 
         public FieldScanner FieldScanner { get { return _fieldScanner; } }
 
-        public IndexReader(string directory, bool cacheDocs = false)
+        public IndexReader(string directory)
         {
             _directory = directory;
-            _cacheDocs = cacheDocs;
             _docFiles = new Dictionary<string, List<string>>();
             _docCache = new Dictionary<string, IDictionary<string, string>>();
 
@@ -123,6 +123,27 @@ namespace Resin
             return hits.Values;
         }
 
+        public IDictionary<string, string> GetDocNoCache(DocumentScore docScore)
+        {
+            var doc = new Dictionary<string, string>();
+            foreach (var file in _docFiles[docScore.DocId])
+            {
+                var d = GetDoc(Path.Combine(_directory, file + ".d"), docScore.DocId);
+                if (d != null)
+                {
+                    foreach (var field in d.Fields)
+                    {
+                        doc[field.Key] = field.Value; // overwrites former value with latter
+                    }
+                }
+            }
+            if (doc.Count == 0)
+            {
+                throw new ArgumentException("Document missing from index", "docScore");
+            }
+            return doc;
+        }
+
         public IDictionary<string, string> GetDoc(DocumentScore docScore)
         {
             IDictionary<string, string> doc;
@@ -148,7 +169,8 @@ namespace Resin
                         {
                             throw new ArgumentException("Document missing from index", "docScore");
                         }
-                        if(_cacheDocs) _docCache[docScore.DocId] = doc;  
+                        _docCache[docScore.DocId] = doc;
+                        Log.InfoFormat("cached doc {0}", docScore.DocId);  
                     }
                 }
             }
@@ -159,7 +181,9 @@ namespace Resin
         {
             var docs = DocFile.Load(fileName);
             Document doc;
-            return docs.Docs.TryGetValue(docId, out doc) ? doc : null;
+            if (!docs.Docs.TryGetValue(docId, out doc)) return null;
+            Log.DebugFormat("fetched doc {0} from {1}", docId, fileName);  
+            return doc;
         }
 
         public void Dispose()

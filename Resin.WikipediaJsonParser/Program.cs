@@ -37,12 +37,10 @@ namespace Resin.WikipediaJsonParser
                     var description = descriptionToken == null ? null : source["descriptions"]["en"]["value"].Value<string>();
                     var aliasesToken = source["aliases"]["en"];
                     var aliases = aliasesToken == null ? null : String.Join(" ", aliasesToken.Select(t => t["value"].Value<string>()));
-                    var fields = JObject.FromObject(new 
+                    var doc = JObject.FromObject(new 
                     {
                         _id, label, description, aliases
                     });
-                    var doc = new JObject();
-                    doc.Add("Fields", fields);
                     var docAsJsonString = doc.ToString(Formatting.None);
                     w.WriteLine(docAsJsonString + ",");
                     Console.SetCursorPosition(cursorPos, Console.CursorTop);

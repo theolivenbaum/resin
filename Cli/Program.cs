@@ -45,7 +45,7 @@ namespace Resin
             var position = 0 + (page * size);
             foreach (var doc in result.Docs)
             {
-                Console.WriteLine(string.Join(", ", ++position, doc.id, doc.label));
+                Console.WriteLine(string.Join(", ", ++position, doc._id, doc.label));
             }
             Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, timer.Elapsed.TotalMilliseconds);
         }
