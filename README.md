@@ -172,9 +172,7 @@ The scoring [implemented here](https://github.com/kreeben/resin/blob/master/Resi
 
 `IDF = log ( numDocs - docFreq / docFreq)`
 
-with the standard Lucene augumented term frequency `sqrt(TF)` (but they're leaving us in the [dust](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/)):
-
-`score = IDF*sqrt(TF)`
+with a sqrt and log-normalized term frequency `1+log(sqrt(TF))`.
 
 <a name="citizens" id="citizens"></a>
 ##Resin's first class citizens
