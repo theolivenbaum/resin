@@ -34,7 +34,7 @@ Code or use the [CLI](#cli) to build, query and analyze your index.
 
 	git clone git@github.com:kreeben/resin.git
 
-Open VS and build Resin.sln in "Release" mode. Then follow along if you please. There is no time for coffee, if you don't already have it in your lefty hand, because this will be brief.
+Open VS and build Resin.sln in "Release" mode. Then follow along if you please, this shall be brief.
 
 ####Here's a document
 
@@ -165,16 +165,14 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
   
 (*) A [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs) has a leading role in the querying routine.  
 
-Coffee-time!
-
 <a name="relevance" id="relevance"></a>
 ##Relevance
 
-The scoring [implemented here](https://github.com/kreeben/resin/blob/master/Resin/Tfidf.cs) follows the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) scheme:
+The scoring [implemented here](https://github.com/kreeben/resin/blob/master/Resin/Tfidf.cs) follows the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) scheme for a probabilistic inverse document frequency:
 
-`IDF = log ( numDocs / docFreq + 1) + 1`
+`IDF = log ( numDocs - docFreq / docFreq)`
 
-with the standard Lucene augumented term frequency `sqrt(TF)` (but they're [leaving us in the dust](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/)):
+with the standard Lucene augumented term frequency `sqrt(TF)` (but they're leaving us in the [dust](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/)):
 
 `score = IDF*sqrt(TF)`
 
