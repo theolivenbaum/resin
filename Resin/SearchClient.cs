@@ -20,7 +20,7 @@ namespace Resin
             var url = string.Format("{0}/?query={1}&page={2}&size={3}", _url, q, page, size);
             var response = _http.Get(url);
             var result = response.DynamicBody;
-            return new DynamicResult{Total = (int)result.total, Docs = result.docs};
+            return new DynamicResult{Total = (int)result.total, Docs = result.docs, Trace = result.trace};
         }
     }
 }

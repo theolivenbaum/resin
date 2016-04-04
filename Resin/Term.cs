@@ -23,7 +23,9 @@ namespace Resin
 
         public override string ToString()
         {
-            return string.Format("{0}:{1}", Field, Token);
+            var fldPrefix = And ? "+" : Not ? "-" : " ";
+            var tokenSuffix = Prefix ? "*" : Fuzzy ? "~" : string.Empty;
+            return string.Format("{0}{1}:{2}{3}", fldPrefix, Field, Token, tokenSuffix);
         }
     }
 }

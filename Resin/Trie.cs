@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ProtoBuf;
 using Resin.IO;
 
@@ -52,24 +53,52 @@ namespace Resin
             }
         }
         
-        public IEnumerable<string> Similar(string word, int distance)
+        public IEnumerable<string> Similar(string word, int edits)
         {
-            var words = new List<string>();
-            SimScan(word, word, distance, 0, words);
-            return words;
+            var words = new List<Word>();
+            SimScan(word, word, edits, 0, words);
+            return words.OrderBy(w=>w.Distance).Select(w=>w.Value);
         }
 
-        private void SimScan(string word, string state, int distance, int index, IList<string> words)
+        private struct Word
+        {
+            public string Value;
+            public int Distance;
+        }
+
+        private void SimScan(string word, string state, int edits, int index, IList<Word> words)
         {
             var childIndex = index + 1;
             foreach (var child in _children.Values)
             {
                 var tmp = index == state.Length ? state + child._value : state.ReplaceAt(index, child._value);
-                if (Levenshtein.Distance(word, tmp) <= distance)
+                if (Levenshtein.Distance(word, tmp) <= edits)
                 {
-                    if (child._eow) words.Add(tmp);
-                    child.SimScan(word, tmp, distance, childIndex, words);  
+                    if (child._eow)
+                    {
+                        var potential = tmp.Substring(0, childIndex);
+                        var distance = Levenshtein.Distance(word, potential);
+                        if (distance <= edits) words.Add(new Word{Value = potential, Distance = distance});
+                    }
+                    child.SimScan(word, tmp, edits, childIndex, words);  
                 }
+            }
+        }
+
+        public IEnumerable<string> All()
+        {
+            var words = new List<string>();
+            FullScan(string.Empty, words);
+            return words;
+        }
+
+        private void FullScan(string state, List<string> words)
+        {
+            foreach (var child in _children.Values)
+            {
+                var tmp = state + child._value;
+                if(child._eow) words.Add(tmp);
+                child.FullScan(tmp, words);
             }
         }
 
@@ -132,6 +161,10 @@ namespace Resin
             if (overflow.Length > 0)
             {
                 Add(overflow);
+            }
+            else
+            {
+                _eow = true;
             }
         }
 

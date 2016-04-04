@@ -19,16 +19,23 @@ namespace Resin
             {
                 var timer = new Stopwatch();
                 timer.Start();
-                var index = parameters.indexName;
+                var indexName = parameters.indexName;
                 var query = Request.Query.query;
                 var page = (int) Request.Query.page;
                 var size = (int)Request.Query.size;
-                var searcher = GetSearcher(index);
-                var lazyResult = searcher.Search(query, page, size);
-                var resolved = lazyResult.Resolve();
-                Log.InfoFormat("query-exec in {0}: {1} {2}", timer.Elapsed, Request.Method, Request.Url);
-                return resolved;
+                return HandleRequest(indexName, query, page, size);
             };
+        }
+
+        private ResolvedResult HandleRequest(string indexName, string query, int page, int size)
+        {
+            var timer = new Stopwatch();
+            timer.Start();
+            var searcher = GetSearcher(indexName);
+            var lazyResult = searcher.Search(query, page, size);
+            var resolved = lazyResult.Resolve();
+            Log.InfoFormat("query-exec {0} {1}{2} hits-total {3}", timer.Elapsed, Request.Url.Path, Uri.UnescapeDataString(Request.Url.Query), resolved.Total);
+            return resolved;
         }
 
         private Searcher GetSearcher(string name)

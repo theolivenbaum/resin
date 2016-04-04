@@ -67,6 +67,11 @@ namespace Resin
             }
         }
 
+        public IEnumerable<string> GetAllTokensFromTrie()
+        {
+            return _trie.All();
+        }
+
         public IEnumerable<TokenInfo> GetAllTokens()
         {
             return _fieldFile.Terms.Select(t=>new TokenInfo

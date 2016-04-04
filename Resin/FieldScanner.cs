@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using log4net;
 using Resin.IO;
 
 namespace Resin
@@ -16,6 +17,7 @@ namespace Resin
         private readonly IDictionary<string, FieldReader> _readerCache;
 
         private static readonly object Sync = new object();
+        private static readonly ILog Log = LogManager.GetLogger(typeof(FieldScanner));
 
         public FieldScanner(string directory, IDictionary<string, IList<string>> fieldIndex)
         {
@@ -60,40 +62,38 @@ namespace Resin
                 var reader = GetReader(term.Field);
                 if (reader != null)
                 {
-                    if (term.Prefix)
-                    {
-                        return GetDocIdsByPrefix(term, reader);
-                    }
-                    if (term.Fuzzy)
-                    {
-                        return GetDocIdsFuzzy(term, reader);
-                    }
-                    return GetDocIdsExact(term, reader);
+                    return ExactMatch(term, reader);
                 }
             }
             return Enumerable.Empty<DocumentScore>();
         }
 
-        private IEnumerable<DocumentScore> GetDocIdsFuzzy(Term term, FieldReader reader)
+        public IList<Term> Expand(Term term)
         {
-            var terms = reader.GetSimilar(term.Token, term.Edits).Select(token => new Term { Field = term.Field, Token = token }).ToList();
-            return terms.SelectMany(t => GetDocIdsExact(t, reader)).GroupBy(d => d.DocId).Select(g => g.OrderByDescending(x => x.TermFrequency).First());
+            var reader = GetReader(term.Field);
+            if (term.Fuzzy)
+            {
+                var expanded = reader.GetSimilar(term.Token, term.Edits).Select(token => new Term { Field = term.Field, Token = token }).ToList();
+                Log.DebugFormat("query-rewrite from {0} to{1}", term, string.Join(string.Empty, expanded.Select(t => t.ToString())));
+                return expanded;
+            }
+            else if (term.Prefix)
+            {
+                var expanded = reader.GetTokens(term.Token).Select(token => new Term { Field = term.Field, Token = token }).ToList();
+                Log.DebugFormat("query-rewrite from {0} to{1}", term, string.Join(string.Empty, expanded.Select(t => t.ToString())));
+                return expanded;
+            }
+            return new List<Term>{term};
         }
 
-        private IEnumerable<DocumentScore> GetDocIdsByPrefix(Term term, FieldReader reader)
-        {
-            var terms = reader.GetTokens(term.Token).Select(token => new Term {Field = term.Field, Token = token}).ToList();
-            return terms.SelectMany(t => GetDocIdsExact(t, reader)).GroupBy(d=>d.DocId).Select(g=>g.OrderByDescending(x=>x.TermFrequency).First());
-        }
-
-        private IEnumerable<DocumentScore> GetDocIdsExact(Term term, FieldReader reader)
+        private IEnumerable<DocumentScore> ExactMatch(Term term, FieldReader reader)
         {
             var postings = reader.GetPostings(term.Token);
             if (postings != null)
             {
                 foreach (var doc in postings)
                 {
-                    yield return new DocumentScore { DocId = doc.Key, TermFrequency = doc.Value };
+                    yield return new DocumentScore(doc.Key, doc.Value);
                 }
             }
         }
@@ -133,13 +133,19 @@ namespace Resin
             return reader;
         }
 
+        public IEnumerable<string> GetAllTokensFromTrie(string field)
+        {
+            var reader = GetReader(field);
+            return reader == null ? Enumerable.Empty<string>() : reader.GetAllTokensFromTrie();
+        }
+
         public IEnumerable<TokenInfo> GetAllTokens(string field)
         {
             var reader = GetReader(field);
             return reader == null ? Enumerable.Empty<TokenInfo>() : reader.GetAllTokens();
         }
 
-        public int DocCount(string field)
+        public int DocsInCorpus(string field)
         {
             var reader = GetReader(field);
             if (reader != null)

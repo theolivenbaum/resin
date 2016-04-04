@@ -30,19 +30,17 @@ namespace Tests
         [Test]
         public void Add()
         {
-            var words = new Trie(new[] {"tree"});
+            var words = new Trie(new[] { "tree", "trees" });
 
-            Assert.IsFalse(words.Prefixed("tree").Contains("trees"));
+            Assert.IsTrue(words.All().Contains("tree"));
+            Assert.IsTrue(words.All().Contains("trees"));
+            Assert.IsFalse(words.All().Contains("tre"));
 
-            Assert.AreEqual(1, words.Prefixed("tree").Count());
-            Assert.AreEqual(0, words.Prefixed("trees").Count());
+            words.Add("tre");
 
-            words.Add("trees");
-
-            Assert.IsTrue(words.Prefixed("tree").Contains("trees"));
-
-            Assert.AreEqual(2, words.Prefixed("tree").Count());
-            Assert.AreEqual(1, words.Prefixed("trees").Count());
+            Assert.IsTrue(words.All().Contains("tree"));
+            Assert.IsTrue(words.All().Contains("trees"));
+            Assert.IsTrue(words.All().Contains("tre"));
         }
 
         [Test]
@@ -50,7 +48,12 @@ namespace Tests
         {
             var words = new Trie(new[] { "tree", "treat", "treaty", "treating", "pre" });
 
-            Assert.True(words.Similar("tre", 0).Count() == 0);
+            Assert.AreEqual(0, words.Similar("tre", 0).Count());
+            Assert.AreEqual(1, words.Similar("tree", 0).Count());
+
+            Assert.IsTrue(words.Similar("tree", 0).Contains("tree"));
+            Assert.IsTrue(words.Similar("tree", 1).Contains("tree"));
+            Assert.IsTrue(words.Similar("tree", 2).Contains("tree"));
 
             Assert.IsTrue(words.Similar("tre", 1).Contains("tree"));
             Assert.IsFalse(words.Similar("tre", 1).Contains("treat"));
@@ -124,6 +127,21 @@ namespace Tests
             Assert.AreEqual(1, words.Prefixed("tree").Count());
             Assert.AreEqual(2, words.Prefixed("pre").Count());
             Assert.AreEqual(1, words.Prefixed("pref").Count());
+        }
+
+        [Test]
+        public void Contains()
+        {
+            var words = new Trie(new[] {"tree", "treat", "treaty", "treating", "pre"});
+            var all = words.All().ToList();
+
+            Assert.IsTrue(all.Contains("tree"));
+            Assert.IsTrue(all.Contains("treat"));
+            Assert.IsTrue(all.Contains("treaty"));
+            Assert.IsTrue(all.Contains("treating"));
+            Assert.IsTrue(all.Contains("pre"));
+
+            Assert.AreEqual(5, all.Count);
         }
     }
 

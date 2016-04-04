@@ -60,21 +60,22 @@ namespace Resin
             var hits = new Dictionary<string, DocumentScore>();
             foreach (var term in terms)
             {
-                var termHits = _fieldScanner.GetDocIds(term).ToList();
-                if (termHits.Count == 0) continue;
+                var unscored = _fieldScanner.GetDocIds(term).ToList();
+                
+                if (unscored.Count == 0) continue;
 
-                var docsInCorpus = _fieldScanner.DocCount(term.Field);
-                var scorer = new Tfidf(docsInCorpus, termHits.Count);
+                var numDocs = _fieldScanner.DocsInCorpus(term.Field);
+                var scorer = new Tfidf(numDocs, unscored.Count);
                 
                 if (hits.Count == 0)
                 {
                     if (!term.Not)
                     {
-                        foreach (var doc in termHits)
+                        foreach (var unscoredDoc in unscored)
                         {
-                            scorer.Score(doc);
+                            scorer.Score(unscoredDoc);
                         }
-                        hits = termHits.ToDictionary(h => h.DocId, h => h);
+                        hits = unscored.ToDictionary(h => h.DocId, h => h);
                     }
                 }
                 else
@@ -82,43 +83,46 @@ namespace Resin
                     if (term.And)
                     {
                         var aggr = new Dictionary<string, DocumentScore>();
-                        foreach (var doc in termHits)
+                        foreach (var unscoredDoc in unscored)
                         {
-                            DocumentScore dscore;
-                            if (hits.TryGetValue(doc.DocId, out dscore))
+                            DocumentScore existingScore;
+                            if (hits.TryGetValue(unscoredDoc.DocId, out existingScore))
                             {
-                                scorer.Score(dscore);
-                                dscore.Score += doc.Score;
-                                aggr.Add(dscore.DocId, dscore);
+                                scorer.Score(unscoredDoc);
+                                aggr.Add(existingScore.DocId, existingScore.Add(unscoredDoc));
                             }
                         }
                         hits = aggr;
                     }
                     else if (term.Not)
                     {
-                        foreach (var doc in termHits)
+                        foreach (var doc in unscored)
                         {
                             hits.Remove(doc.DocId);
                         }
                     }
                     else // Or
                     {
-                        foreach (var doc in termHits)
+                        foreach (var unscoredDoc in unscored)
                         {
-                            scorer.Score(doc);
+                            scorer.Score(unscoredDoc);
 
-                            DocumentScore score;
-                            if (hits.TryGetValue(doc.DocId, out score))
+                            DocumentScore existingScore;
+                            if (hits.TryGetValue(unscoredDoc.DocId, out existingScore))
                             {
-                                score.Score += doc.Score;
+                                hits[unscoredDoc.DocId] = existingScore.Add(unscoredDoc);
                             }
                             else
                             {
-                                hits.Add(doc.DocId, doc);
+                                hits.Add(unscoredDoc.DocId, unscoredDoc);
                             }
                         }
                     }
                 }
+            }
+            foreach (var hit in hits.Values)
+            {
+                Log.DebugFormat("score {0} {1}", hit.Score, hit.Trace);
             }
             return hits.Values;
         }

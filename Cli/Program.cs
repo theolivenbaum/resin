@@ -9,6 +9,52 @@ namespace Resin
 {
     class Program
     {
+        static void Main(string[] args)
+        {
+            if (args[0].ToLower() == "write")
+            {
+                if (Array.IndexOf(args, "--file") == -1 ||
+                    Array.IndexOf(args, "--dir") == -1)
+                {
+                    Console.WriteLine("I need a file and a directory.");
+                    return;
+                }
+                Write(args);
+            }
+            else if (args[0].ToLower() == "query")
+            {
+                if (Array.IndexOf(args, "-q") == -1 ||
+                    Array.IndexOf(args, "--name") == -1)
+                {
+                    Console.WriteLine("I need an index name and a query.");
+                    return;
+                }
+                Query(args);
+            }
+            else if (args[0].ToLower() == "analyze")
+            {
+                if (Array.IndexOf(args, "--field") == -1 || 
+                    Array.IndexOf(args, "--dir") == -1)
+                {
+                    Console.WriteLine("I need a directory and a field.");
+                    return;
+                }
+                Analyze(args);
+            }
+            else if (args[0].ToLower() == "about")
+            {
+                About();
+            }
+            else
+            {
+                Console.WriteLine("usage:");
+                Console.WriteLine("rn.exe write --file source.json --dir c:\\target_dir");
+                Console.WriteLine("rn.exe query --dir c:\\my_index -q field:value");
+                Console.WriteLine("rn.exe analyze --dir c:\\my_index -field field_name");
+                Console.WriteLine("rn.exe about");
+            }
+        }
+
         static void About()
         {
             var about = File.ReadAllText(@"..\..\..\readme.md");
@@ -42,10 +88,11 @@ namespace Resin
             timer.Start();
             var result = s.Search(q, page, size);
             timer.Stop();
+            var trace = result.ToTraceDictionary();
             var position = 0 + (page * size);
             foreach (var doc in result.Docs)
             {
-                Console.WriteLine(string.Join(", ", ++position, doc._id, doc.label));
+                Console.WriteLine(string.Join(", ", ++position, doc._id, doc.label, trace[((string)doc._id).ToLower()]));
             }
             Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, timer.Elapsed.TotalMilliseconds);
         }
@@ -58,8 +105,10 @@ namespace Resin
             timer.Start();
             var scanner = FieldScanner.MergeLoad(dir);
             var tokens = scanner.GetAllTokens(field).OrderByDescending(t => t.Count).ToList();
+            var trieTokens = scanner.GetAllTokensFromTrie(field);
             Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
             File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens.Select(t => string.Format("{0} {1}", t.Token, t.Count)));
+            File.WriteAllLines(Path.Combine(dir, "_" + field + ".tri.txt"), trieTokens);
         }
 
         static void Write(string[] args)
@@ -104,51 +153,6 @@ namespace Resin
                 }
             }
             Console.WriteLine("\r\nIndex created in " + timer.Elapsed);
-        }
-
-        static void Main(string[] args)
-        {
-            if (args[0].ToLower() == "write")
-            {
-                if (Array.IndexOf(args, "--file") == -1 ||
-                    Array.IndexOf(args, "--dir") == -1)
-                {
-                    Console.WriteLine("I need both a file and a directory.");
-                    return;
-                }
-                Write(args);
-            }
-            else if (args[0].ToLower() == "query")
-            {
-                if (Array.IndexOf(args, "-q") == -1 ||
-                    Array.IndexOf(args, "--name") == -1)
-                {
-                    Console.WriteLine("I need and index name and a query.");
-                    return;
-                }
-                Query(args);
-            }
-            else if (args[0].ToLower() == "analyze")
-            {
-                if (Array.IndexOf(args, "--field") == -1 || Array.IndexOf(args, "--dir") == -1)
-                {
-                    Console.WriteLine("I need a directory and a field.");
-                    return;
-                }
-                Analyze(args);
-            }
-            else if (args[0].ToLower() == "about")
-            {
-                About();
-            }
-            else
-            {
-                Console.WriteLine("usage:");
-                Console.WriteLine("rn.exe write --file source.json --dir c:\\target_dir");
-                Console.WriteLine("rn.exe query --dir c:\\my_index -q field:value");
-                Console.WriteLine("rn.exe analyze --dir c:\\my_index -field field_name");
-                Console.WriteLine("rn.exe about");
-            }
         }
     }
 }
