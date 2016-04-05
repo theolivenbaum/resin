@@ -36,8 +36,8 @@ namespace Resin
 
             foreach (var ixFileName in ixIds.Select(id => Path.Combine(_directory, id + ".ix")))
             {
-                var ix = IxFile.Load(ixFileName);
-                var dix = DixFile.Load(ix.DixFileName);
+                var ix = IxFile.Load(Path.Combine(_directory, ixFileName));
+                var dix = DixFile.Load(Path.Combine(_directory, ix.DixFileName));
 
                 foreach (var doc in dix.DocIdToFileIndex)
                 {

@@ -43,7 +43,7 @@ namespace Tests
                 );
             }
             var scanner = FieldScanner.MergeLoad(dir);
-            var score = scanner.GetDocIds(new Term {Field = "title", Token = "hello", And = true}).OrderByDescending(d=>d.TermFrequency).ToList();
+            var score = scanner.GetDocIds(new Term("title", "hello"){And = true}).OrderByDescending(d=>d.TermFrequency).ToList();
 
             Assert.AreEqual(3, score.Count);
 
@@ -68,13 +68,13 @@ namespace Tests
                 );
             }
             var scanner = FieldScanner.MergeLoad(dir);
-            Assert.AreEqual(1, scanner.GetDocIds(new Term {Field = "title", Token = "we", And = true}).ToList().Count);
-            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "all", And = true }).ToList().Count);
-            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "live", And = true }).ToList().Count);
-            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "in", And = true }).ToList().Count);
-            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "a", And = true }).ToList().Count);
-            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "yellow", And = true }).ToList().Count);
-            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "submarine", And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term("title", "we"){ And = true}).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term("title", "all"){ And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term("title", "live"){ And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term("title", "in"){ And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term("title", "a"){ And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term("title", "yellow"){ And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term("title", "submarine") { And = true }).ToList().Count);
         }
 
         [Test]
@@ -92,13 +92,13 @@ namespace Tests
                 );
             }
             var scanner = FieldScanner.MergeLoad(dir);
-            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "we", And = true }).ToList().Count);
-            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "all", And = true }).ToList().Count);
-            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "live", And = true }).ToList().Count);
-            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "in", And = true }).ToList().Count);
-            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "a", And = true }).ToList().Count);
-            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "yellow", And = true }).ToList().Count);
-            Assert.AreEqual(1, scanner.GetDocIds(new Term { Field = "title", Token = "submarine", And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term("title", "we"){ And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term("title", "all"){ And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term("title", "live"){ And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term("title", "in"){ And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term("title", "a"){ And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term("title", "yellow"){ And = true }).ToList().Count);
+            Assert.AreEqual(1, scanner.GetDocIds(new Term("title", "submarine") { And = true }).ToList().Count);
         }
     }
 }

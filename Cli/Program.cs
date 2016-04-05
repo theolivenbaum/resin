@@ -81,10 +81,12 @@ namespace Resin
             var q = args[Array.IndexOf(args, "-q") + 1];
             var page = 0;
             var size = 10;
+            var url = "http://localhost:1234/";
             if (Array.IndexOf(args, "-p") > 0) page = int.Parse(args[Array.IndexOf(args, "-p") + 1]);
             if (Array.IndexOf(args, "-s") > 0) size = int.Parse(args[Array.IndexOf(args, "-s") + 1]);
+            if (Array.IndexOf(args, "--url") > 0) url = args[Array.IndexOf(args, "--url") + 1];
             var timer = new Stopwatch();
-            using (var s = new SearchClient(name, "http://localhost:1234/"))
+            using (var s = new SearchClient(name, url))
             {              
                 timer.Start();
                 var result = s.Search(q, page, size);

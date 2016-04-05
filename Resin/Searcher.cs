@@ -9,7 +9,7 @@ namespace Resin
         private readonly QueryParser _parser;
         private readonly bool _cacheDocs;
         private readonly IndexReader _reader;
-        private static readonly ILog Log = LogManager.GetLogger(typeof(IndexReader));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
 
         public IndexReader Reader { get { return _reader; } }
 

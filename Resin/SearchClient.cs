@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using log4net;
 using Newtonsoft.Json;
 
 namespace Resin
@@ -10,6 +11,7 @@ namespace Resin
     {
         private readonly string _url;
         private readonly HttpClient _client;
+        private static readonly ILog Log = LogManager.GetLogger(typeof(SearchClient));
 
         public SearchClient(string indexName, string url)
         {

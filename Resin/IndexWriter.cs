@@ -102,7 +102,7 @@ namespace Resin
             }
 
             _fix.Save(fixFileName);
-            new IxFile(fixFileName, dixFileName).Save(ixFileName);
+            new IxFile(Path.GetFileName(fixFileName), Path.GetFileName(dixFileName)).Save(ixFileName);
         }
 
         public void Dispose()

@@ -36,8 +36,8 @@ namespace Resin
             var fieldIndex = new Dictionary<string, IList<string>>();
             foreach (var ixFileName in ixIds.Select(id => Path.Combine(directory, id + ".ix")))
             {
-                var ix = IxFile.Load(ixFileName);
-                var fix = FixFile.Load(ix.FixFileName);
+                var ix = IxFile.Load(Path.Combine(directory, ixFileName));
+                var fix = FixFile.Load(Path.Combine(directory, ix.FixFileName));
                 foreach (var field in fix.FieldIndex)
                 {
                     IList<string> files;
@@ -73,13 +73,13 @@ namespace Resin
             var reader = GetReader(term.Field);
             if (term.Fuzzy)
             {
-                var expanded = reader.GetSimilar(term.Token, term.Edits).Select(token => new Term { Field = term.Field, Token = token }).ToList();
+                var expanded = reader.GetSimilar(term.Token, term.Edits).Select(token => new Term(term.Field, token)).ToList();
                 Log.DebugFormat("query-rewrite from {0} to{1}", term, string.Join(string.Empty, expanded.Select(t => t.ToString())));
                 return expanded;
             }
             else if (term.Prefix)
             {
-                var expanded = reader.GetTokens(term.Token).Select(token => new Term { Field = term.Field, Token = token }).ToList();
+                var expanded = reader.GetTokens(term.Token).Select(token => new Term(term.Field, token)).ToList();
                 Log.DebugFormat("query-rewrite from {0} to{1}", term, string.Join(string.Empty, expanded.Select(t => t.ToString())));
                 return expanded;
             }
