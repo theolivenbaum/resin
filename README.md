@@ -5,7 +5,7 @@ _"If it's not zero-config it's not Resin."_
 
 [Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config. [Code](#usage) or use the [CLI](#cli) to build, query and analyze your index. 
 
-Solve your full-text search problem or your big data analysis task with Resin, a code base derived from refactoring Lucene.Net down to what is now __a fast and light-weighted search framework written specifically for .net__ with great analysis skills and fast response times even to complex queries. Resin is multi-cultural and deeply inspired by Lucene but leaves [legacy code and java inheritance](https://lucenenet.apache.org/) behind and finally makes it possible for .net programmers to be able to use [cutting-edge search tech](https://lucene.apache.org/).
+Solve your full-text search problem or your big data analysis task with Resin, a code base derived from refactoring Lucene.Net down to what is now __a fast and light-weighted search framework written specifically for .net__ with great analysis skills and fast response times even to complex queries. Resin is multi-cultural and deeply inspired by Lucene but leaves [legacy code and java inheritance](https://lucenenet.apache.org/) behind and finally makes it possible for .net programmers to be able to use cutting-edge search tech.
 
 First and foremost: read about the dependencies you need to [worry about](#dependencies) before launching your beefed-up search server that serves up 100M documents and that matches Google's capabilities in scale and performance. Spoiler alert: there are none. But read it anyway.
 
