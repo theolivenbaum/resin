@@ -84,17 +84,22 @@ namespace Resin
             if (Array.IndexOf(args, "-p") > 0) page = int.Parse(args[Array.IndexOf(args, "-p") + 1]);
             if (Array.IndexOf(args, "-s") > 0) size = int.Parse(args[Array.IndexOf(args, "-s") + 1]);
             var timer = new Stopwatch();
-            var s = new SearchClient(name, "http://localhost:1234/");
-            timer.Start();
-            var result = s.Search(q, page, size);
-            timer.Stop();
-            var trace = result.ToTraceDictionary();
-            var position = 0 + (page * size);
-            foreach (var doc in result.Docs)
-            {
-                Console.WriteLine(string.Join(", ", ++position, doc._id, doc.label, trace[((string)doc._id).ToLower()]));
+            using (var s = new SearchClient(name, "http://localhost:1234/"))
+            {              
+                timer.Start();
+                var result = s.Search(q, page, size);
+                timer.Stop();
+                var position = 0 + (page * size);
+                foreach (var doc in result.Docs)
+                {
+                    Console.WriteLine(string.Join(", ", ++position, doc["_id"], doc["label"]));
+                    //Console.ForegroundColor = ConsoleColor.DarkCyan;
+                    //Console.Write(" {0}", result.Trace[doc["_id"].ToLower()]);
+                    //Console.ResetColor();
+                    //Console.WriteLine();
+                }
+                Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, timer.Elapsed.TotalMilliseconds);
             }
-            Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, timer.Elapsed.TotalMilliseconds);
         }
 
         static void Analyze(string[] args)

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 namespace Resin
 {
-    public static class BatchHelper
+    public static class Extensions
     {
         /// <summary>
         /// Divides a list into batches.
