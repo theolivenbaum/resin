@@ -2,7 +2,6 @@
 # Resin
 
 _"If it's not zero-config it's not Resin."_  
-_- Creator of Resin_
 
 [Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config:
 
