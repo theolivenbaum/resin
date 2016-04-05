@@ -24,11 +24,6 @@ Contribute frequently. Go directly to an [introduction](#citizens) of the parts 
 
 <a name="usage" id="usage"></a>
 ##Quick usage guide
-
-	git clone git@github.com:kreeben/resin.git
-
-Open VS and build Resin.sln in "Release" mode. Then follow along if you please, this shall be brief.
-
 ####Here's a document
 
 	{
