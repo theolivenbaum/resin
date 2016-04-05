@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using log4net;
@@ -112,7 +113,10 @@ namespace Resin
                         {
                             foreach (var file in files)
                             {
+                                var timer = new Stopwatch();
+                                timer.Start();
                                 var r = FieldReader.Load(Path.Combine(_directory, file + ".f"));
+                                Log.InfoFormat("{0} reader loaded in {1}", field, timer.Elapsed);
                                 if (reader == null)
                                 {
                                     reader = r;
