@@ -1,7 +1,7 @@
 <a name="top" id="top"></a>
 # Resin
 
-_"If it's not zero-config or if it weighs too much, it's not Resin."_  
+_"If it's not zero-config or if it's heavy, it's not Resin."_  
 
 [Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config. [Code](#usage) or use the [CLI](#cli) to build, query and analyze your index. 
 
