@@ -28,8 +28,11 @@ namespace Resin
         {
             var skip = page*size;
             var terms = _parser.Parse(query);
-            var expandedTerms = terms.SelectMany(term => _reader.FieldScanner.Expand(term));
-            var scored = _reader.GetScoredResult(expandedTerms).OrderByDescending(d => d.Score).ToList();
+            foreach (var term in terms)
+            {
+                _reader.FieldScanner.Expand(term);
+            }
+            var scored = _reader.GetScoredResult(terms).OrderByDescending(d => d.Score).ToList();
             var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
             var trace = returnTrace ? paged.ToDictionary(ds => ds.Key, ds => ds.Value.Trace.ToString() + paged[ds.Key].Score) : null;
             var docs = paged.Values.Select(s=>_cacheDocs? _reader.GetDoc(s) : _reader.GetDocNoCache(s));

@@ -73,6 +73,7 @@
     <Compile Include="FieldWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IndexReader.cs" />
+    <Compile Include="QueryInterpreter.cs" />
     <Compile Include="QueryParser.cs" />
     <Compile Include="Result.cs" />
     <Compile Include="SearchClient.cs" />

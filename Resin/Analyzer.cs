@@ -40,12 +40,10 @@ namespace Resin
 
         private bool IsSeparator(char c)
         {
-            return
-                char.IsControl(c) ||
-                char.IsPunctuation(c) ||
-                char.IsSeparator(c) ||
-                char.IsWhiteSpace(c) ||
-                _tokenSeparators.Contains(c);
+            if (char.IsControl(c) || char.IsSeparator(c) || char.IsWhiteSpace(c)) return true;
+            var cat = char.GetUnicodeCategory(c);
+            if (cat == UnicodeCategory.CurrencySymbol) return false;
+            return char.IsPunctuation(c) || _tokenSeparators.Contains(c);
         }
     }
 }

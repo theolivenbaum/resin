@@ -69,22 +69,30 @@ namespace Resin
             return Enumerable.Empty<DocumentScore>();
         }
 
-        public IList<Term> Expand(Term term)
+        public void Expand(Term term)
         {
+            IList<Term> expanded = null;
             var reader = GetReader(term.Field);
             if (term.Fuzzy)
             {
-                var expanded = reader.GetSimilar(term.Token, term.Edits).Select(token => new Term(term.Field, token)).ToList();
-                Log.DebugFormat("query-rewrite from {0} to{1}", term, string.Join(string.Empty, expanded.Select(t => t.ToString())));
-                return expanded;
+                expanded = reader.GetSimilar(term.Token, term.Edits).Select(token => new Term(term.Field, token){And = term.And, Not = term.Not}).ToList();
             }
             else if (term.Prefix)
             {
-                var expanded = reader.GetTokens(term.Token).Select(token => new Term(term.Field, token)).ToList();
-                Log.DebugFormat("query-rewrite from {0} to{1}", term, string.Join(string.Empty, expanded.Select(t => t.ToString())));
-                return expanded;
+                expanded = reader.GetTokens(term.Token).Select(token => new Term(term.Field, token) { And = term.And, Not = term.Not }).ToList();
+                
             }
-            return new List<Term>{term};
+            if (expanded == null) return;
+            if (expanded.Count > 0)
+            {
+                term = expanded[0];
+                foreach (var t in expanded.Skip(1))
+                {
+                    term.Children.Add(t);
+                    term.All.Add(t);
+                }
+            }
+            Log.DebugFormat("query-rewrite from {0} to{1}", term, string.Join(string.Empty, expanded.Select(t => t.ToString())));
         }
 
         private IEnumerable<DocumentScore> ExactMatch(Term term, FieldReader reader)

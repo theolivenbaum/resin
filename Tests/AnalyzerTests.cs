@@ -42,11 +42,13 @@ namespace Tests
         [Test]
         public void Can_analyze_wierdness()
         {
-            var terms = new Analyzer().Analyze("Spanish noblewoman, († 1292)").ToList();
-            Assert.AreEqual(3, terms.Count);
+            var terms = new Analyzer().Analyze("Spanish noblewoman, († 1292) .net c#").ToList();
+            Assert.AreEqual(5, terms.Count);
             Assert.AreEqual("spanish", terms[0]);
             Assert.AreEqual("noblewoman", terms[1]);
             Assert.AreEqual("1292", terms[2]);
+            Assert.AreEqual("net", terms[3]); // Questionable
+            Assert.AreEqual("c", terms[4]); // Very questionable
         }
 
         [Test]

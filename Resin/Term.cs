@@ -16,6 +16,7 @@ namespace Resin
         public bool Fuzzy { get; set; }
 
         public IList<Term> Children { get; protected set; }
+        public IList<Term> All { get; protected set; }
 
         public int Edits { get { return _edits; } }
 
@@ -28,6 +29,8 @@ namespace Resin
         {
             Field = field;
             Token = token;
+            Children = new List<Term>();
+            All = new List<Term>{this};
         }
 
         public override string ToString()
