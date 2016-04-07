@@ -27,7 +27,6 @@ namespace Resin
         {
             var tf = 1 + Math.Log10(Math.Sqrt(doc.TermFrequency));
             doc.Score = tf * _idf;
-            doc.Scorer = this;
             doc.Trace.AppendFormat("1+log(sqrt({0}))*({1}) ", doc.TermFrequency, _idfTrace);
         }
     }
