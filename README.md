@@ -1,6 +1,17 @@
 <a name="top" id="top"></a>
 # Resin
 
+* _[Introduction](#intro)_
+* _[Quick usage guide](#usage)_
+* _[Relevance (tf-idf)](#relevance)_
+* _[The CLI](#cli)_
+* _[Backlog](#roadmap)_
+* _[At large scale](#scale)_
+* _[Dependencies](#dependencies)_
+* _[File format](#fileformat)_
+
+<a name="intro" id="intro"></a>
+##Introduction
 [Launch a search server in seconds](#inproc), with Solr-like capabilities but with zero config. [Consume](#usage) its API from javascript or C#, or use the [CLI](#cli) to build, query and analyze your index. 
 
 Solve your full-text search problem or your big data analysis task with an intuitive tool for information retrieval with an extensible model, a strong architecture and a tiny bit of infrastructure. Resin is stream-lined, free of legacy code and java inheritance and aims to simplify what it is what makes Lucene, Solr and Elasticsearch great: speed of indexing and query execution, relevance, reliablility, and cost, but also: 
@@ -18,14 +29,6 @@ Other features that might perhaps tempt you into trying Resin:
 Resin's document-centric nature (shared by its cousins from javaland) makes it effectively a schema-less [document-oriented json database](https://en.wikipedia.org/wiki/Document-oriented_database) with ad-hoc full-text quering.
 
 Learn about the open-source projects Resin [depends on](#dependencies).
-
-* _[Quick usage guide](#usage)_
-* _[Relevance (tf-idf)](#relevance)_
-* _[The CLI](#cli)_
-* _[Backlog](#roadmap)_
-* _[At large scale](#scale)_
-* _[Dependencies](#dependencies)_
-* _[File format](#fileformat)_
 
 <a name="usage" id="usage"></a>
 ##Quick usage guide
