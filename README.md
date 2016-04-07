@@ -5,9 +5,14 @@ _"If it's not zero-config or if it's heavy, it's not Resin."_
 
 [Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config. [Code](#usage) or use the [CLI](#cli) to build, query and analyze your index. 
 
-Solve your full-text search problem or your big data analysis task with Resin, a code base derived from refactoring Lucene.Net down to what is now __a fast and light-weighted search framework written specifically for .net__ with great analysis skills and fast response times even to complex queries. Resin is multi-cultural and deeply inspired by Lucene but leaves [legacy code and java inheritance](https://lucenenet.apache.org/) behind and finally makes it possible for .net programmers to be able to use cutting-edge search tech.
+Solve your full-text search problem or your big data analysis task with an intuitive tool for information retrieval with an extensible model, a strong architecture and a tiny bit of infrastructure. Resin is stream-lined, free of legacy code and java inheritance and aims to simplify what it is what makes Lucene, Solr and Elasticsearch great: speed of indexing and query execution, relevance, realiablility, and cost, but also: 
 
-First and foremost: read about the dependencies you need to [worry about](#dependencies) before launching your beefed-up search server that serves up 100M documents and that matches Google's capabilities in scale and performance. Spoiler alert: there are none. But read it anyway.
+* zero-config
+* great API (in-proc and HTTP, with optional .net client)
+
+Resin is a multi-cultural search framework, fast and light-weigh, written specifically for .net, with great analysis skills and fast response times even to complex queries.
+
+Read about the dependencies you need to [worry about](#dependencies) before launching your beefed-up search server that serves up 100M documents and that matches Google's capabilities in scale and performance. Spoiler alert: there are none. But read it to learn about the open and closed-source projects Resin depends on.
 
 * _[Quick usage guide](#usage)_
 * _[Relevance (tf-idf)](#relevance)_
