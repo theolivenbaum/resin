@@ -84,8 +84,6 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 	$("#searchbtn").click(function() {
 	
 	  var token = $("#query").val();
-	  if (query.length == 0) return;
-	
 	  var url = "http://localhost:1234/wikipedia/?callback=?";
 	  var q = "label:" + token;
 	  var params = {"query":q, "page":"0", "size":"20"};
