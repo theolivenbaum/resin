@@ -11,7 +11,7 @@ Solve your full-text search problem or your big data analysis task with an intui
 
 Resin is a multi-cultural search framework, fast and light-weigh, written specifically for .net, with great analysis skills and fast response times even to complex queries. Resin (like its cousins from javaland) is document-centric and can be used to extract queryable tokens from your data to provide full-text search, and can also store the whole dataset, as documents, to become a document database of sorts.
 
-Read about the dependencies you need to [worry about](#dependencies) before launching your beefed-up search server that serves up 100M documents and that matches Google's capabilities in scale and performance. Spoiler alert: there are none. But read it to learn about the open and closed-source projects Resin depends on.
+Read about the dependencies you need to [worry about](#dependencies) before launching your beefed-up search server that serves up 100M documents and that matches Google's capabilities in scale and performance. Spoiler alert: there are none. Instead, read it to learn about the open and closed-source projects Resin depends on.
 
 * _[Quick usage guide](#usage)_
 * _[Relevance (tf-idf)](#relevance)_
