@@ -1,7 +1,7 @@
 <a name="top" id="top"></a>
 # Resin
 
-[Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config. [Consume](#usage) its API from javascript or C#, or use the [CLI](#cli) to build, query and analyze your index. 
+[Launch a search server in seconds](#inproc), with Solr-like capabilities but with zero config. [Consume](#usage) its API from javascript or C#, or use the [CLI](#cli) to build, query and analyze your index. 
 
 Solve your full-text search problem or your big data analysis task with an intuitive tool for information retrieval with an extensible model, a strong architecture and a tiny bit of infrastructure. Resin is stream-lined, free of legacy code and java inheritance and aims to simplify what it is what makes Lucene, Solr and Elasticsearch great: speed of indexing and query execution, relevance, reliablility, and cost, but also: 
 
@@ -9,22 +9,19 @@ Solve your full-text search problem or your big data analysis task with an intui
 * great API (in-proc and HTTP, with optional .net client)
 * CLI
 
-Resin is a multi-cultural search framework, fast and light-weigh, written specifically for .net, with great analysis skills and fast response times even to complex queries. Resin (like its cousins from javaland) is document-centric and can be used to extract queryable tokens from your data to provide full-text search, and can also store the whole dataset, as documents, to become a document database of sorts.
+Resin is an extensible and multi-cultural search framework written specifically for .net. It has great analysis skills and fast response times even to complex queries. 
+
+Resin's document-centric nature (shared by its cousins from javaland) makes it effectively a schema-less document-oriented json database with ad-hoc quering.
 
 Read about the dependencies you need to [worry about](#dependencies) before launching your beefed-up search server that serves up 100M documents and that matches Google's capabilities in scale and performance. Spoiler alert: there are none. Instead, read it to learn about the open and closed-source projects Resin depends on.
 
 * _[Quick usage guide](#usage)_
 * _[Relevance (tf-idf)](#relevance)_
-* _[Why so few classes?](#citizens)_
 * _[The CLI](#cli)_
 * _[Backlog](#roadmap)_
 * _[At large scale](#scale)_
-* _[File format](#fileformat)_
 * _[Dependencies](#dependencies)_
-
-Use [freely](https://github.com/kreeben/resin/blob/master/LICENSE) and register [issues here](https://github.com/kreeben/resin/issues).
-
-Contribute frequently. Go directly to an [introduction](#citizens) of the parts that make up Resin.  
+* _[File format](#fileformat)_
 
 <a name="usage" id="usage"></a>
 ##Quick usage guide
@@ -186,217 +183,6 @@ The scoring [implemented here](https://github.com/kreeben/resin/blob/master/Resi
 
 with a sqrt and log-normalized term frequency `1+log(sqrt(TF))`.
 
-<a name="citizens" id="citizens"></a>
-##Resin's first class citizens
-
-To be able to call ourselves a full-text search framework we need something that can analyze text, an [Analyzer](https://github.com/kreeben/resin/blob/master/Resin/Analyzer.cs). Also, something that can write index files and store documents, an [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs), [FieldWriter](https://github.com/kreeben/resin/blob/master/Resin/FieldWriter.cs) and a [DocumentWriter](https://github.com/kreeben/resin/blob/master/Resin/DocumentWriter.cs). 
-
-We will need to be able to parse multi-criteria queries such as "title:Rambo +title:Blood", in other words a [QueryParser](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs). The important questions for the parser to answer are what fields do we need to scan and what are the tokens that should match. A space character between two query terms such as the space  between "Rambo title:" in the query `title:Rambo title:Blood` will be interpreted as `OR`, a plus sign as `AND`, a minus sign as `NOT`. In other words that query will be parsed into "please find documents that has both rambo AND blood in the title", or in a more machine-like language `scan the field named title for the tokens rambo and blood and return the intersection of their postings`.
-
-An [IndexReader](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and a [FieldReader](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) will make it possible for a [FieldScanner](https://github.com/kreeben/resin/blob/master/Resin/FieldScanner.cs) to get a list of document IDs containing the tokens at hand and [scoring](https://github.com/kreeben/resin/blob/master/Resin/Tfidf.cs) them. We can return the whole set or a paginated subset before fetching the documents from cache or disk.
-
-####The Analyzer
-
-	public IEnumerable<string> Analyze(string value)
-	{
-	    if (value == null) yield break;
-	    int token = 0;
-	    var lowerStr = value.ToLower(_culture);
-	    for (int i = 0; i < lowerStr.Length; ++i)
-	    {
-	        if (!IsSeparator(lowerStr[i])) continue;
-	        if (token < i)
-	        {
-	            var tok = lowerStr.Substring(token, i - token);
-	            if (!_stopwords.Contains(tok)) yield return tok;
-	        }
-	        token = i + 1;
-	    }
-	    if (token < lowerStr.Length)
-	    {
-	        yield return lowerStr.Substring(token);
-	    }
-	}
-
-The least thing we can do in an Analyzer is to inspect each character of each token it's been given. We could let .net do that for us (string.Split) or we can sweep over the string ourselves.
-
-Once we have a character in our hands we need to figure out if it's information or if it's something that separates two tokens or if it's noice.
-
-By tokenizing the text of a field we make the individual tokens insensitive to casing, queryable. Had we not only exact matches to the verbatim text can be made at runtime, if we want the querying to go fast. The query "title:Rambo" would produce zero documents (no movie in the whole world actually has the title "Rambo") but querying "title:Rambo\\: First Blood" would produce one hit. 
-
-But only if you are scanning a database of Swedish movie titles because the original movie title was "First Blood". Swedish Media Institue (it's called something else, sorry, I forget) changed the title to the more declarative "Rambo: First Blood". This is probably what happened:
-
-Guy: Americans have sent us new movie.
-
-Boss: What's it called?
-
-g: First blood!
-
-b: First blood? What kind of silly name is that? Who's it about?
-
-g: Well, there's this guy, Rambo, he...
-
-b: Rambo! What great name! Put THAT in title. I'm feeling also this might be franchise.
-
-Another thing we hope to achieve by analyzing text is to normalize between the words used when querying and the words in the documents so that matches can be produced consistently. 
-
-##### Deep analysis
-The analysis you want to do both at indexing and querying time is to acctually try to understand the contents of the text, that a "Tree" is the same thing as a "tree" and a component of "trees". What if you could also pick up on themes and subcontexts?
-
-What we are doing however in Analyzer.cs is very rudimentary type of analysis. We are simply identifying the individual words. We could go further, investigate if any of those words are kind of the same, because although "trees" != "tree" their concepts intersect so much so that in the interest of full-text search they could and maybe should be one and the same concept. Anyway, identifying and normalizing the words will be fine for now.
-
-[Code](https://github.com/kreeben/resin/blob/master/Resin/Analyzer.cs) and [tests](https://github.com/kreeben/resin/blob/master/Tests/AnalyzerTests.cs)
-
-####FieldWriter
-Tokens are stored in a field file. A field file is an index of all the tokens in a field. Tokens are stored together with postings. Postings are pointers to documents. Our postings contain the document ID and how many times the token exists within that document, its _term frequency_.
-
-That means that if we know what field file to look in, we can find the answer to the query "title:rambo" by opening the file, deserialize the contents into this:
-
-	// tokens/docids/term frequency
-	private readonly IDictionary<string, IDictionary<int, int>> _tokens = DeserializeFieldFile(fileName);
-	
-	// ...and then we can find the document IDs. This operation does not take long.
-	IDictionary<int, int> postings;
-	if (!_tokens.TryGetValue(token, out postings))
-	{
-		return null;
-	}
-	return postings;
-
-[Code](https://github.com/kreeben/resin/blob/master/Resin/FieldWriter.cs) and [tests](https://github.com/kreeben/resin/blob/master/Tests/FieldWriterTests.cs)
-
-####DocumentWriter
-
-Documents (and field structures) are persisted on disk as [protobuf](https://en.wikipedia.org/wiki/Protocol_Buffers) messages:
-
-	using (var fs = File.Create(fileName))
-	{
-	    Serializer.Serialize(fs, docs); // protobuf-net serialization
-	}
-
-The in-memory equivalent of a document file is this:
-
-	// docid/fields/value
-	private readonly IDictionary<int, IDictionary<string, string>> _docs;
-
-Here is a document on its own:
-
-	// fields/values
-	IDictionary<string, string> doc;
-
-[Code](https://github.com/kreeben/resin/blob/master/Resin/DocumentWriter.cs)
-
-####IndexWriter
-
-Store the documents. But also analyze them and create field files that are queryable. There's not much to it:
-
-	public void Write(Document doc)
-	{
-	    foreach (var field in doc.Fields)
-	    {
-	        foreach (var value in field.Value)
-	        {
-	            // persist the value of the field, as-is, by writing to a document file
-
-	            var tokens = _analyzer.Analyze(value);
-	            foreach(var token in tokens)
-	            {
-	            	// store the doc ID, token and its position in a field file
-	            }
-	        }
-	    }
-	}
-
-[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/IndexWriterTests.cs)
-
-#### QueryParser
-With our current parser we can interpret "title:Rambo", also `title:first title:blood`. The last query is what lucene decompiles this query into: `title:first blood`. We will try to mimic this later on but for now let's work with the decompiled format.
-
-	var q = query.Split(' ').Select(t => t.Split(':'));
-
-[Code](https://github.com/kreeben/resin/blob/master/Resin/QueryParser.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/QueryParserTests.cs)
-
-####FieldReader
-
-The complete in-memory representation of the field file:
-
-	// terms/docids/term frequency
-	private readonly IDictionary<string, IDictionary<int, int>> _terms;
-	
-	// the char's of the terms, arranged in a tree structure
-	private readonly Trie _trie;
-	
-A field reader can do this:
-
-	var tokens = reader.GetAllTokens();
-	var tokensThatStartWith = reader.GetTokens(prefix);
-	var tokensThatResemble = reader.GetSimilar(word, edits:2);
-	var docPos = reader.GetPostings(term);
-
-[Code](https://github.com/kreeben/resin/blob/master/Resin/FieldReader.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/FieldReaderTests.cs)
-
-#### Token and Term
-
-A token is a clean, noice-free, lower-cased or otherwise noramlized piece of text. A term is a token and a field. Tokens are stored within a field file. Terms are what your parsed queries consist of.
-
-A token:
-
-	rambo
-
-A term:
-
-	title:rambo
-
-#### FieldScanner
-
-After a good parsing we get back a list of terms.
-
-All that we know, as a search framework, is called "a lexicon".
-
-At the back of that lexicon is an index, the field file. A scanner scans the index and if it finds a match it returns the doc IDs and the term frequencies: 
-
-	public IEnumerable<DocumentScore> GetDocIds(Term term)
-	{
-		int fieldId;
-		if (_fieldIndex.TryGetValue(term.Field, out fieldId))
-		{
-		  var reader = GetReader(term.Field);
-		  if (reader != null)
-		  {
-		      if (term.Prefix)
-		      {
-		          return GetDocIdsByPrefix(term, reader);
-		      }
-		      return GetDocIdsExact(term, reader);
-		  }
-		}
-		return Enumerable.Empty<DocumentScore>();
-	}
-
-[Code](https://github.com/kreeben/resin/blob/master/Resin/FieldScanner.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/FieldScannerTests.cs)
-
-#### IndexReader
-
-The IndexReader needs a scanner. The results of a scan is a list of document ids. IndexReader scores the hits by calculating the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) for the terms in the query:
-
-	public IEnumerable<DocumentScore> GetScoredResult(IEnumerable<Term> terms)
-
-[Code](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/IndexReaderTests.cs)
-
-####Searcher
-
-Finally, the searcher, a helper that takes an IndexReader and a QueryParser, accepting unparsed queries, lazily returning a list of documents:
-
-	public IEnumerable<Document> Search(string query)
-	{
-		var terms = _parser.Parse(query);
-		var scored = _reader.GetScoredResult(terms).OrderByDescending(d=>d.TermFrequency).ToList();
-		var docs = scored.Select(s => _reader.GetDocFromDisk(s));
-		return new Result { Docs = docs, Total = scored.Count };
-	}
-
-[Code](https://github.com/kreeben/resin/blob/master/Resin/Searcher.cs) 
-
 <a name="cli" id="cli"></a>
 ## Test spin
 
@@ -509,6 +295,25 @@ Buy Gb network and use bare-metal.
 
 Service-orient the different parts of Resin and make query parsing, calculating of execution plans, scanning, scoring and resolving of documents each a service of its own. Distribute those services across a machine park, grouped by function. Have redundance and scalability within each group: service-orientation with [Nancy](https://github.com/NancyFx/Nancy), messaging with [protobuf-net](https://github.com/mgravell/protobuf-net), System.String and GC provided by Microsoft. ;)
 
+<a name="dependencies" id="dependencies"></a>
+##Dependencies
+
+.net 4.5.1:
+
+* Microsoft.CSharp
+* System
+* System.Core
+* System.Xml
+* System.Net.Http
+
+Packages:  
+
+* [nancyfx](https://github.com/NancyFx/Nancy)
+* [protobuf-net](https://github.com/mgravell/protobuf-net)
+* [json.net](https://github.com/JamesNK/Newtonsoft.Json)
+* [nunit](https://www.nuget.org/packages/NUnit/)
+* [log4net](https://www.nuget.org/packages/log4net/)
+
 <a name="fileformat" id"=fileformat></a>
 ##Resin file format
 
@@ -529,24 +334,5 @@ All files are protobuf messages.
 
 ####Documents
 *.d
-  
-<a name="dependencies" id="dependencies"></a>
-##Dependencies
-
-.net 4.5.1:
-
-* Microsoft.CSharp
-* System
-* System.Core
-* System.Xml
-* System.Net.Http
-
-Packages:  
-
-* [nancyfx](https://github.com/NancyFx/Nancy)
-* [protobuf-net](https://github.com/mgravell/protobuf-net)
-* [json.net](https://github.com/JamesNK/Newtonsoft.Json)
-* [nunit](https://www.nuget.org/packages/NUnit/)
-* [log4net](https://www.nuget.org/packages/log4net/)
 
 To the [top&#10548;](#top)
