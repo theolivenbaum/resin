@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Resin
+﻿namespace Resin
 {
     public class QueryParser
     {
@@ -11,7 +9,7 @@ namespace Resin
             _analyzer = analyzer;
         }
 
-        public IList<Term> Parse(string query)
+        public Query Parse(string query)
         {
             var interpreter = new QueryInterpreter(query, _analyzer);
             for (int i = 0; i < query.Length; i++)

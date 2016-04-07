@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace Resin
 {
@@ -15,9 +14,6 @@ namespace Resin
         public bool Prefix { get; set; }
         public bool Fuzzy { get; set; }
 
-        public IList<Term> Children { get; protected set; }
-        public IList<Term> All { get; protected set; }
-
         public int Edits { get { return _edits; } }
 
         public float Similarity
@@ -29,13 +25,11 @@ namespace Resin
         {
             Field = field;
             Token = token;
-            Children = new List<Term>();
-            All = new List<Term>{this};
         }
 
         public override string ToString()
         {
-            var fldPrefix = And ? "+" : Not ? "-" : " ";
+            var fldPrefix = And ? "+" : Not ? "-" : string.Empty;
             var tokenSuffix = Prefix ? "*" : Fuzzy ? "~" : string.Empty;
             return string.Format("{0}{1}:{2}{3}", fldPrefix, Field, Token, tokenSuffix);
         }

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Resin
@@ -11,8 +10,8 @@ namespace Resin
         private readonly IAnalyzer _analyzer;
         private readonly string _text;
         private DataType _state;
-        private Term _root;
-        private Term _cursor;
+        private Query _root;
+        private Query _cursor;
         private int _start;
         private int _lastIndexOfData;
 
@@ -35,7 +34,7 @@ namespace Resin
             return _text.Length - _start - (_text.Length - _lastIndexOfData - 1);
         }
 
-        public IList<Term> GetQuery()
+        public Query GetQuery()
         {
             var length = GetLength();
             _word = _text.Substring(_start, length);
@@ -43,13 +42,13 @@ namespace Resin
             {
                 foreach (var token in _analyzer.Analyze(_word))
                 {
-                    Add(new Term(_field, token) {And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f});
+                    Add(new Query(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });
                 }
             }
-            return _root.All;
+            return _root;
         }
 
-        private Term Add(Term term)
+        private Query Add(Query term)
         {
             if (_root == null)
             {
@@ -59,13 +58,11 @@ namespace Resin
             else
             {
                 _cursor.Children.Add(term);
-                _root.All.Add(term);
             }
             
-            return _root; // return term to allow nesting
+            return _root;
         }
 
-        //category:action +(setting:western setting:space -(genre:romance +genre:puzzle))
         public void Step(int index)
         {
             var c = _text[index];
@@ -79,7 +76,7 @@ namespace Resin
                     _word = _text.Substring(_start, length);
                     foreach (var token in _analyzer.Analyze(_word))
                     {
-                        _cursor = Add(new Term(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });                       
+                        _cursor = Add(new Query(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });                       
                     }
                     _field = null;
                     _word = null;
@@ -117,7 +114,7 @@ namespace Resin
                         _word = _text.Substring(_start, length);
                         foreach (var token in _analyzer.Analyze(_word))
                         {
-                            _cursor = Add(new Term(_field, token) {And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f});
+                            _cursor = Add(new Query(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });
                         }
                         _field = null;
                         _word = null;
@@ -146,7 +143,6 @@ namespace Resin
 
         private Category GetCategory(char c)
         {
-            //if(char.IsWhiteSpace(c)) return Category.Whitespace;
             if (_fieldOperators.Contains(c)) return Category.FieldOperator;
             if (_termOperators.Contains(c)) return Category.TokenOperator;
             if (c == ':') return Category.EndOfField;
@@ -158,8 +154,7 @@ namespace Resin
             FieldOperator,
             TokenOperator,
             EndOfField,
-            Data,
-            Whitespace
+            Data
         }
 
         private enum DataType

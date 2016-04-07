@@ -69,30 +69,37 @@ namespace Resin
             return Enumerable.Empty<DocumentScore>();
         }
 
-        public void Expand(Term term)
+        public void Expand(Query query)
         {
-            IList<Term> expanded = null;
-            var reader = GetReader(term.Field);
-            if (term.Fuzzy)
+            IList<Query> expanded = null;
+            var reader = GetReader(query.Field);
+            
+            if (query.Fuzzy)
             {
-                expanded = reader.GetSimilar(term.Token, term.Edits).Select(token => new Term(term.Field, token){And = term.And, Not = term.Not}).ToList();
+                expanded = reader.GetSimilar(query.Token, query.Edits).Select(token => new Query(query.Field, token)).ToList();
             }
-            else if (term.Prefix)
+            else if (query.Prefix)
             {
-                expanded = reader.GetTokens(term.Token).Select(token => new Term(term.Field, token) { And = term.And, Not = term.Not }).ToList();
-                
+                expanded = reader.GetTokens(query.Token).Select(token => new Query(query.Field, token)).ToList();
             }
-            if (expanded == null) return;
-            if (expanded.Count > 0)
+
+            if (expanded != null)
             {
-                term = expanded[0];
-                foreach (var t in expanded.Skip(1))
+                var tokenSuffix = query.Prefix ? "*" : query.Fuzzy ? "~" : string.Empty;
+                Log.InfoFormat("{0}:{1}{2} expanded to {3}", query.Field, query.Token, tokenSuffix, string.Join(" ", expanded.Select(q=>q.ToString())));
+                foreach (var t in expanded)
                 {
-                    term.Children.Add(t);
-                    term.All.Add(t);
+                    query.Children.Add(t);
                 }
             }
-            Log.DebugFormat("query-rewrite from {0} to{1}", term, string.Join(string.Empty, expanded.Select(t => t.ToString())));
+
+            query.Prefix = false;
+            query.Fuzzy = false;
+            
+            foreach (var child in query.Children)
+            {
+                Expand(child);
+            }
         }
 
         private IEnumerable<DocumentScore> ExactMatch(Term term, FieldReader reader)

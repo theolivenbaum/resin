@@ -55,76 +55,38 @@ namespace Resin
             _fieldScanner = FieldScanner.MergeLoad(_directory);
         }
 
-        public IEnumerable<DocumentScore> GetScoredResult(IEnumerable<Term> terms)
+        public IEnumerable<DocumentScore> GetScoredResult(Query query)
         {
-            var hits = new Dictionary<string, DocumentScore>();
-            foreach (var term in terms)
-            {
-                var unscored = _fieldScanner.GetDocIds(term).ToList();
-                
-                if (unscored.Count == 0) continue;
+            Expand(query);
+            Fetch(query);
+            return query.Resolve().Values.OrderByDescending(s => s.Score);
+        }
 
-                var numDocs = _fieldScanner.DocsInCorpus(term.Field);
-                var scorer = new Tfidf(numDocs, unscored.Count);
-                
-                if (hits.Count == 0)
-                {
-                    if (!term.Not)
-                    {
-                        foreach (var unscoredDoc in unscored)
-                        {
-                            scorer.Score(unscoredDoc);
-                        }
-                        hits = unscored.ToDictionary(h => h.DocId, h => h);
-                    }
-                }
-                else
-                {
-                    if (term.And)
-                    {
-                        var aggr = new Dictionary<string, DocumentScore>();
-                        foreach (var unscoredDoc in unscored)
-                        {
-                            DocumentScore existingScore;
-                            if (hits.TryGetValue(unscoredDoc.DocId, out existingScore))
-                            {
-                                scorer.Score(unscoredDoc);
-                                aggr.Add(existingScore.DocId, existingScore.Add(unscoredDoc));
-                            }
-                        }
-                        hits = aggr;
-                    }
-                    else if (term.Not)
-                    {
-                        foreach (var doc in unscored)
-                        {
-                            hits.Remove(doc.DocId);
-                        }
-                    }
-                    else // Or
-                    {
-                        foreach (var unscoredDoc in unscored)
-                        {
-                            scorer.Score(unscoredDoc);
+        private void Expand(Query query)
+        {
+            _fieldScanner.Expand(query);            
+        }
 
-                            DocumentScore existingScore;
-                            if (hits.TryGetValue(unscoredDoc.DocId, out existingScore))
-                            {
-                                hits[unscoredDoc.DocId] = existingScore.Add(unscoredDoc);
-                            }
-                            else
-                            {
-                                hits.Add(unscoredDoc.DocId, unscoredDoc);
-                            }
-                        }
-                    }
-                }
-            }
-            foreach (var hit in hits.Values)
+        private IEnumerable<DocumentScore> GetScoredTermResult(Term term)
+        {
+            var result = _fieldScanner.GetDocIds(term).ToList();
+            var numDocs = _fieldScanner.DocsInCorpus(term.Field);
+            var scorer = new Tfidf(numDocs, result.Count);
+            foreach (var hit in result)
             {
+                scorer.Score(hit);
                 Log.DebugFormat("score {0} {1}", hit.Score, hit.Trace);
             }
-            return hits.Values;
+            return result;
+        }
+
+        private void Fetch(Query query)
+        {
+            query.TermResult = GetScoredTermResult(query).ToDictionary(x => x.DocId, y => y);
+            foreach (var child in query.Children)
+            {
+                Fetch(child);
+            }
         }
 
         public IDictionary<string, string> GetDocNoCache(DocumentScore docScore)
@@ -132,7 +94,7 @@ namespace Resin
             var doc = new Dictionary<string, string>();
             foreach (var file in _docFiles[docScore.DocId])
             {
-                var d = GetDoc(Path.Combine(_directory, file + ".d"), docScore.DocId);
+                var d = LoadDoc(Path.Combine(_directory, file + ".d"), docScore.DocId);
                 if (d != null)
                 {
                     foreach (var field in d.Fields)
@@ -160,7 +122,7 @@ namespace Resin
                         doc = new Dictionary<string, string>();
                         foreach (var file in _docFiles[docScore.DocId])
                         {
-                            var d = GetDoc(Path.Combine(_directory, file + ".d"), docScore.DocId);
+                            var d = LoadDoc(Path.Combine(_directory, file + ".d"), docScore.DocId);
                             if (d != null)
                             {
                                 foreach (var field in d.Fields)
@@ -181,7 +143,7 @@ namespace Resin
             return doc;
         }
 
-        private Document GetDoc(string fileName, string docId)
+        private Document LoadDoc(string fileName, string docId)
         {
             var docs = DocFile.Load(fileName);
             Document doc;

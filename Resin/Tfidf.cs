@@ -2,7 +2,7 @@
 
 namespace Resin
 {
-    public class Tfidf
+    public class Tfidf : IScorer
     {
         private readonly double _idf;
         private readonly string _idfTrace;
@@ -30,5 +30,10 @@ namespace Resin
             doc.Scorer = this;
             doc.Trace.AppendFormat("1+log(sqrt({0}))*({1}) ", doc.TermFrequency, _idfTrace);
         }
+    }
+
+    public interface IScorer
+    {
+        void Score(DocumentScore doc);
     }
 }
