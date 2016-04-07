@@ -9,7 +9,11 @@ Solve your full-text search problem or your big data analysis task with an intui
 * great API (in-proc and HTTP, with optional .net client)
 * CLI
 
-Resin is an extensible and multi-cultural search framework written specifically for .net. It has great analysis skills and fast response times even to complex queries. 
+Other features that might perhaps tempt you into trying Resin:
+
+* extensible
+* multi-cultural
+* fast response times even to complex queries 
 
 Resin's document-centric nature (shared by its cousins from javaland) makes it effectively a schema-less [document-oriented json database](https://en.wikipedia.org/wiki/Document-oriented_database) with ad-hoc full-text quering.
 
