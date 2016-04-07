@@ -11,7 +11,7 @@ Solve your full-text search problem or your big data analysis task with an intui
 
 Resin is an extensible and multi-cultural search framework written specifically for .net. It has great analysis skills and fast response times even to complex queries. 
 
-Resin's document-centric nature (shared by its cousins from javaland) makes it effectively a schema-less document-oriented json database with ad-hoc quering.
+Resin's document-centric nature (shared by its cousins from javaland) makes it effectively a schema-less document-oriented json database with ad-hoc full-text quering.
 
 Read about the dependencies you need to [worry about](#dependencies) before launching your beefed-up search server that serves up 100M documents and that matches Google's capabilities in scale and performance. Spoiler alert: there are none. Instead, read it to learn about the open and closed-source projects Resin depends on.
 
