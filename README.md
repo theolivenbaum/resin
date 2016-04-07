@@ -7,10 +7,11 @@ _"If it's not zero-config or if it's heavy, it's not Resin."_
 
 Solve your full-text search problem or your big data analysis task with an intuitive tool for information retrieval with an extensible model, a strong architecture and a tiny bit of infrastructure. Resin is stream-lined, free of legacy code and java inheritance and aims to simplify what it is what makes Lucene, Solr and Elasticsearch great: speed of indexing and query execution, relevance, realiablility, and cost, but also: 
 
-* zero-config
+* zero-config (`git clone`, `build`, `start server`)
 * great API (in-proc and HTTP, with optional .net client)
+* CLI
 
-Resin is a multi-cultural search framework, fast and light-weigh, written specifically for .net, with great analysis skills and fast response times even to complex queries.
+Resin is a multi-cultural search framework, fast and light-weigh, written specifically for .net, with great analysis skills and fast response times even to complex queries. Resin (like its cousins from javaland) is document-centric and can be used to extract queryable tokens from your data to provide full-text search, and can also store the whole dataset, as documents, to become a document database.
 
 Read about the dependencies you need to [worry about](#dependencies) before launching your beefed-up search server that serves up 100M documents and that matches Google's capabilities in scale and performance. Spoiler alert: there are none. But read it to learn about the open and closed-source projects Resin depends on.
 
