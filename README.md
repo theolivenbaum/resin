@@ -127,7 +127,7 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 
 	using (var searcher = new Searcher(dir)) // Initializing the searcher loads the document index
 	{
-		// This loads and caches the term indices for the "id" and "label" fields:
+		// This loads and caches the term indices for the "_id" and "label" fields:
 		
 		var result = searcher.Search("_id:Q1 label:Q1");
 		
@@ -327,7 +327,7 @@ A term:
 
 	title:rambo
 
-#### Scanner
+#### FieldScanner
 
 After a good parsing we get back a list of terms.
 
@@ -353,7 +353,7 @@ At the back of that lexicon is an index, the field file. A scanner scans the ind
 		return Enumerable.Empty<DocumentScore>();
 	}
 
-[Code](https://github.com/kreeben/resin/blob/master/Resin/Scanner.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/ScannerTests.cs)
+[Code](https://github.com/kreeben/resin/blob/master/Resin/FieldScanner.cs) and  [tests](https://github.com/kreeben/resin/blob/master/Tests/FieldScannerTests.cs)
 
 #### IndexReader
 
