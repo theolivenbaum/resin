@@ -3,7 +3,7 @@
 
 [Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config. [Consume](#usage) its API from javascript or C#, or use the [CLI](#cli) to build, query and analyze your index. 
 
-Solve your full-text search problem or your big data analysis task with an intuitive tool for information retrieval with an extensible model, a strong architecture and a tiny bit of infrastructure. Resin is stream-lined, free of legacy code and java inheritance and aims to simplify what it is what makes Lucene, Solr and Elasticsearch great: speed of indexing and query execution, relevance, realiablility, and cost, but also: 
+Solve your full-text search problem or your big data analysis task with an intuitive tool for information retrieval with an extensible model, a strong architecture and a tiny bit of infrastructure. Resin is stream-lined, free of legacy code and java inheritance and aims to simplify what it is what makes Lucene, Solr and Elasticsearch great: speed of indexing and query execution, relevance, reliablility, and cost, but also: 
 
 * zero-config (`git clone`, `build`, `start server`)
 * great API (in-proc and HTTP, with optional .net client)
