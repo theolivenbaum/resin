@@ -17,7 +17,7 @@ Other features that might perhaps tempt you into trying Resin:
 
 Resin's document-centric nature (shared by its cousins from javaland) makes it effectively a schema-less [document-oriented json database](https://en.wikipedia.org/wiki/Document-oriented_database) with ad-hoc full-text quering.
 
-Learn about the open and closed-source projects Resin [depends on](#dependencies).
+Learn about the open-source projects Resin [depends on](#dependencies).
 
 * _[Quick usage guide](#usage)_
 * _[Relevance (tf-idf)](#relevance)_
