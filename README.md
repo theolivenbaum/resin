@@ -183,11 +183,11 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 <a name="relevance" id="relevance"></a>
 ##Relevance
 
-The scoring [implemented here](https://github.com/kreeben/resin/blob/master/Resin/Tfidf.cs) follows the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) scheme for a probabilistic inverse document frequency:
+The standard scoring implementation follows a [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) scheme for a probabilistic inverse document frequency:
 
 `IDF = log ( numDocs - docFreq / docFreq)`
 
-with a sqrt and log-normalized term frequency `1+log(sqrt(TF))`.
+with a slightly normalized term frequency `sqrt(TF)` .
 
 <a name="cli" id="cli"></a>
 ## Test spin
