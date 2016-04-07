@@ -265,13 +265,13 @@ AND, OR, NOT (+ -), prefix* and fuzzy~ [implemented here](https://github.com/kre
 
 TODO: nested clauses, phrases
 
+####Specify which doc fields to read and return in the response
+Cache doc fields instead of whole docs.
+
 ####Fuzzy
 Levenshtein Trie scan implemented [here](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs#L55), inspired by [this paper](http://julesjacobs.github.io/2015/06/17/disqus-levenshtein-simple-and-fast.html).
 
 TODO: override default similarity in query: `label:starr~0.8`.
-
-####Scoring
-Refine the scoring. The current scoring scheme is [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).The Lucene core team has just recently grown out of tf-idf and now like [bm25](http://opensourceconnections.com/blog/2015/10/16/bm25-the-next-generation-of-lucene-relevation/) better.
 
 ####Write concurrency
 Implemented [here](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs#L81) at indexing time and [here](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs#L53) at querying time. Each write session creates a new, automic index. When refreshing the index reader, new indices are merged with earlier generations and then made searchable as if they were one index.
@@ -296,6 +296,9 @@ Implement host as service.
 ####Extensibility
 Allow use of custom IScorer implementations.
 Extensible infrastructure for analysis to implement custom metrics, e.g. doc length or any other piece of data other than the term freq that is already stored. Custom data ends up in .dfo files (doc info files).
+
+####Scoring
+Refine the scoring. Implement BM25 and different flavors of TFIDF.
 
 <a name="scale" id="scale"></a>
 ##Scaling
