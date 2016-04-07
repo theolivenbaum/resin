@@ -1,8 +1,6 @@
 <a name="top" id="top"></a>
 # Resin
 
-_"If it's not zero-config or if it's heavy, it's not Resin."_  
-
 [Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config. [Code](#usage) or use the [CLI](#cli) to build, query and analyze your index. 
 
 Solve your full-text search problem or your big data analysis task with an intuitive tool for information retrieval with an extensible model, a strong architecture and a tiny bit of infrastructure. Resin is stream-lined, free of legacy code and java inheritance and aims to simplify what it is what makes Lucene, Solr and Elasticsearch great: speed of indexing and query execution, relevance, realiablility, and cost, but also: 
