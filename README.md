@@ -1,7 +1,7 @@
 <a name="top" id="top"></a>
 # Resin
 
-[Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config. [Code](#usage) or use the [CLI](#cli) to build, query and analyze your index. 
+[Fire up a search server](#inproc) in seconds, with Solr-like capabilities but with zero config. [Code](#usage) in javascript, c# or vb or use the [CLI](#cli) to build, query and analyze your index. 
 
 Solve your full-text search problem or your big data analysis task with an intuitive tool for information retrieval with an extensible model, a strong architecture and a tiny bit of infrastructure. Resin is stream-lined, free of legacy code and java inheritance and aims to simplify what it is what makes Lucene, Solr and Elasticsearch great: speed of indexing and query execution, relevance, realiablility, and cost, but also: 
 
@@ -73,7 +73,27 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 	
 	// To shut down the server, in the same cmd window, type "stop" and press enter.
 	// To restart it (release its caches), type "restart" instead.
+
+#####JQuery
+
+	$("#searchbtn").click(function() {
 	
+	  var token = $("#query").val();
+	  if (query.length == 0) return;
+	
+	  var url = "http://localhost:1234/wikipedia/?callback=?";
+	  var q = "label:" + token;
+	  var params = {"query":q, "page":"0", "size":"20"};
+	  var result = $("#result");
+	  result.empty();
+	
+	  $.getJSON(url, params, function(data) {
+	    for(var i = 0;i < data.docs.length;i++){
+	      result.append( "<li>" + data.docs[i].label + "</li>");
+	    }
+	  });
+	});
+
 ####Prefix query
 
 	var result = searcher.Search("label:univ*");
