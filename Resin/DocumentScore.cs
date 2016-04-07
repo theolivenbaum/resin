@@ -27,10 +27,6 @@ namespace Resin
 
             Score += score.Score;
             return this;
-            //var scorer = new Tfidf((Scorer.Idf + score.Scorer.Idf)/2);
-            //var d = new DocumentScore(DocId, (TermFrequency + score.TermFrequency)/2);
-            //scorer.Score(d);
-            //return d;
         }
 
         public int CompareTo(DocumentScore other)

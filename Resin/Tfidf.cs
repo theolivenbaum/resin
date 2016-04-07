@@ -25,9 +25,9 @@ namespace Resin
 
         public void Score(DocumentScore doc)
         {
-            var tf = 1 + Math.Log10(Math.Sqrt(doc.TermFrequency));
+            var tf = 1 + Math.Sqrt(doc.TermFrequency);
             doc.Score = tf * _idf;
-            doc.Trace.AppendFormat("1+log(sqrt({0}))*({1}) ", doc.TermFrequency, _idfTrace);
+            doc.Trace.AppendFormat("1+sqrt({0})*({1}) ", doc.TermFrequency, _idfTrace);
         }
     }
 
