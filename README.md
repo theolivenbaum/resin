@@ -285,10 +285,17 @@ Handle queries that span two or more indices.
 As of now, indices are created locally.
 
 ####Tooling
-Refine the CLI to a state where you're starting to wish MS SQL Server Management Studio was a command line tool. Oh, the power you shall have.
+Refine the CLI to a state where you're starting to wish MS SQL Server Management Studio was a command line tool. The power you shall have.
 
 ####Facetting
 Help!
+
+####Windows service
+Implement host as service.
+
+####Extensibility
+Allow use of custom IScorer implementations.
+Extensible infrastructure for analysis to implement custom metrics, e.g. doc length or any other piece of data other than the term freq that is already stored. Custom data ends up in .dfo files (doc info files).
 
 <a name="scale" id="scale"></a>
 ##Scaling
