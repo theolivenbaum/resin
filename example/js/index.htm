@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Resin js example</title>
+  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+</head>
+<body>
+ 
+<form>
+<input type="text" value="porn" id="query"/><input type="button" value="search" id="searchbtn"/>
+</form>
+<ul id="result"></ul>
+
+<script>
+$("#searchbtn").click(function() {
+
+  var token = $("#query").val();
+  if (query.length == 0) return;
+
+  var url = "http://localhost:1234/wikipedia/?callback=?";
+  var q = "label:" + token;
+  var params = {"query":q, "page":"0", "size":"20"};
+  var result = $("#result");
+  result.empty();
+
+  $.getJSON(url, params, function(data) {
+    for(var i = 0;i < data.docs.length;i++){
+      result.append( "<li>" + data.docs[i].label + "</li>");
+    }
+  });
+});
+</script>
+
+</body>
+</html>
