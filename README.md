@@ -263,7 +263,7 @@ AND, OR, NOT (+ -), prefix* and fuzzy~ [implemented here](https://github.com/kre
 
 TODO: nested clauses, phrases
 
-####Specify which doc fields to read and return in the response
+####Specify which doc fields to return in the response
 Cache doc fields instead of whole docs.
 
 ####Fuzzy
@@ -272,9 +272,9 @@ Levenshtein Trie scan implemented [here](https://github.com/kreeben/resin/blob/m
 TODO: override default similarity in query: `label:starr~0.8`.
 
 ####Write concurrency
-Implemented [here](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs#L81) at indexing time and [here](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs#L53) at querying time. Each write session creates a new, automic index. When refreshing the index reader, new indices are merged with earlier generations and then made searchable as if they were one index.
+Implemented [here](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs#L81) at indexing time and [here](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs#L53) at querying time so that each write session creates a new, automic index. When refreshing the index reader, new indices are merged with earlier generations and then made searchable as if they were one index.
 
-TODO: handle deletes, optimize
+TODO: handle deletes, optimization, immediate writes (for when used as a document db: you need to know that thing you PUT will be there the next time you ask for it, not eventually but Now!) 
 
 ####Multi-index searching
 Handle queries that span two or more indices.
