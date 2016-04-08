@@ -271,10 +271,10 @@ Levenshtein Trie scan implemented [here](https://github.com/kreeben/resin/blob/m
 
 TODO: override default similarity in query: `label:starr~0.8`.
 
-####Write concurrency
-Implemented [here](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs#L81) at indexing time and [here](https://github.com/kreeben/resin/blob/master/Resin/IndexReader.cs#L53) at querying time so that each write session creates a new, automic index. When refreshing the index reader, new indices are merged with earlier generations and then made searchable as if they were one index.
+####Data availability
+Today, each write session creates a new, automic index. When refreshing the index reader, new indices are merged with earlier generations and then made searchable as if they were one index.
 
-TODO: handle deletes, optimization, immediate writes (for when used as a document db: you need to know that thing you PUT will be there the next time you ask for it, not eventually but Now!) 
+TODO: handle deletes, optimization, transactions, immediate writes (for when used as a document db: you need to know that thing you PUT will be there the next time you ask for it, not eventually, immidiately!) 
 
 ####Multi-index searching
 Handle queries that span two or more indices.
@@ -286,17 +286,18 @@ As of now, indices are created locally.
 Refine the CLI to a state where you're starting to wish MS SQL Server Management Studio was a command line tool. The power you shall have.
 
 ####Facetting
-Help!
+Killer feature!
 
 ####Windows service
 Implement host as service.
 
 ####Extensibility
 Allow use of custom IScorer implementations.
-Extensible infrastructure for analysis to implement custom metrics, e.g. doc length or any other piece of data other than the term freq that is already stored. Custom data ends up in .dfo files (doc info files).
+
+Make the infrastructure for analysis extensible so that one can implement custom metrics, e.g. doc length, avg. word length or any other piece of data other than the term freq that is already being stored. Custom data ends up in .dfo files (doc info files) and is available in the querying pipeline, e.g. within the context of an IScorer.
 
 ####Scoring
-Refine the scoring. Implement BM25 and different flavors of TFIDF.
+Refine the scoring. Implement BM25 and different flavors of TFIDF. Use custom metrics to support them.
 
 <a name="scale" id="scale"></a>
 ##Scaling
