@@ -308,7 +308,7 @@ Increase responses per second with more RAM and more caching abilities, faster C
 
 Buy Gb network and use bare-metal.
 
-####Google scale
+####Bing scale
 
 Service-orient the different parts of Resin and make query parsing, calculating of execution plans, scanning, scoring and resolving of documents each a service of its own. Distribute those services across a machine park, grouped by function. Have redundance and scalability within each group: service-orientation with [Nancy](https://github.com/NancyFx/Nancy), messaging with [protobuf-net](https://github.com/mgravell/protobuf-net), System.String and GC provided by Microsoft. ;)
 
