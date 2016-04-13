@@ -17,14 +17,17 @@ namespace Resin
         {
             Post["/{indexName}/add"] = parameters =>
             {
-                var doc = this.Bind<Dictionary<string, string>>();
+                var docs = this.Bind<Dictionary<string, string>[]>();
                 var indexName = parameters.indexName;
-                HandleRequest(indexName, doc);
+                var timer = new Stopwatch();
+                timer.Start();
+                HandleRequest(indexName, docs);
+                Log.InfoFormat("added {0} docs in {1}", docs.Length, timer.Elapsed);
                 return HttpStatusCode.NoContent;
             };
         }
 
-        private void HandleRequest(string indexName, Dictionary<string, string> doc)
+        private void HandleRequest(string indexName, IEnumerable<Dictionary<string, string>> docs)
         {
             try
             {
@@ -33,9 +36,12 @@ namespace Resin
                 var dir = Path.Combine(Helper.GetResinDataDirectory(), indexName);
                 using (var writer = new IndexWriter(dir, new Analyzer()))
                 {
-                    writer.Write(doc);
+                    foreach (var doc in docs)
+                    {
+                        writer.Write(doc);
+                        Log.DebugFormat("added doc {0} in {1}", doc["_id"], timer.Elapsed);
+                    }
                 }
-                Log.InfoFormat("added doc {0} in {1}", doc["_id"], timer.Elapsed);
             }
             catch (Exception ex)
             {
@@ -58,23 +64,15 @@ namespace Resin
             using (var sr = new StreamReader(stream))
             using (var jsonTextReader = new JsonTextReader(sr))
             {
-                return serializer.Deserialize<Dictionary<string, string>>(jsonTextReader);
+                var obj = serializer.Deserialize<Dictionary<string, string>[]>(jsonTextReader);
+                return obj;
             }
         }
 
         public bool CanBind(Type modelType)
         {
-            // http://stackoverflow.com/a/16956978/39605
-            if (modelType.IsGenericType && modelType.GetGenericTypeDefinition() == typeof(Dictionary<,>))
-            {
-                if (modelType.GetGenericArguments()[0] == typeof(string) &&
-                    modelType.GetGenericArguments()[1] == typeof(string))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            var can = modelType.BaseType == typeof (Array);
+            return can;
         }
     }
 }

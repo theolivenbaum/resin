@@ -121,7 +121,7 @@ namespace Resin
 
         static void Write(string[] args)
         {
-            Console.Write("Writing: ");
+            Console.Write("Collecting docs ");
 
             var take = 1000;
             var skip = 0;
@@ -135,14 +135,13 @@ namespace Resin
             var indexName = args[Array.IndexOf(args, "--name") + 1];
             var cursorPos = Console.CursorLeft;
             var count = 0;
-            //var stopwords = File.ReadAllLines("stopwords.txt");
             var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
             var timer = new Stopwatch();
             timer.Start();
+            var docs = new List<Dictionary<string, string>>();
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var bs = new BufferedStream(fs))
             using (var sr = new StreamReader(bs))
-            using (var writer = new WriterClient(indexName, url))
             {
                 string line = sr.ReadLine();
                 while (skipped++ < skip)
@@ -156,12 +155,19 @@ namespace Resin
                     var doc = JsonConvert.DeserializeObject<Dictionary<string, string>>(line.Substring(0, line.Length - 1));
                     Console.SetCursorPosition(cursorPos, Console.CursorTop);
                     Console.Write(++count);
-                    writer.Write(doc);
+                    docs.Add(doc);
 
                     if (count == take) break;
                 }
             }
-            Console.WriteLine("\r\nIndex created in " + timer.Elapsed);
+            Console.Write(" in {0}\r\n", timer.Elapsed);
+            timer.Restart();
+            Console.Write("Executing HTTP POST");
+            using (var writer = new WriterClient(indexName, url))
+            {
+                writer.Write(docs);
+            }
+            Console.Write(" in {0}", timer.Elapsed);
         }
     }
 }

@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -17,16 +19,15 @@ namespace Resin
             _url = url + indexName + "/add";
         }
 
-        public void Write(IDictionary<string, string> doc)
+        public void Write(IEnumerable<IDictionary<string, string>> docs)
         {
-            if(Post(doc).Result != HttpStatusCode.NoContent) throw new InvalidOperationException();
+            if(Post(new ArrayList(docs.ToArray())).Result != HttpStatusCode.NoContent) throw new InvalidOperationException();
         }
 
-        private async Task<HttpStatusCode> Post(IDictionary<string, string> doc)
+        private async Task<HttpStatusCode> Post(ArrayList docs)
         {
-            var response = await _client.PostAsJsonAsync(_url, doc);
+            var response = await _client.PostAsJsonAsync(_url, docs);
             return response.StatusCode;
-
         }
 
         public void Dispose()
