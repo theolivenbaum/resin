@@ -43,7 +43,7 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 	var docs = GetHugeNumberOfDocs();
 
 ####Add them to a Resin index
-
+#####In-proc
 	var dir = @"C:\Users\Yourname\Resin\wikipedia";
 	using (var writer = new IndexWriter(dir, new Analyzer()))
 	{
@@ -52,6 +52,21 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 			writer.Write(doc);
 		}
 	}
+
+#####Server
+	
+	// To start the server, in a cmd window:
+	// cd path_to_resin
+	// rnh --url http://localhost:1234/
+	// You have just started a light-weight search server with solr-like capabilities. Enjoy!
+	
+	using (var client = new WriterClient("wikipedia", url))
+	{
+            client.Write(docs);
+	}
+        
+	// To shut down the server, in the same cmd window, type "stop" and press enter.
+	// To restart it (release its caches), enter "restart" instead.
 
 ####Query that index (matching the whole term)
 <a name="inproc" id="inproc"></a>
@@ -62,16 +77,8 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 
 #####Server
 	
-	// To start the server, in a cmd window:
-	// cd path_to_resin
-	// rnh --url http://localhost:1234/
-	// You have just started a light-weight search server with solr-like capabilities. Enjoy!
-	
 	var searcher = new SearchClient("wikipedia", "http://localhost:1234/");
 	var result = searcher.Search("label:universe");
-	
-	// To shut down the server, in the same cmd window, type "stop" and press enter.
-	// To restart it (release its caches), type "restart" instead.
 
 <a name="jquery" id="jquery"></a>
 #####JQuery
