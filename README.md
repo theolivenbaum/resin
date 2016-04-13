@@ -53,13 +53,12 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 		}
 	}
 
-#####Server
+#####Client
 	
 	// To start the server, in a cmd window:
 	// cd path_to_resin
 	// rnh --url http://localhost:1234/
-	// You have just started a light-weight search server with solr-like capabilities. Enjoy!
-	
+
 	using (var client = new WriterClient("wikipedia", url))
 	{
 		client.Write(docs);
@@ -75,7 +74,7 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 	var searcher = new Searcher(dir);
 	var result = searcher.Search("label:universe");
 
-#####Server
+#####Client
 	
 	var searcher = new SearchClient("wikipedia", "http://localhost:1234/");
 	var result = searcher.Search("label:universe");
