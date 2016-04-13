@@ -62,7 +62,7 @@ Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is manda
 	
 	using (var client = new WriterClient("wikipedia", url))
 	{
-            client.Write(docs);
+		client.Write(docs);
 	}
         
 	// To shut down the server, in the same cmd window, type "stop" and press enter.
