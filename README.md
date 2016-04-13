@@ -276,7 +276,7 @@ TODO: override default similarity in query: `label:starr~0.8`.
 ####Data availability
 Today, each write session creates a new, automic index. When refreshing the index reader, new indices are merged with earlier generations and then made searchable as if they were one index.
 
-TODO: handle deletes, optimization, transactions, immediate writes (for when used as a document db: you need to know that thing you PUT will be there the next time you ask for it, not eventually, immidiately!) 
+TODO: handle deletes, optimization, transactions, immediate writes (for when used as a document db: you need to know that thing you PUT will be there the next time you ask for it, not eventually, immediately!) 
 
 ####Multi-index searching
 Handle queries that span two or more indices.
