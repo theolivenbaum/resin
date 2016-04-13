@@ -22,7 +22,7 @@ namespace Resin
                 var timer = new Stopwatch();
                 timer.Start();
                 HandleRequest(indexName, docs);
-                Log.InfoFormat("added {0} docs in {1}", docs.Length, timer.Elapsed);
+                Log.InfoFormat("added {0} docs to {1} in {2}", docs.Length, indexName, timer.Elapsed);
                 return HttpStatusCode.NoContent;
             };
         }

@@ -4,7 +4,7 @@ using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Newtonsoft.Json;
+using Resin.IO;
 
 namespace Resin
 {
@@ -122,7 +122,6 @@ namespace Resin
         {
             var take = 1000;
             var skip = 0;
-            var skipped = 0;
 
             if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
             if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
@@ -144,35 +143,23 @@ namespace Resin
             var timer = new Stopwatch();
             timer.Start();
             
-            var docs = new List<Dictionary<string, string>>();
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var bs = new BufferedStream(fs))
-            using (var sr = new StreamReader(bs))
+            var docs = new List<IDictionary<string, string>>();
+            var docFile = DocFile.Load(fileName);
+            foreach (var doc in docFile.Docs.Skip(skip).Take(take))
             {
-                string line = sr.ReadLine();
-                while (skipped++ < skip)
-                {
-                    sr.ReadLine();
-                }
-                while ((line = sr.ReadLine()) != null)
-                {
-                    if (line[0] == ']') break;
-
-                    var doc = JsonConvert.DeserializeObject<Dictionary<string, string>>(line.Substring(0, line.Length - 1));
-                    Console.SetCursorPosition(cursorPos, Console.CursorTop);
-                    Console.Write(++count);
-
                     if (toDisk)
                     {
-                        w.Write(doc);
+                        w.Write(doc.Value.Fields);
                     }
                     else
                     {
-                        docs.Add(doc);
+                        docs.Add(doc.Value.Fields);
                     }
 
+                    Console.SetCursorPosition(cursorPos, Console.CursorTop);
+                    Console.Write(++count);
+
                     if (count == take) break;
-                }
             }
             Console.Write(" in {0}\r\n", timer.Elapsed);
             timer.Restart();
