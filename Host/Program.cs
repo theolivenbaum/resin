@@ -3,9 +3,8 @@ using log4net;
 using log4net.Config;
 using Nancy;
 using Nancy.Hosting.Self;
-using Resin;
 
-namespace Host
+namespace Resin
 {
     class Program
     {

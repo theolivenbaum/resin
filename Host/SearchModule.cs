@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using log4net;
@@ -18,8 +17,6 @@ namespace Resin
         {
             Get["/{indexName}/"] = parameters =>
             {
-                var timer = new Stopwatch();
-                timer.Start();
                 var indexName = parameters.indexName;
                 var query = Request.Query.query;
                 var page = (int) Request.Query.page;
@@ -49,7 +46,7 @@ namespace Resin
 
         private Searcher GetSearcher(string name)
         {
-            var dir = Path.Combine(GetBaseFolder(), name);
+            var dir = Path.Combine(Helper.GetResinDataDirectory(), name);
             Searcher searcher;
             if (!Searchers.TryGetValue(dir, out searcher))
             {
@@ -63,18 +60,6 @@ namespace Resin
                 }
             }
             return searcher;
-        }
-
-        private static string GetBaseFolder()
-        {
-            var configPath = ConfigurationManager.AppSettings.Get("datafolder");
-            if (!string.IsNullOrWhiteSpace(configPath)) return configPath;
-            string path = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
-            if (Environment.OSVersion.Version.Major >= 6)
-            {
-                path = Directory.GetParent(path).ToString();
-            }
-            return Path.Combine(path, "Resin");
         }
 
         public static void ReleaseCache()

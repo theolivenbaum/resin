@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -14,9 +15,9 @@ namespace Resin
             if (args[0].ToLower() == "write")
             {
                 if (Array.IndexOf(args, "--file") == -1 ||
-                    Array.IndexOf(args, "--dir") == -1)
+                    Array.IndexOf(args, "--name") == -1)
                 {
-                    Console.WriteLine("I need a file and a directory.");
+                    Console.WriteLine("I need a file and an index name.");
                     return;
                 }
                 Write(args);
@@ -81,7 +82,7 @@ namespace Resin
             var q = args[Array.IndexOf(args, "-q") + 1];
             var page = 0;
             var size = 10;
-            var url = "http://localhost:1234/";
+            var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
             if (Array.IndexOf(args, "-p") > 0) page = int.Parse(args[Array.IndexOf(args, "-p") + 1]);
             if (Array.IndexOf(args, "-s") > 0) size = int.Parse(args[Array.IndexOf(args, "-s") + 1]);
             if (Array.IndexOf(args, "--url") > 0) url = args[Array.IndexOf(args, "--url") + 1];
@@ -131,16 +132,17 @@ namespace Resin
             if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
 
             var fileName = args[Array.IndexOf(args, "--file") + 1];
-            var dir = args[Array.IndexOf(args, "--dir") + 1];
+            var indexName = args[Array.IndexOf(args, "--name") + 1];
             var cursorPos = Console.CursorLeft;
             var count = 0;
-            var stopwords = File.ReadAllLines("stopwords.txt");
+            //var stopwords = File.ReadAllLines("stopwords.txt");
+            var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
             var timer = new Stopwatch();
             timer.Start();
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var bs = new BufferedStream(fs))
             using (var sr = new StreamReader(bs))
-            using (var indexWriter = new IndexWriter(dir, new Analyzer(stopwords: stopwords)))
+            using (var writer = new WriterClient(indexName, url))
             {
                 string line = sr.ReadLine();
                 while (skipped++ < skip)
@@ -154,7 +156,7 @@ namespace Resin
                     var doc = JsonConvert.DeserializeObject<Dictionary<string, string>>(line.Substring(0, line.Length - 1));
                     Console.SetCursorPosition(cursorPos, Console.CursorTop);
                     Console.Write(++count);
-                    indexWriter.Write(doc);
+                    writer.Write(doc);
 
                     if (count == take) break;
                 }

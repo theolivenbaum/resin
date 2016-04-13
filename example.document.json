@@ -1,9 +1,6 @@
 {
-  "Fields": {
     "id": "Q1",
     "label": "universe",
     "description": "totality of planets, stars, galaxies, intergalactic space, or all matter or all energy",
     "aliases": "cosmos The Universe existence space outerspace"
-  },
-  "Id": 1
 }

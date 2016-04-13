@@ -1,8 +1,24 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
+
 namespace Resin
 {
-    public static class Extensions
+    public static class Helper
     {
+        public static string GetResinDataDirectory()
+        {
+            var configPath = ConfigurationManager.AppSettings.Get("datadirectory");
+            if (!string.IsNullOrWhiteSpace(configPath)) return configPath;
+            string path = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
+            if (Environment.OSVersion.Version.Major >= 6)
+            {
+                path = Directory.GetParent(path).ToString();
+            }
+            return Path.Combine(path, "Resin");
+        }
+
         /// <summary>
         /// Divides a list into batches.
         /// </summary>
