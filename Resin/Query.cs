@@ -21,12 +21,12 @@ namespace Resin
             {
                 if (child.And)
                 {
-                    var list = result.Values.ToList();
-                    for(int i = 0;i<list.Count;i++)
+                    var childResult = child.Resolve();
+                    var docs = result.Values.ToList();
+                    foreach (var d in docs)
                     {
-                        var d = list[0];
                         DocumentScore score;
-                        if (child.Resolve().TryGetValue(d.DocId, out score))
+                        if (childResult.TryGetValue(d.DocId, out score))
                         {
                             result[d.DocId] = score.Add(d);
                         }
