@@ -321,9 +321,11 @@ Service-orient the different parts of Resin and make query parsing, calculating 
 
 * Microsoft.CSharp
 * System
+* System.Configuration
 * System.Core
-* System.Xml
 * System.Net.Http
+* System.Net.Http.Formatting
+* System.Xml
 
 Packages:  
 
