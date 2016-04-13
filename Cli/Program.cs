@@ -14,10 +14,9 @@ namespace Resin
         {
             if (args[0].ToLower() == "write")
             {
-                if (Array.IndexOf(args, "--file") == -1 ||
-                    Array.IndexOf(args, "--name") == -1)
+                if (Array.IndexOf(args, "--file") == -1)
                 {
-                    Console.WriteLine("I need a file and an index name.");
+                    Console.WriteLine("I need a file.");
                     return;
                 }
                 Write(args);
@@ -121,23 +120,30 @@ namespace Resin
 
         static void Write(string[] args)
         {
-            Console.Write("Collecting docs ");
-
             var take = 1000;
             var skip = 0;
-
             var skipped = 0;
 
             if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
             if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
 
             var fileName = args[Array.IndexOf(args, "--file") + 1];
-            var indexName = args[Array.IndexOf(args, "--name") + 1];
+            string dir = null;
+            string indexName = null;
+            if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
+            if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
+
+            var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
+            var toDisk = !string.IsNullOrWhiteSpace(dir);
+            IndexWriter w = toDisk ? new IndexWriter(dir, new Analyzer()) : null;
+
+            Console.Write(toDisk ? "Writing " : "Collecting docs ");
+
             var cursorPos = Console.CursorLeft;
             var count = 0;
-            var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
             var timer = new Stopwatch();
             timer.Start();
+            
             var docs = new List<Dictionary<string, string>>();
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var bs = new BufferedStream(fs))
@@ -155,17 +161,33 @@ namespace Resin
                     var doc = JsonConvert.DeserializeObject<Dictionary<string, string>>(line.Substring(0, line.Length - 1));
                     Console.SetCursorPosition(cursorPos, Console.CursorTop);
                     Console.Write(++count);
-                    docs.Add(doc);
+
+                    if (toDisk)
+                    {
+                        w.Write(doc);
+                    }
+                    else
+                    {
+                        docs.Add(doc);
+                    }
 
                     if (count == take) break;
                 }
             }
             Console.Write(" in {0}\r\n", timer.Elapsed);
             timer.Restart();
-            Console.Write("Executing HTTP POST");
-            using (var writer = new WriterClient(indexName, url))
+            if (toDisk)
             {
-                writer.Write(docs);
+                Console.Write("Flushing to disk");
+                w.Dispose();
+            }
+            else
+            {
+                Console.Write("Executing HTTP POST");
+                using (var client = new WriterClient(indexName, url))
+                {
+                    client.Write(docs);
+                }   
             }
             Console.Write(" in {0}", timer.Elapsed);
         }
