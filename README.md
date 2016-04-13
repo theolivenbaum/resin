@@ -141,7 +141,7 @@ Fields prefixed with `_` are not analyzed. The `_id` field is mandatory.
 ####Analyze your index
 
 	var field = "label";
-	var scanner = new Scanner(dir);
+	var scanner = new FieldScanner(dir);
 	var termsOrderedByFreq = scanner.GetAllTokens(field).OrderByDescending(t=>t.Count).ToList();
 	
 	File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), termsOrderedByFreq
@@ -184,11 +184,13 @@ Fields prefixed with `_` are not analyzed. The `_id` field is mandatory.
 <a name="relevance" id="relevance"></a>
 ##Relevance
 
-The standard scoring implementation follows a [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) scheme for a probabilistic inverse document frequency:
+The default scoring implementation follows a [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) scheme for a probabilistic inverse document frequency:
 
 `IDF = log ( numDocs - docFreq / docFreq)`
 
-with a slightly normalized term frequency `sqrt(TF)` .
+with a slightly normalized term frequency `1+sqrt(TF)`. 
+
+Call Searcher.Search with `returnTrace:true` to include an explanation along with the result of how the scoring was calculated.
 
 <a name="cli" id="cli"></a>
 ## Test spin
