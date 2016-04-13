@@ -12,7 +12,7 @@
 
 <a name="intro" id="intro"></a>
 ##Introduction
-[Launch a search server in seconds](#inproc), with Solr-like capabilities but with zero config. [Consume](#usage) its API from [javascript](#jquery) or C#, or use the [CLI](#cli) to build, query and analyze your index. 
+[Launch a search server in seconds](#inproc), with Solr-like capabilities but with zero config. [Consume](#usage) its entire API from [javascript](#jquery) or C#, or use the [CLI](#cli) to build, query and analyze your index. 
 
 Solve your full-text search problem or your big data analysis task with an intuitive tool for information retrieval armed with an extensible model and a strong architecture. Resin is stream-lined, free of legacy code and java inheritance and aims to simplify what it is that make Lucene, Solr and Elasticsearch great: __speed of indexing and query execution, relevance, reliablility__, but also: 
 
@@ -36,7 +36,7 @@ Learn about the open-source projects Resin [depends on](#dependencies).
 		"aliases": "cosmos The Universe existence space outerspace"
 	}
 
-Fields prefixed with `_` are not [analyzed](#citizens). The `_id` field is mandatory.  
+Fields prefixed with `_` are not analyzed. The `_id` field is mandatory.  
 
 ####Here's a huge number of documents
 	
