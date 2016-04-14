@@ -33,13 +33,12 @@ namespace Resin
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
-            var q = _parser.Parse(query);
-            var req = new QueryRequest(_directory, _fix, _fieldFiles, _trieFiles);
-            var scored = req.GetResult(q, page, size, returnTrace).ToList();
+            var collector = new Collector(_directory, _fix, _fieldFiles, _trieFiles);
+            var scored = collector.Collect(_parser.Parse(query), page, size, returnTrace).ToList();
             var skip = page*size;
             var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
             var trace = returnTrace ? paged.ToDictionary(ds => ds.Key, ds => ds.Value.Trace.ToString() + paged[ds.Key].Score) : null;
-            var docs = paged.Values.Select(s => GetDoc(s.DocId)).ToList();
+            var docs = paged.Values.Select(s => GetDoc(s.DocId));
             return new Result { Docs = docs, Total = scored.Count, Trace = trace };
         }
 

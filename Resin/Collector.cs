@@ -6,15 +6,15 @@ using Resin.IO;
 
 namespace Resin
 {
-    public class QueryRequest
+    public class Collector
     {
         private readonly string _directory;
-        private static readonly ILog Log = LogManager.GetLogger(typeof(QueryRequest));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly Dictionary<string, Trie> _trieFiles;
         private readonly Dictionary<string, FieldFile> _fieldFiles;
         private readonly FixFile _fix;
 
-        public QueryRequest(string directory, FixFile fix, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles)
+        public Collector(string directory, FixFile fix, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles)
         {
             _directory = directory;
             _fix = fix;
@@ -22,7 +22,7 @@ namespace Resin
             _trieFiles = trieFiles;
         }
 
-        public IEnumerable<DocumentScore> GetResult(Query query, int page, int size, bool returnTrace)
+        public IEnumerable<DocumentScore> Collect(Query query, int page, int size, bool returnTrace)
         {
             Expand(query);
             Scan(query);

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Resin;
 
@@ -120,8 +121,10 @@ namespace Tests
             Assert.AreEqual(2, words.Prefixed("pre").Count());
             Assert.AreEqual(1, words.Prefixed("pref").Count());
 
-            words.Save(Setup.Dir+"\\serialize.tri");
-            words = Trie.Load(Setup.Dir + "\\serialize.tri");
+            var fileName = Setup.Dir + "\\serialize.tri";
+            if(File.Exists(fileName))File.Delete(fileName);
+            words.Save(fileName);
+            words = Trie.Load(fileName);
 
             Assert.AreEqual(3, words.Prefixed("tre").Count());
             Assert.AreEqual(1, words.Prefixed("tree").Count());

@@ -14,6 +14,8 @@ namespace Resin.IO
         {
             try
             {
+                if (!Directory.Exists(Path.GetDirectoryName(fileName)))
+                    Directory.CreateDirectory(Path.GetDirectoryName(fileName));
                 using (var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
                     Serializer.Serialize(fs, this);
@@ -21,7 +23,7 @@ namespace Resin.IO
             }
             catch (Exception ex)
             {
-                throw new ApplicationException(string.Format("Unregistered type {0}", typeof(T)), ex);
+                throw new ApplicationException(string.Format("Error in type {0}", typeof(T)), ex);
             }
         }
 
