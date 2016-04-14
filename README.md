@@ -6,7 +6,6 @@ _A speedy, light-weight, schema-less search server and framework with zero confi
 * _[Introduction](#intro)_
 * _[Quick usage guide](#usage)_
 * _[Relevance (tf-idf)](#relevance)_
-* _[The CLI](#cli)_
 * _[Backlog](#roadmap)_
 * _[At large scale](#scale)_
 * _[Dependencies](#dependencies)_
@@ -14,7 +13,7 @@ _A speedy, light-weight, schema-less search server and framework with zero confi
 
 <a name="intro" id="intro"></a>
 ##Introduction
-[Launch a search server in seconds](#inproc), with Solr-like capabilities but with zero config. [Consume](#usage) its entire API from [javascript](#jquery) or C#, or use the [CLI](#cli) to build, query and analyze your index. 
+[Launch a search server in seconds](#inproc), with Solr-like capabilities but with zero config. [Consume](#usage) its entire API from [javascript](#jquery) or C#, or use the CLI to build, query and analyze your index. 
 
 Solve your full-text search problem or your big data analysis task with an intuitive tool for information retrieval armed with an extensible model and a strong architecture. Resin is stream-lined, free of legacy code and java inheritance and aims to simplify what it is that make Lucene, Solr and Elasticsearch great: __speed of indexing and query execution, relevance, reliablility__, but also: 
 
@@ -193,72 +192,6 @@ The default scoring implementation follows a [tf-idf](https://en.wikipedia.org/w
 with a slightly normalized term frequency `1+sqrt(TF)`. 
 
 Call Searcher.Search with `returnTrace:true` to include an explanation along with the result of how the scoring was calculated.
-
-<a name="cli" id="cli"></a>
-## Test spin
-
-1. Download a Wikipedia JSON dump [here](https://dumps.wikimedia.org/wikidatawiki/entities/)
-2. Use the [WikipediaJsonParser](https://github.com/kreeben/resin/blob/master/Resin.WikipediaJsonParser/Program.cs) to extract as many documents as you want. In a cmd window:
-
-	cd path_to_resin_repo
-	
-	rnw c:\downloads\wikipedia.json 0 1000000
-
-	This will generate a new file: wikipedia_resin.json. 0 documents was skipped and 1M taken from the wikipedia file.
-
-3. Create an index:
-	
-	rn write --file c:\downloads\wikipedia_resin.json --dir c:\temp\resin\wikipedia --skip 0 --take 1000000
-
-4. After 3 minutes or so, do this:  
-
-	rn query --dir c:\temp\resin\wikipedia -q "label:ringo"
-
-![alt text](https://github.com/kreeben/resin/blob/master/screenshot.PNG "I have an SSD. The index was warmed up prior to the query.")
-
-A little less than a millisecond apparently. A couple of orders of magitude faster than Lucene. Here's what went down:
-
-	var q = args[Array.IndexOf(args, "-q") + 1];
-	var timer = new Stopwatch();
-	using (var s = new Searcher(dir))
-	{
-	    for (int i = 0; i < 1; i++)
-	    {
-	        s.Search(q).Docs.ToList(); // this heats up the "label" field and pre-caches the documents
-	    }
-	    timer.Start();
-	    var docs = s.Search(q).Docs.ToList(); // Fetch docs from cache
-	    var elapsed = timer.Elapsed.TotalMilliseconds;
-	    var position = 0;
-	    foreach (var doc in docs)
-	    {
-	        Console.WriteLine(string.Join(", ", ++position, doc.Fields["id"][0], doc.Fields["label"][0]));
-	    }
-	    Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed);
-	}
-
-Here is another test, this time the documents aren't pre-cached in the warmup:
-
-	var q = args[Array.IndexOf(args, "-q") + 1];
-	var timer = new Stopwatch();
-	using (var s = new Searcher(dir))
-	{
-	    for (int i = 0; i < 1; i++)
-	    {
-	        s.Search(q); // warm up the "label" field
-	    }
-	    timer.Start();
-	    var docs = s.Search(q).Docs.ToList(); // Fetch docs from disk
-	    var elapsed = timer.Elapsed.TotalMilliseconds;
-	    var position = 0;
-	    foreach (var doc in docs)
-	    {
-	        Console.WriteLine(string.Join(", ", ++position, doc.Fields["id"][0], doc.Fields["label"][0]));
-	    }
-	    Console.WriteLine("{0} results in {1} ms", docs.Count, elapsed);
-	}
-
-![alt text](https://github.com/kreeben/resin/blob/master/screenshot3.PNG "Docs weren't in the cache.")
 
 <a name="roadmap" id="roadmap"></a>
 ##Backlog
