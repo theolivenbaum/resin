@@ -12,43 +12,22 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(QueryRequest));
         private readonly IDictionary<string, Trie> _trieFiles;
         private readonly IDictionary<string, FieldFile> _fieldFiles;
-        private readonly IDictionary<string, DocFile> _docFiles;
         private readonly FixFile _fix;
-        private readonly DixFile _dix;
 
-        public QueryRequest(string directory)
+        public QueryRequest(string directory, string fixFileName, Dictionary<string, FieldFile> fieldFiles)
         {
             _directory = directory;
-            var ix = IxFile.Load(Path.Combine(directory, "0.ix"));
-            _fix = FixFile.Load(Path.Combine(directory, ix.FixFileName));
-            _dix = DixFile.Load(Path.Combine(directory, ix.DixFileName));
-            _docFiles = new Dictionary<string, DocFile>();
-            _fieldFiles = new Dictionary<string, FieldFile>();
+            _fix = FixFile.Load(Path.Combine(directory, fixFileName));
+            _fieldFiles = fieldFiles;
             _trieFiles = new Dictionary<string, Trie>();
         }
 
-        public Result GetResult(Query query, int page, int size, bool returnTrace)
+        public IEnumerable<DocumentScore> GetResult(Query query, int page, int size, bool returnTrace)
         {
             Expand(query);
             Scan(query);
             var scored = query.Resolve().Values.OrderByDescending(s => s.Score).ToList();
-            var skip = page * size;
-            var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
-            var trace = returnTrace ? paged.ToDictionary(ds => ds.Key, ds => ds.Value.Trace.ToString() + paged[ds.Key].Score) : null;
-            var docs = paged.Values.Select(s => GetDoc(s.DocId)).ToList();
-            return new Result { Docs = docs, Total = scored.Count, Trace = trace };
-        }
-
-        private IDictionary<string, string> GetDoc(string docId)
-        {
-            var fileName = Path.Combine(_directory, _dix.DocIdToFileIndex[docId] + ".d");
-            DocFile file;
-            if (!_docFiles.TryGetValue(fileName, out file))
-            {
-                file = DocFile.Load(fileName);
-                _docFiles[fileName] = file;
-            }
-            return file.Docs[docId].Fields;
+            return scored;
         }
 
         private Trie GetTrieFile(string field)

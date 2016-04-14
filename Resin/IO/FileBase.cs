@@ -27,10 +27,9 @@ namespace Resin.IO
 
         public static T Load(string fileName)
         {
-            Log.DebugFormat("trying to load {0}", fileName);
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                Log.DebugFormat("found {0}", fileName);
+                Log.DebugFormat("loading {0}", fileName);
                 var result = (T)Serializer.Deserialize(fs);
                 Log.DebugFormat("loaded {0}", fileName);
                 return result;
