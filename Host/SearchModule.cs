@@ -54,7 +54,7 @@ namespace Resin
                 {
                     if (!Searchers.TryGetValue(dir, out searcher))
                     {
-                        searcher = new Searcher(dir);
+                        searcher = new Searcher(dir, new QueryParser(new Analyzer()));
                         Searchers.Add(dir, searcher);
                     }
                 }

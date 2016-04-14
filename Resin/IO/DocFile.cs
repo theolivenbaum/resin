@@ -1,26 +1,25 @@
-﻿using System.Collections.Generic;
-using ProtoBuf;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Resin.IO
 {
-    [ProtoContract]
+    [Serializable]
     public class DocFile : FileBase<DocFile>
     {
         // docid/fields/value
-        [ProtoMember(1)]
-        private readonly IDictionary<string, Document> _docs;
+        private readonly Dictionary<string, Document> _docs;
 
         public DocFile()
         {
             _docs = new Dictionary<string, Document>();
         }
 
-        public DocFile(IDictionary<string, Document> docs)
+        public DocFile(Dictionary<string, Document> docs)
         {
             _docs = docs;
         }
 
-        public IDictionary<string, Document> Docs
+        public Dictionary<string, Document> Docs
         {
             get { return _docs; }
         }

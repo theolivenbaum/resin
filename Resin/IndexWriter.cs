@@ -23,7 +23,10 @@ namespace Resin
 
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
-            if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
 
             _directory = directory;
             _analyzer = analyzer;

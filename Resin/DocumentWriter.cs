@@ -36,7 +36,7 @@ namespace Resin
 
             // docid/file
             var dix = new DixFile();
-            var batches = _docs.IntoBatches(1000).ToList();
+            var batches = _docs.IntoBatches(100).ToList();
             foreach (var batch in batches)
             {
                 var d = new DocFile(batch.ToDictionary(x=>x.Key, y=>y.Value));

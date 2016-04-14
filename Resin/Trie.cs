@@ -1,22 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ProtoBuf;
 using Resin.IO;
 
 namespace Resin
 {
-    [ProtoContract]
+    [Serializable]
     public class Trie : FileBase<Trie>
     {
-        [ProtoMember(1)]
         private readonly char _value;
 
-        [ProtoMember(2)]
         private bool _eow;
 
-        [ProtoMember(3, DataFormat = DataFormat.Group)]
-        private readonly IDictionary<char, Trie> _children;
+        private readonly Dictionary<char, Trie> _children;
 
         public Trie()
         {

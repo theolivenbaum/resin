@@ -1,21 +1,25 @@
-﻿using System.Collections.Generic;
-using ProtoBuf;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Resin.IO
 {
-    [ProtoContract]
+    [Serializable]
     public class DixFile : FileBase<DixFile>
     {
         // docid/file
-        [ProtoMember(1)]
-        private readonly IDictionary<string, string>_docIdToFileIndex;
+        private readonly Dictionary<string, string>_docIdToFileIndex;
 
         public DixFile()
         {
             _docIdToFileIndex = new Dictionary<string, string>();
         }
 
-        public IDictionary<string, string> DocIdToFileIndex
+        public DixFile(Dictionary<string, string> docIdToFileIndex)
+        {
+            _docIdToFileIndex = docIdToFileIndex;
+        }
+
+        public Dictionary<string, string> DocIdToFileIndex
         {
             get { return _docIdToFileIndex; }
         }

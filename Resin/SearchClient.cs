@@ -15,6 +15,7 @@ namespace Resin
         {
             _url = url + indexName;
             _client = new HttpClient();
+            _client.Timeout = TimeSpan.FromMinutes(10);
             _client.DefaultRequestHeaders.Accept.Clear();
             _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }

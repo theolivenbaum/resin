@@ -1,21 +1,20 @@
-﻿using System.Collections.Generic;
-using ProtoBuf;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Resin.IO
 {
-    [ProtoContract]
+    [Serializable]
     public class FixFile : FileBase<FixFile>
     {
         // field/fileid
-        [ProtoMember(1)]
-        private readonly IDictionary<string, string> _fieldIndex;
+        private readonly Dictionary<string, string> _fieldIndex;
 
         public FixFile()
         {
             _fieldIndex = new Dictionary<string, string>();
         }
 
-        public IDictionary<string, string> FieldIndex
+        public Dictionary<string, string> FieldIndex
         {
             get { return _fieldIndex; }
         }

@@ -18,7 +18,6 @@ namespace Resin
         private readonly IDictionary<string, IDictionary<string, string>> _docCache;
         
         private readonly string _directory;
-        private static readonly object Sync = new object();
         private static readonly ILog Log = LogManager.GetLogger(typeof(IndexReader));
 
         public FieldScanner FieldScanner { get { return _fieldScanner; } }
@@ -31,7 +30,7 @@ namespace Resin
 
             var ixIds = Directory.GetFiles(_directory, "*.ix")
                 .Where(f => Path.GetExtension(f) != ".tmp")
-                .Select(f => int.Parse(Path.GetFileNameWithoutExtension(f)))
+                .Select(f => int.Parse(Path.GetFileNameWithoutExtension(f) ?? "-1"))
                 .OrderBy(i => i).ToList();
 
             foreach (var ixFileName in ixIds.Select(id => Path.Combine(_directory, id + ".ix")))
@@ -57,14 +56,9 @@ namespace Resin
 
         public IEnumerable<DocumentScore> GetScoredResult(Query query)
         {
-            Expand(query);
+            _fieldScanner.Expand(query);
             Fetch(query);
             return query.Resolve().Values.OrderByDescending(s => s.Score);
-        }
-
-        private void Expand(Query query)
-        {
-            _fieldScanner.Expand(query);            
         }
 
         private IEnumerable<DocumentScore> GetScoredTermResult(Term term)
@@ -82,74 +76,54 @@ namespace Resin
 
         private void Fetch(Query query)
         {
-            query.TermResult = GetScoredTermResult(query).ToDictionary(x => x.DocId, y => y);
+            query.Result = GetScoredTermResult(query).ToDictionary(x => x.DocId, y => y);
             foreach (var child in query.Children)
             {
                 Fetch(child);
             }
         }
 
-        public IDictionary<string, string> GetDocNoCache(DocumentScore docScore)
+        public IDictionary<string, string> GetDoc(DocumentScore docScore)
         {
             var doc = new Dictionary<string, string>();
             foreach (var file in _docFiles[docScore.DocId])
             {
-                var d = LoadDoc(Path.Combine(_directory, file + ".d"), docScore.DocId);
-                if (d != null)
+                var d = GetDoc(docScore.DocId);
+                if (d == null)
                 {
-                    foreach (var field in d.Fields)
-                    {
-                        doc[field.Key] = field.Value; // overwrites former value with latter
-                    }
+                    LoadFile(Path.Combine(_directory, file + ".d"));
+                    d = GetDoc(docScore.DocId);
                 }
-            }
-            if (doc.Count == 0)
-            {
-                throw new ArgumentException("Document missing from index", "docScore");
+                if (d == null)
+                {
+                    throw new ArgumentException("Document missing from index", "docScore");
+                }
+                Log.DebugFormat("found doc {0} in {1}", docScore.DocId, file);
+                foreach (var field in d)
+                {
+                    doc[field.Key] = field.Value; // overwrites former value with latter
+                }
             }
             return doc;
         }
 
-        public IDictionary<string, string> GetDoc(DocumentScore docScore)
+        private IDictionary<string, string> GetDoc(string docId)
         {
             IDictionary<string, string> doc;
-            if (!_docCache.TryGetValue(docScore.DocId, out doc))
+            if (!_docCache.TryGetValue(docId, out doc))
             {
-                lock (Sync)
-                {
-                    if (!_docCache.TryGetValue(docScore.DocId, out doc))
-                    {
-                        doc = new Dictionary<string, string>();
-                        foreach (var file in _docFiles[docScore.DocId])
-                        {
-                            var d = LoadDoc(Path.Combine(_directory, file + ".d"), docScore.DocId);
-                            if (d != null)
-                            {
-                                foreach (var field in d.Fields)
-                                {
-                                    doc[field.Key] = field.Value; // overwrites former value with latter
-                                }
-                            }
-                        }
-                        if (doc.Count == 0)
-                        {
-                            throw new ArgumentException("Document missing from index", "docScore");
-                        }
-                        _docCache[docScore.DocId] = doc;
-                        Log.InfoFormat("cached doc {0}", docScore.DocId);  
-                    }
-                }
+                return null;
             }
             return doc;
         }
 
-        private Document LoadDoc(string fileName, string docId)
+        private void LoadFile(string fileName)
         {
-            var docs = DocFile.Load(fileName);
-            Document doc;
-            if (!docs.Docs.TryGetValue(docId, out doc)) return null;
-            Log.DebugFormat("fetched doc {0} from {1}", docId, fileName);  
-            return doc;
+            foreach (var doc in DocFile.Load(fileName).Docs.Values)
+            {
+                _docCache[doc.Id] = doc.Fields;
+            }
+            Log.DebugFormat("cached {0}", fileName);
         }
 
         public void Dispose()

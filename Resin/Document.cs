@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using ProtoBuf;
 
 namespace Resin
 {
-    [ProtoContract]
+    [Serializable]
     public class Document
     {
         public string Id
@@ -12,7 +11,6 @@ namespace Resin
             get { return Fields["_id"]; }
         }
 
-        [ProtoMember(1)] 
         private readonly IDictionary<string, string> _fields;
 
         public IDictionary<string, string> Fields { get { return _fields; } }

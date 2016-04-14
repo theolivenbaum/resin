@@ -31,7 +31,7 @@ namespace Resin
         {
             var ixIds = Directory.GetFiles(directory, "*.ix")
                 .Where(f => Path.GetExtension(f) != ".tmp")
-                .Select(f => int.Parse(Path.GetFileNameWithoutExtension(f)))
+                .Select(f => int.Parse(Path.GetFileNameWithoutExtension(f) ?? "-1"))
                 .OrderBy(i => i).ToList();
 
             var fieldIndex = new Dictionary<string, IList<string>>();
@@ -72,15 +72,14 @@ namespace Resin
         public void Expand(Query query)
         {
             IList<Query> expanded = null;
-            var reader = GetReader(query.Field);
             
             if (query.Fuzzy)
             {
-                expanded = reader.GetSimilar(query.Token, query.Edits).Select(token => new Query(query.Field, token)).ToList();
+                expanded = GetReader(query.Field).GetSimilar(query.Token, query.Edits).Select(token => new Query(query.Field, token)).ToList();
             }
             else if (query.Prefix)
             {
-                expanded = reader.GetTokens(query.Token).Select(token => new Query(query.Field, token)).ToList();
+                expanded = GetReader(query.Field).GetTokens(query.Token).Select(token => new Query(query.Field, token)).ToList();
             }
 
             if (expanded != null)
@@ -114,7 +113,7 @@ namespace Resin
             }
         }
 
-        private FieldReader GetReader(string field)
+        public FieldReader GetReader(string field)
         {
             FieldReader reader;
             if (!_readerCache.TryGetValue(field, out reader))

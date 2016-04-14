@@ -1,14 +1,12 @@
-﻿using System.IO;
-using ProtoBuf;
+﻿using System;
+using System.IO;
 
 namespace Resin.IO
 {
-    [ProtoContract]
+    [Serializable]
     public class IxFile : FileBase<IxFile>
     {
-        [ProtoMember(1)]
         private readonly string _fixFileName;
-        [ProtoMember(2)]
         private readonly string _dixFileName;
 
         public IxFile() { }

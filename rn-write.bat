@@ -1,6 +1,6 @@
-rmdir /s /q C:\Users\Marcus\Resin\wikipedia
-rem rn.bat write --file c:\temp\wikipedia.d0 --dir c:\users\marcus\resin\wikipedia --skip 0 --take 10000000
-call rn.bat write --file c:\temp\wikipedia.d0 --name wikipedia --skip 0 --take 100000
+rem rmdir /s /q C:\Users\Marcus\Resin\wikipedia
+rem rn write --file c:\temp\wikipedia.json --dir c:\users\marcus\resin\wikipedia --skip 0 --take 1000000
+call rn.bat write --file c:\temp\wikipedia.json --name wikipedia --skip 0 --take 10000
 rem call rn.bat write --file c:\temp\wikipedia.d1 --name wikipedia --skip 0 --take 100000
 rem call rn.bat write --file c:\temp\wikipedia.d2 --name wikipedia --skip 0 --take 100000
 rem call rn.bat write --file c:\temp\wikipedia.d3 --name wikipedia --skip 0 --take 1000000

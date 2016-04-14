@@ -16,6 +16,7 @@ namespace Resin
         public WriterClient(string indexName, string url)
         {
             _client = new HttpClient();
+            _client.Timeout = TimeSpan.FromMinutes(10);
             _url = url + indexName + "/add";
         }
 

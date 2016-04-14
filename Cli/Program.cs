@@ -4,7 +4,8 @@ using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Resin.IO;
+using log4net.Config;
+using Newtonsoft.Json;
 
 namespace Resin
 {
@@ -12,6 +13,7 @@ namespace Resin
     {
         static void Main(string[] args)
         {
+            XmlConfigurator.Configure();
             if (args[0].ToLower() == "write")
             {
                 if (Array.IndexOf(args, "--file") == -1)
@@ -23,10 +25,9 @@ namespace Resin
             }
             else if (args[0].ToLower() == "query")
             {
-                if (Array.IndexOf(args, "-q") == -1 ||
-                    Array.IndexOf(args, "--name") == -1)
+                if (Array.IndexOf(args, "-q") == -1)
                 {
-                    Console.WriteLine("I need an index name and a query.");
+                    Console.WriteLine("I need a query.");
                     return;
                 }
                 Query(args);
@@ -77,7 +78,13 @@ namespace Resin
 
         static void Query(string[] args)
         {
-            var name = args[Array.IndexOf(args, "--name") + 1];
+            Console.ForegroundColor = ConsoleColor.White;
+            string dir = null;
+            string indexName = null;
+            if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
+            if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
+            var inproc = !string.IsNullOrWhiteSpace(dir);
+
             var q = args[Array.IndexOf(args, "-q") + 1];
             var page = 0;
             var size = 10;
@@ -86,22 +93,41 @@ namespace Resin
             if (Array.IndexOf(args, "-s") > 0) size = int.Parse(args[Array.IndexOf(args, "-s") + 1]);
             if (Array.IndexOf(args, "--url") > 0) url = args[Array.IndexOf(args, "--url") + 1];
             var timer = new Stopwatch();
-            using (var s = new SearchClient(name, url))
-            {              
-                timer.Start();
-                var result = s.Search(q, page, size);
-                timer.Stop();
-                var position = 0 + (page * size);
-                foreach (var doc in result.Docs)
+            if (inproc)
+            {
+                using (var s = new Searcher(dir, new QueryParser(new Analyzer())))
                 {
-                    Console.WriteLine(string.Join(", ", ++position, doc["_id"], doc["label"]));
-                    //Console.ForegroundColor = ConsoleColor.DarkCyan;
-                    //Console.Write(" {0}", result.Trace[doc["_id"].ToLower()]);
-                    //Console.ResetColor();
-                    //Console.WriteLine();
+                    timer.Start();
+                    var result = s.Search(q, page, size, returnTrace:true);
+                    timer.Stop();
+                    var position = 0 + (page * size);
+                    foreach (var doc in result.Docs)
+                    {
+                        Console.WriteLine(string.Join(", ", ++position, doc["_id"], doc["label"]));
+                    }
+                    Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, timer.Elapsed.TotalMilliseconds);
+                    //foreach (var doc in result.Trace)
+                    //{
+                    //    Console.WriteLine("{0} {1}", doc.Key, doc.Value);
+                    //}
                 }
-                Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, timer.Elapsed.TotalMilliseconds);
             }
+            else
+            {
+                using (var s = new SearchClient(indexName, url))
+                {
+                    timer.Start();
+                    var result = s.Search(q, page, size);
+                    timer.Stop();
+                    var position = 0 + (page * size);
+                    foreach (var doc in result.Docs)
+                    {
+                        Console.WriteLine(string.Join(", ", ++position, doc["_id"], doc["label"]));
+                    }
+                    Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, timer.Elapsed.TotalMilliseconds);
+                } 
+            }
+            
         }
 
         static void Analyze(string[] args)
@@ -122,6 +148,7 @@ namespace Resin
         {
             var take = 1000;
             var skip = 0;
+            var skipped = 0;
 
             if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
             if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
@@ -133,37 +160,50 @@ namespace Resin
             if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
 
             var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
-            var toDisk = !string.IsNullOrWhiteSpace(dir);
-            IndexWriter w = toDisk ? new IndexWriter(dir, new Analyzer()) : null;
+            var inproc = !string.IsNullOrWhiteSpace(dir);
+            IndexWriter w = inproc ? new IndexWriter(dir, new Analyzer()) : null;
 
-            Console.Write(toDisk ? "Writing " : "Collecting docs ");
+            Console.Write(inproc ? "Writing " : "Collecting docs ");
 
             var cursorPos = Console.CursorLeft;
             var count = 0;
             var timer = new Stopwatch();
             timer.Start();
-            
-            var docs = new List<IDictionary<string, string>>();
-            var docFile = DocFile.Load(fileName);
-            foreach (var doc in docFile.Docs.Skip(skip).Take(take))
-            {
-                    if (toDisk)
-                    {
-                        w.Write(doc.Value.Fields);
-                    }
-                    else
-                    {
-                        docs.Add(doc.Value.Fields);
-                    }
 
+            var docs = new List<Dictionary<string, string>>();
+            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var bs = new BufferedStream(fs))
+            using (var sr = new StreamReader(bs))
+            {
+                string line;
+                sr.ReadLine();
+                while (skipped++ < skip)
+                {
+                    sr.ReadLine();
+                }
+                while ((line = sr.ReadLine()) != null)
+                {
+                    if (line[0] == ']') break;
+
+                    var doc = JsonConvert.DeserializeObject<Dictionary<string, string>>(line.Substring(0, line.Length - 1));
                     Console.SetCursorPosition(cursorPos, Console.CursorTop);
                     Console.Write(++count);
 
+                    if (inproc)
+                    {
+                        w.Write(doc);
+                    }
+                    else
+                    {
+                        docs.Add(doc);
+                    }
+
                     if (count == take) break;
+                }
             }
             Console.Write(" in {0}\r\n", timer.Elapsed);
             timer.Restart();
-            if (toDisk)
+            if (inproc)
             {
                 Console.Write("Flushing to disk");
                 w.Dispose();
@@ -174,7 +214,7 @@ namespace Resin
                 using (var client = new WriterClient(indexName, url))
                 {
                     client.Write(docs);
-                }   
+                }
             }
             Console.Write(" in {0}", timer.Elapsed);
         }

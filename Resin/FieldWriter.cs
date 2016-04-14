@@ -19,8 +19,12 @@ namespace Resin
 
         public FieldWriter(string fileName)
         {
-            var dir = Path.GetDirectoryName(fileName);
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            var dir = Path.GetDirectoryName(fileName) ?? string.Empty;
+
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
 
             _termsFileName = fileName;
             _trieFileName = fileName + ".tri";
@@ -30,7 +34,7 @@ namespace Resin
 
         public void Write(string docId, string term, int frequency)
         {
-            IDictionary<string, int> docs;
+            Dictionary<string, int> docs;
             if (!_terms.Terms.TryGetValue(term, out docs))
             {
                 docs = new Dictionary<string, int> { { docId, frequency } };

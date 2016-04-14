@@ -5,7 +5,7 @@ using Resin.IO;
 
 namespace Resin
 {
-    public class FieldReader
+    public class  FieldReader
     {
         // terms/docids/term frequency
         private readonly FieldFile _fieldFile;
@@ -17,7 +17,7 @@ namespace Resin
 
         public int DocCount { get { return _docCount; } }
         public Trie Trie { get { return _trie; } }
-        public IDictionary<string, IDictionary<string, int>> Terms { get { return _fieldFile.Terms; } } 
+        public Dictionary<string, Dictionary<string, int>> Terms { get { return _fieldFile.Terms; } } 
 
         public FieldReader(FieldFile terms, Trie trie)
         {
@@ -51,10 +51,10 @@ namespace Resin
         {
             foreach (var newTerm in latter._fieldFile.Terms)
             {
-                IDictionary<string, int> t;
+                Dictionary<string, int> t;
                 if (!_fieldFile.Terms.TryGetValue(newTerm.Key, out t))
                 {
-                    _fieldFile.Terms.Add(newTerm);
+                    _fieldFile.Terms.Add(newTerm.Key, newTerm.Value);
                     _trie.Add(newTerm.Key);
                 }
                 else
@@ -91,9 +91,9 @@ namespace Resin
             return _trie.Similar(word, edits);
         }
 
-        public IDictionary<string, int> GetPostings(string token)
+        public Dictionary<string, int> GetPostings(string token)
         {
-            IDictionary<string, int> postings;
+            Dictionary<string, int> postings;
             if (!_fieldFile.Terms.TryGetValue(token, out postings))
             {
                 return null;

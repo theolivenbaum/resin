@@ -1,13 +1,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Resin.IO;
 
 namespace Resin
 {
     public class Query : Term
     {
         public IList<Query> Children { get; protected set; }
-        public IDictionary<string, DocumentScore> TermResult { get; set ; }  
+        public IDictionary<string, DocumentScore> Result { get; set ; }
+        public FieldFile FieldFile { get; set; }
 
         public Query(string field, string token) : base(field, token)
         {
@@ -16,7 +18,7 @@ namespace Resin
 
         public IDictionary<string, DocumentScore> Resolve()
         {
-            var result = TermResult;
+            var result = Result;
             foreach (var child in Children)
             {
                 if (child.And)
