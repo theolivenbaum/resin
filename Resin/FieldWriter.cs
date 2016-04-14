@@ -8,7 +8,7 @@ namespace Resin
     public class FieldWriter : IDisposable
     {
         // terms/docids/term frequency
-        private readonly FieldFile _terms;
+        private readonly FieldFile _fieldFile;
 
         // prefix tree
         private readonly Trie _trie;
@@ -28,17 +28,18 @@ namespace Resin
 
             _termsFileName = fileName;
             _trieFileName = fileName + ".tri";
-            _terms = new FieldFile();
+            _fieldFile = new FieldFile();
             _trie = new Trie();
         }
 
         public void Write(string docId, string term, int frequency)
         {
             Dictionary<string, int> docs;
-            if (!_terms.Terms.TryGetValue(term, out docs))
+            if (!_fieldFile.Terms.TryGetValue(term, out docs))
             {
                 docs = new Dictionary<string, int> { { docId, frequency } };
-                _terms.Terms.Add(term, docs);
+                _fieldFile.Terms.Add(term, docs);
+                if(!_fieldFile.DocIds.ContainsKey(docId)) _fieldFile.DocIds.Add(docId, null);
                 _trie.Add(term);
             }
             else
@@ -51,7 +52,7 @@ namespace Resin
         {
             if (_flushing) return;
             _flushing = true;
-            _terms.Save(_termsFileName);
+            _fieldFile.Save(_termsFileName);
             _trie.Save(_trieFileName);
         }
 

@@ -44,12 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnalyzerTests.cs" />
-    <Compile Include="FieldReaderTests.cs" />
-    <Compile Include="FieldWriterTests.cs" />
-    <Compile Include="IndexReaderTests.cs" />
     <Compile Include="QueryParserTests.cs" />
-    <Compile Include="ScannerTests.cs" />
-    <Compile Include="IndexWriterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Setup.cs" />
     <Compile Include="TrieTests.cs" />

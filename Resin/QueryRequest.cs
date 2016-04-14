@@ -10,16 +10,16 @@ namespace Resin
     {
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(QueryRequest));
-        private readonly IDictionary<string, Trie> _trieFiles;
-        private readonly IDictionary<string, FieldFile> _fieldFiles;
+        private readonly Dictionary<string, Trie> _trieFiles;
+        private readonly Dictionary<string, FieldFile> _fieldFiles;
         private readonly FixFile _fix;
 
-        public QueryRequest(string directory, string fixFileName, Dictionary<string, FieldFile> fieldFiles)
+        public QueryRequest(string directory, FixFile fix, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles)
         {
             _directory = directory;
-            _fix = FixFile.Load(Path.Combine(directory, fixFileName));
+            _fix = fix;
             _fieldFiles = fieldFiles;
-            _trieFiles = new Dictionary<string, Trie>();
+            _trieFiles = trieFiles;
         }
 
         public IEnumerable<DocumentScore> GetResult(Query query, int page, int size, bool returnTrace)
@@ -32,7 +32,7 @@ namespace Resin
 
         private Trie GetTrieFile(string field)
         {
-            var fileName = Path.Combine(_directory,_fix.FieldIndex[field] + ".tri");
+            var fileName = Path.Combine(_directory,_fix.FieldIndex[field] + ".f.tri");
             Trie file;
             if (!_trieFiles.TryGetValue(fileName, out file))
             {
@@ -69,7 +69,7 @@ namespace Resin
         {
             var fieldFile = GetFieldFile(term.Field);
             if (fieldFile == null) yield break;
-            var docsInCorpus = fieldFile.Terms.Values.SelectMany(x => x.Keys).ToList().Distinct().Count();
+            var docsInCorpus = fieldFile.DocIds.Count();
             Dictionary<string, int> postings;
             if (fieldFile.Terms.TryGetValue(term.Token, out postings))
             {

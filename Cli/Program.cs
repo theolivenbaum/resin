@@ -58,22 +58,22 @@ namespace Resin
 
         static void About()
         {
-            var about = File.ReadAllText(@"..\..\..\readme.md");
-            var dir = Path.Combine(Environment.CurrentDirectory, "about");
-            using (var writer = new IndexWriter(dir, new Analyzer()))
-            {
-                writer.Write(new Dictionary<string, string>
-                        {
-                            {"body", about}
-                        }
-            );
-            }
-            var scanner = FieldScanner.MergeLoad(dir);
-            var timer = new Stopwatch();
-            timer.Start();
-            var tokens = scanner.GetAllTokens("body").OrderByDescending(t => t.Count).ToList();
-            Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
-            File.WriteAllLines(Path.Combine(dir, "_about.txt"), tokens.Select(t => string.Format("{0} {1}", t.Token, t.Count)));
+            //var about = File.ReadAllText(@"..\..\..\readme.md");
+            //var dir = Path.Combine(Environment.CurrentDirectory, "about");
+            //using (var writer = new IndexWriter(dir, new Analyzer()))
+            //{
+            //    writer.Write(new Dictionary<string, string>
+            //            {
+            //                {"body", about}
+            //            }
+            //);
+            //}
+            //var scanner = FieldScanner.MergeLoad(dir);
+            //var timer = new Stopwatch();
+            //timer.Start();
+            //var tokens = scanner.GetAllTokens("body").OrderByDescending(t => t.Count).ToList();
+            //Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
+            //File.WriteAllLines(Path.Combine(dir, "_about.txt"), tokens.Select(t => string.Format("{0} {1}", t.Token, t.Count)));
         }
 
         static void Query(string[] args)
@@ -132,16 +132,16 @@ namespace Resin
 
         static void Analyze(string[] args)
         {
-            var dir = args[Array.IndexOf(args, "--dir") + 1];
-            var field = args[Array.IndexOf(args, "--field") + 1];
-            var timer = new Stopwatch();
-            timer.Start();
-            var scanner = FieldScanner.MergeLoad(dir);
-            var tokens = scanner.GetAllTokens(field).OrderByDescending(t => t.Count).ToList();
-            var trieTokens = scanner.GetAllTokensFromTrie(field);
-            Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
-            File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens.Select(t => string.Format("{0} {1}", t.Token, t.Count)));
-            File.WriteAllLines(Path.Combine(dir, "_" + field + ".tri.txt"), trieTokens);
+            //var dir = args[Array.IndexOf(args, "--dir") + 1];
+            //var field = args[Array.IndexOf(args, "--field") + 1];
+            //var timer = new Stopwatch();
+            //timer.Start();
+            //var scanner = FieldScanner.MergeLoad(dir);
+            //var tokens = scanner.GetAllTokens(field).OrderByDescending(t => t.Count).ToList();
+            //var trieTokens = scanner.GetAllTokensFromTrie(field);
+            //Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
+            //File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens.Select(t => string.Format("{0} {1}", t.Token, t.Count)));
+            //File.WriteAllLines(Path.Combine(dir, "_" + field + ".tri.txt"), trieTokens);
         }
 
         static void Write(string[] args)

@@ -1,1 +1,1 @@
-rnw.bat d:\wikipedia\latest-all.json c:\temp\wikipedia.json 0 1000000
+rnw.bat d:\wikipedia\latest-all.json c:\temp\wikipedia.json 1000000 1000000

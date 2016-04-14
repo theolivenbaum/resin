@@ -30,9 +30,7 @@ namespace Resin.IO
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 Log.DebugFormat("loading {0}", fileName);
-                var result = (T)Serializer.Deserialize(fs);
-                Log.DebugFormat("loaded {0}", fileName);
-                return result;
+                return (T)Serializer.Deserialize(fs);
             }
         }
 
@@ -41,7 +39,8 @@ namespace Resin.IO
             typeof (string), typeof (int), typeof (char), typeof (Trie), typeof (Document), typeof (Trie),
             typeof (Dictionary<string, string>), typeof (Dictionary<string, Document>),
             typeof (Dictionary<string, Dictionary<string, int>>), typeof(Dictionary<char, Trie>),
-            typeof(DixFile), typeof(DocFile), typeof(FieldFile), typeof(FixFile), typeof(IxFile)
+            typeof(DixFile), typeof(DocFile), typeof(FieldFile), typeof(FixFile), typeof(IxFile),
+            typeof(Dictionary<string, object>)
         };
 
         private static readonly Serializer Serializer = new Serializer(Types);
