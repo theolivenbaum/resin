@@ -29,6 +29,7 @@ namespace Resin
                 {
                     input = Console.ReadLine();
                 }
+                Log.Info("server stopping");
             }
             Log.Info("server stopped");
             if (input == "restart")

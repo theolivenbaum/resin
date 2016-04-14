@@ -7,7 +7,6 @@ namespace Resin.IO
     {
         public virtual void Save(string fileName)
         {
-            //using (var fs = File.Create(fileName))
             using (var fs = File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             using (var bs = new BufferedStream(fs))
             {
