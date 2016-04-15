@@ -7,7 +7,7 @@ using Nancy;
 using Nancy.ModelBinding;
 using Newtonsoft.Json;
 
-namespace Resin
+namespace Resin.Host
 {
     public class WriteModule : NancyModule
     {

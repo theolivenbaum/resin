@@ -22,7 +22,7 @@ namespace Resin
             _trieFiles = trieFiles;
         }
 
-        public IEnumerable<DocumentScore> Collect(Query query, int page, int size, bool returnTrace)
+        public IEnumerable<DocumentScore> Collect(Query query, int page, int size)
         {
             Expand(query);
             Scan(query);

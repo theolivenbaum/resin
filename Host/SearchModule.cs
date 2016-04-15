@@ -5,7 +5,7 @@ using System.IO;
 using log4net;
 using Nancy;
 
-namespace Resin
+namespace Resin.Host
 {
     public class SearchModule : NancyModule
     {

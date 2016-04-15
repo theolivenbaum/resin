@@ -7,7 +7,7 @@
     <ProjectGuid>{A0C83074-0466-47DC-800C-17F3D0205713}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Resin</RootNamespace>
+    <RootNamespace>Resin.Host</RootNamespace>
     <AssemblyName>rnh</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

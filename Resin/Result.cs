@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
 
 namespace Resin
 {
@@ -23,10 +22,5 @@ namespace Resin
         public IDictionary<string,string>[] Docs { get; set; }
         public int Total { get; set; }
         public IDictionary<string, string> Trace { get; set; }
-
-        public static ResolvedResult Parse(string source)
-        {
-            return JsonConvert.DeserializeObject<ResolvedResult>(source);
-        }
     }
 }

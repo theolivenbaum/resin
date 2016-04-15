@@ -2,6 +2,7 @@ using System;
 
 namespace Resin
 {
+    [Serializable]
     public class Term
     {
         private int _edits;

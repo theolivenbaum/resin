@@ -4,7 +4,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace Resin
+namespace Resin.Client
 {
     public class SearchClient : IDisposable
     {
@@ -14,8 +14,7 @@ namespace Resin
         public SearchClient(string indexName, string url)
         {
             _url = url + indexName;
-            _client = new HttpClient();
-            _client.Timeout = TimeSpan.FromMinutes(10);
+            _client = new HttpClient {Timeout = TimeSpan.FromMinutes(10)};
             _client.DefaultRequestHeaders.Accept.Clear();
             _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }

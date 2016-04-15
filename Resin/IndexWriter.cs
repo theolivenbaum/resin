@@ -29,6 +29,7 @@ namespace Resin
             _deletions = new List<Term>();
         }
 
+        // TODO: implement "delete by query"
         public void Remove(string field, string token)
         {
             _deletions.Add(new Term(field, token));
@@ -100,7 +101,7 @@ namespace Resin
 
             _fix.Save(fixFileName);
             var ix = new IxFile(Path.GetFileName(fixFileName), Path.GetFileName(dixFileName), _deletions);
-            ix.Save(ixFileName);
+            ix.Save(ixFileName); // must be the last thing that happens in the flush, because as soon as the ix file exists this whole index will go live 
         }
 
         public void Dispose()

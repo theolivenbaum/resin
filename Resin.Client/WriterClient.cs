@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace Resin
+namespace Resin.Client
 {
     public class WriterClient : IDisposable
     {
@@ -15,8 +15,7 @@ namespace Resin
 
         public WriterClient(string indexName, string url)
         {
-            _client = new HttpClient();
-            _client.Timeout = TimeSpan.FromMinutes(10);
+            _client = new HttpClient {Timeout = TimeSpan.FromMinutes(10)};
             _url = url + indexName + "/add";
         }
 

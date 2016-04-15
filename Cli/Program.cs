@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using log4net.Config;
 using Newtonsoft.Json;
+using Resin.Client;
 
-namespace Resin
+namespace Resin.Cli
 {
     class Program
     {

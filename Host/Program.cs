@@ -4,11 +4,11 @@ using log4net.Config;
 using Nancy;
 using Nancy.Hosting.Self;
 
-namespace Resin
+namespace Resin.Host
 {
     class Program
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(SearchClient));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Program));
 
         static void Main(string[] args)
         {
