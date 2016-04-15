@@ -63,7 +63,7 @@ namespace Resin
                         _deletedDocs.Add(id);
                     }
                 }
-                var dix = DixFile.Load(ix.DixFileName);
+                var dix = DixFile.Load(Path.Combine(_directory, ix.DixFileName));
                 foreach (var newDoc in dix.DocIdToFileIndex)
                 {
                     var d = DocFile.Load(Path.Combine(_directory, newDoc.Value + ".d")).Docs[newDoc.Key];
@@ -74,19 +74,18 @@ namespace Resin
                         {
                             oldDoc[field.Key] = field.Value;
                         }
-                        var rebased = new Document(oldDoc);
-                        rebasedDocs.Add(rebased.Id, rebased);
+                        d = new Document(oldDoc);
                     }
-                    rebasedDocs.Add(d.Id, d);
+                    rebasedDocs[d.Id] = d;
                 }
             }
             var rebasedDocFile = new DocFile(rebasedDocs);
-            var rebasedDocFileName = Guid.NewGuid().ToString();
+            var rebasedDocFileName = Path.GetRandomFileName();
             foreach (var doc in rebasedDocs)
             {
                 _dix.DocIdToFileIndex[doc.Key] = rebasedDocFileName;
             }
-            _docFiles.Add(rebasedDocFileName, rebasedDocFile);
+            _docFiles.Add(Path.Combine(_directory, rebasedDocFileName + ".d"), rebasedDocFile);
         }
 
         private IEnumerable<string> GetIndexFiles()
