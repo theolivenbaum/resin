@@ -26,9 +26,18 @@ namespace Resin
             _fieldFiles = new Dictionary<string, FieldFile>();
             _trieFiles = new Dictionary<string, Trie>();
 
-            var ix = IxFile.Load(Path.Combine(directory, "0.ix"));
+            var ixFileName = GetIndexFiles().First();
+            var ix = IxFile.Load(Path.Combine(directory, ixFileName));
             _dix = DixFile.Load(Path.Combine(directory, ix.DixFileName));
             _fix = FixFile.Load(Path.Combine(directory, ix.FixFileName));
+        }
+
+        private IEnumerable<string> GetIndexFiles()
+        {
+            var ids =Directory.GetFiles(_directory, "*.ix")
+                .Select(f => Int64.Parse(Path.GetFileNameWithoutExtension(f) ?? "-1"))
+                .OrderBy(id => id);
+            return ids.Select(id => Path.Combine(_directory, id + ".ix"));
         }
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
@@ -38,7 +47,8 @@ namespace Resin
             var skip = page*size;
             var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
             var trace = returnTrace ? paged.ToDictionary(ds => ds.Key, ds => ds.Value.Trace.ToString() + paged[ds.Key].Score) : null;
-            var docs = paged.Values.Select(s => GetDoc(s.DocId));
+            // docs shall remain lazy so that further inproc filtering such as Result.Docs.First() will make the query run even faster
+            var docs = paged.Values.Select(s => GetDoc(s.DocId)); 
             return new Result { Docs = docs, Total = scored.Count, Trace = trace };
         }
 

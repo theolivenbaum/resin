@@ -7,6 +7,8 @@ namespace Resin
 {
     public static class Helper
     {
+        public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 1);
+
         public static string GetResinDataDirectory()
         {
             var configPath = ConfigurationManager.AppSettings.Get("datadirectory");

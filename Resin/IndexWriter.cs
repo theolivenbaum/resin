@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Resin.IO;
 
 namespace Resin
@@ -14,12 +13,11 @@ namespace Resin
         // field/writer
         private readonly IDictionary<string, FieldWriter> _fieldWriters;
 
+        private readonly List<Term> _deletions;
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private readonly DocumentWriter _docWriter;
         private bool _flushing;
-
-        private static readonly object Sync = new object();
 
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
@@ -28,6 +26,12 @@ namespace Resin
             _docWriter = new DocumentWriter(_directory);
             _fieldWriters = new Dictionary<string, FieldWriter>();
             _fix = new FixFile();
+            _deletions = new List<Term>();
+        }
+
+        public void Remove(string field, string token)
+        {
+            _deletions.Add(new Term(field, token));
         }
 
         public void Write(IDictionary<string, string> doc)
@@ -71,15 +75,11 @@ namespace Resin
             _docWriter.Write(document);
         }
 
-        private static string ReserveIndexFileName(string dir)
+        private static string GetUniqueFileId(string dir)
         {
-            lock (Sync)
-            {
-                var count = Directory.GetFiles(dir, "*.ix").Count(f => f.EndsWith(".tmp") == false);
-                var fileName = Path.Combine(dir, count + ".ix");
-                File.WriteAllText(fileName + ".tmp", string.Empty);
-                return fileName;                
-            }
+            var ticks = DateTime.Now.Ticks - Helper.BeginningOfTime.Ticks;
+            var fileName = Path.Combine(dir, ticks + ".ix");
+            return fileName;
         }
 
         private void Flush()
@@ -87,7 +87,7 @@ namespace Resin
             if (_flushing) return;
             _flushing = true;
 
-            var ixFileName = ReserveIndexFileName(_directory);
+            var ixFileName = GetUniqueFileId(_directory);
             var fixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".fix");
             var dixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".dix");
 
@@ -99,7 +99,8 @@ namespace Resin
             }
 
             _fix.Save(fixFileName);
-            new IxFile(Path.GetFileName(fixFileName), Path.GetFileName(dixFileName)).Save(ixFileName);
+            var ix = new IxFile(Path.GetFileName(fixFileName), Path.GetFileName(dixFileName), _deletions);
+            ix.Save(ixFileName);
         }
 
         public void Dispose()
