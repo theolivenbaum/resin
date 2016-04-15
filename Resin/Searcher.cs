@@ -35,7 +35,12 @@ namespace Resin
             _dix = DixFile.Load(Path.Combine(_directory, ix.DixFileName));
             _fix = FixFile.Load(Path.Combine(_directory, ix.FixFileName));
 
-            if (generations.Count > 1) Rebase(generations.Skip(1));
+            if (generations.Count > 1)
+            {
+                Log.DebugFormat("rebasing");
+                Rebase(generations.Skip(1));
+            }
+            Log.DebugFormat("searcher initialized reading {0}", _directory);
         }
 
         /// <summary>
