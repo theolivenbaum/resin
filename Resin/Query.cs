@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using log4net;
 using Resin.IO;
 
 namespace Resin
@@ -10,6 +11,7 @@ namespace Resin
         public IList<Query> Children { get; protected set; }
         public IDictionary<string, DocumentScore> Result { get; set ; }
         public FieldFile FieldFile { get; set; }
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Query));
 
         public Query(string field, string token) : base(field, token)
         {
@@ -31,6 +33,7 @@ namespace Resin
                         if (childResult.TryGetValue(d.DocId, out score))
                         {
                             result[d.DocId] = score.Add(d);
+                            Log.DebugFormat("{0} doc score {1}", score.DocId, score.Score);
                         }
                         else
                         {
@@ -58,6 +61,8 @@ namespace Resin
                         {
                             result.Add(d);
                         }
+                        var r = result[d.Key];
+                        Log.DebugFormat("{0} doc score {1}", r.DocId, r.Score);
                     }
                 }
             }

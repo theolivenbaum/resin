@@ -23,11 +23,6 @@ namespace Resin
 
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
             _directory = directory;
             _analyzer = analyzer;
             _docWriter = new DocumentWriter(_directory);
@@ -85,7 +80,6 @@ namespace Resin
                 File.WriteAllText(fileName + ".tmp", string.Empty);
                 return fileName;                
             }
-
         }
 
         private void Flush()

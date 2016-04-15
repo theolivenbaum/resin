@@ -19,13 +19,6 @@ namespace Resin
 
         public FieldWriter(string fileName)
         {
-            var dir = Path.GetDirectoryName(fileName) ?? string.Empty;
-
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-
             _termsFileName = fileName;
             _trieFileName = fileName + ".tri";
             _fieldFile = new FieldFile();

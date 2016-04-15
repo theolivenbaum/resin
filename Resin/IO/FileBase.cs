@@ -14,11 +14,24 @@ namespace Resin.IO
         {
             try
             {
-                if (!Directory.Exists(Path.GetDirectoryName(fileName)))
-                    Directory.CreateDirectory(Path.GetDirectoryName(fileName));
-                using (var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+                var dir = Path.GetDirectoryName(fileName) ?? string.Empty;
+                if (!Directory.Exists(dir))
                 {
-                    Serializer.Serialize(fs, this);
+                    Directory.CreateDirectory(dir);
+                }
+                if (File.Exists(fileName))
+                {
+                    using (var fs = File.Open(fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read))
+                    {
+                        Serializer.Serialize(fs, this);
+                    }
+                }
+                else
+                {
+                    using (var fs = File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                    {
+                        Serializer.Serialize(fs, this);
+                    }
                 }
             }
             catch (Exception ex)
@@ -36,9 +49,9 @@ namespace Resin.IO
             }
         }
 
-        private static readonly Type[] Types = new[]
+        private static readonly Type[] Types =
         {
-            typeof (string), typeof (int), typeof (char), typeof (Trie), typeof (Document), typeof (Trie),
+            typeof (string), typeof (int), typeof (char), typeof (Trie), typeof (Document),
             typeof (Dictionary<string, string>), typeof (Dictionary<string, Document>),
             typeof (Dictionary<string, Dictionary<string, int>>), typeof(Dictionary<char, Trie>),
             typeof(DixFile), typeof(DocFile), typeof(FieldFile), typeof(FixFile), typeof(IxFile),
