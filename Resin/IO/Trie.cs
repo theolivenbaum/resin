@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Resin.IO;
 
-namespace Resin
+namespace Resin.IO
 {
     [Serializable]
     public class Trie : FileBase<Trie>

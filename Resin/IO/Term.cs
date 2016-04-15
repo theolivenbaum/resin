@@ -1,6 +1,6 @@
 using System;
 
-namespace Resin
+namespace Resin.IO
 {
     [Serializable]
     public class Term

@@ -6,20 +6,30 @@ namespace Resin.IO
     [Serializable]
     public class FieldFile : FileBase<FieldFile>
     {
-        // terms/docids/term frequency
-        private readonly Dictionary<string, Dictionary<string, int>> _terms;
+        // tokens/docids/term frequency
+        private readonly Dictionary<string, Dictionary<string, int>> _tokens;
 
         public Dictionary<string, object> DocIds { get; set; }
  
         public FieldFile()
         {
-            _terms = new Dictionary<string, Dictionary<string, int>>();
+            _tokens = new Dictionary<string, Dictionary<string, int>>();
             DocIds = new Dictionary<string, object>();
         }
 
-        public Dictionary<string, Dictionary<string, int>> Terms
+        public Dictionary<string, Dictionary<string, int>> Tokens
         {
-            get { return _terms; }
+            get { return _tokens; }
+        }
+
+        public void Remove(string docId)
+        {
+            if (!DocIds.ContainsKey(docId)) return;
+
+            foreach (var token in _tokens)
+            {
+                token.Value.Remove(docId);
+            }
         }
     }
 }

@@ -22,11 +22,11 @@ namespace Resin
             _trieFiles = trieFiles;
         }
 
-        public IEnumerable<DocumentScore> Collect(Query query, int page, int size)
+        public IEnumerable<DocumentScore> Collect(QueryContext queryContext, int page, int size)
         {
-            Expand(query);
-            Scan(query);
-            var scored = query.Resolve().Values.OrderByDescending(s => s.Score).ToList();
+            Expand(queryContext);
+            Scan(queryContext);
+            var scored = queryContext.Resolve().Values.OrderByDescending(s => s.Score).ToList();
             return scored;
         }
 
@@ -56,10 +56,10 @@ namespace Resin
             return file;
         }
 
-        private void Scan(Query query)
+        private void Scan(QueryContext queryContext)
         {
-            query.Result = GetScoredResult(query).ToDictionary(x => x.DocId, y => y);
-            foreach (var child in query.Children)
+            queryContext.Result = GetScoredResult(queryContext).ToDictionary(x => x.DocId, y => y);
+            foreach (var child in queryContext.Children)
             {
                 Scan(child);
             }
@@ -71,7 +71,7 @@ namespace Resin
             if (fieldFile == null) yield break;
             var docsInCorpus = fieldFile.DocIds.Count();
             Dictionary<string, int> postings;
-            if (fieldFile.Terms.TryGetValue(term.Token, out postings))
+            if (fieldFile.Tokens.TryGetValue(term.Token, out postings))
             {
                 var scorer = new Tfidf(docsInCorpus, postings.Count);
                 foreach (var posting in postings)
@@ -83,37 +83,37 @@ namespace Resin
             }            
         }
 
-        private void Expand(Query query)
+        private void Expand(QueryContext queryContext)
         {
-            if (query.Fuzzy || query.Prefix)
+            if (queryContext.Fuzzy || queryContext.Prefix)
             {
-                var trie = GetTrieFile(query.Field);
+                var trie = GetTrieFile(queryContext.Field);
 
-                IList<Query> expanded = null;
+                IList<QueryContext> expanded = null;
 
-                if (query.Fuzzy)
+                if (queryContext.Fuzzy)
                 {
-                    expanded = trie.Similar(query.Token, query.Edits).Select(token => new Query(query.Field, token)).ToList();
+                    expanded = trie.Similar(queryContext.Token, queryContext.Edits).Select(token => new QueryContext(queryContext.Field, token)).ToList();
                 }
-                else if (query.Prefix)
+                else if (queryContext.Prefix)
                 {
-                    expanded = trie.Prefixed(query.Token).Select(token => new Query(query.Field, token)).ToList();
+                    expanded = trie.Prefixed(queryContext.Token).Select(token => new QueryContext(queryContext.Field, token)).ToList();
                 }
 
                 if (expanded != null)
                 {
-                    var tokenSuffix = query.Prefix ? "*" : query.Fuzzy ? "~" : string.Empty;
-                    Log.InfoFormat("{0}:{1}{2} expanded to {3}", query.Field, query.Token, tokenSuffix, string.Join(" ", expanded.Select(q => q.ToString())));
+                    var tokenSuffix = queryContext.Prefix ? "*" : queryContext.Fuzzy ? "~" : string.Empty;
+                    Log.InfoFormat("{0}:{1}{2} expanded to {3}", queryContext.Field, queryContext.Token, tokenSuffix, string.Join(" ", expanded.Select(q => q.ToString())));
                     foreach (var t in expanded)
                     {
-                        query.Children.Add(t);
+                        queryContext.Children.Add(t);
                     }
                 }
 
-                query.Prefix = false;
-                query.Fuzzy = false;
+                queryContext.Prefix = false;
+                queryContext.Fuzzy = false;
 
-                foreach (var child in query.Children)
+                foreach (var child in queryContext.Children)
                 {
                     Expand(child);
                 }   

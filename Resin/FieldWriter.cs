@@ -28,10 +28,10 @@ namespace Resin
         public void Write(string docId, string term, int frequency)
         {
             Dictionary<string, int> docs;
-            if (!_fieldFile.Terms.TryGetValue(term, out docs))
+            if (!_fieldFile.Tokens.TryGetValue(term, out docs))
             {
                 docs = new Dictionary<string, int> { { docId, frequency } };
-                _fieldFile.Terms.Add(term, docs);
+                _fieldFile.Tokens.Add(term, docs);
                 if(!_fieldFile.DocIds.ContainsKey(docId)) _fieldFile.DocIds.Add(docId, null);
                 _trie.Add(term);
             }

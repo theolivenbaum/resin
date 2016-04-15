@@ -9,7 +9,7 @@
             _analyzer = analyzer;
         }
 
-        public Query Parse(string query)
+        public QueryContext Parse(string query)
         {
             var interpreter = new QueryInterpreter(query, _analyzer);
             for (int i = 0; i < query.Length; i++)

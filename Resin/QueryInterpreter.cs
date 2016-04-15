@@ -10,8 +10,8 @@ namespace Resin
         private readonly IAnalyzer _analyzer;
         private readonly string _text;
         private DataType _state;
-        private Query _root;
-        private Query _cursor;
+        private QueryContext _root;
+        private QueryContext _cursor;
         private int _start;
         private int _lastIndexOfData;
 
@@ -34,7 +34,7 @@ namespace Resin
             return _text.Length - _start - (_text.Length - _lastIndexOfData - 1);
         }
 
-        public Query GetQuery()
+        public QueryContext GetQuery()
         {
             var length = GetLength();
             _word = _text.Substring(_start, length);
@@ -42,13 +42,13 @@ namespace Resin
             {
                 foreach (var token in _analyzer.Analyze(_word))
                 {
-                    Add(new Query(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });
+                    Add(new QueryContext(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });
                 }
             }
             return _root;
         }
 
-        private Query Add(Query term)
+        private QueryContext Add(QueryContext term)
         {
             if (_root == null)
             {
@@ -76,7 +76,7 @@ namespace Resin
                     _word = _text.Substring(_start, length);
                     foreach (var token in _analyzer.Analyze(_word))
                     {
-                        _cursor = Add(new Query(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });                       
+                        _cursor = Add(new QueryContext(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });                       
                     }
                     _field = null;
                     _word = null;
@@ -114,7 +114,7 @@ namespace Resin
                         _word = _text.Substring(_start, length);
                         foreach (var token in _analyzer.Analyze(_word))
                         {
-                            _cursor = Add(new Query(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });
+                            _cursor = Add(new QueryContext(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });
                         }
                         _field = null;
                         _word = null;

@@ -14,7 +14,6 @@ namespace Resin
         private readonly Dictionary<string, DocFile> _docFiles;
         private readonly Dictionary<string, FieldFile> _fieldFiles;
         private readonly Dictionary<string, Trie> _trieFiles;
-        private readonly HashSet<string> _deletedDocs; 
         private readonly DixFile _dix;
         private readonly FixFile _fix;
 
@@ -27,7 +26,6 @@ namespace Resin
             _docFiles = new Dictionary<string, DocFile>();
             _fieldFiles = new Dictionary<string, FieldFile>();
             _trieFiles = new Dictionary<string, Trie>();
-            _deletedDocs = new HashSet<string>();
             
             var generations = GetIndexFiles().ToList();
             var firstGen = generations.First();
@@ -40,7 +38,7 @@ namespace Resin
                 Log.DebugFormat("rebasing");
                 Rebase(generations.Skip(1));
             }
-            Log.DebugFormat("searcher initialized reading {0}", _directory);
+            Log.DebugFormat("searcher initialized in {0}", _directory);
         }
 
         /// <summary>
@@ -51,32 +49,79 @@ namespace Resin
         private void Rebase(IEnumerable<string> generations)
         {
             var rebasedDocs = new Dictionary<string, Document>();
-            foreach (var gen in generations.Skip(1))
+            foreach (var gen in generations)
             {
                 var ix = IxFile.Load(Path.Combine(_directory, gen));
                 foreach (var term in ix.Deletions)
                 {
                     var collector = new Collector(_directory, _fix, _fieldFiles, _trieFiles);
-                    var docIds = collector.Collect(new Query(term.Field, term.Token), 0, int.MaxValue).Select(ds=>ds.DocId).ToList();
-                    foreach (var id in docIds)
+                    var docIds = collector.Collect(new QueryContext(term.Field, term.Token), 0, int.MaxValue).Select(ds=>ds.DocId).ToList();
+                    foreach (var docId in docIds)
                     {
-                        _deletedDocs.Add(id);
+                        var docFile = GetDocFile(docId);
+                        docFile.Docs.Remove(docId);
+                        _docFiles[Path.Combine(_directory, _dix.DocIdToFileIndex[docId] + ".d")] = docFile;
+                        _dix.DocIdToFileIndex.Remove(docId);
+
+                        foreach (var field in _fix.FieldIndex)
+                        {
+                            var fileName = Path.Combine(_directory, field.Value + ".f");
+                            FieldFile ff;
+                            if (!_fieldFiles.TryGetValue(fileName, out ff))
+                            {
+                                ff = FieldFile.Load(fileName);
+                            }
+                            ff.Remove(docId);
+                            _fieldFiles[fileName] = ff;
+                        }
                     }
                 }
+
                 var dix = DixFile.Load(Path.Combine(_directory, ix.DixFileName));
                 foreach (var newDoc in dix.DocIdToFileIndex)
                 {
-                    var d = DocFile.Load(Path.Combine(_directory, newDoc.Value + ".d")).Docs[newDoc.Key];
+                    var docFile = GetDocFile(newDoc.Key, dix);
+                    var nd = docFile.Docs[newDoc.Key];
                     if (_dix.DocIdToFileIndex.ContainsKey(newDoc.Key))
                     {
                         var oldDoc = GetDoc(newDoc.Key);
-                        foreach (var field in d.Fields)
+                        foreach (var field in nd.Fields)
                         {
                             oldDoc[field.Key] = field.Value;
                         }
-                        d = new Document(oldDoc);
+                        nd = new Document(oldDoc);
                     }
-                    rebasedDocs[d.Id] = d;
+                    rebasedDocs[nd.Id] = nd;
+                }
+
+                var fix = FixFile.Load(Path.Combine(_directory, ix.FixFileName));
+                foreach (var field in fix.FieldIndex)
+                {
+                    var newFileName = Path.Combine(_directory, field.Value + ".f");
+                    var oldFileName = Path.Combine(_directory, _fix.FieldIndex[field.Key] + ".f");
+                    FieldFile oldFile;
+                    if (!_fieldFiles.TryGetValue(oldFileName, out oldFile))
+                    {
+                        oldFile = FieldFile.Load(oldFileName);
+                    }
+                    var newFile = FieldFile.Load(newFileName);
+                    foreach (var entry in newFile.Tokens)
+                    {
+                        Dictionary<string, int> oldFilePostings;
+                        if (!oldFile.Tokens.TryGetValue(entry.Key, out oldFilePostings))
+                        {
+                            oldFile.Tokens.Add(entry.Key, entry.Value);
+                        }
+                        else
+                        {
+                            foreach (var posting in entry.Value)
+                            {
+                                oldFilePostings[posting.Key] = posting.Value;
+                            }
+                            oldFile.Tokens[entry.Key] = oldFilePostings;
+                        }
+                    }
+                    _fieldFiles[oldFileName] = oldFile;
                 }
             }
             var rebasedDocFile = new DocFile(rebasedDocs);
@@ -99,11 +144,10 @@ namespace Resin
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
             var collector = new Collector(_directory, _fix, _fieldFiles, _trieFiles);
-            var scored = collector.Collect(_parser.Parse(query), page, size).Where(ds=>!_deletedDocs.Contains(ds.DocId)).ToList();
+            var scored = collector.Collect(_parser.Parse(query), page, size).ToList();
             var skip = page*size;
             var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
             var trace = returnTrace ? paged.ToDictionary(ds => ds.Key, ds => ds.Value.Trace.ToString() + paged[ds.Key].Score) : null;
-            // docs shall remain lazy so that further inproc filtering such as Result.Docs.First() will make the query run even faster
             var docs = paged.Values.Select(s => GetDoc(s.DocId)); 
             return new Result { Docs = docs, Total = scored.Count, Trace = trace };
         }
@@ -116,21 +160,18 @@ namespace Resin
 
         private DocFile GetDocFile(string docId)
         {
-            var fileName = Path.Combine(_directory, _dix.DocIdToFileIndex[docId] + ".d");
-            DocFile file;
-            if (!_docFiles.TryGetValue(fileName, out file))
-            {
-                file = GetDocFile(docId, _dix);
-                _docFiles[fileName] = file;
-            }
-            return file;
+            return GetDocFile(docId, _dix);
         }
 
         private DocFile GetDocFile(string docId, DixFile dix)
         {
             var fileName = Path.Combine(_directory, dix.DocIdToFileIndex[docId] + ".d");
-            var file = DocFile.Load(fileName);
-            Log.DebugFormat("cache miss for doc id {0}", docId);
+            DocFile file;
+            if (!_docFiles.TryGetValue(fileName, out file))
+            {
+                file = DocFile.Load(fileName);
+                _docFiles[fileName] = file;
+            }
             return file;
         }
 

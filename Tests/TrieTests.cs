@@ -2,6 +2,7 @@
 using System.Linq;
 using NUnit.Framework;
 using Resin;
+using Resin.IO;
 
 namespace Tests
 {

@@ -50,7 +50,7 @@
   <ItemGroup>
     <Compile Include="Analyzer.cs" />
     <Compile Include="Helper.cs" />
-    <Compile Include="Document.cs" />
+    <Compile Include="IO\Document.cs" />
     <Compile Include="DocumentScore.cs" />
     <Compile Include="DocumentWriter.cs" />
     <Compile Include="IO\DixFile.cs" />
@@ -64,16 +64,16 @@
     <Compile Include="IndexWriter.cs" />
     <Compile Include="FieldWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Query.cs" />
+    <Compile Include="QueryContext.cs" />
     <Compile Include="QueryInterpreter.cs" />
     <Compile Include="QueryParser.cs" />
     <Compile Include="Result.cs" />
     <Compile Include="Collector.cs" />
     <Compile Include="Searcher.cs" />
-    <Compile Include="Term.cs" />
+    <Compile Include="IO\Term.cs" />
     <Compile Include="Tfidf.cs" />
     <Compile Include="TokenInfo.cs" />
-    <Compile Include="Trie.cs" />
+    <Compile Include="IO\Trie.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

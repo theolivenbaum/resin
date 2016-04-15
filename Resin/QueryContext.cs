@@ -6,16 +6,16 @@ using Resin.IO;
 
 namespace Resin
 {
-    public class Query : Term
+    public class QueryContext : Term
     {
-        public IList<Query> Children { get; protected set; }
+        public IList<QueryContext> Children { get; protected set; }
         public IDictionary<string, DocumentScore> Result { get; set ; }
         public FieldFile FieldFile { get; set; }
-        private static readonly ILog Log = LogManager.GetLogger(typeof(Query));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(QueryContext));
 
-        public Query(string field, string token) : base(field, token)
+        public QueryContext(string field, string token) : base(field, token)
         {
-            Children = new List<Query>();
+            Children = new List<QueryContext>();
         }
 
         public IDictionary<string, DocumentScore> Resolve()
