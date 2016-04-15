@@ -23,6 +23,16 @@ namespace Resin.Cli
                 }
                 Write(args);
             }
+            if (args[0].ToLower() == "delete")
+            {
+                if (Array.IndexOf(args, "--dir") == -1 ||
+                    Array.IndexOf(args, "--docid") == -1)
+                {
+                    Console.WriteLine("I need a directory and a doc id.");
+                    return;
+                }
+                Delete(args);
+            }
             else if (args[0].ToLower() == "query")
             {
                 if (Array.IndexOf(args, "-q") == -1)
@@ -142,6 +152,19 @@ namespace Resin.Cli
             //Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
             //File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens.Select(t => string.Format("{0} {1}", t.Token, t.Count)));
             //File.WriteAllLines(Path.Combine(dir, "_" + field + ".tri.txt"), trieTokens);
+        }
+
+        static void Delete(string[] args)
+        {
+            var dir = args[Array.IndexOf(args, "--dir") + 1];
+            var docId = args[Array.IndexOf(args, "--docid") + 1];
+            var timer = new Stopwatch();
+            timer.Start();
+            using (var writer = new IndexWriter(dir, new Analyzer()))
+            {
+                writer.Remove("_id", docId);
+            }
+            Console.WriteLine("deleted {0} in {1}", docId, timer.Elapsed);
         }
 
         static void Write(string[] args)

@@ -87,9 +87,13 @@ namespace Resin
                         var oldDoc = GetDoc(newDoc.Key);
                         foreach (var field in nd.Fields)
                         {
-                            oldDoc[field.Key] = field.Value;
+                            oldDoc[field.Key] = field.Value; // upsert of field
                         }
                         nd = new Document(oldDoc);
+                    }
+                    else
+                    {
+                        _dix.DocIdToFileIndex[newDoc.Key] = newDoc.Value;
                     }
                     rebasedDocs[nd.Id] = nd;
                 }

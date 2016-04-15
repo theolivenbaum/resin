@@ -30,8 +30,6 @@ namespace Resin
 
             _flushing = true;
 
-            if (_docs.Count == 0) return;
-
             // docid/file
             var dix = new DixFile();
             var batches = _docs.IntoBatches(1000).ToList();
