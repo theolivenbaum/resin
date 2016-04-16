@@ -29,12 +29,13 @@ namespace Resin
 
         protected DocFile GetDocFile(string docId)
         {
-            var fileName = Path.Combine(Directory, Dix.DocIdToFileId[docId] + ".d");
+            var fileId = Dix.DocIdToFileId[docId];
+            var fileName = Path.Combine(Directory, fileId + ".d");
             DocFile file;
-            if (!DocFiles.TryGetValue(fileName, out file))
+            if (!DocFiles.TryGetValue(fileId, out file))
             {
                 file = DocFile.Load(fileName);
-                DocFiles[fileName] = file;
+                DocFiles[fileId] = file;
             }
             return file;
         }
