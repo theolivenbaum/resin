@@ -52,6 +52,7 @@ namespace Resin
             }
 
             ix.Save(Helper.GetChronologicalFileId(_directory));
+            Log.DebugFormat("optimized {0}", _directory);
         }
 
         /// <summary>
