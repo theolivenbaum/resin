@@ -25,18 +25,20 @@ namespace Resin
 
         public void Rebase()
         {
-            Rebase(_generations); 
+            Rebase(_generations.Skip(1).ToList()); 
         }
 
         public void Save(IxFile ix)
         {
-            var fixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".fix");
-            var dixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".dix");
+            var fixFileId = Path.GetRandomFileName() + ".fix";
+            var dixFileId = Path.GetRandomFileName() + ".dix";
+            var fixFileName = Path.Combine(_directory, fixFileId);
+            var dixFileName = Path.Combine(_directory, dixFileId);
             Dix.Save(dixFileName);
             Fix.Save(fixFileName);
             ix.Deletions.Clear();
-            ix.DixFileName = dixFileName;
-            ix.FixFileName = fixFileName;
+            ix.DixFileName = dixFileId;
+            ix.FixFileName = fixFileId;
 
             foreach (var d in DocFiles)
             {
@@ -51,7 +53,7 @@ namespace Resin
                 File.Delete(x);
             }
 
-            ix.Save(Helper.GetChronologicalFileId(_directory));
+            ix.Save(_generations.First());
             Log.DebugFormat("optimized {0}", _directory);
         }
 
@@ -60,8 +62,9 @@ namespace Resin
         /// A changeset (i.e. an index) can contain both (1) document deletions as well as (2) upserts of document fields.
         /// </summary>
         /// <param name="generations">The *.ix file names of subsequent generations sorted by age, oldest first.</param>
-        private void Rebase(IEnumerable<string> generations)
+        private void Rebase(IList<string> generations)
         {
+            if (generations.Count < 1) return;
             var rebasedDocs = new Dictionary<string, Document>();
             foreach (var gen in generations)
             {
@@ -80,19 +83,19 @@ namespace Resin
                     {
                         var docFile = GetDocFile(docId);
                         docFile.Docs.Remove(docId);
-                        DocFiles[Dix.DocIdToFileId[docId]] = docFile;
                         Dix.DocIdToFileId.Remove(docId);
 
-                        foreach (var field in Fix.FieldToFileId) 
+                        foreach (var field in Fix.FieldToFileId)
                         {
-                            var fileName = Path.Combine(Directory, field.Value + ".f");
+                            var fileId = field.Value;
+                            var fileName = Path.Combine(Directory, fileId + ".f");
                             FieldFile ff;
-                            if (!FieldFiles.TryGetValue(field.Value, out ff))
+                            if (!FieldFiles.TryGetValue(fileId, out ff))
                             {
                                 ff = FieldFile.Load(fileName);
                             }
                             ff.Remove(docId);
-                            FieldFiles[field.Value] = ff;
+                            FieldFiles[fileId] = ff;
                         }
                     }
                 }

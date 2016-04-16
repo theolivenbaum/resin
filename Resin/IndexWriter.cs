@@ -20,20 +20,24 @@ namespace Resin
         private bool _flushing;
         private readonly IxFile _ix;
         private readonly DixFile _dix;
+        private readonly string _ixFileName;
 
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
-
             _directory = directory;
+
+            // should be the first thing that happens in a write operation, for synching purposes
+            _ixFileName = Helper.GetChronologicalFileId(_directory);
+
             _analyzer = analyzer;
             _docWriter = new DocumentWriter(_directory);
             _fieldWriters = new Dictionary<string, FieldWriter>();
             _deletions = new List<Term>();
 
-            var fixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".fix");
-            var dixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".dix");
+            var fixFileId = Path.GetRandomFileName() + ".fix";
+            var dixFileId = Path.GetRandomFileName() + ".dix";
 
-            _ix = new IxFile(fixFileName, dixFileName, _deletions);
+            _ix = new IxFile(fixFileId, dixFileId, _deletions);
             _dix = new DixFile();
             _fix = new FixFile();
         }
@@ -91,16 +95,15 @@ namespace Resin
             _flushing = true;
 
             _docWriter.Flush(_dix);
-            _dix.Save(_ix.DixFileName);
+            _dix.Save(Path.Combine(_directory, _ix.DixFileName));
 
             foreach (var writer in _fieldWriters.Values)
             {
                 writer.Flush();
             }
 
-            _fix.Save(_ix.FixFileName);
-            var ixFileName = Helper.GetChronologicalFileId(_directory);
-            _ix.Save(ixFileName); // must be the last thing that happens in the flush, because as soon as the ix file exists this whole index will go live 
+            _fix.Save(Path.Combine(_directory, _ix.FixFileName));
+            _ix.Save(_ixFileName); // must be the last thing that happens in the flush, because as soon as the ix file exists this whole index will go live 
         }
 
         public void Dispose()

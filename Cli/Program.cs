@@ -176,7 +176,7 @@ namespace Resin.Cli
             var fix = FixFile.Load(Path.Combine(dir, ix.FixFileName));
             var optimizer = new Optimizer(
                 dir, 
-                generations.Skip(1).ToArray(), 
+                generations, 
                 dix, 
                 fix, 
                 new Dictionary<string, DocFile>(), 
