@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using log4net;
@@ -10,24 +9,50 @@ namespace Resin
     public class Optimizer : SearcherBase
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Optimizer));
+        private readonly string _directory;
         private readonly IList<string> _generations;
-
-        public Optimizer(string directory, IList<string> generations, Dictionary<string, DocFile> docFiles, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles, DixFile dix, FixFile fix)
+        private readonly IList<IxFile> _obsoleteIndices;
+ 
+        public Optimizer(string directory, IList<string> generations, DixFile dix, FixFile fix, Dictionary<string, DocFile> docFiles, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles)
             : base(directory, docFiles, fieldFiles, trieFiles)
         {
+            _directory = directory;
             _generations = generations;
+            _obsoleteIndices = new List<IxFile>();
             Dix = dix;
             Fix = fix;
         }
 
-        public void Optimize()
+        public void Rebase()
         {
             Rebase(_generations); 
         }
 
-        public void Flush()
+        public void Save(IxFile ix)
         {
-            
+            var fixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".fix");
+            var dixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".dix");
+            Dix.Save(dixFileName);
+            Fix.Save(fixFileName);
+            ix.Deletions.Clear();
+            ix.DixFileName = dixFileName;
+            ix.FixFileName = fixFileName;
+
+            foreach (var f in DocFiles.Values)
+            {
+                f.Save();
+            }
+            foreach (var f in FieldFiles.Values)
+            {
+                f.Save();
+            }
+
+            foreach (var x in _obsoleteIndices)
+            {
+                File.Delete(x.FileName);
+            }
+
+            ix.Save();
         }
 
         /// <summary>
@@ -41,10 +66,16 @@ namespace Resin
             foreach (var gen in generations)
             {
                 var ix = IxFile.Load(gen);
+                _obsoleteIndices.Add(ix);
                 foreach (var term in ix.Deletions)
                 {
                     var collector = new Collector(Directory, Fix, FieldFiles, TrieFiles);
                     var docIds = collector.Collect(new QueryContext(term.Field, term.Token), 0, int.MaxValue).Select(ds => ds.DocId).ToList();
+
+                    // delete docs from doc files and field files
+                    // trie files are not touched
+                    // loads into memory "old" doc files that have been cleaned
+                    // loads into memory all fields except last gen
                     foreach (var docId in docIds)
                     {
                         var docFile = GetDocFile(docId);
@@ -52,7 +83,7 @@ namespace Resin
                         DocFiles[Path.Combine(Directory, Dix.DocIdToFileIndex[docId] + ".d")] = docFile;
                         Dix.DocIdToFileIndex.Remove(docId);
 
-                        foreach (var field in Fix.FieldIndex)
+                        foreach (var field in Fix.FieldIndex) 
                         {
                             var fileName = Path.Combine(Directory, field.Value + ".f");
                             FieldFile ff;
@@ -66,6 +97,8 @@ namespace Resin
                     }
                 }
 
+                // upsert docs
+                // loads into memory all new doc files
                 var dix = DixFile.Load(Path.Combine(Directory, ix.DixFileName));
                 foreach (var newDoc in dix.DocIdToFileIndex)
                 {
@@ -87,6 +120,7 @@ namespace Resin
                     rebasedDocs[nd.Id] = nd;
                 }
 
+                // loads into memory the field files that are appended to in this gen
                 var fix = FixFile.Load(Path.Combine(Directory, ix.FixFileName));
                 foreach (var field in fix.FieldIndex)
                 {
@@ -117,66 +151,17 @@ namespace Resin
                     FieldFiles[oldFileName] = oldFile;
                 }
             }
-            var rebasedDocFile = new DocFile(rebasedDocs);
-            var rebasedDocFileName = Path.GetRandomFileName();
+
+            // rebased docs, those that have been touched since gen 0, are bundled together in a new DocFile
+            var rebasedDocFileName = Path.Combine(_directory, Path.GetRandomFileName());
+            var rebasedDocFile = new DocFile(rebasedDocFileName, rebasedDocs);
             foreach (var doc in rebasedDocs)
             {
                 Dix.DocIdToFileIndex[doc.Key] = rebasedDocFileName;
             }
             DocFiles.Add(Path.Combine(Directory, rebasedDocFileName + ".d"), rebasedDocFile);
-        }
 
-        public void Dispose()
-        {
-        }
-    }
-
-    public abstract class SearcherBase
-    {
-        protected readonly string Directory;
-        protected readonly Dictionary<string, DocFile> DocFiles;
-        protected readonly Dictionary<string, FieldFile> FieldFiles;
-        protected readonly Dictionary<string, Trie> TrieFiles;
-        protected DixFile Dix;
-        protected FixFile Fix;
-
-        protected SearcherBase(string directory, Dictionary<string, DocFile> docFiles, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles)
-        {
-            Directory = directory;
-            DocFiles = docFiles;
-            FieldFiles = fieldFiles;
-            TrieFiles = trieFiles;
-        }
-
-        protected IEnumerable<string> GetIndexFiles()
-        {
-            var ids = System.IO.Directory.GetFiles(Directory, "*.ix")
-                .Select(f => Int64.Parse(Path.GetFileNameWithoutExtension(f) ?? "-1"))
-                .OrderBy(id => id);
-            return ids.Select(id => Path.Combine(Directory, id + ".ix"));
-        }
-
-        protected IDictionary<string, string> GetDoc(string docId)
-        {
-            var file = GetDocFile(docId);
-            return file.Docs[docId].Fields;
-        }
-
-        protected DocFile GetDocFile(string docId)
-        {
-            return GetDocFile(docId, Dix);
-        }
-
-        protected DocFile GetDocFile(string docId, DixFile dix)
-        {
-            var fileName = Path.Combine(Directory, dix.DocIdToFileIndex[docId] + ".d");
-            DocFile file;
-            if (!DocFiles.TryGetValue(fileName, out file))
-            {
-                file = DocFile.Load(fileName);
-                DocFiles[fileName] = file;
-            }
-            return file;
+            Log.DebugFormat("rebased {0}", _directory);
         }
     }
 }

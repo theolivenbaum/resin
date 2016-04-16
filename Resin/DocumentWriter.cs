@@ -24,27 +24,25 @@ namespace Resin
             _docs[doc.Id] = doc; // this overwrites previous doc if same docId appears twice in the session
         }
 
-        public void Flush(string dixFileName)
+        public void Flush(DixFile dix)
         {
             if (_flushing) return;
 
             _flushing = true;
 
-            // docid/file
-            var dix = new DixFile();
             var batches = _docs.IntoBatches(1000).ToList();
             foreach (var batch in batches)
             {
-                var d = new DocFile(batch.ToDictionary(x=>x.Key, y=>y.Value));
                 var fileId = Path.GetRandomFileName();
                 var fileName = Path.Combine(_dir, fileId + ".d");
-                d.Save(fileName);
+                var d = new DocFile(fileName, batch.ToDictionary(x => x.Key, y => y.Value));
+                d.Save();
                 foreach (var docId in d.Docs)
                 {
                     dix.DocIdToFileIndex[docId.Key] = fileId;
                 }
             }
-            dix.Save(dixFileName);
+            dix.Save();
             _docs.Clear();
         }
     }

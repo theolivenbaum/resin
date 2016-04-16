@@ -9,7 +9,8 @@ namespace Resin.IO
         // field/fileid
         private readonly Dictionary<string, string> _fieldIndex;
 
-        public FixFile()
+        public FixFile(string fileName)
+            : base(fileName)     
         {
             _fieldIndex = new Dictionary<string, string>();
         }

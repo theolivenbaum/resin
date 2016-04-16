@@ -9,12 +9,12 @@ namespace Resin.IO
         // docid/file
         private readonly Dictionary<string, string>_docIdToFileIndex;
 
-        public DixFile()
+        public DixFile(string fileName) : base(fileName)        
         {
             _docIdToFileIndex = new Dictionary<string, string>();
         }
 
-        public DixFile(Dictionary<string, string> docIdToFileIndex)
+        public DixFile(string fileName, Dictionary<string, string> docIdToFileIndex) : base(fileName)
         {
             _docIdToFileIndex = docIdToFileIndex;
         }

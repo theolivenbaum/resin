@@ -13,15 +13,13 @@ namespace Resin
         // prefix tree
         private readonly Trie _trie;
 
-        private readonly string _termsFileName;
         private readonly string _trieFileName;
         private bool _flushing;
 
         public FieldWriter(string fileName)
         {
-            _termsFileName = fileName;
+            _fieldFile = new FieldFile(fileName);
             _trieFileName = fileName + ".tri";
-            _fieldFile = new FieldFile();
             _trie = new Trie();
         }
 
@@ -45,7 +43,7 @@ namespace Resin
         {
             if (_flushing) return;
             _flushing = true;
-            _fieldFile.Save(_termsFileName);
+            _fieldFile.Save();
             _trie.Save(_trieFileName);
         }
 

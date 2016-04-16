@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using log4net.Config;
 using Newtonsoft.Json;
 using Resin.Client;
+using Resin.IO;
 
 namespace Resin.Cli
 {
@@ -23,7 +25,16 @@ namespace Resin.Cli
                 }
                 Write(args);
             }
-            if (args[0].ToLower() == "delete")
+            else if (args[0].ToLower() == "optimize")
+            {
+                if (Array.IndexOf(args, "--dir") == -1)
+                {
+                    Console.WriteLine("I need a directory.");
+                    return;
+                }
+                Optimize(args);
+            }
+            else if (args[0].ToLower() == "delete")
             {
                 if (Array.IndexOf(args, "--dir") == -1 ||
                     Array.IndexOf(args, "--docid") == -1)
@@ -152,6 +163,28 @@ namespace Resin.Cli
             //Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
             //File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens.Select(t => string.Format("{0} {1}", t.Token, t.Count)));
             //File.WriteAllLines(Path.Combine(dir, "_" + field + ".tri.txt"), trieTokens);
+        }
+
+        static void Optimize(string[] args)
+        {
+            var dir = args[Array.IndexOf(args, "--dir") + 1];
+            var timer = new Stopwatch();
+            timer.Start();
+            var generations = Helper.GetIndexFiles(dir).ToList();
+            var ix = IxFile.Load(generations.First());
+            var dix = DixFile.Load(Path.Combine(dir, ix.DixFileName));
+            var fix = FixFile.Load(Path.Combine(dir, ix.FixFileName));
+            var optimizer = new Optimizer(
+                dir, 
+                generations.Skip(1).ToArray(), 
+                dix, 
+                fix, 
+                new Dictionary<string, DocFile>(), 
+                new Dictionary<string, FieldFile>(), 
+                new Dictionary<string, Trie>());
+            optimizer.Rebase();
+            optimizer.Save(ix);
+            Console.WriteLine("optimized {0} in {1}", dir, timer.Elapsed);
         }
 
         static void Delete(string[] args)

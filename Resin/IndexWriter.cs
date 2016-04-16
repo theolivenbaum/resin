@@ -18,15 +18,25 @@ namespace Resin
         private readonly IAnalyzer _analyzer;
         private readonly DocumentWriter _docWriter;
         private bool _flushing;
+        private readonly IxFile _ix;
+        private readonly DixFile _dix;
 
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
+
             _directory = directory;
             _analyzer = analyzer;
             _docWriter = new DocumentWriter(_directory);
             _fieldWriters = new Dictionary<string, FieldWriter>();
-            _fix = new FixFile();
             _deletions = new List<Term>();
+
+            var ixFileName = Helper.GetChronologicalFileId(_directory);
+            var fixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".fix");
+            var dixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".dix");
+
+            _ix = new IxFile(ixFileName, fixFileName, dixFileName, _deletions);
+            _dix = new DixFile(dixFileName);
+            _fix = new FixFile(fixFileName);
         }
 
         // TODO: implement "delete by query"
@@ -76,32 +86,20 @@ namespace Resin
             _docWriter.Write(document);
         }
 
-        private static string GetUniqueFileId(string dir)
-        {
-            var ticks = DateTime.Now.Ticks - Helper.BeginningOfTime.Ticks;
-            var fileName = Path.Combine(dir, ticks + ".ix");
-            return fileName;
-        }
-
         private void Flush()
         {
             if (_flushing) return;
             _flushing = true;
 
-            var ixFileName = GetUniqueFileId(_directory);
-            var fixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".fix");
-            var dixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".dix");
-
-            _docWriter.Flush(dixFileName);
+            _docWriter.Flush(_dix);
 
             foreach (var writer in _fieldWriters.Values)
             {
                 writer.Flush();
             }
 
-            _fix.Save(fixFileName);
-            var ix = new IxFile(Path.GetFileName(fixFileName), Path.GetFileName(dixFileName), _deletions);
-            ix.Save(ixFileName); // must be the last thing that happens in the flush, because as soon as the ix file exists this whole index will go live 
+            _fix.Save();
+            _ix.Save(); // must be the last thing that happens in the flush, because as soon as the ix file exists this whole index will go live 
         }
 
         public void Dispose()

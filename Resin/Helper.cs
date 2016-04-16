@@ -2,12 +2,28 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Linq;
 
 namespace Resin
 {
     public static class Helper
     {
         public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 1);
+
+        public static IEnumerable<string> GetIndexFiles(string dir)
+        {
+            var ids = Directory.GetFiles(dir, "*.ix")
+                .Select(f => Int64.Parse(Path.GetFileNameWithoutExtension(f) ?? "-1"))
+                .OrderBy(id => id);
+            return ids.Select(id => Path.Combine(dir, id + ".ix"));
+        }
+
+        public static string GetChronologicalFileId(string dir)
+        {
+            var ticks = DateTime.Now.Ticks - BeginningOfTime.Ticks;
+            var fileName = Path.Combine(dir, ticks + ".ix");
+            return fileName;
+        }
 
         public static string GetResinDataDirectory()
         {

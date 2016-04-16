@@ -10,8 +10,9 @@ namespace Resin.IO
         private readonly Dictionary<string, Dictionary<string, int>> _tokens;
 
         public Dictionary<string, object> DocIds { get; set; }
- 
-        public FieldFile()
+
+        public FieldFile(string fileName)
+            : base(fileName)     
         {
             _tokens = new Dictionary<string, Dictionary<string, int>>();
             DocIds = new Dictionary<string, object>();

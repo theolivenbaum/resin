@@ -6,48 +6,63 @@ using NetSerializer;
 
 namespace Resin.IO
 {
-    public class FileBase<T>
+    [Serializable]
+    public class FileBase<T> : FileBase
     {
-        private static readonly ILog Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private string _fileName;
+        public string FileName { get { return _fileName; } }
+
+        public FileBase(string fileName)
+        {
+            _fileName = fileName;
+        } 
+
+        public virtual void Save()
+        {
+            Save(_fileName);
+        }
 
         public virtual void Save(string fileName)
         {
-            try
+            if (fileName == null) throw new ArgumentNullException("fileName");
+            _fileName = fileName;
+            var dir = Path.GetDirectoryName(_fileName) ?? string.Empty;
+            if (!Directory.Exists(dir))
             {
-                var dir = Path.GetDirectoryName(fileName) ?? string.Empty;
-                if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+            }
+            if (File.Exists(_fileName))
+            {
+                using (var fs = File.Open(_fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read))
                 {
-                    Directory.CreateDirectory(dir);
-                }
-                if (File.Exists(fileName))
-                {
-                    using (var fs = File.Open(fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read))
-                    {
-                        Serializer.Serialize(fs, this);
-                    }
-                }
-                else
-                {
-                    using (var fs = File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-                    {
-                        Serializer.Serialize(fs, this);
-                    }
+                    Serializer.Serialize(fs, this);
                 }
             }
-            catch (Exception ex)
+            else
             {
-                throw new ApplicationException(string.Format("Error in type {0}", typeof(T)), ex);
+                using (var fs = File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                {
+                    Serializer.Serialize(fs, this);
+                }
             }
         }
 
         public static T Load(string fileName)
         {
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 Log.DebugFormat("loading {0}", fileName);
                 return (T)Serializer.Deserialize(fs);
             }
         }
+    }
+
+    public class FileBase
+    {
+        protected static readonly ILog Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        // to allow conversion between file system versions
+        public static readonly int FileSystemVersion = 2;
 
         private static readonly Type[] Types =
         {
@@ -59,6 +74,6 @@ namespace Resin.IO
             typeof(Term)
         };
 
-        private static readonly Serializer Serializer = new Serializer(Types);
+        public static readonly Serializer Serializer = new Serializer(Types);
     }
 }

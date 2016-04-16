@@ -16,12 +16,12 @@ namespace Resin
         {
             _parser = parser;
 
-            var generations = GetIndexFiles().ToList();
+            var generations = Helper.GetIndexFiles(Directory).ToList();
             var ix = IxFile.Load(generations.First());
             Dix = DixFile.Load(Path.Combine(Directory, ix.DixFileName));
             Fix = FixFile.Load(Path.Combine(Directory, ix.FixFileName));
-            var optimizer = new Optimizer(directory, generations.Skip(1).ToArray(), DocFiles, FieldFiles, TrieFiles, Dix, Fix);
-            optimizer.Optimize();
+            var optimizer = new Optimizer(directory, generations.Skip(1).ToArray(), Dix, Fix, DocFiles, FieldFiles, TrieFiles);
+            optimizer.Rebase();
             Log.DebugFormat("searcher initialized in {0}", Directory);
         }
 
