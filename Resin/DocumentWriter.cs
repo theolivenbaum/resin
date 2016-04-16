@@ -35,14 +35,13 @@ namespace Resin
             {
                 var fileId = Path.GetRandomFileName();
                 var fileName = Path.Combine(_dir, fileId + ".d");
-                var d = new DocFile(fileName, batch.ToDictionary(x => x.Key, y => y.Value));
-                d.Save();
+                var d = new DocFile(batch.ToDictionary(x => x.Key, y => y.Value));
+                d.Save(fileName);
                 foreach (var docId in d.Docs)
                 {
-                    dix.DocIdToFileIndex[docId.Key] = fileId;
+                    dix.DocIdToFileId[docId.Key] = fileId;
                 }
             }
-            dix.Save();
             _docs.Clear();
         }
     }

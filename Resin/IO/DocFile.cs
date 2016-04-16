@@ -9,13 +9,12 @@ namespace Resin.IO
         // docid/fields/value
         private readonly Dictionary<string, Document> _docs;
 
-        public DocFile(string fileName)
-            : base(fileName)     
+        public DocFile()  
         {
             _docs = new Dictionary<string, Document>();
         }
 
-        public DocFile(string fileName, Dictionary<string, Document> docs) : base(fileName)
+        public DocFile(Dictionary<string, Document> docs)
         {
             _docs = docs;
         }

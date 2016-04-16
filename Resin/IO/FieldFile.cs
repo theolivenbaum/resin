@@ -11,8 +11,7 @@ namespace Resin.IO
 
         public Dictionary<string, object> DocIds { get; set; }
 
-        public FieldFile(string fileName)
-            : base(fileName)     
+        public FieldFile()  
         {
             _tokens = new Dictionary<string, Dictionary<string, int>>();
             DocIds = new Dictionary<string, object>();
@@ -31,6 +30,7 @@ namespace Resin.IO
             {
                 token.Value.Remove(docId);
             }
+            DocIds.Remove(docId);
         }
     }
 }

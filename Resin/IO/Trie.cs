@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using log4net;
 
 namespace Resin.IO
 {
     [Serializable]
-    public class Trie
+    public class Trie : FileBase<Trie>
     {
-        protected static readonly ILog Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly char _value;
 
         private bool _eow;
@@ -183,39 +179,6 @@ namespace Resin.IO
                     child._eow = false;
                 }
                 if (word.Length > 1) child.Remove(word.Substring(1));
-            }
-        }
-
-        public virtual void Save(string fileName)
-        {
-            if (fileName == null) throw new ArgumentNullException("fileName");
-            var dir = Path.GetDirectoryName(fileName) ?? string.Empty;
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-            if (File.Exists(fileName))
-            {
-                using (var fs = File.Open(fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read))
-                {
-                    FileBase.Serializer.Serialize(fs, this);
-                }
-            }
-            else
-            {
-                using (var fs = File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-                {
-                    FileBase.Serializer.Serialize(fs, this);
-                }
-            }
-        }
-
-        public static Trie Load(string fileName)
-        {
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                Log.DebugFormat("loading {0}", fileName);
-                return (Trie)FileBase.Serializer.Deserialize(fs);
             }
         }
     }

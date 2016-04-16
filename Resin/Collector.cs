@@ -32,7 +32,7 @@ namespace Resin
 
         private Trie GetTrieFile(string field)
         {
-            var fileName = Path.Combine(_directory,_fix.FieldIndex[field] + ".f.tri");
+            var fileName = Path.Combine(_directory,_fix.FieldToFileId[field] + ".f.tri");
             Trie file;
             if (!_trieFiles.TryGetValue(fileName, out file))
             {
@@ -44,14 +44,15 @@ namespace Resin
 
         private FieldFile GetFieldFile(string field)
         {
-            if (!_fix.FieldIndex.ContainsKey(field)) return null;
+            if (!_fix.FieldToFileId.ContainsKey(field)) return null;
 
-            var fileName = Path.Combine(_directory, _fix.FieldIndex[field] + ".f");
+            var fileId = _fix.FieldToFileId[field];
+            var fileName = Path.Combine(_directory, fileId + ".f");
             FieldFile file;
-            if (!_fieldFiles.TryGetValue(fileName, out file))
+            if (!_fieldFiles.TryGetValue(fileId, out file))
             {
                 file = FieldFile.Load(fileName);
-                _fieldFiles[fileName] = file;
+                _fieldFiles[fileId] = file;
             }
             return file;
         }

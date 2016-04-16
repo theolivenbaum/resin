@@ -9,31 +9,18 @@ namespace Resin.IO
     [Serializable]
     public class FileBase<T> : FileBase
     {
-        private string _fileName;
-        public string FileName { get { return _fileName; } }
-
-        public FileBase(string fileName)
-        {
-            _fileName = fileName;
-        } 
-
-        public virtual void Save()
-        {
-            Save(_fileName);
-        }
 
         public virtual void Save(string fileName)
         {
             if (fileName == null) throw new ArgumentNullException("fileName");
-            _fileName = fileName;
-            var dir = Path.GetDirectoryName(_fileName) ?? string.Empty;
+            var dir = Path.GetDirectoryName(fileName) ?? string.Empty;
             if (!Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
             }
-            if (File.Exists(_fileName))
+            if (File.Exists(fileName))
             {
-                using (var fs = File.Open(_fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read))
+                using (var fs = File.Open(fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read))
                 {
                     Serializer.Serialize(fs, this);
                 }

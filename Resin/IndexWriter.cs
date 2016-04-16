@@ -30,13 +30,12 @@ namespace Resin
             _fieldWriters = new Dictionary<string, FieldWriter>();
             _deletions = new List<Term>();
 
-            var ixFileName = Helper.GetChronologicalFileId(_directory);
             var fixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".fix");
             var dixFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".dix");
 
-            _ix = new IxFile(ixFileName, fixFileName, dixFileName, _deletions);
-            _dix = new DixFile(dixFileName);
-            _fix = new FixFile(fixFileName);
+            _ix = new IxFile(fixFileName, dixFileName, _deletions);
+            _dix = new DixFile();
+            _fix = new FixFile();
         }
 
         // TODO: implement "delete by query"
@@ -51,10 +50,10 @@ namespace Resin
             foreach (var field in document.Fields)
             {
                 string fieldFileId;
-                if (!_fix.FieldIndex.TryGetValue(field.Key, out fieldFileId))
+                if (!_fix.FieldToFileId.TryGetValue(field.Key, out fieldFileId))
                 {
                     fieldFileId = Path.GetRandomFileName();
-                    _fix.FieldIndex.Add(field.Key, fieldFileId);
+                    _fix.FieldToFileId.Add(field.Key, fieldFileId);
                 }
 
                 FieldWriter fw;
@@ -92,14 +91,16 @@ namespace Resin
             _flushing = true;
 
             _docWriter.Flush(_dix);
+            _dix.Save(_ix.DixFileName);
 
             foreach (var writer in _fieldWriters.Values)
             {
                 writer.Flush();
             }
 
-            _fix.Save();
-            _ix.Save(); // must be the last thing that happens in the flush, because as soon as the ix file exists this whole index will go live 
+            _fix.Save(_ix.FixFileName);
+            var ixFileName = Helper.GetChronologicalFileId(_directory);
+            _ix.Save(ixFileName); // must be the last thing that happens in the flush, because as soon as the ix file exists this whole index will go live 
         }
 
         public void Dispose()

@@ -7,21 +7,21 @@ namespace Resin.IO
     public class DixFile : FileBase<DixFile>
     {
         // docid/file
-        private readonly Dictionary<string, string>_docIdToFileIndex;
+        private readonly Dictionary<string, string>_docIdToFileId;
 
-        public DixFile(string fileName) : base(fileName)        
+        public DixFile()       
         {
-            _docIdToFileIndex = new Dictionary<string, string>();
+            _docIdToFileId = new Dictionary<string, string>();
         }
 
-        public DixFile(string fileName, Dictionary<string, string> docIdToFileIndex) : base(fileName)
+        public DixFile(Dictionary<string, string> docIdToFileId)
         {
-            _docIdToFileIndex = docIdToFileIndex;
+            _docIdToFileId = docIdToFileId;
         }
 
-        public Dictionary<string, string> DocIdToFileIndex
+        public Dictionary<string, string> DocIdToFileId
         {
-            get { return _docIdToFileIndex; }
+            get { return _docIdToFileId; }
         }
     }
 }

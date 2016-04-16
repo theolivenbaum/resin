@@ -7,17 +7,16 @@ namespace Resin.IO
     public class FixFile : FileBase<FixFile>
     {
         // field/fileid
-        private readonly Dictionary<string, string> _fieldIndex;
+        private readonly Dictionary<string, string> _fieldToFileId;
 
-        public FixFile(string fileName)
-            : base(fileName)     
+        public FixFile()   
         {
-            _fieldIndex = new Dictionary<string, string>();
+            _fieldToFileId = new Dictionary<string, string>();
         }
 
-        public Dictionary<string, string> FieldIndex
+        public Dictionary<string, string> FieldToFileId
         {
-            get { return _fieldIndex; }
+            get { return _fieldToFileId; }
         }
     }
 }
