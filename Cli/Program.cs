@@ -184,7 +184,6 @@ namespace Resin.Cli
                 new Dictionary<string, Trie>());
             optimizer.Rebase();
             optimizer.Save(ix);
-            Console.WriteLine("optimized {0} in {1}", dir, timer.Elapsed);
         }
 
         static void Delete(string[] args)

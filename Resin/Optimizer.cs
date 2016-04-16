@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using log4net;
 using Resin.IO;
 
@@ -59,12 +61,16 @@ namespace Resin
 
         /// <summary>
         /// Newer generation indices are treated as changesets to older generations.
-        /// A changeset (i.e. an index) can contain both (1) document deletions as well as (2) upserts of document fields.
+        /// A changeset (i.e. an index) can contain both (1) document deletions as well as (2) upserts of documents.
         /// </summary>
         /// <param name="generations">The *.ix file names of subsequent generations sorted by age, oldest first.</param>
         private void Rebase(IList<string> generations)
         {
             if (generations.Count < 1) return;
+
+            Log.InfoFormat("rebasing {0}", _directory);
+            var timer = new Stopwatch();
+            timer.Start();
             var rebasedDocs = new Dictionary<string, Document>();
             foreach (var gen in generations)
             {
@@ -75,9 +81,9 @@ namespace Resin
                     var collector = new Collector(Directory, Fix, FieldFiles, TrieFiles);
                     var docIds = collector.Collect(new QueryContext(term.Field, term.Token), 0, int.MaxValue).Select(ds => ds.DocId).ToList();
 
-                    // delete docs from doc files and field files
+                    // delete docs
                     // trie files are not touched
-                    // loads into memory "old" doc files that have been cleaned
+                    // loads into memory cleaned doc files
                     // loads into memory all fields except last gen
                     foreach (var docId in docIds)
                     {
@@ -101,29 +107,11 @@ namespace Resin
                 }
 
                 // upsert docs
-                // loads into memory all upserted docs
                 var dix = DixFile.Load(Path.Combine(Directory, ix.DixFileName));
-                foreach (var fileId in dix.DocIdToFileId.Values.Distinct())
+                foreach (var docId in dix.DocIdToFileId)
                 {
-                    var docFile = DocFile.Load(Path.Combine(_directory, fileId + ".d"));
-                    foreach (var newDoc in docFile.Docs.Values)
-                    {
-                        if (Dix.DocIdToFileId.ContainsKey(newDoc.Id))
-                        {
-                            var oldDoc = GetDoc(newDoc.Id);
-                            foreach (var field in newDoc.Fields)
-                            {
-                                oldDoc[field.Key] = field.Value; // upsert of field
-                            }
-                            rebasedDocs[newDoc.Id] = new Document(oldDoc);
-                        }
-                        else
-                        {
-                            rebasedDocs[newDoc.Id] = newDoc;
-                        }
-                    }
-                }
-                
+                    Dix.DocIdToFileId[docId.Key] = docId.Value;
+                }              
 
                 // remove stale data from field files
                 // append new data
@@ -150,7 +138,7 @@ namespace Resin
                         var newFile = FieldFile.Load(newFileName);
                         
                         // remove stale postings
-                        foreach (var docId in newFile.DocIds.Keys)
+                        foreach (var docId in newFile.DocIds.Keys.Intersect(oldFile.DocIds.Keys))
                         {
                             oldFile.Remove(docId);
                         }
@@ -161,7 +149,7 @@ namespace Resin
                             Dictionary<string, int> oldFilePostings;
                             if (!oldFile.Tokens.TryGetValue(newTermPostings.Key, out oldFilePostings))
                             {
-                                // I had not heard of that word before
+                                // had not heard of that word before
 
                                 oldFile.Tokens.Add(newTermPostings.Key, newTermPostings.Value);
                                 foreach (var docId in newTermPostings.Value.Keys)
@@ -190,18 +178,7 @@ namespace Resin
                     }
                 }
             }
-
-            // rebased docs, those that have been touched or added since gen 0, are bundled together in a new DocFile
-            // TODO: use a docwriter?
-            var docFileId = Path.GetRandomFileName();
-            var rebasedDocFile = new DocFile(rebasedDocs);
-            foreach (var doc in rebasedDocs.Values)
-            {
-                Dix.DocIdToFileId[doc.Id] = docFileId;
-            }
-            DocFiles.Add(docFileId, rebasedDocFile);
-
-            Log.DebugFormat("rebased {0}", _directory);
+            Log.InfoFormat("rebased {0} in {1}", _directory, timer.Elapsed);
         }
     }
 }

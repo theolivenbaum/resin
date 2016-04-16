@@ -38,8 +38,9 @@ namespace Resin.IO
         {
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                Log.DebugFormat("loading {0}", fileName);
-                return (T)Serializer.Deserialize(fs);
+                var obj = (T)Serializer.Deserialize(fs);
+                Log.DebugFormat("loaded {0}", fileName);
+                return obj;
             }
         }
     }

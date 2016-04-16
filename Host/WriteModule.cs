@@ -22,7 +22,7 @@ namespace Resin.Host
                 var timer = new Stopwatch();
                 timer.Start();
                 HandleRequest(indexName, docs);
-                Log.InfoFormat("added {0} docs to {1} in {2}", docs.Length, indexName, timer.Elapsed);
+                Log.InfoFormat("upserted {0} docs to {1} in {2}", docs.Length, indexName, timer.Elapsed);
                 return HttpStatusCode.NoContent;
             };
         }
@@ -39,7 +39,7 @@ namespace Resin.Host
                     foreach (var doc in docs)
                     {
                         writer.Write(doc);
-                        Log.DebugFormat("added doc {0} in {1}", doc["_id"], timer.Elapsed);
+                        Log.DebugFormat("upserted doc {0} in {1}", doc["_id"], timer.Elapsed);
                     }
                 }
             }
