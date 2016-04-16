@@ -6,6 +6,7 @@ _A speedy, light-weight, schema-less search server and framework with zero confi
 * _[Introduction](#intro)_
 * _[Quick usage guide](#usage)_
 * _[Relevance (tf-idf)](#relevance)_
+* _[Data availability](#data-availability)_
 * _[Backlog](#roadmap)_
 * _[At large scale](#scale)_
 * _[Dependencies](#dependencies)_
@@ -193,6 +194,18 @@ with a slightly normalized term frequency `1+sqrt(TF)`.
 
 Call Searcher.Search with `returnTrace:true` to include an explanation along with the result of how the scoring was calculated.
 
+<a name="data-availability" id="data-availability"></a>
+##Data availability
+An index is a set of deletions and a list of document field upserts. 
+
+Each write session is an automic operation and creates an entirely new index. 
+
+During writes, older generation indices are still readable and consistent with their initial state.
+
+When refreshing a Searcher, newer generation indices are rebased with earlier generations. The end result of rebasing the generations of an index is an in-memory representation of the current state of the data store. 
+
+This state can be made permament by letting the Optimizer save its state as a new index and declaring the other generations obsolete. Optimizing an index minimizes the time it takes to initialize a Searcher.
+
 <a name="roadmap" id="roadmap"></a>
 ##Backlog
 
@@ -208,11 +221,6 @@ Cache doc fields instead of whole docs.
 Levenshtein Trie scan implemented [here](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs#L55), inspired by [this paper](http://julesjacobs.github.io/2015/06/17/disqus-levenshtein-simple-and-fast.html).
 
 TODO: override default similarity in query: `label:starr~0.8`.
-
-####Data availability
-Today, each write session creates a new, automic index. When refreshing the index reader, new indices are merged with earlier generations and then made searchable as if they were one index.
-
-TODO: handle deletes, optimization, transactions, immediate writes (for when used as a document db: you need to know that thing you PUT will be there the next time you ask for it, not eventually, immediately!) 
 
 ####Multi-index searching
 Handle queries that span two or more indices.
