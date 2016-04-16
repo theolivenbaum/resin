@@ -22,7 +22,7 @@ Solve your full-text search problem or your big data analysis task with an intui
 * CLI tooling
 * multi-cultural
 
-Resin's document-centric nature (shared by its cousins from javaland) makes it effectively __a schema-less [document-oriented json database](https://en.wikipedia.org/wiki/Document-oriented_database) with ad-hoc full-text quering__.
+Resin's document-centric nature (shared by its cousins from javaland) makes it effectively _a schema-less [document-oriented json database](https://en.wikipedia.org/wiki/Document-oriented_database) with ad-hoc full-text quering_.
 
 Learn about the open-source projects Resin [depends on](#dependencies).
 
