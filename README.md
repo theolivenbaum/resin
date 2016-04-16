@@ -202,9 +202,9 @@ Each write session is an automic operation and creates an entirely new index.
 
 During writes, older generation indices are still readable and consistent with their initial state.
 
-When refreshing a Searcher, newer generation indices are rebased with earlier generations. The end result of rebasing the generations of an index is an in-memory representation of the current state of the data store. 
+When refreshing a [Searcher](https://github.com/kreeben/resin/blob/master/Resin/Searcher.cs) (i.e. creating a new instance), newer generation indices are rebased with earlier generations. The end result of rebasing the generations of an index is an in-memory representation of the current state of the data store. 
 
-This state can be made permament by letting the Optimizer save its state as a new index and declaring the other generations obsolete. Optimizing an index minimizes the time it takes to initialize a Searcher.
+This state can be made permament by letting the [Optimizer](https://github.com/kreeben/resin/blob/master/Resin/Optimizer.cs) save its state as a new index and declaring the other generations obsolete. Optimizing an index minimizes the time it takes to initialize a Searcher.
 
 <a name="roadmap" id="roadmap"></a>
 ##Backlog
