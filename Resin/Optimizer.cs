@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using log4net;
 using Resin.IO;
 
@@ -71,7 +70,6 @@ namespace Resin
             Log.InfoFormat("rebasing {0}", _directory);
             var timer = new Stopwatch();
             timer.Start();
-            var rebasedDocs = new Dictionary<string, Document>();
             foreach (var gen in generations)
             {
                 var ix = IxFile.Load(gen);
