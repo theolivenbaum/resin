@@ -123,7 +123,7 @@ namespace Resin
                         }
                         else
                         {
-                            Dix.DocIdToFileId[doc.Key] = null;
+                            Dix.DocIdToFileId[doc.Key] = null; // value will be set when saving
                             Docs[doc.Key] = doc.Value.Fields;
                         }
                     }
