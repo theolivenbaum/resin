@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Resin.IO
 {
+    /// <summary>
+    /// Serializable representation of a document.
+    /// </summary>
     [Serializable]
     public class Document
     {

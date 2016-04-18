@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Resin.IO
 {
+    /// <summary>
+    /// Serializable structure that contains documents.
+    /// </summary>
     [Serializable]
     public class DocFile : FileBase<DocFile>
     {

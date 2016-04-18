@@ -6,8 +6,12 @@ using NetSerializer;
 
 namespace Resin.IO
 {
+    /// <summary>
+    /// Base class for the Resin file system.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     [Serializable]
-    public class FileBase<T> : FileBase
+    public abstract class FileBase<T> : FileBase
     {
         public virtual void Save(string fileName)
         {

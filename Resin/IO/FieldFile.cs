@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Resin.IO
 {
+    /// <summary>
+    /// Inverted index of terms, docs and postings.
+    /// </summary>
     [Serializable]
     public class FieldFile : FileBase<FieldFile>
     {

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Resin.IO
 {
+    /// <summary>
+    /// Index header file representing either an index or a commit. Contains pointers to docs and fields.
+    /// </summary>
     [Serializable]
     public class IxFile : FileBase<IxFile>
     {

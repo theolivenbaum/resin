@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Resin.IO
 {
+    /// <summary>
+    /// A mapping between field names and a file IDs.
+    /// </summary>
     [Serializable]
     public class FixFile : FileBase<FixFile>
     {
