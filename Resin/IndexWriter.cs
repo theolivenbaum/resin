@@ -103,6 +103,7 @@ namespace Resin
             }
             else
             {
+                Log.Info("loading last baseline");
                 var ix = IxFile.Load(latestBaseline);
                 var dix = DixFile.Load(Path.Combine(_directory, ix.DixFileName));
                 var fix = FixFile.Load(Path.Combine(_directory, ix.FixFileName));
