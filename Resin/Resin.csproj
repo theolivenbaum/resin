@@ -71,7 +71,7 @@
     <Compile Include="Collector.cs" />
     <Compile Include="Searcher.cs" />
     <Compile Include="IO\Term.cs" />
-    <Compile Include="SearcherBase.cs" />
+    <Compile Include="DocumentReader.cs" />
     <Compile Include="Tfidf.cs" />
     <Compile Include="TokenInfo.cs" />
     <Compile Include="IO\Trie.cs" />

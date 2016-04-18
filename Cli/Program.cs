@@ -116,22 +116,20 @@ namespace Resin.Cli
             var timer = new Stopwatch();
             if (inproc)
             {
-                using (var s = new Searcher(dir, new QueryParser(new Analyzer())))
+                var s = new Searcher(dir, new QueryParser(new Analyzer()));
+                timer.Start();
+                var result = s.Search(q, page, size, returnTrace:true);
+                timer.Stop();
+                var position = 0 + (page * size);
+                foreach (var doc in result.Docs)
                 {
-                    timer.Start();
-                    var result = s.Search(q, page, size, returnTrace:true);
-                    timer.Stop();
-                    var position = 0 + (page * size);
-                    foreach (var doc in result.Docs)
-                    {
-                        Console.WriteLine(string.Join(", ", ++position, doc["_id"], doc["label"]));
-                    }
-                    Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, timer.Elapsed.TotalMilliseconds);
-                    //foreach (var doc in result.Trace)
-                    //{
-                    //    Console.WriteLine("{0} {1}", doc.Key, doc.Value);
-                    //}
+                    Console.WriteLine(string.Join(", ", ++position, doc["_id"], doc["label"]));
                 }
+                Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, timer.Elapsed.TotalMilliseconds);
+                //foreach (var doc in result.Trace)
+                //{
+                //    Console.WriteLine("{0} {1}", doc.Key, doc.Value);
+                //}
             }
             else
             {
@@ -261,7 +259,6 @@ namespace Resin.Cli
             timer.Restart();
             if (inproc)
             {
-                Console.Write("Flushing to disk");
                 w.Dispose();
             }
             else
@@ -272,7 +269,7 @@ namespace Resin.Cli
                     client.Write(docs);
                 }
             }
-            Console.Write(" in {0}", timer.Elapsed);
+            Console.WriteLine(" in {0}", timer.Elapsed);
         }
     }
 }

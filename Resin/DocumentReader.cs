@@ -4,26 +4,25 @@ using Resin.IO;
 
 namespace Resin
 {
-    public abstract class SearcherBase
+    public class DocumentReader
     {
         protected readonly string Directory;
         protected readonly Dictionary<string, DocFile> DocFiles;
-        protected readonly Dictionary<string, FieldFile> FieldFiles;
-        protected readonly Dictionary<string, Trie> TrieFiles;
+
         protected readonly Dictionary<string, Document> Docs; 
         protected DixFile Dix;
         protected FixFile Fix;
 
-        protected SearcherBase(string directory, Dictionary<string, DocFile> docFiles, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles, Dictionary<string, Document> docs)
+        public DocumentReader(string directory, DixFile dix, Dictionary<string, DocFile> docFiles, Dictionary<string, Document> docs)
         {
             Directory = directory;
+            Dix = dix;
             DocFiles = docFiles;
-            FieldFiles = fieldFiles;
-            TrieFiles = trieFiles;
+
             Docs = docs;
         }
 
-        protected IDictionary<string, string> GetDoc(string docId)
+        public IDictionary<string, string> GetDoc(string docId)
         {
             Document doc;
             if (!Docs.TryGetValue(docId, out doc))

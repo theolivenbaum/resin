@@ -7,11 +7,14 @@ using Resin.IO;
 
 namespace Resin
 {
-    public class Optimizer : SearcherBase
+    public class Optimizer : DocumentReader
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Optimizer));
         private readonly string _directory;
         private readonly IList<string> _generations;
+
+        protected readonly Dictionary<string, FieldFile> FieldFiles;
+        protected readonly Dictionary<string, Trie> TrieFiles;
 
         public Optimizer(
             string directory, 
@@ -21,11 +24,12 @@ namespace Resin
             Dictionary<string, DocFile> docFiles, 
             Dictionary<string, FieldFile> fieldFiles, 
             Dictionary<string, Trie> trieFiles, 
-            Dictionary<string, Document> docs) : base(directory, docFiles, fieldFiles, trieFiles, docs)
+            Dictionary<string, Document> docs) : base(directory, dix, docFiles, docs)
         {
+            FieldFiles = fieldFiles;
+            TrieFiles = trieFiles;
             _directory = directory;
             _generations = generations;
-            Dix = dix;
             Fix = fix;
         }
 
@@ -58,8 +62,9 @@ namespace Resin
             ix.Deletions.Clear();
             ix.DixFileName = dixFileId;
             ix.FixFileName = fixFileId;
-            ix.Save(Helper.GetChronologicalIndexFileName(_directory));
-            Log.DebugFormat("optimized {0}", _directory);
+            var ixFileName = Helper.GetChronologicalIndexFileName(_directory); //TODO: the timing is fucked up
+            ix.Save(ixFileName);
+            Log.DebugFormat("saved new index {0}", ixFileName);
         }
 
         /// <summary>
