@@ -12,7 +12,7 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
         private readonly QueryParser _parser;
 
-        public Searcher(string directory, QueryParser parser) : base(directory, new Dictionary<string, DocFile>(), new Dictionary<string, FieldFile>(), new Dictionary<string, Trie>())
+        public Searcher(string directory, QueryParser parser) : base(directory, new Dictionary<string, DocFile>(), new Dictionary<string, FieldFile>(), new Dictionary<string, Trie>(), new Dictionary<string, IDictionary<string, string>>())
         {
             _parser = parser;
 
@@ -20,7 +20,7 @@ namespace Resin
             var ix = IxFile.Load(generations.First());
             Dix = DixFile.Load(Path.Combine(Directory, ix.DixFileName));
             Fix = FixFile.Load(Path.Combine(Directory, ix.FixFileName));
-            var optimizer = new Optimizer(directory, generations.ToArray(), Dix, Fix, DocFiles, FieldFiles, TrieFiles);
+            var optimizer = new Optimizer(directory, generations.ToArray(), Dix, Fix, DocFiles, FieldFiles, TrieFiles, Docs);
             optimizer.Rebase();
             Log.DebugFormat("searcher initialized in {0}", Directory);
         }

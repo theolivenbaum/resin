@@ -18,7 +18,7 @@ namespace Resin
             return ids.Select(id => Path.Combine(dir, id + ".ix"));
         }
 
-        public static string GetChronologicalFileId(string dir)
+        public static string GetChronologicalIndexFileName(string dir)
         {
             var ticks = DateTime.Now.Ticks - BeginningOfTime.Ticks;
             var fileName = Path.Combine(dir, ticks + ".ix");

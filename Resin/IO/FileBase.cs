@@ -9,7 +9,6 @@ namespace Resin.IO
     [Serializable]
     public class FileBase<T> : FileBase
     {
-
         public virtual void Save(string fileName)
         {
             if (fileName == null) throw new ArgumentNullException("fileName");

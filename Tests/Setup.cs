@@ -11,6 +11,7 @@ namespace Tests
         public void RunBeforeAnyTests()
         {
             if (Directory.Exists(Dir)) Directory.Delete(Dir, true);
+            Directory.CreateDirectory(Dir);
         }
 
         [TearDown]

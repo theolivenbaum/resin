@@ -27,7 +27,7 @@ namespace Resin
             _directory = directory;
 
             // should be the first thing that happens in a write operation, for synching purposes
-            _ixFileName = Helper.GetChronologicalFileId(_directory);
+            _ixFileName = Helper.GetChronologicalIndexFileName(_directory);
 
             _analyzer = analyzer;
             _docWriter = new DocumentWriter(_directory);
@@ -83,7 +83,7 @@ namespace Resin
                 }
                 foreach(var token in termFrequencies)
                 {
-                    fw.Write(document.Id, token.Key, token.Value);
+                    fw.Write(document.Id, token.Key, token.Value, analyze);
                 }
             }
             _docWriter.Write(document);

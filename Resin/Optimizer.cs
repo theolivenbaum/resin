@@ -12,14 +12,12 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(Optimizer));
         private readonly string _directory;
         private readonly IList<string> _generations;
-        private readonly IList<string> _obsoleteIndices;
- 
-        public Optimizer(string directory, IList<string> generations, DixFile dix, FixFile fix, Dictionary<string, DocFile> docFiles, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles)
-            : base(directory, docFiles, fieldFiles, trieFiles)
+
+        public Optimizer(string directory, IList<string> generations, DixFile dix, FixFile fix, Dictionary<string, DocFile> docFiles, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles, Dictionary<string, IDictionary<string, string>> docs)
+            : base(directory, docFiles, fieldFiles, trieFiles, docs)
         {
             _directory = directory;
             _generations = generations;
-            _obsoleteIndices = new List<string>();
             Dix = dix;
             Fix = fix;
         }
@@ -31,6 +29,22 @@ namespace Resin
 
         public void Save(IxFile ix)
         {
+            var docWriter = new DocumentWriter(_directory);
+            foreach (var doc in Docs.Select(d=>new Document(d.Value)))
+            {
+                docWriter.Write(doc);
+            }
+            docWriter.Flush(Dix);
+            foreach (var fieldFile in FieldFiles)
+            {
+                var fileId = fieldFile.Key;
+                fieldFile.Value.Save(Path.Combine(_directory, fileId + ".f"));
+                TrieFiles[fileId].Save(Path.Combine(_directory, fileId + ".f.tri"));
+            }
+            foreach (var x in _generations)
+            {
+                File.Delete(x);
+            }
             var fixFileId = Path.GetRandomFileName() + ".fix";
             var dixFileId = Path.GetRandomFileName() + ".dix";
             var fixFileName = Path.Combine(_directory, fixFileId);
@@ -40,27 +54,14 @@ namespace Resin
             ix.Deletions.Clear();
             ix.DixFileName = dixFileId;
             ix.FixFileName = fixFileId;
-
-            foreach (var d in DocFiles)
-            {
-                d.Value.Save(Path.Combine(_directory, d.Key + ".d"));
-            }
-            foreach (var f in FieldFiles)
-            {
-                f.Value.Save(Path.Combine(_directory, f.Key + ".f"));
-            }
-            foreach (var x in _obsoleteIndices)
-            {
-                File.Delete(x);
-            }
-
-            ix.Save(_generations.First());
+            ix.Save(Helper.GetChronologicalIndexFileName(_directory));
             Log.DebugFormat("optimized {0}", _directory);
         }
 
         /// <summary>
+        /// Rebasing loads all files into memory that have been touched in a write since last time the index was optimized.
         /// Newer generation indices are treated as changesets to older generations.
-        /// A changeset (i.e. an index) can contain both (1) document deletions as well as (2) upserts of documents.
+        /// An index can contain both (1) document deletions as well as (2) upserts of documents.
         /// </summary>
         /// <param name="generations">The *.ix file names of subsequent generations sorted by age, oldest first.</param>
         private void Rebase(IList<string> generations)
@@ -73,16 +74,14 @@ namespace Resin
             foreach (var gen in generations)
             {
                 var ix = IxFile.Load(gen);
-                _obsoleteIndices.Add(gen);
                 foreach (var term in ix.Deletions)
                 {
                     var collector = new Collector(Directory, Fix, FieldFiles, TrieFiles);
                     var docIds = collector.Collect(new QueryContext(term.Field, term.Token), 0, int.MaxValue).Select(ds => ds.DocId).ToList();
 
                     // delete docs
-                    // trie files are not touched
-                    // loads into memory cleaned doc files
-                    // loads into memory all fields except last gen
+                    // loads into memory all cleaned doc files
+                    // loads all field files except last gen
                     foreach (var docId in docIds)
                     {
                         var docFile = GetDocFile(docId);
@@ -97,82 +96,88 @@ namespace Resin
                             if (!FieldFiles.TryGetValue(fileId, out ff))
                             {
                                 ff = FieldFile.Load(fileName);
+                                FieldFiles[fileId] = ff;
                             }
                             ff.Remove(docId);
-                            FieldFiles[fileId] = ff;
                         }
                     }
                 }
 
                 // upsert docs
+                // loads all updated docs
                 var dix = DixFile.Load(Path.Combine(Directory, ix.DixFileName));
-                foreach (var docId in dix.DocIdToFileId)
+                foreach (var fileId in dix.DocIdToFileId.Values.Distinct())
                 {
-                    Dix.DocIdToFileId[docId.Key] = docId.Value;
-                }              
+                    var fileName = Path.Combine(_directory, fileId + ".d");
+                    var file = DocFile.Load(fileName);
+                    foreach (var doc in file.Docs)
+                    {
+                        if (Dix.DocIdToFileId.ContainsKey(doc.Key))
+                        {
+                            var prevDoc = GetDoc(doc.Key);
+                            foreach (var field in doc.Value.Fields)
+                            {
+                                prevDoc[field.Key] = field.Value; // field-wise upsert
+                            }
+                            Docs[doc.Key] = prevDoc;
+                        }
+                        else
+                        {
+                            Dix.DocIdToFileId[doc.Key] = null;
+                            Docs[doc.Key] = doc.Value.Fields;
+                        }
+                    }
+                }
 
-                // remove stale data from field files
-                // append new data
-                // loads into memory the field files that are updated by this gen
+                // update field files
+                // loads into memory all updated field files
                 var fix = FixFile.Load(Path.Combine(Directory, ix.FixFileName));
                 foreach (var field in fix.FieldToFileId)
                 {
+                    var fieldName = field.Key;
                     var newFileId = field.Value;
-                    if (Fix.FieldToFileId.ContainsKey(field.Key))
+                    var newFileName = Path.Combine(Directory, newFileId + ".f");
+                    var newFile = FieldFile.Load(newFileName);
+
+                    if (Fix.FieldToFileId.ContainsKey(fieldName))
                     {
                         // we already know about this field
-                        // load into memory the old field file
-                        // remove stale data
-                        // add new data
 
-                        var oldFileId = Fix.FieldToFileId[field.Key];
-                        var newFileName = Path.Combine(Directory, newFileId + ".f");
-                        var oldFileName = Path.Combine(Directory, oldFileId + ".f");
-                        FieldFile oldFile;
-                        if (!FieldFiles.TryGetValue(oldFileId, out oldFile))
-                        {
-                            oldFile = FieldFile.Load(oldFileName);
-                        }
-                        var newFile = FieldFile.Load(newFileName);
+                        var previousFileId = Fix.FieldToFileId[fieldName];
+                        var previousFileName = Path.Combine(Directory, previousFileId + ".f");
                         
-                        // remove stale postings
-                        foreach (var docId in newFile.DocIds.Keys.Intersect(oldFile.DocIds.Keys))
+                        FieldFile prevFieldFile;
+                        if (!FieldFiles.TryGetValue(previousFileId, out prevFieldFile))
                         {
-                            oldFile.Remove(docId);
+                            prevFieldFile = FieldFile.Load(previousFileName);
                         }
 
-                        // add new postings
-                        foreach (var newTermPostings in newFile.Tokens)
+                        var prevTri = Trie.Load(previousFileName + ".tri");
+
+                        foreach (var entry in newFile.Entries)
                         {
-                            Dictionary<string, int> oldFilePostings;
-                            if (!oldFile.Tokens.TryGetValue(newTermPostings.Key, out oldFilePostings))
+                            var token = entry.Key;
+                            foreach (var posting in entry.Value)
                             {
-                                // had not heard of that word before
-
-                                oldFile.Tokens.Add(newTermPostings.Key, newTermPostings.Value);
-                                foreach (var docId in newTermPostings.Value.Keys)
-                                {
-                                    oldFile.DocIds[docId] = null;
-                                }
+                                var docId = posting.Key;
+                                var freq = posting.Value;
+                                prevFieldFile.AddOrOverwrite(docId, token, freq);
                             }
-                            else
-                            {
-                                // seen that word before
-
-                                foreach (var posting in newTermPostings.Value)
-                                {
-                                    oldFilePostings[posting.Key] = posting.Value;
-                                    oldFile.DocIds[posting.Key] = null;
-                                }
-                                oldFile.Tokens[newTermPostings.Key] = oldFilePostings;
-                            }
+                            prevTri.Add(entry.Key);
                         }
-                        FieldFiles[oldFileId] = oldFile;
+
+                        var rebasedFileId = Path.GetRandomFileName();
+
+                        Fix.FieldToFileId[fieldName] = rebasedFileId;
+                        FieldFiles[rebasedFileId] = prevFieldFile;
+                        TrieFiles[rebasedFileId] = prevTri;
                     }
                     else
                     {
                         // completely new field
-                        Fix.FieldToFileId[field.Key] = newFileId;
+                        Fix.FieldToFileId[fieldName] = newFileId;
+                        FieldFiles[newFileId] = newFile;
+                        TrieFiles[newFileId] = Trie.Load(newFileName + ".tri");
                     }
                 }
             }

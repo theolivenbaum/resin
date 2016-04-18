@@ -32,12 +32,13 @@ namespace Resin
 
         private Trie GetTrieFile(string field)
         {
-            var fileName = Path.Combine(_directory,_fix.FieldToFileId[field] + ".f.tri");
+            var fileId = _fix.FieldToFileId[field];
+            var fileName = Path.Combine(_directory, fileId + ".f.tri");
             Trie file;
-            if (!_trieFiles.TryGetValue(fileName, out file))
+            if (!_trieFiles.TryGetValue(fileId, out file))
             {
                 file = Trie.Load(fileName);
-                _trieFiles[fileName] = file;
+                _trieFiles[fileId] = file;
             }
             return file;
         }
@@ -70,9 +71,9 @@ namespace Resin
         {
             var fieldFile = GetFieldFile(term.Field);
             if (fieldFile == null) yield break;
-            var docsInCorpus = fieldFile.DocIds.Count();
+            var docsInCorpus = fieldFile.NumDocs();
             Dictionary<string, int> postings;
-            if (fieldFile.Tokens.TryGetValue(term.Token, out postings))
+            if (fieldFile.TryGetValue(term.Token, out postings))
             {
                 var scorer = new Tfidf(docsInCorpus, postings.Count);
                 foreach (var posting in postings)
@@ -104,7 +105,7 @@ namespace Resin
                 if (expanded != null)
                 {
                     var tokenSuffix = queryContext.Prefix ? "*" : queryContext.Fuzzy ? "~" : string.Empty;
-                    Log.InfoFormat("{0}:{1}{2} expanded to {3}", queryContext.Field, queryContext.Token, tokenSuffix, string.Join(" ", expanded.Select(q => q.ToString())));
+                    Log.DebugFormat("{0}:{1}{2} expanded to {3}", queryContext.Field, queryContext.Token, tokenSuffix, string.Join(" ", expanded.Select(q => q.ToString())));
                     foreach (var t in expanded)
                     {
                         queryContext.Children.Add(t);

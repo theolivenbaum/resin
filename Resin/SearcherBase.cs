@@ -10,21 +10,28 @@ namespace Resin
         protected readonly Dictionary<string, DocFile> DocFiles;
         protected readonly Dictionary<string, FieldFile> FieldFiles;
         protected readonly Dictionary<string, Trie> TrieFiles;
+        protected readonly Dictionary<string, IDictionary<string, string>> Docs; 
         protected DixFile Dix;
         protected FixFile Fix;
 
-        protected SearcherBase(string directory, Dictionary<string, DocFile> docFiles, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles)
+        protected SearcherBase(string directory, Dictionary<string, DocFile> docFiles, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles, Dictionary<string, IDictionary<string, string>> docs)
         {
             Directory = directory;
             DocFiles = docFiles;
             FieldFiles = fieldFiles;
             TrieFiles = trieFiles;
+            Docs = docs;
         }
 
         protected IDictionary<string, string> GetDoc(string docId)
         {
-            var file = GetDocFile(docId);
-            return file.Docs[docId].Fields;
+            IDictionary<string, string> doc;
+            if (!Docs.TryGetValue(docId, out doc))
+            {
+                var file = GetDocFile(docId);
+                doc = file.Docs[docId].Fields;                
+            }
+            return doc;
         }
 
         protected DocFile GetDocFile(string docId)

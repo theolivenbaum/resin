@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Resin.IO;
 
 namespace Resin
@@ -11,31 +10,24 @@ namespace Resin
 
         // prefix tree
         private readonly Trie _trie;
-        private readonly string _termsFileName;
+        private readonly string _fieldFileName;
         private readonly string _trieFileName;
         private bool _flushing;
 
         public FieldWriter(string fileName)
         {
-            _termsFileName = fileName;
+            _fieldFileName = fileName;
             _trieFileName = fileName + ".tri";
             _fieldFile = new FieldFile();
             _trie = new Trie();
         }
 
-        public void Write(string docId, string term, int frequency)
+        public void Write(string docId, string token, int frequency, bool analyzed)
         {
-            Dictionary<string, int> docs;
-            if (!_fieldFile.Tokens.TryGetValue(term, out docs))
+            _fieldFile.AddOrOverwrite(docId, token, frequency);
+            if (analyzed)
             {
-                docs = new Dictionary<string, int> { { docId, frequency } };
-                _fieldFile.Tokens.Add(term, docs);
-                _fieldFile.DocIds[docId] = null;
-                _trie.Add(term);
-            }
-            else
-            {
-                docs[docId] = frequency;
+                _trie.Add(token);
             }
         }
 
@@ -43,7 +35,7 @@ namespace Resin
         {
             if (_flushing) return;
             _flushing = true;
-            _fieldFile.Save(_termsFileName);
+            _fieldFile.Save(_fieldFileName);
             _trie.Save(_trieFileName);
         }
 
