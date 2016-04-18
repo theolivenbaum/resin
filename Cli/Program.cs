@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using log4net.Config;
 using Newtonsoft.Json;
 using Resin.Client;
@@ -166,23 +165,18 @@ namespace Resin.Cli
         static void Optimize(string[] args)
         {
             var dir = args[Array.IndexOf(args, "--dir") + 1];
+            var truncate = Array.IndexOf(args, "--truncate") > 0;
             var timer = new Stopwatch();
             timer.Start();
-            var generations = Helper.GetIndexFiles(dir).ToList();
-            var ix = IxFile.Load(generations.First());
+            var ixFileName = Helper.GetFileNameOfLatestIndex(dir);
+            var ix = IxFile.Load(ixFileName);
             var dix = DixFile.Load(Path.Combine(dir, ix.DixFileName));
             var fix = FixFile.Load(Path.Combine(dir, ix.FixFileName));
-            var optimizer = new Optimizer(
-                dir, 
-                generations, 
-                dix, 
-                fix, 
-                new Dictionary<string, DocFile>(), 
-                new Dictionary<string, FieldFile>(), 
-                new Dictionary<string, Trie>(),
-                new Dictionary<string, Document>());
+
+            var optimizer = new Optimizer(dir, ixFileName, dix, fix);
             optimizer.Rebase();
-            optimizer.Save(ix);
+            if (truncate) optimizer.Truncate();
+            optimizer.Save();
         }
 
         static void Delete(string[] args)
@@ -191,10 +185,9 @@ namespace Resin.Cli
             var docId = args[Array.IndexOf(args, "--docid") + 1];
             var timer = new Stopwatch();
             timer.Start();
-            using (var writer = new IndexWriter(dir, new Analyzer()))
-            {
-                writer.Remove("_id", docId);
-            }
+            var writer = new IndexWriter(dir, new Analyzer());
+            writer.Remove("_id", docId);
+            writer.Flush();
             Console.WriteLine("deleted {0} in {1}", docId, timer.Elapsed);
         }
 
@@ -253,11 +246,12 @@ namespace Resin.Cli
 
                     if (count == take) break;
                 }
+                Console.WriteLine();
             }
 
             if (inproc)
             {
-                w.Dispose();
+                w.Flush();
             }
             else
             {

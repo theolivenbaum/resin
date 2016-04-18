@@ -8,18 +8,15 @@ namespace Resin
     {
         protected readonly string Directory;
         protected readonly Dictionary<string, DocFile> DocFiles;
-
         protected readonly Dictionary<string, Document> Docs; 
         protected DixFile Dix;
-        protected FixFile Fix;
 
-        public DocumentReader(string directory, DixFile dix, Dictionary<string, DocFile> docFiles, Dictionary<string, Document> docs)
+        public DocumentReader(string directory, DixFile dix)
         {
             Directory = directory;
             Dix = dix;
-            DocFiles = docFiles;
-
-            Docs = docs;
+            DocFiles = new Dictionary<string, DocFile>();
+            Docs = new Dictionary<string, Document>();
         }
 
         public IDictionary<string, string> GetDoc(string docId)

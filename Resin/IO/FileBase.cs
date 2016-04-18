@@ -35,6 +35,8 @@ namespace Resin.IO
 
         public static T Load(string fileName)
         {
+            if (fileName == null) throw new ArgumentNullException("fileName");
+
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 var obj = (T)Serializer.Deserialize(fs);

@@ -27,23 +27,11 @@ namespace Resin
             _fieldFiles = new Dictionary<string, FieldFile>();
             _trieFiles = new Dictionary<string, Trie>();
 
-            var generations = Helper.GetIndexFiles(_directory).ToList();
-            var ix = IxFile.Load(generations.First());
+            var ixFileName = Helper.GetFileNameOfLatestIndex(_directory);
+            var ix = IxFile.Load(ixFileName);
             var dix = DixFile.Load(Path.Combine(_directory, ix.DixFileName));
             _fix = FixFile.Load(Path.Combine(_directory, ix.FixFileName));
-            var docs = new Dictionary<string, Document>();
-            var docFiles = new Dictionary<string, DocFile>();
-            var optimizer = new Optimizer(
-                directory, 
-                generations, 
-                dix, 
-                _fix, 
-                docFiles,
-                _fieldFiles, 
-                _trieFiles, 
-                docs);
-            optimizer.Rebase();
-            _docReader = new DocumentReader(_directory, dix, docFiles, docs);
+            _docReader = new DocumentReader(_directory, dix);
 
             Log.DebugFormat("searcher initialized in {0}", _directory);
         }

@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
+using log4net;
 using Resin.IO;
 
 namespace Resin
 {
-    public class IndexWriter : IDisposable
+    public class IndexWriter
     {
         // field/fileid
         private readonly FixFile _fix;
@@ -20,6 +20,7 @@ namespace Resin
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private bool _flushing;
+        private static readonly ILog Log = LogManager.GetLogger(typeof(IndexWriter));
 
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
@@ -75,16 +76,15 @@ namespace Resin
                     fw.Write(document.Id, token.Key, token.Value, analyze);
                 }
             }
-            _docs[document.Id] = document; // this overwrites previous doc if same docId appears twice in the session
+            _docs[document.Id] = document; // this overwrites previous doc if same docId appears twice in the batch
         }
 
-        private void Flush()
+        public void Flush()
         {
             if (_flushing) return;
             _flushing = true;
 
-            var dix = new DixFile();
-            var ix = new IxFile();
+            var commitDix = new DixFile();
             var fieldFiles = new Dictionary<string, FieldFile>();
             var triFiles = new Dictionary<string, Trie>();
             foreach (var writer in _fieldWriters)
@@ -93,20 +93,23 @@ namespace Resin
                 fieldFiles.Add(fileId, writer.Value.FieldFile);
                 triFiles.Add(fileId, writer.Value.Trie);
             }
-            var optimizer = new Optimizer(
-                _directory, 
-                new string[0], 
-                dix, 
-                _fix, 
-                new Dictionary<string, DocFile>(),
-                fieldFiles, triFiles,
-                _docs);  
-            optimizer.Save(ix);
-        }
-
-        public void Dispose()
-        {
-            Flush();
+            var commit = Helper.Save(_directory, ".co", commitDix, _fix, _docs, fieldFiles, triFiles);
+            var latestBaseline = Helper.GetFileNameOfLatestIndex(_directory);
+            if (latestBaseline == null)
+            {
+                var ixFileName = Helper.GenerateNewChronologicalFileName(_directory, ".ix");
+                commit.Save(ixFileName);
+                Log.InfoFormat("new baseline {0}", ixFileName);
+            }
+            else
+            {
+                var ix = IxFile.Load(latestBaseline);
+                var dix = DixFile.Load(Path.Combine(_directory, ix.DixFileName));
+                var fix = FixFile.Load(Path.Combine(_directory, ix.FixFileName));
+                var optimizer = new Optimizer(_directory, latestBaseline, dix, fix);
+                optimizer.Rebase();
+                optimizer.Save();
+            }
         }
     }
 }

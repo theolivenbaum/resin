@@ -6,14 +6,9 @@ namespace Resin.IO
     [Serializable]
     public class IxFile : FileBase<IxFile>
     {
-        private string _fixFileName;
-        private string _dixFileName;
+        private readonly string _fixFileName;
+        private readonly string _dixFileName;
         private readonly List<Term> _deletions;
-
-        public IxFile()
-        {
-            _deletions = new List<Term>();
-        }
 
         public IxFile(string fixFileName, string dixFileName, List<Term> deletions)
         {
@@ -22,8 +17,8 @@ namespace Resin.IO
             _deletions = deletions;
         }
 
-        public string FixFileName { get { return _fixFileName; } set { _fixFileName = value; } }
-        public string DixFileName { get { return _dixFileName; } set { _dixFileName = value; } }
+        public string FixFileName { get { return _fixFileName; } }
+        public string DixFileName { get { return _dixFileName; } }
         public IList<Term> Deletions { get { return _deletions; } }
     }
 }

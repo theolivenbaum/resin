@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -7,196 +8,183 @@ using Resin.IO;
 
 namespace Resin
 {
+    /// <summary>
+    /// Initialize an Optimizer with an index and fast-forward to the directory's latest commit by calling Optimizer.Rebase().
+    /// Save that state as a new baseline by calling Optimizer.Save().
+    /// </summary>
     public class Optimizer : DocumentReader
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Optimizer));
         private readonly string _directory;
-        private readonly IList<string> _generations;
+        private readonly Dictionary<string, FieldFile> _fieldFiles;
+        private readonly Dictionary<string, Trie> _trieFiles;
+        private readonly FixFile _fix;
+        private readonly string _ixFileName;
+        private readonly IList<string> _processedCommits; 
 
-        protected readonly Dictionary<string, FieldFile> FieldFiles;
-        protected readonly Dictionary<string, Trie> TrieFiles;
-
-        public Optimizer(
-            string directory, 
-            IList<string> generations, 
-            DixFile dix, 
-            FixFile fix, 
-            Dictionary<string, DocFile> docFiles, 
-            Dictionary<string, FieldFile> fieldFiles, 
-            Dictionary<string, Trie> trieFiles, 
-            Dictionary<string, Document> docs) : base(directory, dix, docFiles, docs)
+        public Optimizer(string directory, string ixFileName, DixFile dix, FixFile fix) : base(directory, dix)
         {
-            FieldFiles = fieldFiles;
-            TrieFiles = trieFiles;
+            _ixFileName = ixFileName;
+            _fieldFiles = new Dictionary<string, FieldFile>();
+            _trieFiles = new Dictionary<string, Trie>();
             _directory = directory;
-            _generations = generations;
-            Fix = fix;
+            _fix = fix;
+            _processedCommits = new List<string>();
+        }
+
+        /// <summary>
+        /// Irreversibly delete commits that are older than the latest baseline.
+        /// </summary>
+        public void Truncate()
+        {
+            //TODO: implement truncate
         }
 
         public void Rebase()
         {
-            if (_generations.Count < 2) return;
-            Rebase(_generations.Skip(1).ToList()); 
+            var commits = Helper.GetFilesOrderedChronologically(_directory, "*.co").ToList();
+            var nextCommit = Helper.GetNextCommit(_ixFileName, commits);
+            while (nextCommit != null)
+            {
+                Rebase(nextCommit);
+                nextCommit = Helper.GetNextCommit(nextCommit, commits);
+            }
         }
 
-        public void Save(IxFile ix)
+        public IxFile Save()
         {
-            var docWriter = new DocumentWriter(_directory, Docs);
-            docWriter.Flush(Dix);
-            foreach (var fieldFile in FieldFiles)
-            {
-                var fileId = fieldFile.Key;
-                fieldFile.Value.Save(Path.Combine(_directory, fileId + ".f"));
-                TrieFiles[fileId].Save(Path.Combine(_directory, fileId + ".f.tri"));
-            }
-            foreach (var x in _generations)
-            {
-                File.Delete(x);
-            }
-            var fixFileId = Path.GetRandomFileName() + ".fix";
-            var dixFileId = Path.GetRandomFileName() + ".dix";
-            var fixFileName = Path.Combine(_directory, fixFileId);
-            var dixFileName = Path.Combine(_directory, dixFileId);
-            Dix.Save(dixFileName);
-            Fix.Save(fixFileName);
-            ix.Deletions.Clear();
-            ix.DixFileName = dixFileId;
-            ix.FixFileName = fixFileId;
-            var ixFileName = Helper.GetChronologicalIndexFileName(_directory); //TODO: the timing is fucked up
-            ix.Save(ixFileName);
-            Log.InfoFormat("saved new index {0}", ixFileName);
+            return Helper.Save(_directory, ".ix", Dix, _fix, Docs, _fieldFiles, _trieFiles);
         }
 
         /// <summary>
-        /// Rebasing loads all files into memory that have been touched in a write since last time the index was optimized.
-        /// Newer generation indices are treated as changesets to older generations.
-        /// An index can contain both document deletions as well as upserts of documents.
+        /// A write is a commit.
+        /// A commit is an index. 
+        /// An index contains deletions and upserts. 
+        /// Newer commits are treated as changesets to older commits. 
         /// </summary>
-        /// <param name="generations">The *.ix file names of subsequent generations sorted by age, oldest first.</param>
-        private void Rebase(IList<string> generations)
+        /// <param name="commitFileName">The *.co file name of the subsequent commit.</param>
+        private void Rebase(string commitFileName)
         {
-            if (generations.Count < 1) return;
+            if (commitFileName == null) throw new ArgumentNullException("commitFileName");
 
-            Log.InfoFormat("rebasing {0}", _directory);
+            Log.InfoFormat("rebasing {0}", commitFileName);
             var timer = new Stopwatch();
             timer.Start();
-            foreach (var gen in generations)
+            var ix = IxFile.Load(commitFileName);
+            foreach (var term in ix.Deletions)
             {
-                var ix = IxFile.Load(gen);
-                foreach (var term in ix.Deletions)
+                var collector = new Collector(Directory, _fix, _fieldFiles, _trieFiles);
+                var docIds = collector.Collect(new QueryContext(term.Field, term.Token), 0, int.MaxValue).Select(ds => ds.DocId).ToList();
+
+                // delete docs
+                // loads into memory all cleaned doc files
+                // loads all field files except last gen
+                foreach (var docId in docIds)
                 {
-                    var collector = new Collector(Directory, Fix, FieldFiles, TrieFiles);
-                    var docIds = collector.Collect(new QueryContext(term.Field, term.Token), 0, int.MaxValue).Select(ds => ds.DocId).ToList();
+                    var docFile = GetDocFile(docId);
+                    docFile.Docs.Remove(docId);
+                    Dix.DocIdToFileId.Remove(docId);
 
-                    // delete docs
-                    // loads into memory all cleaned doc files
-                    // loads all field files except last gen
-                    foreach (var docId in docIds)
+                    foreach (var field in _fix.FieldToFileId)
                     {
-                        var docFile = GetDocFile(docId);
-                        docFile.Docs.Remove(docId);
-                        Dix.DocIdToFileId.Remove(docId);
-
-                        foreach (var field in Fix.FieldToFileId)
+                        var fileId = field.Value;
+                        var fileName = Path.Combine(Directory, fileId + ".f");
+                        FieldFile ff;
+                        if (!_fieldFiles.TryGetValue(fileId, out ff))
                         {
-                            var fileId = field.Value;
-                            var fileName = Path.Combine(Directory, fileId + ".f");
-                            FieldFile ff;
-                            if (!FieldFiles.TryGetValue(fileId, out ff))
-                            {
-                                ff = FieldFile.Load(fileName);
-                                FieldFiles[fileId] = ff;
-                            }
-                            ff.Remove(docId);
+                            ff = FieldFile.Load(fileName);
+                            _fieldFiles[fileId] = ff;
                         }
-                    }
-                }
-
-                // upsert docs
-                // loads all updated docs
-                var dix = DixFile.Load(Path.Combine(Directory, ix.DixFileName));
-                foreach (var fileId in dix.DocIdToFileId.Values.Distinct())
-                {
-                    var fileName = Path.Combine(_directory, fileId + ".d");
-                    var file = DocFile.Load(fileName);
-                    foreach (var doc in file.Docs)
-                    {
-                        if (Dix.DocIdToFileId.ContainsKey(doc.Key))
-                        {
-                            var prevDoc = GetDoc(doc.Key);
-                            foreach (var field in doc.Value.Fields)
-                            {
-                                prevDoc[field.Key] = field.Value; // field-wise upsert
-                            }
-                            Docs[doc.Key] = new Document(prevDoc);
-                        }
-                        else
-                        {
-                            Dix.DocIdToFileId[doc.Key] = null; // value will be set when saving
-                            Docs[doc.Key] = doc.Value;
-                        }
-                    }
-                }
-
-                // update field files
-                // loads into memory all updated field files
-                var fix = FixFile.Load(Path.Combine(Directory, ix.FixFileName));
-                foreach (var field in fix.FieldToFileId)
-                {
-                    var fieldName = field.Key;
-                    var newFileId = field.Value;
-                    var newFileName = Path.Combine(Directory, newFileId + ".f");
-                    var newFile = FieldFile.Load(newFileName);
-
-                    if (Fix.FieldToFileId.ContainsKey(fieldName))
-                    {
-                        // we already know about this field
-
-                        var previousFileId = Fix.FieldToFileId[fieldName];
-                        var previousFileName = Path.Combine(Directory, previousFileId + ".f");
-                        
-                        FieldFile prevFieldFile;
-                        if (!FieldFiles.TryGetValue(previousFileId, out prevFieldFile))
-                        {
-                            prevFieldFile = FieldFile.Load(previousFileName);
-                            FieldFiles[previousFileId] = prevFieldFile;
-                        }
-
-                        Trie prevTri;
-                        if (!TrieFiles.TryGetValue(previousFileId, out prevTri))
-                        {
-                            prevTri = Trie.Load(previousFileName + ".tri");
-                            TrieFiles[previousFileId] = prevTri;
-                        }
-
-                        foreach (var entry in newFile.Entries)
-                        {
-                            var token = entry.Key;
-                            foreach (var posting in entry.Value)
-                            {
-                                var docId = posting.Key;
-                                var freq = posting.Value;
-                                prevFieldFile.AddOrOverwrite(docId, token, freq);
-                            }
-                            prevTri.Add(token);
-                        }
-
-                        var rebasedFileId = Path.GetRandomFileName();
-
-                        Fix.FieldToFileId[fieldName] = rebasedFileId;
-                        FieldFiles[rebasedFileId] = prevFieldFile;
-                        TrieFiles[rebasedFileId] = prevTri;
-                    }
-                    else
-                    {
-                        // completely new field
-                        Fix.FieldToFileId[fieldName] = newFileId;
-                        FieldFiles[newFileId] = newFile;
-                        TrieFiles[newFileId] = Trie.Load(newFileName + ".tri");
+                        ff.Remove(docId);
                     }
                 }
             }
-            Log.InfoFormat("rebased {0} in {1}", _directory, timer.Elapsed);
+
+            // upsert docs
+            // loads all updated docs
+            var dix = DixFile.Load(Path.Combine(Directory, ix.DixFileName));
+            foreach (var fileId in dix.DocIdToFileId.Values.Distinct())
+            {
+                var fileName = Path.Combine(_directory, fileId + ".d");
+                var file = DocFile.Load(fileName);
+                foreach (var doc in file.Docs)
+                {
+                    if (Dix.DocIdToFileId.ContainsKey(doc.Key))
+                    {
+                        var prevDoc = GetDoc(doc.Key);
+                        foreach (var field in doc.Value.Fields)
+                        {
+                            prevDoc[field.Key] = field.Value; // field-wise upsert
+                        }
+                        Docs[doc.Key] = new Document(prevDoc);
+                    }
+                    else
+                    {
+                        Dix.DocIdToFileId[doc.Key] = null; // value will be set when saving
+                        Docs[doc.Key] = doc.Value;
+                    }
+                }
+            }
+
+            // update field files
+            // loads into memory all updated field files
+            var fix = FixFile.Load(Path.Combine(Directory, ix.FixFileName));
+            foreach (var field in fix.FieldToFileId)
+            {
+                var fieldName = field.Key;
+                var newFileId = field.Value;
+                var newFileName = Path.Combine(Directory, newFileId + ".f");
+                var newFile = FieldFile.Load(newFileName);
+
+                if (_fix.FieldToFileId.ContainsKey(fieldName))
+                {
+                    // we already know about this field
+
+                    var previousFileId = _fix.FieldToFileId[fieldName];
+                    var previousFileName = Path.Combine(Directory, previousFileId + ".f");
+
+                    FieldFile prevFieldFile;
+                    if (!_fieldFiles.TryGetValue(previousFileId, out prevFieldFile))
+                    {
+                        prevFieldFile = FieldFile.Load(previousFileName);
+                        _fieldFiles[previousFileId] = prevFieldFile;
+                    }
+
+                    Trie prevTri;
+                    if (!_trieFiles.TryGetValue(previousFileId, out prevTri))
+                    {
+                        prevTri = Trie.Load(previousFileName + ".tri");
+                        _trieFiles[previousFileId] = prevTri;
+                    }
+
+                    foreach (var entry in newFile.Entries)
+                    {
+                        var token = entry.Key;
+                        foreach (var posting in entry.Value)
+                        {
+                            var docId = posting.Key;
+                            var freq = posting.Value;
+                            prevFieldFile.AddOrOverwrite(docId, token, freq);
+                        }
+                        prevTri.Add(token);
+                    }
+
+                    var rebasedFileId = Path.GetRandomFileName();
+
+                    _fix.FieldToFileId[fieldName] = rebasedFileId;
+                    _fieldFiles[rebasedFileId] = prevFieldFile;
+                    _trieFiles[rebasedFileId] = prevTri;
+                }
+                else
+                {
+                    // completely new field
+                    _fix.FieldToFileId[fieldName] = newFileId;
+                    _fieldFiles[newFileId] = newFile;
+                    _trieFiles[newFileId] = Trie.Load(newFileName + ".tri");
+                }
+            }
+            _processedCommits.Add(commitFileName);
+            Log.InfoFormat("rebased {0} in {1}", commitFileName, timer.Elapsed);
         }
     }
 }
