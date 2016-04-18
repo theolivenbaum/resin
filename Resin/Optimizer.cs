@@ -159,9 +159,15 @@ namespace Resin
                         if (!FieldFiles.TryGetValue(previousFileId, out prevFieldFile))
                         {
                             prevFieldFile = FieldFile.Load(previousFileName);
+                            FieldFiles[previousFileId] = prevFieldFile;
                         }
 
-                        var prevTri = Trie.Load(previousFileName + ".tri");
+                        Trie prevTri;
+                        if (!TrieFiles.TryGetValue(previousFileId, out prevTri))
+                        {
+                            prevTri = Trie.Load(previousFileName + ".tri");
+                            TrieFiles[previousFileId] = prevTri;
+                        }
 
                         foreach (var entry in newFile.Entries)
                         {
@@ -172,7 +178,7 @@ namespace Resin
                                 var freq = posting.Value;
                                 prevFieldFile.AddOrOverwrite(docId, token, freq);
                             }
-                            prevTri.Add(entry.Key);
+                            prevTri.Add(token);
                         }
 
                         var rebasedFileId = Path.GetRandomFileName();
