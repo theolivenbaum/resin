@@ -221,10 +221,9 @@ namespace Resin.Cli
 
             var cursorPos = Console.CursorLeft;
             var count = 0;
+            var docs = new List<Dictionary<string, string>>();
             var timer = new Stopwatch();
             timer.Start();
-
-            var docs = new List<Dictionary<string, string>>();
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var bs = new BufferedStream(fs))
             using (var sr = new StreamReader(bs))
@@ -255,8 +254,7 @@ namespace Resin.Cli
                     if (count == take) break;
                 }
             }
-            Console.Write(" in {0}\r\n", timer.Elapsed);
-            timer.Restart();
+
             if (inproc)
             {
                 w.Dispose();
@@ -269,7 +267,7 @@ namespace Resin.Cli
                     client.Write(docs);
                 }
             }
-            Console.WriteLine(" in {0}", timer.Elapsed);
+            Console.Write("total time elapsed {0}", timer.Elapsed);
         }
     }
 }

@@ -64,7 +64,7 @@ namespace Resin
             ix.FixFileName = fixFileId;
             var ixFileName = Helper.GetChronologicalIndexFileName(_directory); //TODO: the timing is fucked up
             ix.Save(ixFileName);
-            Log.DebugFormat("saved new index {0}", ixFileName);
+            Log.InfoFormat("saved new index {0}", ixFileName);
         }
 
         /// <summary>
