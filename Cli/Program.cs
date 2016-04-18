@@ -182,7 +182,7 @@ namespace Resin.Cli
                 new Dictionary<string, DocFile>(), 
                 new Dictionary<string, FieldFile>(), 
                 new Dictionary<string, Trie>(),
-                new Dictionary<string, IDictionary<string, string>>());
+                new Dictionary<string, Document>());
             optimizer.Rebase();
             optimizer.Save(ix);
         }

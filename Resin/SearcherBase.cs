@@ -10,11 +10,11 @@ namespace Resin
         protected readonly Dictionary<string, DocFile> DocFiles;
         protected readonly Dictionary<string, FieldFile> FieldFiles;
         protected readonly Dictionary<string, Trie> TrieFiles;
-        protected readonly Dictionary<string, IDictionary<string, string>> Docs; 
+        protected readonly Dictionary<string, Document> Docs; 
         protected DixFile Dix;
         protected FixFile Fix;
 
-        protected SearcherBase(string directory, Dictionary<string, DocFile> docFiles, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles, Dictionary<string, IDictionary<string, string>> docs)
+        protected SearcherBase(string directory, Dictionary<string, DocFile> docFiles, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles, Dictionary<string, Document> docs)
         {
             Directory = directory;
             DocFiles = docFiles;
@@ -25,13 +25,13 @@ namespace Resin
 
         protected IDictionary<string, string> GetDoc(string docId)
         {
-            IDictionary<string, string> doc;
+            Document doc;
             if (!Docs.TryGetValue(docId, out doc))
             {
                 var file = GetDocFile(docId);
-                doc = file.Docs[docId].Fields;                
+                doc = file.Docs[docId];                
             }
-            return doc;
+            return doc.Fields;
         }
 
         protected DocFile GetDocFile(string docId)

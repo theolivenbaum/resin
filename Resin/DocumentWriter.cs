@@ -15,16 +15,11 @@ namespace Resin
         // docid/fields/value
         private readonly IDictionary<string, Document> _docs;
 
-        public DocumentWriter(string dir, int batchSize = 1000)
+        public DocumentWriter(string dir, IDictionary<string, Document> docs, int batchSize = 1000)
         {
             _dir = dir;
             _batchSize = batchSize;
-            _docs = new Dictionary<string, Document>();
-        }
-
-        public void Write(Document doc)
-        {
-            _docs[doc.Id] = doc; // this overwrites previous doc if same docId appears twice in the session
+            _docs = docs;
         }
 
         public void Flush(DixFile dix)

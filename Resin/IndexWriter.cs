@@ -11,35 +11,24 @@ namespace Resin
         private readonly FixFile _fix;
 
         // field/writer
-        private readonly IDictionary<string, FieldWriter> _fieldWriters;
+        private readonly Dictionary<string, FieldWriter> _fieldWriters;
+
+        // docid/fields/value
+        private readonly Dictionary<string, Document> _docs;
 
         private readonly List<Term> _deletions;
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
-        private readonly DocumentWriter _docWriter;
         private bool _flushing;
-        private readonly IxFile _ix;
-        private readonly DixFile _dix;
-        private readonly string _ixFileName;
 
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
             _directory = directory;
-
-            // should be the first thing that happens in a write operation, for synching purposes
-            _ixFileName = Helper.GetChronologicalIndexFileName(_directory);
-
             _analyzer = analyzer;
-            _docWriter = new DocumentWriter(_directory);
             _fieldWriters = new Dictionary<string, FieldWriter>();
             _deletions = new List<Term>();
-
-            var fixFileId = Path.GetRandomFileName() + ".fix";
-            var dixFileId = Path.GetRandomFileName() + ".dix";
-
-            _ix = new IxFile(fixFileId, dixFileId, _deletions);
-            _dix = new DixFile();
             _fix = new FixFile();
+            _docs = new Dictionary<string, Document>();
         }
 
         // TODO: implement "delete by query"
@@ -53,18 +42,18 @@ namespace Resin
             var document = new Document(doc);
             foreach (var field in document.Fields)
             {
-                string fieldFileId;
-                if (!_fix.FieldToFileId.TryGetValue(field.Key, out fieldFileId))
+                string fileId;
+                if (!_fix.FieldToFileId.TryGetValue(field.Key, out fileId))
                 {
-                    fieldFileId = Path.GetRandomFileName();
-                    _fix.FieldToFileId.Add(field.Key, fieldFileId);
+                    fileId = Path.GetRandomFileName();
+                    _fix.FieldToFileId.Add(field.Key, fileId);
                 }
 
                 FieldWriter fw;
-                if (!_fieldWriters.TryGetValue(fieldFileId, out fw))
+                if (!_fieldWriters.TryGetValue(fileId, out fw))
                 {
-                    fw = new FieldWriter(Path.Combine(_directory, fieldFileId + ".f"));
-                    _fieldWriters.Add(fieldFileId, fw);
+                    fw = new FieldWriter();
+                    _fieldWriters.Add(fileId, fw);
                 }
                 var termFrequencies = new Dictionary<string, int>();
                 var analyze = field.Key[0] != '_';
@@ -86,7 +75,7 @@ namespace Resin
                     fw.Write(document.Id, token.Key, token.Value, analyze);
                 }
             }
-            _docWriter.Write(document);
+            _docs[document.Id] = document; // this overwrites previous doc if same docId appears twice in the session
         }
 
         private void Flush()
@@ -94,16 +83,25 @@ namespace Resin
             if (_flushing) return;
             _flushing = true;
 
-            _docWriter.Flush(_dix);
-            _dix.Save(Path.Combine(_directory, _ix.DixFileName));
-
-            foreach (var writer in _fieldWriters.Values)
+            var dix = new DixFile();
+            var ix = new IxFile();
+            var fieldFiles = new Dictionary<string, FieldFile>();
+            var triFiles = new Dictionary<string, Trie>();
+            foreach (var writer in _fieldWriters)
             {
-                writer.Flush();
+                var fileId = writer.Key;
+                fieldFiles.Add(fileId, writer.Value.FieldFile);
+                triFiles.Add(fileId, writer.Value.Trie);
             }
-
-            _fix.Save(Path.Combine(_directory, _ix.FixFileName));
-            _ix.Save(_ixFileName); // must be the last thing that happens in the flush, because as soon as the ix file exists this whole index will go live 
+            var optimizer = new Optimizer(
+                _directory, 
+                new string[0], 
+                dix, 
+                _fix, 
+                new Dictionary<string, DocFile>(),
+                fieldFiles, triFiles,
+                _docs);  
+            optimizer.Save(ix);
         }
 
         public void Dispose()
@@ -111,6 +109,4 @@ namespace Resin
             Flush();
         }
     }
-
-
 }

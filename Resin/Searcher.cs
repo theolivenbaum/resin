@@ -12,7 +12,7 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
         private readonly QueryParser _parser;
 
-        public Searcher(string directory, QueryParser parser) : base(directory, new Dictionary<string, DocFile>(), new Dictionary<string, FieldFile>(), new Dictionary<string, Trie>(), new Dictionary<string, IDictionary<string, string>>())
+        public Searcher(string directory, QueryParser parser) : base(directory, new Dictionary<string, DocFile>(), new Dictionary<string, FieldFile>(), new Dictionary<string, Trie>(), new Dictionary<string, Document>())
         {
             _parser = parser;
 

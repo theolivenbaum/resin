@@ -10,6 +10,11 @@ namespace Resin.IO
         private string _dixFileName;
         private readonly List<Term> _deletions;
 
+        public IxFile()
+        {
+            _deletions = new List<Term>();
+        }
+
         public IxFile(string fixFileName, string dixFileName, List<Term> deletions)
         {
             _fixFileName = fixFileName;

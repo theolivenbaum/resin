@@ -13,8 +13,15 @@ namespace Resin
         private readonly string _directory;
         private readonly IList<string> _generations;
 
-        public Optimizer(string directory, IList<string> generations, DixFile dix, FixFile fix, Dictionary<string, DocFile> docFiles, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles, Dictionary<string, IDictionary<string, string>> docs)
-            : base(directory, docFiles, fieldFiles, trieFiles, docs)
+        public Optimizer(
+            string directory, 
+            IList<string> generations, 
+            DixFile dix, 
+            FixFile fix, 
+            Dictionary<string, DocFile> docFiles, 
+            Dictionary<string, FieldFile> fieldFiles, 
+            Dictionary<string, Trie> trieFiles, 
+            Dictionary<string, Document> docs) : base(directory, docFiles, fieldFiles, trieFiles, docs)
         {
             _directory = directory;
             _generations = generations;
@@ -24,16 +31,13 @@ namespace Resin
 
         public void Rebase()
         {
+            if (_generations.Count < 2) return;
             Rebase(_generations.Skip(1).ToList()); 
         }
 
         public void Save(IxFile ix)
         {
-            var docWriter = new DocumentWriter(_directory);
-            foreach (var doc in Docs.Select(d=>new Document(d.Value)))
-            {
-                docWriter.Write(doc);
-            }
+            var docWriter = new DocumentWriter(_directory, Docs);
             docWriter.Flush(Dix);
             foreach (var fieldFile in FieldFiles)
             {
@@ -61,7 +65,7 @@ namespace Resin
         /// <summary>
         /// Rebasing loads all files into memory that have been touched in a write since last time the index was optimized.
         /// Newer generation indices are treated as changesets to older generations.
-        /// An index can contain both (1) document deletions as well as (2) upserts of documents.
+        /// An index can contain both document deletions as well as upserts of documents.
         /// </summary>
         /// <param name="generations">The *.ix file names of subsequent generations sorted by age, oldest first.</param>
         private void Rebase(IList<string> generations)
@@ -119,12 +123,12 @@ namespace Resin
                             {
                                 prevDoc[field.Key] = field.Value; // field-wise upsert
                             }
-                            Docs[doc.Key] = prevDoc;
+                            Docs[doc.Key] = new Document(prevDoc);
                         }
                         else
                         {
                             Dix.DocIdToFileId[doc.Key] = null; // value will be set when saving
-                            Docs[doc.Key] = doc.Value.Fields;
+                            Docs[doc.Key] = doc.Value;
                         }
                     }
                 }
