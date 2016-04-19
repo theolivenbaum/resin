@@ -5,8 +5,8 @@ _A speedy, light-weight, schema-less search server and framework with zero confi
 
 * _[Introduction](#intro)_
 * _[Quick usage guide](#usage)_
-* _[Relevance (tf-idf)](#relevance)_
 * _[Data availability](#data-availability)_
+* _[Relevance (tf-idf)](#relevance)_
 * _[Backlog](#roadmap)_
 * _[At large scale](#scale)_
 * _[Dependencies](#dependencies)_
@@ -149,39 +149,20 @@ Fields prefixed with `_` are not analyzed. The `_id` field is mandatory.
 	File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), termsOrderedByFreq
 		.Select(t=>string.Format("{0} {1}", t.Token, t.Count)));
 
-####Querying is fast because
+####Reading and writing
+Each write session is an automic operation. During writes, the last known baseline is still readable and consistent with its initial state.
 
-	using (var searcher = new Searcher(dir)) // Initializing the searcher loads the document index
-	{
-		// This loads and caches the term indices for the "_id" and "label" fields:
-		
-		var result = searcher.Search("_id:Q1 label:Q1");
-		
-		// This executes the query. Resin loads the doc from disk and caches it:
-		
-		var doc1 = result.Docs.First();
-		
-		// The following query requires 
-		//
-		// - a hashtable lookup towards the field file index to find the field ID
-		// - a hashtable lookup towards the term index to find the doc IDs
-		// - for each doc ID: a hashtable lookup towards the doc cache
-		
-		var docs = searcher.Search("label:universe").Docs.ToList();
-		
-		// The following prefix query requires 
-		//
-		// - a hashtable lookup towards the field file index to find the field ID
-		// - a Trie scan (*) to find matching terms
-		// - for each term: a hashtable lookup towards the term index to find the doc IDs
-		// - append the results of the scan (as if the tokens are joined by "OR")
-		// - for each doc ID: one hashtable lookup towards the doc cache
-		
-		docs = searcher.Search("label:univ*").Docs.ToList();
-		
-	}// Caches are released	 
-  
-(*) A [Trie](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs) has a leading role in the querying routine.  
+A write is a commit. Each commit is an index. An index is a set of deletions and document upserts. Newer commits are treated as changesets to older commits. 
+
+Writing to an empty directory will create a commit and a baseline. Subsequent commits can be applied to the last baseline by calling Optimizer.Rebase(). That state can be made into a new baseline by calling Optimizer.Save().
+
+The "_id" field of a document is mandatory. A document may be queried by its ID immediately after a write but until the commit has been applied to the baseline and a new baseline has been created queries towards other fields are not possible.
+
+Your directory will eventually contain commits that have already been applied. Those that are older than the last baseline can be deleted by calling Optimizer.Truncate().
+
+If you do not truncate, you can do this: Optimizer.RewindTo(fileNameOfCommit);
+
+When refreshing a Searcher (i.e. creating a new instance), the newest baseline as well as uncommited documents queryable by their ID can be read.
 
 <a name="relevance" id="relevance"></a>
 ##Relevance
@@ -190,21 +171,17 @@ The default scoring implementation follows a [tf-idf](https://en.wikipedia.org/w
 
 `IDF = log ( numDocs - docFreq / docFreq)`
 
-with a slightly normalized term frequency `1+sqrt(TF)`. 
+with a slightly normalized term frequency `sqrt(TF)`. 
 
 Call Searcher.Search with `returnTrace:true` to include an explanation along with the result of how the scoring was calculated.
 
 <a name="data-availability" id="data-availability"></a>
 ##Data availability
-An index is a set of deletions and document upserts. 
 
-Each write session is an automic operation and creates an entirely new index. 
-
-During writes, older generation indices are still readable and consistent with their initial state.
-
-When refreshing a [Searcher](https://github.com/kreeben/resin/blob/master/Resin/Searcher.cs) (i.e. creating a new instance), newer generation indices are rebased with earlier generations. The end result of rebasing index generations is an in-memory representation of the current state of the data store. 
-
-This snapshot can be taggad as the new status quo by letting the [Optimizer](https://github.com/kreeben/resin/blob/master/Resin/Optimizer.cs) save its state as a new index and declaring the other generations obsolete. Optimizing an index minimizes the time it takes to initialize a Searcher.
+####Actors included in the Resin Data Availability Scheme
+[IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs)  
+[Searcher](https://github.com/kreeben/resin/blob/master/Resin/Searcher.cs)   
+[Optimizer](https://github.com/kreeben/resin/blob/master/Resin/Optimizer.cs)  
 
 <a name="roadmap" id="roadmap"></a>
 ##Backlog
@@ -221,6 +198,9 @@ Cache doc fields instead of whole docs.
 Levenshtein Trie scan implemented [here](https://github.com/kreeben/resin/blob/master/Resin/Trie.cs#L55), inspired by [this paper](http://julesjacobs.github.io/2015/06/17/disqus-levenshtein-simple-and-fast.html).
 
 TODO: override default similarity in query: `label:starr~0.8`.
+
+####Phrase and range query
+Implement token position as a custom metric. Use that metric to score documents in a range query based on how far the tokens are from each other. Then implement phrase query by parsing `fielName:this is a phrase` into `fieldName:[this TO is] + fieldName:[is TO a] fieldName:[a TO phrase]`
 
 ####Multi-index searching
 Handle queries that span two or more indices.
