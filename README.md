@@ -152,25 +152,25 @@ Fields prefixed with `_` are not analyzed. The `_id` field is mandatory.
 <a name="data-availability" id="data-availability"></a>
 ##Data availability
 
-####Resin Data Availability Scheme
+####Data Availability Scheme
 [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs)  
 [Searcher](https://github.com/kreeben/resin/blob/master/Resin/Searcher.cs)   
 [Optimizer](https://github.com/kreeben/resin/blob/master/Resin/Optimizer.cs)  
 
-####Reading and writing
+#####Reading and writing
 On disk an index is a document-based data store where the tokens of the fields of the documents also reside in inverted indices to allow for querying. To add data to a data store you direct an index writer to that directory and you create a write commit.
 
 Each write session is an automic operation. During writes, the last known baseline of a directory is readable and consistent with its initial state.
 
 A write is a commit. Each commit is an index. An index is a set of deletions and document upserts. Newer commits are treated as changesets to older commits. 
 
-Writing to an empty directory will create a commit and a baseline. Subsequent commits can be applied to the last baseline by calling Optimizer.Rebase(). That state can be made into a new baseline by calling Optimizer.Save().
+Writing to an empty directory will create a commit and a baseline. Subsequent commits can be applied to the last baseline by calling `Optimizer.Rebase()`. That state can be made into a new baseline by calling `Optimizer.Save()`.
 
 A document may be queried by its ID immediately after a write but until the commit has been applied to the baseline and a new baseline has been created queries towards other fields are not possible.
 
-Your directory will eventually contain commits that have already been applied. Those that are older than the last baseline can be deleted by calling Optimizer.Truncate().
+Your directory will eventually contain commits that have already been applied. Those that are older than the last baseline can be deleted by calling `Optimizer.Truncate()`.
 
-If you do not truncate, you can do this: Optimizer.RewindTo(fileNameOfCommit);
+If you do not truncate, you can do this: `Optimizer.RewindTo(commitFileName)`;
 
 When refreshing a Searcher (i.e. creating a new instance), the newest baseline as well as uncommited documents queryable by their ID can be read.
 
