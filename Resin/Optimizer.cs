@@ -9,7 +9,7 @@ using Resin.IO;
 namespace Resin
 {
     /// <summary>
-    /// Initialize an Optimizer with an index and fast-forward to the directory's latest commit by calling Optimizer.Rebase().
+    /// Initialize an Optimizer with your directory's current baseline and fast-forward to the directory's latest commit by calling Optimizer.Rebase().
     /// Save that state as a new baseline by calling Optimizer.Save().
     /// </summary>
     public class Optimizer : DocumentReader
@@ -30,6 +30,15 @@ namespace Resin
             _directory = directory;
             _fix = fix;
             _processedCommits = new List<string>();
+        }
+
+        /// <summary>
+        /// Rewind the state of your directory to a commit older than the current baseline.
+        /// </summary>
+        /// <param name="commitFileName"></param>
+        public void RewindTo(string commitFileName)
+        {
+            //TODO: implement rewind
         }
 
         /// <summary>

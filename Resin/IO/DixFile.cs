@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Resin.IO
 {
     /// <summary>
-    /// Document index containing pointers to all documents in the index or commit.
+    /// Document index containing pointers to all document files in the index or commit.
     /// </summary>
     [Serializable]
     public class DixFile : FileBase<DixFile>
