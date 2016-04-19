@@ -60,8 +60,13 @@ namespace Resin
 
         public void Rebase()
         {
+            // get all commits
             var commits = Helper.GetFilesOrderedChronologically(_directory, "*.co").ToList();
+            
+            // rewind
             var nextCommit = Helper.GetNextCommit(_ixFileName, commits);
+            
+            // apply commits younger than the baseline, i.e. younger than _ixFileName
             while (nextCommit != null)
             {
                 Rebase(nextCommit);
