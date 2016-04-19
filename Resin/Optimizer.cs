@@ -35,7 +35,7 @@ namespace Resin
         /// <summary>
         /// Rewind the state of your directory to a commit older than the current baseline.
         /// </summary>
-        /// <param name="commitFileName"></param>
+        /// <param name="indexOrCommitFileName"></param>
         public void SetHeadTo(string indexOrCommitFileName)
         {
             //TODO: implement set head
