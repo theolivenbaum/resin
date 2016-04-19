@@ -149,6 +149,14 @@ Fields prefixed with `_` are not analyzed. The `_id` field is mandatory.
 	File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), termsOrderedByFreq
 		.Select(t=>string.Format("{0} {1}", t.Token, t.Count)));
 
+<a name="data-availability" id="data-availability"></a>
+##Data availability
+
+####Actors included in the Resin Data Availability Scheme
+[IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs)  
+[Searcher](https://github.com/kreeben/resin/blob/master/Resin/Searcher.cs)   
+[Optimizer](https://github.com/kreeben/resin/blob/master/Resin/Optimizer.cs)  
+
 ####Reading and writing
 Each write session is an automic operation. During writes, the last known baseline is still readable and consistent with its initial state.
 
@@ -174,14 +182,6 @@ The default scoring implementation follows a [tf-idf](https://en.wikipedia.org/w
 with a slightly normalized term frequency `sqrt(TF)`. 
 
 Call Searcher.Search with `returnTrace:true` to include an explanation along with the result of how the scoring was calculated.
-
-<a name="data-availability" id="data-availability"></a>
-##Data availability
-
-####Actors included in the Resin Data Availability Scheme
-[IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs)  
-[Searcher](https://github.com/kreeben/resin/blob/master/Resin/Searcher.cs)   
-[Optimizer](https://github.com/kreeben/resin/blob/master/Resin/Optimizer.cs)  
 
 <a name="roadmap" id="roadmap"></a>
 ##Backlog
