@@ -157,7 +157,7 @@ Fields prefixed with `_` are not analyzed. The `_id` field is mandatory.
 [Optimizer](https://github.com/kreeben/resin/blob/master/Resin/Optimizer.cs)  
 
 ####Reading and writing
-On disk an index is a document-based data store where the tokens of the fields of the documents also reside in inverted indices to allow for querying. To add data to a data store you direct an index writer to that directory and you create a write commit.
+On disk an index is a file-based data store inside a directory, where documents are stored verbatim and the tokens of the fields of the documents also reside in inverted indices to allow for querying. To add data to a data store you direct an index writer to that directory and you create a write commit.
 
 Each write session is an automic operation. During writes, the last known baseline of a directory is readable and consistent with its initial state.
 
