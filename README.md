@@ -169,7 +169,7 @@ A document may be queried by its ID immediately after a write but until the comm
 
 In other words, a baseline is not a constant state since it is based on (1) the state of a directory after a `Rebase` and a `Save`, in addition to (2) any uncommited documents that may be written to the directory at any time without also having called `Rebase and Save`.
 
-Call `Optimizer.RebaseHardHead(indexOrCommitFileName)` to make that file descriptor the new baseline by deleting all younger baselines and commits.
+Call `Optimizer.RebaseHard(indexOrCommitFileName)` to make that file descriptor the new baseline and deleting all younger baselines and commits.
 
 Your directory will eventually contain commits that have already been applied. Those that are older than the last baseline can be deleted by calling `Optimizer.Truncate()`.
 
