@@ -152,7 +152,7 @@ Fields prefixed with `_` are not analyzed. The `_id` field is mandatory.
 <a name="data-availability" id="data-availability"></a>
 ##Data availability
 
-####Actors included in the Resin Data Availability Scheme
+####Resin Data Availability Scheme
 [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs)  
 [Searcher](https://github.com/kreeben/resin/blob/master/Resin/Searcher.cs)   
 [Optimizer](https://github.com/kreeben/resin/blob/master/Resin/Optimizer.cs)  
