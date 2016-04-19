@@ -161,7 +161,7 @@ Fields prefixed with `_` are not analyzed. The `_id` field is mandatory.
 ####Reading and writing
 On disk an index is a file-based data store inside a directory, where documents are stored verbatim and the tokens of the fields of the documents also reside in inverted indices to allow for querying. To add data to a data store you direct an index writer to that directory and you create a write commit.
 
-Each write session is an automic operation. During writes, the last known baseline of a directory is readable and consistent with its initial state.
+Each write session is an atomic operation. During writes, the last known baseline of a directory is readable and consistent with its initial state.
 
 A write is a commit. Each commit is an index. An index is a set of deletions and document upserts. Newer commits are treated as changesets to older commits. 
 
