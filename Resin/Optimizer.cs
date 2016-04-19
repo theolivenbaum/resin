@@ -9,7 +9,7 @@ using Resin.IO;
 namespace Resin
 {
     /// <summary>
-    /// Initialize an Optimizer with your directory's current baseline and fast-forward to the directory's latest commit by calling Optimizer.Rebase().
+    /// Initialize an Optimizer with your directory's current baseline and then fast-forward to the directory's latest commit by calling Optimizer.Rebase().
     /// Save that state as a new baseline by calling Optimizer.Save().
     /// </summary>
     public class Optimizer : DocumentReader
@@ -69,7 +69,7 @@ namespace Resin
             // apply commits younger than the baseline, i.e. younger than _ixFileName
             while (nextCommit != null)
             {
-                Rebase(nextCommit);
+                Apply(nextCommit);
                 nextCommit = Helper.GetNextCommit(nextCommit, commits);
             }
         }
@@ -80,17 +80,14 @@ namespace Resin
         }
 
         /// <summary>
-        /// A write is a commit.
-        /// A commit is an index. 
-        /// An index contains deletions and upserts. 
-        /// Newer commits are treated as changesets to older commits. 
+        /// Apply a commit 
         /// </summary>
         /// <param name="commitFileName">The *.co file name of the subsequent commit.</param>
-        private void Rebase(string commitFileName)
+        private void Apply(string commitFileName)
         {
             if (commitFileName == null) throw new ArgumentNullException("commitFileName");
 
-            Log.InfoFormat("rebasing {0}", commitFileName);
+            Log.InfoFormat("applying {0}", commitFileName);
             var timer = new Stopwatch();
             timer.Start();
             var ix = IxFile.Load(commitFileName);
