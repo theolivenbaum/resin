@@ -16,14 +16,16 @@ _A speedy, light-weight, schema-less search server and framework with zero confi
 ##Introduction
 [Launch a search server in seconds](#inproc), with Solr-like capabilities but with zero config. [Consume](#usage) its entire API from [javascript](#jquery) or C#, or use the CLI to build, query and analyze your index. 
 
-Solve your full-text search problem or your big data analysis task with an intuitive tool for information retrieval armed with an extensible model and a strong architecture. Resin is stream-lined, free of legacy code and java inheritance and aims to simplify what it is that make Lucene, Solr and Elasticsearch great: __speed of indexing and query execution, relevance, reliablility__, but also: 
+Solve your full-text search problem or your big data analysis task with an intuitive tool for information retrieval armed with an extensible model and a strong architecture. Resin is stream-lined, free of legacy code and java inheritance and aims to simplify what it is that make Lucene, Solr and Elasticsearch great: _speed of indexing and query execution, relevance, reliablility_, but also: 
 
 * zero-config (`git clone`, `build`, `start server`)
 * easy-to-use API (in-proc and HTTP, with optional .net client or from [javascript](#jquery))
 * CLI tooling
 * multi-cultural
+* write commit history allowing rewind, fast-forward and rebasing of indices
+* (soon: custom metrics)
 
-Resin's document-centric nature (shared by its cousins from javaland) makes it effectively _a schema-less [document-oriented json database](https://en.wikipedia.org/wiki/Document-oriented_database) with ad-hoc full-text quering_.
+Resin's document-centric nature (shared by its cousins from javaland) makes it effectively a schema-less [document-oriented json database](https://en.wikipedia.org/wiki/Document-oriented_database) with ad-hoc full-text quering.
 
 Learn about the open-source projects Resin [depends on](#dependencies).
 
