@@ -5,7 +5,7 @@ _A speedy, light-weight, schema-less search server and framework with zero confi
 
 * _[Introduction](#intro)_
 * _[Quick usage guide](#usage)_
-* _[Data availability](#data-availability)_
+* _[Data availability scheme](#data-availability)_
 * _[Relevance (tf-idf)](#relevance)_
 * _[Backlog](#roadmap)_
 * _[At large scale](#scale)_
@@ -150,14 +150,13 @@ Fields prefixed with `_` are not analyzed. The `_id` field is mandatory.
 		.Select(t=>string.Format("{0} {1}", t.Token, t.Count)));
 
 <a name="data-availability" id="data-availability"></a>
-##Data availability
+##Data Availability Scheme
 
-####Data Availability Scheme
 [IndexWriter](https://github.com/kreeben/resin/blob/master/Resin/IndexWriter.cs)  
 [Searcher](https://github.com/kreeben/resin/blob/master/Resin/Searcher.cs)   
 [Optimizer](https://github.com/kreeben/resin/blob/master/Resin/Optimizer.cs)  
 
-#####Reading and writing
+####Reading and writing
 On disk an index is a document-based data store where the tokens of the fields of the documents also reside in inverted indices to allow for querying. To add data to a data store you direct an index writer to that directory and you create a write commit.
 
 Each write session is an automic operation. During writes, the last known baseline of a directory is readable and consistent with its initial state.
