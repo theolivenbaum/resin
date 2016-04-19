@@ -169,7 +169,7 @@ Writing to an empty directory will create a commit and a baseline. Subsequent co
 
 A document may be queried by its ID immediately after a write but until the commit has been applied to the baseline and a new baseline has been created queries towards other fields are not possible.
 
-In other words, a baseline is not a constant state since it is based on (1) the state of a directory after a `Rebase` and a `Save`, in addition to (2) any uncommited documents that may be written to the directory at any time without also having called `Rebase and Save`.
+In other words, a baseline is not a constant state since it is based on (1) a snapshot of the state of a directory after a `Rebase` and then a `Save`, in addition to (2) any uncommited documents (queryable only by their ID) that may have been written to the directory between the `Rebase` and `Save` or any time after.
 
 Call `Optimizer.RebaseHard(indexOrCommitFileName)` to make that file descriptor the new baseline and deleting all younger baselines and commits.
 
