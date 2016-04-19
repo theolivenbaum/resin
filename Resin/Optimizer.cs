@@ -82,7 +82,7 @@ namespace Resin
         /// <summary>
         /// Apply a commit 
         /// </summary>
-        /// <param name="commitFileName">The *.co file name of the subsequent commit.</param>
+        /// <param name="commitFileName">The *.co file name of the commit.</param>
         private void Apply(string commitFileName)
         {
             if (commitFileName == null) throw new ArgumentNullException("commitFileName");
