@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using log4net;
 using NetSerializer;
@@ -16,6 +17,8 @@ namespace Resin.IO
         public virtual void Save(string fileName)
         {
             if (fileName == null) throw new ArgumentNullException("fileName");
+            var timer = new Stopwatch();
+            timer.Start();
             var dir = Path.GetDirectoryName(fileName) ?? string.Empty;
             if (!Directory.Exists(dir))
             {
@@ -35,16 +38,19 @@ namespace Resin.IO
                     Serializer.Serialize(fs, this);
                 }
             }
+            Log.DebugFormat("saved {0} in {1}", fileName, timer.Elapsed);
         }
 
         public static T Load(string fileName)
         {
             if (fileName == null) throw new ArgumentNullException("fileName");
 
+            var timer = new Stopwatch();
+            timer.Start();
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 var obj = (T)Serializer.Deserialize(fs);
-                Log.DebugFormat("loaded {0}", fileName);
+                Log.DebugFormat("loaded {0} in {1}", fileName, timer.Elapsed);
                 return obj;
             }
         }

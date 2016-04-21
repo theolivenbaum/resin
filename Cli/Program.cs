@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using log4net.Config;
 using Newtonsoft.Json;
 using Resin.Client;
@@ -112,18 +113,19 @@ namespace Resin.Cli
             if (Array.IndexOf(args, "-s") > 0) size = int.Parse(args[Array.IndexOf(args, "-s") + 1]);
             if (Array.IndexOf(args, "--url") > 0) url = args[Array.IndexOf(args, "--url") + 1];
             var timer = new Stopwatch();
+            timer.Start();
             if (inproc)
             {
                 var s = new Searcher(dir, new QueryParser(new Analyzer()));
-                timer.Start();
-                var result = s.Search(q, page, size, returnTrace:true);
+                var result = s.Search(q, page, size, returnTrace:false);
+                var docs = result.Docs.ToList();
                 timer.Stop();
                 var position = 0 + (page * size);
-                foreach (var doc in result.Docs)
+                foreach (var doc in docs)
                 {
                     Console.WriteLine(string.Join(", ", ++position, doc["_id"], doc["label"]));
                 }
-                Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, timer.Elapsed.TotalMilliseconds);
+                Console.WriteLine("\r\n{0} results of {1} in {2}", position, result.Total, timer.Elapsed);
                 //foreach (var doc in result.Trace)
                 //{
                 //    Console.WriteLine("{0} {1}", doc.Key, doc.Value);
@@ -133,11 +135,11 @@ namespace Resin.Cli
             {
                 using (var s = new SearchClient(indexName, url))
                 {
-                    timer.Start();
                     var result = s.Search(q, page, size);
+                    var docs = result.Docs.ToList();
                     timer.Stop();
                     var position = 0 + (page * size);
-                    foreach (var doc in result.Docs)
+                    foreach (var doc in docs)
                     {
                         Console.WriteLine(string.Join(", ", ++position, doc["_id"], doc["label"]));
                     }
