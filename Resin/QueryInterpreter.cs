@@ -40,9 +40,16 @@ namespace Resin
             _word = _text.Substring(_start, length);
             if (!string.IsNullOrWhiteSpace(_field) && !string.IsNullOrWhiteSpace(_word))
             {
-                foreach (var token in _analyzer.Analyze(_word))
+                if (_field[0] == '_')
                 {
-                    Add(new QueryContext(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });
+                    Add(new QueryContext(_field, _word) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });
+                }
+                else
+                {
+                    foreach (var token in _analyzer.Analyze(_word))
+                    {
+                        Add(new QueryContext(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });
+                    } 
                 }
             }
             return _root;
@@ -74,9 +81,16 @@ namespace Resin
                 {
                     var length = GetLength();
                     _word = _text.Substring(_start, length);
-                    foreach (var token in _analyzer.Analyze(_word))
+                    if (_field[0] == '_')
                     {
-                        _cursor = Add(new QueryContext(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });                       
+                        Add(new QueryContext(_field, _word) {And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f});
+                    }
+                    else
+                    {
+                        foreach (var token in _analyzer.Analyze(_word))
+                        {
+                            _cursor = Add(new QueryContext(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });
+                        } 
                     }
                     _field = null;
                     _word = null;
@@ -112,10 +126,18 @@ namespace Resin
                     {
                         var length = GetLength();
                         _word = _text.Substring(_start, length);
-                        foreach (var token in _analyzer.Analyze(_word))
+                        if (_field[0] == '_')
                         {
-                            _cursor = Add(new QueryContext(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });
+                            Add(new QueryContext(_field, _word) {And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f});
                         }
+                        else
+                        {
+                            foreach (var token in _analyzer.Analyze(_word))
+                            {
+                                _cursor = Add(new QueryContext(_field, token) { And = _and, Not = _not, Prefix = _prefix, Fuzzy = _fuzzy, Similarity = _fuzzy ? 0.75f : 0f });
+                            }
+                        }
+                        
                         _field = null;
                         _word = null;
                         _and = false;

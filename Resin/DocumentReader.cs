@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Resin.IO;
 
 namespace Resin
@@ -9,12 +10,12 @@ namespace Resin
         protected readonly string Directory;
         protected readonly Dictionary<string, DocFile> DocFiles;
         protected readonly Dictionary<string, Document> Docs; 
-        protected DixFile Dix;
+        private readonly Dictionary<string, List<string>> _docIdToFileIds;
 
-        public DocumentReader(string directory, DixFile dix)
+        public DocumentReader(string directory, Dictionary<string, List<string>> docIdToFileIds)
         {
             Directory = directory;
-            Dix = dix;
+            _docIdToFileIds = docIdToFileIds;
             DocFiles = new Dictionary<string, DocFile>();
             Docs = new Dictionary<string, Document>();
         }
@@ -22,25 +23,35 @@ namespace Resin
         public IDictionary<string, string> GetDoc(string docId)
         {
             Document doc;
-            if (!Docs.TryGetValue(docId, out doc))
+            if (Docs.TryGetValue(docId, out doc)) return doc.Fields;
+            var upserted = new Document();
+            var files = GetDocFiles(docId).ToList();
+            foreach (var file in files)
             {
-                var file = GetDocFile(docId);
-                doc = file.Docs[docId];                
+                var version = file.Docs[docId].Fields;
+                foreach (var field in version)
+                {
+                    upserted.Fields[field.Key] = field.Value;
+                }
             }
-            return doc.Fields;
+            Docs[docId] = upserted;
+            return upserted.Fields;
         }
 
-        protected DocFile GetDocFile(string docId)
+        protected IEnumerable<DocFile> GetDocFiles(string docId)
         {
-            var fileId = Dix.DocIdToFileId[docId];
-            var fileName = Path.Combine(Directory, fileId + ".d");
-            DocFile file;
-            if (!DocFiles.TryGetValue(fileId, out file))
+            var fileIds = _docIdToFileIds[docId];
+            foreach (var fileId in fileIds)
             {
-                file = DocFile.Load(fileName);
-                DocFiles[fileId] = file;
+                var fileName = Path.Combine(Directory, fileId + ".d");
+                DocFile file;
+                if (!DocFiles.TryGetValue(fileId, out file))
+                {
+                    file = DocFile.Load(fileName);
+                    DocFiles[fileId] = file;
+                }
+                yield return file;  
             }
-            return file;
         }
     }
 }

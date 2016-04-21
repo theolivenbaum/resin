@@ -6,7 +6,6 @@ using System.IO;
 using log4net.Config;
 using Newtonsoft.Json;
 using Resin.Client;
-using Resin.IO;
 
 namespace Resin.Cli
 {
@@ -24,15 +23,15 @@ namespace Resin.Cli
                 }
                 Write(args);
             }
-            else if (args[0].ToLower() == "optimize")
-            {
-                if (Array.IndexOf(args, "--dir") == -1)
-                {
-                    Console.WriteLine("I need a directory.");
-                    return;
-                }
-                Optimize(args);
-            }
+            //else if (args[0].ToLower() == "optimize")
+            //{
+            //    if (Array.IndexOf(args, "--dir") == -1)
+            //    {
+            //        Console.WriteLine("I need a directory.");
+            //        return;
+            //    }
+            //    Optimize(args);
+            //}
             else if (args[0].ToLower() == "delete")
             {
                 if (Array.IndexOf(args, "--dir") == -1 ||
@@ -52,16 +51,16 @@ namespace Resin.Cli
                 }
                 Query(args);
             }
-            else if (args[0].ToLower() == "analyze")
-            {
-                if (Array.IndexOf(args, "--field") == -1 || 
-                    Array.IndexOf(args, "--dir") == -1)
-                {
-                    Console.WriteLine("I need a directory and a field.");
-                    return;
-                }
-                Analyze(args);
-            }
+            //else if (args[0].ToLower() == "analyze")
+            //{
+            //    if (Array.IndexOf(args, "--field") == -1 || 
+            //        Array.IndexOf(args, "--dir") == -1)
+            //    {
+            //        Console.WriteLine("I need a directory and a field.");
+            //        return;
+            //    }
+            //    Analyze(args);
+            //}
             else if (args[0].ToLower() == "about")
             {
                 About();
@@ -148,8 +147,8 @@ namespace Resin.Cli
             
         }
 
-        static void Analyze(string[] args)
-        {
+        //static void Analyze(string[] args)
+        //{
             //var dir = args[Array.IndexOf(args, "--dir") + 1];
             //var field = args[Array.IndexOf(args, "--field") + 1];
             //var timer = new Stopwatch();
@@ -160,34 +159,35 @@ namespace Resin.Cli
             //Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
             //File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens.Select(t => string.Format("{0} {1}", t.Token, t.Count)));
             //File.WriteAllLines(Path.Combine(dir, "_" + field + ".tri.txt"), trieTokens);
-        }
+        //}
 
-        static void Optimize(string[] args)
-        {
-            var dir = args[Array.IndexOf(args, "--dir") + 1];
-            var truncate = Array.IndexOf(args, "--truncate") > 0;
-            var timer = new Stopwatch();
-            timer.Start();
-            var ixFileName = Helper.GetFileNameOfLatestIndex(dir);
-            var ix = IxFile.Load(ixFileName);
-            var dix = DixFile.Load(Path.Combine(dir, ix.DixFileName));
-            var fix = FixFile.Load(Path.Combine(dir, ix.FixFileName));
+        //static void Optimize(string[] args)
+        //{
+        //    var dir = args[Array.IndexOf(args, "--dir") + 1];
+        //    var truncate = Array.IndexOf(args, "--truncate") > 0;
+        //    var timer = new Stopwatch();
+        //    timer.Start();
+        //    var ixFileName = Helper.GetFileNameOfLatestIndex(dir);
+        //    var ix = IxFile.Load(ixFileName);
+        //    var dix = DixFile.Load(Path.Combine(dir, ix.DixFileName));
+        //    var fix = FixFile.Load(Path.Combine(dir, ix.FixFileName));
 
-            var optimizer = new Optimizer(dir, ixFileName, dix, fix);
-            optimizer.Rebase();
-            if (truncate) optimizer.Truncate();
-            optimizer.Save();
-        }
+        //    var optimizer = new Optimizer(dir, ixFileName, dix, fix);
+        //    optimizer.Rebase();
+        //    if (truncate) optimizer.Truncate();
+        //    optimizer.Save();
+        //}
 
         static void Delete(string[] args)
         {
             var dir = args[Array.IndexOf(args, "--dir") + 1];
+            //var push = Array.IndexOf(args, "--push") > 0;
             var docId = args[Array.IndexOf(args, "--docid") + 1];
             var timer = new Stopwatch();
             timer.Start();
             var writer = new IndexWriter(dir, new Analyzer());
             writer.Remove("_id", docId);
-            writer.Flush();
+            writer.Commit();
             Console.WriteLine("deleted {0} in {1}", docId, timer.Elapsed);
         }
 
@@ -196,6 +196,7 @@ namespace Resin.Cli
             var take = 1000;
             var skip = 0;
             var skipped = 0;
+            //var push = Array.IndexOf(args, "--push") > 0;
 
             if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
             if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
@@ -251,7 +252,7 @@ namespace Resin.Cli
 
             if (inproc)
             {
-                w.Flush();
+                w.Commit();
             }
             else
             {

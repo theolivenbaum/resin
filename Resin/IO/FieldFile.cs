@@ -66,15 +66,18 @@ namespace Resin.IO
 
         public void Remove(string docId)
         {
-            foreach (var token in _tokens)
+            if (_docs.ContainsKey(docId))
             {
-                token.Value.Remove(docId);
-                if (_tokens[token.Key].Count == 0)
+                foreach (var token in _tokens)
                 {
-                    _tokens.Remove(token.Key);
+                    token.Value.Remove(docId);
+                    if (_tokens[token.Key].Count == 0)
+                    {
+                        _tokens.Remove(token.Key);
+                    }
                 }
+                _docs.Remove(docId);
             }
-            _docs.Remove(docId);
         }
     }
 }

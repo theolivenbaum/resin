@@ -11,17 +11,21 @@ namespace Resin.IO
     {
         private readonly string _fixFileName;
         private readonly string _dixFileName;
-        private readonly List<Term> _deletions;
+        private readonly List<string> _deletedDocs;
 
-        public IxFile(string fixFileName, string dixFileName, List<Term> deletions)
+        public IxFile( string dixFileName, List<string> deletedDocs)
+        {
+            _dixFileName = dixFileName;
+            _deletedDocs = deletedDocs;
+        }
+
+        public IxFile(string fixFileName, string dixFileName, List<string> deletedDocs) : this(dixFileName, deletedDocs)
         {
             _fixFileName = fixFileName;
-            _dixFileName = dixFileName;
-            _deletions = deletions;
         }
 
         public string FixFileName { get { return _fixFileName; } }
         public string DixFileName { get { return _dixFileName; } }
-        public IList<Term> Deletions { get { return _deletions; } }
+        public IList<string> DeletedDocs { get { return _deletedDocs; } }
     }
 }

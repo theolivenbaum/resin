@@ -8,7 +8,7 @@ namespace Resin.IO
         private int _edits;
 
         public string Field { get; protected set; }
-        public string Token { get; protected set; }
+        public string Value { get; protected set; }
 
         public bool And { get; set; }
         public bool Not { get; set; }
@@ -19,20 +19,20 @@ namespace Resin.IO
 
         public float Similarity
         {
-            set { _edits = Convert.ToInt32(Token.Length*(1-value)); }
+            set { _edits = Convert.ToInt32(Value.Length*(1-value)); }
         }
 
-        public Term(string field, string token)
+        public Term(string field, string value)
         {
             Field = field;
-            Token = token;
+            Value = value;
         }
 
         public override string ToString()
         {
             var fldPrefix = And ? "+" : Not ? "-" : string.Empty;
             var tokenSuffix = Prefix ? "*" : Fuzzy ? "~" : string.Empty;
-            return string.Format("{0}{1}:{2}{3}", fldPrefix, Field, Token, tokenSuffix);
+            return string.Format("{0}{1}:{2}{3}", fldPrefix, Field, Value, tokenSuffix);
         }
     }
 }

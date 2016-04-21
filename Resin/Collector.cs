@@ -8,18 +8,31 @@ namespace Resin
 {
     public class Collector
     {
-        private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
-        private readonly Dictionary<string, Trie> _trieFiles;
-        private readonly Dictionary<string, FieldFile> _fieldFiles;
-        private readonly FixFile _fix;
+        private readonly Dictionary<string, Trie> _triesByFileId;
+        private readonly Dictionary<string, FieldFile> _fieldFileByFileId;
+        private readonly Dictionary<string, List<string>> _fileIdsByField;
 
-        public Collector(string directory, FixFile fix, Dictionary<string, FieldFile> fieldFiles, Dictionary<string, Trie> trieFiles)
+        public Collector(IxFile ix, string directory)
         {
-            _directory = directory;
-            _fix = fix;
-            _fieldFiles = fieldFiles;
-            _trieFiles = trieFiles;
+            _fieldFileByFileId = new Dictionary<string, FieldFile>();
+            _triesByFileId = new Dictionary<string, Trie>();
+            _fileIdsByField = new Dictionary<string, List<string>>();
+
+            var fix = FixFile.Load(Path.Combine(directory, ix.FixFileName));
+            foreach (var field in fix.FieldToFileId)
+            {
+                _fileIdsByField.Add(field.Key, new List<string> { field.Value });
+                _fieldFileByFileId[field.Value] = FieldFile.Load(Path.Combine(directory, field.Value + ".f"));
+                _triesByFileId[field.Key] = Trie.Load(Path.Combine(directory, field.Value + ".f.tri"));
+            }
+        }
+
+        public Collector(Dictionary<string, List<string>> fileIdsByField, Dictionary<string, FieldFile> fieldFileByFileId, Dictionary<string, Trie> triesByFileId)
+        {
+            _fieldFileByFileId = fieldFileByFileId;
+            _triesByFileId = triesByFileId;
+            _fileIdsByField = fileIdsByField;
         }
 
         public IEnumerable<DocumentScore> Collect(QueryContext queryContext, int page, int size)
@@ -30,32 +43,28 @@ namespace Resin
             return scored;
         }
 
-        private Trie GetTrieFile(string field)
+        private IEnumerable<FieldFile> GetFieldFiles(string field)
         {
-            var fileId = _fix.FieldToFileId[field];
-            var fileName = Path.Combine(_directory, fileId + ".f.tri");
-            Trie file;
-            if (!_trieFiles.TryGetValue(fileId, out file))
+            List<string> fileIds;
+            if (_fileIdsByField.TryGetValue(field, out fileIds))
             {
-                file = Trie.Load(fileName);
-                _trieFiles[fileId] = file;
+                foreach (var fileId in fileIds)
+                {
+                    yield return _fieldFileByFileId[fileId];
+                }
             }
-            return file;
         }
 
-        private FieldFile GetFieldFile(string field)
+        private IEnumerable<Trie> GetTries(string field)
         {
-            if (!_fix.FieldToFileId.ContainsKey(field)) return null;
-
-            var fileId = _fix.FieldToFileId[field];
-            var fileName = Path.Combine(_directory, fileId + ".f");
-            FieldFile file;
-            if (!_fieldFiles.TryGetValue(fileId, out file))
+            List<string> fileIds;
+            if (_fileIdsByField.TryGetValue(field, out fileIds))
             {
-                file = FieldFile.Load(fileName);
-                _fieldFiles[fileId] = file;
+                foreach (var fileId in fileIds)
+                {
+                    yield return _triesByFileId[fileId];
+                }
             }
-            return file;
         }
 
         private void Scan(QueryContext queryContext)
@@ -69,56 +78,56 @@ namespace Resin
 
         private IEnumerable<DocumentScore> GetScoredResult(Term term)
         {
-            var fieldFile = GetFieldFile(term.Field);
-            if (fieldFile == null) yield break;
-            var docsInCorpus = fieldFile.NumDocs();
-            Dictionary<string, int> postings;
-            if (fieldFile.TryGetValue(term.Token, out postings))
+            var fieldFiles = GetFieldFiles(term.Field).ToList();
+            var postings = new Dictionary<string, int>();
+            int docsInCorpus = 0;
+            foreach (var fieldFile in fieldFiles)
             {
-                var scorer = new Tfidf(docsInCorpus, postings.Count);
-                foreach (var posting in postings)
+                Dictionary<string, int> ps;
+                if (fieldFile.TryGetValue(term.Value, out ps))
                 {
-                    var hit = new DocumentScore(posting.Key, posting.Value);
-                    scorer.Score(hit);
-                    yield return hit;
+                    foreach (var p in ps)
+                    {
+                        postings[p.Key] = p.Value; //overwrite the freq with the most recent value
+                    }
                 }
-            }            
+                docsInCorpus = fieldFile.NumDocs();
+            }
+            var scorer = new Tfidf(docsInCorpus, postings.Count);
+            foreach (var posting in postings)
+            {
+                var hit = new DocumentScore(posting.Key, posting.Value);
+                scorer.Score(hit);
+                yield return hit;
+            }     
         }
 
         private void Expand(QueryContext queryContext)
         {
             if (queryContext.Fuzzy || queryContext.Prefix)
             {
-                var trie = GetTrieFile(queryContext.Field);
-
-                IList<QueryContext> expanded = null;
-
-                if (queryContext.Fuzzy)
+                var ts = GetTries(queryContext.Field).ToList();
+                var words = new List<string>();
+                foreach (var t in ts)
                 {
-                    expanded = trie.Similar(queryContext.Token, queryContext.Edits).Select(token => new QueryContext(queryContext.Field, token)).ToList();
-                }
-                else if (queryContext.Prefix)
-                {
-                    expanded = trie.Prefixed(queryContext.Token).Select(token => new QueryContext(queryContext.Field, token)).ToList();
-                }
-
-                if (expanded != null)
-                {
-                    var tokenSuffix = queryContext.Prefix ? "*" : queryContext.Fuzzy ? "~" : string.Empty;
-                    Log.DebugFormat("{0}:{1}{2} expanded to {3}", queryContext.Field, queryContext.Token, tokenSuffix, string.Join(" ", expanded.Select(q => q.ToString())));
-                    foreach (var t in expanded)
+                    if (queryContext.Fuzzy)
                     {
-                        queryContext.Children.Add(t);
+                        var mightMean = t.Similar(queryContext.Value, queryContext.Edits);
+                        words.AddRange(mightMean);
+                    }
+                    else if (queryContext.Prefix)
+                    {
+                        var mightMean = t.Prefixed(queryContext.Value);
+                        words.AddRange(mightMean);
                     }
                 }
-
-                queryContext.Prefix = false;
-                queryContext.Fuzzy = false;
-
-                foreach (var child in queryContext.Children)
+                var expanded = words.Select(token => new QueryContext(queryContext.Field, token)).ToList();
+                var tokenSuffix = queryContext.Prefix ? "*" : queryContext.Fuzzy ? "~" : string.Empty;
+                Log.DebugFormat("{0}:{1}{2} expanded to {3}", queryContext.Field, queryContext.Value, tokenSuffix, string.Join(" ", expanded.Select(q => q.ToString())));
+                foreach (var t in expanded)
                 {
-                    Expand(child);
-                }   
+                    queryContext.Children.Add(t);
+                }
             }
         }
     }

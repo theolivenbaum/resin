@@ -13,7 +13,7 @@ namespace Resin
         public FieldFile FieldFile { get; set; }
         private static readonly ILog Log = LogManager.GetLogger(typeof(QueryContext));
 
-        public QueryContext(string field, string token) : base(field, token)
+        public QueryContext(string field, string value) : base(field, value)
         {
             Children = new List<QueryContext>();
         }

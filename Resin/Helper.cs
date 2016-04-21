@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
-using log4net;
 using Resin.IO;
 
 namespace Resin
@@ -15,19 +14,20 @@ namespace Resin
         /// </summary>
         public static readonly DateTime BeginningOfTime = new DateTime(2007, 4, 23);
 
-        private static readonly ILog Log = LogManager.GetLogger(typeof(Helper));
+        //private static readonly ILog Log = LogManager.GetLogger(typeof(Helper));
 
-        public static IxFile Save(
+        public static IxFile CreateIndex(
             string dir, 
             string extensionIncDot, 
             DixFile dix, 
             FixFile fix, 
             Dictionary<string, Document> docs, 
             Dictionary<string, FieldFile> fieldFiles, 
-            Dictionary<string, Trie> trieFiles)
+            Dictionary<string, Trie> trieFiles,
+            List<string> deletions)
         {
             var docWriter = new DocumentWriter(dir, docs);
-            docWriter.Flush(dix);
+            docWriter.Commit(dix);
             foreach (var fieldFile in fieldFiles)
             {
                 var fileId = fieldFile.Key;
@@ -40,10 +40,9 @@ namespace Resin
             var dixFileName = Path.Combine(dir, dixFileId);
             dix.Save(dixFileName);
             fix.Save(fixFileName);
-            var ix = new IxFile(fixFileName, dixFileName, new List<Term>());
+            var ix = new IxFile(fixFileId, dixFileId, deletions);
             var ixFileName = GenerateNewChronologicalFileName(dir, extensionIncDot);
             ix.Save(ixFileName);
-            Log.InfoFormat("new {0} {1}", extensionIncDot == ".ix" ? "baseline" :  "commit", ixFileName);
             return ix;
         }
 

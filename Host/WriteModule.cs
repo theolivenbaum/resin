@@ -40,7 +40,7 @@ namespace Resin.Host
                     writer.Write(doc);
                     Log.DebugFormat("upserted doc {0} in {1}", doc["_id"], timer.Elapsed);
                 }
-                writer.Flush();
+                writer.Commit();
             }
             catch (Exception ex)
             {

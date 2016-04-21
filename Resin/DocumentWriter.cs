@@ -8,7 +8,6 @@ namespace Resin
 {
     public class DocumentWriter
     {
-        private bool _flushing;
         private readonly string _dir;
         private readonly int _batchSize;
 
@@ -22,12 +21,8 @@ namespace Resin
             _docs = docs;
         }
 
-        public void Flush(DixFile dix)
+        public void Commit(DixFile dix)
         {
-            if (_flushing) return;
-
-            _flushing = true;
-
             var files = new Dictionary<string, DocFile>();
             var batches = _docs.IntoBatches(_batchSize).ToList();
             foreach (var batch in batches)
@@ -48,7 +43,6 @@ namespace Resin
                 d.Value.Save(fileName);
 
             });
-            _docs.Clear();
         }
     }
 }
