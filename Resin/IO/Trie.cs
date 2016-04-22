@@ -1,9 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Resin.IO
 {
+    [Serializable]
+    public class Posting : IEquatable<Posting>
+    {
+        private readonly char _value;
+        private readonly string _id;
+
+        public char Value { get { return _value; } }
+        public string Id { get { return _id; } }
+
+        public Posting(char value, string id)
+        {
+            _value = value;
+            _id = id;
+        }
+        public static implicit operator char(Posting p)
+        {
+            return p.Value;
+        }
+        public static implicit operator Posting(char c)
+        {
+            return new Posting(c, null);
+        }
+
+        public bool Equals(Posting other)
+        {
+            return other != null && other.Value.Equals(Value);
+        }
+
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return Value.ToString(CultureInfo.CurrentUICulture);
+        }
+    }
+
     [Serializable]
     public class Trie : FileBase<Trie>
     {
@@ -11,14 +51,14 @@ namespace Resin.IO
 
         private bool _eow;
 
-        private readonly Dictionary<char, Trie> _children;
+        private readonly Dictionary<Posting, Trie> _children;
 
         public Trie()
         {
-            _children = new Dictionary<char, Trie>();
+            _children = new Dictionary<Posting, Trie>();
         }
 
-        public Trie(IList<string> words) : this()
+        public Trie(IEnumerable<IEnumerable<char>> words) : this()
         {
             if (words == null) throw new ArgumentNullException("words");
 
@@ -28,15 +68,16 @@ namespace Resin.IO
             }
         }
 
-        private Trie(string text) : this()
+        private Trie(IEnumerable<char> text) : this()
         {
-            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("word");
+            if (text == null) throw new ArgumentNullException("text");
+            var list = text.ToArray();
+            if(list.Length == 0) throw new ArgumentOutOfRangeException("text");
+            _value = list[0];
 
-            _value = text[0];
-
-            if (text.Length > 1)
+            if (list.Length > 1)
             {
-                var overflow = text.Substring(1);
+                var overflow = list.Skip(1).ToArray();
                 if (overflow.Length > 0)
                 {
                     Add(overflow);
@@ -133,16 +174,16 @@ namespace Resin.IO
 
         public IEnumerable<string> Prefixed(string prefix)
         {
-            var words = new List<string>();
+            var words = new List<List<char>>();
             Trie child;
             if (_children.TryGetValue(prefix[0], out child))
             {
-                child.PrefixScan(prefix, prefix, words);
+                child.PrefixScan(new List<char>(prefix), prefix, words);
             }
-            return words;
+            return words.Select(s=>new string(s.ToArray()));
         }
 
-        private void PrefixScan(string state, string prefix, List<string> words)
+        private void PrefixScan(List<char> state, string prefix, List<List<char>> words)
         {
             if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
 
@@ -152,7 +193,10 @@ namespace Resin.IO
                 if (_eow) words.Add(state);
                 foreach (var node in _children.Values)
                 {
-                    node.PrefixScan(state + node._value, new string(new[] { node._value }), words);
+                    var newState = new List<char>(state.Count+1);
+                    foreach(var c in state) newState.Add(c);
+                    newState.Add(node._value);
+                    node.PrefixScan(newState, new string(new[] { node._value }), words);
                 }
             }
             else if (prefix[0] == _value)
@@ -165,28 +209,31 @@ namespace Resin.IO
             }
         }
 
-        public void Add(string word)
+        public void Add(IEnumerable<char> word)
         {
-            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
+            if (word == null) throw new ArgumentNullException("word");
+            var list = word.ToArray();
+            if (list.Length == 0) throw new ArgumentOutOfRangeException("word");
 
             Trie child;
-            if (!_children.TryGetValue(word[0], out child))
+            if (!_children.TryGetValue(list[0], out child))
             {
-                child = new Trie(word);
-                _children.Add(word[0], child);
+                child = new Trie(list);
+                _children.Add(list[0], child);
             }
             else
             {
-                child.Append(word);
+                child.Append(list);
             }
         }
 
-        private void Append(string text)
+        private void Append(IEnumerable<char> text)
         {
-            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("word");
-            if (text[0] != _value) throw new ArgumentOutOfRangeException("text");
+            if (text == null) throw new ArgumentNullException("text");
+            var list = text.ToArray();
+            if (list[0] != _value) throw new ArgumentOutOfRangeException("text");
 
-            var overflow = text.Substring(1);
+            var overflow = list.Skip(1).ToArray();
             if (overflow.Length > 0)
             {
                 Add(overflow);
