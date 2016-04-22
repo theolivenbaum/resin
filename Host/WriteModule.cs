@@ -34,13 +34,14 @@ namespace Resin.Host
                 var timer = new Stopwatch();
                 timer.Start();
                 var dir = Path.Combine(Helper.GetResinDataDirectory(), indexName);
-                var writer = new IndexWriter(dir, new Analyzer());
-                foreach (var doc in docs)
+                using (var writer = new IndexWriter(dir, new Analyzer()))
                 {
-                    writer.Write(doc);
-                    Log.DebugFormat("upserted doc {0} in {1}", doc["_id"], timer.Elapsed);
+                    foreach (var doc in docs)
+                    {
+                        writer.Write(doc);
+                        Log.DebugFormat("upserted doc {0} in {1}", doc["_id"], timer.Elapsed);
+                    }   
                 }
-                writer.Commit();
             }
             catch (Exception ex)
             {

@@ -117,7 +117,7 @@ namespace Resin.Cli
             if (inproc)
             {
                 var s = new Searcher(dir, new QueryParser(new Analyzer()));
-                var result = s.Search(q, page, size, returnTrace:false);
+                var result = s.Search(q, page, size);
                 var docs = result.Docs.ToList();
                 timer.Stop();
                 var position = 0 + (page * size);
@@ -187,9 +187,11 @@ namespace Resin.Cli
             var docId = args[Array.IndexOf(args, "--docid") + 1];
             var timer = new Stopwatch();
             timer.Start();
-            var writer = new IndexWriter(dir, new Analyzer());
-            writer.Remove("_id", docId);
-            writer.Commit();
+            using (var writer = new IndexWriter(dir, new Analyzer()))
+            {
+                writer.Remove("_id", docId);
+            }
+           
             Console.WriteLine("deleted {0} in {1}", docId, timer.Elapsed);
         }
 
@@ -254,7 +256,7 @@ namespace Resin.Cli
 
             if (inproc)
             {
-                w.Commit();
+                w.Dispose();
             }
             else
             {

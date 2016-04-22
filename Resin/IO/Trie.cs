@@ -1,48 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 namespace Resin.IO
 {
-    [Serializable]
-    public class Posting : IEquatable<Posting>
-    {
-        private readonly char _value;
-        private readonly string _id;
+    //[Serializable]
+    //public class Posting : IEquatable<Posting>
+    //{
+    //    private readonly char _value;
+    //    private readonly string _id;
 
-        public char Value { get { return _value; } }
-        public string Id { get { return _id; } }
+    //    public char Value { get { return _value; } }
+    //    public string Id { get { return _id; } }
 
-        public Posting(char value, string id)
-        {
-            _value = value;
-            _id = id;
-        }
-        public static implicit operator char(Posting p)
-        {
-            return p.Value;
-        }
-        public static implicit operator Posting(char c)
-        {
-            return new Posting(c, null);
-        }
+    //    public Posting(char value, string id)
+    //    {
+    //        _value = value;
+    //        _id = id;
+    //    }
+    //    public static implicit operator char(Posting p)
+    //    {
+    //        return p.Value;
+    //    }
+    //    public static implicit operator Posting(char c)
+    //    {
+    //        return new Posting(c, null);
+    //    }
 
-        public bool Equals(Posting other)
-        {
-            return other != null && other.Value.Equals(Value);
-        }
+    //    public bool Equals(Posting other)
+    //    {
+    //        return other != null && other.Value.Equals(Value);
+    //    }
 
-        public override int GetHashCode()
-        {
-            return Value.GetHashCode();
-        }
+    //    public override int GetHashCode()
+    //    {
+    //        return Value.GetHashCode();
+    //    }
 
-        public override string ToString()
-        {
-            return Value.ToString(CultureInfo.CurrentUICulture);
-        }
-    }
+    //    public override string ToString()
+    //    {
+    //        return Value.ToString(CultureInfo.CurrentUICulture);
+    //    }
+    //}
 
     [Serializable]
     public class Trie : FileBase<Trie>
@@ -51,14 +50,14 @@ namespace Resin.IO
 
         private bool _eow;
 
-        private readonly Dictionary<Posting, Trie> _children;
+        private readonly Dictionary<char, Trie> _children;
 
         public Trie()
         {
-            _children = new Dictionary<Posting, Trie>();
+            _children = new Dictionary<char, Trie>();
         }
 
-        public Trie(IEnumerable<IEnumerable<char>> words) : this()
+        public Trie(IEnumerable<string> words) : this()
         {
             if (words == null) throw new ArgumentNullException("words");
 
@@ -68,7 +67,8 @@ namespace Resin.IO
             }
         }
 
-        private Trie(IEnumerable<char> text) : this()
+        private Trie(IEnumerable<char> text)
+            : this()
         {
             if (text == null) throw new ArgumentNullException("text");
             var list = text.ToArray();
@@ -121,16 +121,16 @@ namespace Resin.IO
             }
         }
 
-        public char? GetNode(string word)
+        public bool ContainsToken(string token)
         {
             var nodes = new List<char>();
             Trie child;
-            if (_children.TryGetValue(word[0], out child))
+            if (_children.TryGetValue(token[0], out child))
             {
-                child.ExactScan(word, nodes);
+                child.ExactScan(token, nodes);
             }
-            if (nodes.Count > 0) return nodes.First();
-            return null;
+            if (nodes.Count > 0) return true;
+            return false;
         }
 
         private void ExactScan(string prefix, List<char> chars)

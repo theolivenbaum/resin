@@ -3,23 +3,33 @@ using System.Collections.Generic;
 
 namespace Resin.IO
 {
-    /// <summary>
-    /// A mapping between field names and a file IDs.
-    /// </summary>
     [Serializable]
     public class FixFile : FileBase<FixFile>
     {
         // field/fileid
-        private readonly Dictionary<string, string> _fieldToFileId;
+        private readonly Dictionary<string, string> _fields;
+        private readonly Dictionary<string, string> _fileIds;
 
-        public FixFile()   
+        public Dictionary<string, string> Fields { get { return _fields; } }
+        public Dictionary<string, string> FileIds { get { return _fileIds; } }
+
+        public FixFile()
         {
-            _fieldToFileId = new Dictionary<string, string>();
+            _fields = new Dictionary<string, string>();
+            _fileIds = new Dictionary<string, string>();
         }
 
-        public Dictionary<string, string> FieldToFileId
+        public void Add(string field, string fileId)
         {
-            get { return _fieldToFileId; }
+            _fields.Add(field, fileId);
+            _fileIds.Add(fileId, field);
+        }
+
+        public void Remove(string field)
+        {
+            var fileId = _fields[field];
+            _fields.Remove(field);
+            _fileIds.Remove(fileId);
         }
     }
 }

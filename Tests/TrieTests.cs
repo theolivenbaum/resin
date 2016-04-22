@@ -50,13 +50,13 @@ namespace Tests
         {
             var words = new Trie(new[] { "ring", "ringo", "apple" });
 
-            Assert.IsNull(words.GetNode("rin"));
-            Assert.AreEqual('g', words.GetNode("ring"));
-            Assert.IsNull(words.GetNode("ringa"));
-            Assert.AreEqual('o', words.GetNode("ringo"));
-            Assert.IsNull(words.GetNode("appl"));
-            Assert.AreEqual('e', words.GetNode("apple"));
-            Assert.IsNull(words.GetNode("apples"));
+            Assert.IsFalse(words.ContainsToken("rin"));
+            Assert.IsTrue(words.ContainsToken("ring"));
+            Assert.IsFalse(words.ContainsToken("ringa"));
+            Assert.IsTrue(words.ContainsToken("ringo"));
+            Assert.IsFalse(words.ContainsToken("appl"));
+            Assert.IsTrue(words.ContainsToken("apple"));
+            Assert.IsFalse(words.ContainsToken("apples"));
         }
 
         [Test]

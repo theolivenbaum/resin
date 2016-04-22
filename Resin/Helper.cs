@@ -1,50 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using Resin.IO;
+using System.Text;
 
 namespace Resin
 {
     public static class Helper
     {
+        public static void Delete(string fileName)
+        {
+            if (fileName == null) throw new ArgumentNullException("fileName");
+            if (File.Exists(fileName)) File.Delete(fileName);
+        }
+
+        public static string ToNumericalString(this string text)
+        {
+            if (text == null) throw new ArgumentNullException("text");
+            var numbers = text.Select(c=>Convert.ToInt32(c).ToString(CultureInfo.InvariantCulture));
+            return string.Join("-", numbers);
+        }
+
+        public static string FromNumericalString(this string numString)
+        {
+            if (numString == null) throw new ArgumentNullException("numString");
+            var parts = numString.Split(new[] {'-'}, StringSplitOptions.RemoveEmptyEntries);
+            var alphabetical = new StringBuilder();
+            foreach (var part in parts)
+            {
+                var num = int.Parse(part);
+                alphabetical.Append((char) num);
+            }
+            return alphabetical.ToString();
+        }
+
         /// <summary>
         /// Theo Lager's birthday. I love you.
         /// </summary>
         public static readonly DateTime BeginningOfTime = new DateTime(2007, 4, 23);
 
         //private static readonly ILog Log = LogManager.GetLogger(typeof(Helper));
-
-        public static IxFile CreateIndex(
-            string dir, 
-            string extensionIncDot, 
-            DixFile dix, 
-            FixFile fix, 
-            Dictionary<string, Document> docs, 
-            Dictionary<string, FieldFile> fieldFiles, 
-            Dictionary<string, Trie> trieFiles,
-            List<string> deletions)
-        {
-            var docWriter = new DocumentWriter(dir, docs);
-            docWriter.Commit(dix);
-            foreach (var fieldFile in fieldFiles)
-            {
-                var fileId = fieldFile.Key;
-                fieldFile.Value.Save(Path.Combine(dir, fileId + ".f"));
-                trieFiles[fileId].Save(Path.Combine(dir, fileId + ".f.tri"));
-            }
-            var fixFileId = Path.GetRandomFileName() + ".fix";
-            var dixFileId = Path.GetRandomFileName() + ".dix";
-            var fixFileName = Path.Combine(dir, fixFileId);
-            var dixFileName = Path.Combine(dir, dixFileId);
-            dix.Save(dixFileName);
-            fix.Save(fixFileName);
-            var ix = new IxFile(fixFileId, dixFileId, deletions);
-            var ixFileName = GenerateNewChronologicalFileName(dir, extensionIncDot);
-            ix.Save(ixFileName);
-            return ix;
-        }
 
         public static string GetNextCommit(string fileName, IList<string> commits)
         {
@@ -116,6 +113,29 @@ namespace Resin
                 }
                 if (batch.Count > 0) yield return batch;
             }
+        }
+    }
+
+    public static class Versioning
+    {
+        public static void Checkout(string branch, bool create)
+        {
+            
+        }
+
+        public static void Rebase(string branch)
+        {
+            
+        }
+
+        public static void Commit(string message)
+        {
+            
+        }
+
+        public static void DeleteBranch(string branch)
+        {
+            
         }
     }
 }

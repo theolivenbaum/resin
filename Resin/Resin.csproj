@@ -52,17 +52,13 @@
     <Compile Include="Helper.cs" />
     <Compile Include="IO\Document.cs" />
     <Compile Include="DocumentScore.cs" />
-    <Compile Include="DocumentWriter.cs" />
-    <Compile Include="IO\DixFile.cs" />
     <Compile Include="IO\DocFile.cs" />
-    <Compile Include="IO\FieldFile.cs" />
-    <Compile Include="IO\FileBase.cs" />
     <Compile Include="IO\FixFile.cs" />
-    <Compile Include="IO\IxFile.cs" />
+    <Compile Include="IO\PostingsFile.cs" />
+    <Compile Include="IO\FileBase.cs" />
     <Compile Include="Levenshtein.cs" />
     <Compile Include="Optimizer.cs" />
     <Compile Include="IndexWriter.cs" />
-    <Compile Include="FieldWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueryContext.cs" />
     <Compile Include="QueryInterpreter.cs" />
@@ -71,7 +67,6 @@
     <Compile Include="Collector.cs" />
     <Compile Include="Searcher.cs" />
     <Compile Include="IO\Term.cs" />
-    <Compile Include="DocumentReader.cs" />
     <Compile Include="Tfidf.cs" />
     <Compile Include="TokenInfo.cs" />
     <Compile Include="IO\Trie.cs" />

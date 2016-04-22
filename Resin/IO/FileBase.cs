@@ -68,9 +68,7 @@ namespace Resin.IO
             typeof (string), typeof (int), typeof (char), typeof (Trie), typeof (Document),
             typeof (Dictionary<string, string>), typeof (Dictionary<string, Document>),
             typeof (Dictionary<string, Dictionary<string, int>>), typeof(Dictionary<char, Trie>),
-            typeof(Dictionary<string, object>),
-            typeof(DixFile), typeof(DocFile), typeof(FieldFile), typeof(FixFile), typeof(IxFile),
-            typeof(Term)
+            typeof(Dictionary<string, object>), typeof(DocFile), typeof(Term), typeof(PostingsFile), typeof(FixFile)
         };
 
         public static readonly Serializer Serializer = new Serializer(Types);

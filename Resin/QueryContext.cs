@@ -10,7 +10,6 @@ namespace Resin
     {
         public IList<QueryContext> Children { get; protected set; }
         public IDictionary<string, DocumentScore> Result { get; set ; }
-        public FieldFile FieldFile { get; set; }
         private static readonly ILog Log = LogManager.GetLogger(typeof(QueryContext));
 
         public QueryContext(string field, string value) : base(field, value)
