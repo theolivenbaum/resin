@@ -46,6 +46,20 @@ namespace Tests
         }
 
         [Test]
+        public void Exact()
+        {
+            var words = new Trie(new[] { "ring", "ringo", "apple" });
+
+            Assert.IsNull(words.GetNode("rin"));
+            Assert.AreEqual('g', words.GetNode("ring"));
+            Assert.IsNull(words.GetNode("ringa"));
+            Assert.AreEqual('o', words.GetNode("ringo"));
+            Assert.IsNull(words.GetNode("appl"));
+            Assert.AreEqual('e', words.GetNode("apple"));
+            Assert.IsNull(words.GetNode("apples"));
+        }
+
+        [Test]
         public void SimilarTo()
         {
             var words = new Trie(new[] { "tree", "treat", "treaty", "treating", "pre" });

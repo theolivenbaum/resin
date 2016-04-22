@@ -80,6 +80,40 @@ namespace Resin.IO
             }
         }
 
+        public char? GetNode(string word)
+        {
+            var nodes = new List<char>();
+            Trie child;
+            if (_children.TryGetValue(word[0], out child))
+            {
+                child.ExactScan(word, nodes);
+            }
+            if (nodes.Count > 0) return nodes.First();
+            return null;
+        }
+
+        private void ExactScan(string prefix, List<char> chars)
+        {
+            if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
+
+            if (prefix.Length == 1 && prefix[0] == _value)
+            {
+                // The scan has reached its destination.
+                if (_eow)
+                {
+                    chars.Add(_value);
+                }
+            }
+            else if (prefix[0] == _value)
+            {
+                Trie child;
+                if (_children.TryGetValue(prefix[1], out child))
+                {
+                    child.ExactScan(prefix.Substring(1), chars);
+                }
+            }
+        }
+
         public IEnumerable<string> All()
         {
             var words = new List<string>();
@@ -118,7 +152,7 @@ namespace Resin.IO
                 if (_eow) words.Add(state);
                 foreach (var node in _children.Values)
                 {
-                    node.PrefixScan(state+node._value, new string(new []{node._value}), words);
+                    node.PrefixScan(state + node._value, new string(new[] { node._value }), words);
                 }
             }
             else if (prefix[0] == _value)
