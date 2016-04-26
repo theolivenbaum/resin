@@ -1,34 +1,14 @@
 ﻿using System.IO;
 using System.Linq;
-using NetSerializer;
 using NUnit.Framework;
 using Resin;
 using Resin.IO;
-using Simplicit.Net.Lzo;
 
 namespace Tests
 {
     [TestFixture]
     public class TrieTests
     {
-        [Test]
-        public void Test()
-        {
-            var fileName = Path.Combine(Setup.Dir, "dasddasdas.cdd");
-            var file = new DocFile("Hello!");
-            using (var fs = File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-            {
-                FileBase.Serializer.Serialize(fs, file);
-            }
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                var obj = (DocFile)FileBase.Serializer.Deserialize(fs);
-                Assert.AreEqual("Hello!", obj.Value);
-            }
-            //var compressor = new LzoCompressor();
-            //compressor.Compress()
-        }
-
         [Test]
         public void Remove()
         {

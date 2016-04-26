@@ -2,6 +2,7 @@ using System;
 
 namespace Resin.IO
 {
+    //TODO:remove from IO namespace
     [Serializable]
     public class Term
     {

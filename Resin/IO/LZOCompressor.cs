@@ -1,74 +1,63 @@
-﻿/*
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- *
-*/
+﻿using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
-// LZO.Net
-// $Id: LZOCompressor.cs,v 1.1 2004/02/22 17:44:04 laptop Exp $
-
-namespace Simplicit.Net.Lzo
+namespace Lzo64
 {
-    using System;
-    using System.Diagnostics;
-    using System.Runtime.InteropServices;
-
     /// <summary>
     /// Wrapper class for the highly performant LZO compression library
     /// </summary>
-    public class LzoCompressor
+    public class LZOCompressor
     {
-        private static readonly TraceSwitch TraceSwitch = new TraceSwitch("Simplicit.Net.Lzo", "Switch for tracing of the LZOCompressor-Class");
+        private static TraceSwitch _traceSwitch = new TraceSwitch("Simplicit.Net.Lzo", "Switch for tracing of the LZOCompressor-Class");
+        private const string LzoDll32Bit = @"lib32\lzo2.dll";
+        private const string LzoDll64Bit = @"lib64\lzo2_64.dll";
 
         #region Dll-Imports
-        [DllImport("lzo.dll")]
-        private static extern int __lzo_init3();
-        [DllImport("lzo.dll")]
-        private static extern string lzo_version_string();
-        [DllImport("lzo.dll")]
+
+
+        [DllImport(LzoDll64Bit)]
+        private static extern int __lzo_init_v2(uint v, int s1, int s2, int s3, int s4, int s5, int s6, int s7, int s8, int s9);
+
+        //[DllImport(LzoDll32Bit)]
+        //private static extern int __lzo_init3();
+        [DllImport(LzoDll64Bit)]
+        private static extern IntPtr lzo_version_string();
+        [DllImport(LzoDll32Bit, EntryPoint = "lzo_version_string")]
+        private static extern IntPtr lzo_version_string32();
+        [DllImport(LzoDll64Bit)]
         private static extern string lzo_version_date();
-        [DllImport("lzo.dll")]
-        private static extern int lzo1x_1_compress(
-            byte[] src,
-            int src_len,
-            byte[] dst,
-            ref int dst_len,
-            byte[] wrkmem
-            );
-        [DllImport("lzo.dll")]
-        private static extern int lzo1x_decompress(
-            byte[] src,
-            int src_len,
-            byte[] dst,
-            ref int dst_len,
-            byte[] wrkmem);
+        [DllImport(LzoDll64Bit)]
+        private static extern int lzo1x_1_compress(byte[] src, int src_len, byte[] dst, ref int dst_len, byte[] wrkmem);
+        [DllImport(LzoDll64Bit)]
+        private static extern int lzo1x_decompress(byte[] src, int src_len, byte[] dst, ref int dst_len, byte[] wrkmem);
+
+        [DllImport(LzoDll32Bit, EntryPoint = "lzo1x_1_compress", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int lzo1x_1_compress32(byte[] src, int src_len, byte[] dst, ref int dst_len, byte[] wrkmem);
+        [DllImport(LzoDll32Bit, EntryPoint = "lzo1x_decompress", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int lzo1x_decompress32(byte[] src, int src_len, byte[] dst, ref int dst_len, byte[] wrkmem);
+        [DllImport(LzoDll32Bit, EntryPoint = "__lzo_init_v2", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int __lzo_init_v2_32(uint v, int s1, int s2, int s3, int s4, int s5, int s6, int s7, int s8, int s9);
+
         #endregion
 
-        private readonly byte[] _workMemory = new byte[16384L * 4];
+        private byte[] _workMemory = new byte[16384L * 4];
 
-        static LzoCompressor()
+        public LZOCompressor()
         {
-            int init = __lzo_init3();
+            int init = 0;
+            if (Is64Bit())
+                init = __lzo_init_v2(1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
+            else
+                init = __lzo_init_v2_32(1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
+
             if (init != 0)
             {
                 throw new Exception("Initialization of LZO-Compressor failed !");
             }
         }
+
+
 
         /// <summary>
         /// Version string of the compression library.
@@ -77,7 +66,14 @@ namespace Simplicit.Net.Lzo
         {
             get
             {
-                return lzo_version_string();
+                IntPtr strPtr;
+                if (Is64Bit())
+                    strPtr = lzo_version_string();
+                else
+                    strPtr = lzo_version_string32();
+
+                string version = Marshal.PtrToStringAnsi(strPtr);
+                return version;
             }
         }
 
@@ -100,14 +96,18 @@ namespace Simplicit.Net.Lzo
         /// <returns>Byte array containing the compressed data</returns>
         public byte[] Compress(byte[] src)
         {
-            if (TraceSwitch.TraceVerbose)
+            if (_traceSwitch.TraceVerbose)
             {
                 Trace.WriteLine(String.Format("LZOCompressor: trying to compress {0}", src.Length));
             }
             byte[] dst = new byte[src.Length + src.Length / 64 + 16 + 3 + 4];
             int outlen = 0;
-            lzo1x_1_compress(src, src.Length, dst, ref outlen, _workMemory);
-            if (TraceSwitch.TraceVerbose)
+            if (Is64Bit())
+                lzo1x_1_compress(src, src.Length, dst, ref outlen, _workMemory);
+            else
+                lzo1x_1_compress32(src, src.Length, dst, ref outlen, _workMemory);
+
+            if (_traceSwitch.TraceVerbose)
             {
                 Trace.WriteLine(String.Format("LZOCompressor: compressed {0} to {1} bytes", src.Length, outlen));
             }
@@ -118,6 +118,18 @@ namespace Simplicit.Net.Lzo
             return ret;
         }
 
+        private bool _calculated;
+        private bool _is64bit;
+        private bool Is64Bit()
+        {
+            if (!_calculated)
+            {
+                _is64bit = IntPtr.Size == 8;
+                _calculated = true;
+            }
+            return _is64bit;
+        }
+
         /// <summary>
         /// Decompresses compressed data to its original state.
         /// </summary>
@@ -125,19 +137,26 @@ namespace Simplicit.Net.Lzo
         /// <returns>Decompressed data</returns>
         public byte[] Decompress(byte[] src)
         {
-            if (TraceSwitch.TraceVerbose)
+            if (_traceSwitch.TraceVerbose)
             {
                 Trace.WriteLine(String.Format("LZOCompressor: trying to decompress {0}", src.Length));
             }
             int origlen = BitConverter.ToInt32(src, src.Length - 4);
             byte[] dst = new byte[origlen];
             int outlen = origlen;
-            lzo1x_decompress(src, src.Length - 4, dst, ref outlen, _workMemory);
-            if (TraceSwitch.TraceVerbose)
+            if (Is64Bit())
+                lzo1x_decompress(src, src.Length - 4, dst, ref outlen, _workMemory);
+            else
+                lzo1x_decompress32(src, src.Length - 4, dst, ref outlen, _workMemory);
+
+            if (_traceSwitch.TraceVerbose)
             {
                 Trace.WriteLine(String.Format("LZOCompressor: decompressed {0} to {1} bytes", src.Length, origlen));
             }
             return dst;
         }
+
+
     }
+
 }

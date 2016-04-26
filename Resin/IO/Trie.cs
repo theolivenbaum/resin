@@ -4,45 +4,6 @@ using System.Linq;
 
 namespace Resin.IO
 {
-    //[Serializable]
-    //public class Posting : IEquatable<Posting>
-    //{
-    //    private readonly char _value;
-    //    private readonly string _id;
-
-    //    public char Value { get { return _value; } }
-    //    public string Id { get { return _id; } }
-
-    //    public Posting(char value, string id)
-    //    {
-    //        _value = value;
-    //        _id = id;
-    //    }
-    //    public static implicit operator char(Posting p)
-    //    {
-    //        return p.Value;
-    //    }
-    //    public static implicit operator Posting(char c)
-    //    {
-    //        return new Posting(c, null);
-    //    }
-
-    //    public bool Equals(Posting other)
-    //    {
-    //        return other != null && other.Value.Equals(Value);
-    //    }
-
-    //    public override int GetHashCode()
-    //    {
-    //        return Value.GetHashCode();
-    //    }
-
-    //    public override string ToString()
-    //    {
-    //        return Value.ToString(CultureInfo.CurrentUICulture);
-    //    }
-    //}
-
     [Serializable]
     public class Trie : FileBase<Trie>
     {

@@ -47,11 +47,18 @@ namespace Resin.IO
 
             var timer = new Stopwatch();
             timer.Start();
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            try
             {
-                var obj = (T)Serializer.Deserialize(fs);
-                Log.DebugFormat("loaded {0} in {1}", fileName, timer.Elapsed);
-                return obj;
+                using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    var obj = (T) Serializer.Deserialize(fs);
+                    Log.DebugFormat("loaded {0} in {1}", fileName, timer.Elapsed);
+                    return obj;
+                }
+            }
+            catch (FileNotFoundException)
+            {
+                return default(T);
             }
         }
     }
@@ -65,12 +72,32 @@ namespace Resin.IO
 
         private static readonly Type[] Types =
         {
-            typeof (string), typeof (int), typeof (char), typeof (Trie), typeof (Document),
-            typeof (Dictionary<string, string>), typeof (Dictionary<string, Document>),
-            typeof (Dictionary<string, Dictionary<string, int>>), typeof(Dictionary<char, Trie>),
-            typeof(Dictionary<string, object>), typeof(DocFile), typeof(Term), typeof(PostingsFile), typeof(FixFile)
+            typeof (string), typeof (int), typeof (char), typeof (Trie),
+            typeof (Dictionary<string, string>),
+            typeof (Dictionary<string, Dictionary<string, object>>), 
+            typeof(Dictionary<char, Trie>),
+            typeof(Dictionary<string, object>), 
+            typeof(DocFieldFile), 
+            typeof(DocContainerFile), 
+            typeof(PostingsFile), 
+            typeof(IxFile)
         };
 
         public static readonly Serializer Serializer = new Serializer(Types);
+
+        ////Read like Jon Skeet (http://stackoverflow.com/a/221941/46645)
+        //public static byte[] ReadFully(Stream input)
+        //{
+        //    byte[] buffer = new byte[16 * 1024];
+        //    using (MemoryStream ms = new MemoryStream())
+        //    {
+        //        int read;
+        //        while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+        //        {
+        //            ms.Write(buffer, 0, read);
+        //        }
+        //        return ms.ToArray();
+        //    }
+        //}
     }
 }

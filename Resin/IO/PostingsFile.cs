@@ -8,37 +8,27 @@ namespace Resin.IO
     [Serializable]
     public class PostingsFile : FileBase<PostingsFile>
     {
-        // docids/term frequency
         private readonly Dictionary<string, int> _postings;
-
-        public PostingsFile()  
-        {
-            _postings = new Dictionary<string, int>();
-        }
-
+        /// <summary>
+        /// docids/term frequency
+        /// </summary>
         public Dictionary<string, int> Postings
         {
             get { return _postings; }
         }
 
+        private readonly string _field;
+        public string Field { get { return _field; } }
+
+        public PostingsFile(string field)
+        {
+            _field = field;
+            _postings = new Dictionary<string, int>();
+        }
+
         public int NumDocs()
         {
             return Postings.Count;
-        }
-
-        public bool TryGetValue(string docId, out int termFrequency)
-        {
-            return Postings.TryGetValue(docId, out termFrequency);
-        }
-
-        public void AddOrOverwrite(string docId, int termFrequency)
-        {
-            Postings[docId] = termFrequency;
-        }
-
-        public void Remove(string docId)
-        {
-            Postings.Remove(docId);
         }
     }
 }

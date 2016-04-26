@@ -3,10 +3,7 @@ using System.Collections.Generic;
 
 namespace Resin.IO
 {
-    /// <summary>
-    /// Serializable representation of a document.
-    /// </summary>
-    [Serializable]
+    //TODO:remove from IO namespace
     public class Document
     {
         public string Id

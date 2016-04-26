@@ -10,36 +10,40 @@ namespace Resin
 {
     public static class Helper
     {
-        public static void Delete(string fileName)
-        {
-            if (fileName == null) throw new ArgumentNullException("fileName");
-            if (File.Exists(fileName)) File.Delete(fileName);
-        }
-
-        public static string ToNumericalString(this string text)
+        public static string ToIdentifyer(this string text)
         {
             if (text == null) throw new ArgumentNullException("text");
             var numbers = text.Select(c=>Convert.ToInt32(c).ToString(CultureInfo.InvariantCulture));
-            return string.Join("-", numbers);
+            return string.Join(".", numbers);
+        }
+
+        public static string FromIdentifyer(this string id)
+        {
+            if (id == null) throw new ArgumentNullException("id");
+            var parts = id.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+            var alphabetical = new StringBuilder();
+            foreach (var part in parts)
+            {
+                var num = int.Parse(part);
+                alphabetical.Append((char)num);
+            }
+            return alphabetical.ToString();
         }
 
         public static string FromNumericalString(this string numString)
         {
             if (numString == null) throw new ArgumentNullException("numString");
-            var parts = numString.Split(new[] {'-'}, StringSplitOptions.RemoveEmptyEntries);
+            var parts = numString.Split(new[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
             var alphabetical = new StringBuilder();
             foreach (var part in parts)
             {
                 var num = int.Parse(part);
-                alphabetical.Append((char) num);
+                alphabetical.Append((char)num);
             }
             return alphabetical.ToString();
         }
 
-        /// <summary>
-        /// Theo Lager's birthday. I love you.
-        /// </summary>
-        public static readonly DateTime BeginningOfTime = new DateTime(2007, 4, 23);
+        public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 23);
 
         //private static readonly ILog Log = LogManager.GetLogger(typeof(Helper));
 

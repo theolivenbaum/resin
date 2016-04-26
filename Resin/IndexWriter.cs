@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using log4net;
@@ -11,49 +12,96 @@ namespace Resin
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private static readonly ILog Log = LogManager.GetLogger(typeof(IndexWriter));
+
+        /// <summary>
+        /// field/trie
+        /// </summary>
         private readonly IDictionary<string, Trie> _trieFiles;
-        private readonly IDictionary<string, PostingsFile> _postingFiles;
-        private readonly FixFile _fix;
+
+        /// <summary>
+        /// field.token/postings
+        /// </summary>
+        private readonly IDictionary<string, PostingsFile> _postingsFiles;
+
+        private readonly ConcurrentQueue<DocContainerFile> _docContainerFiles; 
+            
+        private readonly IxFile _ix;
+        private readonly FileSystemWatcher _fileWatcher;
+
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
             _directory = directory;
             _analyzer = analyzer;
             _trieFiles = new Dictionary<string, Trie>();
-            _postingFiles = new Dictionary<string, PostingsFile>();
-            var fixFileName = Path.Combine(directory, ".fi");
-            _fix = File.Exists(fixFileName) ? FixFile.Load(fixFileName) : new FixFile();
+            _postingsFiles = new Dictionary<string, PostingsFile>();
+            _docContainerFiles = new ConcurrentQueue<DocContainerFile>();
+
+            var ixFileName = Path.Combine(directory, "0.ix");
+            _ix = File.Exists(ixFileName) ? IxFile.Load(ixFileName) : new IxFile();
+
+            _fileWatcher = new FileSystemWatcher(_directory, "*.do") {NotifyFilter = NotifyFilters.LastWrite};
+            _fileWatcher.Changed += FileWatcher_Changed;
+            _fileWatcher.EnableRaisingEvents = true;
+        }
+
+        void FileWatcher_Changed(object sender, FileSystemEventArgs e)
+        {
+            DocContainerFile container;
+            if (!_docContainerFiles.TryDequeue(out container))
+            {
+                container = new DocContainerFile(Path.GetRandomFileName());
+            }
+            var fileName = e.FullPath;
+            var file = DocFieldFile.Load(fileName);
+            File.Delete(fileName);
+            var key = string.Format(("{0}.{1}"), file.DocId, file.Field);
+            container.Files.Add(key, file);
+            _ix.DocContainers.Add(key, container.Id);
+
+            if (container.Files.Count == 1000)
+            {
+                var containerFileName = Path.Combine(_directory, container.Id + ".dl");
+                container.Save(containerFileName);
+            }
+            else
+            {
+                _docContainerFiles.Enqueue(container);
+            }
         }
 
         public void Remove(string docId, string field)
         {
-            var docFileId = string.Format("{0}.{1}", docId.ToNumericalString(), _fix.Fields[field]);
-            var docFileName = Path.Combine(_directory, docFileId + ".do");
-            if (!File.Exists(docFileName)) return;
-            var file = DocFile.Load(docFileName);
-            IEnumerable<string> tokens;
-            if (field[0] == '_')
+            var docFieldId = string.Format("{0}.{1}", docId, field);
+            if (_ix.Fields[field].ContainsKey(docId))
             {
-                tokens = new[] {file.Value};
-            }
-            else
-            {
-                tokens = _analyzer.Analyze(file.Value);
-            }
-            foreach (var token in tokens)
-            {
-                var fileId = string.Format("{0}.{1}", _fix.Fields[field], token.ToNumericalString());
-                var fileName = Path.Combine(_directory, fileId + ".po");
-                var postingsFile = PostingsFile.Load(fileName);
-                postingsFile.Remove(docId);
-                if (postingsFile.NumDocs() == 0)
+                _ix.Fields[field].Remove(docId);
+                var containerFileName = Path.Combine(_directory, _ix.DocContainers[docFieldId] + ".do");
+                var container = DocContainerFile.Load(containerFileName);
+                var docField = container.Files[docFieldId];
+                container.Files.Remove(docFieldId);
+                IEnumerable<string> tokens;
+                if (field[0] == '_')
                 {
-                    Helper.Delete(fileName);
-                    var trie = GetTrie(field);
-                    trie.Remove(token);
+                    tokens = new[] { docField.Value };
                 }
-                postingsFile.Save(fileName);
-            }
-            Helper.Delete(docFileName);
+                else
+                {
+                    tokens = _analyzer.Analyze(docField.Value);
+                }
+                foreach (var token in tokens)
+                {
+                    var fieldTokenId = string.Format("{0}.{1}", field, token);
+                    var postingsFile = GetPostingsFile(field, token);
+                    postingsFile.Postings.Remove(docId);
+                    if (postingsFile.NumDocs() == 0)
+                    {
+                        var fileName = Path.Combine(_directory, _ix.FileIds[fieldTokenId] + ".po");
+                        File.Delete(fileName);
+                        var trie = GetTrie(field);
+                        trie.Remove(token);
+                    }
+                }
+            }  
         }
 
         public void Write(IDictionary<string, string> doc)
@@ -66,9 +114,8 @@ namespace Resin
             foreach (var field in doc.Fields)
             {
                 Analyze(doc.Id, field.Key, field.Value);
-                var docFileId = string.Format("{0}.{1}", doc.Id.ToNumericalString(), _fix.Fields[field.Key]);
-                var docFileName = Path.Combine(_directory, docFileId + ".do");
-                new DocFile(field.Value).Save(docFileName);
+                var docFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".do");
+                new DocFieldFile(doc.Id, field.Key, field.Value).Save(docFileName);
             }
         }
 
@@ -99,21 +146,28 @@ namespace Resin
         {
             var trie = GetTrie(field);
             trie.Add(token);
-
             var pf = GetPostingsFile(field, token);
-            pf.AddOrOverwrite(docId, termFrequency);
+            pf.Postings[docId] = termFrequency;
+
+            if (!_ix.Fields.ContainsKey(field))
+            {
+                _ix.Fields.Add(field, new Dictionary<string, object>());
+            }
+            _ix.Fields[field][docId] = null;
         }
 
         private PostingsFile GetPostingsFile(string field, string token)
         {
-            if (!_fix.Fields.ContainsKey(field))
-            {
-                _fix.Add(field, Path.GetRandomFileName());
-            }
-            var fileId = string.Format("{0}.{1}", _fix.Fields[field], token.ToNumericalString());
+            var fieldTokenId = string.Format("{0}.{1}", field, token);
             PostingsFile file;
-            if (!_postingFiles.TryGetValue(fileId, out file))
+            if (!_postingsFiles.TryGetValue(fieldTokenId, out file))
             {
+                string fileId;
+                if (!_ix.FileIds.TryGetValue(fieldTokenId, out fileId))
+                {
+                    fileId = Path.GetRandomFileName();
+                    _ix.FileIds.Add(fieldTokenId, fileId);
+                }
                 var fileName = Path.Combine(_directory, fileId + ".po");
                 if (File.Exists(fileName))
                 {
@@ -121,23 +175,24 @@ namespace Resin
                 }
                 else
                 {
-                    file = new PostingsFile();
+                    file = new PostingsFile(field);
                 }
-                _postingFiles.Add(fileId, file);
+                _postingsFiles.Add(fieldTokenId, file);
             }
             return file;
         }
 
         private Trie GetTrie(string field)
         {
-            if (!_fix.Fields.ContainsKey(field))
-            {
-                _fix.Add(field, Path.GetRandomFileName());
-            }
-            var fileId = _fix.Fields[field];
             Trie file;
-            if (!_trieFiles.TryGetValue(fileId, out file))
+            if (!_trieFiles.TryGetValue(field, out file))
             {
+                string fileId;
+                if (!_ix.FileIds.TryGetValue(field, out fileId))
+                {
+                    fileId = Path.GetRandomFileName();
+                    _ix.FileIds.Add(field, fileId);
+                }
                 var fileName = Path.Combine(_directory, fileId + ".tr");
                 if (File.Exists(fileName))
                 {
@@ -147,7 +202,7 @@ namespace Resin
                 {
                     file = new Trie();
                 }
-                _trieFiles.Add(fileId, file);
+                _trieFiles.Add(field, file);
             }
             return file;
         }
@@ -158,7 +213,7 @@ namespace Resin
             {
                 try
                 {
-                    string fileName = Path.Combine(_directory, trie.Key + ".tr");
+                    string fileName = Path.Combine(_directory, _ix.FileIds[trie.Key] + ".tr");
                     trie.Value.Save(fileName);
                 }
                 catch (Exception ex)
@@ -166,11 +221,11 @@ namespace Resin
                     Log.ErrorFormat("Error saving {0} {1}", trie.Key, ex);
                 }
             }
-            foreach (var pf in _postingFiles)
+            foreach (var pf in _postingsFiles)
             {
                 try
                 {
-                    string fileName = Path.Combine(_directory, pf.Key + ".po");
+                    string fileName = Path.Combine(_directory, _ix.FileIds[pf.Key] + ".po");
                     pf.Value.Save(fileName);
                 }
                 catch (Exception ex)
@@ -178,7 +233,13 @@ namespace Resin
                     Log.ErrorFormat("Error saving {0} {1}", pf.Key, ex);
                 }
             }
-            _fix.Save(Path.Combine(_directory, ".fi"));
+            _fileWatcher.Dispose();
+            _ix.Save(Path.Combine(_directory, "0.ix"));
+            foreach (var container in _docContainerFiles.ToArray())
+            {
+                var fileName = Path.Combine(_directory, container.Id + ".dl");
+                container.Save(fileName);
+            }
         }
     }
 }

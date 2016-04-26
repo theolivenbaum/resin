@@ -11,13 +11,13 @@ namespace Resin
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly IDictionary<string, Trie> _trieFiles;
-        private readonly FixFile _fix;
+        private readonly IxFile _ix;
 
-        public Collector(string directory, FixFile fix, IDictionary<string, Trie> trieFiles)
+        public Collector(string directory, IxFile ix, IDictionary<string, Trie> trieFiles)
         {
             _directory = directory;
             _trieFiles = trieFiles;
-            _fix = fix;
+            _ix = ix;
         }
 
         public IEnumerable<DocumentScore> Collect(QueryContext queryContext, int page, int size)
@@ -30,9 +30,9 @@ namespace Resin
 
         private Trie GetTrie(string field)
         {
-            if (_fix.Fields.ContainsKey(field))
+            if (_ix.Fields.ContainsKey(field))
             {
-                var fileId = _fix.Fields[field];
+                var fileId = _ix.FileIds[field];
                 Trie file;
                 if (!_trieFiles.TryGetValue(fileId, out file))
                 {
@@ -59,12 +59,10 @@ namespace Resin
         {
             var trie = GetTrie(term.Field);
             if (trie == null) yield break;
-            var docsInCorpus = 10000;
+            var docsInCorpus = _ix.Fields[term.Field].Count;
             if (trie.ContainsToken(term.Value))
             {
-                var fileId = string.Format("{0}.{1}", _fix.Fields[term.Field], term.Value.ToNumericalString());
-                var fileName = Path.Combine(_directory, fileId + ".po");
-                var postingsFile = PostingsFile.Load(fileName);
+                var postingsFile = GetPostingsFile(term.Field, term.Value);
                 var scorer = new Tfidf(docsInCorpus, postingsFile.Postings.Count);
                 foreach (var posting in postingsFile.Postings)
                 {
@@ -73,6 +71,14 @@ namespace Resin
                     yield return hit;
                 }
             }
+        }
+
+        private PostingsFile GetPostingsFile(string field, string token)
+        {
+            var fieldTokenId = string.Format("{0}.{1}", field, token);
+            var fileId = _ix.FileIds[fieldTokenId];
+            var fileName = Path.Combine(_directory, fileId + ".po");
+            return PostingsFile.Load(fileName);
         }
 
         private void Expand(QueryContext queryContext)

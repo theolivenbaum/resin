@@ -1,8 +1,8 @@
-files
+indices
 ----------------------------------------------------------------------------------------------
-field.tr								tokens
-field.token.po							docids/termfreq
-docid.field.do 							value
+field									char trie
+field.token								postings (docids/termfreq)
+docid.field 							doc value
 
 writing
 ----------------------------------------------------------------------------------------------
@@ -32,12 +32,13 @@ reading
 init searcher:							do nothing
 
 searcher.search(query):					analyze query
-										find and load trie files
-										scan trie
-										get field.token.postings files
-										score
-										read docid.field.doc files and return docs
-										keep trie in memory	
+										for each term (field+token) in query:
+											find, read and cache one trie file 
+											scan trie
+											read field.token.postings from disk
+											score
+											join (and/or/not)
+										read docid.field.doc files from disk and lazily return paged set of docs
 
 
 
