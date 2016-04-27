@@ -10,24 +10,15 @@ namespace Resin
 {
     public static class Helper
     {
-        public static string ToIdentifyer(this string text)
+        public static UInt64 ToHash(this string read)
         {
-            if (text == null) throw new ArgumentNullException("text");
-            var numbers = text.Select(c=>Convert.ToInt32(c).ToString(CultureInfo.InvariantCulture));
-            return string.Join(".", numbers);
-        }
-
-        public static string FromIdentifyer(this string id)
-        {
-            if (id == null) throw new ArgumentNullException("id");
-            var parts = id.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
-            var alphabetical = new StringBuilder();
-            foreach (var part in parts)
+            UInt64 hashedValue = 3074457345618258791ul;
+            for (int i = 0; i < read.Length; i++)
             {
-                var num = int.Parse(part);
-                alphabetical.Append((char)num);
+                hashedValue += read[i];
+                hashedValue *= 3074457345618258799ul;
             }
-            return alphabetical.ToString();
+            return hashedValue;
         }
 
         public static string FromNumericalString(this string numString)

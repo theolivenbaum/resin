@@ -26,7 +26,7 @@ namespace Resin
         private readonly ConcurrentQueue<DocContainerFile> _docContainerFiles; 
             
         private readonly IxFile _ix;
-        private readonly FileSystemWatcher _fileWatcher;
+        private readonly FileSystemWatcher _dfileWatcher;
 
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
@@ -39,12 +39,12 @@ namespace Resin
             var ixFileName = Path.Combine(directory, "0.ix");
             _ix = File.Exists(ixFileName) ? IxFile.Load(ixFileName) : new IxFile();
 
-            _fileWatcher = new FileSystemWatcher(_directory, "*.do") {NotifyFilter = NotifyFilters.LastWrite};
-            _fileWatcher.Changed += FileWatcher_Changed;
-            _fileWatcher.EnableRaisingEvents = true;
+            _dfileWatcher = new FileSystemWatcher(_directory, "*.do") {NotifyFilter = NotifyFilters.LastWrite};
+            _dfileWatcher.Changed += DfileWatcherChanged;
+            _dfileWatcher.EnableRaisingEvents = true;
         }
 
-        void FileWatcher_Changed(object sender, FileSystemEventArgs e)
+        void DfileWatcherChanged(object sender, FileSystemEventArgs e)
         {
             DocContainerFile container;
             if (!_docContainerFiles.TryDequeue(out container))
@@ -95,7 +95,7 @@ namespace Resin
                     postingsFile.Postings.Remove(docId);
                     if (postingsFile.NumDocs() == 0)
                     {
-                        var fileName = Path.Combine(_directory, _ix.FileIds[fieldTokenId] + ".po");
+                        var fileName = Path.Combine(_directory, fieldTokenId.ToHash() + ".po");
                         File.Delete(fileName);
                         var trie = GetTrie(field);
                         trie.Remove(token);
@@ -162,13 +162,7 @@ namespace Resin
             PostingsFile file;
             if (!_postingsFiles.TryGetValue(fieldTokenId, out file))
             {
-                string fileId;
-                if (!_ix.FileIds.TryGetValue(fieldTokenId, out fileId))
-                {
-                    fileId = Path.GetRandomFileName();
-                    _ix.FileIds.Add(fieldTokenId, fileId);
-                }
-                var fileName = Path.Combine(_directory, fileId + ".po");
+                var fileName = Path.Combine(_directory, fieldTokenId.ToHash() + ".po");
                 if (File.Exists(fileName))
                 {
                     file = PostingsFile.Load(fileName);
@@ -187,13 +181,7 @@ namespace Resin
             Trie file;
             if (!_trieFiles.TryGetValue(field, out file))
             {
-                string fileId;
-                if (!_ix.FileIds.TryGetValue(field, out fileId))
-                {
-                    fileId = Path.GetRandomFileName();
-                    _ix.FileIds.Add(field, fileId);
-                }
-                var fileName = Path.Combine(_directory, fileId + ".tr");
+                var fileName = Path.Combine(_directory, field.ToHash() + ".tr");
                 if (File.Exists(fileName))
                 {
                     file = Trie.Load(fileName);
@@ -211,35 +199,21 @@ namespace Resin
         {
             foreach (var trie in _trieFiles)
             {
-                try
-                {
-                    string fileName = Path.Combine(_directory, _ix.FileIds[trie.Key] + ".tr");
-                    trie.Value.Save(fileName);
-                }
-                catch (Exception ex)
-                {
-                    Log.ErrorFormat("Error saving {0} {1}", trie.Key, ex);
-                }
+                string fileName = Path.Combine(_directory, trie.Key.ToHash() + ".tr");
+                trie.Value.Save(fileName);
             }
             foreach (var pf in _postingsFiles)
             {
-                try
-                {
-                    string fileName = Path.Combine(_directory, _ix.FileIds[pf.Key] + ".po");
-                    pf.Value.Save(fileName);
-                }
-                catch (Exception ex)
-                {
-                    Log.ErrorFormat("Error saving {0} {1}", pf.Key, ex);
-                }
+                string fileName = Path.Combine(_directory, pf.Key.ToHash() + ".po");
+                pf.Value.Save(fileName);
             }
-            _fileWatcher.Dispose();
-            _ix.Save(Path.Combine(_directory, "0.ix"));
+            _dfileWatcher.Dispose();
             foreach (var container in _docContainerFiles.ToArray())
             {
                 var fileName = Path.Combine(_directory, container.Id + ".dl");
                 container.Save(fileName);
             }
+            _ix.Save(Path.Combine(_directory, "0.ix"));
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using log4net;
@@ -32,13 +33,13 @@ namespace Resin
         {
             if (_ix.Fields.ContainsKey(field))
             {
-                var fileId = _ix.FileIds[field];
+                var id = field.ToHash().ToString(CultureInfo.InvariantCulture);
                 Trie file;
-                if (!_trieFiles.TryGetValue(fileId, out file))
+                if (!_trieFiles.TryGetValue(id, out file))
                 {
-                    var fileName = Path.Combine(_directory, fileId + ".tr");
+                    var fileName = Path.Combine(_directory, id + ".tr");
                     file = Trie.Load(fileName);
-                    _trieFiles.Add(fileId, file);
+                    _trieFiles.Add(id, file);
                 }
                 return file;
             }
@@ -76,7 +77,7 @@ namespace Resin
         private PostingsFile GetPostingsFile(string field, string token)
         {
             var fieldTokenId = string.Format("{0}.{1}", field, token);
-            var fileId = _ix.FileIds[fieldTokenId];
+            var fileId = fieldTokenId.ToHash().ToString(CultureInfo.InvariantCulture);
             var fileName = Path.Combine(_directory, fileId + ".po");
             return PostingsFile.Load(fileName);
         }

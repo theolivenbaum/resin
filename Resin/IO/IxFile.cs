@@ -6,12 +6,6 @@ namespace Resin.IO
     [Serializable]
     public class IxFile : FileBase<IxFile>
     {
-        private readonly Dictionary<string, string> _fileIds;
-        /// <summary>
-        /// id/fileId (IO-safe)
-        /// </summary>
-        public Dictionary<string, string> FileIds { get { return _fileIds; } }
-
         private readonly Dictionary<string, string> _docContainers;
         /// <summary>
         ///  docid.field/containerid
@@ -26,7 +20,6 @@ namespace Resin.IO
 
         public IxFile()
         {
-            _fileIds = new Dictionary<string, string>();
             _docContainers = new Dictionary<string, string>();
             _fields = new Dictionary<string, Dictionary<string, object>>();
         }

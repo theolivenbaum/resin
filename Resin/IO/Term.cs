@@ -35,5 +35,7 @@ namespace Resin.IO
             var tokenSuffix = Prefix ? "*" : Fuzzy ? "~" : string.Empty;
             return string.Format("{0}{1}:{2}{3}", fldPrefix, Field, Value, tokenSuffix);
         }
+
+        
     }
 }
