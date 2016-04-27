@@ -211,7 +211,7 @@ namespace Resin
                     container.Files.Add(id, pf);
                     _ix.PosContainers[id] = container.Id;
                 }
-                var fileName = Path.Combine(_directory, container.Id + ".dl");
+                var fileName = Path.Combine(_directory, container.Id + ".pl");
                 container.Save(fileName);
             }
             _dfileWatcher.Dispose();

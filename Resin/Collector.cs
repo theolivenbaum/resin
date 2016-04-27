@@ -77,9 +77,10 @@ namespace Resin
         private PostingsFile GetPostingsFile(string field, string token)
         {
             var fieldTokenId = string.Format("{0}.{1}", field, token);
-            var fileId = fieldTokenId.ToHash().ToString(CultureInfo.InvariantCulture);
-            var fileName = Path.Combine(_directory, fileId + ".po");
-            return PostingsFile.Load(fileName);
+            var fileId = _ix.PosContainers[fieldTokenId];
+            var fileName = Path.Combine(_directory, fileId + ".pl");
+            var container = PostingsContainerFile.Load(fileName);
+            return container.Files[fieldTokenId];
         }
 
         private void Expand(QueryContext queryContext)

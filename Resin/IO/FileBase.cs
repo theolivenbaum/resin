@@ -72,15 +72,19 @@ namespace Resin.IO
 
         private static readonly Type[] Types =
         {
-            typeof (string), typeof (int), typeof (char), typeof (Trie),
+            typeof (string), 
+            typeof (int), 
+            typeof (char), 
+            typeof (Trie),
             typeof (Dictionary<string, string>),
             typeof (Dictionary<string, Dictionary<string, object>>), 
-            typeof(Dictionary<char, Trie>),
-            typeof(Dictionary<string, object>), 
-            typeof(DocFieldFile), 
-            typeof(DocContainerFile), 
-            typeof(PostingsFile), 
-            typeof(IxFile)
+            typeof (Dictionary<char, Trie>),
+            typeof (Dictionary<string, object>), 
+            typeof (DocFieldFile), 
+            typeof (DocContainerFile), 
+            typeof (PostingsFile), 
+            typeof (IxFile),
+            typeof (PostingsContainerFile)
         };
 
         public static readonly Serializer Serializer = new Serializer(Types);
