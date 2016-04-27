@@ -189,7 +189,10 @@ namespace Resin.Cli
             timer.Start();
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Remove("_id", docId);
+                writer.Remove(docId, "_id");
+                writer.Remove(docId, "label");
+                writer.Remove(docId, "aliases");
+                writer.Remove(docId, "description");
             }
            
             Console.WriteLine("deleted {0} in {1}", docId, timer.Elapsed);

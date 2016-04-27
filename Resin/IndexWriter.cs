@@ -75,7 +75,7 @@ namespace Resin
             if (_ix.Fields[field].ContainsKey(docId))
             {
                 _ix.Fields[field].Remove(docId);
-                var containerFileName = Path.Combine(_directory, _ix.DocContainers[docFieldId] + ".do");
+                var containerFileName = Path.Combine(_directory, _ix.DocContainers[docFieldId] + ".dl");
                 var container = DocContainerFile.Load(containerFileName);
                 var docField = container.Files[docFieldId];
                 container.Files.Remove(docFieldId);
