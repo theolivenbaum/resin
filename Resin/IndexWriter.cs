@@ -23,8 +23,10 @@ namespace Resin
         /// </summary>
         private readonly IDictionary<string, PostingsFile> _postingsFiles;
 
-        private readonly ConcurrentQueue<DocContainerFile> _docContainerFiles; 
-            
+        private readonly ConcurrentQueue<DocContainerFile> _docContainerFiles;
+
+        private readonly Dictionary<string, PostingsContainerFile> _postingsContainerFiles;
+    
         private readonly IxFile _ix;
         private readonly FileSystemWatcher _dfileWatcher;
 
@@ -34,6 +36,7 @@ namespace Resin
             _analyzer = analyzer;
             _trieFiles = new Dictionary<string, Trie>();
             _postingsFiles = new Dictionary<string, PostingsFile>();
+            _postingsContainerFiles = new Dictionary<string, PostingsContainerFile>();
             _docContainerFiles = new ConcurrentQueue<DocContainerFile>();
 
             var ixFileName = Path.Combine(directory, "0.ix");
@@ -95,8 +98,8 @@ namespace Resin
                     postingsFile.Postings.Remove(docId);
                     if (postingsFile.NumDocs() == 0)
                     {
-                        var fileName = Path.Combine(_directory, fieldTokenId.ToHash() + ".po");
-                        File.Delete(fileName);
+                        var pContainer = _postingsContainerFiles[fieldTokenId];
+                        pContainer.Files.Remove(fieldTokenId);
                         var trie = GetTrie(field);
                         trie.Remove(token);
                     }
@@ -147,8 +150,14 @@ namespace Resin
             var trie = GetTrie(field);
             trie.Add(token);
             var pf = GetPostingsFile(field, token);
-            pf.Postings[docId] = termFrequency;
-
+            if (pf.Postings.ContainsKey(docId))
+            {
+                pf.Postings[docId] += termFrequency;
+            }
+            else
+            {
+                pf.Postings.Add(docId, termFrequency);
+            }
             if (!_ix.Fields.ContainsKey(field))
             {
                 _ix.Fields.Add(field, new Dictionary<string, object>());
@@ -162,10 +171,13 @@ namespace Resin
             PostingsFile file;
             if (!_postingsFiles.TryGetValue(fieldTokenId, out file))
             {
-                var fileName = Path.Combine(_directory, fieldTokenId.ToHash() + ".po");
-                if (File.Exists(fileName))
+                if (_ix.PosContainers.ContainsKey(fieldTokenId))
                 {
-                    file = PostingsFile.Load(fileName);
+                    var fileName = Path.Combine(_directory, _ix.PosContainers[fieldTokenId] + ".pl");
+                    var container = _postingsContainerFiles.ContainsKey(fieldTokenId) ? _postingsContainerFiles[fieldTokenId] : PostingsContainerFile.Load(fileName);
+                    file = container.Pop(fieldTokenId);
+                    _ix.PosContainers.Remove(fieldTokenId);
+                    _postingsContainerFiles[fieldTokenId] = container;
                 }
                 else
                 {
@@ -197,6 +209,8 @@ namespace Resin
 
         public void Dispose()
         {
+            _dfileWatcher.Dispose();
+
             foreach (var trie in _trieFiles)
             {
                 string fileName = Path.Combine(_directory, trie.Key.ToHash() + ".tr");
@@ -214,11 +228,29 @@ namespace Resin
                 var fileName = Path.Combine(_directory, container.Id + ".pl");
                 container.Save(fileName);
             }
-            _dfileWatcher.Dispose();
+            foreach (var container in _postingsContainerFiles.Values)
+            {
+                var fileName = Path.Combine(_directory, container.Id + ".pl");
+                if (container.Files.Count > 0)
+                {
+                    container.Save(fileName);
+                }
+                else
+                {
+                    File.Delete(fileName);
+                }
+            }
             foreach (var container in _docContainerFiles.ToArray())
             {
                 var fileName = Path.Combine(_directory, container.Id + ".dl");
-                container.Save(fileName);
+                if (container.Files.Count > 0)
+                {
+                    container.Save(fileName);
+                }
+                else
+                {
+                    File.Delete(fileName);
+                }
             }
             _ix.Save(Path.Combine(_directory, "0.ix"));
         }
