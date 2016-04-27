@@ -38,7 +38,7 @@ namespace Resin
 
             var ixFileName = Path.Combine(directory, "0.ix");
             _ix = File.Exists(ixFileName) ? IxFile.Load(ixFileName) : new IxFile();
-
+            
             _dfileWatcher = new FileSystemWatcher(_directory, "*.do") {NotifyFilter = NotifyFilters.LastWrite};
             _dfileWatcher.Changed += DfileWatcherChanged;
             _dfileWatcher.EnableRaisingEvents = true;
@@ -169,7 +169,7 @@ namespace Resin
                 }
                 else
                 {
-                    file = new PostingsFile(field);
+                    file = new PostingsFile(field, token);
                 }
                 _postingsFiles.Add(fieldTokenId, file);
             }
@@ -202,10 +202,17 @@ namespace Resin
                 string fileName = Path.Combine(_directory, trie.Key.ToHash() + ".tr");
                 trie.Value.Save(fileName);
             }
-            foreach (var pf in _postingsFiles)
+            foreach (var batch in _postingsFiles.Values.IntoBatches(10000))
             {
-                string fileName = Path.Combine(_directory, pf.Key.ToHash() + ".po");
-                pf.Value.Save(fileName);
+                var container = new PostingsContainerFile(Path.GetRandomFileName());
+                foreach (var pf in batch)
+                {
+                    var id = string.Format("{0}.{1}", pf.Field, pf.Token);
+                    container.Files.Add(id, pf);
+                    _ix.PosContainers[id] = container.Id;
+                }
+                var fileName = Path.Combine(_directory, container.Id + ".dl");
+                container.Save(fileName);
             }
             _dfileWatcher.Dispose();
             foreach (var container in _docContainerFiles.ToArray())

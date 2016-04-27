@@ -12,6 +12,12 @@ namespace Resin.IO
         /// </summary>
         public Dictionary<string, string> DocContainers { get { return _docContainers; } }
 
+        private readonly Dictionary<string, string> _posContainers;
+        /// <summary>
+        ///  field.token/containerid
+        /// </summary>
+        public Dictionary<string, string> PosContainers { get { return _posContainers; } }
+
         private readonly Dictionary<string, Dictionary<string, object>> _fields;
         /// <summary>
         /// field/docid/null
@@ -21,6 +27,7 @@ namespace Resin.IO
         public IxFile()
         {
             _docContainers = new Dictionary<string, string>();
+            _posContainers = new Dictionary<string, string>();
             _fields = new Dictionary<string, Dictionary<string, object>>();
         }
 

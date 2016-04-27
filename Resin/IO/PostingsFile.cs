@@ -19,10 +19,13 @@ namespace Resin.IO
 
         private readonly string _field;
         public string Field { get { return _field; } }
+        private readonly string _token;
+        public string Token { get { return _token; } }
 
-        public PostingsFile(string field)
+        public PostingsFile(string field, string token)
         {
             _field = field;
+            _token = token;
             _postings = new Dictionary<string, int>();
         }
 
