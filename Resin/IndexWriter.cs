@@ -25,6 +25,9 @@ namespace Resin
 
         private readonly ConcurrentQueue<DocContainerFile> _docContainerFiles;
 
+        /// <summary>
+        /// containerid/file
+        /// </summary>
         private readonly Dictionary<string, PostingsContainerFile> _postingsContainerFiles;
     
         private readonly IxFile _ix;
@@ -43,23 +46,40 @@ namespace Resin
             _ix = File.Exists(ixFileName) ? IxFile.Load(ixFileName) : new IxFile();
             
             _dfileWatcher = new FileSystemWatcher(_directory, "*.do") {NotifyFilter = NotifyFilters.LastWrite};
-            _dfileWatcher.Changed += DfileWatcherChanged;
+            _dfileWatcher.Changed += DfileChanged;
             _dfileWatcher.EnableRaisingEvents = true;
         }
 
-        void DfileWatcherChanged(object sender, FileSystemEventArgs e)
+        private void DfileChanged(object sender, FileSystemEventArgs e)
         {
+            TryMoveDocFileIntoContainer(e.FullPath);
+        }
+
+        private void TryMoveDocFileIntoContainer(string fileName)
+        {
+            try
+            {
+                MoveDocFileIntoContainer(fileName);
+            }
+            catch (IOException ex)
+            {
+                Log.Debug(fileName, ex);
+            }
+        }
+
+        private void MoveDocFileIntoContainer(string fileName)
+        {
+            var file = DocFieldFile.Load(fileName);
+            if (file == null) return;
+            File.Delete(fileName);
+            var key = string.Format(("{0}.{1}"), file.DocId, file.Field);
             DocContainerFile container;
             if (!_docContainerFiles.TryDequeue(out container))
             {
                 container = new DocContainerFile(Path.GetRandomFileName());
             }
-            var fileName = e.FullPath;
-            var file = DocFieldFile.Load(fileName);
-            File.Delete(fileName);
-            var key = string.Format(("{0}.{1}"), file.DocId, file.Field);
-            container.Files.Add(key, file);
-            _ix.DocContainers.Add(key, container.Id);
+            container.Files[key] = file;
+            _ix.DocContainers[key] = container.Id;
 
             if (container.Files.Count == 1000)
             {
@@ -98,7 +118,7 @@ namespace Resin
                     postingsFile.Postings.Remove(docId);
                     if (postingsFile.NumDocs() == 0)
                     {
-                        var pContainer = _postingsContainerFiles[fieldTokenId];
+                        var pContainer = _postingsContainerFiles[_ix.PosContainers[fieldTokenId]];
                         pContainer.Files.Remove(fieldTokenId);
                         var trie = GetTrie(field);
                         trie.Remove(token);
@@ -173,11 +193,11 @@ namespace Resin
             {
                 if (_ix.PosContainers.ContainsKey(fieldTokenId))
                 {
-                    var fileName = Path.Combine(_directory, _ix.PosContainers[fieldTokenId] + ".pl");
-                    var container = _postingsContainerFiles.ContainsKey(fieldTokenId) ? _postingsContainerFiles[fieldTokenId] : PostingsContainerFile.Load(fileName);
+                    var id = _ix.PosContainers[fieldTokenId];
+                    var fileName = Path.Combine(_directory, id + ".pl");
+                    var container = _postingsContainerFiles.ContainsKey(id) ? _postingsContainerFiles[id] : PostingsContainerFile.Load(fileName);
                     file = container.Pop(fieldTokenId);
-                    _ix.PosContainers.Remove(fieldTokenId);
-                    _postingsContainerFiles[fieldTokenId] = container;
+                    _postingsContainerFiles[id] = container;
                 }
                 else
                 {
@@ -210,6 +230,11 @@ namespace Resin
         public void Dispose()
         {
             _dfileWatcher.Dispose();
+
+            foreach (var docFile in Directory.GetFiles(_directory, "*.do"))
+            {
+                MoveDocFileIntoContainer(docFile);
+            }
 
             foreach (var trie in _trieFiles)
             {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using log4net;
+using Lzo64;
 using NetSerializer;
 
 namespace Resin.IO
@@ -30,9 +31,27 @@ namespace Resin.IO
                 {
                     Serializer.Serialize(fs, this);
                 }
+                //using (var fs = File.Open(fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read))
+                //using (var memStream = new MemoryStream())
+                //{
+                //    Serializer.Serialize(memStream, this);
+                //    var bytes = memStream.ToArray();
+                //    var comp = new LZOCompressor();
+                //    var compressed = comp.Compress(bytes);
+                //    fs.Write(compressed, 0, compressed.Length);
+                //}
             }
             else
             {
+                //using (var fs = File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                //using (var memStream = new MemoryStream())
+                //{
+                //    Serializer.Serialize(memStream, this);
+                //    var bytes = memStream.ToArray();
+                //    var comp = new LZOCompressor();
+                //    var compressed = comp.Compress(bytes);
+                //    fs.Write(compressed, 0, compressed.Length);
+                //}
                 using (var fs = File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 {
                     Serializer.Serialize(fs, this);
@@ -49,9 +68,19 @@ namespace Resin.IO
             timer.Start();
             try
             {
+                //using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                //using (var memStream = new MemoryStream())
+                //{
+                //    fs.CopyTo(memStream);
+                //    var bytes = memStream.ToArray();
+                //    var comp = new LZOCompressor();
+                //    var decompressed = comp.Decompress(bytes);
+                //    var obj = (T)Serializer.Deserialize(new MemoryStream(decompressed));
+                //    return obj;
+                //}
                 using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    var obj = (T) Serializer.Deserialize(fs);
+                    var obj = (T)Serializer.Deserialize(fs);
                     Log.DebugFormat("loaded {0} in {1}", fileName, timer.Elapsed);
                     return obj;
                 }
