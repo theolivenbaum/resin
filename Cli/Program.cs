@@ -183,18 +183,13 @@ namespace Resin.Cli
         static void Delete(string[] args)
         {
             var dir = args[Array.IndexOf(args, "--dir") + 1];
-            //var push = Array.IndexOf(args, "--push") > 0;
             var docId = args[Array.IndexOf(args, "--docid") + 1];
             var timer = new Stopwatch();
             timer.Start();
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Remove(docId, "_id");
-                writer.Remove(docId, "label");
-                writer.Remove(docId, "aliases");
-                writer.Remove(docId, "description");
+                writer.Remove(docId);
             }
-           
             Console.WriteLine("deleted {0} in {1}", docId, timer.Elapsed);
         }
 
@@ -203,7 +198,6 @@ namespace Resin.Cli
             var take = 1000;
             var skip = 0;
             var skipped = 0;
-            //var push = Array.IndexOf(args, "--push") > 0;
 
             if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
             if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);

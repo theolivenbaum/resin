@@ -114,9 +114,9 @@ namespace Resin
             }
         }
 
-        public void Remove(string docId, string field)
+        public void Remove(string docId)
         {
-            if (_ix.Fields[field].ContainsKey(docId))
+            foreach (var field in _ix.Fields.Keys)
             {
                 _ix.Fields[field].Remove(docId);
                 var containerId = docId.ToDocHash();
@@ -153,7 +153,7 @@ namespace Resin
                         _postingsWorker.Enqueue(postingsFile);
                     }
                 }
-            }  
+            }
         }
 
         public void Write(IDictionary<string, string> doc)
