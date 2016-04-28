@@ -77,7 +77,7 @@ namespace Resin
         private PostingsFile GetPostingsFile(string field, string token)
         {
             var fieldTokenId = string.Format("{0}.{1}", field, token);
-            var fileId = _ix.PosContainers[fieldTokenId];
+            var fileId = Helper.ToPostingHash(field, token);
             var fileName = Path.Combine(_directory, fileId + ".pl");
             var container = PostingsContainerFile.Load(fileName);
             return container.Files[fieldTokenId];

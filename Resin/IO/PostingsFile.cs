@@ -6,7 +6,7 @@ namespace Resin.IO
     /// <summary>
     /// </summary>
     [Serializable]
-    public class PostingsFile : FileBase<PostingsFile>
+    public class PostingsFile
     {
         private readonly Dictionary<string, int> _postings;
         /// <summary>

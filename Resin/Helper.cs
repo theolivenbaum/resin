@@ -10,7 +10,30 @@ namespace Resin
 {
     public static class Helper
     {
+        public static string ToDocHash(this string docId)
+        {
+            if (docId == null) throw new ArgumentNullException("docId");
+            if (docId.Length < 1) throw new ArgumentOutOfRangeException("docId");
+            return ToHash(docId.Take(3).ToArray()).ToString(CultureInfo.InvariantCulture);
+        }
+
+        public static string ToPostingHash(string field, string token)
+        {
+            return ToHash(new[]{field[0], token[0]}).ToString(CultureInfo.InvariantCulture);
+        }
+
         public static UInt64 ToHash(this string read)
+        {
+            UInt64 hashedValue = 3074457345618258791ul;
+            for (int i = 0; i < read.Length; i++)
+            {
+                hashedValue += read[i];
+                hashedValue *= 3074457345618258799ul;
+            }
+            return hashedValue;
+        }
+
+        public static UInt64 ToHash(this char[] read)
         {
             UInt64 hashedValue = 3074457345618258791ul;
             for (int i = 0; i < read.Length; i++)

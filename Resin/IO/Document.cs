@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Resin.IO
 {
     [Serializable]
-    public class Document : FileBase<Document>
+    public class Document
     {
         public string Id
         {

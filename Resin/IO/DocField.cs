@@ -68,12 +68,5 @@ namespace Resin.IO
             _id = id;
             _files = new Dictionary<string, PostingsFile>();
         }
-
-        public PostingsFile Pop(string key)
-        {
-            var p = Files[key];
-            Files.Remove(key);
-            return p;
-        }
     }
 }

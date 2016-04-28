@@ -40,7 +40,7 @@ namespace Resin
 
         private IDictionary<string, string> GetDoc(string docId)
         {
-            var containerId = _ix.DocContainers[docId];
+            var containerId = docId.ToDocHash();
             var fileName = Path.Combine(_directory, containerId + ".dl");
             var file = DocContainerFile.Load(fileName);
             return file.Files[docId].Fields;
