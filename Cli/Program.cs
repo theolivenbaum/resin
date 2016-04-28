@@ -33,15 +33,14 @@ namespace Resin.Cli
             //    }
             //    Optimize(args);
             //}
-            else if (args[0].ToLower() == "delete")
+            else if (args[0].ToLower() == "remove")
             {
-                if (Array.IndexOf(args, "--dir") == -1 ||
-                    Array.IndexOf(args, "--docid") == -1)
+                if (Array.IndexOf(args, "--docid") == -1)
                 {
-                    Console.WriteLine("I need a directory and a doc id.");
+                    Console.WriteLine("I need a doc id.");
                     return;
                 }
-                Delete(args);
+                Remove(args);
             }
             else if (args[0].ToLower() == "query")
             {
@@ -98,7 +97,6 @@ namespace Resin.Cli
 
         static void Query(string[] args)
         {
-            Console.ForegroundColor = ConsoleColor.White;
             string dir = null;
             string indexName = null;
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
@@ -180,15 +178,30 @@ namespace Resin.Cli
         //    optimizer.Save();
         //}
 
-        static void Delete(string[] args)
+        static void Remove(string[] args)
         {
-            var dir = args[Array.IndexOf(args, "--dir") + 1];
+            string dir = null;
+            string indexName = null;
+            if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
+            if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
+            var inproc = !string.IsNullOrWhiteSpace(dir);
             var docId = args[Array.IndexOf(args, "--docid") + 1];
             var timer = new Stopwatch();
             timer.Start();
-            using (var writer = new IndexWriter(dir, new Analyzer()))
+            if (inproc)
             {
-                writer.Remove(docId);
+                using (var writer = new IndexWriter(dir, new Analyzer()))
+                {
+                    writer.Remove(docId);
+                }
+            }
+            else
+            {
+                var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
+                using (var client = new WriterClient(indexName, url))
+                {
+                    client.Remove(docId);
+                }
             }
             Console.WriteLine("deleted {0} in {1}", docId, timer.Elapsed);
         }
