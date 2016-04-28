@@ -109,7 +109,7 @@ namespace Resin.IO
             typeof (Dictionary<string, Dictionary<string, object>>), 
             typeof (Dictionary<char, Trie>),
             typeof (Dictionary<string, object>), 
-            typeof (DocFieldFile), 
+            typeof (Document), 
             typeof (DocContainerFile), 
             typeof (PostingsFile), 
             typeof (IxFile),

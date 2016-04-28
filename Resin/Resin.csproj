@@ -53,7 +53,7 @@
     <Compile Include="IO\LZOCompressor.cs" />
     <Compile Include="IO\Document.cs" />
     <Compile Include="DocumentScore.cs" />
-    <Compile Include="IO\DocFieldFile.cs" />
+    <Compile Include="IO\DocField.cs" />
     <Compile Include="IO\IxFile.cs" />
     <Compile Include="IO\PostingsFile.cs" />
     <Compile Include="IO\FileBase.cs" />

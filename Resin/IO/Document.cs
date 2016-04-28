@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 namespace Resin.IO
 {
-    //TODO:remove from IO namespace
-    public class Document
+    [Serializable]
+    public class Document : FileBase<Document>
     {
         public string Id
         {

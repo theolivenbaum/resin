@@ -177,10 +177,14 @@ namespace Resin.IO
             if (list.Length == 0) throw new ArgumentOutOfRangeException("word");
 
             Trie child;
+
             if (!_children.TryGetValue(list[0], out child))
             {
-                child = new Trie(list);
-                _children.Add(list[0], child);
+                if (!_children.TryGetValue(list[0], out child))
+                {
+                    child = new Trie(list);
+                    _children.Add(list[0], child);
+                }
             }
             else
             {

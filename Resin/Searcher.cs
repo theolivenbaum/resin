@@ -42,17 +42,10 @@ namespace Resin
 
         private IDictionary<string, string> GetDoc(string docId)
         {
-            var doc = new Dictionary<string, string>();
-            foreach (var field in _ix.Fields.Keys)
-            {
-                var docFieldId = string.Format("{0}.{1}", docId, field);
-                var containerId = _ix.DocContainers[docFieldId];
-                var fileName = Path.Combine(_directory, containerId + ".dl");
-                var file = DocContainerFile.Load(fileName);
-                var fieldFile = file.Files[docFieldId];
-                doc[fieldFile.Field] = fieldFile.Value;
-            }
-            return doc;
+            var containerId = _ix.DocContainers[docId];
+            var fileName = Path.Combine(_directory, containerId + ".dl");
+            var file = DocContainerFile.Load(fileName);
+            return file.Files[docId].Fields;
         }
     }
 }

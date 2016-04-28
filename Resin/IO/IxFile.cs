@@ -8,7 +8,7 @@ namespace Resin.IO
     {
         private readonly Dictionary<string, string> _docContainers;
         /// <summary>
-        ///  docid.field/containerid
+        ///  docid/containerid
         /// </summary>
         public Dictionary<string, string> DocContainers { get { return _docContainers; } }
 
