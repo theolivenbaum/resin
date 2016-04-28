@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -11,13 +12,15 @@ namespace Resin
     {
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
-        private readonly IDictionary<string, Trie> _trieFiles;
+        private readonly ConcurrentDictionary<string, Trie> _trieFiles;
+        private readonly ConcurrentDictionary<string, PostingsContainerFile> _postingsCache;
         private readonly IxFile _ix;
 
-        public Collector(string directory, IxFile ix, IDictionary<string, Trie> trieFiles)
+        public Collector(string directory, IxFile ix, ConcurrentDictionary<string, Trie> trieFiles, ConcurrentDictionary<string, PostingsContainerFile> postingsCache)
         {
             _directory = directory;
             _trieFiles = trieFiles;
+            _postingsCache = postingsCache;
             _ix = ix;
         }
 
@@ -39,7 +42,7 @@ namespace Resin
                 {
                     var fileName = Path.Combine(_directory, id + ".tr");
                     file = Trie.Load(fileName);
-                    _trieFiles.Add(id, file);
+                    _trieFiles[id] = file;
                 }
                 return file;
             }
@@ -76,10 +79,15 @@ namespace Resin
 
         private PostingsFile GetPostingsFile(string field, string token)
         {
-            var fieldTokenId = string.Format("{0}.{1}", field, token);
             var fileId = token.ToPostingHash();
-            var fileName = Path.Combine(_directory, fileId + ".pl");
-            var container = PostingsContainerFile.Load(fileName);
+            PostingsContainerFile container;
+            if (!_postingsCache.TryGetValue(fileId, out container))
+            {
+                var fileName = Path.Combine(_directory, fileId + ".pl");
+                container = PostingsContainerFile.Load(fileName);
+                _postingsCache[fileId] = container;
+            }
+            var fieldTokenId = string.Format("{0}.{1}", field, token);
             return container.Files[fieldTokenId];
         }
 

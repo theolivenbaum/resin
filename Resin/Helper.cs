@@ -13,8 +13,7 @@ namespace Resin
         public static string ToDocHash(this string docId)
         {
             if (docId == null) throw new ArgumentNullException("docId");
-            if (docId.Length < 1) throw new ArgumentOutOfRangeException("docId");
-            return ToHash(docId.Take(3).ToArray()).ToString(CultureInfo.InvariantCulture);
+            return ToHash(docId.Take(4).ToArray()).ToString(CultureInfo.InvariantCulture);
         }
 
         public static string ToPostingHash(this string token)

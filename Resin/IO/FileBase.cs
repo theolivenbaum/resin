@@ -30,7 +30,7 @@ namespace Resin.IO
                     Serializer.Serialize(fs, this);
                 }
             }
-            Log.DebugFormat("saved {0} in {1}", fileName, timer.Elapsed);
+            Log.InfoFormat("saved {0} in {1}", fileName, timer.Elapsed);
         }
 
         public static T Load(string fileName)
@@ -44,7 +44,7 @@ namespace Resin.IO
                 using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
                     var obj = (T)Serializer.Deserialize(fs);
-                    Log.DebugFormat("loaded {0} in {1}", fileName, timer.Elapsed);
+                    Log.InfoFormat("loaded {0} in {1}", fileName, timer.Elapsed);
                     return obj;
                 }
             }
@@ -87,7 +87,7 @@ namespace Resin.IO
                     fs.Write(compressed, 0, compressed.Length);
                 }
             }
-            Log.DebugFormat("saved {0} in {1}", fileName, timer.Elapsed);
+            Log.InfoFormat("saved {0} in {1}", fileName, timer.Elapsed);
         }
 
         public static T Load(string fileName)
@@ -106,7 +106,7 @@ namespace Resin.IO
                     var comp = new LZOCompressor();
                     var decompressed = comp.Decompress(bytes);
                     var obj = (T)Serializer.Deserialize(new MemoryStream(decompressed));
-                    Log.DebugFormat("loaded {0} in {1}", fileName, timer.Elapsed);
+                    Log.InfoFormat("loaded {0} in {1}", fileName, timer.Elapsed);
                     return obj;
                 }
             }
