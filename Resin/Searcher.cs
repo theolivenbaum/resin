@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,14 +17,17 @@ namespace Resin
         private readonly QueryParser _parser;
         private readonly Dictionary<string, Trie> _trieFiles;
         private readonly IxFile _ix;
-
+        private readonly ConcurrentDictionary<string, DocContainerFile> _docCache;
+ 
         public Searcher(string directory, QueryParser parser)
         {
             _directory = directory;
             _parser = parser;
             _trieFiles = new Dictionary<string, Trie>();
+            _docCache = new ConcurrentDictionary<string, DocContainerFile>();
+
             var fileName = Path.Combine(_directory, "0.ix");
-            if(!File.Exists(fileName)) throw new ArgumentException(string.Format("No index found in {0}", _directory), "directory");
+            if (!File.Exists(fileName)) throw new ArgumentException(string.Format("No index found in {0}", _directory), "directory");
             _ix = IxFile.Load(Path.Combine(_directory, "0.ix"));
         }
 
@@ -41,9 +45,14 @@ namespace Resin
         private IDictionary<string, string> GetDoc(string docId)
         {
             var containerId = docId.ToDocHash();
-            var fileName = Path.Combine(_directory, containerId + ".dl");
-            var file = DocContainerFile.Load(fileName);
-            return file.Files[docId].Fields;
+            DocContainerFile container;
+            if (!_docCache.TryGetValue(containerId, out container))
+            {
+                var fileName = Path.Combine(_directory, containerId + ".dl");
+                container = DocContainerFile.Load(fileName);
+                _docCache[containerId] = container;
+            }
+            return container.Files[docId].Fields;
         }
     }
 }
