@@ -34,7 +34,7 @@ namespace Resin.IO
     //}
 
     [Serializable]
-    public class DocContainerFile : FileBase<DocContainerFile>
+    public class DocContainerFile : CompressedFileBase<DocContainerFile>
     {
         private readonly string _id;
         public string Id { get { return _id; } }
@@ -53,7 +53,7 @@ namespace Resin.IO
     }
 
     [Serializable]
-    public class PostingsContainerFile : FileBase<PostingsContainerFile>
+    public class PostingsContainerFile : CompressedFileBase<PostingsContainerFile>
     {
         private readonly string _id;
         public string Id { get { return _id; } }

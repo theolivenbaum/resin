@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Resin.IO
 {
     [Serializable]
-    public class IxFile : FileBase<IxFile>
+    public class IxFile : CompressedFileBase<IxFile>
     {
         private readonly Dictionary<string, string> _docContainers;
         /// <summary>
@@ -30,7 +30,5 @@ namespace Resin.IO
             _posContainers = new Dictionary<string, string>();
             _fields = new Dictionary<string, Dictionary<string, object>>();
         }
-
-
     }
 }

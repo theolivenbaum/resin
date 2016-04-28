@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using log4net;
 using Resin.IO;
 
 namespace Resin
@@ -12,7 +11,7 @@ namespace Resin
     /// </summary>
     public class Searcher
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
+        //private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
         private readonly string _directory;
         private readonly QueryParser _parser;
         private readonly Dictionary<string, Trie> _trieFiles;
@@ -26,7 +25,6 @@ namespace Resin
             var fileName = Path.Combine(_directory, "0.ix");
             if(!File.Exists(fileName)) throw new ArgumentException(string.Format("No index found in {0}", _directory), "directory");
             _ix = IxFile.Load(Path.Combine(_directory, "0.ix"));
-            Log.DebugFormat("searcher initialized in {0}", directory);
         }
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)

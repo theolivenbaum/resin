@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading;
-using log4net;
 using Resin.IO;
 
 namespace Resin
@@ -13,75 +12,55 @@ namespace Resin
     {
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
-        private static readonly ILog Log = LogManager.GetLogger(typeof(IndexWriter));
+        private readonly int _docFileSize;
+        private readonly int _postingFileSize;
+        //private static readonly ILog Log = LogManager.GetLogger(typeof(IndexWriter));
+        private readonly ConcurrentStack<DocContainerFile> _docContainerStack;
+        private readonly ConcurrentStack<PostingsContainerFile> _posContainerStack;
+        private readonly TaskQueue<Document> _docWorker;
+        private readonly IxFile _ix;
 
         /// <summary>
         /// field/trie
         /// </summary>
-        private readonly ConcurrentDictionary<string, Trie> _trieFiles;
+        private readonly Dictionary<string, Trie> _trieFiles;
 
         /// <summary>
         /// field.token/postings
         /// </summary>
-        private readonly ConcurrentDictionary<string, PostingsFile> _postingsFiles;
+        private readonly Dictionary<string, PostingsFile> _postingsFiles;
 
         /// <summary>
         /// containerid/file
         /// </summary>
-        private readonly ConcurrentDictionary<string, DocContainerFile> _docContainers;
-
-        private readonly ConcurrentStack<DocContainerFile> _docContainerStack; 
-
+        private readonly Dictionary<string, DocContainerFile> _docContainers;
+ 
         /// <summary>
         /// containerid/file
         /// </summary>
         private readonly Dictionary<string, PostingsContainerFile> _postingsContainers;
-    
-        private readonly IxFile _ix;
-        private readonly FileSystemWatcher _dfileWatcher;
 
-        public IndexWriter(string directory, IAnalyzer analyzer)
+        public IndexWriter(string directory, IAnalyzer analyzer, int docFileSize = 1000, int postingFileSize = 10000)
         {
             _directory = directory;
             _analyzer = analyzer;
-            _trieFiles = new ConcurrentDictionary<string, Trie>();
-            _postingsFiles = new ConcurrentDictionary<string, PostingsFile>();
+            _docFileSize = docFileSize;
+            _postingFileSize = postingFileSize;
+            _trieFiles = new Dictionary<string, Trie>();
+            _postingsFiles = new Dictionary<string, PostingsFile>();
             _postingsContainers = new Dictionary<string, PostingsContainerFile>();
-            _docContainers = new ConcurrentDictionary<string, DocContainerFile>();
+            _posContainerStack = new ConcurrentStack<PostingsContainerFile>();
+            _docContainers = new Dictionary<string, DocContainerFile>();
             _docContainerStack = new ConcurrentStack<DocContainerFile>();
+            _docWorker = new TaskQueue<Document>(1, MoveDocIntoContainer);
 
             var ixFileName = Path.Combine(directory, "0.ix");
             _ix = File.Exists(ixFileName) ? IxFile.Load(ixFileName) : new IxFile();
-            
-            _dfileWatcher = new FileSystemWatcher(_directory, "*.do") {NotifyFilter = NotifyFilters.LastWrite};
-            _dfileWatcher.Changed += DfileChanged;
-            _dfileWatcher.EnableRaisingEvents = true;
         }
 
-        private void DfileChanged(object sender, FileSystemEventArgs e)
+        private void MoveDocIntoContainer(Document doc)
         {
-            TryMoveDocFileIntoContainer(e.FullPath);
-        }
-
-        private void TryMoveDocFileIntoContainer(string fileName)
-        {
-            try
-            {
-                MoveDocFileIntoContainer(fileName);
-            }
-            catch (IOException ex)
-            {
-                Log.Debug(fileName, ex);
-            }
-        }
-
-        private void MoveDocFileIntoContainer(string fileName)
-        {
-            var doc = Document.Load(fileName);
-            if (doc == null) return;
-            File.Delete(fileName);
             DocContainerFile container;
-
             if (_ix.DocContainers.ContainsKey(doc.Id))
             {
                 var containerId = _ix.DocContainers[doc.Id];
@@ -98,7 +77,7 @@ namespace Resin
             }
             else
             {
-                if (!_docContainerStack.TryPeek(out container) || container.Files.Count == 1000)
+                if (!_docContainerStack.TryPeek(out container) || container.Files.Count == _docFileSize)
                 {
                     container = new DocContainerFile(Path.GetRandomFileName());
                     _docContainerStack.Push(container);
@@ -135,7 +114,11 @@ namespace Resin
                     if (postingsFile.NumDocs() == 0)
                     {
                         var pContainer = _postingsContainers[_ix.PosContainers[fieldTokenId]];
+                        
+                        _ix.PosContainers.Remove(fieldTokenId);
                         pContainer.Files.Remove(fieldTokenId);
+                        _postingsFiles.Remove(fieldTokenId);
+
                         var trie = GetTrie(field);
                         trie.Remove(token);
                     }
@@ -150,12 +133,7 @@ namespace Resin
 
         public void Write(Document doc)
         {
-            new Thread(() =>
-            {
-                Thread.CurrentThread.IsBackground = true;
-                var docFileName = Path.Combine(_directory, Path.GetRandomFileName() + ".do");
-                doc.Save(docFileName);                
-            }).Start();
+            _docWorker.Enqueue(doc);  
 
             foreach (var field in doc.Fields)
             {
@@ -246,22 +224,33 @@ namespace Resin
 
         public void Dispose()
         {
+            _docWorker.Dispose();
             foreach (var trie in _trieFiles)
             {
                 string fileName = Path.Combine(_directory, trie.Key.ToHash() + ".tr");
                 trie.Value.Save(fileName);
             }
-            foreach (var batch in _postingsFiles.Values.IntoBatches(10000))
+            foreach (var pf in _postingsFiles.Values)
             {
-                var container = new PostingsContainerFile(Path.GetRandomFileName());
-                foreach (var pf in batch)
+                var fieldTokenId = string.Format("{0}.{1}", pf.Field, pf.Token);
+                if (_ix.PosContainers.ContainsKey(fieldTokenId))
                 {
-                    var id = string.Format("{0}.{1}", pf.Field, pf.Token);
-                    container.Files.Add(id, pf);
-                    _ix.PosContainers[id] = container.Id;
+                    var containerId = _ix.PosContainers[fieldTokenId];
+                    var container = _postingsContainers[containerId];
+                    container.Files[fieldTokenId] = pf;
                 }
-                var fileName = Path.Combine(_directory, container.Id + ".pl");
-                container.Save(fileName);
+                else
+                {
+                    PostingsContainerFile container;
+                    if (!_posContainerStack.TryPeek(out container) || container.Files.Count == _postingFileSize)
+                    {
+                        container = new PostingsContainerFile(Path.GetRandomFileName());
+                        _posContainerStack.Push(container);
+                    }
+                    container.Files.Add(fieldTokenId, pf);
+                    _postingsContainers[container.Id] = container;
+                    _ix.PosContainers[fieldTokenId] = container.Id;
+                }
             }
             foreach (var container in _postingsContainers.Values)
             {
@@ -275,14 +264,7 @@ namespace Resin
                     File.Delete(fileName);
                 }
             }
-
-            _dfileWatcher.Dispose();
-
-            foreach (var docFile in Directory.GetFiles(_directory, "*.do"))
-            {
-                MoveDocFileIntoContainer(docFile);
-            }
-            foreach (var container in _docContainers.Values.Concat(_docContainerStack))
+            foreach (var container in _docContainers.Values)
             {
                 var fileName = Path.Combine(_directory, container.Id + ".dl");
                 if (container.Files.Count > 0)
@@ -296,5 +278,72 @@ namespace Resin
             }
             _ix.Save(Path.Combine(_directory, "0.ix"));
         }
+    }
+
+
+
+
+    public class TaskQueue<T> : IDisposable where T : class
+    {
+        private readonly Action<T> _action;
+        readonly object _sync = new object();
+        readonly Thread[] _workers;
+        readonly Queue<T> _tasks = new Queue<T>();
+
+        public TaskQueue(int workerCount, Action<T> action)
+        {
+            _action = action;
+            _workers = new Thread[workerCount];
+            for (int i = 0; i < workerCount; i++)
+            {
+                (_workers[i] = new Thread(Consume)).Start();
+                Trace.WriteLine("worker thread started");
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                for (int i = 0; i < _workers.Length; i++) Enqueue(null);
+                foreach (Thread worker in _workers)
+                {
+                    worker.Join();
+                    Trace.WriteLine("worker thread joined");
+                }
+            }
+        }
+
+        public void Enqueue(T task)
+        {
+            lock (_sync)
+            {
+                _tasks.Enqueue(task);
+                Monitor.PulseAll(_sync);
+            }
+        }
+
+        void Consume()
+        {
+            while (true)
+            {
+                T task;
+                lock (_sync)
+                {
+                    while (_tasks.Count == 0) Monitor.Wait(_sync);
+                    task = _tasks.Dequeue();
+                }
+                if (task == null) return; //exit
+                _action(task);
+            }
+        }
+
+        public int Count { get { return _tasks.Count; } }
     }
 }
