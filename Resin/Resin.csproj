@@ -50,10 +50,11 @@
   <ItemGroup>
     <Compile Include="Analyzer.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="IO\DocContainerFile.cs" />
     <Compile Include="IO\LZOCompressor.cs" />
     <Compile Include="IO\Document.cs" />
     <Compile Include="DocumentScore.cs" />
-    <Compile Include="IO\DocField.cs" />
+    <Compile Include="IO\PostingsContainerFile.cs" />
     <Compile Include="IO\IxFile.cs" />
     <Compile Include="IO\PostingsFile.cs" />
     <Compile Include="IO\FileBase.cs" />

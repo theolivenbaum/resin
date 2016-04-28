@@ -17,9 +17,11 @@ namespace Resin
             return ToHash(docId.Take(3).ToArray()).ToString(CultureInfo.InvariantCulture);
         }
 
-        public static string ToPostingHash(string field, string token)
+        public static string ToPostingHash(this string token)
         {
-            return ToHash(new[]{field[0], token[0]}).ToString(CultureInfo.InvariantCulture);
+            //return ToHash(new[]{field[0], token[0]}).ToString(CultureInfo.InvariantCulture);
+            var seed = token.Length == 1 ? token + "0" : token.Substring(0, 2);
+            return ToHash(seed).ToString(CultureInfo.InvariantCulture);
         }
 
         public static UInt64 ToHash(this string read)

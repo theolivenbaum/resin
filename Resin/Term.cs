@@ -1,9 +1,7 @@
 using System;
 
-namespace Resin.IO
+namespace Resin
 {
-    //TODO:remove from IO namespace
-    [Serializable]
     public class Term
     {
         private int _edits;

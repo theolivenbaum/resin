@@ -54,7 +54,7 @@ namespace Resin
 
         private void PutPostingsInContainer(PostingsFile posting)
         {
-            var containerId = Helper.ToPostingHash(posting.Field, posting.Token);
+            var containerId = posting.Token.ToPostingHash();
             var containerFileName = Path.Combine(_directory, containerId + ".pl");
             var fieldTokenId = string.Format("{0}.{1}", posting.Field, posting.Token);
             PostingsContainerFile container;
@@ -140,7 +140,7 @@ namespace Resin
                     postingsFile.Postings.Remove(docId);
                     if (postingsFile.NumDocs() == 0)
                     {
-                        var pContainerId = Helper.ToPostingHash(field, token);
+                        var pContainerId = token.ToPostingHash();
                         var pContainer = _postingsContainers[pContainerId];
                         pContainer.Files.Remove(fieldTokenId);
                         _postingsFiles.Remove(fieldTokenId);
@@ -216,7 +216,7 @@ namespace Resin
             PostingsFile file;
             if (!_postingsFiles.TryGetValue(fieldTokenId, out file))
             {
-                var id = Helper.ToPostingHash(field, token);
+                var id = token.ToPostingHash();
                 var fileName = Path.Combine(_directory, id + ".pl");
                 PostingsContainerFile container;
                 if (!_postingsContainers.TryGetValue(id, out container))
