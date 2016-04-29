@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -30,6 +31,7 @@ namespace Resin.IO
             if (File.Exists(fileName))
             {
                 trie = Load(fileName);
+                if (trie == null) throw new DataMisalignedException("Your data got misaligned.");
                 _cache[c] = trie;
                 return true;
             }

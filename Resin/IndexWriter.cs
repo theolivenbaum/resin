@@ -37,6 +37,8 @@ namespace Resin
 
         private readonly TaskQueue<PostingsFile> _postingsWorker;
 
+        private readonly IList<string> _deletions; 
+
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
             _directory = directory;
@@ -47,6 +49,7 @@ namespace Resin
             _docContainers = new Dictionary<string, DocContainerFile>();
             _docWorker = new TaskQueue<Document>(1, PutDocInContainer);
             _postingsWorker = new TaskQueue<PostingsFile>(1, PutPostingsInContainer);
+            _deletions = new List<string>();
 
             var ixFileName = Path.Combine(directory, "0.ix");
             _ix = File.Exists(ixFileName) ? IxFile.Load(ixFileName) : new IxFile();
@@ -63,7 +66,6 @@ namespace Resin
                 if (!_postingsContainers.TryGetValue(bucketId, out container))
                 {
                     container = PostingsContainerFile.Load(containerFileName);
-                    _postingsContainers[container.Id] = container;
                 }
                 container.Files[fieldTokenId] = posting;
             }
@@ -72,11 +74,10 @@ namespace Resin
                 if (!_postingsContainers.TryGetValue(bucketId, out container))
                 {
                     container = new PostingsContainerFile(bucketId);
-                    _postingsContainers[container.Id] = container;
                 }
-                //Log.InfoFormat("{0}:{1}", posting.Field, posting.Token);
                 container.Files[fieldTokenId] = posting;
             }
+            _postingsContainers[container.Id] = container;
         }
 
         private void PutDocInContainer(Document doc)
@@ -89,7 +90,6 @@ namespace Resin
                 if (!_docContainers.TryGetValue(bucketId, out container))
                 {
                     container = DocContainerFile.Load(containerFileName);
-                    _docContainers[container.Id] = container;
                 }
                 Document existing;
                 if (container.Files.TryGetValue(doc.Id, out existing))
@@ -98,6 +98,7 @@ namespace Resin
                     {
                         existing.Fields[field.Key] = field.Value;
                     }
+                    container.Files[doc.Id] = existing;
                 }
                 else
                 {
@@ -113,9 +114,15 @@ namespace Resin
                 }
                 container.Files[doc.Id] = doc;
             }
+            _docContainers[container.Id] = container;
         }
 
         public void Remove(string docId)
+        {
+            _deletions.Add(docId);
+        }
+
+        private void DoRemove(string docId)
         {
             foreach (var field in _ix.Fields.Keys)
             {
@@ -263,13 +270,20 @@ namespace Resin
 
         public void Dispose()
         {
-            Parallel.ForEach(_trieFiles, trie =>
+            foreach (var docId in _deletions)
             {
-                foreach (var child in trie.Value.Children())
+                DoRemove(docId);
+            }
+
+            Parallel.ForEach(_trieFiles, kvp =>
+            {
+                var field = kvp.Key;
+                var trie = kvp.Value;
+                foreach (var child in trie.Children())
                 {
-                    var fileNameWithoutExt = trie.Key.ToTrieFileNameWithoutExtension(child.Val);
+                    var fileNameWithoutExt = field.ToTrieFileNameWithoutExtension(child.Val);
                     string fileName = Path.Combine(_directory, fileNameWithoutExt + ".tr");
-                    child.Save(fileName);  
+                    child.Save(fileName);
                 }
             });
 
@@ -288,18 +302,6 @@ namespace Resin
                     File.Delete(fileName);
                 }
             });
-            //foreach (var container in _postingsContainers.Values)
-            //{
-            //    var fileName = Path.Combine(_directory, container.Id + ".pl");
-            //    if (container.Files.Count > 0)
-            //    {
-            //        container.Save(fileName);
-            //    }
-            //    else
-            //    {
-            //        File.Delete(fileName);
-            //    }
-            //}
             Parallel.ForEach(_docContainers.Values, container =>
             {
                 var fileName = Path.Combine(_directory, container.Id + ".dl");
@@ -312,18 +314,6 @@ namespace Resin
                     File.Delete(fileName);
                 }
             });
-            //foreach (var container in _docContainers.Values)
-            //{
-            //    var fileName = Path.Combine(_directory, container.Id + ".dl");
-            //    if (container.Files.Count > 0)
-            //    {
-            //        container.Save(fileName);
-            //    }
-            //    else
-            //    {
-            //        File.Delete(fileName);
-            //    }
-            //}
             _ix.Save(Path.Combine(_directory, "0.ix"));
         }
     }

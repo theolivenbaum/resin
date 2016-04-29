@@ -55,7 +55,7 @@ namespace Resin
         private IEnumerable<DocumentScore> GetScoredResult(Term term)
         {
             var trie = GetTrie(term.Field);
-            if (trie == null) yield break;
+            if (_ix == null) yield break;
             var docsInCorpus = _ix.Fields[term.Field].Count;
             if (trie.ContainsToken(term.Value))
             {

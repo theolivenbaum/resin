@@ -176,7 +176,7 @@ namespace Resin.IO
             if (list.Length == 0) throw new ArgumentOutOfRangeException("word");
 
             Trie child;
-            if (!TryResolveChild(list[0], out child))
+            if (!_children.TryGetValue(list[0], out child))
             {
                 child = new Trie(list);
                 _children.Add(list[0], child);
@@ -209,7 +209,7 @@ namespace Resin.IO
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 
             Trie child;
-            if (TryResolveChild(word[0], out child))
+            if (_children.TryGetValue(word[0], out child))
             {
                 if (child._children.Count == 0)
                 {

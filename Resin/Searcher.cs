@@ -27,9 +27,6 @@ namespace Resin
             _trieFiles = new ConcurrentDictionary<string, LazyTrie>();
             _docCache = new ConcurrentDictionary<string, DocContainerFile>();
             _postingsCache = new ConcurrentDictionary<string, PostingsContainerFile>();
-
-            var fileName = Path.Combine(_directory, "0.ix");
-            if (!File.Exists(fileName)) throw new ArgumentException(string.Format("No index found in {0}", _directory), "directory");
             _ix = IxFile.Load(Path.Combine(_directory, "0.ix"));
         }
 
