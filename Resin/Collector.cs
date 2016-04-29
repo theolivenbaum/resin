@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using log4net;
@@ -12,11 +11,11 @@ namespace Resin
     {
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
-        private readonly ConcurrentDictionary<string, Trie> _trieFiles;
+        private readonly ConcurrentDictionary<string, LazyTrie> _trieFiles;
         private readonly ConcurrentDictionary<string, PostingsContainerFile> _postingsCache;
         private readonly IxFile _ix;
 
-        public Collector(string directory, IxFile ix, ConcurrentDictionary<string, Trie> trieFiles, ConcurrentDictionary<string, PostingsContainerFile> postingsCache)
+        public Collector(string directory, IxFile ix, ConcurrentDictionary<string, LazyTrie> trieFiles, ConcurrentDictionary<string, PostingsContainerFile> postingsCache)
         {
             _directory = directory;
             _trieFiles = trieFiles;
@@ -34,21 +33,14 @@ namespace Resin
 
         private Trie GetTrie(string field)
         {
-            if (_ix.Fields.ContainsKey(field))
+            LazyTrie file;
+            if (!_trieFiles.TryGetValue(field, out file))
             {
-                var id = field.ToHash().ToString(CultureInfo.InvariantCulture);
-                Trie file;
-                if (!_trieFiles.TryGetValue(id, out file))
-                {
-                    var fileName = Path.Combine(_directory, id + ".tr");
-                    file = Trie.Load(fileName);
-                    _trieFiles[id] = file;
-                }
-                return file;
+                file = new LazyTrie(_directory, field);
+                _trieFiles[field] = file;
             }
-            return null;
+            return file;
         }
-
 
         private void Scan(QueryContext queryContext)
         {

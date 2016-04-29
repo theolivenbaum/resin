@@ -51,6 +51,7 @@
     <Compile Include="Analyzer.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="IO\DocContainerFile.cs" />
+    <Compile Include="IO\LazyTrie.cs" />
     <Compile Include="IO\LZOCompressor.cs" />
     <Compile Include="IO\Document.cs" />
     <Compile Include="DocumentScore.cs" />

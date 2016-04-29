@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using Lzo64;
 using Resin.IO;
 
 namespace Resin
@@ -248,14 +248,13 @@ namespace Resin
             Trie file;
             if (!_trieFiles.TryGetValue(field, out file))
             {
-                var fileName = Path.Combine(_directory, field.ToHash() + ".tr");
-                if (File.Exists(fileName))
+                if (!Directory.GetFiles(_directory, field.ToTrieSearchPattern()).Any())
                 {
-                    file = Trie.Load(fileName);
+                    file = new Trie();
                 }
                 else
                 {
-                    file = new Trie();
+                    file = new LazyTrie(_directory, field);
                 }
                 _trieFiles[field] = file;
             }
@@ -266,8 +265,12 @@ namespace Resin
         {
             Parallel.ForEach(_trieFiles, trie =>
             {
-                string fileName = Path.Combine(_directory, trie.Key.ToHash() + ".tr");
-                trie.Value.Save(fileName);
+                foreach (var child in trie.Value.DirectChildren())
+                {
+                    var fileNameWithoutExt = trie.Key.ToTrieFileNameWithoutExtension(child.Val);
+                    string fileName = Path.Combine(_directory, fileNameWithoutExt + ".tr");
+                    child.Save(fileName);  
+                }
             });
 
             _docWorker.Dispose();

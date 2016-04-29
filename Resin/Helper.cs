@@ -4,7 +4,6 @@ using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Resin
 {
@@ -12,19 +11,41 @@ namespace Resin
     {
         public static string ToDocHash(this string docId)
         {
-            if (docId == null) throw new ArgumentNullException("docId");
-            var seed = new string(docId.Take(3).ToArray()).PadLeft(3);
+            if (string.IsNullOrEmpty(docId)) throw new ArgumentException("docId");
+            var seed = new string(docId.Take(3).ToArray());
             return ToHash(seed).ToString(CultureInfo.InvariantCulture);
         }
 
         public static string ToPostingHash(this string token)
         {
-            if (token == null) throw new ArgumentNullException("token");
-            var seed = new string(token.Take(2).ToArray()).PadLeft(2);
+            if (string.IsNullOrEmpty(token)) throw new ArgumentException("token");
+            var seed = new string(token.Take(2).ToArray());
             return ToHash(seed).ToString(CultureInfo.InvariantCulture);
         }
 
-        public static UInt64 ToHash(this string read)
+        public static string ToTrieFileNameWithoutExtension(this string field, char c)
+        {
+            if (string.IsNullOrEmpty(field)) throw new ArgumentException("field");
+            var fieldHash = ToHash(field).ToString(CultureInfo.InvariantCulture);
+            var charId = Convert.ToInt32(c).ToString(CultureInfo.InvariantCulture);
+            return string.Format("{0}.{1}", fieldHash, charId);
+        }
+
+        public static char ToTrieChar(this string fn)
+        {
+            if (string.IsNullOrEmpty(fn)) throw new ArgumentException("fn");
+            var charId = Int32.Parse(fn.Substring(fn.IndexOf('.') + 1));
+            return (char) charId;
+        }
+
+        public static string ToTrieSearchPattern(this string field)
+        {
+            if (string.IsNullOrEmpty(field)) throw new ArgumentException("field");
+            var fieldHash = ToHash(field).ToString(CultureInfo.InvariantCulture);
+            return string.Format("{0}.*.tr", fieldHash);
+        }
+
+        private static UInt64 ToHash(this string read)
         {
             UInt64 hashedValue = 3074457345618258791ul;
             for (int i = 0; i < read.Length; i++)
@@ -33,30 +54,6 @@ namespace Resin
                 hashedValue *= 3074457345618258799ul;
             }
             return hashedValue;
-        }
-
-        public static UInt64 ToHash(this char[] read)
-        {
-            UInt64 hashedValue = 3074457345618258791ul;
-            for (int i = 0; i < read.Length; i++)
-            {
-                hashedValue += read[i];
-                hashedValue *= 3074457345618258799ul;
-            }
-            return hashedValue;
-        }
-
-        public static string FromNumericalString(this string numString)
-        {
-            if (numString == null) throw new ArgumentNullException("numString");
-            var parts = numString.Split(new[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
-            var alphabetical = new StringBuilder();
-            foreach (var part in parts)
-            {
-                var num = int.Parse(part);
-                alphabetical.Append((char)num);
-            }
-            return alphabetical.ToString();
         }
 
         public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 23);

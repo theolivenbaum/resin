@@ -15,7 +15,7 @@ namespace Resin
         //private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
         private readonly string _directory;
         private readonly QueryParser _parser;
-        private readonly ConcurrentDictionary<string, Trie> _trieFiles;
+        private readonly ConcurrentDictionary<string, LazyTrie> _trieFiles;
         private readonly IxFile _ix;
         private readonly ConcurrentDictionary<string, DocContainerFile> _docCache;
         private readonly ConcurrentDictionary<string, PostingsContainerFile> _postingsCache; 
@@ -24,7 +24,7 @@ namespace Resin
         {
             _directory = directory;
             _parser = parser;
-            _trieFiles = new ConcurrentDictionary<string, Trie>();
+            _trieFiles = new ConcurrentDictionary<string, LazyTrie>();
             _docCache = new ConcurrentDictionary<string, DocContainerFile>();
             _postingsCache = new ConcurrentDictionary<string, PostingsContainerFile>();
 

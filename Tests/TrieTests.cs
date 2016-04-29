@@ -34,15 +34,15 @@ namespace Tests
         {
             var words = new Trie(new[] { "tree", "trees" });
 
-            Assert.IsTrue(words.All().Contains("tree"));
-            Assert.IsTrue(words.All().Contains("trees"));
-            Assert.IsFalse(words.All().Contains("tre"));
+            Assert.IsTrue(words.ContainsToken("tree"));
+            Assert.IsTrue(words.ContainsToken("trees"));
+            Assert.IsFalse(words.ContainsToken("tre"));
 
             words.Add("tre");
 
-            Assert.IsTrue(words.All().Contains("tree"));
-            Assert.IsTrue(words.All().Contains("trees"));
-            Assert.IsTrue(words.All().Contains("tre"));
+            Assert.IsTrue(words.ContainsToken("tree"));
+            Assert.IsTrue(words.ContainsToken("trees"));
+            Assert.IsTrue(words.ContainsToken("tre"));
         }
 
         [Test]
@@ -148,18 +148,43 @@ namespace Tests
         }
 
         [Test]
+        public void Lazy()
+        {
+            var dir = Setup.Dir + "\\lazy";
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            var words = new Trie(new[] { "tree", "treaty", "treating", "pre", "prefix" });
+
+            Assert.AreEqual(3, words.Prefixed("tre").Count());
+            Assert.AreEqual(1, words.Prefixed("tree").Count());
+            Assert.AreEqual(2, words.Prefixed("pre").Count());
+            Assert.AreEqual(1, words.Prefixed("pref").Count());
+
+            foreach (var child in words.DirectChildren())
+            {
+                var fileNameWithoutExt = "fieldname".ToTrieFileNameWithoutExtension(child.Val);
+                string fileName = Path.Combine(dir, fileNameWithoutExt + ".tr");
+                child.Save(fileName);
+            }
+
+            var lz = new LazyTrie(dir, "fieldname");
+            Assert.AreEqual(3, lz.Prefixed("tre").Count());
+            Assert.AreEqual(1, lz.Prefixed("tree").Count());
+            Assert.AreEqual(2, lz.Prefixed("pre").Count());
+            Assert.AreEqual(1, lz.Prefixed("pref").Count());
+        }
+
+        [Test]
         public void Contains()
         {
             var words = new Trie(new[] {"tree", "treat", "treaty", "treating", "pre"});
-            var all = words.All().ToList();
 
-            Assert.IsTrue(all.Contains("tree"));
-            Assert.IsTrue(all.Contains("treat"));
-            Assert.IsTrue(all.Contains("treaty"));
-            Assert.IsTrue(all.Contains("treating"));
-            Assert.IsTrue(all.Contains("pre"));
+            Assert.IsTrue(words.ContainsToken("tree"));
+            Assert.IsTrue(words.ContainsToken("treat"));
+            Assert.IsTrue(words.ContainsToken("treaty"));
+            Assert.IsTrue(words.ContainsToken("treating"));
+            Assert.IsTrue(words.ContainsToken("pre"));
 
-            Assert.AreEqual(5, all.Count);
+            Assert.IsFalse(words.ContainsToken("pee"));
         }
     }
 
