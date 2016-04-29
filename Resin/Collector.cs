@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -85,6 +86,7 @@ namespace Resin
 
         private void Expand(QueryContext queryContext)
         {
+            if (queryContext == null) throw new ArgumentNullException("queryContext");
             if (queryContext.Fuzzy || queryContext.Prefix)
             {
                 var trie = GetTrie(queryContext.Field);

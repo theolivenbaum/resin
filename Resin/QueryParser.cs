@@ -1,4 +1,6 @@
-﻿namespace Resin
+﻿using System;
+
+namespace Resin
 {
     public class QueryParser
     {
@@ -11,6 +13,7 @@
 
         public QueryContext Parse(string query)
         {
+            if (string.IsNullOrWhiteSpace(query)) throw new ArgumentException("query");
             var interpreter = new QueryInterpreter(query, _analyzer);
             for (int i = 0; i < query.Length; i++)
             {

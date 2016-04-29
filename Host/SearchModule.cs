@@ -34,7 +34,7 @@ namespace Resin.Host
                 var searcher = GetSearcher(indexName);
                 var lazyResult = searcher.Search(query, page, size);
                 var resolved = lazyResult.Resolve();
-                Log.InfoFormat("query-exec {0} {1}{2} hits-total {3}", timer.Elapsed, Request.Url.Path, Uri.UnescapeDataString(Request.Url.Query), resolved.Total);
+                Log.InfoFormat("query-exec {0} {1}{2} hit count: {3}", timer.Elapsed, Request.Url.Path, Uri.UnescapeDataString(Request.Url.Query), resolved.Total);
                 return resolved;
             }
             catch (Exception ex)

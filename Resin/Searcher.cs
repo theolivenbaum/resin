@@ -36,7 +36,12 @@ namespace Resin
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
             var collector = new Collector(_directory, _ix, _trieFiles, _postingsCache);
-            var scored = collector.Collect(_parser.Parse(query), page, size).ToList();
+            var q = _parser.Parse(query);
+            if (q == null)
+            {
+                return new Result{Docs = Enumerable.Empty<IDictionary<string, string>>()};
+            }
+            var scored = collector.Collect(q, page, size).ToList();
             var skip = page*size;
             var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
             var trace = returnTrace ? paged.ToDictionary(ds => ds.Key, ds => ds.Value.Trace.ToString() + paged[ds.Key].Score) : null;
