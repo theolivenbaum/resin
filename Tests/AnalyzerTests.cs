@@ -66,6 +66,12 @@ namespace Tests
             var terms = new Analyzer().Analyze("   (abc)   ").ToList();
             Assert.AreEqual(1, terms.Count);
             Assert.AreEqual("abc", terms[0]);
+
+            terms = new Analyzer().Analyze(" ").ToList();
+            Assert.AreEqual(0, terms.Count);
+
+            terms = new Analyzer().Analyze("  ").ToList();
+            Assert.AreEqual(0, terms.Count);
         }
     }
 }

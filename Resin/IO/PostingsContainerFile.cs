@@ -16,6 +16,7 @@ namespace Resin.IO
         public Dictionary<string, PostingsFile> Files { get { return _files; } }
         public PostingsContainerFile(string id)
         {
+            if (id == null) throw new ArgumentNullException("id");
             _id = id;
             _files = new Dictionary<string, PostingsFile>();
         }

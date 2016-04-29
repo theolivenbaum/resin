@@ -51,13 +51,13 @@ namespace Resin
 
         private IDictionary<string, string> GetDoc(string docId)
         {
-            var containerId = docId.ToDocHash();
+            var bucketId = docId.ToDocBucket();
             DocContainerFile container;
-            if (!_docCache.TryGetValue(containerId, out container))
+            if (!_docCache.TryGetValue(bucketId, out container))
             {
-                var fileName = Path.Combine(_directory, containerId + ".dl");
+                var fileName = Path.Combine(_directory, bucketId + ".dl");
                 container = DocContainerFile.Load(fileName);
-                _docCache[containerId] = container;
+                _docCache[bucketId] = container;
             }
             return container.Files[docId].Fields;
         }

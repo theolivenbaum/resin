@@ -9,14 +9,14 @@ namespace Resin
 {
     public static class Helper
     {
-        public static string ToDocHash(this string docId)
+        public static string ToDocBucket(this string docId)
         {
             if (string.IsNullOrEmpty(docId)) throw new ArgumentException("docId");
             var seed = new string(docId.Take(3).ToArray());
             return ToHash(seed).ToString(CultureInfo.InvariantCulture);
         }
 
-        public static string ToPostingHash(this string token)
+        public static string ToPostingsBucket(this string token)
         {
             if (string.IsNullOrEmpty(token)) throw new ArgumentException("token");
             var seed = new string(token.Take(2).ToArray());

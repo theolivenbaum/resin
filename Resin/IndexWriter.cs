@@ -26,12 +26,12 @@ namespace Resin
         private readonly Dictionary<string, PostingsFile> _postingsFiles;
 
         /// <summary>
-        /// containerid/file
+        /// bucketId/file
         /// </summary>
         private readonly Dictionary<string, DocContainerFile> _docContainers;
  
         /// <summary>
-        /// containerid/file
+        /// bucketId/file
         /// </summary>
         private readonly Dictionary<string, PostingsContainerFile> _postingsContainers;
 
@@ -54,13 +54,13 @@ namespace Resin
 
         private void PutPostingsInContainer(PostingsFile posting)
         {
-            var containerId = posting.Token.ToPostingHash();
-            var containerFileName = Path.Combine(_directory, containerId + ".pl");
+            var bucketId = posting.Token.ToPostingsBucket();
+            var containerFileName = Path.Combine(_directory, bucketId + ".pl");
             var fieldTokenId = string.Format("{0}.{1}", posting.Field, posting.Token);
             PostingsContainerFile container;
             if (File.Exists(containerFileName))
             {
-                if (!_postingsContainers.TryGetValue(containerId, out container))
+                if (!_postingsContainers.TryGetValue(bucketId, out container))
                 {
                     container = PostingsContainerFile.Load(containerFileName);
                     _postingsContainers[container.Id] = container;
@@ -69,9 +69,9 @@ namespace Resin
             }
             else
             {
-                if (!_postingsContainers.TryGetValue(containerId, out container))
+                if (!_postingsContainers.TryGetValue(bucketId, out container))
                 {
-                    container = new PostingsContainerFile(containerId);
+                    container = new PostingsContainerFile(bucketId);
                     _postingsContainers[container.Id] = container;
                 }
                 //Log.InfoFormat("{0}:{1}", posting.Field, posting.Token);
@@ -81,12 +81,12 @@ namespace Resin
 
         private void PutDocInContainer(Document doc)
         {
-            var containerId = doc.Id.ToDocHash();
-            var containerFileName = Path.Combine(_directory, containerId + ".dl");
+            var bucketId = doc.Id.ToDocBucket();
+            var containerFileName = Path.Combine(_directory, bucketId + ".dl");
             DocContainerFile container;
             if (File.Exists(containerFileName))
             {
-                if (!_docContainers.TryGetValue(containerId, out container))
+                if (!_docContainers.TryGetValue(bucketId, out container))
                 {
                     container = DocContainerFile.Load(containerFileName);
                     _docContainers[container.Id] = container;
@@ -106,9 +106,9 @@ namespace Resin
             }
             else
             {
-                if (!_docContainers.TryGetValue(containerId, out container))
+                if (!_docContainers.TryGetValue(bucketId, out container))
                 {
-                    container = new DocContainerFile(containerId);
+                    container = new DocContainerFile(bucketId);
                     _docContainers[container.Id] = container;
                 }
                 container.Files[doc.Id] = doc;
@@ -120,8 +120,8 @@ namespace Resin
             foreach (var field in _ix.Fields.Keys)
             {
                 _ix.Fields[field].Remove(docId);
-                var containerId = docId.ToDocHash();
-                var containerFileName = Path.Combine(_directory, containerId + ".dl");
+                var bucketId = docId.ToDocBucket();
+                var containerFileName = Path.Combine(_directory, bucketId + ".dl");
                 var container = DocContainerFile.Load(containerFileName);
                 var doc = container.Files[docId];
                 container.Files.Remove(docId);
@@ -141,8 +141,8 @@ namespace Resin
                     postingsFile.Postings.Remove(docId);
                     if (postingsFile.NumDocs() == 0)
                     {
-                        var pContainerId = token.ToPostingHash();
-                        var pContainer = _postingsContainers[pContainerId];
+                        var pbucketId = token.ToPostingsBucket();
+                        var pContainer = _postingsContainers[pbucketId];
                         pContainer.Files.Remove(fieldTokenId);
                         _postingsFiles.Remove(fieldTokenId);
 
@@ -157,7 +157,7 @@ namespace Resin
             }
         }
 
-        public void Write(IDictionary<string, string> doc)
+        public void Write(Dictionary<string, string> doc)
         {
             Write(new Document(doc));
         }
@@ -217,22 +217,22 @@ namespace Resin
             PostingsFile file;
             if (!_postingsFiles.TryGetValue(fieldTokenId, out file))
             {
-                var id = token.ToPostingHash();
-                var fileName = Path.Combine(_directory, id + ".pl");
+                var bucketId = token.ToPostingsBucket();
+                var fileName = Path.Combine(_directory, bucketId + ".pl");
                 PostingsContainerFile container;
-                if (!_postingsContainers.TryGetValue(id, out container))
+                if (!_postingsContainers.TryGetValue(bucketId, out container))
                 {
                     if (File.Exists(fileName))
                     {
                         container = PostingsContainerFile.Load(fileName);
-                        _postingsContainers[id] = container;
+                        _postingsContainers[bucketId] = container;
                     }
                     else
                     {
-                        container = new PostingsContainerFile(id);
+                        container = new PostingsContainerFile(bucketId);
                     }
                 }
-                _postingsContainers[id] = container;
+                _postingsContainers[bucketId] = container;
 
                 if (!container.Files.TryGetValue(fieldTokenId, out file))
                 {
@@ -265,7 +265,7 @@ namespace Resin
         {
             Parallel.ForEach(_trieFiles, trie =>
             {
-                foreach (var child in trie.Value.DirectChildren())
+                foreach (var child in trie.Value.Children())
                 {
                     var fileNameWithoutExt = trie.Key.ToTrieFileNameWithoutExtension(child.Val);
                     string fileName = Path.Combine(_directory, fileNameWithoutExt + ".tr");

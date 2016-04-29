@@ -51,7 +51,7 @@ namespace Resin.IO
             }
         }
 
-        public IEnumerable<Trie> DirectChildren()
+        public IEnumerable<Trie> Children()
         {
             return _children.Values;
         }

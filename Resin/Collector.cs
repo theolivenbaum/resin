@@ -72,13 +72,13 @@ namespace Resin
 
         private PostingsFile GetPostingsFile(string field, string token)
         {
-            var fileId = token.ToPostingHash();
+            var bucketId = token.ToPostingsBucket();
             PostingsContainerFile container;
-            if (!_postingsCache.TryGetValue(fileId, out container))
+            if (!_postingsCache.TryGetValue(bucketId, out container))
             {
-                var fileName = Path.Combine(_directory, fileId + ".pl");
+                var fileName = Path.Combine(_directory, bucketId + ".pl");
                 container = PostingsContainerFile.Load(fileName);
-                _postingsCache[fileId] = container;
+                _postingsCache[bucketId] = container;
             }
             var fieldTokenId = string.Format("{0}.{1}", field, token);
             return container.Files[fieldTokenId];

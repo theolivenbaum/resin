@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 
@@ -9,19 +10,27 @@ namespace Resin.IO
         private readonly string _field;
         private readonly string _searchPattern;
 
+        private readonly ConcurrentDictionary<char, Trie> _cache;
+
         public LazyTrie(string directory, string field)
         {
             _directory = directory;
             _field = field;
             _searchPattern = field.ToTrieSearchPattern();
+            _cache = new ConcurrentDictionary<char, Trie>();
         }
 
         protected override bool TryResolveChild(char c, out Trie trie)
         {
+            if (_cache.TryGetValue(c, out trie))
+            {
+                return true;
+            }
             var fileName = Path.Combine(_directory, _field.ToTrieFileNameWithoutExtension(c) + ".tr");
             if (File.Exists(fileName))
             {
                 trie = Load(fileName);
+                _cache[c] = trie;
                 return true;
             }
             return _children.TryGetValue(c, out trie);
@@ -33,12 +42,10 @@ namespace Resin.IO
             {
                 var c = Path.GetFileNameWithoutExtension(file).ToTrieChar();
                 Trie trie;
-                if (!_children.TryGetValue(c, out trie))
+                if (TryResolveChild(c, out trie))
                 {
-                    trie = Load(file);
-                    _children.Add(c, trie);
+                    yield return trie;
                 }
-                yield return trie;
             }
         }
     }
