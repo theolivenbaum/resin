@@ -58,11 +58,10 @@ namespace Resin.IO
     [Serializable]
     public abstract class CompressedFileBase<T> : FileBase
     {
-        public virtual void Save(string fileName, LZOCompressor comp = null)
+        public virtual void Save(string fileName)
         {
             if (fileName == null) throw new ArgumentNullException("fileName");
 
-            if (comp == null) comp = new LZOCompressor();
             var timer = new Stopwatch();
             timer.Start();
             if (File.Exists(fileName))
@@ -70,6 +69,7 @@ namespace Resin.IO
                 using (var fs = File.Open(fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read))
                 using (var memStream = new MemoryStream())
                 {
+                    var comp = new LZOCompressor();
                     Serializer.Serialize(memStream, this);
                     var bytes = memStream.ToArray();
                     var compressed = comp.Compress(bytes);
@@ -81,6 +81,7 @@ namespace Resin.IO
                 using (var fs = File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 using (var memStream = new MemoryStream())
                 {
+                    var comp = new LZOCompressor();
                     Serializer.Serialize(memStream, this);
                     var bytes = memStream.ToArray();
                     var compressed = comp.Compress(bytes);
@@ -90,11 +91,10 @@ namespace Resin.IO
             Log.DebugFormat("saved {0} in {1}", fileName, timer.Elapsed);
         }
 
-        public static T Load(string fileName, LZOCompressor comp = null)
+        public static T Load(string fileName)
         {
             if (fileName == null) throw new ArgumentNullException("fileName");
 
-            if(comp == null) comp = new LZOCompressor();
             var timer = new Stopwatch();
             timer.Start();
             try
@@ -102,6 +102,7 @@ namespace Resin.IO
                 using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 using (var memStream = new MemoryStream())
                 {
+                    var comp = new LZOCompressor();
                     fs.CopyTo(memStream);
                     var bytes = memStream.ToArray();
                     var decompressed = comp.Decompress(bytes);
@@ -115,6 +116,7 @@ namespace Resin.IO
                 return default(T);
             }
         }
+
     }
 
     public class FileBase

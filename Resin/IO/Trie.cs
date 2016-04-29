@@ -5,7 +5,7 @@ using System.Linq;
 namespace Resin.IO
 {
     [Serializable]
-    public class Trie : FileBase<Trie>
+    public class Trie : CompressedFileBase<Trie>
     {
         private readonly char _value;
 
