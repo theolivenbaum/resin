@@ -58,11 +58,11 @@ namespace Resin.IO
     [Serializable]
     public abstract class CompressedFileBase<T> : FileBase
     {
-        protected static readonly LZOCompressor Compressor = new LZOCompressor();
-
-        public virtual void Save(string fileName)
+        public virtual void Save(string fileName, LZOCompressor comp = null)
         {
             if (fileName == null) throw new ArgumentNullException("fileName");
+
+            if (comp == null) comp = new LZOCompressor();
             var timer = new Stopwatch();
             timer.Start();
             if (File.Exists(fileName))
@@ -72,7 +72,7 @@ namespace Resin.IO
                 {
                     Serializer.Serialize(memStream, this);
                     var bytes = memStream.ToArray();
-                    var compressed = Compressor.Compress(bytes);
+                    var compressed = comp.Compress(bytes);
                     fs.Write(compressed, 0, compressed.Length);
                 }
             }
@@ -83,17 +83,18 @@ namespace Resin.IO
                 {
                     Serializer.Serialize(memStream, this);
                     var bytes = memStream.ToArray();
-                    var compressed = Compressor.Compress(bytes);
+                    var compressed = comp.Compress(bytes);
                     fs.Write(compressed, 0, compressed.Length);
                 }
             }
             Log.InfoFormat("saved {0} in {1}", fileName, timer.Elapsed);
         }
 
-        public static T Load(string fileName)
+        public static T Load(string fileName, LZOCompressor comp = null)
         {
             if (fileName == null) throw new ArgumentNullException("fileName");
 
+            if(comp == null) comp = new LZOCompressor();
             var timer = new Stopwatch();
             timer.Start();
             try
@@ -103,7 +104,6 @@ namespace Resin.IO
                 {
                     fs.CopyTo(memStream);
                     var bytes = memStream.ToArray();
-                    var comp = new LZOCompressor();
                     var decompressed = comp.Decompress(bytes);
                     var obj = (T)Serializer.Deserialize(new MemoryStream(decompressed));
                     Log.InfoFormat("loaded {0} in {1}", fileName, timer.Elapsed);

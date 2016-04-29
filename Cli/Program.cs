@@ -7,6 +7,7 @@ using System.Linq;
 using log4net.Config;
 using Newtonsoft.Json;
 using Resin.Client;
+using Resin.IO;
 
 namespace Resin.Cli
 {
@@ -51,16 +52,16 @@ namespace Resin.Cli
                 }
                 Query(args);
             }
-            //else if (args[0].ToLower() == "analyze")
-            //{
-            //    if (Array.IndexOf(args, "--field") == -1 || 
-            //        Array.IndexOf(args, "--dir") == -1)
-            //    {
-            //        Console.WriteLine("I need a directory and a field.");
-            //        return;
-            //    }
-            //    Analyze(args);
-            //}
+            else if (args[0].ToLower() == "analyze")
+            {
+                if (Array.IndexOf(args, "--field") == -1 ||
+                    Array.IndexOf(args, "--dir") == -1)
+                {
+                    Console.WriteLine("I need a directory and a field.");
+                    return;
+                }
+                Analyze(args);
+            }
             else if (args[0].ToLower() == "about")
             {
                 About();
@@ -147,19 +148,18 @@ namespace Resin.Cli
             
         }
 
-        //static void Analyze(string[] args)
-        //{
-            //var dir = args[Array.IndexOf(args, "--dir") + 1];
-            //var field = args[Array.IndexOf(args, "--field") + 1];
-            //var timer = new Stopwatch();
-            //timer.Start();
-            //var scanner = FieldScanner.MergeLoad(dir);
-            //var tokens = scanner.GetAllTokens(field).OrderByDescending(t => t.Count).ToList();
-            //var trieTokens = scanner.GetAllTokensFromTrie(field);
-            //Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
-            //File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens.Select(t => string.Format("{0} {1}", t.Token, t.Count)));
-            //File.WriteAllLines(Path.Combine(dir, "_" + field + ".tri.txt"), trieTokens);
-        //}
+        static void Analyze(string[] args)
+        {
+            var dir = args[Array.IndexOf(args, "--dir") + 1];
+            var field = args[Array.IndexOf(args, "--field") + 1];
+            var timer = new Stopwatch();
+            timer.Start();
+            var fileName = Path.Combine(dir, field.ToHash() + ".tr");
+            var trie = Trie.Load(fileName);
+            var tokens = trie.All().Take(100).ToList();
+            Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
+            File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens);
+        }
 
         //static void Optimize(string[] args)
         //{

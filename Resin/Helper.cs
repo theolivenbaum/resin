@@ -13,13 +13,14 @@ namespace Resin
         public static string ToDocHash(this string docId)
         {
             if (docId == null) throw new ArgumentNullException("docId");
-            return ToHash(docId.Take(4).ToArray()).ToString(CultureInfo.InvariantCulture);
+            var seed = new string(docId.Take(3).ToArray()).PadLeft(3);
+            return ToHash(seed).ToString(CultureInfo.InvariantCulture);
         }
 
         public static string ToPostingHash(this string token)
         {
-            //return ToHash(new[]{field[0], token[0]}).ToString(CultureInfo.InvariantCulture);
-            var seed = token.Length == 1 ? token + "0" : token.Substring(0, 2);
+            if (token == null) throw new ArgumentNullException("token");
+            var seed = new string(token.Take(2).ToArray()).PadLeft(2);
             return ToHash(seed).ToString(CultureInfo.InvariantCulture);
         }
 

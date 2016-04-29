@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Threading;
+using System.Threading.Tasks;
+using Lzo64;
 using Resin.IO;
 
 namespace Resin
@@ -11,7 +11,7 @@ namespace Resin
     {
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
-        //private static readonly ILog Log = LogManager.GetLogger(typeof(IndexWriter));
+        //private static readonly ILog Log = LogManager.GetLogger("TermFileAppender");
         private readonly TaskQueue<Document> _docWorker;
         private readonly IxFile _ix;
 
@@ -74,6 +74,7 @@ namespace Resin
                     container = new PostingsContainerFile(containerId);
                     _postingsContainers[container.Id] = container;
                 }
+                //Log.InfoFormat("{0}:{1}", posting.Field, posting.Token);
                 container.Files[fieldTokenId] = posting;
             }
         }
@@ -263,15 +264,16 @@ namespace Resin
 
         public void Dispose()
         {
-            _docWorker.Dispose();
-            _postingsWorker.Dispose();
-
-            foreach (var trie in _trieFiles)
+            Parallel.ForEach(_trieFiles, trie =>
             {
                 string fileName = Path.Combine(_directory, trie.Key.ToHash() + ".tr");
                 trie.Value.Save(fileName);
-            }
-            foreach (var container in _postingsContainers.Values)
+            });
+
+            _docWorker.Dispose();
+            _postingsWorker.Dispose();
+
+            Parallel.ForEach(_postingsContainers.Values, container =>
             {
                 var fileName = Path.Combine(_directory, container.Id + ".pl");
                 if (container.Files.Count > 0)
@@ -282,8 +284,20 @@ namespace Resin
                 {
                     File.Delete(fileName);
                 }
-            }
-            foreach (var container in _docContainers.Values)
+            });
+            //foreach (var container in _postingsContainers.Values)
+            //{
+            //    var fileName = Path.Combine(_directory, container.Id + ".pl");
+            //    if (container.Files.Count > 0)
+            //    {
+            //        container.Save(fileName);
+            //    }
+            //    else
+            //    {
+            //        File.Delete(fileName);
+            //    }
+            //}
+            Parallel.ForEach(_docContainers.Values, container =>
             {
                 var fileName = Path.Combine(_directory, container.Id + ".dl");
                 if (container.Files.Count > 0)
@@ -294,75 +308,20 @@ namespace Resin
                 {
                     File.Delete(fileName);
                 }
-            }
+            });
+            //foreach (var container in _docContainers.Values)
+            //{
+            //    var fileName = Path.Combine(_directory, container.Id + ".dl");
+            //    if (container.Files.Count > 0)
+            //    {
+            //        container.Save(fileName);
+            //    }
+            //    else
+            //    {
+            //        File.Delete(fileName);
+            //    }
+            //}
             _ix.Save(Path.Combine(_directory, "0.ix"));
         }
-    }
-
-
-
-
-    public class TaskQueue<T> : IDisposable where T : class
-    {
-        private readonly Action<T> _action;
-        readonly object _sync = new object();
-        readonly Thread[] _workers;
-        readonly Queue<T> _tasks = new Queue<T>();
-
-        public TaskQueue(int workerCount, Action<T> action)
-        {
-            _action = action;
-            _workers = new Thread[workerCount];
-            for (int i = 0; i < workerCount; i++)
-            {
-                (_workers[i] = new Thread(Consume)).Start();
-                Trace.WriteLine("worker thread started");
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                for (int i = 0; i < _workers.Length; i++) Enqueue(null);
-                foreach (Thread worker in _workers)
-                {
-                    worker.Join();
-                    Trace.WriteLine("worker thread joined");
-                }
-            }
-        }
-
-        public void Enqueue(T task)
-        {
-            lock (_sync)
-            {
-                _tasks.Enqueue(task);
-                Monitor.PulseAll(_sync);
-            }
-        }
-
-        void Consume()
-        {
-            while (true)
-            {
-                T task;
-                lock (_sync)
-                {
-                    while (_tasks.Count == 0) Monitor.Wait(_sync);
-                    task = _tasks.Dequeue();
-                }
-                if (task == null) return; //exit
-                _action(task);
-            }
-        }
-
-        public int Count { get { return _tasks.Count; } }
     }
 }
