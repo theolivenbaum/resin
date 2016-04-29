@@ -37,12 +37,21 @@ namespace Tests
             Assert.IsTrue(words.ContainsToken("tree"));
             Assert.IsTrue(words.ContainsToken("trees"));
             Assert.IsFalse(words.ContainsToken("tre"));
+            Assert.IsFalse(words.ContainsToken("treesesses"));
 
             words.Add("tre");
 
             Assert.IsTrue(words.ContainsToken("tree"));
             Assert.IsTrue(words.ContainsToken("trees"));
             Assert.IsTrue(words.ContainsToken("tre"));
+            Assert.IsFalse(words.ContainsToken("treesesses"));
+
+            words.Add("treesesses");
+
+            Assert.IsTrue(words.ContainsToken("tree"));
+            Assert.IsTrue(words.ContainsToken("trees"));
+            Assert.IsTrue(words.ContainsToken("tre"));
+            Assert.IsTrue(words.ContainsToken("treesesses"));
         }
 
         [Test]
@@ -152,6 +161,7 @@ namespace Tests
         {
             var dir = Setup.Dir + "\\lazy";
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
             var words = new Trie(new[] { "tree", "treaty", "treating", "pre", "prefix" });
 
             Assert.AreEqual(3, words.Prefixed("tre").Count());
@@ -167,10 +177,32 @@ namespace Tests
             }
 
             var lz = new LazyTrie(dir, "fieldname");
+
             Assert.AreEqual(3, lz.Prefixed("tre").Count());
             Assert.AreEqual(1, lz.Prefixed("tree").Count());
             Assert.AreEqual(2, lz.Prefixed("pre").Count());
             Assert.AreEqual(1, lz.Prefixed("pref").Count());
+
+            Assert.AreEqual(0, lz.Prefixed("cracker").Count());
+
+            lz.Add("cracker");
+
+            Assert.AreEqual(1, lz.Prefixed("cracker").Count());
+
+            foreach (var child in lz.DirectChildren())
+            {
+                var fileNameWithoutExt = "fieldname".ToTrieFileNameWithoutExtension(child.Val);
+                string fileName = Path.Combine(dir, fileNameWithoutExt + ".tr");
+                child.Save(fileName);
+            }
+
+            var llz = new LazyTrie(dir, "fieldname");
+
+            Assert.AreEqual(3, llz.Prefixed("tre").Count());
+            Assert.AreEqual(1, llz.Prefixed("tree").Count());
+            Assert.AreEqual(2, llz.Prefixed("pre").Count());
+            Assert.AreEqual(1, llz.Prefixed("pref").Count());
+            Assert.AreEqual(1, llz.Prefixed("cracker").Count());
         }
 
         [Test]

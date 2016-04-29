@@ -11,7 +11,7 @@ namespace Resin.IO
 
         private bool _eow;
 
-        private readonly Dictionary<char, Trie> _children;
+        protected readonly Dictionary<char, Trie> _children;
 
         public char Val { get { return _value; } }
 
@@ -30,8 +30,7 @@ namespace Resin.IO
             }
         }
 
-        private Trie(IEnumerable<char> text)
-            : this()
+        private Trie(IEnumerable<char> text) : this()
         {
             if (text == null) throw new ArgumentNullException("text");
             var list = text.ToArray();
@@ -56,8 +55,7 @@ namespace Resin.IO
         {
             return _children.Values;
         }
-
-
+        
         protected virtual bool TryResolveChild(char c, out Trie trie)
         {
             return _children.TryGetValue(c, out trie);
@@ -178,8 +176,7 @@ namespace Resin.IO
             if (list.Length == 0) throw new ArgumentOutOfRangeException("word");
 
             Trie child;
-
-            if (!_children.TryGetValue(list[0], out child))
+            if (!TryResolveChild(list[0], out child))
             {
                 child = new Trie(list);
                 _children.Add(list[0], child);
