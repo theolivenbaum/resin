@@ -35,7 +35,7 @@ namespace Resin.IO
                 _cache[c] = trie;
                 return true;
             }
-            return _children.TryGetValue(c, out trie);
+            return Nodes.TryGetValue(c, out trie);
         }
 
         protected override IEnumerable<Trie> ResolveChildren()

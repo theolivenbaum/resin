@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="Analyzer.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="IO\CompressedFileBase.cs" />
     <Compile Include="IO\DocContainerFile.cs" />
     <Compile Include="IO\LazyTrie.cs" />
     <Compile Include="IO\LZOCompressor.cs" />
@@ -59,6 +60,7 @@
     <Compile Include="IO\IxFile.cs" />
     <Compile Include="IO\PostingsFile.cs" />
     <Compile Include="IO\FileBase.cs" />
+    <Compile Include="IO\QuickLZ.cs" />
     <Compile Include="Levenshtein.cs" />
     <Compile Include="Optimizer.cs" />
     <Compile Include="IndexWriter.cs" />

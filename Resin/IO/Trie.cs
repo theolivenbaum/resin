@@ -11,13 +11,13 @@ namespace Resin.IO
 
         private bool _eow;
 
-        protected readonly Dictionary<char, Trie> _children;
+        protected readonly Dictionary<char, Trie> Nodes;
 
         public char Val { get { return _value; } }
 
         public Trie()
         {
-            _children = new Dictionary<char, Trie>();
+            Nodes = new Dictionary<char, Trie>();
         }
 
         public Trie(IEnumerable<string> words) : this()
@@ -53,17 +53,17 @@ namespace Resin.IO
 
         public IEnumerable<Trie> Children()
         {
-            return _children.Values;
+            return Nodes.Values;
         }
         
         protected virtual bool TryResolveChild(char c, out Trie trie)
         {
-            return _children.TryGetValue(c, out trie);
+            return Nodes.TryGetValue(c, out trie);
         }
 
         protected virtual IEnumerable<Trie> ResolveChildren()
         {
-            return _children.Values;
+            return Nodes.Values;
         } 
         
         public IEnumerable<string> Similar(string word, int edits)
@@ -176,10 +176,10 @@ namespace Resin.IO
             if (list.Length == 0) throw new ArgumentOutOfRangeException("word");
 
             Trie child;
-            if (!_children.TryGetValue(list[0], out child))
+            if (!Nodes.TryGetValue(list[0], out child))
             {
                 child = new Trie(list);
-                _children.Add(list[0], child);
+                Nodes.Add(list[0], child);
             }
             else
             {
@@ -209,11 +209,11 @@ namespace Resin.IO
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 
             Trie child;
-            if (_children.TryGetValue(word[0], out child))
+            if (Nodes.TryGetValue(word[0], out child))
             {
-                if (child._children.Count == 0)
+                if (child.Nodes.Count == 0)
                 {
-                    _children.Remove(child._value);
+                    Nodes.Remove(child._value);
                 }
                 else
                 {
