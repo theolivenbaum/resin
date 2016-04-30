@@ -5,17 +5,15 @@ namespace Resin
     public class Tfidf : IScorer
     {
         private readonly double _idf;
-        private readonly string _idfTrace;
-        
+
         public double Idf
         {
             get { return _idf; }
         }
 
-        public Tfidf(int numDocs, int docFreq)
+        public Tfidf(int totalNumOfDocs, int hitCount)
         {
-            _idf = Math.Log10(numDocs - docFreq / (double)docFreq);
-            _idfTrace = string.Format("log({0}-{1}/{1})", numDocs, docFreq);
+            _idf = Math.Log10(totalNumOfDocs / (double)hitCount);
         }
 
         public Tfidf(double idf)
@@ -27,7 +25,6 @@ namespace Resin
         {
             var tf = Math.Sqrt(doc.TermFrequency);
             doc.Score = tf * _idf;
-            doc.Trace.AppendFormat("sqrt({0})*({1}) ", doc.TermFrequency, _idfTrace);
         }
     }
 
