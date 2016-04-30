@@ -12,10 +12,18 @@ namespace Resin
             get { return _idf; }
         }
 
+        /// <summary>
+        /// Create scoring scheme
+        /// </summary>
         public Tfidf()
         {
         }
 
+        /// <summary>
+        /// Create scorer
+        /// </summary>
+        /// <param name="totalNumOfDocs"></param>
+        /// <param name="hitCount"></param>
         public Tfidf(int totalNumOfDocs, int hitCount)
         {
             _idf = Math.Log10(totalNumOfDocs / (double)hitCount);
