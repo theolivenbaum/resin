@@ -7,6 +7,14 @@ namespace Tests
     public class QueryParserTests
     {
         [Test]
+        public void Can_parse_phrase()
+        {
+            var q = new QueryParser(new Analyzer()).Parse("title:rambo first blood");
+
+            Assert.AreEqual("+title:rambo title:first title:blood", q.ToString());
+        }
+
+        [Test]
         public void Can_parse_one_term()
         {
             var q = new QueryParser(new Analyzer()).Parse("title:rambo");

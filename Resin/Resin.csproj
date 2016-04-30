@@ -68,7 +68,6 @@
     <Compile Include="IndexWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueryContext.cs" />
-    <Compile Include="QueryInterpreter.cs" />
     <Compile Include="QueryParser.cs" />
     <Compile Include="Result.cs" />
     <Compile Include="Collector.cs" />
