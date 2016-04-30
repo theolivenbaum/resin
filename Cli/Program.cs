@@ -8,7 +8,6 @@ using System.Linq;
 using log4net.Config;
 using Newtonsoft.Json;
 using Resin.Client;
-using Resin.IO;
 
 namespace Resin.Cli
 {
@@ -121,12 +120,14 @@ namespace Resin.Cli
                 var docs = result.Docs.ToList();
                 timer.Stop();
                 var position = 0 + (page * size);
+                Console.WriteLine();
                 Console.WriteLine(string.Join(string.Empty,
                         string.Empty.PadRight(7),
-                        "[docid]".PadRight(10),
-                        "[label]".PadRight(50),
-                        "[aliases]"
+                        "docid".PadRight(10),
+                        "label".PadRight(50),
+                        "aliases"
                     ));
+                Console.WriteLine();
                 foreach (var doc in docs)
                 {
                     Console.WriteLine(string.Join(string.Empty, 
@@ -137,10 +138,6 @@ namespace Resin.Cli
                     ));
                 }
                 Console.WriteLine("\r\n{0} results of {1} in {2}", position, result.Total, timer.Elapsed);
-                //foreach (var doc in result.Trace)
-                //{
-                //    Console.WriteLine("{0} {1}", doc.Key, doc.Value);
-                //}
             }
             else
             {

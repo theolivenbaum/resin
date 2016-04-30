@@ -40,9 +40,8 @@ namespace Resin
             var scored = collector.Collect(q, page, size).ToList();
             var skip = page*size;
             var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
-            var trace = returnTrace ? paged.ToDictionary(ds => ds.Key, ds => ds.Value.Trace.ToString() + paged[ds.Key].Score) : null;
             var docs = paged.Values.Select(s => GetDoc(s.DocId)); 
-            return new Result { Docs = docs, Total = scored.Count, Trace = trace };
+            return new Result { Docs = docs, Total = scored.Count};
         }
 
         private IDictionary<string, string> GetDoc(string docId)

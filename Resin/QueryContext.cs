@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using log4net;
-using Resin.IO;
 
 namespace Resin
 {
@@ -10,7 +8,6 @@ namespace Resin
     {
         public IList<QueryContext> Children { get; protected set; }
         public IDictionary<string, DocumentScore> Result { get; set ; }
-        private static readonly ILog Log = LogManager.GetLogger(typeof(QueryContext));
 
         public QueryContext(string field, string value) : base(field, value)
         {
@@ -32,7 +29,6 @@ namespace Resin
                         if (childResult.TryGetValue(d.DocId, out score))
                         {
                             result[d.DocId] = score.Add(d);
-                            Log.DebugFormat("{0} doc score {1}", score.DocId, score.Score);
                         }
                         else
                         {
@@ -60,8 +56,6 @@ namespace Resin
                         {
                             result.Add(d);
                         }
-                        var r = result[d.Key];
-                        Log.DebugFormat("{0} doc score {1}", r.DocId, r.Score);
                     }
                 }
             }

@@ -1,24 +1,24 @@
 ﻿using System;
-using System.Text;
 
 namespace Resin
 {
     public class DocumentScore : IEquatable<DocumentScore>
     {
-        private readonly StringBuilder _trace;
         private readonly string _docId;
         private readonly double _termFreq;
+        private readonly int _docsInCorpus;
 
         public string DocId { get { return _docId; } }
         public double TermFrequency { get { return _termFreq; } }
-        public double Score { get; set; }
-        public StringBuilder Trace { get { return _trace; } }
+        public int DocsInCorpus { get { return _docsInCorpus; } }
 
-        public DocumentScore(string docId, double termFreq)
+        public double Score { get; set; }
+
+        public DocumentScore(string docId, double termFreq, int docsInCorpus)
         {
             _docId = docId;
             _termFreq = termFreq;
-            _trace = new StringBuilder();
+            _docsInCorpus = docsInCorpus;
         }
 
         public DocumentScore Add(DocumentScore score)
@@ -47,6 +47,12 @@ namespace Resin
         public override int GetHashCode()
         {
             return DocId.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return string.Format("docid:{0} rawtf:{1} docsincorpus:{2} score:{3}",
+                _docId, _termFreq, _docsInCorpus, Score);
         }
     }
 }

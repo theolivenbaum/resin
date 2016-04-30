@@ -56,15 +56,16 @@ namespace Resin
         {
             var trie = GetTrie(term.Field);
             if (_ix == null) yield break;
-            var docsInCorpus = _ix.Fields[term.Field].Count;
+            var totalNumOfDocs = _ix.Fields[term.Field].Count;
             if (trie.ContainsToken(term.Value))
             {
                 var postingsFile = GetPostingsFile(term.Field, term.Value);
-                var scorer = new Tfidf(docsInCorpus, postingsFile.Postings.Count);
+                var scorer = new Tfidf(totalNumOfDocs, postingsFile.Postings.Count);
                 foreach (var posting in postingsFile.Postings)
                 {
-                    var hit = new DocumentScore(posting.Key, posting.Value);
+                    var hit = new DocumentScore(posting.Key, posting.Value, totalNumOfDocs);
                     scorer.Score(hit);
+                    if (hit.TermFrequency > 1) Log.Info(hit);
                     yield return hit;
                 }
             }

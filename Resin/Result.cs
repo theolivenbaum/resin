@@ -7,12 +7,11 @@ namespace Resin
     {
         public IEnumerable<IDictionary<string, string>> Docs { get; set; }
         public int Total { get; set; }
-        public IDictionary<string, string> Trace { get; set; }
 
         public ResolvedResult Resolve()
         {
             var docs = Docs.ToList();
-            var result = new ResolvedResult{Docs = docs.ToArray(), Total = Total, Trace = Trace};
+            var result = new ResolvedResult{Docs = docs.ToArray(), Total = Total};
             return result;
         }
     }
@@ -21,6 +20,5 @@ namespace Resin
     {
         public IDictionary<string,string>[] Docs { get; set; }
         public int Total { get; set; }
-        public IDictionary<string, string> Trace { get; set; }
     }
 }
