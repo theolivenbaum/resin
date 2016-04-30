@@ -82,7 +82,7 @@ namespace Resin.IO
         private void SimScan(string word, string state, int edits, int index, IList<Word> words)
         {
             var childIndex = index + 1;
-            foreach (var child in ResolveChildren())
+            foreach (var child in Nodes.Values)
             {
                 var tmp = index == state.Length ? state + child._value : state.ReplaceAt(index, child._value);
                 if (Levenshtein.Distance(word, tmp) <= edits)
@@ -125,7 +125,7 @@ namespace Resin.IO
             else if (prefix[0] == _value)
             {
                 Trie child;
-                if (TryResolveChild(prefix[1], out child))
+                if (Nodes.TryGetValue(prefix[1], out child))
                 {
                     child.ExactScan(prefix.Substring(1), chars);
                 }
@@ -162,7 +162,7 @@ namespace Resin.IO
             else if (prefix[0] == _value)
             {
                 Trie child;
-                if (TryResolveChild(prefix[1], out child))
+                if (Nodes.TryGetValue(prefix[1], out child))
                 {
                     child.PrefixScan(state, prefix.Substring(1), words);
                 }
