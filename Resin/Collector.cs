@@ -65,7 +65,7 @@ namespace Resin
                 {
                     var hit = new DocumentScore(posting.Key, posting.Value, totalNumOfDocs);
                     scorer.Score(hit);
-                    if (hit.Score > 2.5d) Log.Info(hit);
+                    if (hit.Score > 4d) Log.Info(hit);
                     yield return hit;
                 }
             }
