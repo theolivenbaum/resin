@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using log4net.Config;
@@ -120,9 +121,20 @@ namespace Resin.Cli
                 var docs = result.Docs.ToList();
                 timer.Stop();
                 var position = 0 + (page * size);
+                Console.WriteLine(string.Join(string.Empty,
+                        string.Empty.PadRight(7),
+                        "[docid]".PadRight(10),
+                        "[label]".PadRight(50),
+                        "[aliases]"
+                    ));
                 foreach (var doc in docs)
                 {
-                    Console.WriteLine(string.Join(", ", ++position, doc["_id"], doc["label"], doc["aliases"]));
+                    Console.WriteLine(string.Join(string.Empty, 
+                        (++position).ToString(CultureInfo.InvariantCulture).PadRight(7),
+                        doc["_id"].ToString(CultureInfo.InvariantCulture).PadRight(10),
+                        (doc["label"] ?? string.Empty).Substring(0, Math.Min(49, (doc["label"] ?? string.Empty).Length)).PadRight(50),
+                        (doc["aliases"] ?? string.Empty).Substring(0, Math.Min(100, (doc["aliases"] ?? string.Empty).Length))
+                    ));
                 }
                 Console.WriteLine("\r\n{0} results of {1} in {2}", position, result.Total, timer.Elapsed);
                 //foreach (var doc in result.Trace)
