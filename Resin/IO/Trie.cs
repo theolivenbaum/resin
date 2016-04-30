@@ -82,7 +82,7 @@ namespace Resin.IO
         private void SimScan(string word, string state, int edits, int index, IList<Word> words)
         {
             var childIndex = index + 1;
-            foreach (var child in Nodes.Values)
+            foreach (var child in ResolveChildren())
             {
                 var tmp = index == state.Length ? state + child._value : state.ReplaceAt(index, child._value);
                 if (Levenshtein.Distance(word, tmp) <= edits)
@@ -151,7 +151,7 @@ namespace Resin.IO
             {
                 // The scan has reached its destination. Find words derived from this node.
                 if (_eow) words.Add(state);
-                foreach (var node in ResolveChildren())
+                foreach (var node in Nodes.Values)
                 {
                     var newState = new List<char>(state.Count+1);
                     foreach(var c in state) newState.Add(c);

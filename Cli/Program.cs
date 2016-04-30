@@ -122,7 +122,7 @@ namespace Resin.Cli
                 var position = 0 + (page * size);
                 foreach (var doc in docs)
                 {
-                    Console.WriteLine(string.Join(", ", ++position, doc["_id"], doc["label"]));
+                    Console.WriteLine(string.Join(", ", ++position, doc["_id"], doc["label"], doc["aliases"]));
                 }
                 Console.WriteLine("\r\n{0} results of {1} in {2}", position, result.Total, timer.Elapsed);
                 //foreach (var doc in result.Trace)
