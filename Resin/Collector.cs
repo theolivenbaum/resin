@@ -59,13 +59,13 @@ namespace Resin
             var totalNumOfDocs = _ix.Fields[term.Field].Count;
             if (trie.ContainsToken(term.Value))
             {
-                var postingsFile = GetPostingsFile(term.Field, term.Value);
-                var scorer = new Tfidf(totalNumOfDocs, postingsFile.Postings.Count);
-                foreach (var posting in postingsFile.Postings)
+                var termData = GetPostingsFile(term.Field, term.Value);
+                var scorer = new Tfidf(totalNumOfDocs, termData.Postings.Count);
+                foreach (var posting in termData.Postings)
                 {
                     var hit = new DocumentScore(posting.Key, posting.Value, totalNumOfDocs);
                     scorer.Score(hit);
-                    if (hit.TermFrequency > 1) Log.Info(hit);
+                    if (hit.Score > 2.5d) Log.Info(hit);
                     yield return hit;
                 }
             }

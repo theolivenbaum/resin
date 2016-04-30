@@ -199,7 +199,7 @@ namespace Resin.Cli
             timer.Start();
             if (inproc)
             {
-                using (var writer = new IndexWriter(dir, new Analyzer()))
+                using (var writer = new IndexWriter(dir, new Analyzer(), new Tfidf()))
                 {
                     writer.Remove(docId);
                 }
@@ -232,7 +232,7 @@ namespace Resin.Cli
 
             var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
             var inproc = !string.IsNullOrWhiteSpace(dir);
-            IndexWriter w = inproc ? new IndexWriter(dir, new Analyzer()) : null;
+            IndexWriter w = inproc ? new IndexWriter(dir, new Analyzer(), new Tfidf()) : null;
 
             Console.Write(inproc ? "Writing " : "Collecting docs ");
 

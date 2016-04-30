@@ -11,6 +11,7 @@ namespace Resin
     {
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
+        private readonly IScoringScheme _scoringScheme;
         //private static readonly ILog Log = LogManager.GetLogger("TermFileAppender");
         private readonly TaskQueue<Document> _docWorker;
         private readonly IxFile _ix;
@@ -37,12 +38,13 @@ namespace Resin
 
         private readonly TaskQueue<PostingsFile> _postingsWorker;
 
-        private readonly IList<string> _deletions; 
+        private readonly IList<string> _deletions;
 
-        public IndexWriter(string directory, IAnalyzer analyzer)
+        public IndexWriter(string directory, IAnalyzer analyzer, IScoringScheme scoringScheme)
         {
             _directory = directory;
             _analyzer = analyzer;
+            _scoringScheme = scoringScheme;
             _trieFiles = new Dictionary<string, Trie>();
             _postingsFiles = new Dictionary<string, PostingsFile>();
             _postingsContainers = new Dictionary<string, PostingsContainerFile>();
@@ -181,28 +183,15 @@ namespace Resin
 
         private void Analyze(string docId, string field, string value)
         {
-            var termFrequencies = new Dictionary<string, int>();
-            var analyze = field[0] != '_';
-            if (analyze)
-            {
-                foreach (var token in _analyzer.Analyze(value))
-                {
-                    if (termFrequencies.ContainsKey(token)) termFrequencies[token] += 1;
-                    else termFrequencies.Add(token, 1);
-                }
-            }
-            else
-            {
-                if (termFrequencies.ContainsKey(value)) termFrequencies[value] += 1;
-                else termFrequencies.Add(value, 1);
-            }
-            foreach (var token in termFrequencies)
+            var postingData = new Dictionary<string, object>();
+            _scoringScheme.Eval(field, value, _analyzer, postingData);
+            foreach (var token in postingData)
             {
                 Write(docId, field, token.Key, token.Value);
             }
         }
 
-        private void Write(string docId, string field, string token, int termFrequency)
+        private void Write(string docId, string field, string token, object postingData)
         {
             if (!_ix.Fields.ContainsKey(field))
             {
@@ -214,7 +203,7 @@ namespace Resin
             trie.Add(token);
             
             var postingsFile = GetPostingsFile(field, token);
-            postingsFile.Postings[docId] = termFrequency;
+            postingsFile.Postings[docId] = postingData;
             _postingsWorker.Enqueue(postingsFile);
         }
 
@@ -270,6 +259,7 @@ namespace Resin
 
         public void Dispose()
         {
+            //TODO:this is not the time to be doing this
             foreach (var docId in _deletions)
             {
                 DoRemove(docId);

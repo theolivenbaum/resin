@@ -8,11 +8,11 @@ namespace Resin.IO
     [Serializable]
     public class PostingsFile
     {
-        private readonly Dictionary<string, int> _postings;
+        private readonly Dictionary<string, object> _postings;
         /// <summary>
         /// docids/term frequency
         /// </summary>
-        public Dictionary<string, int> Postings
+        public Dictionary<string, object> Postings
         {
             get { return _postings; }
         }
@@ -26,7 +26,7 @@ namespace Resin.IO
         {
             _field = field;
             _token = token;
-            _postings = new Dictionary<string, int>();
+            _postings = new Dictionary<string, object>();
         }
 
         public int NumDocs()

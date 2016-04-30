@@ -5,19 +5,19 @@ namespace Resin
     public class DocumentScore : IEquatable<DocumentScore>
     {
         private readonly string _docId;
-        private readonly double _termFreq;
+        private readonly object _postingData;
         private readonly int _docsInCorpus;
 
         public string DocId { get { return _docId; } }
-        public double TermFrequency { get { return _termFreq; } }
+        public object PostingData { get { return _postingData; } }
         public int DocsInCorpus { get { return _docsInCorpus; } }
 
         public double Score { get; set; }
 
-        public DocumentScore(string docId, double termFreq, int docsInCorpus)
+        public DocumentScore(string docId, object postingData, int docsInCorpus)
         {
             _docId = docId;
-            _termFreq = termFreq;
+            _postingData = postingData;
             _docsInCorpus = docsInCorpus;
         }
 
@@ -52,7 +52,7 @@ namespace Resin
         public override string ToString()
         {
             return string.Format("docid:{0} rawtf:{1} docsincorpus:{2} score:{3}",
-                _docId, _termFreq, _docsInCorpus, Score);
+                _docId, _postingData, _docsInCorpus, Score);
         }
     }
 }
