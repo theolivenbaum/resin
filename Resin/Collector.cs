@@ -24,10 +24,10 @@ namespace Resin
             _ix = ix;
         }
 
-        public IEnumerable<DocumentScore> Collect(QueryContext queryContext, int page, int size)
+        public IEnumerable<DocumentScore> Collect(QueryContext queryContext, int page, int size, IScoringScheme scorer)
         {
             Expand(queryContext);
-            Scan(queryContext);
+            Scan(queryContext, scorer);
             var scored = queryContext.Resolve().Values.OrderByDescending(s => s.Score).ToList();
             return scored;
         }
@@ -43,16 +43,16 @@ namespace Resin
             return file;
         }
 
-        private void Scan(QueryContext queryContext)
+        private void Scan(QueryContext queryContext, IScoringScheme scorer)
         {
-            queryContext.Result = GetScoredResult(queryContext).ToDictionary(x => x.DocId, y => y);
+            queryContext.Result = GetScoredResult(queryContext, scorer).ToDictionary(x => x.DocId, y => y);
             foreach (var child in queryContext.Children)
             {
-                Scan(child);
+                Scan(child, scorer);
             }
         }
 
-        private IEnumerable<DocumentScore> GetScoredResult(Term term)
+        private IEnumerable<DocumentScore> GetScoredResult(Term term, IScoringScheme scoringScheme)
         {
             var trie = GetTrie(term.Field);
             if (_ix == null) yield break;
@@ -60,7 +60,7 @@ namespace Resin
             if (trie.ContainsToken(term.Value))
             {
                 var termData = GetPostingsFile(term.Field, term.Value);
-                var scorer = new Tfidf(totalNumOfDocs, termData.Postings.Count);
+                var scorer = scoringScheme.CreateScorer(totalNumOfDocs, termData.Postings.Count);
                 foreach (var posting in termData.Postings)
                 {
                     var hit = new DocumentScore(posting.Key, posting.Value, totalNumOfDocs);

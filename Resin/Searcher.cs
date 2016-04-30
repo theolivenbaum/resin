@@ -14,15 +14,17 @@ namespace Resin
         //private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
         private readonly string _directory;
         private readonly QueryParser _parser;
+        private readonly IScoringScheme _scorer;
         private readonly ConcurrentDictionary<string, LazyTrie> _trieFiles;
         private readonly IxFile _ix;
         private readonly ConcurrentDictionary<string, DocContainerFile> _docCache;
         private readonly ConcurrentDictionary<string, PostingsContainerFile> _postingsCache; 
  
-        public Searcher(string directory, QueryParser parser)
+        public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
         {
             _directory = directory;
             _parser = parser;
+            _scorer = scorer;
             _trieFiles = new ConcurrentDictionary<string, LazyTrie>();
             _docCache = new ConcurrentDictionary<string, DocContainerFile>();
             _postingsCache = new ConcurrentDictionary<string, PostingsContainerFile>();
@@ -37,7 +39,7 @@ namespace Resin
             {
                 return new Result{Docs = Enumerable.Empty<IDictionary<string, string>>()};
             }
-            var scored = collector.Collect(q, page, size).ToList();
+            var scored = collector.Collect(q, page, size, _scorer).ToList();
             var skip = page*size;
             var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
             var docs = paged.Values.Select(s => GetDoc(s.DocId)); 

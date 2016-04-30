@@ -115,7 +115,7 @@ namespace Resin.Cli
             timer.Start();
             if (inproc)
             {
-                var s = new Searcher(dir, new QueryParser(new Analyzer()));
+                var s = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf());
                 var result = s.Search(q, page, size);
                 var docs = result.Docs.ToList();
                 timer.Stop();

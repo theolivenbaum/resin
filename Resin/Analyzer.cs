@@ -55,9 +55,4 @@ namespace Resin
             return char.IsPunctuation(c) || _customTokenSeparators.Contains(c);
         }
     }
-
-    public interface IAnalyzer
-    {
-        IEnumerable<string> Analyze(string value);
-    }
 }

@@ -21,10 +21,9 @@ namespace Resin
             _idf = Math.Log10(totalNumOfDocs / (double)hitCount);
         }
 
-
-        public Tfidf(double idf)
+        public IScoringScheme CreateScorer(int totalNumOfDocs, int hitCount)
         {
-            _idf = idf;
+            return new Tfidf(totalNumOfDocs, hitCount);
         }
 
         public void Score(DocumentScore doc)
@@ -50,11 +49,5 @@ namespace Resin
                 else postingData.Add(value, 1);
             }
         }
-    }
-
-    public interface IScoringScheme
-    {
-        void Score(DocumentScore doc);
-        void Eval(string field, string value, IAnalyzer analyzer, Dictionary<string, object> postingData);
     }
 }
