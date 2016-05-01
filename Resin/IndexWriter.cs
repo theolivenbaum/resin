@@ -29,12 +29,12 @@ namespace Resin
         /// <summary>
         /// bucketId/file
         /// </summary>
-        private readonly Dictionary<string, DocContainerFile> _docContainers;
+        private readonly Dictionary<string, DocContainer> _docContainers;
  
         /// <summary>
         /// bucketId/file
         /// </summary>
-        private readonly Dictionary<string, PostingsContainerFile> _postingsContainers;
+        private readonly Dictionary<string, PostingsContainer> _postingsContainers;
 
         private readonly TaskQueue<PostingsFile> _postingsWorker;
 
@@ -47,8 +47,8 @@ namespace Resin
             _scoringScheme = scoringScheme;
             _trieFiles = new Dictionary<string, Trie>();
             _postingsFiles = new Dictionary<string, PostingsFile>();
-            _postingsContainers = new Dictionary<string, PostingsContainerFile>();
-            _docContainers = new Dictionary<string, DocContainerFile>();
+            _postingsContainers = new Dictionary<string, PostingsContainer>();
+            _docContainers = new Dictionary<string, DocContainer>();
             _docWorker = new TaskQueue<Document>(1, PutDocInContainer);
             _postingsWorker = new TaskQueue<PostingsFile>(1, PutPostingsInContainer);
             _deletions = new List<string>();
@@ -62,12 +62,12 @@ namespace Resin
             var bucketId = posting.Token.ToPostingsBucket();
             var containerFileName = Path.Combine(_directory, bucketId + ".pl");
             var fieldTokenId = string.Format("{0}.{1}", posting.Field, posting.Token);
-            PostingsContainerFile container;
+            PostingsContainer container;
             if (File.Exists(containerFileName))
             {
                 if (!_postingsContainers.TryGetValue(bucketId, out container))
                 {
-                    container = PostingsContainerFile.Load(containerFileName);
+                    container = PostingsContainer.Load(containerFileName);
                 }
                 container.Files[fieldTokenId] = posting;
             }
@@ -75,7 +75,7 @@ namespace Resin
             {
                 if (!_postingsContainers.TryGetValue(bucketId, out container))
                 {
-                    container = new PostingsContainerFile(bucketId);
+                    container = new PostingsContainer(bucketId);
                 }
                 container.Files[fieldTokenId] = posting;
             }
@@ -86,12 +86,12 @@ namespace Resin
         {
             var bucketId = doc.Id.ToDocBucket();
             var containerFileName = Path.Combine(_directory, bucketId + ".dl");
-            DocContainerFile container;
+            DocContainer container;
             if (File.Exists(containerFileName))
             {
                 if (!_docContainers.TryGetValue(bucketId, out container))
                 {
-                    container = DocContainerFile.Load(containerFileName);
+                    container = DocContainer.Load(containerFileName);
                 }
                 Document existing;
                 if (container.Files.TryGetValue(doc.Id, out existing))
@@ -111,7 +111,7 @@ namespace Resin
             {
                 if (!_docContainers.TryGetValue(bucketId, out container))
                 {
-                    container = new DocContainerFile(bucketId);
+                    container = new DocContainer(bucketId);
                     _docContainers[container.Id] = container;
                 }
                 container.Files[doc.Id] = doc;
@@ -131,7 +131,7 @@ namespace Resin
                 _ix.Fields[field].Remove(docId);
                 var bucketId = docId.ToDocBucket();
                 var containerFileName = Path.Combine(_directory, bucketId + ".dl");
-                var container = DocContainerFile.Load(containerFileName);
+                var container = DocContainer.Load(containerFileName);
                 var doc = container.Files[docId];
                 container.Files.Remove(docId);
                 IEnumerable<string> tokens;
@@ -215,17 +215,17 @@ namespace Resin
             {
                 var bucketId = token.ToPostingsBucket();
                 var fileName = Path.Combine(_directory, bucketId + ".pl");
-                PostingsContainerFile container;
+                PostingsContainer container;
                 if (!_postingsContainers.TryGetValue(bucketId, out container))
                 {
                     if (File.Exists(fileName))
                     {
-                        container = PostingsContainerFile.Load(fileName);
+                        container = PostingsContainer.Load(fileName);
                         _postingsContainers[bucketId] = container;
                     }
                     else
                     {
-                        container = new PostingsContainerFile(bucketId);
+                        container = new PostingsContainer(bucketId);
                     }
                 }
                 _postingsContainers[bucketId] = container;

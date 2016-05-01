@@ -52,11 +52,11 @@
     <Compile Include="Helper.cs" />
     <Compile Include="IAnalyzer.cs" />
     <Compile Include="IO\CompressedFileBase.cs" />
-    <Compile Include="IO\DocContainerFile.cs" />
+    <Compile Include="IO\DocContainer.cs" />
     <Compile Include="IO\LazyTrie.cs" />
     <Compile Include="IO\Document.cs" />
     <Compile Include="DocumentScore.cs" />
-    <Compile Include="IO\PostingsContainerFile.cs" />
+    <Compile Include="IO\PostingsContainer.cs" />
     <Compile Include="IO\IxFile.cs" />
     <Compile Include="IO\PostingsFile.cs" />
     <Compile Include="IO\FileBase.cs" />

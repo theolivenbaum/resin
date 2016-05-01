@@ -14,10 +14,10 @@ namespace Resin
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly ConcurrentDictionary<string, LazyTrie> _trieFiles;
-        private readonly ConcurrentDictionary<string, PostingsContainerFile> _postingsCache;
+        private readonly ConcurrentDictionary<string, PostingsContainer> _postingsCache;
         private readonly IxInfo _ix;
 
-        public Collector(string directory, IxInfo ix, ConcurrentDictionary<string, LazyTrie> trieFiles, ConcurrentDictionary<string, PostingsContainerFile> postingsCache)
+        public Collector(string directory, IxInfo ix, ConcurrentDictionary<string, LazyTrie> trieFiles, ConcurrentDictionary<string, PostingsContainer> postingsCache)
         {
             _directory = directory;
             _trieFiles = trieFiles;
@@ -75,11 +75,11 @@ namespace Resin
         private PostingsFile GetPostingsFile(string field, string token)
         {
             var bucketId = token.ToPostingsBucket();
-            PostingsContainerFile container;
+            PostingsContainer container;
             if (!_postingsCache.TryGetValue(bucketId, out container))
             {
                 var fileName = Path.Combine(_directory, bucketId + ".pl");
-                container = PostingsContainerFile.Load(fileName);
+                container = PostingsContainer.Load(fileName);
                 _postingsCache[bucketId] = container;
             }
             var fieldTokenId = string.Format("{0}.{1}", field, token);

@@ -23,7 +23,7 @@ namespace Resin.IO
     {
         private readonly Dictionary<string, int> _docCount;
         /// <summary>
-        /// field/docid/null
+        /// field/doc count
         /// </summary>
         public Dictionary<string, int> DocCount { get { return _docCount; } }
 

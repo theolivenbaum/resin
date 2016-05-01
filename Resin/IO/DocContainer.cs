@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Resin.IO
 {
     [Serializable]
-    public class DocContainerFile : CompressedFileBase<DocContainerFile>
+    public class DocContainer : CompressedFileBase<DocContainer>
     {
         private readonly string _id;
         public string Id { get { return _id; } }
@@ -15,7 +15,7 @@ namespace Resin.IO
         /// </summary>
         public Dictionary<string, Document> Files { get { return _files; } }
         
-        public DocContainerFile(string id)
+        public DocContainer(string id)
         {
             _id = id;
             _files = new Dictionary<string, Document>();

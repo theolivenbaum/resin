@@ -19,8 +19,8 @@ namespace Resin
         private readonly IScoringScheme _scorer;
         private readonly ConcurrentDictionary<string, LazyTrie> _trieFiles;
         private readonly IxInfo _ix;
-        private readonly ConcurrentDictionary<string, DocContainerFile> _docCache;
-        private readonly ConcurrentDictionary<string, PostingsContainerFile> _postingsCache; 
+        private readonly ConcurrentDictionary<string, DocContainer> _docCache;
+        private readonly ConcurrentDictionary<string, PostingsContainer> _postingsCache; 
  
         public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
         {
@@ -28,8 +28,8 @@ namespace Resin
             _parser = parser;
             _scorer = scorer;
             _trieFiles = new ConcurrentDictionary<string, LazyTrie>();
-            _docCache = new ConcurrentDictionary<string, DocContainerFile>();
-            _postingsCache = new ConcurrentDictionary<string, PostingsContainerFile>();
+            _docCache = new ConcurrentDictionary<string, DocContainer>();
+            _postingsCache = new ConcurrentDictionary<string, PostingsContainer>();
             _ix = IxInfo.Load(Path.Combine(_directory, "0.ix"));
         }
 
@@ -54,11 +54,11 @@ namespace Resin
         private IDictionary<string, string> GetDoc(string docId)
         {
             var bucketId = docId.ToDocBucket();
-            DocContainerFile container;
+            DocContainer container;
             if (!_docCache.TryGetValue(bucketId, out container))
             {
                 var fileName = Path.Combine(_directory, bucketId + ".dl");
-                container = DocContainerFile.Load(fileName);
+                container = DocContainer.Load(fileName);
                 _docCache[bucketId] = container;
             }
             return container.Files[docId].Fields;

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Resin.IO
 {
     [Serializable]
-    public class PostingsContainerFile : CompressedFileBase<PostingsContainerFile>
+    public class PostingsContainer : CompressedFileBase<PostingsContainer>
     {
         private readonly string _id;
         public string Id { get { return _id; } }
@@ -14,7 +14,7 @@ namespace Resin.IO
         /// field.token/file
         /// </summary>
         public Dictionary<string, PostingsFile> Files { get { return _files; } }
-        public PostingsContainerFile(string id)
+        public PostingsContainer(string id)
         {
             if (id == null) throw new ArgumentNullException("id");
             _id = id;
