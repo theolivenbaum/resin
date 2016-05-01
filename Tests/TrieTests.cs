@@ -169,7 +169,7 @@ namespace Tests
             Assert.AreEqual(2, words.Prefixed("pre").Count());
             Assert.AreEqual(1, words.Prefixed("pref").Count());
 
-            foreach (var child in words.Children())
+            foreach (var child in words.ResolveChildren())
             {
                 var fileNameWithoutExt = "fieldname".ToTrieFileNameWithoutExtension(child.Val);
                 string fileName = Path.Combine(dir, fileNameWithoutExt + ".tr");
@@ -189,7 +189,7 @@ namespace Tests
 
             Assert.AreEqual(1, lz.Prefixed("cracker").Count());
 
-            foreach (var child in lz.Children())
+            foreach (var child in lz.ResolveChildren())
             {
                 var fileNameWithoutExt = "fieldname".ToTrieFileNameWithoutExtension(child.Val);
                 string fileName = Path.Combine(dir, fileNameWithoutExt + ".tr");

@@ -94,27 +94,27 @@ namespace Resin
                     container = DocContainer.Load(containerFileName);
                 }
                 Document existing;
-                if (container.TryGet(doc.Id, out existing))
+                if (container.TryGet(doc.Id, _directory, out existing))
                 {
                     foreach (var field in doc.Fields)
                     {
                         existing.Fields[field.Key] = field.Value;
                     }
-                    container.Put(existing);
+                    container.Put(existing, _directory);
                 }
                 else
                 {
-                    container.Put(doc);
+                    container.Put(doc, _directory);
                 }
             }
             else
             {
                 if (!_docContainers.TryGetValue(bucketId, out container))
                 {
-                    container = new DocContainer(bucketId);
+                    container = new DocContainer(bucketId, _directory);
                     _docContainers[container.Id] = container;
                 }
-                container.Put(doc);
+                container.Put(doc, _directory);
             }
             _docContainers[container.Id] = container;
         }
@@ -128,11 +128,15 @@ namespace Resin
         {
             foreach (var field in _ix.Fields.Keys)
             {
+                if (!_ix.Fields[field].ContainsKey(docId))
+                {
+                    continue;
+                }
                 _ix.Fields[field].Remove(docId);
                 var bucketId = docId.ToDocBucket();
                 var containerFileName = Path.Combine(_directory, bucketId + ".dl");
                 var container = DocContainer.Load(containerFileName);
-                var doc = container.Get(docId);
+                var doc = container.Get(docId, _directory);
                 container.Remove(docId);
                 IEnumerable<string> tokens;
                 if (field[0] == '_')
@@ -269,7 +273,7 @@ namespace Resin
             {
                 var field = kvp.Key;
                 var trie = kvp.Value;
-                foreach (var child in trie.Children())
+                foreach (var child in trie.ResolveChildren())
                 {
                     var fileNameWithoutExt = field.ToTrieFileNameWithoutExtension(child.Val);
                     string fileName = Path.Combine(_directory, fileNameWithoutExt + ".tr");
@@ -298,9 +302,11 @@ namespace Resin
                 if (container.Count > 0)
                 {
                     container.Save(fileName);
+                    container.Dispose();
                 }
                 else
                 {
+                    container.Dispose();
                     File.Delete(fileName);
                 }
             });

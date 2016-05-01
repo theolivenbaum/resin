@@ -50,18 +50,12 @@ namespace Resin.IO
                 _eow = true;
             }
         }
-
-        public IEnumerable<Trie> Children()
-        {
-            return Nodes.Values;
-        }
-        
         protected virtual bool TryResolveChild(char c, out Trie trie)
         {
             return Nodes.TryGetValue(c, out trie);
         }
 
-        protected virtual IEnumerable<Trie> ResolveChildren()
+        public virtual IEnumerable<Trie> ResolveChildren()
         {
             return Nodes.Values;
         } 
@@ -176,7 +170,7 @@ namespace Resin.IO
             if (list.Length == 0) throw new ArgumentOutOfRangeException("word");
 
             Trie child;
-            if (!Nodes.TryGetValue(list[0], out child))
+            if (!TryResolveChild(list[0], out child))
             {
                 child = new Trie(list);
                 Nodes.Add(list[0], child);

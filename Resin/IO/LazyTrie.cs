@@ -38,7 +38,7 @@ namespace Resin.IO
             return Nodes.TryGetValue(c, out trie);
         }
 
-        protected override IEnumerable<Trie> ResolveChildren()
+        public override IEnumerable<Trie> ResolveChildren()
         {
             foreach (var file in Directory.GetFiles(_directory, _searchPattern))
             {
@@ -48,6 +48,10 @@ namespace Resin.IO
                 {
                     yield return trie;
                 }
+            }
+            foreach (var node in Nodes.Values)
+            {
+                yield return node;
             }
         }
     }
