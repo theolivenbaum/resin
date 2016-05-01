@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace Resin.IO
@@ -35,10 +36,13 @@ namespace Resin.IO
                 File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
 
             _writer = new StreamWriter(fileStream);
+            _writer.AutoFlush = false;
         }
 
         public Document Get(string docId, string directory)
         {
+            var timer = new Stopwatch();
+            timer.Start();
             var id = _ids[docId];
             var base64 = string.Empty;
             var fileName = Path.Combine(directory, _id + ".dc");
@@ -55,10 +59,12 @@ namespace Resin.IO
                 }
             }
             var rawBytes = Convert.FromBase64String(base64);
-            //var decompressed = QuickLZ.decompress(rawBytes);
-            using (var memStream = new MemoryStream(rawBytes))
+            var decompressed = QuickLZ.decompress(rawBytes);
+            using (var memStream = new MemoryStream(decompressed))
             {
-                return (Document)Serializer.Deserialize(memStream);
+                var obj = (Document)Serializer.Deserialize(memStream);
+                Log.DebugFormat("read {0} in {1}", fileName, timer.Elapsed);
+                return obj;
             }
         }
 
@@ -72,8 +78,10 @@ namespace Resin.IO
             {
                 Serializer.Serialize(memStream, doc);
                 var bytes = memStream.ToArray();
-                var base64 = Convert.ToBase64String(bytes);
+                var compressed = QuickLZ.compress(bytes, 1);
+                var base64 = Convert.ToBase64String(compressed);
                 _writer.WriteLine("{0}:{1}", id, base64);
+                _writer.Flush();
             }
         }
 
@@ -96,7 +104,11 @@ namespace Resin.IO
         public int Count { get { return _ids.Count; } }
         public void Dispose()
         {
-            if(_writer != null) _writer.Dispose();
+            if (_writer != null)
+            {
+                _writer.Close();
+                _writer.Dispose();
+            }
         }
     }
 }
