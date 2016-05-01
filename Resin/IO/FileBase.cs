@@ -21,6 +21,7 @@ namespace Resin.IO
                 {
                     Serializer.Serialize(fs, this);
                 }
+                Log.DebugFormat("re-wrote {0} in {1}", fileName, timer.Elapsed);
             }
             else
             {
@@ -28,8 +29,8 @@ namespace Resin.IO
                 {
                     Serializer.Serialize(fs, this);
                 }
+                Log.DebugFormat("created {0} in {1}", fileName, timer.Elapsed);
             }
-            Log.DebugFormat("saved {0} in {1}", fileName, timer.Elapsed);
         }
 
         public static T Load(string fileName)
@@ -43,7 +44,7 @@ namespace Resin.IO
                 using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
                     var obj = (T)Serializer.Deserialize(fs);
-                    Log.DebugFormat("loaded {0} in {1}", fileName, timer.Elapsed);
+                    Log.DebugFormat("read {0} in {1}", fileName, timer.Elapsed);
                     return obj;
                 }
             }
@@ -72,6 +73,7 @@ namespace Resin.IO
             typeof (Document),
             typeof (Dictionary<string, string>),
             typeof (IxFile),
+            typeof (IxInfo),
             typeof (Dictionary<string, Dictionary<string, object>>), 
             typeof (PostingsContainerFile),
             typeof (Dictionary<string, PostingsFile>),

@@ -53,7 +53,7 @@ namespace Resin
             _postingsWorker = new TaskQueue<PostingsFile>(1, PutPostingsInContainer);
             _deletions = new List<string>();
 
-            var ixFileName = Path.Combine(directory, "0.ix");
+            var ixFileName = Path.Combine(directory, "1.ix");
             _ix = File.Exists(ixFileName) ? IxFile.Load(ixFileName) : new IxFile();
         }
 
@@ -304,7 +304,13 @@ namespace Resin
                     File.Delete(fileName);
                 }
             });
-            _ix.Save(Path.Combine(_directory, "0.ix"));
+            _ix.Save(Path.Combine(_directory, "1.ix"));
+            var ixInfo = new IxInfo();
+            foreach (var field in _ix.Fields)
+            {
+                ixInfo.DocCount[field.Key] = field.Value.Count;
+            }
+            ixInfo.Save(Path.Combine(_directory, "0.ix"));
         }
     }
 }

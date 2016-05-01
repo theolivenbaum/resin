@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using log4net;
@@ -14,9 +15,9 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly ConcurrentDictionary<string, LazyTrie> _trieFiles;
         private readonly ConcurrentDictionary<string, PostingsContainerFile> _postingsCache;
-        private readonly IxFile _ix;
+        private readonly IxInfo _ix;
 
-        public Collector(string directory, IxFile ix, ConcurrentDictionary<string, LazyTrie> trieFiles, ConcurrentDictionary<string, PostingsContainerFile> postingsCache)
+        public Collector(string directory, IxInfo ix, ConcurrentDictionary<string, LazyTrie> trieFiles, ConcurrentDictionary<string, PostingsContainerFile> postingsCache)
         {
             _directory = directory;
             _trieFiles = trieFiles;
@@ -56,7 +57,7 @@ namespace Resin
         {
             var trie = GetTrie(term.Field);
             if (_ix == null) yield break;
-            var totalNumOfDocs = _ix.Fields[term.Field].Count;
+            var totalNumOfDocs = _ix.DocCount[term.Field];
             if (trie.ContainsToken(term.Value))
             {
                 var termData = GetPostingsFile(term.Field, term.Value);
@@ -65,7 +66,7 @@ namespace Resin
                 {
                     var hit = new DocumentScore(posting.Key, posting.Value, totalNumOfDocs);
                     scorer.Score(hit);
-                    if (hit.Score > 4d) Log.Info(hit);
+                    //if (hit.Score > 4d) Log.Info(hit);
                     yield return hit;
                 }
             }
@@ -90,6 +91,9 @@ namespace Resin
             if (queryContext == null) throw new ArgumentNullException("queryContext");
             if (queryContext.Fuzzy || queryContext.Prefix)
             {
+                var timer = new Stopwatch();
+                timer.Start();
+
                 var trie = GetTrie(queryContext.Field);
 
                 IList<QueryContext> expanded = null;
@@ -105,8 +109,6 @@ namespace Resin
 
                 if (expanded != null)
                 {
-                    var tokenSuffix = queryContext.Prefix ? "*" : queryContext.Fuzzy ? "~" : string.Empty;
-                    Log.DebugFormat("{0}:{1}{2} expanded to {3}", queryContext.Field, queryContext.Value, tokenSuffix, string.Join(" ", expanded.Select(q => q.ToString())));
                     foreach (var t in expanded)
                     {
                         queryContext.Children.Add(t);
@@ -115,6 +117,8 @@ namespace Resin
 
                 queryContext.Prefix = false;
                 queryContext.Fuzzy = false;
+
+                Log.DebugFormat("expanded {0} in {1}", queryContext, timer.Elapsed);
 
                 foreach (var child in queryContext.Children)
                 {

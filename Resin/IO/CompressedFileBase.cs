@@ -23,6 +23,7 @@ namespace Resin.IO
                     var compressed = QuickLZ.compress(bytes, 1);
                     fs.Write(compressed, 0, compressed.Length);
                 }
+                Log.DebugFormat("re-wrote {0} in {1}", fileName, timer.Elapsed);
             }
             else
             {
@@ -34,8 +35,9 @@ namespace Resin.IO
                     var compressed = QuickLZ.compress(bytes, 1);
                     fs.Write(compressed, 0, compressed.Length);
                 }
+                Log.DebugFormat("created {0} in {1}", fileName, timer.Elapsed);
+
             }
-            Log.DebugFormat("saved {0} in {1}", fileName, timer.Elapsed);
         }
 
         public static T Load(string fileName)
@@ -53,7 +55,7 @@ namespace Resin.IO
                     var bytes = memStream.ToArray();
                     var decompressed = QuickLZ.decompress(bytes);
                     var obj = (T)Serializer.Deserialize(new MemoryStream(decompressed));
-                    Log.DebugFormat("loaded {0} in {1}", fileName, timer.Elapsed);
+                    Log.DebugFormat("read {0} in {1}", fileName, timer.Elapsed);
                     return obj;
                 }
             }
