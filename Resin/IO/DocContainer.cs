@@ -58,9 +58,9 @@ namespace Resin.IO
                     base64 = row.Substring(endOfId + 1);
                 }
             }
-            var rawBytes = Convert.FromBase64String(base64);
-            var decompressed = QuickLZ.decompress(rawBytes);
-            using (var memStream = new MemoryStream(decompressed))
+            var bytes = Convert.FromBase64String(base64);
+            //var decompressed = QuickLZ.decompress(bytes);
+            using (var memStream = new MemoryStream(bytes))
             {
                 var obj = (Document)Serializer.Deserialize(memStream);
                 Log.DebugFormat("read {0} in {1}", fileName, timer.Elapsed);
@@ -73,15 +73,14 @@ namespace Resin.IO
             var id = Path.GetRandomFileName();
             _ids[doc.Id] = id;
             var fileName = Path.Combine(directory, _id + ".dc");
-            if(_writer == null) Init(fileName);
+            if (_writer == null) Init(fileName);
             using (var memStream = new MemoryStream())
             {
                 Serializer.Serialize(memStream, doc);
                 var bytes = memStream.ToArray();
-                var compressed = QuickLZ.compress(bytes, 1);
-                var base64 = Convert.ToBase64String(compressed);
+                //var compressed = QuickLZ.compress(bytes, 3);
+                var base64 = Convert.ToBase64String(bytes);
                 _writer.WriteLine("{0}:{1}", id, base64);
-                _writer.Flush();
             }
         }
 
@@ -106,6 +105,7 @@ namespace Resin.IO
         {
             if (_writer != null)
             {
+                _writer.Flush();
                 _writer.Close();
                 _writer.Dispose();
             }
