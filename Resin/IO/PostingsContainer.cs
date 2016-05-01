@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Resin.IO
 {
     [Serializable]
-    public class PostingsContainer : CompressedFileBase<PostingsContainer>
+    public class PostingsContainer : FileBase<PostingsContainer>
     {
         private readonly string _id;
         public string Id { get { return _id; } }

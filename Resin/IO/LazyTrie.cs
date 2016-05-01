@@ -42,7 +42,7 @@ namespace Resin.IO
         {
             foreach (var file in Directory.GetFiles(_directory, _searchPattern))
             {
-                var c = Path.GetFileNameWithoutExtension(file).ToTrieChar();
+                var c = Path.GetFileNameWithoutExtension(file).ToTrieCharFromFileName();
                 Trie trie;
                 if (TryResolveChild(c, out trie))
                 {
