@@ -119,11 +119,10 @@ namespace Resin
                 queryContext.Fuzzy = false;
 
                 Log.DebugFormat("expanded {0} in {1}", queryContext, timer.Elapsed);
-
-                foreach (var child in queryContext.Children)
-                {
-                    Expand(child);
-                }
+            }
+            foreach (var child in queryContext.Children)
+            {
+                Expand(child);
             }
         }
     }

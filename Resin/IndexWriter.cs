@@ -94,17 +94,17 @@ namespace Resin
                     container = DocContainer.Load(containerFileName);
                 }
                 Document existing;
-                if (container.Files.TryGetValue(doc.Id, out existing))
+                if (container.TryGet(doc.Id, out existing))
                 {
                     foreach (var field in doc.Fields)
                     {
                         existing.Fields[field.Key] = field.Value;
                     }
-                    container.Files[doc.Id] = existing;
+                    container.Put(existing);
                 }
                 else
                 {
-                    container.Files[doc.Id] = doc;
+                    container.Put(doc);
                 }
             }
             else
@@ -114,7 +114,7 @@ namespace Resin
                     container = new DocContainer(bucketId);
                     _docContainers[container.Id] = container;
                 }
-                container.Files[doc.Id] = doc;
+                container.Put(doc);
             }
             _docContainers[container.Id] = container;
         }
@@ -132,8 +132,8 @@ namespace Resin
                 var bucketId = docId.ToDocBucket();
                 var containerFileName = Path.Combine(_directory, bucketId + ".dl");
                 var container = DocContainer.Load(containerFileName);
-                var doc = container.Files[docId];
-                container.Files.Remove(docId);
+                var doc = container.Get(docId);
+                container.Remove(docId);
                 IEnumerable<string> tokens;
                 if (field[0] == '_')
                 {
@@ -295,7 +295,7 @@ namespace Resin
             Parallel.ForEach(_docContainers.Values, container =>
             {
                 var fileName = Path.Combine(_directory, container.Id + ".dl");
-                if (container.Files.Count > 0)
+                if (container.Count > 0)
                 {
                     container.Save(fileName);
                 }

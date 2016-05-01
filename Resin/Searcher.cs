@@ -61,7 +61,7 @@ namespace Resin
                 container = DocContainer.Load(fileName);
                 _docCache[bucketId] = container;
             }
-            return container.Files[docId].Fields;
+            return container.Get(docId).Fields;
         }
     }
 }
