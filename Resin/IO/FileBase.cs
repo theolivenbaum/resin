@@ -55,13 +55,16 @@ namespace Resin.IO
         }
     }
 
+    [Serializable]
     public class FileBase
     {
+        [NonSerialized]
         protected static readonly ILog Log = LogManager.GetLogger(typeof(FileBase));
 
         // to allow conversion between file system versions
         public static readonly int FileSystemVersion = 4;
 
+        [NonSerialized]
         private static readonly Type[] Types =
         {
             typeof (string), 
@@ -79,9 +82,11 @@ namespace Resin.IO
             typeof (Dictionary<string, PostingsFile>),
             typeof (PostingsFile),
             typeof (Dictionary<string, int>), 
-            typeof (Dictionary<char, Trie>)
+            typeof (Dictionary<char, Trie>),
+            typeof (Container<DocContainer, Document>)
         };
 
+        [NonSerialized]
         public static readonly Serializer Serializer = new Serializer(Types);
     }
 }

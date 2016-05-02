@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Resin.IO
 {
     [Serializable]
-    public class Document
+    public class Document : IDentifyable
     {
         public string Id
         {
@@ -25,5 +25,10 @@ namespace Resin.IO
             if (fields == null) throw new ArgumentNullException("fields");
             _fields = fields;
         }
+    }
+
+    public interface IDentifyable
+    {
+        string Id { get; }
     }
 }

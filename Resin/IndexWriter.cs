@@ -111,7 +111,7 @@ namespace Resin
             {
                 if (!_docContainers.TryGetValue(bucketId, out container))
                 {
-                    container = new DocContainer(bucketId);
+                    container = new DocContainer(bucketId, ".dc");
                     _docContainers[container.Id] = container;
                 }
                 container.Put(doc, _directory);

@@ -6,26 +6,36 @@ using System.IO;
 namespace Resin.IO
 {
     [Serializable]
-    public class DocContainer : CompressedFileBase<DocContainer>, IDisposable
+    public class DocContainer : Container<DocContainer, Document>
     {
-        private readonly string _id;
-        public string Id { get { return _id; } }
+        public DocContainer(string containerId, string itemsFileExtIncDot) : base(containerId, itemsFileExtIncDot)
+        {
+        }
+    }
 
-        [NonSerialized]
-        private Dictionary<string, StreamReader> _readers; 
-
+    [Serializable]
+    public class Container<TContainer, TItem> : CompressedFileBase<TContainer>, IDisposable where TItem : IDentifyable
+    {
         /// <summary>
-        /// docid/id (in file)
+        /// itemid/id (in file)
         /// </summary>
         private readonly Dictionary<string, string> _ids;
+        private readonly string _itemsFileExtIncDot;
+        private readonly string _containerId;
+
+        public string Id { get { return _containerId; } }
+
+        [NonSerialized]
+        private Dictionary<string, StreamReader> _readers;       
 
         [NonSerialized]
         private StreamWriter _writer;
 
-        public DocContainer(string id)
+        public Container(string containerId, string itemsFileExtIncDot)
         {
-            _id = id;
+            _containerId = containerId;
             _ids = new Dictionary<string, string>();
+            _itemsFileExtIncDot = itemsFileExtIncDot;
         }
 
         private void InitWriteSession(string fileName)
@@ -37,7 +47,7 @@ namespace Resin.IO
                  File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
 
                 _writer = new StreamWriter(fileStream);
-                _writer.AutoFlush = false; 
+                _writer.AutoFlush = false;
             }
         }
 
@@ -46,12 +56,12 @@ namespace Resin.IO
             if (_readers == null) _readers = new Dictionary<string, StreamReader>();
         }
 
-        public Document Get(string docId, string directory)
+        public TItem Get(string docId, string directory)
         {
             var timer = new Stopwatch();
             timer.Start();
             var id = _ids[docId];
-            var fileName = Path.Combine(directory, _id + ".dc");
+            var fileName = Path.Combine(directory, _containerId + _itemsFileExtIncDot);
             InitReadSession();
             StreamReader reader;
             if (!_readers.TryGetValue(fileName, out reader))
@@ -83,41 +93,51 @@ namespace Resin.IO
             var bytes = Convert.FromBase64String(base64);
             using (var memStream = new MemoryStream(bytes))
             {
-                var obj = (Document)Serializer.Deserialize(memStream);
+                var obj = Deserialize(memStream);
                 Log.DebugFormat("read from {0} in {1}", fileName, timer.Elapsed);
                 return obj;
             }
         }
 
-        public void Put(Document doc, string directory)
+        protected virtual TItem Deserialize(Stream stream)
+        {
+            return (TItem)Serializer.Deserialize(stream);
+        }
+
+        protected virtual void Serialize(Stream stream, TItem item)
+        {
+            Serializer.Serialize(stream, item);
+        }
+
+        public void Put(TItem item, string directory)
         {
             var id = Path.GetRandomFileName();
-            _ids[doc.Id] = id;
-            var fileName = Path.Combine(directory, _id + ".dc");
+            _ids[item.Id] = id;
+            var fileName = Path.Combine(directory, _containerId + _itemsFileExtIncDot);
             InitWriteSession(fileName);
             using (var memStream = new MemoryStream())
             {
-                Serializer.Serialize(memStream, doc);
+                Serialize(memStream, item);
                 var bytes = memStream.ToArray();
                 var base64 = Convert.ToBase64String(bytes);
                 _writer.WriteLine("{0}:{1}", id, base64);
             }
         }
 
-        public bool TryGet(string docId, string directory, out Document doc)
+        public bool TryGet(string itemId, string directory, out TItem item)
         {
-            if (_ids.ContainsKey(docId))
+            if (_ids.ContainsKey(itemId))
             {
-                doc = Get(docId, directory);
+                item = Get(itemId, directory);
                 return true;
             }
-            doc = null;
+            item = default(TItem);
             return false;
         }
 
-        public void Remove(string docId)
+        public void Remove(string itemId)
         {
-            _ids.Remove(docId);
+            _ids.Remove(itemId);
         }
 
         public int Count { get { return _ids.Count; } }
@@ -134,7 +154,7 @@ namespace Resin.IO
                 foreach (var reader in _readers.Values)
                 {
                     reader.Dispose();
-                }  
+                }
             }
         }
     }
