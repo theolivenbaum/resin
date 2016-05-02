@@ -72,18 +72,18 @@ namespace Resin.IO
             typeof (char), 
             typeof (Trie),
             typeof (DocContainer), 
-            typeof (Dictionary<string, Document>),
             typeof (Document),
             typeof (Dictionary<string, string>),
+            typeof (Dictionary<string, object>),
             typeof (IxFile),
             typeof (IxInfo),
             typeof (Dictionary<string, Dictionary<string, object>>), 
             typeof (PostingsContainer),
-            typeof (Dictionary<string, PostingsFile>),
             typeof (PostingsFile),
             typeof (Dictionary<string, int>), 
             typeof (Dictionary<char, Trie>),
-            typeof (Container<DocContainer, Document>)
+            typeof (Container<DocContainer, Document>),
+            typeof (Container<PostingsContainer, PostingsFile>)
         };
 
         [NonSerialized]

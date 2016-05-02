@@ -16,7 +16,7 @@ namespace Resin
             return seed.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 
-        public static string ToPostingsBucket(this string field, char c)
+        public static string ToPostingsBucket(this string field)
         {
             return field.ToHash().ToString(CultureInfo.InvariantCulture);
         }

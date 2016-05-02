@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace Resin.IO
 {
     [Serializable]
     public class DocContainer : Container<DocContainer, Document>
     {
-        public DocContainer(string containerId, string itemsFileExtIncDot) : base(containerId, itemsFileExtIncDot)
+        public DocContainer(string containerId) : base(containerId, ".dc")
         {
         }
     }
@@ -46,7 +47,7 @@ namespace Resin.IO
                  File.Open(fileName, FileMode.Append, FileAccess.Write, FileShare.Read) :
                  File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
 
-                _writer = new StreamWriter(fileStream);
+                _writer = new StreamWriter(fileStream, Encoding.ASCII);
                 _writer.AutoFlush = false;
             }
         }
@@ -56,29 +57,30 @@ namespace Resin.IO
             if (_readers == null) _readers = new Dictionary<string, StreamReader>();
         }
 
-        public TItem Get(string docId, string directory)
+        public TItem Get(string itemId, string directory)
         {
             var timer = new Stopwatch();
             timer.Start();
-            var id = _ids[docId];
+            var id = _ids[itemId];
             var fileName = Path.Combine(directory, _containerId + _itemsFileExtIncDot);
             InitReadSession();
             StreamReader reader;
             if (!_readers.TryGetValue(fileName, out reader))
             {
                 var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                reader = new StreamReader(fs);
+                reader = new StreamReader(fs, Encoding.ASCII);
                 _readers[fileName] = reader;
                 Log.DebugFormat("opened {0}", fileName);
             }
             reader.BaseStream.Position = 0;
             reader.DiscardBufferedData();
             var data = string.Empty;
-            string lineId;
+            string lineId = string.Empty;
             while (reader.Peek() >= 0)
             {
                 var row = reader.ReadLine();
-                lineId = row.Substring(0, 12);
+                var indexOfDelimiter = row.IndexOf(':');
+                lineId = row.Substring(0, indexOfDelimiter);
                 if (lineId == id)
                 {
                     data = row;
@@ -89,12 +91,12 @@ namespace Resin.IO
             {
                 throw new Exception();
             }
-            var base64 = data.Substring(13);
+            var base64 = data.Substring(lineId.Length+1);
             var bytes = Convert.FromBase64String(base64);
             using (var memStream = new MemoryStream(bytes))
             {
                 var obj = Deserialize(memStream);
-                Log.DebugFormat("read from {0} in {1}", fileName, timer.Elapsed);
+                Log.DebugFormat("extracted {0} from {1} in {2}", obj.Id, fileName, timer.Elapsed);
                 return obj;
             }
         }
@@ -104,9 +106,13 @@ namespace Resin.IO
             return (TItem)Serializer.Deserialize(stream);
         }
 
-        protected virtual void Serialize(Stream stream, TItem item)
+        private byte[] Serialize(TItem item)
         {
-            Serializer.Serialize(stream, item);
+            using (var stream = new MemoryStream())
+            {
+                Serializer.Serialize(stream, item);
+                return stream.ToArray();
+            }
         }
 
         public void Put(TItem item, string directory)
@@ -115,13 +121,9 @@ namespace Resin.IO
             _ids[item.Id] = id;
             var fileName = Path.Combine(directory, _containerId + _itemsFileExtIncDot);
             InitWriteSession(fileName);
-            using (var memStream = new MemoryStream())
-            {
-                Serialize(memStream, item);
-                var bytes = memStream.ToArray();
-                var base64 = Convert.ToBase64String(bytes);
-                _writer.WriteLine("{0}:{1}", id, base64);
-            }
+            var bytes = Serialize(item);
+            var base64 = Convert.ToBase64String(bytes);
+            _writer.WriteLine("{0}:{1}", id, base64);
         }
 
         public bool TryGet(string itemId, string directory, out TItem item)
@@ -153,6 +155,7 @@ namespace Resin.IO
             {
                 foreach (var reader in _readers.Values)
                 {
+                    reader.Close();
                     reader.Dispose();
                 }
             }

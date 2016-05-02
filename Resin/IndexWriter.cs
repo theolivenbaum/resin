@@ -59,9 +59,8 @@ namespace Resin
 
         private void PutPostingsInContainer(PostingsFile posting)
         {
-            var bucketId = posting.Field.ToPostingsBucket(posting.Token[0]);
-            var containerFileName = Path.Combine(_directory, bucketId + ".pl");
-            var fieldTokenId = string.Format("{0}.{1}", posting.Field, posting.Token);
+            var bucketId = posting.Field.ToPostingsBucket();
+            var containerFileName = Path.Combine(_directory, bucketId + ".pix");
             PostingsContainer container;
             if (File.Exists(containerFileName))
             {
@@ -69,7 +68,6 @@ namespace Resin
                 {
                     container = PostingsContainer.Load(containerFileName);
                 }
-                container.Files[fieldTokenId] = posting;
             }
             else
             {
@@ -77,15 +75,15 @@ namespace Resin
                 {
                     container = new PostingsContainer(bucketId);
                 }
-                container.Files[fieldTokenId] = posting;
             }
+            container.Put(posting);
             _postingsContainers[container.Id] = container;
         }
 
         private void PutDocInContainer(Document doc)
         {
             var bucketId = doc.Id.ToDocBucket();
-            var containerFileName = Path.Combine(_directory, bucketId + ".dl");
+            var containerFileName = Path.Combine(_directory, bucketId + ".dix");
             DocContainer container;
             if (File.Exists(containerFileName))
             {
@@ -111,7 +109,7 @@ namespace Resin
             {
                 if (!_docContainers.TryGetValue(bucketId, out container))
                 {
-                    container = new DocContainer(bucketId, ".dc");
+                    container = new DocContainer(bucketId);
                     _docContainers[container.Id] = container;
                 }
                 container.Put(doc, _directory);
@@ -134,7 +132,7 @@ namespace Resin
                 }
                 _ix.Fields[field].Remove(docId);
                 var bucketId = docId.ToDocBucket();
-                var containerFileName = Path.Combine(_directory, bucketId + ".dl");
+                var containerFileName = Path.Combine(_directory, bucketId + ".dix");
                 var container = DocContainer.Load(containerFileName);
                 var doc = container.Get(docId, _directory);
                 container.Remove(docId);
@@ -154,9 +152,9 @@ namespace Resin
                     postingsFile.Postings.Remove(docId);
                     if (postingsFile.NumDocs() == 0)
                     {
-                        var pbucketId = field.ToPostingsBucket(token[0]);
+                        var pbucketId = field.ToPostingsBucket();
                         var pContainer = _postingsContainers[pbucketId];
-                        pContainer.Files.Remove(fieldTokenId);
+                        pContainer.Remove(fieldTokenId);
                         _postingsFiles.Remove(fieldTokenId);
 
                         var trie = GetTrie(field);
@@ -217,8 +215,8 @@ namespace Resin
             PostingsFile file;
             if (!_postingsFiles.TryGetValue(fieldTokenId, out file))
             {
-                var bucketId = field.ToPostingsBucket(token[0]);
-                var fileName = Path.Combine(_directory, bucketId + ".pl");
+                var bucketId = field.ToPostingsBucket();
+                var fileName = Path.Combine(_directory, bucketId + ".pix");
                 PostingsContainer container;
                 if (!_postingsContainers.TryGetValue(bucketId, out container))
                 {
@@ -234,7 +232,7 @@ namespace Resin
                 }
                 _postingsContainers[bucketId] = container;
 
-                if (!container.Files.TryGetValue(fieldTokenId, out file))
+                if (!container.TryGet(fieldTokenId, _directory, out file))
                 {
                     file = new PostingsFile(field, token);
                 }
@@ -286,19 +284,22 @@ namespace Resin
 
             Parallel.ForEach(_postingsContainers.Values, container =>
             {
-                var fileName = Path.Combine(_directory, container.Id + ".pl");
-                if (container.Files.Count > 0)
+                var fileName = Path.Combine(_directory, container.Id + ".pix");
+                if (container.Count > 0)
                 {
+                    container.Flush(_directory);
                     container.Save(fileName);
+                    container.Dispose();
                 }
                 else
                 {
+                    container.Dispose();
                     File.Delete(fileName);
                 }
             });
             Parallel.ForEach(_docContainers.Values, container =>
             {
-                var fileName = Path.Combine(_directory, container.Id + ".dl");
+                var fileName = Path.Combine(_directory, container.Id + ".dix");
                 if (container.Count > 0)
                 {
                     container.Save(fileName);

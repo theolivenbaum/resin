@@ -6,20 +6,17 @@ namespace Resin.IO
     /// <summary>
     /// </summary>
     [Serializable]
-    public class PostingsFile
+    public class PostingsFile : IDentifyable
     {
-        private readonly Dictionary<string, object> _postings;
         /// <summary>
         /// docids/term frequency
         /// </summary>
-        public Dictionary<string, object> Postings
-        {
-            get { return _postings; }
-        }
-
+        private readonly Dictionary<string, object> _postings;
         private readonly string _field;
-        public string Field { get { return _field; } }
         private readonly string _token;
+
+        public Dictionary<string, object> Postings { get { return _postings; } }
+        public string Field { get { return _field; } }
         public string Token { get { return _token; } }
 
         public PostingsFile(string field, string token)
@@ -32,6 +29,13 @@ namespace Resin.IO
         public int NumDocs()
         {
             return Postings.Count;
+        }
+
+        public string Id { get { return string.Format("{0}.{1}", _field, _token); } }
+
+        public override string ToString()
+        {
+            return Id;
         }
     }
 }

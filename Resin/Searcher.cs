@@ -59,7 +59,7 @@ namespace Resin
             DocContainer container;
             if (!_docContainers.TryGetValue(bucketId, out container))
             {
-                var fileName = Path.Combine(_directory, bucketId + ".dl");
+                var fileName = Path.Combine(_directory, bucketId + ".dix");
                 container = DocContainer.Load(fileName);
                 _docContainers[bucketId] = container;
             }
