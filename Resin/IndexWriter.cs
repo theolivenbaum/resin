@@ -273,7 +273,7 @@ namespace Resin
             {
                 var field = kvp.Key;
                 var trie = kvp.Value;
-                foreach (var child in trie.ResolveChildren())
+                foreach (var child in trie.Dirty())
                 {
                     var fileNameWithoutExt = field.ToTrieFileNameWithoutExtension(child.Val);
                     string fileName = Path.Combine(_directory, fileNameWithoutExt + ".tr");

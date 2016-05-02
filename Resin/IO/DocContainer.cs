@@ -49,13 +49,13 @@ namespace Resin.IO
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var reader = new StreamReader(fs))
             {
-                while (reader.Peek() >= 0) 
+                while (reader.Peek() >= 0)
                 {
                     var row = reader.ReadLine();
-                    var endOfId = row.IndexOf(':');
-                    var lineId = row.Substring(0, endOfId);
+                    if(row.Length<12)continue;
+                    var lineId = row.Substring(0, 12);
                     if(lineId != id) continue;
-                    base64 = row.Substring(endOfId + 1);
+                    base64 = row.Substring(13);
                 }
             }
             var bytes = Convert.FromBase64String(base64);

@@ -12,21 +12,21 @@ namespace Resin
         public static string ToDocBucket(this string docId)
         {
             if (string.IsNullOrEmpty(docId)) throw new ArgumentException("docId");
-            var seed = docId.PadRight(2).Substring(0, 2);
-            return Math.Abs(seed.GetHashCode()).ToString(CultureInfo.InvariantCulture);
+            var seed = docId.PadRight(3).Substring(0, 3);
+            return seed.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 
         public static string ToPostingsBucket(this string token)
         {
             if (string.IsNullOrEmpty(token)) throw new ArgumentException("token");
             var seed = token.PadRight(2).Substring(0, 2);
-            return Math.Abs(seed.GetHashCode()).ToString(CultureInfo.InvariantCulture);
+            return seed.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 
         public static string ToTrieFileNameWithoutExtension(this string field, char c)
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentException("field");
-            var fieldHash = Math.Abs(field.GetHashCode()).ToString(CultureInfo.InvariantCulture);
+            var fieldHash = field.ToHash().ToString(CultureInfo.InvariantCulture);
             var charId = Convert.ToInt32(c).ToString(CultureInfo.InvariantCulture);
             return string.Format("{0}.{1}", fieldHash, charId);
         }
@@ -41,20 +41,20 @@ namespace Resin
         public static string ToTrieSearchPattern(this string field)
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentException("field");
-            var fieldHash = Math.Abs(field.GetHashCode()).ToString(CultureInfo.InvariantCulture);
+            var fieldHash = field.ToHash().ToString(CultureInfo.InvariantCulture);
             return string.Format("{0}.*.tr", fieldHash);
         }
 
-        //private static UInt64 ToHash(this string read)
-        //{
-        //    UInt64 hashedValue = 3074457345618258791ul;
-        //    for (int i = 0; i < read.Length; i++)
-        //    {
-        //        hashedValue += read[i];
-        //        hashedValue *= 3074457345618258799ul;
-        //    }
-        //    return hashedValue;
-        //}
+        private static UInt64 ToHash(this string read)
+        {
+            UInt64 hashedValue = 3074457345618258791ul;
+            for (int i = 0; i < read.Length; i++)
+            {
+                hashedValue += read[i];
+                hashedValue *= 3074457345618258799ul;
+            }
+            return hashedValue;
+        }
 
         public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 23);
 

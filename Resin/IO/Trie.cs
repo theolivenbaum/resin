@@ -58,6 +58,11 @@ namespace Resin.IO
         public virtual IEnumerable<Trie> ResolveChildren()
         {
             return Nodes.Values;
+        }
+
+        public virtual IEnumerable<Trie> Dirty()
+        {
+            return ResolveChildren();
         } 
         
         public IEnumerable<string> Similar(string word, int edits)

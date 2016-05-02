@@ -54,5 +54,10 @@ namespace Resin.IO
                 yield return node;
             }
         }
+
+        public override IEnumerable<Trie> Dirty()
+        {
+            return _cache.Values;
+        }
     }
 }
