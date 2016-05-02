@@ -23,7 +23,7 @@ namespace Resin
             return seed.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 
-        public static string ToTrieFileNameWithoutExtension(this string field, char c)
+        public static string ToTrieBucket(this string field, char c)
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentException("field");
             var fieldHash = field.ToHash().ToString(CultureInfo.InvariantCulture);
@@ -31,7 +31,7 @@ namespace Resin
             return string.Format("{0}.{1}", fieldHash, charId);
         }
 
-        public static char ToTrieCharFromFileName(this string fn)
+        public static char ParseCharFromFileName(this string fn)
         {
             if (string.IsNullOrEmpty(fn)) throw new ArgumentException("fn");
             var charId = Int32.Parse(fn.Substring(fn.IndexOf('.') + 1));

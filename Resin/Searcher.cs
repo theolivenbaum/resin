@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,7 +12,7 @@ namespace Resin
     /// <summary>
     /// A reader that provides thread-safe access to an index
     /// </summary>
-    public class Searcher
+    public class Searcher : IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
         private readonly string _directory;
@@ -20,8 +21,9 @@ namespace Resin
         private readonly ConcurrentDictionary<string, LazyTrie> _trieFiles;
         private readonly IxInfo _ix;
         //private readonly ConcurrentDictionary<string, PostingsContainer> _postingsCache;
-        private readonly ConcurrentDictionary<string, Document> _docCache;
- 
+        //private readonly ConcurrentDictionary<string, Document> _docCache;
+        private readonly ConcurrentDictionary<string, DocContainer> _docContainers;
+
         public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
         {
             _directory = directory;
@@ -29,7 +31,8 @@ namespace Resin
             _scorer = scorer;
             _trieFiles = new ConcurrentDictionary<string, LazyTrie>();
             //_postingsCache = new ConcurrentDictionary<string, PostingsContainer>();
-            _docCache = new ConcurrentDictionary<string, Document>();
+            //_docCache = new ConcurrentDictionary<string, Document>();
+            _docContainers = new ConcurrentDictionary<string, DocContainer>();
 
             _ix = IxInfo.Load(Path.Combine(_directory, "0.ix"));
         }
@@ -66,12 +69,33 @@ namespace Resin
         //    return doc.Fields;
         //}
 
+        //private IDictionary<string, string> GetDoc(string docId)
+        //{
+        //    var bucketId = docId.ToDocBucket();
+        //    var fileName = Path.Combine(_directory, bucketId + ".dl");
+        //    var container = DocContainer.Load(fileName);
+        //    return container.Get(docId, _directory).Fields;
+        //}
+
         private IDictionary<string, string> GetDoc(string docId)
         {
             var bucketId = docId.ToDocBucket();
-            var fileName = Path.Combine(_directory, bucketId + ".dl");
-            var container = DocContainer.Load(fileName);
+            DocContainer container;
+            if (!_docContainers.TryGetValue(bucketId, out container))
+            {
+                var fileName = Path.Combine(_directory, bucketId + ".dl");
+                container = DocContainer.Load(fileName);
+                _docContainers[bucketId] = container;
+            }
             return container.Get(docId, _directory).Fields;
+        }
+
+        public void Dispose()
+        {
+            foreach (var dc in _docContainers.Values)
+            {
+                dc.Dispose();
+            }
         }
     }
 }

@@ -11,6 +11,9 @@ namespace Resin.IO
         private readonly string _id;
         public string Id { get { return _id; } }
 
+        [NonSerialized]
+        private Dictionary<string, StreamReader> _readers; 
+
         /// <summary>
         /// docid/id (in file)
         /// </summary>
@@ -19,17 +22,14 @@ namespace Resin.IO
         [NonSerialized]
         private StreamWriter _writer;
 
-        public DocContainer(string id, string directory)
+        public DocContainer(string id)
         {
             _id = id;
             _ids = new Dictionary<string, string>();
-            
-            var fileName = Path.Combine(directory, _id + ".dc");
-
-            Init(fileName);
+            _readers = new Dictionary<string, StreamReader>();
         }
 
-        private void Init(string fileName)
+        private void InitWriteSession(string fileName)
         {
             var fileStream = File.Exists(fileName) ?
                 File.Open(fileName, FileMode.Append, FileAccess.Write, FileShare.Read) :
@@ -44,26 +44,40 @@ namespace Resin.IO
             var timer = new Stopwatch();
             timer.Start();
             var id = _ids[docId];
-            var base64 = string.Empty;
             var fileName = Path.Combine(directory, _id + ".dc");
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var reader = new StreamReader(fs))
+            if(_readers == null) _readers = new Dictionary<string, StreamReader>();
+            StreamReader reader;
+            if (!_readers.TryGetValue(fileName, out reader))
             {
-                while (reader.Peek() >= 0)
+                var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                reader = new StreamReader(fs);
+                _readers[fileName] = reader;
+                Log.DebugFormat("opened {0}", fileName);
+            }
+            reader.BaseStream.Position = 0;
+            reader.DiscardBufferedData();
+            var data = string.Empty;
+            string lineId;
+            while (reader.Peek() >= 0)
+            {
+                var row = reader.ReadLine();
+                lineId = row.Substring(0, 12);
+                if (lineId == id)
                 {
-                    var row = reader.ReadLine();
-                    if(row.Length<12)continue;
-                    var lineId = row.Substring(0, 12);
-                    if(lineId != id) continue;
-                    base64 = row.Substring(13);
+                    data = row;
+                    break;
                 }
             }
+            if (string.IsNullOrWhiteSpace(data))
+            {
+                throw new Exception();
+            }
+            var base64 = data.Substring(13);
             var bytes = Convert.FromBase64String(base64);
-            //var decompressed = QuickLZ.decompress(bytes);
             using (var memStream = new MemoryStream(bytes))
             {
                 var obj = (Document)Serializer.Deserialize(memStream);
-                Log.DebugFormat("read {0} in {1}", fileName, timer.Elapsed);
+                Log.DebugFormat("read from {0} in {1}", fileName, timer.Elapsed);
                 return obj;
             }
         }
@@ -73,12 +87,11 @@ namespace Resin.IO
             var id = Path.GetRandomFileName();
             _ids[doc.Id] = id;
             var fileName = Path.Combine(directory, _id + ".dc");
-            if (_writer == null) Init(fileName);
+            if (_writer == null) InitWriteSession(fileName);
             using (var memStream = new MemoryStream())
             {
                 Serializer.Serialize(memStream, doc);
                 var bytes = memStream.ToArray();
-                //var compressed = QuickLZ.compress(bytes, 3);
                 var base64 = Convert.ToBase64String(bytes);
                 _writer.WriteLine("{0}:{1}", id, base64);
             }
@@ -108,6 +121,10 @@ namespace Resin.IO
                 _writer.Flush();
                 _writer.Close();
                 _writer.Dispose();
+            }
+            foreach (var reader in _readers.Values)
+            {
+                reader.Dispose();
             }
         }
     }

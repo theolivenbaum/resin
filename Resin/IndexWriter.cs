@@ -111,7 +111,7 @@ namespace Resin
             {
                 if (!_docContainers.TryGetValue(bucketId, out container))
                 {
-                    container = new DocContainer(bucketId, _directory);
+                    container = new DocContainer(bucketId);
                     _docContainers[container.Id] = container;
                 }
                 container.Put(doc, _directory);
@@ -275,7 +275,7 @@ namespace Resin
                 var trie = kvp.Value;
                 foreach (var child in trie.Dirty())
                 {
-                    var fileNameWithoutExt = field.ToTrieFileNameWithoutExtension(child.Val);
+                    var fileNameWithoutExt = field.ToTrieBucket(child.Val);
                     string fileName = Path.Combine(_directory, fileNameWithoutExt + ".tr");
                     child.Save(fileName);
                 }

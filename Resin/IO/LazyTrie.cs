@@ -27,7 +27,7 @@ namespace Resin.IO
             {
                 return true;
             }
-            var fileName = Path.Combine(_directory, _field.ToTrieFileNameWithoutExtension(c) + ".tr");
+            var fileName = Path.Combine(_directory, _field.ToTrieBucket(c) + ".tr");
             if (File.Exists(fileName))
             {
                 trie = Load(fileName);
@@ -42,7 +42,7 @@ namespace Resin.IO
         {
             foreach (var file in Directory.GetFiles(_directory, _searchPattern))
             {
-                var c = Path.GetFileNameWithoutExtension(file).ToTrieCharFromFileName();
+                var c = Path.GetFileNameWithoutExtension(file).ParseCharFromFileName();
                 Trie trie;
                 if (TryResolveChild(c, out trie))
                 {
