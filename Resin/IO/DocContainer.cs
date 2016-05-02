@@ -26,17 +26,24 @@ namespace Resin.IO
         {
             _id = id;
             _ids = new Dictionary<string, string>();
-            _readers = new Dictionary<string, StreamReader>();
         }
 
         private void InitWriteSession(string fileName)
         {
-            var fileStream = File.Exists(fileName) ?
-                File.Open(fileName, FileMode.Append, FileAccess.Write, FileShare.Read) :
-                File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
+            if (_writer == null)
+            {
+                var fileStream = File.Exists(fileName) ?
+                 File.Open(fileName, FileMode.Append, FileAccess.Write, FileShare.Read) :
+                 File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
 
-            _writer = new StreamWriter(fileStream);
-            _writer.AutoFlush = false;
+                _writer = new StreamWriter(fileStream);
+                _writer.AutoFlush = false; 
+            }
+        }
+
+        private void InitReadSession()
+        {
+            if (_readers == null) _readers = new Dictionary<string, StreamReader>();
         }
 
         public Document Get(string docId, string directory)
@@ -45,7 +52,7 @@ namespace Resin.IO
             timer.Start();
             var id = _ids[docId];
             var fileName = Path.Combine(directory, _id + ".dc");
-            if(_readers == null) _readers = new Dictionary<string, StreamReader>();
+            InitReadSession();
             StreamReader reader;
             if (!_readers.TryGetValue(fileName, out reader))
             {
@@ -87,7 +94,7 @@ namespace Resin.IO
             var id = Path.GetRandomFileName();
             _ids[doc.Id] = id;
             var fileName = Path.Combine(directory, _id + ".dc");
-            if (_writer == null) InitWriteSession(fileName);
+            InitWriteSession(fileName);
             using (var memStream = new MemoryStream())
             {
                 Serializer.Serialize(memStream, doc);
@@ -122,9 +129,12 @@ namespace Resin.IO
                 _writer.Close();
                 _writer.Dispose();
             }
-            foreach (var reader in _readers.Values)
+            if (_readers != null)
             {
-                reader.Dispose();
+                foreach (var reader in _readers.Values)
+                {
+                    reader.Dispose();
+                }  
             }
         }
     }

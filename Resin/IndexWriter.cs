@@ -59,7 +59,7 @@ namespace Resin
 
         private void PutPostingsInContainer(PostingsFile posting)
         {
-            var bucketId = posting.Token.ToPostingsBucket();
+            var bucketId = posting.Field.ToPostingsBucket(posting.Token[0]);
             var containerFileName = Path.Combine(_directory, bucketId + ".pl");
             var fieldTokenId = string.Format("{0}.{1}", posting.Field, posting.Token);
             PostingsContainer container;
@@ -154,7 +154,7 @@ namespace Resin
                     postingsFile.Postings.Remove(docId);
                     if (postingsFile.NumDocs() == 0)
                     {
-                        var pbucketId = token.ToPostingsBucket();
+                        var pbucketId = field.ToPostingsBucket(token[0]);
                         var pContainer = _postingsContainers[pbucketId];
                         pContainer.Files.Remove(fieldTokenId);
                         _postingsFiles.Remove(fieldTokenId);
@@ -217,7 +217,7 @@ namespace Resin
             PostingsFile file;
             if (!_postingsFiles.TryGetValue(fieldTokenId, out file))
             {
-                var bucketId = token.ToPostingsBucket();
+                var bucketId = field.ToPostingsBucket(token[0]);
                 var fileName = Path.Combine(_directory, bucketId + ".pl");
                 PostingsContainer container;
                 if (!_postingsContainers.TryGetValue(bucketId, out container))
@@ -248,7 +248,7 @@ namespace Resin
             Trie file;
             if (!_trieFiles.TryGetValue(field, out file))
             {
-                if (!Directory.GetFiles(_directory, field.ToTrieSearchPattern()).Any())
+                if (!Directory.GetFiles(_directory, field.CreateTrieFileSearchPattern()).Any())
                 {
                     file = new Trie();
                 }
@@ -275,7 +275,7 @@ namespace Resin
                 var trie = kvp.Value;
                 foreach (var child in trie.Dirty())
                 {
-                    var fileNameWithoutExt = field.ToTrieBucket(child.Val);
+                    var fileNameWithoutExt = field.ToTrieFileNameWoExt(child.Val);
                     string fileName = Path.Combine(_directory, fileNameWithoutExt + ".tr");
                     child.Save(fileName);
                 }

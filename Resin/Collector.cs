@@ -74,7 +74,7 @@ namespace Resin
 
         private PostingsFile GetPostingsFile(string field, string token)
         {
-            var bucketId = token.ToPostingsBucket();
+            var bucketId = field.ToPostingsBucket(token[0]);
             PostingsContainer container;
             if (!_postingsCache.TryGetValue(bucketId, out container))
             {

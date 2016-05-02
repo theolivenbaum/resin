@@ -20,8 +20,7 @@ namespace Resin
         private readonly IScoringScheme _scorer;
         private readonly ConcurrentDictionary<string, LazyTrie> _trieFiles;
         private readonly IxInfo _ix;
-        //private readonly ConcurrentDictionary<string, PostingsContainer> _postingsCache;
-        //private readonly ConcurrentDictionary<string, Document> _docCache;
+        private readonly ConcurrentDictionary<string, PostingsContainer> _postingContainers;
         private readonly ConcurrentDictionary<string, DocContainer> _docContainers;
 
         public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
@@ -30,9 +29,8 @@ namespace Resin
             _parser = parser;
             _scorer = scorer;
             _trieFiles = new ConcurrentDictionary<string, LazyTrie>();
-            //_postingsCache = new ConcurrentDictionary<string, PostingsContainer>();
-            //_docCache = new ConcurrentDictionary<string, Document>();
             _docContainers = new ConcurrentDictionary<string, DocContainer>();
+            _postingContainers = new ConcurrentDictionary<string, PostingsContainer>();
 
             _ix = IxInfo.Load(Path.Combine(_directory, "0.ix"));
         }
@@ -40,7 +38,7 @@ namespace Resin
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
             var timer = new Stopwatch();
-            var collector = new Collector(_directory, _ix, _trieFiles, new ConcurrentDictionary<string, PostingsContainer>());
+            var collector = new Collector(_directory, _ix, _trieFiles, _postingContainers);
             timer.Start();
             var q = _parser.Parse(query);
             if (q == null)
@@ -54,28 +52,6 @@ namespace Resin
             var docs = paged.Values.Select(s => GetDoc(s.DocId)); 
             return new Result { Docs = docs, Total = scored.Count};
         }
-
-        //private IDictionary<string, string> GetDoc(string docId)
-        //{
-        //    Document doc;
-        //    if (!_docCache.TryGetValue(docId, out doc))
-        //    {
-        //        var bucketId = docId.ToDocBucket();
-        //        var fileName = Path.Combine(_directory, bucketId + ".dl");
-        //        var container = DocContainer.Load(fileName);
-        //        doc = container.Get(docId, _directory);
-        //        _docCache[docId] = doc;
-        //    }
-        //    return doc.Fields;
-        //}
-
-        //private IDictionary<string, string> GetDoc(string docId)
-        //{
-        //    var bucketId = docId.ToDocBucket();
-        //    var fileName = Path.Combine(_directory, bucketId + ".dl");
-        //    var container = DocContainer.Load(fileName);
-        //    return container.Get(docId, _directory).Fields;
-        //}
 
         private IDictionary<string, string> GetDoc(string docId)
         {
@@ -95,6 +71,11 @@ namespace Resin
             foreach (var dc in _docContainers.Values)
             {
                 dc.Dispose();
+            }
+
+            foreach (var dc in _postingContainers.Values)
+            {
+                //dc.Dispose();
             }
         }
     }

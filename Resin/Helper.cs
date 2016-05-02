@@ -16,14 +16,12 @@ namespace Resin
             return seed.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 
-        public static string ToPostingsBucket(this string token)
+        public static string ToPostingsBucket(this string field, char c)
         {
-            if (string.IsNullOrEmpty(token)) throw new ArgumentException("token");
-            var seed = token.PadRight(2).Substring(0, 2);
-            return seed.ToHash().ToString(CultureInfo.InvariantCulture);
+            return field.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 
-        public static string ToTrieBucket(this string field, char c)
+        public static string ToTrieFileNameWoExt(this string field, char c)
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentException("field");
             var fieldHash = field.ToHash().ToString(CultureInfo.InvariantCulture);
@@ -31,14 +29,14 @@ namespace Resin
             return string.Format("{0}.{1}", fieldHash, charId);
         }
 
-        public static char ParseCharFromFileName(this string fn)
+        public static char ParseCharFromTrieFileName(this string fn)
         {
             if (string.IsNullOrEmpty(fn)) throw new ArgumentException("fn");
             var charId = Int32.Parse(fn.Substring(fn.IndexOf('.') + 1));
             return (char) charId;
         }
 
-        public static string ToTrieSearchPattern(this string field)
+        public static string CreateTrieFileSearchPattern(this string field)
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentException("field");
             var fieldHash = field.ToHash().ToString(CultureInfo.InvariantCulture);

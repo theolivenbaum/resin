@@ -171,7 +171,7 @@ namespace Tests
 
             foreach (var child in words.ResolveChildren())
             {
-                var fileNameWithoutExt = "fieldname".ToTrieBucket(child.Val);
+                var fileNameWithoutExt = "fieldname".ToTrieFileNameWoExt(child.Val);
                 string fileName = Path.Combine(dir, fileNameWithoutExt + ".tr");
                 child.Save(fileName);
             }
@@ -191,7 +191,7 @@ namespace Tests
 
             foreach (var child in lz.ResolveChildren())
             {
-                var fileNameWithoutExt = "fieldname".ToTrieBucket(child.Val);
+                var fileNameWithoutExt = "fieldname".ToTrieFileNameWoExt(child.Val);
                 string fileName = Path.Combine(dir, fileNameWithoutExt + ".tr");
                 child.Save(fileName);
             }

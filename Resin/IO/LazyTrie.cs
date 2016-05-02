@@ -11,38 +11,35 @@ namespace Resin.IO
         private readonly string _field;
         private readonly string _searchPattern;
 
-        private readonly ConcurrentDictionary<char, Trie> _cache;
-
         public LazyTrie(string directory, string field)
         {
             _directory = directory;
             _field = field;
-            _searchPattern = field.ToTrieSearchPattern();
-            _cache = new ConcurrentDictionary<char, Trie>();
+            _searchPattern = field.CreateTrieFileSearchPattern();
         }
 
         protected override bool TryResolveChild(char c, out Trie trie)
         {
-            if (_cache.TryGetValue(c, out trie))
+            if (Nodes.TryGetValue(c, out trie))
             {
                 return true;
             }
-            var fileName = Path.Combine(_directory, _field.ToTrieBucket(c) + ".tr");
+            var fileName = Path.Combine(_directory, _field.ToTrieFileNameWoExt(c) + ".tr");
             if (File.Exists(fileName))
             {
                 trie = Load(fileName);
                 if (trie == null) throw new DataMisalignedException("Your data got misaligned.");
-                _cache[c] = trie;
+                Nodes[c] = trie;
                 return true;
             }
-            return Nodes.TryGetValue(c, out trie);
+            return false;
         }
 
         public override IEnumerable<Trie> ResolveChildren()
         {
             foreach (var file in Directory.GetFiles(_directory, _searchPattern))
             {
-                var c = Path.GetFileNameWithoutExtension(file).ParseCharFromFileName();
+                var c = Path.GetFileNameWithoutExtension(file).ParseCharFromTrieFileName();
                 Trie trie;
                 if (TryResolveChild(c, out trie))
                 {
@@ -57,7 +54,7 @@ namespace Resin.IO
 
         public override IEnumerable<Trie> Dirty()
         {
-            return _cache.Values;
+            return Nodes.Values;
         }
     }
 }
