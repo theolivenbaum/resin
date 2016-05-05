@@ -77,7 +77,6 @@ namespace Resin.IO
             typeof (IxFile),
             typeof (IxInfo),
             typeof (Dictionary<string, Dictionary<string, object>>), 
-            typeof (PostingsContainer),
             typeof (PostingsFile),
             typeof (Dictionary<string, int>)
         };

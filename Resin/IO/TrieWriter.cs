@@ -26,7 +26,7 @@ namespace Resin.IO
                     File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
 
                 _writer = new StreamWriter(fileStream, Encoding.Unicode);
-                _writer.AutoFlush = false;
+                _writer.AutoFlush = true;
             }
         }
 

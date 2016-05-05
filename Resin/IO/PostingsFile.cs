@@ -9,11 +9,11 @@ namespace Resin.IO
     public class PostingsFile
     {
         /// <summary>
-        /// docids/term frequency
+        /// docids/posting data
         /// </summary>
         private readonly Dictionary<string, object> _postings;
-        private readonly string _field;
         private readonly string _token;
+        private readonly string _field;
 
         public Dictionary<string, object> Postings { get { return _postings; } }
         public string Field { get { return _field; } }
@@ -31,11 +31,9 @@ namespace Resin.IO
             return Postings.Count;
         }
 
-        public string Id { get { return string.Format("{0}.{1}", _field, _token); } }
-
         public override string ToString()
         {
-            return Id;
+            return Token;
         }
     }
 }

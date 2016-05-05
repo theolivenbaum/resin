@@ -14,14 +14,14 @@ namespace Resin
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly ConcurrentDictionary<string, LazyTrie> _trieFiles;
-        private readonly ConcurrentDictionary<string, PostingsContainer> _postingsCache;
+        private readonly ConcurrentDictionary<string, PostingsContainer> _postingContainers;
         private readonly IxInfo _ix;
 
-        public Collector(string directory, IxInfo ix, ConcurrentDictionary<string, LazyTrie> trieFiles, ConcurrentDictionary<string, PostingsContainer> postingsCache)
+        public Collector(string directory, IxInfo ix, ConcurrentDictionary<string, LazyTrie> trieFiles, ConcurrentDictionary<string, PostingsContainer> postingContainers)
         {
             _directory = directory;
             _trieFiles = trieFiles;
-            _postingsCache = postingsCache;
+            _postingContainers = postingContainers;
             _ix = ix;
         }
 
@@ -66,7 +66,6 @@ namespace Resin
                 {
                     var hit = new DocumentScore(posting.Key, posting.Value, totalNumOfDocs);
                     scorer.Score(hit);
-                    //if (hit.Score > 4d) Log.Info(hit);
                     yield return hit;
                 }
             }
@@ -74,16 +73,14 @@ namespace Resin
 
         private PostingsFile GetPostingsFile(string field, string token)
         {
-            var bucketId = field.ToPostingsContainerId();
+            var containerId = field.ToPostingsContainerId();
             PostingsContainer container;
-            if (!_postingsCache.TryGetValue(bucketId, out container))
+            if (!_postingContainers.TryGetValue(containerId, out container))
             {
-                var fileName = Path.Combine(_directory, bucketId + ".pix");
-                container = PostingsContainer.Load(fileName);
-                _postingsCache[bucketId] = container;
+                container = new PostingsContainer(_directory, containerId, eager:false);
+                _postingContainers[containerId] = container;
             }
-            var fieldTokenId = string.Format("{0}.{1}", field, token);
-            return container.Get(fieldTokenId, _directory);
+            return container.Get(token);
         }
 
         private void Expand(QueryContext queryContext)

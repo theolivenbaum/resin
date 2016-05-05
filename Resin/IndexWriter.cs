@@ -57,21 +57,10 @@ namespace Resin
         private void PutPostingsInContainer(PostingsFile posting)
         {
             var containerId = posting.Field.ToPostingsContainerId();
-            var containerFileName = Path.Combine(_directory, containerId + ".pix");
             PostingsContainer container;
-            if (File.Exists(containerFileName))
+            if (!_postingsContainers.TryGetValue(containerId, out container))
             {
-                if (!_postingsContainers.TryGetValue(containerId, out container))
-                {
-                    container = PostingsContainer.Load(containerFileName);
-                }
-            }
-            else
-            {
-                if (!_postingsContainers.TryGetValue(containerId, out container))
-                {
-                    container = new PostingsContainer(containerId);
-                }
+                container = new PostingsContainer(_directory, containerId);
             }
             container.Put(posting);
             _postingsContainers[container.Id] = container;
@@ -152,7 +141,7 @@ namespace Resin
                     {
                         var pbucketId = field.ToPostingsContainerId();
                         var pContainer = _postingsContainers[pbucketId];
-                        pContainer.Remove(fieldTokenId);
+                        pContainer.Remove(token);
                         _postingsFiles.Remove(fieldTokenId);
 
                         var trie = GetTrie(field);
@@ -193,6 +182,11 @@ namespace Resin
 
         private void Write(string docId, string field, string token, object postingData)
         {
+            if (docId == null) throw new ArgumentNullException("docId");
+            if (field == null) throw new ArgumentNullException("field");
+            if (token == null) throw new ArgumentNullException("token");
+            if (postingData == null) throw new ArgumentNullException("postingData");
+
             if (!_ix.Fields.ContainsKey(field))
             {
                 _ix.Fields.Add(field, new Dictionary<string, object>());
@@ -210,29 +204,18 @@ namespace Resin
         private PostingsFile GetPostingsFile(string field, string token)
         {
             var fieldTokenId = string.Format("{0}.{1}", field, token);
-
-
             PostingsFile file;
             if (!_postingsFiles.TryGetValue(fieldTokenId, out file))
             {
-                var bucketId = field.ToPostingsContainerId();
-                var fileName = Path.Combine(_directory, bucketId + ".pix");
+                var containerId = field.ToPostingsContainerId();
                 PostingsContainer container;
-                if (!_postingsContainers.TryGetValue(bucketId, out container))
+                if (!_postingsContainers.TryGetValue(containerId, out container))
                 {
-                    if (File.Exists(fileName))
-                    {
-                        container = PostingsContainer.Load(fileName);
-                        _postingsContainers[bucketId] = container;
-                    }
-                    else
-                    {
-                        container = new PostingsContainer(bucketId);
-                    }
+                    container = new PostingsContainer(_directory, containerId);
                 }
-                _postingsContainers[bucketId] = container;
+                _postingsContainers[containerId] = container;
 
-                if (!container.TryGet(fieldTokenId, _directory, out file))
+                if (!container.TryGet(token, out file))
                 {
                     file = new PostingsFile(field, token);
                 }
@@ -274,17 +257,15 @@ namespace Resin
 
             Parallel.ForEach(_postingsContainers.Values, container =>
             {
-                var fileName = Path.Combine(_directory, container.Id + ".pix");
                 if (container.Count > 0)
                 {
                     container.Flush(_directory);
-                    container.Save(fileName);
                     container.Dispose();
                 }
                 else
                 {
                     container.Dispose();
-                    File.Delete(fileName);
+                    File.Delete(Path.Combine(_directory, container.Id + ".pc"));
                 }
             });
             Parallel.ForEach(_docContainers.Values, container =>
