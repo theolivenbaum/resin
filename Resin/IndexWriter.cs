@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Resin.IO;
 
@@ -14,12 +13,14 @@ namespace Resin
         private readonly IScoringScheme _scoringScheme;
         //private static readonly ILog Log = LogManager.GetLogger("TermFileAppender");
         private readonly TaskQueue<Document> _docWorker;
+        private readonly TaskQueue<PostingsFile> _postingsWorker;
+        private readonly IList<string> _deletions;
         private readonly IxFile _ix;
 
         /// <summary>
         /// field/trie
         /// </summary>
-        private readonly Dictionary<string, Trie> _trieFiles;
+        private readonly Dictionary<string, LazyTrie> _trieFiles;
 
         /// <summary>
         /// field.token/postings
@@ -27,31 +28,27 @@ namespace Resin
         private readonly Dictionary<string, PostingsFile> _postingsFiles;
 
         /// <summary>
-        /// bucketId/file
+        /// containerid/file
         /// </summary>
         private readonly Dictionary<string, DocContainer> _docContainers;
  
         /// <summary>
-        /// bucketId/file
+        /// containerid/file
         /// </summary>
         private readonly Dictionary<string, PostingsContainer> _postingsContainers;
-
-        private readonly TaskQueue<PostingsFile> _postingsWorker;
-
-        private readonly IList<string> _deletions;
 
         public IndexWriter(string directory, IAnalyzer analyzer, IScoringScheme scoringScheme)
         {
             _directory = directory;
             _analyzer = analyzer;
             _scoringScheme = scoringScheme;
-            _trieFiles = new Dictionary<string, Trie>();
             _postingsFiles = new Dictionary<string, PostingsFile>();
             _postingsContainers = new Dictionary<string, PostingsContainer>();
             _docContainers = new Dictionary<string, DocContainer>();
             _docWorker = new TaskQueue<Document>(1, PutDocInContainer);
             _postingsWorker = new TaskQueue<PostingsFile>(1, PutPostingsInContainer);
             _deletions = new List<string>();
+            _trieFiles = new Dictionary<string, LazyTrie>();
 
             var ixFileName = Path.Combine(directory, "1.ix");
             _ix = File.Exists(ixFileName) ? IxFile.Load(ixFileName) : new IxFile();
@@ -59,21 +56,21 @@ namespace Resin
 
         private void PutPostingsInContainer(PostingsFile posting)
         {
-            var bucketId = posting.Field.ToPostingsBucket();
-            var containerFileName = Path.Combine(_directory, bucketId + ".pix");
+            var containerId = posting.Field.ToPostingsContainerId();
+            var containerFileName = Path.Combine(_directory, containerId + ".pix");
             PostingsContainer container;
             if (File.Exists(containerFileName))
             {
-                if (!_postingsContainers.TryGetValue(bucketId, out container))
+                if (!_postingsContainers.TryGetValue(containerId, out container))
                 {
                     container = PostingsContainer.Load(containerFileName);
                 }
             }
             else
             {
-                if (!_postingsContainers.TryGetValue(bucketId, out container))
+                if (!_postingsContainers.TryGetValue(containerId, out container))
                 {
-                    container = new PostingsContainer(bucketId);
+                    container = new PostingsContainer(containerId);
                 }
             }
             container.Put(posting);
@@ -82,12 +79,12 @@ namespace Resin
 
         private void PutDocInContainer(Document doc)
         {
-            var bucketId = doc.Id.ToDocBucket();
-            var containerFileName = Path.Combine(_directory, bucketId + ".dix");
+            var containerId = doc.Id.ToDocContainerId();
+            var containerFileName = Path.Combine(_directory, containerId + ".dix");
             DocContainer container;
             if (File.Exists(containerFileName))
             {
-                if (!_docContainers.TryGetValue(bucketId, out container))
+                if (!_docContainers.TryGetValue(containerId, out container))
                 {
                     container = DocContainer.Load(containerFileName);
                 }
@@ -107,9 +104,9 @@ namespace Resin
             }
             else
             {
-                if (!_docContainers.TryGetValue(bucketId, out container))
+                if (!_docContainers.TryGetValue(containerId, out container))
                 {
-                    container = new DocContainer(bucketId);
+                    container = new DocContainer(containerId);
                     _docContainers[container.Id] = container;
                 }
                 container.Put(doc, _directory);
@@ -119,6 +116,7 @@ namespace Resin
 
         public void Remove(string docId)
         {
+            // TODO: should use a Collector to learn which docs to remove, which also works out well for DeleteByQuery.
             _deletions.Add(docId);
         }
 
@@ -131,7 +129,7 @@ namespace Resin
                     continue;
                 }
                 _ix.Fields[field].Remove(docId);
-                var bucketId = docId.ToDocBucket();
+                var bucketId = docId.ToDocContainerId();
                 var containerFileName = Path.Combine(_directory, bucketId + ".dix");
                 var container = DocContainer.Load(containerFileName);
                 var doc = container.Get(docId, _directory);
@@ -152,7 +150,7 @@ namespace Resin
                     postingsFile.Postings.Remove(docId);
                     if (postingsFile.NumDocs() == 0)
                     {
-                        var pbucketId = field.ToPostingsBucket();
+                        var pbucketId = field.ToPostingsContainerId();
                         var pContainer = _postingsContainers[pbucketId];
                         pContainer.Remove(fieldTokenId);
                         _postingsFiles.Remove(fieldTokenId);
@@ -212,10 +210,12 @@ namespace Resin
         private PostingsFile GetPostingsFile(string field, string token)
         {
             var fieldTokenId = string.Format("{0}.{1}", field, token);
+
+
             PostingsFile file;
             if (!_postingsFiles.TryGetValue(fieldTokenId, out file))
             {
-                var bucketId = field.ToPostingsBucket();
+                var bucketId = field.ToPostingsContainerId();
                 var fileName = Path.Combine(_directory, bucketId + ".pix");
                 PostingsContainer container;
                 if (!_postingsContainers.TryGetValue(bucketId, out container))
@@ -241,27 +241,19 @@ namespace Resin
             return file;
         }
 
-        private Trie GetTrie(string field)
+        private LazyTrie GetTrie(string field)
         {
-            Trie file;
-            if (!_trieFiles.TryGetValue(field, out file))
+            LazyTrie trie;
+            if (!_trieFiles.TryGetValue(field, out trie))
             {
-                if (!Directory.GetFiles(_directory, field.CreateTrieFileSearchPattern()).Any())
-                {
-                    file = new Trie();
-                }
-                else
-                {
-                    file = new LazyTrie(_directory, field);
-                }
-                _trieFiles[field] = file;
+                trie = new LazyTrie(field.ToTrieContainerId());
+                _trieFiles[field] = trie;
             }
-            return file;
+            return trie;
         }
 
         public void Dispose()
         {
-            //TODO:this is not the time to be doing this
             foreach (var docId in _deletions)
             {
                 DoRemove(docId);
@@ -271,11 +263,9 @@ namespace Resin
             {
                 var field = kvp.Key;
                 var trie = kvp.Value;
-                foreach (var child in trie.Dirty())
+                using(var container = new TrieWriter(field.ToTrieContainerId()))
                 {
-                    var fileNameWithoutExt = field.ToTrieFileNameWoExt(child.Val);
-                    string fileName = Path.Combine(_directory, fileNameWithoutExt + ".tr");
-                    child.Save(fileName);
+                    trie.Save(container, _directory);
                 }
             });
 

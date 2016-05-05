@@ -4,8 +4,9 @@ using System.Collections.Generic;
 namespace Resin.IO
 {
     [Serializable]
-    public class Document : IDentifyable
+    public class Document
     {
+        //TODO: make "_id" not mandatory
         public string Id
         {
             get { return Fields["_id"]; }
@@ -25,10 +26,5 @@ namespace Resin.IO
             if (fields == null) throw new ArgumentNullException("fields");
             _fields = fields;
         }
-    }
-
-    public interface IDentifyable
-    {
-        string Id { get; }
     }
 }

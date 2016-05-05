@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace Resin.IO
 {
@@ -16,8 +17,6 @@ namespace Resin.IO
 
         [NonSerialized] 
         private Dictionary<string, PostingsFile> _postingsFiles;
-        [NonSerialized]
-        private Dictionary<string, StreamReader> _readers;       
         [NonSerialized]
         private StreamWriter _writer;
 
@@ -42,7 +41,6 @@ namespace Resin.IO
 
         private void InitReadSession()
         {
-            if (_readers == null) _readers = new Dictionary<string, StreamReader>();
             if (_postingsFiles == null) _postingsFiles = new Dictionary<string, PostingsFile>();
         }
 
@@ -59,41 +57,35 @@ namespace Resin.IO
             timer.Start();
             var id = _ids[itemId];
             var fileName = Path.Combine(directory, _containerId + ItemsFileExtIncDot);
-            StreamReader reader;
-            if (!_readers.TryGetValue(fileName, out reader))
+            using(var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var reader = new StreamReader(fs, Encoding.ASCII))
             {
-                var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                reader = new StreamReader(fs);
-                _readers[fileName] = reader;
-                Log.DebugFormat("opened {0}", fileName);
-            }
-            reader.BaseStream.Position = 0;
-            reader.DiscardBufferedData();
-            var data = string.Empty;
-            string lineId = string.Empty;
-            while (reader.Peek() >= 0)
-            {
-                var row = reader.ReadLine();
-                var indexOfDelimiter = row.IndexOf(':');
-                lineId = row.Substring(0, indexOfDelimiter);
-                if (lineId == id)
+                var data = string.Empty;
+                string lineId = string.Empty;
+                while (reader.Peek() >= 0)
                 {
-                    data = row;
-                    break;
+                    var row = reader.ReadLine();
+                    var indexOfDelimiter = row.IndexOf(':');
+                    lineId = row.Substring(0, indexOfDelimiter);
+                    if (lineId == id)
+                    {
+                        data = row;
+                        break;
+                    }
                 }
-            }
-            if (string.IsNullOrWhiteSpace(data))
-            {
-                throw new Exception();
-            }
-            var base64 = data.Substring(lineId.Length+1);
-            var bytes = Convert.FromBase64String(base64);
-            using (var memStream = new MemoryStream(bytes))
-            {
-                var obj = Deserialize(memStream);
-                _postingsFiles[itemId] = obj;
-                Log.DebugFormat("extracted {0} from {1} in {2}", obj, fileName, timer.Elapsed);
-                return obj;
+                if (string.IsNullOrWhiteSpace(data))
+                {
+                    throw new Exception();
+                }
+                var base64 = data.Substring(lineId.Length + 1);
+                var bytes = Convert.FromBase64String(base64);
+                using (var memStream = new MemoryStream(bytes))
+                {
+                    var obj = Deserialize(memStream);
+                    _postingsFiles[itemId] = obj;
+                    Log.DebugFormat("extracted {0} from {1} in {2}", obj, fileName, timer.Elapsed);
+                    return obj;
+                }   
             }
         }
 
@@ -162,13 +154,6 @@ namespace Resin.IO
                 _writer.Flush();
                 _writer.Close();
                 _writer.Dispose();
-            }
-            if (_readers != null)
-            {
-                foreach (var reader in _readers.Values)
-                {
-                    reader.Dispose();
-                }
             }
         }
     }

@@ -9,51 +9,6 @@ namespace Resin
 {
     public static class Helper
     {
-        public static string ToDocBucket(this string docId)
-        {
-            if (string.IsNullOrEmpty(docId)) throw new ArgumentException("docId");
-            var seed = docId.PadRight(3).Substring(0, 3);
-            return seed.ToHash().ToString(CultureInfo.InvariantCulture);
-        }
-
-        public static string ToPostingsBucket(this string field)
-        {
-            return field.ToHash().ToString(CultureInfo.InvariantCulture);
-        }
-
-        public static string ToTrieFileNameWoExt(this string field, char c)
-        {
-            if (string.IsNullOrEmpty(field)) throw new ArgumentException("field");
-            var fieldHash = field.ToHash().ToString(CultureInfo.InvariantCulture);
-            var charId = Convert.ToInt32(c).ToString(CultureInfo.InvariantCulture);
-            return string.Format("{0}.{1}", fieldHash, charId);
-        }
-
-        public static char ParseCharFromTrieFileName(this string fn)
-        {
-            if (string.IsNullOrEmpty(fn)) throw new ArgumentException("fn");
-            var charId = Int32.Parse(fn.Substring(fn.IndexOf('.') + 1));
-            return (char) charId;
-        }
-
-        public static string CreateTrieFileSearchPattern(this string field)
-        {
-            if (string.IsNullOrEmpty(field)) throw new ArgumentException("field");
-            var fieldHash = field.ToHash().ToString(CultureInfo.InvariantCulture);
-            return string.Format("{0}.*.tr", fieldHash);
-        }
-
-        private static UInt64 ToHash(this string read)
-        {
-            UInt64 hashedValue = 3074457345618258791ul;
-            for (int i = 0; i < read.Length; i++)
-            {
-                hashedValue += read[i];
-                hashedValue *= 3074457345618258799ul;
-            }
-            return hashedValue;
-        }
-
         public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 23);
 
         //private static readonly ILog Log = LogManager.GetLogger(typeof(Helper));
@@ -131,26 +86,35 @@ namespace Resin
         }
     }
 
-    public static class Versioning
+    internal static class WierdStringExtensions
     {
-        public static void Checkout(string branch, bool create)
+        public static string ToDocContainerId(this string docId)
         {
-            
+            if (string.IsNullOrEmpty(docId)) throw new ArgumentException("docId");
+            var seed = docId.PadRight(3).Substring(0, 3);
+            return seed.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 
-        public static void Rebase(string branch)
+        public static string ToPostingsContainerId(this string field)
         {
-            
+            return field.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 
-        public static void Commit(string message)
+        public static string ToTrieContainerId(this string field)
         {
-            
+            var fieldHash = field.ToHash().ToString(CultureInfo.InvariantCulture);
+            return string.Format("{0}", fieldHash);
         }
 
-        public static void DeleteBranch(string branch)
+        public static UInt64 ToHash(this string read)
         {
-            
+            UInt64 hashedValue = 3074457345618258791ul;
+            for (int i = 0; i < read.Length; i++)
+            {
+                hashedValue += read[i];
+                hashedValue *= 3074457345618258799ul;
+            }
+            return hashedValue;
         }
     }
 }

@@ -55,7 +55,7 @@ namespace Resin
 
         private IDictionary<string, string> GetDoc(string docId)
         {
-            var bucketId = docId.ToDocBucket();
+            var bucketId = docId.ToDocContainerId();
             DocContainer container;
             if (!_docContainers.TryGetValue(bucketId, out container))
             {
@@ -75,7 +75,7 @@ namespace Resin
 
             foreach (var dc in _postingContainers.Values)
             {
-                //dc.Dispose();
+                dc.Dispose();
             }
         }
     }

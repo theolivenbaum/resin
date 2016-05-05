@@ -70,7 +70,6 @@ namespace Resin.IO
             typeof (string), 
             typeof (int), 
             typeof (char), 
-            typeof (Trie),
             typeof (DocContainer), 
             typeof (Document),
             typeof (Dictionary<string, string>),
@@ -80,10 +79,7 @@ namespace Resin.IO
             typeof (Dictionary<string, Dictionary<string, object>>), 
             typeof (PostingsContainer),
             typeof (PostingsFile),
-            typeof (Dictionary<string, int>), 
-            typeof (Dictionary<char, Trie>),
-            typeof (Container<DocContainer, Document>),
-            typeof (Container<PostingsContainer, PostingsFile>)
+            typeof (Dictionary<string, int>)
         };
 
         [NonSerialized]

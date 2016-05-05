@@ -33,12 +33,12 @@ namespace Resin
             return scored;
         }
 
-        private Trie GetTrie(string field)
+        private LazyTrie GetTrie(string field)
         {
             LazyTrie file;
             if (!_trieFiles.TryGetValue(field, out file))
             {
-                file = new LazyTrie(_directory, field);
+                file = new LazyTrie(Path.Combine(_directory, field.ToTrieContainerId() + ".tc"));
                 _trieFiles[field] = file;
             }
             return file;
@@ -74,7 +74,7 @@ namespace Resin
 
         private PostingsFile GetPostingsFile(string field, string token)
         {
-            var bucketId = field.ToPostingsBucket();
+            var bucketId = field.ToPostingsContainerId();
             PostingsContainer container;
             if (!_postingsCache.TryGetValue(bucketId, out container))
             {

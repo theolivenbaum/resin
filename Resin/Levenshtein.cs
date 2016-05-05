@@ -7,6 +7,7 @@ namespace Resin
         public static string ReplaceAt(this string input, int index, char newChar)
         {
             var chars = input.ToCharArray();
+            if (index == input.Length) return input + newChar;
             chars[index] = newChar;
             return new string(chars);
         }

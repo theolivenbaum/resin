@@ -136,79 +136,40 @@ namespace Tests
         }
 
         [Test]
-        public void Serialize()
-        {
-            var words = new Trie(new[] { "tree", "treaty", "treating", "pre", "prefix" });
-
-            Assert.AreEqual(3, words.Prefixed("tre").Count());
-            Assert.AreEqual(1, words.Prefixed("tree").Count());
-            Assert.AreEqual(2, words.Prefixed("pre").Count());
-            Assert.AreEqual(1, words.Prefixed("pref").Count());
-
-            var fileName = Setup.Dir + "\\serialize.tri";
-            if(File.Exists(fileName))File.Delete(fileName);
-            words.Save(fileName);
-            words = Trie.Load(fileName);
-
-            Assert.AreEqual(3, words.Prefixed("tre").Count());
-            Assert.AreEqual(1, words.Prefixed("tree").Count());
-            Assert.AreEqual(2, words.Prefixed("pre").Count());
-            Assert.AreEqual(1, words.Prefixed("pref").Count());
-        }
-
-        [Test]
         public void Lazy()
         {
             var dir = Setup.Dir + "\\lazy";
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            var words = new Trie(new[] { "tree", "treaty", "treating", "pre", "prefix" });
-
+            var words = new LazyTrie(Path.Combine(dir, "abc123.tc"));
+            words.Add("treaty");
+            words.Add("treating");
+            words.Add("tree");
+            words.Add("pre");
+            words.Add("prefix");
             Assert.AreEqual(3, words.Prefixed("tre").Count());
             Assert.AreEqual(1, words.Prefixed("tree").Count());
             Assert.AreEqual(2, words.Prefixed("pre").Count());
             Assert.AreEqual(1, words.Prefixed("pref").Count());
 
-            foreach (var child in words.ResolveChildren())
+            using (var container = new TrieWriter("abc123"))
             {
-                var fileNameWithoutExt = "fieldname".ToTrieFileNameWoExt(child.Val);
-                string fileName = Path.Combine(dir, fileNameWithoutExt + ".tr");
-                child.Save(fileName);
+                words.Save(container, dir);
             }
 
-            var lz = new LazyTrie(dir, "fieldname");
+            var lz = new LazyTrie(Path.Combine(dir, "abc123.tc"));
 
             Assert.AreEqual(3, lz.Prefixed("tre").Count());
             Assert.AreEqual(1, lz.Prefixed("tree").Count());
             Assert.AreEqual(2, lz.Prefixed("pre").Count());
             Assert.AreEqual(1, lz.Prefixed("pref").Count());
-
             Assert.AreEqual(0, lz.Prefixed("cracker").Count());
-
-            lz.Add("cracker");
-
-            Assert.AreEqual(1, lz.Prefixed("cracker").Count());
-
-            foreach (var child in lz.ResolveChildren())
-            {
-                var fileNameWithoutExt = "fieldname".ToTrieFileNameWoExt(child.Val);
-                string fileName = Path.Combine(dir, fileNameWithoutExt + ".tr");
-                child.Save(fileName);
-            }
-
-            var llz = new LazyTrie(dir, "fieldname");
-
-            Assert.AreEqual(3, llz.Prefixed("tre").Count());
-            Assert.AreEqual(1, llz.Prefixed("tree").Count());
-            Assert.AreEqual(2, llz.Prefixed("pre").Count());
-            Assert.AreEqual(1, llz.Prefixed("pref").Count());
-            Assert.AreEqual(1, llz.Prefixed("cracker").Count());
         }
 
         [Test]
         public void Contains()
         {
-            var words = new Trie(new[] {"tree", "treat", "treaty", "treating", "pre"});
+            var words = new Trie(new[] { "tree", "treat", "treaty", "treating", "pre" });
 
             Assert.IsTrue(words.ContainsToken("tree"));
             Assert.IsTrue(words.ContainsToken("treat"));

@@ -6,7 +6,7 @@ namespace Resin.IO
     /// <summary>
     /// </summary>
     [Serializable]
-    public class PostingsFile : IDentifyable
+    public class PostingsFile
     {
         /// <summary>
         /// docids/term frequency
