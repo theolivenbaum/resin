@@ -246,7 +246,7 @@ namespace Resin
             LazyTrie trie;
             if (!_trieFiles.TryGetValue(field, out trie))
             {
-                trie = new LazyTrie(field.ToTrieContainerId());
+                trie = new LazyTrie(Path.Combine(_directory, field.ToTrieContainerId() + ".tc"));
                 _trieFiles[field] = trie;
             }
             return trie;
