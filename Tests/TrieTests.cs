@@ -152,6 +152,12 @@ namespace Tests
             Assert.AreEqual(2, words.Prefixed("pre").Count());
             Assert.AreEqual(1, words.Prefixed("pref").Count());
 
+            Assert.IsTrue(words.Similar("tre", 1).Contains("tree"));
+            Assert.IsFalse(words.Similar("tre", 1).Contains("treat"));
+            Assert.IsFalse(words.Similar("tre", 1).Contains("treaty"));
+            Assert.IsFalse(words.Similar("tre", 1).Contains("treating"));
+            Assert.IsTrue(words.Similar("tre", 1).Contains("pre"));
+
             using (var container = new TrieWriter("abc123"))
             {
                 words.Save(container, dir);
@@ -164,6 +170,12 @@ namespace Tests
             Assert.AreEqual(2, lz.Prefixed("pre").Count());
             Assert.AreEqual(1, lz.Prefixed("pref").Count());
             Assert.AreEqual(0, lz.Prefixed("cracker").Count());
+
+            Assert.IsTrue(lz.Similar("tre", 1).Contains("tree"));
+            Assert.IsFalse(lz.Similar("tre", 1).Contains("treat"));
+            Assert.IsFalse(lz.Similar("tre", 1).Contains("treaty"));
+            Assert.IsFalse(lz.Similar("tre", 1).Contains("treating"));
+            Assert.IsTrue(lz.Similar("tre", 1).Contains("pre"));
         }
 
         [Test]

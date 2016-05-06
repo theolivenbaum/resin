@@ -142,7 +142,7 @@ namespace Resin
                 fieldName = field;
             }
             if (position == 0) and = true;
-            return new QueryContext(fieldName, token) { And = and, Not = not, Prefix = prefix, Fuzzy = fuzzy, Similarity = 0.75f };
+            return new QueryContext(fieldName, token) { And = and, Not = not, Prefix = prefix, Fuzzy = fuzzy, Similarity = 0.9f };
         }
     }
 }
