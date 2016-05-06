@@ -63,7 +63,7 @@ namespace Resin.IO
                  File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
 
                 _writer = new StreamWriter(fileStream);
-                _writer.AutoFlush = true;
+                _writer.AutoFlush = false;
             }
         }
 

@@ -70,7 +70,6 @@ namespace Resin.IO
             typeof (string), 
             typeof (int), 
             typeof (char), 
-            typeof (DocContainer), 
             typeof (Document),
             typeof (Dictionary<string, string>),
             typeof (Dictionary<string, object>),

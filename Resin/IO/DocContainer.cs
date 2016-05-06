@@ -2,28 +2,27 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
+using log4net;
 
 namespace Resin.IO
 {
-    [Serializable]
-    public class DocContainer : CompressedFileBase<DocContainer>, IDisposable
+    public class DocContainer : IDisposable
     {
-        /// <summary>
-        /// itemid/id (in file)
-        /// </summary>
-        private readonly Dictionary<string, string> _ids;
+        private readonly string _directory;
         private readonly string _containerId;
-
+        private StreamWriter _writer;
+        private readonly HashSet<string> _deletions;
+        private static readonly ILog Log = LogManager.GetLogger(typeof(DocContainer));
+        
         public string Id { get { return _containerId; } }
 
-        [NonSerialized]
-        private StreamWriter _writer;
-
-        public DocContainer(string containerId)
+        public DocContainer(string directory, string containerId)
         {
+            _directory = directory;
             _containerId = containerId;
-            _ids = new Dictionary<string, string>();
+            _deletions = new HashSet<string>();
         }
 
         private void InitWriteSession(string fileName)
@@ -34,40 +33,32 @@ namespace Resin.IO
                     File.Open(fileName, FileMode.Append, FileAccess.Write, FileShare.Read) :
                     File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
 
-                _writer = new StreamWriter(fileStream, Encoding.ASCII);
+                _writer = new StreamWriter(fileStream, Encoding.ASCII); // TODO: store token hashes instead of tokens? Tokens are Unicode.
                 _writer.AutoFlush = true;
             }
         }
 
-        public Document Get(string docId, string directory)
+        public Document Get(string docId)
         {
             var timer = new Stopwatch();
             timer.Start();
-            var id = _ids[docId];
-            var fileName = Path.Combine(directory, _containerId + ".dc");
+            var fileName = Path.Combine(_directory, _containerId + ".dc");
             using(var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var reader = new StreamReader(fs, Encoding.ASCII))
             {
-                reader.BaseStream.Position = 0;
-                reader.DiscardBufferedData();
+                string readerId = string.Empty;
+                string line;
                 var data = string.Empty;
-                string lineId = string.Empty;
-                while (reader.Peek() >= 0)
+                while ((line = reader.ReadLine()) != null)
                 {
-                    var row = reader.ReadLine();
-                    var indexOfDelimiter = row.IndexOf(':');
-                    lineId = row.Substring(0, indexOfDelimiter);
-                    if (lineId == id)
+                    readerId = line.Substring(0, line.IndexOf(':'));
+                    if (readerId == docId)
                     {
-                        data = row;
+                        data = line;
                         break;
                     }
                 }
-                if (string.IsNullOrWhiteSpace(data))
-                {
-                    throw new Exception();
-                }
-                var base64 = data.Substring(lineId.Length + 1);
+                var base64 = data.Substring(readerId.Length + 1);
                 var bytes = Convert.FromBase64String(base64);
                 using (var memStream = new MemoryStream(bytes))
                 {
@@ -80,46 +71,75 @@ namespace Resin.IO
 
         private Document Deserialize(Stream stream)
         {
-            return (Document)Serializer.Deserialize(stream);
+            return (Document)FileBase.Serializer.Deserialize(stream);
         }
 
         private byte[] Serialize(Document item)
         {
             using (var stream = new MemoryStream())
             {
-                Serializer.Serialize(stream, item);
+                FileBase.Serializer.Serialize(stream, item);
                 return stream.ToArray();
             }
         }
 
         public void Put(Document item, string directory)
         {
-            var id = Path.GetRandomFileName();
-            _ids[item.Id] = id;
             var fileName = Path.Combine(directory, _containerId + ".dc");
             InitWriteSession(fileName);
             var bytes = Serialize(item);
+            if(bytes.Length == 0) throw new Exception();
             var base64 = Convert.ToBase64String(bytes);
-            _writer.WriteLine("{0}:{1}", id, base64);
+            _writer.WriteLine("{0}:{1}", item.Id, base64);
         }
 
-        public bool TryGet(string docId, string directory, out Document item)
+        public bool TryGet(string docId, out Document item)
         {
-            if (_ids.ContainsKey(docId))
+            var timer = new Stopwatch();
+            timer.Start();
+            var fileName = Path.Combine(_directory, _containerId + ".dc");
+            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var reader = new StreamReader(fs, Encoding.ASCII))
             {
-                item = Get(docId, directory);
-                return true;
+                string readerId = string.Empty;
+                string line;
+                string data = null;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (string.IsNullOrEmpty(line))
+                    {
+                        item = null;
+                        return false;
+                    }
+                    readerId = line.Substring(0, line.IndexOf(':'));
+                    if (readerId == docId)
+                    {
+                        data = line;
+                        break;
+                    }
+                }
+                if (data == null)
+                {
+                    item = null;
+                    return false;
+                }
+                var base64 = data.Substring(readerId.Length + 1);
+                var bytes = Convert.FromBase64String(base64);
+                using (var memStream = new MemoryStream(bytes))
+                {
+                    var doc = Deserialize(memStream);
+                    Log.DebugFormat("extracted {0} from {1} in {2}", doc.Id, fileName, timer.Elapsed);
+                    item = doc;
+                    return true;
+                }
             }
-            item = null;
-            return false;
         }
 
         public void Remove(string docId)
         {
-            _ids.Remove(docId);
+            _deletions.Add(docId);
         }
 
-        public int Count { get { return _ids.Count; } }
         public void Dispose()
         {
             if (_writer != null)
@@ -127,7 +147,41 @@ namespace Resin.IO
                 _writer.Flush();
                 _writer.Close();
                 _writer.Dispose();
+
+                if (_deletions.Count == 0) return;
+
+                var fileName = Path.Combine(_directory, _containerId + ".dc");
+                var lines = File.ReadAllLines(fileName).ToList();
+                using (var fs = File.Open(fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read))
+                using (var w = new StreamWriter(fs, Encoding.ASCII))
+                {
+                    foreach (var line in lines)
+                    {
+                        var docId = line.Substring(0, line.IndexOf(':'));
+                        if (_deletions.Contains(docId))
+                        {
+                            _deletions.Remove(docId);
+                        }
+                        else
+                        {
+                            w.WriteLine(line);
+                        }
+                    }
+                }
             }
         }
+
+        //private IEnumerable<string> ReadAllLines(string fileName)
+        //{
+        //    using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+        //    using (var sr = new StreamReader(fs, Encoding.ASCII))
+        //    {
+        //        string line;
+        //        while ((line = sr.ReadLine()) != null)
+        //        {
+        //            yield return line;
+        //        }
+        //    }
+        //} 
     }
 }

@@ -55,15 +55,14 @@ namespace Resin
 
         private IDictionary<string, string> GetDoc(string docId)
         {
-            var bucketId = docId.ToDocContainerId();
+            var containerId = docId.ToDocContainerId();
             DocContainer container;
-            if (!_docContainers.TryGetValue(bucketId, out container))
+            if (!_docContainers.TryGetValue(containerId, out container))
             {
-                var fileName = Path.Combine(_directory, bucketId + ".dix");
-                container = DocContainer.Load(fileName);
-                _docContainers[bucketId] = container;
+                container = new DocContainer(_directory, containerId);
+                _docContainers[containerId] = container;
             }
-            return container.Get(docId, _directory).Fields;
+            return container.Get(docId).Fields;
         }
 
         public void Dispose()

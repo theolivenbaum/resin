@@ -69,21 +69,22 @@ namespace Resin
         private void PutDocInContainer(Document doc)
         {
             var containerId = doc.Id.ToDocContainerId();
-            var containerFileName = Path.Combine(_directory, containerId + ".dix");
+            var containerFileName = Path.Combine(_directory, containerId + ".dc");
             DocContainer container;
             if (File.Exists(containerFileName))
             {
                 if (!_docContainers.TryGetValue(containerId, out container))
                 {
-                    container = DocContainer.Load(containerFileName);
+                    container = new DocContainer(_directory, containerId);
                 }
                 Document existing;
-                if (container.TryGet(doc.Id, _directory, out existing))
+                if (container.TryGet(doc.Id, out existing))
                 {
                     foreach (var field in doc.Fields)
                     {
                         existing.Fields[field.Key] = field.Value;
                     }
+                    container.Remove(doc.Id);
                     container.Put(existing, _directory);
                 }
                 else
@@ -95,7 +96,7 @@ namespace Resin
             {
                 if (!_docContainers.TryGetValue(containerId, out container))
                 {
-                    container = new DocContainer(containerId);
+                    container = new DocContainer(_directory, containerId);
                     _docContainers[container.Id] = container;
                 }
                 container.Put(doc, _directory);
@@ -118,40 +119,51 @@ namespace Resin
                     continue;
                 }
                 _ix.Fields[field].Remove(docId);
-                var bucketId = docId.ToDocContainerId();
-                var containerFileName = Path.Combine(_directory, bucketId + ".dix");
-                var container = DocContainer.Load(containerFileName);
-                var doc = container.Get(docId, _directory);
-                container.Remove(docId);
-                IEnumerable<string> tokens;
-                if (field[0] == '_')
+                var containerId = docId.ToDocContainerId();
+                var containerFileName = Path.Combine(_directory, containerId + ".dc");
+                DocContainer container;
+                if (!_docContainers.TryGetValue(containerId, out container))
                 {
-                    tokens = new[] { doc.Fields[field] };
+                    container = new DocContainer(_directory, containerId);
+                    _docContainers[containerId] = container;
                 }
-                else
+                if (File.Exists(containerFileName))
                 {
-                    tokens = _analyzer.Analyze(doc.Fields[field]);
-                }
-                foreach (var token in tokens)
-                {
-                    var fieldTokenId = string.Format("{0}.{1}", field, token);
-                    var postingsFile = GetPostingsFile(field, token);
-                    postingsFile.Postings.Remove(docId);
-                    if (postingsFile.NumDocs() == 0)
+                    Document doc;
+                    if (container.TryGet(docId, out doc))
                     {
-                        var pbucketId = field.ToPostingsContainerId();
-                        var pContainer = _postingsContainers[pbucketId];
-                        pContainer.Remove(token);
-                        _postingsFiles.Remove(fieldTokenId);
+                        container.Remove(docId);
+                        IEnumerable<string> tokens;
+                        if (field[0] == '_')
+                        {
+                            tokens = new[] { doc.Fields[field] };
+                        }
+                        else
+                        {
+                            tokens = _analyzer.Analyze(doc.Fields[field]);
+                        }
+                        foreach (var token in tokens)
+                        {
+                            var fieldTokenId = string.Format("{0}.{1}", field, token);
+                            var postingsFile = GetPostingsFile(field, token);
+                            postingsFile.Postings.Remove(docId);
+                            if (postingsFile.NumDocs() == 0)
+                            {
+                                var pbucketId = field.ToPostingsContainerId();
+                                var pContainer = _postingsContainers[pbucketId];
+                                pContainer.Remove(token);
+                                _postingsFiles.Remove(fieldTokenId);
 
-                        var trie = GetTrie(field);
-                        trie.Remove(token);
+                                var trie = GetTrie(field);
+                                trie.Remove(token);
+                            }
+                            else
+                            {
+                                _postingsWorker.Enqueue(postingsFile);
+                            }
+                        }
                     }
-                    else
-                    {
-                        _postingsWorker.Enqueue(postingsFile);
-                    }
-                }
+                }                
             }
         }
 
@@ -163,7 +175,6 @@ namespace Resin
         public void Write(Document doc)
         {
             _docWorker.Enqueue(doc);  
-
             foreach (var field in doc.Fields)
             {
                 Analyze(doc.Id, field.Key, field.Value);
@@ -268,20 +279,9 @@ namespace Resin
                     File.Delete(Path.Combine(_directory, container.Id + ".pc"));
                 }
             });
-            Parallel.ForEach(_docContainers.Values, container =>
-            {
-                var fileName = Path.Combine(_directory, container.Id + ".dix");
-                if (container.Count > 0)
-                {
-                    container.Save(fileName);
-                    container.Dispose();
-                }
-                else
-                {
-                    container.Dispose();
-                    File.Delete(fileName);
-                }
-            });
+            
+            Parallel.ForEach(_docContainers.Values, container => container.Dispose());
+
             _ix.Save(Path.Combine(_directory, "1.ix"));
             var ixInfo = new IxInfo();
             foreach (var field in _ix.Fields)
