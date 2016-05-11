@@ -16,14 +16,14 @@ namespace Resin.IO
         public bool Eow { get { return _eow; } }
         public Dictionary<char, Trie> Nodes { get { return _nodes; } } 
 
-        public IEnumerable<Trie> EndOfWords()
-        {
-            if (_eow) yield return this;
-            foreach (var word in _nodes.Values.SelectMany(c => c.EndOfWords()))
-            {
-                yield return word;
-            }
-        }
+        //public IEnumerable<Trie> EndOfWords()
+        //{
+        //    if (_eow) yield return this;
+        //    foreach (var word in _nodes.Values.SelectMany(c => c.EndOfWords()))
+        //    {
+        //        yield return word;
+        //    }
+        //}
 
         public Trie()
         {
@@ -65,33 +65,50 @@ namespace Resin.IO
             }
         }
 
-        public bool TryResolveChild(char c, int depth, out Trie trie)
+
+        public Trie(char val, int depth, bool eow)
         {
-            Trie t;
-            if(_nodes.TryGetValue(c, out t))
+            _value = val;
+            _depth = depth;
+            _eow = eow;
+        }
+
+        private bool TryResolveChild(char c, TrieReader reader, out Trie trie)
+        {
+            if (reader == null)
             {
-                trie = t;
-                return true;
+                return _nodes.TryGetValue(c, out trie);
             }
-            trie = null;
+            if (!_nodes.TryGetValue(c, out trie))
+            {
+                if (reader.TryStep(out trie))
+                {
+                    _nodes.Add(c, trie);
+                    return true;
+                }
+            }
             return false;
         }
 
-        public IEnumerable<Trie> ResolveChildren()
+        private IEnumerable<Trie> ResolveChildren(TrieReader reader)
         {
-            return _nodes.Values;
+            Trie trie;
+            while (reader.TryStep(out trie))
+            {
+                yield return trie;
+            }
         }
 
-        public IEnumerable<string> Similar(string word, int edits)
+        public IEnumerable<string> Similar(string word, int edits, TrieReader reader = null)
         {
             var words = new List<Word>();
-            SimScan(word, word, edits, words);
+            SimScan(word, word, edits, words, reader);
             return words.OrderBy(w => w.Distance).Select(w => w.Value);
         }
 
-        public void SimScan(string word, string state, int edits, IList<Word> words)
+        private void SimScan(string word, string state, int edits, IList<Word> words, TrieReader reader)
         {
-            foreach (var child in ResolveChildren())
+            foreach (var child in ResolveChildren(reader))
             {
                 var tmp = state.ReplaceAt(child.Depth, child.Val);
                 if (Levenshtein.Distance(word, tmp) <= edits)
@@ -102,24 +119,24 @@ namespace Resin.IO
                         var distance = Levenshtein.Distance(word, potential);
                         if (distance <= edits) words.Add(new Word { Value = potential, Distance = distance });
                     }
-                    child.SimScan(word, tmp, edits, words);
+                    child.SimScan(word, tmp, edits, words, reader);
                 }
             }
         }
 
-        public bool ContainsToken(string token)
+        public bool ContainsToken(string token, TrieReader reader = null)
         {
             var nodes = new List<char>();
             Trie child;
-            if (TryResolveChild(token[0], 0, out child))
+            if (TryResolveChild(token[0], reader, out child))
             {
-                child.ExactScan(token, nodes);
+                child.ExactScan(token, nodes, reader);
             }
             if (nodes.Count > 0) return true;
             return false;
         }
 
-        public void ExactScan(string prefix, List<char> chars)
+        private void ExactScan(string prefix, List<char> chars, TrieReader reader)
         {
             if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
 
@@ -134,25 +151,25 @@ namespace Resin.IO
             else if (prefix[0] == _value)
             {
                 Trie child;
-                if (TryResolveChild(prefix[1], _depth, out child))
+                if (TryResolveChild(prefix[1], reader, out child))
                 {
-                    child.ExactScan(prefix.Substring(1), chars);
+                    child.ExactScan(prefix.Substring(1), chars, reader);
                 }
             }
         }
 
-        public IEnumerable<string> Prefixed(string prefix)
+        public IEnumerable<string> Prefixed(string prefix, TrieReader reader = null)
         {
             var words = new List<List<char>>();
             Trie child;
-            if (TryResolveChild(prefix[0], 0, out child))
+            if (TryResolveChild(prefix[0], reader, out child))
             {
-                child.PrefixScan(new List<char>(prefix), prefix, words);
+                child.PrefixScan(new List<char>(prefix), prefix, words, reader);
             }
             return words.Select(s=>new string(s.ToArray()));
         }
 
-        public void PrefixScan(List<char> state, string prefix, List<List<char>> words)
+        public void PrefixScan(List<char> state, string prefix, List<List<char>> words, TrieReader reader)
         {
             if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
 
@@ -160,20 +177,20 @@ namespace Resin.IO
             {
                 // The scan has reached its destination. Find words derived from this node.
                 if (_eow) words.Add(state);
-                foreach (var node in ResolveChildren())
+                foreach (var node in ResolveChildren(reader))
                 {
                     var newState = new List<char>(state.Count+1);
                     foreach(var c in state) newState.Add(c);
                     newState.Add(node.Val);
-                    node.PrefixScan(newState, new string(new[] { node.Val }), words);
+                    node.PrefixScan(newState, new string(new[] { node.Val }), words, reader);
                 }
             }
             else if (prefix[0] == _value)
             {
                 Trie child;
-                if (TryResolveChild(prefix[1], _depth+1, out child))
+                if (TryResolveChild(prefix[1], reader, out child))
                 {
-                    child.PrefixScan(state, prefix.Substring(1), words);
+                    child.PrefixScan(state, prefix.Substring(1), words, reader);
                 }
             }
         }
@@ -185,7 +202,7 @@ namespace Resin.IO
             if (list.Length == 0) throw new ArgumentOutOfRangeException("word");
 
             Trie child;
-            if (!TryResolveChild(list[0], depth, out child))
+            if (!_nodes.TryGetValue(list[0], out child))
             {
                 child = new Trie(list, depth);
                 _nodes.Add(list[0], child);

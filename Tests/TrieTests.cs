@@ -140,13 +140,14 @@ namespace Tests
         {
             var dir = Setup.Dir + "\\lazy";
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-
-            var words = new LazyTrie(Path.Combine(dir, "abc123.tc"));
+            
+            var words = new Trie();
             words.Add("treaty");
             words.Add("treating");
             words.Add("tree");
             words.Add("pre");
             words.Add("prefix");
+            
             Assert.AreEqual(3, words.Prefixed("tre").Count());
             Assert.AreEqual(1, words.Prefixed("tree").Count());
             Assert.AreEqual(2, words.Prefixed("pre").Count());
@@ -158,24 +159,55 @@ namespace Tests
             Assert.IsFalse(words.Similar("tre", 1).Contains("treating"));
             Assert.IsTrue(words.Similar("tre", 1).Contains("pre"));
 
-            using (var container = new TrieWriter("abc123"))
+            const string containerId = "abc123";
+
+            using (var container = new TrieWriter(containerId))
             {
                 words.Save(container, dir);
             }
 
-            var lz = new LazyTrie(Path.Combine(dir, "abc123.tc"));
+            var lz = new Trie();
+            using (var reader = new TrieReader(containerId, dir))
+            {
+                Assert.AreEqual(3, lz.Prefixed("tre", reader).Count());
+            }
+            using (var reader = new TrieReader(containerId, dir))
+            {
+                Assert.AreEqual(1, lz.Prefixed("tree", reader).Count());
+            }
+            using (var reader = new TrieReader(containerId, dir))
+            {
+                Assert.AreEqual(2, lz.Prefixed("pre", reader).Count());
+            }
+            using (var reader = new TrieReader(containerId, dir))
+            {
+                Assert.AreEqual(1, lz.Prefixed("pref", reader).Count());
+            }
+            using (var reader = new TrieReader(containerId, dir))
+            {
+                Assert.AreEqual(0, lz.Prefixed("cracker", reader).Count());
+            }
 
-            Assert.AreEqual(3, lz.Prefixed("tre").Count());
-            Assert.AreEqual(1, lz.Prefixed("tree").Count());
-            Assert.AreEqual(2, lz.Prefixed("pre").Count());
-            Assert.AreEqual(1, lz.Prefixed("pref").Count());
-            Assert.AreEqual(0, lz.Prefixed("cracker").Count());
-
-            Assert.IsTrue(lz.Similar("tre", 1).Contains("tree"));
-            Assert.IsFalse(lz.Similar("tre", 1).Contains("treat"));
-            Assert.IsFalse(lz.Similar("tre", 1).Contains("treaty"));
-            Assert.IsFalse(lz.Similar("tre", 1).Contains("treating"));
-            Assert.IsTrue(lz.Similar("tre", 1).Contains("pre"));
+            using (var reader = new TrieReader(containerId, dir))
+            {
+                Assert.IsTrue(lz.Similar("tre", 1, reader).Contains("tree"));
+            }
+            using (var reader = new TrieReader(containerId, dir))
+            {
+                Assert.IsFalse(lz.Similar("tre", 1, reader).Contains("treat"));
+            }
+            using (var reader = new TrieReader(containerId, dir))
+            {
+                Assert.IsFalse(lz.Similar("tre", 1, reader).Contains("treaty"));
+            }
+            using (var reader = new TrieReader(containerId, dir))
+            {
+                Assert.IsFalse(lz.Similar("tre", 1, reader).Contains("treating"));
+            }
+            using (var reader = new TrieReader(containerId, dir))
+            {
+                Assert.IsTrue(lz.Similar("tre", 1, reader).Contains("pre"));
+            }
         }
 
         [Test]
