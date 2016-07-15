@@ -60,6 +60,7 @@
     <Compile Include="IO\PostingsFile.cs" />
     <Compile Include="IO\FileBase.cs" />
     <Compile Include="IO\QuickLZ.cs" />
+    <Compile Include="IO\TrieReader.cs" />
     <Compile Include="IO\TrieWriter.cs" />
     <Compile Include="IScoringScheme.cs" />
     <Compile Include="Levenshtein.cs" />

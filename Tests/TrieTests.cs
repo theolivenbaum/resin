@@ -1,5 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
 using NUnit.Framework;
 using Resin;
 using Resin.IO;
@@ -34,24 +37,24 @@ namespace Tests
         {
             var words = new Trie(new[] { "tree", "trees" });
 
-            Assert.IsTrue(words.ContainsToken("tree"));
-            Assert.IsTrue(words.ContainsToken("trees"));
-            Assert.IsFalse(words.ContainsToken("tre"));
-            Assert.IsFalse(words.ContainsToken("treesesses"));
+            Assert.IsTrue(words.HasWord("tree"));
+            Assert.IsTrue(words.HasWord("trees"));
+            Assert.IsFalse(words.HasWord("tre"));
+            Assert.IsFalse(words.HasWord("treesesses"));
 
             words.Add("tre");
 
-            Assert.IsTrue(words.ContainsToken("tree"));
-            Assert.IsTrue(words.ContainsToken("trees"));
-            Assert.IsTrue(words.ContainsToken("tre"));
-            Assert.IsFalse(words.ContainsToken("treesesses"));
+            Assert.IsTrue(words.HasWord("tree"));
+            Assert.IsTrue(words.HasWord("trees"));
+            Assert.IsTrue(words.HasWord("tre"));
+            Assert.IsFalse(words.HasWord("treesesses"));
 
             words.Add("treesesses");
 
-            Assert.IsTrue(words.ContainsToken("tree"));
-            Assert.IsTrue(words.ContainsToken("trees"));
-            Assert.IsTrue(words.ContainsToken("tre"));
-            Assert.IsTrue(words.ContainsToken("treesesses"));
+            Assert.IsTrue(words.HasWord("tree"));
+            Assert.IsTrue(words.HasWord("trees"));
+            Assert.IsTrue(words.HasWord("tre"));
+            Assert.IsTrue(words.HasWord("treesesses"));
         }
 
         [Test]
@@ -59,13 +62,13 @@ namespace Tests
         {
             var words = new Trie(new[] { "ring", "ringo", "apple" });
 
-            Assert.IsFalse(words.ContainsToken("rin"));
-            Assert.IsTrue(words.ContainsToken("ring"));
-            Assert.IsFalse(words.ContainsToken("ringa"));
-            Assert.IsTrue(words.ContainsToken("ringo"));
-            Assert.IsFalse(words.ContainsToken("appl"));
-            Assert.IsTrue(words.ContainsToken("apple"));
-            Assert.IsFalse(words.ContainsToken("apples"));
+            Assert.IsFalse(words.HasWord("rin"));
+            Assert.IsTrue(words.HasWord("ring"));
+            Assert.IsFalse(words.HasWord("ringa"));
+            Assert.IsTrue(words.HasWord("ringo"));
+            Assert.IsFalse(words.HasWord("appl"));
+            Assert.IsTrue(words.HasWord("apple"));
+            Assert.IsFalse(words.HasWord("apples"));
         }
 
         [Test]
@@ -136,18 +139,29 @@ namespace Tests
         }
 
         [Test]
-        public void Lazy()
+        public void Write_and_read()
         {
-            var dir = Setup.Dir + "\\lazy";
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-            
+            var fileName = Setup.Dir + "\\write.trie";
+            var dir = Path.GetDirectoryName(fileName);
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
             var words = new Trie();
             words.Add("treaty");
             words.Add("treating");
             words.Add("tree");
             words.Add("pre");
             words.Add("prefix");
-            
+
+            Assert.IsTrue(words.HasWord("treaty"));
+            Assert.IsTrue(words.HasWord("treating"));
+            Assert.IsTrue(words.HasWord("tree"));
+            Assert.IsTrue(words.HasWord("pre"));
+            Assert.IsTrue(words.HasWord("prefix"));
+            Assert.IsFalse(words.HasWord("prefixx"));
+
             Assert.AreEqual(3, words.Prefixed("tre").Count());
             Assert.AreEqual(1, words.Prefixed("tree").Count());
             Assert.AreEqual(2, words.Prefixed("pre").Count());
@@ -159,54 +173,42 @@ namespace Tests
             Assert.IsFalse(words.Similar("tre", 1).Contains("treating"));
             Assert.IsTrue(words.Similar("tre", 1).Contains("pre"));
 
-            const string containerId = "abc123";
+            var fileStream = File.Exists(fileName) ?
+                    File.Open(fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read) :
+                    File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
 
-            using (var container = new TrieWriter(containerId))
+            using (var writer = new StreamWriter(fileStream, Encoding.Unicode))
             {
-                words.Save(container, dir);
-            }
-
-            var lz = new Trie();
-            using (var reader = new TrieReader(containerId, dir))
-            {
-                Assert.AreEqual(3, lz.Prefixed("tre", reader).Count());
-            }
-            using (var reader = new TrieReader(containerId, dir))
-            {
-                Assert.AreEqual(1, lz.Prefixed("tree", reader).Count());
-            }
-            using (var reader = new TrieReader(containerId, dir))
-            {
-                Assert.AreEqual(2, lz.Prefixed("pre", reader).Count());
-            }
-            using (var reader = new TrieReader(containerId, dir))
-            {
-                Assert.AreEqual(1, lz.Prefixed("pref", reader).Count());
-            }
-            using (var reader = new TrieReader(containerId, dir))
-            {
-                Assert.AreEqual(0, lz.Prefixed("cracker", reader).Count());
+                words.Write(writer, CultureInfo.CurrentCulture);
             }
 
-            using (var reader = new TrieReader(containerId, dir))
+            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var sr = new StreamReader(fs, Encoding.Unicode))
+            using (var reader = new TrieReader(sr))
             {
-                Assert.IsTrue(lz.Similar("tre", 1, reader).Contains("tree"));
-            }
-            using (var reader = new TrieReader(containerId, dir))
-            {
-                Assert.IsFalse(lz.Similar("tre", 1, reader).Contains("treat"));
-            }
-            using (var reader = new TrieReader(containerId, dir))
-            {
-                Assert.IsFalse(lz.Similar("tre", 1, reader).Contains("treaty"));
-            }
-            using (var reader = new TrieReader(containerId, dir))
-            {
-                Assert.IsFalse(lz.Similar("tre", 1, reader).Contains("treating"));
-            }
-            using (var reader = new TrieReader(containerId, dir))
-            {
-                Assert.IsTrue(lz.Similar("tre", 1, reader).Contains("pre"));
+                Assert.IsTrue(reader.HasWord("treaty"));
+                Assert.IsTrue(reader.HasWord("treating"));
+                Assert.IsTrue(reader.HasWord("tree"));
+                Assert.IsTrue(reader.HasWord("pre"));
+                Assert.IsTrue(reader.HasWord("prefix"));
+                Assert.IsFalse(reader.HasWord("prefixx"));
+
+                //Assert.AreEqual(3, lz.Prefixed("tre").Count());
+                //Assert.AreEqual(1, lz.Prefixed("tree").Count());
+                //Assert.AreEqual(2, lz.Prefixed("pre").Count());
+                //Assert.AreEqual(1, lz.Prefixed("pref").Count());
+                //Assert.AreEqual(0, lz.Prefixed("cracker").Count());
+
+
+
+
+
+                //Assert.IsTrue(lz.Similar("tre", 1).Contains("tree"));
+                //Assert.IsFalse(lz.Similar("tre", 1).Contains("treat"));
+                //Assert.IsFalse(lz.Similar("tre", 1).Contains("treaty"));
+                //Assert.IsFalse(lz.Similar("tre", 1).Contains("treating"));
+                //Assert.IsTrue(lz.Similar("tre", 1).Contains("pre"));
+
             }
         }
 
@@ -215,13 +217,13 @@ namespace Tests
         {
             var words = new Trie(new[] { "tree", "treat", "treaty", "treating", "pre" });
 
-            Assert.IsTrue(words.ContainsToken("tree"));
-            Assert.IsTrue(words.ContainsToken("treat"));
-            Assert.IsTrue(words.ContainsToken("treaty"));
-            Assert.IsTrue(words.ContainsToken("treating"));
-            Assert.IsTrue(words.ContainsToken("pre"));
+            Assert.IsTrue(words.HasWord("tree"));
+            Assert.IsTrue(words.HasWord("treat"));
+            Assert.IsTrue(words.HasWord("treaty"));
+            Assert.IsTrue(words.HasWord("treating"));
+            Assert.IsTrue(words.HasWord("pre"));
 
-            Assert.IsFalse(words.ContainsToken("pee"));
+            Assert.IsFalse(words.HasWord("pee"));
         }
     }
 

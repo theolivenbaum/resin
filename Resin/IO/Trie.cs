@@ -1,266 +1,254 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Resin.IO
 {
     public class Trie
     {
-        private readonly int _depth;
-        private readonly char _value;
-        private bool _eow;
-        private readonly Dictionary<char, Trie> _nodes;
+        public char Value { get; protected set; }
 
-        public char Val { get { return _value; } }
-        public int Depth { get { return _depth; } }
-        public bool Eow { get { return _eow; } }
-        public Dictionary<char, Trie> Nodes { get { return _nodes; } } 
+        public bool Eow { get; protected set; }
 
-        //public IEnumerable<Trie> EndOfWords()
-        //{
-        //    if (_eow) yield return this;
-        //    foreach (var word in _nodes.Values.SelectMany(c => c.EndOfWords()))
-        //    {
-        //        yield return word;
-        //    }
-        //}
+        protected readonly Dictionary<char, Trie> Nodes;
 
         public Trie()
         {
-            _nodes = new Dictionary<char, Trie>();
+            Nodes = new Dictionary<char, Trie>();
         }
 
-        public Trie(IEnumerable<string> words) : this()
+        public Trie(char value, bool eow)
+        {
+            Value = value;
+            Eow = eow;
+        }
+
+        public Trie(IEnumerable<string> words)
         {
             if (words == null) throw new ArgumentNullException("words");
 
             foreach (var word in words)
             {
-                Add(word);
+                Add(word.ToCharArray());
             }
         }
 
-        private Trie(IEnumerable<char> text, int depth) : this()
+        private Trie(char[] chars)
         {
-            if (text == null) throw new ArgumentNullException("text");
+            if (chars == null) throw new ArgumentNullException("chars");
+            if (chars.Length == 0) throw new ArgumentOutOfRangeException("chars");
 
-            var list = text.ToArray();
+            Nodes = new Dictionary<char, Trie>();
 
-            if(list.Length == 0) throw new ArgumentOutOfRangeException("text");
-            
-            _value = list[0];
-            _depth = depth;
+            Value = chars[0];
 
-            if (list.Length > 1)
+            if (chars.Length > 1)
             {
-                var overflow = list.Skip(1).ToArray();
+                var overflow = chars.Skip(1).ToArray();
                 if (overflow.Length > 0)
                 {
-                    Add(overflow, depth+1);
+                    Add(overflow);
                 }
             }
             else
             {
-                _eow = true;
+                Eow = true;
             }
         }
 
-
-        public Trie(char val, int depth, bool eow)
+        public void Write(StreamWriter writer, IFormatProvider formatProvider, int level = 0)
         {
-            _value = val;
-            _depth = depth;
-            _eow = eow;
+            var sorted = Nodes.Values.OrderBy(s => s.Value).ToList();
+            var nextLevel = level + 1;
+            foreach (var node in sorted)
+            {
+                writer.WriteLine(Format, level, node.ToString(formatProvider));
+            }
+            foreach (var node in sorted)
+            {
+                node.Write(writer, formatProvider, nextLevel);
+            }
         }
 
-        private bool TryResolveChild(char c, TrieReader reader, out Trie trie)
+        protected virtual bool TryResolveChild(char c, out Trie trie)
         {
-            if (reader == null)
-            {
-                return _nodes.TryGetValue(c, out trie);
-            }
-            if (!_nodes.TryGetValue(c, out trie))
-            {
-                if (reader.TryStep(out trie))
-                {
-                    _nodes.Add(c, trie);
-                    return true;
-                }
-            }
-            return false;
+            return Nodes.TryGetValue(c, out trie);
         }
 
-        private IEnumerable<Trie> ResolveChildren(TrieReader reader)
+        protected virtual ICollection<Trie> ResolveChildren()
         {
-            Trie trie;
-            while (reader.TryStep(out trie))
-            {
-                yield return trie;
-            }
+            return Nodes.Values;
         }
 
-        public IEnumerable<string> Similar(string word, int edits, TrieReader reader = null)
+        public IEnumerable<string> Similar(string word, int edits)
         {
             var words = new List<Word>();
-            SimScan(word, word, edits, words, reader);
+            SimScan(word, word, edits, 0, words);
             return words.OrderBy(w => w.Distance).Select(w => w.Value);
         }
 
-        private void SimScan(string word, string state, int edits, IList<Word> words, TrieReader reader)
+        private struct Word
         {
-            foreach (var child in ResolveChildren(reader))
+            public string Value;
+            public int Distance;
+        }
+
+        private void SimScan(string word, string state, int edits, int index, IList<Word> words)
+        {
+            var childIndex = index + 1;
+            foreach (var child in ResolveChildren())
             {
-                var tmp = state.ReplaceAt(child.Depth, child.Val);
+                var tmp = index == state.Length ? state + child.Value : state.ReplaceAt(index, child.Value);
                 if (Levenshtein.Distance(word, tmp) <= edits)
                 {
                     if (child.Eow)
                     {
-                        var potential = tmp.Substring(0, child.Depth + 1);
+                        var potential = tmp.Substring(0, childIndex);
                         var distance = Levenshtein.Distance(word, potential);
                         if (distance <= edits) words.Add(new Word { Value = potential, Distance = distance });
                     }
-                    child.SimScan(word, tmp, edits, words, reader);
+                    child.SimScan(word, tmp, edits, childIndex, words);
                 }
             }
         }
 
-        public bool ContainsToken(string token, TrieReader reader = null)
+        public bool HasWord(string word)
         {
             var nodes = new List<char>();
             Trie child;
-            if (TryResolveChild(token[0], reader, out child))
+            if (TryResolveChild(word[0], out child))
             {
-                child.ExactScan(token, nodes, reader);
+                child.ExactScan(word, nodes);
             }
             if (nodes.Count > 0) return true;
             return false;
         }
 
-        private void ExactScan(string prefix, List<char> chars, TrieReader reader)
+        private void ExactScan(string prefix, List<char> chars)
         {
             if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
 
-            if (prefix.Length == 1 && prefix[0] == _value)
+            if (prefix.Length == 1 && prefix[0] == Value)
             {
                 // The scan has reached its destination.
-                if (_eow)
+                if (Eow)
                 {
-                    chars.Add(_value);
+                    chars.Add(Value);
                 }
             }
-            else if (prefix[0] == _value)
+            else if (prefix[0] == Value)
             {
                 Trie child;
-                if (TryResolveChild(prefix[1], reader, out child))
+                if (Nodes.TryGetValue(prefix[1], out child))
                 {
-                    child.ExactScan(prefix.Substring(1), chars, reader);
+                    child.ExactScan(prefix.Substring(1), chars);
                 }
             }
         }
 
-        public IEnumerable<string> Prefixed(string prefix, TrieReader reader = null)
+        public IEnumerable<string> Prefixed(string prefix)
         {
             var words = new List<List<char>>();
             Trie child;
-            if (TryResolveChild(prefix[0], reader, out child))
+            if (TryResolveChild(prefix[0], out child))
             {
-                child.PrefixScan(new List<char>(prefix), prefix, words, reader);
+                child.PrefixScan(new List<char>(prefix), prefix, words);
             }
-            return words.Select(s=>new string(s.ToArray()));
+            return words.Select(s => new string(s.ToArray()));
         }
 
-        public void PrefixScan(List<char> state, string prefix, List<List<char>> words, TrieReader reader)
+        private void PrefixScan(List<char> state, string prefix, List<List<char>> words)
         {
             if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
 
-            if (prefix.Length == 1 && prefix[0] == _value)
+            if (prefix.Length == 1 && prefix[0] == Value)
             {
                 // The scan has reached its destination. Find words derived from this node.
-                if (_eow) words.Add(state);
-                foreach (var node in ResolveChildren(reader))
+                if (Eow) words.Add(state);
+                foreach (var node in Nodes.Values)
                 {
-                    var newState = new List<char>(state.Count+1);
-                    foreach(var c in state) newState.Add(c);
-                    newState.Add(node.Val);
-                    node.PrefixScan(newState, new string(new[] { node.Val }), words, reader);
+                    var newState = new List<char>(state.Count + 1);
+                    foreach (var c in state) newState.Add(c);
+                    newState.Add(node.Value);
+                    node.PrefixScan(newState, new string(new[] { node.Value }), words);
                 }
             }
-            else if (prefix[0] == _value)
+            else if (prefix[0] == Value)
             {
                 Trie child;
-                if (TryResolveChild(prefix[1], reader, out child))
+                if (Nodes.TryGetValue(prefix[1], out child))
                 {
-                    child.PrefixScan(state, prefix.Substring(1), words, reader);
+                    child.PrefixScan(state, prefix.Substring(1), words);
                 }
             }
         }
 
-        public void Add(IEnumerable<char> word, int depth = 0)
+        public void Add(string word)
+        {
+            Add(word.ToCharArray());
+        }
+
+        public void Add(char[] word)
         {
             if (word == null) throw new ArgumentNullException("word");
-            var list = word.ToArray();
-            if (list.Length == 0) throw new ArgumentOutOfRangeException("word");
+            if (word.Length == 0) throw new ArgumentOutOfRangeException("word");
 
             Trie child;
-            if (!_nodes.TryGetValue(list[0], out child))
+            if (!Nodes.TryGetValue(word[0], out child))
             {
-                child = new Trie(list, depth);
-                _nodes.Add(list[0], child);
+                child = new Trie(word);
+                Nodes.Add(word[0], child);
             }
             else
             {
-                child.Append(list, depth);
+                child.Append(word);
             }
         }
 
-        private void Append(IEnumerable<char> text, int depth)
+        private void Append(IEnumerable<char> text)
         {
             if (text == null) throw new ArgumentNullException("text");
             var list = text.ToArray();
-            if (list[0] != _value) throw new ArgumentOutOfRangeException("text");
+            if (list[0] != Value) throw new ArgumentOutOfRangeException("text");
 
             var overflow = list.Skip(1).ToArray();
             if (overflow.Length > 0)
             {
-                Add(overflow, depth+1);
+                Add(overflow);
             }
             else
             {
-                _eow = true;
+                Eow = true;
             }
         }
 
         public void Remove(string word)
         {
-            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
+            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("chars");
 
             Trie child;
-            if (_nodes.TryGetValue(word[0], out child))
+            if (Nodes.TryGetValue(word[0], out child))
             {
-                if (child._nodes.Count == 0)
+                if (child.Nodes.Count == 0)
                 {
-                    _nodes.Remove(child._value);
+                    Nodes.Remove(child.Value);
                 }
                 else
                 {
-                    child._eow = false;
+                    child.Eow = false;
                 }
-                if (word.Length > 1)
-                {
-                    child.Remove(word.Substring(1));
-                }
+                if (word.Length > 1) child.Remove(word.Substring(1));
             }
         }
 
-        public override string ToString()
+        public string ToString(IFormatProvider formatProvider)
         {
-            return string.Format("{0}.{1}:{2}", _value, _depth, _eow);
+            return string.Format(formatProvider, Format,
+                Value, 
+                Eow ? "1" : "0");
         }
-    }
 
-    public struct Word
-    {
-        public string Value;
-        public int Distance;
+        private const string Format = "{0}\t{1}";
     }
 }

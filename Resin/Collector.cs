@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using log4net;
 using Resin.IO;
@@ -13,14 +12,14 @@ namespace Resin
     {
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
-        private readonly ConcurrentDictionary<string, LazyTrie> _trieFiles;
+        private readonly ConcurrentDictionary<string, Trie> _tries;
         private readonly ConcurrentDictionary<string, PostingsContainer> _postingContainers;
         private readonly IxInfo _ix;
 
-        public Collector(string directory, IxInfo ix, ConcurrentDictionary<string, LazyTrie> trieFiles, ConcurrentDictionary<string, PostingsContainer> postingContainers)
+        public Collector(string directory, IxInfo ix, ConcurrentDictionary<string, Trie> tries, ConcurrentDictionary<string, PostingsContainer> postingContainers)
         {
             _directory = directory;
-            _trieFiles = trieFiles;
+            _tries = tries;
             _postingContainers = postingContainers;
             _ix = ix;
         }
@@ -33,13 +32,14 @@ namespace Resin
             return scored;
         }
 
-        private LazyTrie GetTrie(string field)
+        private Trie GetTrie(string field)
         {
-            LazyTrie file;
-            if (!_trieFiles.TryGetValue(field, out file))
+            throw new NotImplementedException();
+            Trie file;
+            if (!_tries.TryGetValue(field, out file))
             {
-                file = new LazyTrie(Path.Combine(_directory, field.ToTrieContainerId() + ".tc"));
-                _trieFiles[field] = file;
+                //file = new Trie(new TrieReader(field.ToTrieContainerId(), _directory));
+                _tries[field] = file;
             }
             return file;
         }
@@ -56,9 +56,11 @@ namespace Resin
         private IEnumerable<DocumentScore> GetScoredResult(Term term, IScoringScheme scoringScheme)
         {
             var trie = GetTrie(term.Field);
+
             if (_ix == null) yield break;
+
             var totalNumOfDocs = _ix.DocCount[term.Field];
-            if (trie.ContainsToken(term.Value))
+            if (trie.HasWord(term.Value))
             {
                 var termData = GetPostingsFile(term.Field, term.Value);
                 var scorer = scoringScheme.CreateScorer(totalNumOfDocs, termData.Postings.Count);

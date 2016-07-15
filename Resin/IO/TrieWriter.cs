@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -6,15 +7,19 @@ namespace Resin.IO
 {
     public class TrieWriter : IDisposable
     {
-        private readonly string _containerId;
+        private readonly string _fileId;
+        private readonly IFormatProvider _formatProvider;
 
-        public string Id { get { return _containerId; } }
+        public string Id { get { return _fileId; } }
 
         private StreamWriter _writer;
 
-        public TrieWriter(string containerId)
+        public TrieWriter(string fileId, string directory, IFormatProvider formatProvider)
         {
-            _containerId = containerId;
+            _fileId = fileId;
+            _formatProvider = formatProvider;
+            var fileName = Path.Combine(directory, _fileId + ".tc");
+            InitWriteSession(fileName);
         }
 
         private void InitWriteSession(string fileName)
@@ -30,59 +35,16 @@ namespace Resin.IO
             }
         }
 
-        public void Put(Trie trie, string directory)
+        public void Write(Trie trie)
         {
-            var id = string.Format("{0}.{1}", trie.Val, trie.Depth);
-            var fileName = Path.Combine(directory, _containerId + ".tc");
-            InitWriteSession(fileName);
-            _writer.WriteLine("{0}:{1}", id, trie.Eow ? 1 : 0);
+            trie.Write(_writer, _formatProvider);
         }
 
         public void Dispose()
         {
-            if (_writer != null)
-            {
-                _writer.Flush();
-                _writer.Close();
-                _writer.Dispose();
-            }
-        }
-    }
-
-    public class TrieReader : IDisposable
-    {
-        private readonly StreamReader _reader;
-
-        public TrieReader(string containerId, string directory)
-        {
-            var fileName = Path.Combine(directory, containerId + ".tc");
-            var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            _reader = new StreamReader(fs, Encoding.Unicode);
-        }
-
-        public bool TryStep(out Trie node)
-        {
-            var line = _reader.ReadLine();
-            if (string.IsNullOrEmpty(line))
-            {
-                node = null;
-                return false;
-            }
-            var id = line.Substring(0, line.IndexOf(':'));
-            var val = line[0];
-            var eow = int.Parse(line.Substring(id.Length + 1)) == 1;
-            var depth = Int32.Parse(id.Substring(id.IndexOf('.') + 1));
-            node = new Trie(val, depth, eow);
-            return true;
-        }
-
-        public void Dispose()
-        {
-            if (_reader != null)
-            {
-                _reader.Close();
-                _reader.Dispose();
-            }
+            _writer.Flush();
+            _writer.Close();
+            _writer.Dispose();
         }
     }
 }

@@ -18,7 +18,7 @@ namespace Resin
         private readonly string _directory;
         private readonly QueryParser _parser;
         private readonly IScoringScheme _scorer;
-        private readonly ConcurrentDictionary<string, LazyTrie> _trieFiles;
+        private readonly ConcurrentDictionary<string, Trie> _tries;
         private readonly IxInfo _ix;
         private readonly ConcurrentDictionary<string, PostingsContainer> _postingContainers;
         private readonly ConcurrentDictionary<string, DocContainer> _docContainers;
@@ -28,7 +28,7 @@ namespace Resin
             _directory = directory;
             _parser = parser;
             _scorer = scorer;
-            _trieFiles = new ConcurrentDictionary<string, LazyTrie>();
+            _tries = new ConcurrentDictionary<string, Trie>();
             _docContainers = new ConcurrentDictionary<string, DocContainer>();
             _postingContainers = new ConcurrentDictionary<string, PostingsContainer>();
 
@@ -38,7 +38,7 @@ namespace Resin
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
             var timer = new Stopwatch();
-            var collector = new Collector(_directory, _ix, _trieFiles, _postingContainers);
+            var collector = new Collector(_directory, _ix, _tries, _postingContainers);
             timer.Start();
             var q = _parser.Parse(query);
             if (q == null)
