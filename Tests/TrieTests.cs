@@ -154,18 +154,20 @@ namespace Tests
             words.Add("tree");
             words.Add("pre");
             words.Add("prefix");
+            words.Add("prefixes");
 
             Assert.IsTrue(words.HasWord("treaty"));
             Assert.IsTrue(words.HasWord("treating"));
             Assert.IsTrue(words.HasWord("tree"));
             Assert.IsTrue(words.HasWord("pre"));
             Assert.IsTrue(words.HasWord("prefix"));
+            Assert.IsTrue(words.HasWord("prefixes"));
             Assert.IsFalse(words.HasWord("prefixx"));
 
             Assert.AreEqual(3, words.Prefixed("tre").Count());
             Assert.AreEqual(1, words.Prefixed("tree").Count());
-            Assert.AreEqual(2, words.Prefixed("pre").Count());
-            Assert.AreEqual(1, words.Prefixed("pref").Count());
+            Assert.AreEqual(3, words.Prefixed("pre").Count());
+            Assert.AreEqual(2, words.Prefixed("pref").Count());
 
             Assert.IsTrue(words.Similar("tre", 1).Contains("tree"));
             Assert.IsFalse(words.Similar("tre", 1).Contains("treat"));
@@ -193,11 +195,11 @@ namespace Tests
                 Assert.IsTrue(reader.HasWord("prefix"));
                 Assert.IsFalse(reader.HasWord("prefixx"));
 
-                //Assert.AreEqual(3, lz.Prefixed("tre").Count());
-                //Assert.AreEqual(1, lz.Prefixed("tree").Count());
-                //Assert.AreEqual(2, lz.Prefixed("pre").Count());
-                //Assert.AreEqual(1, lz.Prefixed("pref").Count());
-                //Assert.AreEqual(0, lz.Prefixed("cracker").Count());
+                Assert.AreEqual(3, reader.Prefixed("tre").Count());
+                Assert.AreEqual(1, reader.Prefixed("tree").Count());
+                Assert.AreEqual(3, reader.Prefixed("pre").Count());
+                Assert.AreEqual(2, reader.Prefixed("pref").Count());
+                Assert.AreEqual(0, reader.Prefixed("cracker").Count());
 
 
 
@@ -210,6 +212,45 @@ namespace Tests
                 //Assert.IsTrue(lz.Similar("tre", 1).Contains("pre"));
 
             }
+            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var sr = new StreamReader(fs, Encoding.Unicode))
+            using (var reader = new TrieReader(sr))
+            {
+                Assert.IsTrue(reader.HasWord("treating"));
+            }
+
+            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var sr = new StreamReader(fs, Encoding.Unicode))
+            using (var reader = new TrieReader(sr))
+            {
+                Assert.IsTrue(reader.HasWord("tree"));
+
+
+            }
+            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var sr = new StreamReader(fs, Encoding.Unicode))
+            using (var reader = new TrieReader(sr))
+            {
+                Assert.IsTrue(reader.HasWord("pre"));
+
+
+            } 
+            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var sr = new StreamReader(fs, Encoding.Unicode))
+            using (var reader = new TrieReader(sr))
+            {
+                Assert.IsTrue(reader.HasWord("prefix"));
+
+
+            } 
+            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var sr = new StreamReader(fs, Encoding.Unicode))
+            using (var reader = new TrieReader(sr))
+            {
+                Assert.IsFalse(reader.HasWord("prefixx"));
+
+
+            } 
         }
 
         [Test]

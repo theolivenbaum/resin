@@ -11,20 +11,20 @@ namespace Resin.IO
 
         public bool Eow { get; protected set; }
 
-        protected readonly Dictionary<char, Trie> Nodes;
+        public Dictionary<char, Trie> Nodes { get; set; }
 
         public Trie()
         {
             Nodes = new Dictionary<char, Trie>();
         }
 
-        public Trie(char value, bool eow)
+        public Trie(char value, bool eow) : this()
         {
             Value = value;
             Eow = eow;
         }
 
-        public Trie(IEnumerable<string> words)
+        public Trie(IEnumerable<string> words): this()
         {
             if (words == null) throw new ArgumentNullException("words");
 
@@ -34,12 +34,10 @@ namespace Resin.IO
             }
         }
 
-        private Trie(char[] chars)
+        private Trie(char[] chars): this()
         {
             if (chars == null) throw new ArgumentNullException("chars");
             if (chars.Length == 0) throw new ArgumentOutOfRangeException("chars");
-
-            Nodes = new Dictionary<char, Trie>();
 
             Value = chars[0];
 
@@ -61,6 +59,8 @@ namespace Resin.IO
         {
             var sorted = Nodes.Values.OrderBy(s => s.Value).ToList();
             var nextLevel = level + 1;
+            var header = string.Format(formatProvider, ":{0}{1}", level, Value == char.MinValue ? ' ' : Value);
+            writer.WriteLine(header);
             foreach (var node in sorted)
             {
                 writer.WriteLine(Format, level, node.ToString(formatProvider));
@@ -125,11 +125,11 @@ namespace Resin.IO
             return false;
         }
 
-        private void ExactScan(string prefix, List<char> chars)
+        private void ExactScan(string word, List<char> chars)
         {
-            if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
+            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 
-            if (prefix.Length == 1 && prefix[0] == Value)
+            if (word.Length == 1 && word[0] == Value)
             {
                 // The scan has reached its destination.
                 if (Eow)
@@ -137,14 +137,43 @@ namespace Resin.IO
                     chars.Add(Value);
                 }
             }
-            else if (prefix[0] == Value)
+            else if (word[0] == Value)
             {
                 Trie child;
-                if (Nodes.TryGetValue(prefix[1], out child))
+                if (Nodes.TryGetValue(word[1], out child))
                 {
-                    child.ExactScan(prefix.Substring(1), chars);
+                    child.ExactScan(word.Substring(1), chars);
                 }
             }
+        }
+
+        public Trie FindNode(string word)
+        {
+            Trie child;
+            if (TryResolveChild(word[0], out child))
+            {
+                return child.FindNodeScan(word);
+            }
+            return null;
+        }
+
+        public Trie FindNodeScan(string word)
+        {
+            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
+
+            if (word.Length == 1 && word[0] == Value)
+            {
+                // The scan has reached its destination.
+                return this;
+            }
+
+            if(word[0] != Value) return null;
+
+            foreach (var node in Nodes.Values)
+            {
+                return node.FindNodeScan(word.Substring(1));
+            }
+            return null;
         }
 
         public IEnumerable<string> Prefixed(string prefix)
