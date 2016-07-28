@@ -100,13 +100,12 @@ namespace Resin.IO
             foreach (var child in ResolveChildren())
             {
                 var tmp = index == state.Length ? state + child.Value : state.ReplaceAt(index, child.Value);
-                if (Levenshtein.Distance(word, tmp) <= edits)
+                var distance = Levenshtein.Distance(word, tmp);
+                if (distance <= edits)
                 {
                     if (child.Eow)
                     {
-                        var potential = tmp.Substring(0, childIndex);
-                        var distance = Levenshtein.Distance(word, potential);
-                        if (distance <= edits) words.Add(new Word { Value = potential, Distance = distance });
+                        words.Add(new Word { Value = tmp, Distance = distance });
                     }
                     child.SimScan(word, tmp, edits, childIndex, words);
                 }

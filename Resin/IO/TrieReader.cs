@@ -16,10 +16,44 @@ namespace Resin.IO
             _reader = reader;
         }
 
-        //public IEnumerable<string> Similar(string word, int edits)
-        //{
+        public bool HasWord(string word)
+        {
+            SeekToBeginningOfFile();
+            var node = FindNode(word);
+            if (node != null && node.Value.EoW) return true;
+            return false;
+        }
 
-        //}
+        public IEnumerable<string> Similar(string word, int edits)
+        {
+            SeekToBeginningOfFile();
+            var node = FindNode(word);
+            if (node != null)
+            {
+                if (node.Value.EoW) yield return word;
+
+                var nodes = new Queue<Trie>(word.Select(c => new Trie(c, false)));
+
+                if (nodes.Count == 0) yield break;
+
+                var root = new Trie();
+                var parent = nodes.Dequeue();
+                root.Nodes.Add(parent.Value, parent);
+                while (nodes.Count > 0)
+                {
+                    var n = nodes.Dequeue();
+                    parent.Nodes.Add(n.Value, n);
+                    parent = n;
+                }
+                var tip = root.FindNode(word);
+                ResolveWords(node.Value.Value, node.Value.Level + 1, tip);
+                var result = root.Prefixed(word).ToList();
+                foreach (var w in result)
+                {
+                    yield return w;
+                }
+            }
+        }
 
         public IEnumerable<string> Prefixed(string word)
         {
@@ -56,7 +90,7 @@ namespace Resin.IO
         {
             if (!IsHeader(_lastReadObject))
             {
-                GotoHeader(string.Format(":{0}{1}", level, c));              
+                StepUntilHeaderIsFound(string.Format(":{0}{1}", level, c));              
             }
             while (true)
             {
@@ -85,21 +119,13 @@ namespace Resin.IO
             Step();
         }
 
-        public bool HasWord(string word)
-        {
-            SeekToBeginningOfFile();
-            var node = FindNode(word);
-            if (node != null && node.Value.EoW) return true;
-            return false;
-        }
-
         private Node? FindNode(string word)
         {
             var lastIndex = word.Length - 1;
             for (int level = 0; level < word.Length; level++)
             {
                 var c = word[level];
-                var line = GotoNode(level, c);
+                var line = StepUntilNodeIsFound(level, c);
                 if (line == null) return null;
                 var thisIsTheLastChar = level == lastIndex;
                 if (thisIsTheLastChar)
@@ -107,7 +133,7 @@ namespace Resin.IO
                     return line;
                 }
                 var header = string.Format(":{0}{1}", level + 1, word[level]);
-                GotoHeader(header);
+                StepUntilHeaderIsFound(header);
                 if (!(IsHeader(_lastReadObject)))
                 {
                     return null;
@@ -121,7 +147,7 @@ namespace Resin.IO
             return obj is string;
         }
         
-        private void GotoHeader(string header)
+        private void StepUntilHeaderIsFound(string header)
         {
             while (true)
             {
@@ -130,7 +156,7 @@ namespace Resin.IO
             }
         }
 
-        private Node? GotoNode(int level, char value)
+        private Node? StepUntilNodeIsFound(int level, char value)
         {
             while (true)
             {
@@ -139,7 +165,7 @@ namespace Resin.IO
                 if (_lastReadObject is Node)
                 {
                     var node = (Node) _lastReadObject;
-                    if (node.IsMinValue() == false && node.Level == level && node.Value == value)
+                    if (node.Level == level && node.Value == value)
                     {
                         return node;
                     }
@@ -178,19 +204,7 @@ namespace Resin.IO
             public readonly int Level; 
             public readonly bool EoW;
             public readonly char Value;
-            
-            //public static Node MinValue()
-            //{
-            //    return new Node(isMinValue: true);
-            //}
-
-            //public Node(bool isMinValue)
-            //{
-            //    Level = -1;
-            //    EoW = false;
-            //    Value = (char)0;
-            //}
-            
+                       
             public Node(int level, char value, bool eow)
             {
                 Level = level;
@@ -201,12 +215,6 @@ namespace Resin.IO
             public override string ToString()
             {
                 return Value.ToString(CultureInfo.CurrentCulture);
-            }
-
-
-            public bool IsMinValue()
-            {
-                return Level == -1 && EoW == false && Value == (char) 0;
             }
         }
 
