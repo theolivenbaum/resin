@@ -44,15 +44,17 @@ namespace Resin.IO
                 var header = string.Format(":{0}{1}", childIndex, child.Value);
                 if (header != _lastReadHeader) StepUntilHeader(header);
 
-                var test = index == state.Length ? state + child.Value : state.ReplaceAt(index, child.Value);
-                var distance = Levenshtein.Distance(word, test);
+                var tmp = index == state.Length ? state + child.Value : state.ReplaceAt(index, child.Value);
+                var distance = Levenshtein.Distance(word, tmp);
                 if (distance <= edits)
                 {
                     if (child.Eow)
                     {
-                        words.Add(new Trie.Word {Value = test, Distance = distance});
+                        var potential = tmp.Substring(0, childIndex);
+                        var d = Levenshtein.Distance(word, potential);
+                        if (d <= edits) words.Add(new Trie.Word { Value = potential, Distance = d });
                     }
-                    SimScan(word, test, edits, childIndex, words);
+                    SimScan(word, tmp, edits, childIndex, words);
                 }
             }
         }

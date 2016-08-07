@@ -18,7 +18,7 @@ namespace Resin
 
         public float Similarity
         {
-            set { _edits = Convert.ToInt32(Value.Length*(1-value)); }
+            set { _edits = (int)Math.Ceiling(Value.Length*(1-value)); }
         }
 
         public Term(string field, string value)

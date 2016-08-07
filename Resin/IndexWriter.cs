@@ -14,11 +14,11 @@ namespace Resin
         private readonly IScoringScheme _scoringScheme;
         private readonly IFormatProvider _formatProvider;
         //private static readonly ILog Log = LogManager.GetLogger("TermFileAppender");
-        private readonly TaskQueue<Document> _docWorker;
+        //private readonly TaskQueue<Document> _docWorker;
         private readonly TaskQueue<PostingsFile> _postingsWorker;
         private readonly IList<string> _deletions;
         private readonly IxFile _ix;
-
+        private readonly Dictionary<string, Document> _docs; 
         /// <summary>
         /// field/trie
         /// </summary>
@@ -48,12 +48,13 @@ namespace Resin
             _postingsFiles = new Dictionary<string, PostingsFile>();
             _postingsContainers = new Dictionary<string, PostingsContainer>();
             _docContainers = new Dictionary<string, DocContainer>();
-            _docWorker = new TaskQueue<Document>(1, PutDocInContainer);
+            //_docWorker = new TaskQueue<Document>(1, PutDocInContainer);
             _postingsWorker = new TaskQueue<PostingsFile>(1, PutPostingsInContainer);
             _deletions = new List<string>();
             _tries = new Dictionary<string, Trie>();
+            _docs = new Dictionary<string, Document>();
 
-            if(formatProvider == null) _formatProvider = CultureInfo.CurrentCulture;
+            if (formatProvider == null) _formatProvider = CultureInfo.CurrentCulture;
 
             var ixFileName = Path.Combine(directory, "1.ix");
             _ix = File.Exists(ixFileName) ? IxFile.Load(ixFileName) : new IxFile();
@@ -82,20 +83,7 @@ namespace Resin
                 {
                     container = new DocContainer(_directory, containerId);
                 }
-                Document existing;
-                if (container.TryGet(doc.Id, out existing))
-                {
-                    foreach (var field in doc.Fields)
-                    {
-                        existing.Fields[field.Key] = field.Value;
-                    }
-                    container.Remove(doc.Id);
-                    container.Put(existing, _directory);
-                }
-                else
-                {
-                    container.Put(doc, _directory);
-                }
+                container.Put(doc, _directory);
             }
             else
             {
@@ -179,7 +167,7 @@ namespace Resin
 
         public void Write(Document doc)
         {
-            _docWorker.Enqueue(doc);
+            _docs[doc.Id] = doc;
             foreach (var field in doc.Fields)
             {
                 Analyze(doc.Id, field.Key, field.Value);
@@ -268,7 +256,6 @@ namespace Resin
                 }
             });
 
-            _docWorker.Dispose();
             _postingsWorker.Dispose();
 
             Parallel.ForEach(_postingsContainers.Values, container =>
@@ -285,6 +272,10 @@ namespace Resin
                 }
             });
 
+            foreach (var doc in _docs.Values)
+            {
+                PutDocInContainer(doc);
+            }
             Parallel.ForEach(_docContainers.Values, container => container.Dispose());
 
             _ix.Save(Path.Combine(_directory, "1.ix"));

@@ -93,6 +93,11 @@ namespace Resin.IO
         {
             public string Value;
             public int Distance;
+
+            public override string ToString()
+            {
+                return Value;
+            }
         }
 
         private void SimScan(string word, string state, int edits, int index, IList<Word> words)
@@ -100,15 +105,16 @@ namespace Resin.IO
             var childIndex = index + 1;
             foreach (var child in ResolveChildren())
             {
-                var test = index == state.Length ? state + child.Value : state.ReplaceAt(index, child.Value);
-                var distance = Levenshtein.Distance(word, test);
-                if (distance <= edits)
+                var tmp = index == state.Length ? state + child.Value : state.ReplaceAt(index, child.Value);
+                if (Levenshtein.Distance(word, tmp) <= edits)
                 {
                     if (child.Eow)
                     {
-                        words.Add(new Word { Value = test, Distance = distance });
+                        var potential = tmp.Substring(0, childIndex);
+                        var distance = Levenshtein.Distance(word, potential);
+                        if (distance <= edits) words.Add(new Word { Value = potential, Distance = distance });
                     }
-                    child.SimScan(word, test, edits, childIndex, words);
+                    child.SimScan(word, tmp, edits, childIndex, words);
                 }
             }
         }

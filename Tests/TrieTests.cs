@@ -73,7 +73,7 @@ namespace Tests
         [Test]
         public void SimilarTo()
         {
-            var words = new Trie(new[] { "tree", "treat", "treaty", "treating", "pre" });
+            var words = new Trie(new[] { "tree", "treat", "treaty", "treating", "pre", "ring", "rings" });
 
             Assert.AreEqual(0, words.Similar("tre", 0).Count());
             Assert.AreEqual(1, words.Similar("tree", 0).Count());
@@ -111,6 +111,19 @@ namespace Tests
             Assert.IsTrue(words.Similar("tre", 5).Contains("treaty"));
             Assert.IsTrue(words.Similar("tre", 5).Contains("treating"));
             Assert.IsTrue(words.Similar("tre", 5).Contains("pre"));
+
+            Assert.AreEqual(4, words.Similar("tree", 3).Count());
+            Assert.IsTrue(words.Similar("tree", 3).Contains("tree"));
+            Assert.IsTrue(words.Similar("tree", 3).Contains("treat"));
+            Assert.IsTrue(words.Similar("tree", 3).Contains("treaty"));
+            Assert.IsTrue(words.Similar("tree", 3).Contains("pre"));
+
+            Assert.AreEqual(2, words.Similar("ring", 1).Count());
+            Assert.IsTrue(words.Similar("ring", 1).Contains("ring"));
+            Assert.IsTrue(words.Similar("ring", 1).Contains("rings"));
+
+            Assert.AreEqual(1, words.Similar("ring", 0).Count());
+            Assert.IsTrue(words.Similar("ring", 0).Contains("ring"));
         }
 
         [Test]
@@ -154,6 +167,8 @@ namespace Tests
             words.Add("pre");
             words.Add("prefix");
             words.Add("prefixes");
+            words.Add("ring");
+            words.Add("rings");
 
             Assert.IsTrue(words.HasWord("treaty"));
             Assert.IsTrue(words.HasWord("treating"));
@@ -161,18 +176,39 @@ namespace Tests
             Assert.IsTrue(words.HasWord("pre"));
             Assert.IsTrue(words.HasWord("prefix"));
             Assert.IsTrue(words.HasWord("prefixes"));
+            Assert.IsTrue(words.HasWord("ring"));
+            Assert.IsTrue(words.HasWord("rings"));
             Assert.IsFalse(words.HasWord("prefixx"));
 
             Assert.AreEqual(3, words.Prefixed("tre").Count());
             Assert.AreEqual(1, words.Prefixed("tree").Count());
             Assert.AreEqual(3, words.Prefixed("pre").Count());
             Assert.AreEqual(2, words.Prefixed("pref").Count());
+            Assert.AreEqual(2, words.Prefixed("ring").Count());
+            Assert.AreEqual(0, words.Prefixed("cracker").Count());
 
             Assert.IsTrue(words.Similar("tre", 1).Contains("tree"));
+            Assert.IsTrue(words.Similar("tre", 1).Contains("pre"));
             Assert.IsFalse(words.Similar("tre", 1).Contains("treat"));
             Assert.IsFalse(words.Similar("tre", 1).Contains("treaty"));
             Assert.IsFalse(words.Similar("tre", 1).Contains("treating"));
-            Assert.IsTrue(words.Similar("tre", 1).Contains("pre"));
+
+            Assert.AreEqual(3, words.Similar("treaty", 3).Count());
+            Assert.IsTrue(words.Similar("treaty", 3).Contains("treaty"));
+            Assert.IsTrue(words.Similar("treaty", 3).Contains("treating"));
+            Assert.IsTrue(words.Similar("treaty", 3).Contains("tree"));
+
+            Assert.AreEqual(3, words.Similar("tree", 3).Count());
+            Assert.IsTrue(words.Similar("tree", 3).Contains("tree"));
+            Assert.IsTrue(words.Similar("tree", 3).Contains("treaty"));
+            Assert.IsTrue(words.Similar("tree", 3).Contains("pre"));
+
+            Assert.AreEqual(2, words.Similar("ring", 1).Count());
+            Assert.IsTrue(words.Similar("ring", 1).Contains("ring"));
+            Assert.IsTrue(words.Similar("ring", 1).Contains("rings"));
+
+            Assert.AreEqual(1, words.Similar("ring", 0).Count());
+            Assert.IsTrue(words.Similar("ring", 0).Contains("ring"));
 
             var fileStream = File.Exists(fileName) ?
                     File.Open(fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read) :
@@ -192,60 +228,40 @@ namespace Tests
                 Assert.IsTrue(reader.HasWord("tree"));
                 Assert.IsTrue(reader.HasWord("pre"));
                 Assert.IsTrue(reader.HasWord("prefix"));
+                Assert.IsTrue(reader.HasWord("ring"));
+                Assert.IsTrue(reader.HasWord("rings"));
                 Assert.IsFalse(reader.HasWord("prefixx"));
 
                 Assert.AreEqual(3, reader.Prefixed("tre").Count());
                 Assert.AreEqual(1, reader.Prefixed("tree").Count());
                 Assert.AreEqual(3, reader.Prefixed("pre").Count());
                 Assert.AreEqual(2, reader.Prefixed("pref").Count());
+                Assert.AreEqual(2, reader.Prefixed("ring").Count());
                 Assert.AreEqual(0, reader.Prefixed("cracker").Count());
 
                 Assert.IsTrue(reader.Similar("tre", 1).Contains("tree"));
+                Assert.IsTrue(reader.Similar("tre", 1).Contains("pre"));
                 Assert.IsFalse(reader.Similar("tre", 1).Contains("treat"));
                 Assert.IsFalse(reader.Similar("tre", 1).Contains("treaty"));
                 Assert.IsFalse(reader.Similar("tre", 1).Contains("treating"));
-                Assert.IsTrue(reader.Similar("tre", 1).Contains("pre"));
 
+                Assert.AreEqual(3, reader.Similar("treaty", 3).Count());
+                Assert.IsTrue(reader.Similar("treaty", 3).Contains("treaty"));
+                Assert.IsTrue(reader.Similar("treaty", 3).Contains("treating"));
+                Assert.IsTrue(reader.Similar("treaty", 3).Contains("tree"));
+
+                Assert.AreEqual(3, reader.Similar("tree", 3).Count());
+                Assert.IsTrue(reader.Similar("tree", 3).Contains("tree"));
+                Assert.IsTrue(reader.Similar("tree", 3).Contains("treaty"));
+                Assert.IsTrue(reader.Similar("tree", 3).Contains("pre"));
+
+                Assert.AreEqual(2, reader.Similar("ring", 1).Count());
+                Assert.IsTrue(reader.Similar("ring", 1).Contains("ring"));
+                Assert.IsTrue(reader.Similar("ring", 1).Contains("rings"));
+
+                Assert.AreEqual(1, words.Similar("ring", 0).Count());
+                Assert.IsTrue(words.Similar("ring", 0).Contains("ring"));
             }
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var reader = new TrieReader(sr))
-            {
-                Assert.IsTrue(reader.HasWord("treating"));
-            }
-
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var reader = new TrieReader(sr))
-            {
-                Assert.IsTrue(reader.HasWord("tree"));
-
-
-            }
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var reader = new TrieReader(sr))
-            {
-                Assert.IsTrue(reader.HasWord("pre"));
-
-
-            } 
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var reader = new TrieReader(sr))
-            {
-                Assert.IsTrue(reader.HasWord("prefix"));
-
-
-            } 
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var reader = new TrieReader(sr))
-            {
-                Assert.IsFalse(reader.HasWord("prefixx"));
-
-
-            } 
         }
 
         [Test]
