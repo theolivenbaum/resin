@@ -2,7 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text;
 using log4net;
 using Resin.IO;
 
@@ -12,14 +14,12 @@ namespace Resin
     {
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
-        private readonly ConcurrentDictionary<string, Trie> _tries;
         private readonly ConcurrentDictionary<string, PostingsContainer> _postingContainers;
         private readonly IxInfo _ix;
 
-        public Collector(string directory, IxInfo ix, ConcurrentDictionary<string, Trie> tries, ConcurrentDictionary<string, PostingsContainer> postingContainers)
+        public Collector(string directory, IxInfo ix, ConcurrentDictionary<string, PostingsContainer> postingContainers)
         {
             _directory = directory;
-            _tries = tries;
             _postingContainers = postingContainers;
             _ix = ix;
         }
@@ -32,16 +32,12 @@ namespace Resin
             return scored;
         }
 
-        private Trie GetTrie(string field)
+        private TrieReader GetTrieReader(string field)
         {
-            throw new NotImplementedException();
-            Trie file;
-            if (!_tries.TryGetValue(field, out file))
-            {
-                //file = new Trie(new TrieReader(field.ToTrieContainerId(), _directory));
-                _tries[field] = file;
-            }
-            return file;
+            var fileName = Path.Combine(_directory, field.ToTrieContainerId() + ".tc");
+            var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var sr = new StreamReader(fs, Encoding.Unicode);
+            return new TrieReader(sr);
         }
 
         private void Scan(QueryContext queryContext, IScoringScheme scorer)
@@ -55,7 +51,7 @@ namespace Resin
 
         private IEnumerable<DocumentScore> GetScoredResult(Term term, IScoringScheme scoringScheme)
         {
-            var trie = GetTrie(term.Field);
+            var trie = GetTrieReader(term.Field);
 
             if (_ix == null) yield break;
 
@@ -93,7 +89,7 @@ namespace Resin
                 var timer = new Stopwatch();
                 timer.Start();
 
-                var trie = GetTrie(queryContext.Field);
+                var trie = GetTrieReader(queryContext.Field);
 
                 IList<QueryContext> expanded = null;
 

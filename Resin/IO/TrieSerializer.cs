@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Globalization;
 using System.IO;
 using System.Text;
 
 namespace Resin.IO
 {
-    public class TrieWriter : IDisposable
+    public class TrieSerializer : IDisposable
     {
         private readonly string _fileId;
         private readonly IFormatProvider _formatProvider;
@@ -14,7 +13,7 @@ namespace Resin.IO
 
         private StreamWriter _writer;
 
-        public TrieWriter(string fileId, string directory, IFormatProvider formatProvider)
+        public TrieSerializer(string fileId, string directory, IFormatProvider formatProvider)
         {
             _fileId = fileId;
             _formatProvider = formatProvider;
@@ -35,9 +34,9 @@ namespace Resin.IO
             }
         }
 
-        public void Write(Trie trie)
+        public void Serialize(Trie trie)
         {
-            trie.Write(_writer, _formatProvider);
+            trie.Serialize(_writer, _formatProvider);
         }
 
         public void Dispose()

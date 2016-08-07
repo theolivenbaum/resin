@@ -10,6 +10,7 @@ namespace Resin.IO
     {
         private readonly StreamReader _reader;
         private object _lastReadObject;
+        private string _lastReadHeader;
 
         public TrieReader(StreamReader reader)
         {
@@ -18,50 +19,77 @@ namespace Resin.IO
 
         public bool HasWord(string word)
         {
-            SeekToBeginningOfFile();
+            ResetCursor();
             var node = FindNode(word);
-            if (node != null && node.Value.EoW) return true;
+            if (node != null && node.Value.Eow) return true;
             return false;
         }
 
         public IEnumerable<string> Similar(string word, int edits)
         {
-            SeekToBeginningOfFile();
-            var node = FindNode(word);
-            if (node != null)
+            ResetCursor();
+            var words = new List<Trie.Word>();
+            var state = new string(word.ToCharArray());
+            SimScan(word, state, edits, 0, words);
+            return words.OrderBy(w=>w.Distance).Select(w => w.Value);
+        }
+
+        private void SimScan(string word, string state, int edits, int index, IList<Trie.Word> words)
+        {
+            var childIndex = index + 1;
+            var children = ResolveChildrenAt(index).ToList();
+
+            foreach (var child in children)
             {
-                if (node.Value.EoW) yield return word;
+                var header = string.Format(":{0}{1}", childIndex, child.Value);
+                if (header != _lastReadHeader) StepUntilHeader(header);
 
-                var nodes = new Queue<Trie>(word.Select(c => new Trie(c, false)));
-
-                if (nodes.Count == 0) yield break;
-
-                var root = new Trie();
-                var parent = nodes.Dequeue();
-                root.Nodes.Add(parent.Value, parent);
-                while (nodes.Count > 0)
+                var test = index == state.Length ? state + child.Value : state.ReplaceAt(index, child.Value);
+                var distance = Levenshtein.Distance(word, test);
+                if (distance <= edits)
                 {
-                    var n = nodes.Dequeue();
-                    parent.Nodes.Add(n.Value, n);
-                    parent = n;
-                }
-                var tip = root.FindNode(word);
-                ResolveWords(node.Value.Value, node.Value.Level + 1, tip);
-                var result = root.Prefixed(word).ToList();
-                foreach (var w in result)
-                {
-                    yield return w;
+                    if (child.Eow)
+                    {
+                        words.Add(new Trie.Word {Value = test, Distance = distance});
+                    }
+                    SimScan(word, test, edits, childIndex, words);
                 }
             }
         }
 
+        private IEnumerable<Trie> ResolveChildrenAt(int level)
+        {
+            while (true)
+            {
+                Step();
+                if (_lastReadObject == null)
+                {
+                    break;
+                }
+                if (_lastReadObject is Node)
+                {
+                    var node = (Node) _lastReadObject;
+                    yield return new Trie(node.Value, node.Eow);
+                }
+                else
+                {
+                    if (level == 0) break;
+                    var cursorLevel = int.Parse(((string) _lastReadObject).Substring(1, 1));
+                    while (cursorLevel != level)
+                    {
+                        yield break;
+                    }
+                }
+            }
+        } 
+
         public IEnumerable<string> Prefixed(string word)
         {
-            SeekToBeginningOfFile();
+            ResetCursor();
             var node = FindNode(word);
             if (node != null)
             {
-                if (node.Value.EoW) yield return word;
+                if (node.Value.Eow) yield return word;
 
                 var nodes = new Queue<Trie>(word.Select(c => new Trie(c, false)));
                 
@@ -90,7 +118,7 @@ namespace Resin.IO
         {
             if (!IsHeader(_lastReadObject))
             {
-                StepUntilHeaderIsFound(string.Format(":{0}{1}", level, c));              
+                StepUntilHeader(string.Format(":{0}{1}", level, c));              
             }
             while (true)
             {
@@ -98,7 +126,7 @@ namespace Resin.IO
                 if (_lastReadObject is Node)
                 {
                     var node = (Node) _lastReadObject;
-                    tip.Nodes.Add(node.Value, new Trie(node.Value, node.EoW));
+                    tip.Nodes.Add(node.Value, new Trie(node.Value, node.Eow));
                 }
                 else
                 {
@@ -112,7 +140,7 @@ namespace Resin.IO
             }
         }
 
-        private void SeekToBeginningOfFile()
+        private void ResetCursor()
         {
             _reader.BaseStream.Position = 0;
             _reader.DiscardBufferedData();
@@ -125,7 +153,7 @@ namespace Resin.IO
             for (int level = 0; level < word.Length; level++)
             {
                 var c = word[level];
-                var line = StepUntilNodeIsFound(level, c);
+                var line = StepUntilNode(level, c);
                 if (line == null) return null;
                 var thisIsTheLastChar = level == lastIndex;
                 if (thisIsTheLastChar)
@@ -133,7 +161,7 @@ namespace Resin.IO
                     return line;
                 }
                 var header = string.Format(":{0}{1}", level + 1, word[level]);
-                StepUntilHeaderIsFound(header);
+                StepUntilHeader(header);
                 if (!(IsHeader(_lastReadObject)))
                 {
                     return null;
@@ -144,10 +172,27 @@ namespace Resin.IO
 
         private bool IsHeader(object obj)
         {
-            return obj is string;
+            return obj == null || obj is string;
+        }
+
+        private void Step()
+        {
+            var line = _reader.ReadLine();
+            if (line == null)
+            {
+                _lastReadObject = null;
+                return;
+            }
+            if (line.StartsWith(":"))
+            {
+                _lastReadObject = line;
+                _lastReadHeader = line;
+                return;
+            }
+            _lastReadObject = ParseNode(line);
         }
         
-        private void StepUntilHeaderIsFound(string header)
+        private void StepUntilHeader(string header)
         {
             while (true)
             {
@@ -156,7 +201,7 @@ namespace Resin.IO
             }
         }
 
-        private Node? StepUntilNodeIsFound(int level, char value)
+        private Node? StepUntilNode(int level, char value)
         {
             while (true)
             {
@@ -183,32 +228,16 @@ namespace Resin.IO
             return new Node(level, val, eow);
         }
 
-        private void Step()
-        {
-            var line = _reader.ReadLine();
-            if (line == null)
-            {
-                _lastReadObject = null;
-                return;
-            }
-            if (line.StartsWith(":"))
-            {
-                _lastReadObject = line;
-                return;
-            }
-            _lastReadObject = ParseNode(line);
-        }
-
         private struct Node
         {
             public readonly int Level; 
-            public readonly bool EoW;
+            public readonly bool Eow;
             public readonly char Value;
                        
             public Node(int level, char value, bool eow)
             {
                 Level = level;
-                EoW = eow;
+                Eow = eow;
                 Value = value;
             }
 

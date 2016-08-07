@@ -191,103 +191,103 @@ namespace Resin.Cli
 
         static void Remove(string[] args)
         {
-            //string dir = null;
-            //string indexName = null;
-            //if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
-            //if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
-            //var inproc = !string.IsNullOrWhiteSpace(dir);
-            //var docId = args[Array.IndexOf(args, "--docid") + 1];
-            //var timer = new Stopwatch();
-            //timer.Start();
-            //if (inproc)
-            //{
-            //    using (var writer = new IndexWriter(dir, new Analyzer(), new Tfidf()))
-            //    {
-            //        writer.Remove(docId);
-            //    }
-            //}
-            //else
-            //{
-            //    var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
-            //    using (var client = new WriterClient(indexName, url))
-            //    {
-            //        client.Remove(docId);
-            //    }
-            //}
-            //Console.WriteLine("deleted {0} in {1}", docId, timer.Elapsed);
+            string dir = null;
+            string indexName = null;
+            if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
+            if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
+            var inproc = !string.IsNullOrWhiteSpace(dir);
+            var docId = args[Array.IndexOf(args, "--docid") + 1];
+            var timer = new Stopwatch();
+            timer.Start();
+            if (inproc)
+            {
+                using (var writer = new IndexWriter(dir, new Analyzer(), new Tfidf()))
+                {
+                    writer.Remove(docId);
+                }
+            }
+            else
+            {
+                var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
+                using (var client = new WriterClient(indexName, url))
+                {
+                    client.Remove(docId);
+                }
+            }
+            Console.WriteLine("deleted {0} in {1}", docId, timer.Elapsed);
         }
 
         static void Write(string[] args)
         {
-            //var take = 1000;
-            //var skip = 0;
-            //var skipped = 0;
+            var take = 1000;
+            var skip = 0;
+            var skipped = 0;
 
-            //if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
-            //if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
+            if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
+            if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
 
-            //var fileName = args[Array.IndexOf(args, "--file") + 1];
-            //string dir = null;
-            //string indexName = null;
-            //if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
-            //if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
+            var fileName = args[Array.IndexOf(args, "--file") + 1];
+            string dir = null;
+            string indexName = null;
+            if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
+            if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
 
-            //var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
-            //var inproc = !string.IsNullOrWhiteSpace(dir);
-            //IndexWriter w = inproc ? new IndexWriter(dir, new Analyzer(), new Tfidf()) : null;
+            var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
+            var inproc = !string.IsNullOrWhiteSpace(dir);
+            IndexWriter w = inproc ? new IndexWriter(dir, new Analyzer(), new Tfidf()) : null;
 
-            //Console.Write(inproc ? "Writing " : "Collecting docs ");
+            Console.Write(inproc ? "Writing " : "Collecting docs ");
 
-            //var cursorPos = Console.CursorLeft;
-            //var count = 0;
-            //var docs = new List<Dictionary<string, string>>();
-            //var timer = new Stopwatch();
-            //timer.Start();
-            //using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            //using (var bs = new BufferedStream(fs))
-            //using (var sr = new StreamReader(bs))
-            //{
-            //    string line;
-            //    sr.ReadLine();
-            //    while (skipped++ < skip)
-            //    {
-            //        sr.ReadLine();
-            //    }
-            //    while ((line = sr.ReadLine()) != null)
-            //    {
-            //        if (line[0] == ']') break;
+            var cursorPos = Console.CursorLeft;
+            var count = 0;
+            var docs = new List<Dictionary<string, string>>();
+            var timer = new Stopwatch();
+            timer.Start();
+            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var bs = new BufferedStream(fs))
+            using (var sr = new StreamReader(bs))
+            {
+                string line;
+                sr.ReadLine();
+                while (skipped++ < skip)
+                {
+                    sr.ReadLine();
+                }
+                while ((line = sr.ReadLine()) != null)
+                {
+                    if (line[0] == ']') break;
 
-            //        var doc = JsonConvert.DeserializeObject<Dictionary<string, string>>(line.Substring(0, line.Length - 1));
-            //        Console.SetCursorPosition(cursorPos, Console.CursorTop);
-            //        Console.Write(++count);
+                    var doc = JsonConvert.DeserializeObject<Dictionary<string, string>>(line.Substring(0, line.Length - 1));
+                    Console.SetCursorPosition(cursorPos, Console.CursorTop);
+                    Console.Write(++count);
 
-            //        if (inproc)
-            //        {
-            //            w.Write(doc);
-            //        }
-            //        else
-            //        {
-            //            docs.Add(doc);
-            //        }
+                    if (inproc)
+                    {
+                        w.Write(doc);
+                    }
+                    else
+                    {
+                        docs.Add(doc);
+                    }
 
-            //        if (count == take) break;
-            //    }
-            //    Console.WriteLine();
-            //}
+                    if (count == take) break;
+                }
+                Console.WriteLine();
+            }
 
-            //if (inproc)
-            //{
-            //    w.Dispose();
-            //}
-            //else
-            //{
-            //    Console.Write("Executing HTTP POST");
-            //    using (var client = new WriterClient(indexName, url))
-            //    {
-            //        client.Write(docs);
-            //    }
-            //}
-            //Console.Write("total time elapsed {0}", timer.Elapsed);
+            if (inproc)
+            {
+                w.Dispose();
+            }
+            else
+            {
+                Console.Write("Executing HTTP POST");
+                using (var client = new WriterClient(indexName, url))
+                {
+                    client.Write(docs);
+                }
+            }
+            Console.Write("total time elapsed {0}", timer.Elapsed);
         }
     }
 }

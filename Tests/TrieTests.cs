@@ -1,5 +1,4 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -181,7 +180,7 @@ namespace Tests
 
             using (var writer = new StreamWriter(fileStream, Encoding.Unicode))
             {
-                words.Write(writer, CultureInfo.CurrentCulture);
+                words.Serialize(writer, CultureInfo.CurrentCulture);
             }
 
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -201,15 +200,11 @@ namespace Tests
                 Assert.AreEqual(2, reader.Prefixed("pref").Count());
                 Assert.AreEqual(0, reader.Prefixed("cracker").Count());
 
-
-
-
-
-                //Assert.IsTrue(lz.Similar("tre", 1).Contains("tree"));
-                //Assert.IsFalse(lz.Similar("tre", 1).Contains("treat"));
-                //Assert.IsFalse(lz.Similar("tre", 1).Contains("treaty"));
-                //Assert.IsFalse(lz.Similar("tre", 1).Contains("treating"));
-                //Assert.IsTrue(lz.Similar("tre", 1).Contains("pre"));
+                Assert.IsTrue(reader.Similar("tre", 1).Contains("tree"));
+                Assert.IsFalse(reader.Similar("tre", 1).Contains("treat"));
+                Assert.IsFalse(reader.Similar("tre", 1).Contains("treaty"));
+                Assert.IsFalse(reader.Similar("tre", 1).Contains("treating"));
+                Assert.IsTrue(reader.Similar("tre", 1).Contains("pre"));
 
             }
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))

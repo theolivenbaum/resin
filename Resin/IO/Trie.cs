@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -55,11 +56,11 @@ namespace Resin.IO
             }
         }
 
-        public void Write(StreamWriter writer, IFormatProvider formatProvider, int level = 0)
+        public void Serialize(StreamWriter writer, IFormatProvider formatProvider, int level = 0)
         {
             var sorted = Nodes.Values.OrderBy(s => s.Value).ToList();
             var nextLevel = level + 1;
-            var header = string.Format(formatProvider, ":{0}{1}", level, Value == char.MinValue ? ' ' : Value);
+            var header = string.Format(formatProvider, ":{0}{1}", level, Value == char.MinValue ? string.Empty : Value.ToString(formatProvider));
             writer.WriteLine(header);
             foreach (var node in sorted)
             {
@@ -67,7 +68,7 @@ namespace Resin.IO
             }
             foreach (var node in sorted)
             {
-                node.Write(writer, formatProvider, nextLevel);
+                node.Serialize(writer, formatProvider, nextLevel);
             }
         }
 
@@ -84,11 +85,11 @@ namespace Resin.IO
         public IEnumerable<string> Similar(string word, int edits)
         {
             var words = new List<Word>();
-            SimScan(word, word, edits, 0, words);
+            SimScan(word, new string(word.ToCharArray()), edits, 0, words);
             return words.OrderBy(w => w.Distance).Select(w => w.Value);
         }
 
-        private struct Word
+        public struct Word
         {
             public string Value;
             public int Distance;
@@ -99,15 +100,15 @@ namespace Resin.IO
             var childIndex = index + 1;
             foreach (var child in ResolveChildren())
             {
-                var tmp = index == state.Length ? state + child.Value : state.ReplaceAt(index, child.Value);
-                var distance = Levenshtein.Distance(word, tmp);
+                var test = index == state.Length ? state + child.Value : state.ReplaceAt(index, child.Value);
+                var distance = Levenshtein.Distance(word, test);
                 if (distance <= edits)
                 {
                     if (child.Eow)
                     {
-                        words.Add(new Word { Value = tmp, Distance = distance });
+                        words.Add(new Word { Value = test, Distance = distance });
                     }
-                    child.SimScan(word, tmp, edits, childIndex, words);
+                    child.SimScan(word, test, edits, childIndex, words);
                 }
             }
         }
@@ -275,6 +276,11 @@ namespace Resin.IO
             return string.Format(formatProvider, Format,
                 Value, 
                 Eow ? "1" : "0");
+        }
+
+        public override string ToString()
+        {
+            return Value.ToString(CultureInfo.CurrentCulture);
         }
 
         private const string Format = "{0}\t{1}";
