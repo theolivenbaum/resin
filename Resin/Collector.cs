@@ -104,7 +104,7 @@ namespace Resin
 
                 if (expanded != null)
                 {
-                    foreach (var t in expanded)
+                    foreach (var t in expanded.Where(e=>e.Value != queryContext.Value))
                     {
                         queryContext.Children.Add(t);
                     }
