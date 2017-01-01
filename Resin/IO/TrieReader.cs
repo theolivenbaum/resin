@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -9,243 +8,57 @@ namespace Resin.IO
     public class TrieReader : IDisposable
     {
         private readonly StreamReader _reader;
-        private object _lastReadObject;
-        private string _lastReadHeader;
 
         public TrieReader(StreamReader reader)
         {
             _reader = reader;
         }
 
-        public bool HasWord(string word)
+        public Trie ReadWholeTree()
         {
-            ResetCursor();
-            var node = FindNode(word);
-            if (node != null && node.Value.Eow) return true;
-            return false;
+            var count = int.Parse(_reader.ReadLine() ?? "0");
+            var root = new Trie();
+            Populate(root, count);
+            return root;
         }
 
-        public IEnumerable<string> Similar(string word, int edits)
+        private void Populate(Trie trie, int count)
         {
-            ResetCursor();
-            var words = new List<Trie.Word>();
-            var state = new string(word.ToCharArray());
-            SimScan(word, state, edits, 0, words);
-            return words.OrderBy(w=>w.Distance).Select(w => w.Value);
-        }
-
-        private void SimScan(string word, string state, int edits, int index, IList<Trie.Word> words)
-        {
-            var childIndex = index + 1;
-            var children = ResolveChildrenAt(index).ToList();
-
-            foreach (var child in children)
+            foreach (var node in ReadLines(count).ToList())
             {
-                var header = string.Format(":{0}{1}", childIndex, child.Value);
-                if (header != _lastReadHeader) StepUntilHeader(header);
-
-                var tmp = index == state.Length ? state + child.Value : state.ReplaceAt(index, child.Value);
-                var distance = Levenshtein.Distance(word, tmp);
-                if (distance <= edits)
-                {
-                    if (child.Eow)
-                    {
-                        var potential = tmp.Substring(0, childIndex);
-                        var d = Levenshtein.Distance(word, potential);
-                        if (d <= edits) words.Add(new Trie.Word { Value = potential, Distance = d });
-                    }
-                    SimScan(word, tmp, edits, childIndex, words);
-                }
+                var subTree = new Trie(node.Value, node.Eow);
+                trie.Nodes.Add(node.Value, subTree);
+                Populate(subTree, node.Count);
             }
         }
 
-        private IEnumerable<Trie> ResolveChildrenAt(int level)
+        private IEnumerable<Node> ReadLines(int count)
         {
-            while (true)
+            for (int i = 0; i < count; i++)
             {
-                Step();
-                if (_lastReadObject == null)
-                {
-                    break;
-                }
-                if (_lastReadObject is Node)
-                {
-                    var node = (Node) _lastReadObject;
-                    yield return new Trie(node.Value, node.Eow);
-                }
-                else
-                {
-                    if (level == 0) break;
-                    var cursorLevel = int.Parse(((string) _lastReadObject).Substring(1, 1));
-                    while (cursorLevel != level)
-                    {
-                        yield break;
-                    }
-                }
+                yield return ParseNode(_reader.ReadLine());
             }
-        } 
-
-        public IEnumerable<string> Prefixed(string word)
-        {
-            ResetCursor();
-            var node = FindNode(word);
-            if (node != null)
-            {
-                if (node.Value.Eow) yield return word;
-
-                var nodes = new Queue<Trie>(word.Select(c => new Trie(c, false)));
-                
-                if (nodes.Count == 0) yield break;
-
-                var root = new Trie();
-                var parent = nodes.Dequeue();
-                root.Nodes.Add(parent.Value, parent);
-                while (nodes.Count > 0)
-                {
-                    var n = nodes.Dequeue();
-                    parent.Nodes.Add(n.Value, n);
-                    parent = n;
-                }
-                var tip = root.FindNode(word);
-                ResolveWords(node.Value.Value, node.Value.Level + 1, tip);
-                var result = root.Prefixed(word).ToList();
-                foreach (var w in result)
-                {
-                    yield return w;
-                }
-            }
-        }
-
-        private void ResolveWords(char c, int level, Trie tip)
-        {
-            if (!IsHeader(_lastReadObject))
-            {
-                StepUntilHeader(string.Format(":{0}{1}", level, c));              
-            }
-            while (true)
-            {
-                Step();
-                if (_lastReadObject is Node)
-                {
-                    var node = (Node) _lastReadObject;
-                    tip.Nodes.Add(node.Value, new Trie(node.Value, node.Eow));
-                }
-                else
-                {
-                    break;
-                }
-            }
-            var nextLevel = level + 1;
-            foreach (var node in tip.Nodes.Values)
-            {
-                ResolveWords(node.Value, nextLevel, node);
-            }
-        }
-
-        private void ResetCursor()
-        {
-            _reader.BaseStream.Position = 0;
-            _reader.DiscardBufferedData();
-            Step();
-        }
-
-        private Node? FindNode(string word)
-        {
-            var lastIndex = word.Length - 1;
-            for (int level = 0; level < word.Length; level++)
-            {
-                var c = word[level];
-                var line = StepUntilNode(level, c);
-                if (line == null) return null;
-                var thisIsTheLastChar = level == lastIndex;
-                if (thisIsTheLastChar)
-                {
-                    return line;
-                }
-                var header = string.Format(":{0}{1}", level + 1, word[level]);
-                StepUntilHeader(header);
-                if (!(IsHeader(_lastReadObject)))
-                {
-                    return null;
-                }
-            }
-            return null;
-        }
-
-        private bool IsHeader(object obj)
-        {
-            return obj == null || obj is string;
-        }
-
-        private void Step()
-        {
-            var line = _reader.ReadLine();
-            if (line == null)
-            {
-                _lastReadObject = null;
-                return;
-            }
-            if (line.StartsWith(":"))
-            {
-                _lastReadObject = line;
-                _lastReadHeader = line;
-                return;
-            }
-            _lastReadObject = ParseNode(line);
-        }
-        
-        private void StepUntilHeader(string header)
-        {
-            while (true)
-            {
-                Step();
-                if (IsHeader(_lastReadObject) && (string) _lastReadObject == header) break;
-            }
-        }
-
-        private Node? StepUntilNode(int level, char value)
-        {
-            while (true)
-            {
-                Step();
-                if (_lastReadObject == null) break;
-                if (_lastReadObject is Node)
-                {
-                    var node = (Node) _lastReadObject;
-                    if (node.Level == level && node.Value == value)
-                    {
-                        return node;
-                    }
-                }
-            }
-            return null;
         }
 
         private Node ParseNode(string line)
         {
-            var segs = line.Split(new[] { "\t" }, StringSplitOptions.None);
-            var level = int.Parse(segs[0], CultureInfo.CurrentCulture);
-            var val = Char.Parse(segs[1]);
-            var eow = segs[2] == "1";
-            return new Node(level, val, eow);
+            var val = line[0];
+            var eow = line[1] == '1';
+            var count = int.Parse(line.Substring(2, line.Length-2));
+            return new Node(val, eow, count);
         }
 
-        private struct Node
+        public struct Node
         {
-            public readonly int Level; 
             public readonly bool Eow;
             public readonly char Value;
+            public readonly int Count;
                        
-            public Node(int level, char value, bool eow)
+            public Node(char value, bool eow, int count)
             {
-                Level = level;
                 Eow = eow;
                 Value = value;
-            }
-
-            public override string ToString()
-            {
-                return Value.ToString(CultureInfo.CurrentCulture);
+                Count = count;
             }
         }
 
@@ -258,12 +71,5 @@ namespace Resin.IO
                 _reader.Dispose();
             }
         }
-    }
-
-    public interface ITrieReader
-    {
-        IEnumerable<string> Similar(string word, int edits);
-        IEnumerable<string> Prefixed(string prefix);
-        bool HasWord(string word);
     }
 }

@@ -1,4 +1,4 @@
-call rnw.bat d:\wikipedia\latest-all.json c:\temp\3wikipedia.json 0 1000
+call rnw.bat d:\wikipedia\latest-all.json c:\temp\0wikipedia.json 0 1000000
 rem call rnw.bat d:\wikipedia\latest-all.json c:\temp\4wikipedia.json 4000000 1000000
 rem call rnw.bat d:\wikipedia\latest-all.json c:\temp\5wikipedia.json 5000000 1000000
 rem call rnw.bat d:\wikipedia\latest-all.json c:\temp\6wikipedia.json 5000000 1000000

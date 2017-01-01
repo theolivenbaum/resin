@@ -1,22 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Resin.IO
 {
-    public class TrieSerializer : IDisposable
+    public class TrieWriter : IDisposable
     {
         private readonly string _fileId;
-        private readonly IFormatProvider _formatProvider;
 
         public string Id { get { return _fileId; } }
 
         private StreamWriter _writer;
 
-        public TrieSerializer(string fileId, string directory, IFormatProvider formatProvider)
+        public TrieWriter(string fileId, string directory)
         {
             _fileId = fileId;
-            _formatProvider = formatProvider;
             var fileName = Path.Combine(directory, _fileId + ".tc");
             InitWriteSession(fileName);
         }
@@ -30,13 +30,29 @@ namespace Resin.IO
                     File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
 
                 _writer = new StreamWriter(fileStream, Encoding.Unicode);
-                _writer.AutoFlush = false;
+                //_writer.AutoFlush = false;
             }
         }
 
-        public void Serialize(Trie trie)
+        public void Write(Trie trie)
         {
-            trie.Serialize(_writer, _formatProvider);
+            _writer.WriteLine(trie.Nodes.Count);
+            Write(trie.Nodes.Values.ToList());
+        }
+
+        private void Write(IList<Trie> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                _writer.Write(node.Value);
+                _writer.Write(node.Eow ? "1" : "0");
+                _writer.WriteLine(node.Nodes.Count);
+            }
+
+            foreach (Trie t in nodes)
+            {
+                Write(t.Nodes.Values.ToList());
+            }
         }
 
         public void Dispose()

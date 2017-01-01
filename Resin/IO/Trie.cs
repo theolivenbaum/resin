@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using log4net.Core;
 
 namespace Resin.IO
 {
@@ -56,22 +57,6 @@ namespace Resin.IO
             }
         }
 
-        public void Serialize(StreamWriter writer, IFormatProvider formatProvider, int level = 0)
-        {
-            var sorted = Nodes.Values.OrderBy(s => s.Value).ToList();
-            var nextLevel = level + 1;
-            var header = string.Format(formatProvider, ":{0}{1}", level, Value == char.MinValue ? string.Empty : Value.ToString(formatProvider));
-            writer.WriteLine(header);
-            foreach (var node in sorted)
-            {
-                writer.WriteLine(Format, level, node.ToString(formatProvider));
-            }
-            foreach (var node in sorted)
-            {
-                node.Serialize(writer, formatProvider, nextLevel);
-            }
-        }
-
         protected virtual bool TryResolveChild(char c, out Trie trie)
         {
             return Nodes.TryGetValue(c, out trie);
@@ -112,7 +97,10 @@ namespace Resin.IO
                     {
                         var potential = tmp.Substring(0, childIndex);
                         var distance = Levenshtein.Distance(word, potential);
-                        if (distance <= edits) words.Add(new Word { Value = potential, Distance = distance });
+                        if (distance <= edits)
+                        {
+                            words.Add(new Word { Value = potential, Distance = distance });
+                        }
                     }
                     child.SimScan(word, tmp, edits, childIndex, words);
                 }
@@ -163,7 +151,7 @@ namespace Resin.IO
             return null;
         }
 
-        public Trie FindNodeScan(string word)
+        private Trie FindNodeScan(string word)
         {
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 
@@ -279,16 +267,12 @@ namespace Resin.IO
 
         public string ToString(IFormatProvider formatProvider)
         {
-            return string.Format(formatProvider, Format,
-                Value, 
-                Eow ? "1" : "0");
+            return Value.ToString(formatProvider);
         }
 
         public override string ToString()
         {
             return Value.ToString(CultureInfo.CurrentCulture);
         }
-
-        private const string Format = "{0}\t{1}";
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using Resin.IO;
@@ -12,7 +11,6 @@ namespace Resin
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private readonly IScoringScheme _scoringScheme;
-        private readonly IFormatProvider _formatProvider;
         //private static readonly ILog Log = LogManager.GetLogger("TermFileAppender");
         //private readonly TaskQueue<Document> _docWorker;
         private readonly TaskQueue<PostingsFile> _postingsWorker;
@@ -39,12 +37,11 @@ namespace Resin
         /// </summary>
         private readonly Dictionary<string, PostingsContainer> _postingsContainers;
 
-        public IndexWriter(string directory, IAnalyzer analyzer, IScoringScheme scoringScheme, IFormatProvider formatProvider = null)
+        public IndexWriter(string directory, IAnalyzer analyzer, IScoringScheme scoringScheme)
         {
             _directory = directory;
             _analyzer = analyzer;
             _scoringScheme = scoringScheme;
-            _formatProvider = formatProvider;
             _postingsFiles = new Dictionary<string, PostingsFile>();
             _postingsContainers = new Dictionary<string, PostingsContainer>();
             _docContainers = new Dictionary<string, DocContainer>();
@@ -53,8 +50,6 @@ namespace Resin
             _deletions = new List<string>();
             _tries = new Dictionary<string, Trie>();
             _docs = new Dictionary<string, Document>();
-
-            if (formatProvider == null) _formatProvider = CultureInfo.CurrentCulture;
 
             var ixFileName = Path.Combine(directory, "1.ix");
             _ix = File.Exists(ixFileName) ? IxFile.Load(ixFileName) : new IxFile();
@@ -250,9 +245,9 @@ namespace Resin
             {
                 var field = kvp.Key;
                 var trie = kvp.Value;
-                using (var writer = new TrieSerializer(field.ToTrieContainerId(), _directory, _formatProvider))
+                using (var writer = new TrieWriter(field.ToTrieContainerId(), _directory))
                 {
-                    writer.Serialize(trie);
+                    writer.Write(trie);
                 }
             });
 
