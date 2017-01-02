@@ -17,10 +17,31 @@ namespace Resin.IO
         public TrieWriter(string fileId, string directory)
         {
             _fileId = fileId;
-            var fileName = Path.Combine(directory, _fileId + ".tc");
-            InitWriteSession(fileName);
+            InitWriteSession(Path.Combine(directory, _fileId + ".tc"));
         }
 
+        public void Write(Trie node)
+        {
+            _writer.Write(node.Value);
+            _writer.Write(node.Eow ? "1" : "0");
+            _writer.WriteLine(node.Count);
+            Print(node.Nodes.ToList());
+        }
+
+        private void Print(IList<Trie> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                _writer.Write(node.Value);
+                _writer.Write(node.Eow ? "1" : "0");
+                _writer.WriteLine(node.Count);
+            }
+            foreach (var node in nodes)
+            {
+                Print(node.Nodes.ToList());
+            }
+        }
+        
         private void InitWriteSession(string fileName)
         {
             if (_writer == null)
@@ -31,27 +52,6 @@ namespace Resin.IO
 
                 _writer = new StreamWriter(fileStream, Encoding.Unicode);
                 //_writer.AutoFlush = false;
-            }
-        }
-
-        public void Write(Trie trie)
-        {
-            _writer.WriteLine(trie.Nodes.Count);
-            Write(trie.Nodes.Values.ToList());
-        }
-
-        private void Write(IList<Trie> nodes)
-        {
-            foreach (var node in nodes)
-            {
-                _writer.Write(node.Value);
-                _writer.Write(node.Eow ? "1" : "0");
-                _writer.WriteLine(node.Nodes.Count);
-            }
-
-            foreach (Trie t in nodes)
-            {
-                Write(t.Nodes.Values.ToList());
             }
         }
 

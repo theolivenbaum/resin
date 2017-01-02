@@ -249,6 +249,7 @@ namespace Resin
                 {
                     writer.Write(trie);
                 }
+                trie.Dispose();
             });
 
             _postingsWorker.Dispose();

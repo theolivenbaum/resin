@@ -10,7 +10,7 @@ using Resin.IO;
 
 namespace Resin
 {
-    public class Collector
+    public class Collector : IDisposable
     {
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
@@ -51,13 +51,11 @@ namespace Resin
             timer.Start();
             var fileName = Path.Combine(_directory, field.ToTrieContainerId() + ".tc");
             var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            using(var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var reader = new TrieReader(sr))
-            {
-                var trie = reader.ReadWholeTree();
-                Log.DebugFormat("read {0} in {1}", fileName, timer.Elapsed);
-                return trie;
-            }
+            var sr = new StreamReader(fs, Encoding.Unicode);
+            var reader = new TrieStreamReader(sr);
+            var trie = reader.Read();
+            Log.DebugFormat("read {0} in {1}", fileName, timer.Elapsed);
+            return trie;
         }
 
         private void Scan(QueryContext queryContext, IScoringScheme scorer)
@@ -138,6 +136,14 @@ namespace Resin
             foreach (var child in queryContext.Children)
             {
                 Expand(child);
+            }
+        }
+
+        public void Dispose()
+        {
+            foreach (var trie in _trieCache.Values)
+            {
+                trie.Dispose();
             }
         }
     }

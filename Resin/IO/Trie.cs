@@ -1,29 +1,51 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using log4net.Core;
 
 namespace Resin.IO
 {
-    public class Trie
+    public struct Word
     {
-        public char Value { get; protected set; }
+        public string Value;
+        public int Distance;
 
+        public override string ToString()
+        {
+            return Value;
+        }
+    }
+
+    public class Trie : IDisposable
+    {
+        private readonly IDictionary<char, Trie> _nodes;
+ 
+        public char Value { get; protected set; }
         public bool Eow { get; protected set; }
 
-        public Dictionary<char, Trie> Nodes { get; set; }
+        public IEnumerable<Trie> Nodes
+        {
+            get { return _nodes.Values; }
+        }
+
+        public int Count
+        {
+            get { return GetCount(); }
+        }
+
+        protected virtual int GetCount()
+        {
+            return _nodes.Count;
+        }
+
+        protected virtual IEnumerable<Trie> GetChildren()
+        {
+            return _nodes.Values;
+        }
 
         public Trie()
         {
-            Nodes = new Dictionary<char, Trie>();
-        }
-
-        public Trie(char value, bool eow) : this()
-        {
-            Value = value;
-            Eow = eow;
+            _nodes = new Dictionary<char, Trie>();
         }
 
         public Trie(IEnumerable<string> words): this()
@@ -57,16 +79,6 @@ namespace Resin.IO
             }
         }
 
-        protected virtual bool TryResolveChild(char c, out Trie trie)
-        {
-            return Nodes.TryGetValue(c, out trie);
-        }
-
-        protected virtual ICollection<Trie> ResolveChildren()
-        {
-            return Nodes.Values;
-        }
-
         public IEnumerable<string> Similar(string word, int edits)
         {
             var words = new List<Word>();
@@ -74,21 +86,10 @@ namespace Resin.IO
             return words.OrderBy(w => w.Distance).Select(w => w.Value);
         }
 
-        public struct Word
-        {
-            public string Value;
-            public int Distance;
-
-            public override string ToString()
-            {
-                return Value;
-            }
-        }
-
         private void SimScan(string word, string state, int edits, int index, IList<Word> words)
         {
             var childIndex = index + 1;
-            foreach (var child in ResolveChildren())
+            foreach (var child in GetChildren())
             {
                 var tmp = index == state.Length ? state + child.Value : state.ReplaceAt(index, child.Value);
                 if (Levenshtein.Distance(word, tmp) <= edits)
@@ -134,40 +135,11 @@ namespace Resin.IO
             else if (word[0] == Value)
             {
                 Trie child;
-                if (Nodes.TryGetValue(word[1], out child))
+                if (TryResolveChild(word[1], out child))
                 {
                     child.ExactScan(word.Substring(1), chars);
                 }
             }
-        }
-
-        public Trie FindNode(string word)
-        {
-            Trie child;
-            if (TryResolveChild(word[0], out child))
-            {
-                return child.FindNodeScan(word);
-            }
-            return null;
-        }
-
-        private Trie FindNodeScan(string word)
-        {
-            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
-
-            if (word.Length == 1 && word[0] == Value)
-            {
-                // The scan has reached its destination.
-                return this;
-            }
-
-            if(word[0] != Value) return null;
-
-            foreach (var node in Nodes.Values)
-            {
-                return node.FindNodeScan(word.Substring(1));
-            }
-            return null;
         }
 
         public IEnumerable<string> Prefixed(string prefix)
@@ -189,7 +161,7 @@ namespace Resin.IO
             {
                 // The scan has reached its destination. Find words derived from this node.
                 if (Eow) words.Add(state);
-                foreach (var node in Nodes.Values)
+                foreach (var node in GetChildren())
                 {
                     var newState = new List<char>(state.Count + 1);
                     foreach (var c in state) newState.Add(c);
@@ -200,7 +172,7 @@ namespace Resin.IO
             else if (prefix[0] == Value)
             {
                 Trie child;
-                if (Nodes.TryGetValue(prefix[1], out child))
+                if (TryResolveChild(prefix[1], out child))
                 {
                     child.PrefixScan(state, prefix.Substring(1), words);
                 }
@@ -218,15 +190,37 @@ namespace Resin.IO
             if (word.Length == 0) throw new ArgumentOutOfRangeException("word");
 
             Trie child;
-            if (!Nodes.TryGetValue(word[0], out child))
+            if (!TryResolveChild(word[0], out child))
             {
                 child = new Trie(word);
-                Nodes.Add(word[0], child);
+                Add(child);
             }
             else
             {
                 child.Append(word);
             }
+        }
+
+        public void Add(Trie child)
+        {
+            try
+            {
+                _nodes.Add(child.Value, child);
+            }
+            catch (Exception ex)
+            {
+                
+            }
+        }
+
+        public void Remove(Trie child)
+        {
+            _nodes.Remove(child.Value);
+        }
+
+        protected virtual bool TryResolveChild(char c, out Trie child)
+        {
+            return _nodes.TryGetValue(c, out child);
         }
 
         private void Append(IEnumerable<char> text)
@@ -251,11 +245,11 @@ namespace Resin.IO
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("chars");
 
             Trie child;
-            if (Nodes.TryGetValue(word[0], out child))
+            if (TryResolveChild(word[0], out child))
             {
-                if (child.Nodes.Count == 0)
+                if (child.Count == 0)
                 {
-                    Nodes.Remove(child.Value);
+                    Remove(child);
                 }
                 else
                 {
@@ -273,6 +267,10 @@ namespace Resin.IO
         public override string ToString()
         {
             return Value.ToString(CultureInfo.CurrentCulture);
+        }
+
+        public virtual void Dispose()
+        {
         }
     }
 }
