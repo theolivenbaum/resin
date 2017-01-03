@@ -45,7 +45,7 @@ namespace Resin.IO
             }
         }
 
-        public Trie Read()
+        private Trie Read()
         {
             var line = StreamReader.ReadLine();
             LastRead = line;

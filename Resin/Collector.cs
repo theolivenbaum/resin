@@ -15,14 +15,14 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly ConcurrentDictionary<string, PostingsContainer> _postingContainers;
         private readonly IxInfo _ix;
-        private readonly ConcurrentDictionary<string, Trie> _trieCache;
+        private readonly ConcurrentDictionary<string, TrieStreamReader> _readers;
  
         public Collector(string directory, IxInfo ix, ConcurrentDictionary<string, PostingsContainer> postingContainers)
         {
             _directory = directory;
             _postingContainers = postingContainers;
             _ix = ix;
-            _trieCache = new ConcurrentDictionary<string, Trie>();
+            _readers = new ConcurrentDictionary<string, TrieStreamReader>();
         }
 
         public IEnumerable<DocumentScore> Collect(QueryContext queryContext, int page, int size, IScoringScheme scorer)
@@ -35,19 +35,18 @@ namespace Resin
 
         private Trie GetTrie(string field)
         {
-            return GetTrieFromIo(field);
-        }
-
-        private Trie GetTrieFromIo(string field)
-        {
-            var timer = new Stopwatch();
-            timer.Start();
-            var fileName = Path.Combine(_directory, field.ToTrieContainerId() + ".tc");
-            var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var reader = new TrieStreamReader(fs);
-            var trie = reader.Read();
-            Log.DebugFormat("read {0} in {1}", fileName, timer.Elapsed);
-            return trie;
+            TrieStreamReader reader;
+            if (!_readers.TryGetValue(field, out reader))
+            {
+                var timer = new Stopwatch();
+                timer.Start();
+                var fileName = Path.Combine(_directory, field.ToTrieContainerId() + ".tc");
+                var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                reader = new TrieStreamReader(fs);
+                _readers.AddOrUpdate(field, reader, (s, streamReader) => streamReader);
+                Log.DebugFormat("opened {0} in {1}", fileName, timer.Elapsed);
+            }
+            return reader.Reset();
         }
 
         private void Scan(QueryContext queryContext, IScoringScheme scorer)
@@ -133,7 +132,7 @@ namespace Resin
 
         public void Dispose()
         {
-            foreach (var trie in _trieCache.Values)
+            foreach (var trie in _readers.Values)
             {
                 trie.Dispose();
             }

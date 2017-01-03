@@ -14,7 +14,8 @@ namespace Resin.IO
         {
             _trieStreamReader = trieStreamReader;
 
-            var root = _trieStreamReader.Read();
+            var root = _trieStreamReader.Reset();
+            Value = root.Value;
             _count = root.ChildCount;
         }
 
