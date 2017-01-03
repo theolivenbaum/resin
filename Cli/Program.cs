@@ -34,15 +34,15 @@ namespace Resin.Cli
             //    }
             //    Optimize(args);
             //}
-            else if (args[0].ToLower() == "remove")
-            {
-                if (Array.IndexOf(args, "--docid") == -1)
-                {
-                    Console.WriteLine("I need a doc id.");
-                    return;
-                }
-                Remove(args);
-            }
+            //else if (args[0].ToLower() == "remove")
+            //{
+            //    if (Array.IndexOf(args, "--docid") == -1)
+            //    {
+            //        Console.WriteLine("I need a doc id.");
+            //        return;
+            //    }
+            //    Remove(args);
+            //}
             else if (args[0].ToLower() == "query")
             {
                 if (Array.IndexOf(args, "-q") == -1)
@@ -189,33 +189,33 @@ namespace Resin.Cli
         //    optimizer.Save();
         //}
 
-        static void Remove(string[] args)
-        {
-            string dir = null;
-            string indexName = null;
-            if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
-            if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
-            var inproc = !string.IsNullOrWhiteSpace(dir);
-            var docId = args[Array.IndexOf(args, "--docid") + 1];
-            var timer = new Stopwatch();
-            timer.Start();
-            if (inproc)
-            {
-                using (var writer = new IndexWriter(dir, new Analyzer(), new Tfidf()))
-                {
-                    writer.Remove(docId);
-                }
-            }
-            else
-            {
-                var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
-                using (var client = new WriterClient(indexName, url))
-                {
-                    client.Remove(docId);
-                }
-            }
-            Console.WriteLine("deleted {0} in {1}", docId, timer.Elapsed);
-        }
+        //static void Remove(string[] args)
+        //{
+        //    string dir = null;
+        //    string indexName = null;
+        //    if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
+        //    if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
+        //    var inproc = !string.IsNullOrWhiteSpace(dir);
+        //    var docId = args[Array.IndexOf(args, "--docid") + 1];
+        //    var timer = new Stopwatch();
+        //    timer.Start();
+        //    if (inproc)
+        //    {
+        //        using (var writer = new IndexWriter(dir, new Analyzer(), new Tfidf()))
+        //        {
+        //            writer.Remove(docId);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
+        //        using (var client = new WriterClient(indexName, url))
+        //        {
+        //            client.Remove(docId);
+        //        }
+        //    }
+        //    Console.WriteLine("deleted {0} in {1}", docId, timer.Elapsed);
+        //}
 
         static void Write(string[] args)
         {

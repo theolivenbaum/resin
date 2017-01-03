@@ -24,7 +24,7 @@ namespace Resin.IO
         {
             _writer.Write(node.Value);
             _writer.Write(node.Eow ? "1" : "0");
-            _writer.WriteLine(node.Count);
+            _writer.WriteLine(node.ChildCount);
             Print(node.Nodes.ToList());
         }
 
@@ -34,7 +34,7 @@ namespace Resin.IO
             {
                 _writer.Write(node.Value);
                 _writer.Write(node.Eow ? "1" : "0");
-                _writer.WriteLine(node.Count);
+                _writer.WriteLine(node.ChildCount);
             }
             foreach (var node in nodes)
             {

@@ -5,47 +5,37 @@ using System.Linq;
 
 namespace Resin.IO
 {
-    public struct Word
-    {
-        public string Value;
-        public int Distance;
-
-        public override string ToString()
-        {
-            return Value;
-        }
-    }
-
     public class Trie : IDisposable
     {
-        private readonly IDictionary<char, Trie> _nodes;
+        protected readonly IDictionary<char, Trie> NodeDict;
  
         public char Value { get; protected set; }
         public bool Eow { get; protected set; }
+        public int Index { get; set; }
 
-        public IEnumerable<Trie> Nodes
+        public ICollection<Trie> Nodes
         {
-            get { return _nodes.Values; }
+            get { return NodeDict.Values; }
         }
 
-        public int Count
+        public int ChildCount
         {
-            get { return GetCount(); }
+            get { return GetChildCount(); }
         }
 
-        protected virtual int GetCount()
+        protected virtual int GetChildCount()
         {
-            return _nodes.Count;
+            return NodeDict.Count;
         }
 
         protected virtual IEnumerable<Trie> GetChildren()
         {
-            return _nodes.Values;
+            return NodeDict.Values;
         }
 
         public Trie()
         {
-            _nodes = new Dictionary<char, Trie>();
+            NodeDict = new Dictionary<char, Trie>();
         }
 
         public Trie(IEnumerable<string> words): this()
@@ -79,17 +69,23 @@ namespace Resin.IO
             }
         }
 
-        public IEnumerable<string> Similar(string word, int edits)
+        public virtual IEnumerable<string> Similar(string word, int edits)
+        {
+            return SimilarInternal(word, edits);
+        }
+
+        protected IEnumerable<string> SimilarInternal(string word, int edits)
         {
             var words = new List<Word>();
             SimScan(word, new string(word.ToCharArray()), edits, 0, words);
             return words.OrderBy(w => w.Distance).Select(w => w.Value);
         }
 
-        private void SimScan(string word, string state, int edits, int index, IList<Word> words)
+        public virtual void SimScan(string word, string state, int edits, int index, IList<Word> words)
         {
             var childIndex = index + 1;
-            foreach (var child in GetChildren())
+            var children = GetChildren().ToList();
+            foreach (var child in children)
             {
                 var tmp = index == state.Length ? state + child.Value : state.ReplaceAt(index, child.Value);
                 if (Levenshtein.Distance(word, tmp) <= edits)
@@ -108,7 +104,12 @@ namespace Resin.IO
             }
         }
 
-        public bool HasWord(string word)
+        public virtual bool HasWord(string word)
+        {
+            return HasWordInternal(word);
+        }
+
+        protected bool HasWordInternal(string word)
         {
             var nodes = new List<char>();
             Trie child;
@@ -142,7 +143,12 @@ namespace Resin.IO
             }
         }
 
-        public IEnumerable<string> Prefixed(string prefix)
+        public virtual IEnumerable<string> Prefixed(string prefix)
+        {
+            return PrefixedInternal(prefix);
+        }
+
+        protected IEnumerable<string> PrefixedInternal(string prefix)
         {
             var words = new List<List<char>>();
             Trie child;
@@ -203,24 +209,17 @@ namespace Resin.IO
 
         public void Add(Trie child)
         {
-            try
-            {
-                _nodes.Add(child.Value, child);
-            }
-            catch (Exception ex)
-            {
-                
-            }
+            NodeDict.Add(child.Value, child);
         }
 
         public void Remove(Trie child)
         {
-            _nodes.Remove(child.Value);
+            NodeDict.Remove(child.Value);
         }
 
         protected virtual bool TryResolveChild(char c, out Trie child)
         {
-            return _nodes.TryGetValue(c, out child);
+            return NodeDict.TryGetValue(c, out child);
         }
 
         private void Append(IEnumerable<char> text)
@@ -240,33 +239,28 @@ namespace Resin.IO
             }
         }
 
-        public void Remove(string word)
-        {
-            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("chars");
+        //public void Remove(string word)
+        //{
+        //    if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("chars");
 
-            Trie child;
-            if (TryResolveChild(word[0], out child))
-            {
-                if (child.Count == 0)
-                {
-                    Remove(child);
-                }
-                else
-                {
-                    child.Eow = false;
-                }
-                if (word.Length > 1) child.Remove(word.Substring(1));
-            }
-        }
-
-        public string ToString(IFormatProvider formatProvider)
-        {
-            return Value.ToString(formatProvider);
-        }
+        //    Trie child;
+        //    if (TryResolveChild(word[0], out child))
+        //    {
+        //        if (child.ChildCount == 0)
+        //        {
+        //            Remove(child);
+        //        }
+        //        else
+        //        {
+        //            child.Eow = false;
+        //        }
+        //        if (word.Length > 1) child.Remove(word.Substring(1));
+        //    }
+        //}
 
         public override string ToString()
         {
-            return Value.ToString(CultureInfo.CurrentCulture);
+            return string.Format("{0}{1}{2}", Value, Eow ? 1 : 0, ChildCount);
         }
 
         public virtual void Dispose()

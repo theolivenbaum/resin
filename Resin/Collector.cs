@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using log4net;
 using Resin.IO;
 
@@ -36,13 +35,7 @@ namespace Resin
 
         private Trie GetTrie(string field)
         {
-            Trie trie;
-            if (!_trieCache.TryGetValue(field, out trie))
-            {
-                trie = GetTrieFromIo(field);
-                _trieCache.AddOrUpdate(field, trie, (s, trie1) => trie1);
-            }
-            return trie;
+            return GetTrieFromIo(field);
         }
 
         private Trie GetTrieFromIo(string field)
@@ -51,8 +44,7 @@ namespace Resin
             timer.Start();
             var fileName = Path.Combine(_directory, field.ToTrieContainerId() + ".tc");
             var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var sr = new StreamReader(fs, Encoding.Unicode);
-            var reader = new TrieStreamReader(sr);
+            var reader = new TrieStreamReader(fs);
             var trie = reader.Read();
             Log.DebugFormat("read {0} in {1}", fileName, timer.Elapsed);
             return trie;

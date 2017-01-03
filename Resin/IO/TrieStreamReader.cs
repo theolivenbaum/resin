@@ -1,36 +1,59 @@
 using System;
 using System.IO;
-using System.Linq;
+using System.Text;
 
 namespace Resin.IO
 {
     public class TrieStreamReader : IDisposable
     {
-        protected readonly StreamReader StreamReader;
+        protected StreamReader StreamReader;
+        private readonly FileStream _fileStream;
 
-        public TrieStreamReader(StreamReader streamReader)
+        public TrieStreamReader(FileStream fileStream)
         {
-            StreamReader = streamReader;
+            _fileStream = fileStream;
+            StreamReader = new StreamReader(_fileStream, Encoding.Unicode);
+        }
+
+        public TrieScanner Reset()
+        {
+            TrieScanner.Skip = 0;
+            _fileStream.Position = 0;
+            StreamReader = new StreamReader(_fileStream, Encoding.Unicode);
+            return (TrieScanner)Read();
+        }
+
+        public void Skip(int count)
+        {
+            while (true)
+            {
+                if (count == 0) return;
+                var node = Read();
+                count--;
+                count += node.ChildCount;
+            }
         }
 
         public void ResolveChildren(Trie node)
         {
-            for (int i = 0; i < node.Count; i++)
+            var children = node.ChildCount;
+            for (int i = 0; i < children; i++)
             {
-                node.Add(Read());
-            }
-            foreach (var child in node.Nodes)
-            {
-                ResolveChildren(child);
+                var child = Read();
+                child.Index = i;
+                node.Add(child);
             }
         }
 
         public Trie Read()
         {
             var line = StreamReader.ReadLine();
+            LastRead = line;
             if (line == null) return null;
             return ParseNode(line);
         }
+
+        public string LastRead { get; private set; }
 
         private Trie ParseNode(string line)
         {

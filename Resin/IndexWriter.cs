@@ -14,7 +14,6 @@ namespace Resin
         //private static readonly ILog Log = LogManager.GetLogger("TermFileAppender");
         //private readonly TaskQueue<Document> _docWorker;
         private readonly TaskQueue<PostingsFile> _postingsWorker;
-        private readonly IList<string> _deletions;
         private readonly IxFile _ix;
         private readonly Dictionary<string, Document> _docs; 
         /// <summary>
@@ -47,7 +46,6 @@ namespace Resin
             _docContainers = new Dictionary<string, DocContainer>();
             //_docWorker = new TaskQueue<Document>(1, PutDocInContainer);
             _postingsWorker = new TaskQueue<PostingsFile>(1, PutPostingsInContainer);
-            _deletions = new List<string>();
             _tries = new Dictionary<string, Trie>();
             _docs = new Dictionary<string, Document>();
 
@@ -90,69 +88,6 @@ namespace Resin
                 container.Put(doc, _directory);
             }
             _docContainers[container.Id] = container;
-        }
-
-        public void Remove(string docId)
-        {
-            // TODO: should use a Collector to learn which docs to remove, which also works out well for DeleteByQuery.
-            _deletions.Add(docId);
-        }
-
-        private void DoRemove(string docId)
-        {
-            foreach (var field in _ix.Fields.Keys)
-            {
-                if (!_ix.Fields[field].ContainsKey(docId))
-                {
-                    continue;
-                }
-                _ix.Fields[field].Remove(docId);
-                var containerId = docId.ToDocContainerId();
-                var containerFileName = Path.Combine(_directory, containerId + ".dc");
-                DocContainer container;
-                if (!_docContainers.TryGetValue(containerId, out container))
-                {
-                    container = new DocContainer(_directory, containerId);
-                    _docContainers[containerId] = container;
-                }
-                if (File.Exists(containerFileName))
-                {
-                    Document doc;
-                    if (container.TryGet(docId, out doc))
-                    {
-                        container.Remove(docId);
-                        IEnumerable<string> tokens;
-                        if (field[0] == '_')
-                        {
-                            tokens = new[] { doc.Fields[field] };
-                        }
-                        else
-                        {
-                            tokens = _analyzer.Analyze(doc.Fields[field]);
-                        }
-                        foreach (var token in tokens)
-                        {
-                            var fieldTokenId = string.Format("{0}.{1}", field, token);
-                            var postingsFile = GetPostingsFile(field, token);
-                            postingsFile.Postings.Remove(docId);
-                            if (postingsFile.NumDocs() == 0)
-                            {
-                                var pbucketId = field.ToPostingsContainerId();
-                                var pContainer = _postingsContainers[pbucketId];
-                                pContainer.Remove(token);
-                                _postingsFiles.Remove(fieldTokenId);
-
-                                var trie = GetTrie(field);
-                                trie.Remove(token);
-                            }
-                            else
-                            {
-                                _postingsWorker.Enqueue(postingsFile);
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         public void Write(Dictionary<string, string> doc)
@@ -236,11 +171,6 @@ namespace Resin
 
         public void Dispose()
         {
-            foreach (var docId in _deletions)
-            {
-                DoRemove(docId);
-            }
-
             Parallel.ForEach(_tries, kvp =>
             {
                 var field = kvp.Key;

@@ -63,6 +63,7 @@
     <Compile Include="IO\TrieScanner.cs" />
     <Compile Include="IO\TrieStreamReader.cs" />
     <Compile Include="IO\TrieWriter.cs" />
+    <Compile Include="IO\Word.cs" />
     <Compile Include="IScoringScheme.cs" />
     <Compile Include="Levenshtein.cs" />
     <Compile Include="Optimizer.cs" />
