@@ -13,6 +13,7 @@ namespace Resin.Cli
 {
     class Program
     {
+        //query --dir D:\resin\wikipedia -q "label:porn~" -p 0 -s 10
         static void Main(string[] args)
         {
             XmlConfigurator.Configure();

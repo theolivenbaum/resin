@@ -12,9 +12,12 @@ namespace Resin
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private readonly IScoringScheme _scoringScheme;
-        //private static readonly ILog Log = LogManager.GetLogger("TermFileAppender");
         private readonly TaskQueue<Document> _docWorker;
         private readonly TaskQueue<PostingsFile> _postingsWorker;
+
+        /// <summary>
+        /// field/doc count
+        /// </summary>
         private readonly ConcurrentDictionary<string, int> _docCount;
         /// <summary>
         /// field/trie
@@ -44,10 +47,33 @@ namespace Resin
             _postingsFiles = new Dictionary<string, PostingsFile>();
             _postingsContainers = new Dictionary<string, PostingsContainer>();
             _docContainers = new ConcurrentDictionary<string, DocumentFile>();
-            _docWorker = new TaskQueue<Document>(1, PutDocumentInContainer);
-            _postingsWorker = new TaskQueue<PostingsFile>(1, PutPostingsInContainer);
+            _docWorker = new TaskQueue<Document>(10, PutDocumentInContainer);
+            _postingsWorker = new TaskQueue<PostingsFile>(10, PutPostingsInContainer);
             _tries = new Dictionary<string, Trie>();
             _docCount = new ConcurrentDictionary<string, int>();
+        }
+
+        public void Write(IEnumerable<Dictionary<string, string>> docs)
+        {
+            foreach (var doc in docs)
+            {
+                var d = new Document(doc);
+                _docWorker.Enqueue(d);
+                foreach (var field in d.Fields)
+                {
+                    Analyze(d.Id, field.Key, field.Value);
+                }
+            }
+
+            Parallel.ForEach(_tries, kvp =>
+            {
+                var field = kvp.Key;
+                var trie = kvp.Value;
+                using (var writer = new TrieWriter(field.ToTrieContainerId(), _directory))
+                {
+                    writer.Write(trie);
+                }
+            });
         }
 
         private void PutPostingsInContainer(PostingsFile posting)
@@ -72,59 +98,34 @@ namespace Resin
                 _docContainers.AddOrUpdate(containerId, container, (s, file) => file);
             }
             container.Put(doc, _directory);
-
-        }
-
-        public void Write(IEnumerable<Dictionary<string, string>> docs)
-        {
-            foreach (var doc in docs)
-            {
-                var d = new Document(doc);
-                _docWorker.Enqueue(d);
-                foreach (var field in d.Fields)
-                {
-                    Analyze(d.Id, field.Key, field.Value);
-                }
-            }
-
-            Parallel.ForEach(_tries, kvp =>
-            {
-                var field = kvp.Key;
-                var trie = kvp.Value;
-                using (var writer = new TrieWriter(field.ToTrieContainerId(), _directory))
-                {
-                    writer.Write(trie);
-                }
-            });
-
         }
 
         private void Analyze(string docId, string field, string value)
         {
-            var postingData = new Dictionary<string, object>();
-            _scoringScheme.Eval(field, value, _analyzer, postingData);
-            foreach (var token in postingData)
+            if (!_docCount.ContainsKey(field))
             {
-                Write(docId, field, token.Key, token.Value);
+                _docCount.AddOrUpdate(field, 1, (s, count) => count + 1);
+            }
+
+            var termCount = new Dictionary<string, object>();
+            _scoringScheme.Eval(field, value, _analyzer, termCount);
+            foreach (var term in termCount)
+            {
+                Write(docId, field, term.Key, term.Value);
             }
         }
 
-        private void Write(string docId, string field, string token, object postingData)
+        private void Write(string docId, string field, string term, object postingData)
         {
             if (docId == null) throw new ArgumentNullException("docId");
             if (field == null) throw new ArgumentNullException("field");
-            if (token == null) throw new ArgumentNullException("token");
+            if (term == null) throw new ArgumentNullException("term");
             if (postingData == null) throw new ArgumentNullException("postingData");
 
-            if (!_docCount.ContainsKey(field))
-            {
-                _docCount.AddOrUpdate(field, 1, (s, count) => count+1);
-            }
-
             var trie = GetTrie(field);
-            trie.Add(token);
+            trie.Add(term);
 
-            var postingsFile = GetPostingsFile(field, token);
+            var postingsFile = GetPostingsFile(field, term);
             postingsFile.Postings[docId] = postingData;
             _postingsWorker.Enqueue(postingsFile);
         }
