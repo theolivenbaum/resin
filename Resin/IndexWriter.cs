@@ -29,7 +29,7 @@ namespace Resin
         /// <summary>
         /// containerid/file
         /// </summary>
-        private readonly Dictionary<string, DocumentFile> _docContainers;
+        private readonly ConcurrentDictionary<string, DocumentFile> _docContainers;
 
         /// <summary>
         /// containerid/file
@@ -43,8 +43,8 @@ namespace Resin
             _scoringScheme = scoringScheme;
             _postingsFiles = new Dictionary<string, PostingsFile>();
             _postingsContainers = new Dictionary<string, PostingsContainer>();
-            _docContainers = new Dictionary<string, DocumentFile>();
-            _docWorker = new TaskQueue<Document>(1, PutDocInContainer);
+            _docContainers = new ConcurrentDictionary<string, DocumentFile>();
+            _docWorker = new TaskQueue<Document>(1, PutDocumentInContainer);
             _postingsWorker = new TaskQueue<PostingsFile>(1, PutPostingsInContainer);
             _tries = new Dictionary<string, Trie>();
             _docCount = new ConcurrentDictionary<string, int>();
@@ -62,29 +62,16 @@ namespace Resin
             _postingsContainers[container.Id] = container;
         }
 
-        private void PutDocInContainer(Document doc)
+        private void PutDocumentInContainer(Document doc)
         {
             var containerId = doc.Id.ToDocContainerId();
-            var containerFileName = Path.Combine(_directory, containerId + ".dc");
             DocumentFile container;
-            if (File.Exists(containerFileName))
+            if (!_docContainers.TryGetValue(containerId, out container))
             {
-                if (!_docContainers.TryGetValue(containerId, out container))
-                {
-                    container = new DocumentFile(_directory, containerId);
-                }
-                container.Put(doc, _directory);
+                container = new DocumentFile(_directory, containerId);
+                _docContainers.AddOrUpdate(containerId, container, (s, file) => file);
             }
-            else
-            {
-                if (!_docContainers.TryGetValue(containerId, out container))
-                {
-                    container = new DocumentFile(_directory, containerId);
-                    _docContainers[container.Id] = container;
-                }
-                container.Put(doc, _directory);
-            }
-            _docContainers[container.Id] = container;
+            container.Put(doc, _directory);
 
         }
 
@@ -110,28 +97,6 @@ namespace Resin
                 }
             });
 
-            Parallel.ForEach(_postingsContainers.Values, container =>
-            {
-                if (container.Count > 0)
-                {
-                    container.Flush(_directory);
-                    container.Dispose();
-                }
-                else
-                {
-                    container.Dispose();
-                    File.Delete(Path.Combine(_directory, container.Id + ".pc"));
-                }
-            });
-
-            Parallel.ForEach(_docContainers.Values, container => container.Dispose());
-
-            var ixInfo = new DocumentCountFile();
-            foreach (var field in _docCount)
-            {
-                ixInfo.DocCount[field.Key] = field.Value;
-            }
-            ixInfo.Save(Path.Combine(_directory, "0.ix"));
         }
 
         private void Analyze(string docId, string field, string value)
@@ -200,7 +165,28 @@ namespace Resin
 
         public void Dispose()
         {
-            
+            Parallel.ForEach(_postingsContainers.Values, container =>
+            {
+                if (container.Count > 0)
+                {
+                    container.Flush(_directory);
+                    container.Dispose();
+                }
+                else
+                {
+                    container.Dispose();
+                    File.Delete(Path.Combine(_directory, container.Id + ".pc"));
+                }
+            });
+
+            Parallel.ForEach(_docContainers.Values, container => container.Dispose());
+
+            var ixInfo = new DocumentCountFile();
+            foreach (var field in _docCount)
+            {
+                ixInfo.DocCount[field.Key] = field.Value;
+            }
+            ixInfo.Save(Path.Combine(_directory, "0.ix"));
 
             _postingsWorker.Dispose();
             _docWorker.Dispose();
