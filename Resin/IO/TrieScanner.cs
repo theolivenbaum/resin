@@ -1,9 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Resin.IO
 {
-    public class TrieScanner : Trie
+    public class TrieScanner : Trie, IDisposable
     {
         private readonly int _count;
         private bool _resolved;
@@ -84,7 +85,7 @@ namespace Resin.IO
             }
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             if (_trieStreamReader != null)
             {

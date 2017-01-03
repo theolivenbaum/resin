@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 namespace Resin.IO
 {
-    public class Trie : IDisposable
+    public class Trie
     {
         protected readonly IDictionary<char, Trie> NodeDict;
  
@@ -261,10 +260,6 @@ namespace Resin.IO
         public override string ToString()
         {
             return string.Format("{0}{1}{2}", Value, Eow ? 1 : 0, ChildCount);
-        }
-
-        public virtual void Dispose()
-        {
         }
     }
 }

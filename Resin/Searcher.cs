@@ -18,19 +18,19 @@ namespace Resin
         private readonly string _directory;
         private readonly QueryParser _parser;
         private readonly IScoringScheme _scorer;
-        private readonly IxInfo _ix;
+        private readonly DocumentCountFile _ix;
         private readonly ConcurrentDictionary<string, PostingsContainer> _postingContainers;
-        private readonly ConcurrentDictionary<string, DocContainer> _docContainers;
+        private readonly ConcurrentDictionary<string, DocumentFile> _docContainers;
 
         public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
         {
             _directory = directory;
             _parser = parser;
             _scorer = scorer;
-            _docContainers = new ConcurrentDictionary<string, DocContainer>();
+            _docContainers = new ConcurrentDictionary<string, DocumentFile>();
             _postingContainers = new ConcurrentDictionary<string, PostingsContainer>();
 
-            _ix = IxInfo.Load(Path.Combine(_directory, "0.ix"));
+            _ix = DocumentCountFile.Load(Path.Combine(_directory, "0.ix"));
         }
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
@@ -54,10 +54,10 @@ namespace Resin
         private IDictionary<string, string> GetDoc(string docId)
         {
             var containerId = docId.ToDocContainerId();
-            DocContainer container;
+            DocumentFile container;
             if (!_docContainers.TryGetValue(containerId, out container))
             {
-                container = new DocContainer(_directory, containerId);
+                container = new DocumentFile(_directory, containerId);
                 _docContainers[containerId] = container;
             }
             return container.Get(docId).Fields;

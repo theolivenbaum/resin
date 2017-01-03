@@ -42,6 +42,10 @@
       <HintPath>..\packages\NetSerializer.4.0.0.0\lib\net45\NetSerializer.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -52,11 +56,11 @@
     <Compile Include="Helper.cs" />
     <Compile Include="IAnalyzer.cs" />
     <Compile Include="IO\CompressedFileBase.cs" />
-    <Compile Include="IO\DocContainer.cs" />
+    <Compile Include="IO\DocumentFile.cs" />
+    <Compile Include="IO\DocumentCountFile.cs" />
     <Compile Include="IO\Document.cs" />
     <Compile Include="DocumentScore.cs" />
     <Compile Include="IO\PostingsContainer.cs" />
-    <Compile Include="IO\IxFile.cs" />
     <Compile Include="IO\PostingsFile.cs" />
     <Compile Include="IO\FileBase.cs" />
     <Compile Include="IO\QuickLZ.cs" />

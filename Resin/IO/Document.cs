@@ -6,7 +6,6 @@ namespace Resin.IO
     [Serializable]
     public class Document
     {
-        //TODO: make "_id" not mandatory
         public string Id
         {
             get { return Fields["_id"]; }

@@ -73,8 +73,7 @@ namespace Resin.IO
             typeof (Document),
             typeof (Dictionary<string, string>),
             typeof (Dictionary<string, object>),
-            typeof (IxFile),
-            typeof (IxInfo),
+            typeof (DocumentCountFile),
             typeof (Dictionary<string, Dictionary<string, object>>), 
             typeof (PostingsFile),
             typeof (Dictionary<string, int>)

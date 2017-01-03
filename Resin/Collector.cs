@@ -14,10 +14,10 @@ namespace Resin
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly ConcurrentDictionary<string, PostingsContainer> _postingContainers;
-        private readonly IxInfo _ix;
+        private readonly DocumentCountFile _ix;
         private readonly ConcurrentDictionary<string, TrieStreamReader> _readers;
  
-        public Collector(string directory, IxInfo ix, ConcurrentDictionary<string, PostingsContainer> postingContainers)
+        public Collector(string directory, DocumentCountFile ix, ConcurrentDictionary<string, PostingsContainer> postingContainers)
         {
             _directory = directory;
             _postingContainers = postingContainers;

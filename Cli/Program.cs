@@ -261,14 +261,7 @@ namespace Resin.Cli
                     Console.SetCursorPosition(cursorPos, Console.CursorTop);
                     Console.Write(++count);
 
-                    if (inproc)
-                    {
-                        w.Write(doc);
-                    }
-                    else
-                    {
-                        docs.Add(doc);
-                    }
+                    docs.Add(doc);
 
                     if (count == take) break;
                 }
@@ -277,6 +270,7 @@ namespace Resin.Cli
 
             if (inproc)
             {
+                w.Write(docs);
                 w.Dispose();
             }
             else

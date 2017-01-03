@@ -8,17 +8,17 @@ using log4net;
 
 namespace Resin.IO
 {
-    public class DocContainer : IDisposable
+    public class DocumentFile : IDisposable
     {
         private readonly string _directory;
         private readonly string _containerId;
         private StreamWriter _writer;
         private readonly HashSet<string> _deletions;
-        private static readonly ILog Log = LogManager.GetLogger(typeof(DocContainer));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(DocumentFile));
         
         public string Id { get { return _containerId; } }
 
-        public DocContainer(string directory, string containerId)
+        public DocumentFile(string directory, string containerId)
         {
             _directory = directory;
             _containerId = containerId;

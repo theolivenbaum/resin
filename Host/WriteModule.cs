@@ -64,10 +64,7 @@ namespace Resin.Host
                 var dir = Path.Combine(Helper.GetResinDataDirectory(), indexName);
                 using (var writer = new IndexWriter(dir, new Analyzer(), new Tfidf()))
                 {
-                    foreach (var doc in docs)
-                    {
-                        writer.Write(doc);
-                    }
+                    writer.Write(docs);
                 }
             }
             catch (Exception ex)
