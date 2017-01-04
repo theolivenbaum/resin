@@ -70,13 +70,18 @@ namespace Resin.IO
             typeof (string), 
             typeof (int), 
             typeof (char), 
-            typeof (Document),
             typeof (Dictionary<string, string>),
             typeof (Dictionary<string, object>),
-            typeof (DocumentCountFile),
+            typeof (DocumentCount),
             typeof (Dictionary<string, Dictionary<string, object>>), 
-            typeof (PostingsFile),
-            typeof (Dictionary<string, int>)
+            typeof (Dictionary<string, int>),
+            typeof (Document),
+            typeof (IndexInfo),
+            typeof (DocumentCount),
+            typeof (TermDocumentMatrix),
+            typeof (DocumentWeight),
+            typeof (Term),
+            typeof (Dictionary<Term, List<DocumentWeight>>)
         };
 
         [NonSerialized]

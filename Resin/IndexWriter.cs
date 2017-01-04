@@ -2,18 +2,101 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Resin.IO;
 
 namespace Resin
 {
+    public class AnalyzedDocument
+    {
+        private readonly string _id;
+        private readonly IDictionary<Term, object> _terms;
+
+        public IDictionary<Term, object> Terms { get { return _terms; } }
+        public string Id { get { return _id; } }
+
+        public AnalyzedDocument(string id, IDictionary<string, IDictionary<string, object>> analyzedTerms)
+        {
+            _id = id;
+            _terms = new Dictionary<Term, object>();
+            foreach (var field in analyzedTerms)
+            {
+                foreach (var term in field.Value)
+                {
+                    var key = new Term(field.Key, term.Key);
+                    object data;
+                    if (!_terms.TryGetValue(key, out data))
+                    {
+                        _terms.Add(key, term.Value);
+                    }
+                    else
+                    {
+                        _terms[key] = (int) data + (int) term.Value;
+                    }
+                }
+            }
+        }
+    }
+
+    [Serializable]
+    public class DocumentWeight : IEquatable<DocumentWeight>
+    {
+        public string DocumentId { get; private set; }
+        public int Weight { get; private set; }
+
+        public DocumentWeight(string documentId, int weight)
+        {
+            DocumentId = documentId;
+            Weight = weight;
+        }
+
+        public bool Equals(DocumentWeight other)
+        {
+            if (other == null) return false;
+            return other.DocumentId == DocumentId && other.Weight == Weight;
+        }
+
+        public override int GetHashCode()
+        {
+            int hash = 13;
+            hash = (hash*7) + DocumentId.GetHashCode();
+            hash = (hash*7) + Weight.GetHashCode();
+            return hash;
+        }
+    }
+
+    [Serializable]
+    public class Term : IEquatable<Term>
+    {
+        public string Field { get; private set; }
+        public string Token { get; private set; }
+
+        public Term(string field, string token)
+        {
+            Field = field;
+            Token = token;
+        }
+        public bool Equals(Term other)
+        {
+            if (other == null) return false;
+            return other.Field == Field && other.Token == Token;
+        }
+        public override int GetHashCode()
+        {
+            int hash = 13;
+            hash = (hash * 7) + Field.GetHashCode();
+            hash = (hash * 7) + Token.GetHashCode();
+            return hash;
+        }
+    } 
     public class IndexWriter : IDisposable
     {
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
-        private readonly IScoringScheme _scoringScheme;
         private readonly TaskQueue<Document> _docWorker;
-        private readonly TaskQueue<PostingsFile> _postingsWorker;
+        private static readonly object _sync = new object();
+        private readonly TermDocumentMatrix _termDocMatrix;
 
         /// <summary>
         /// field/doc count
@@ -25,132 +108,51 @@ namespace Resin
         private readonly Dictionary<string, Trie> _tries;
 
         /// <summary>
-        /// field.token/postings
-        /// </summary>
-        private readonly Dictionary<string, PostingsFile> _postingsFiles;
-
-        /// <summary>
         /// containerid/file
         /// </summary>
         private readonly ConcurrentDictionary<string, DocumentFile> _docContainers;
 
-        /// <summary>
-        /// containerid/file
-        /// </summary>
-        private readonly Dictionary<string, PostingsContainer> _postingsContainers;
+        private readonly List<IDictionary<string, string>> _docs;
 
-        public IndexWriter(string directory, IAnalyzer analyzer, IScoringScheme scoringScheme)
+        public IndexWriter(string directory, IAnalyzer analyzer)
         {
             _directory = directory;
             _analyzer = analyzer;
-            _scoringScheme = scoringScheme;
-            _postingsFiles = new Dictionary<string, PostingsFile>();
-            _postingsContainers = new Dictionary<string, PostingsContainer>();
             _docContainers = new ConcurrentDictionary<string, DocumentFile>();
-            _docWorker = new TaskQueue<Document>(10, PutDocumentInContainer);
-            _postingsWorker = new TaskQueue<PostingsFile>(10, PutPostingsInContainer);
+            _docWorker = new TaskQueue<Document>(1, PutDocumentInContainer);
             _tries = new Dictionary<string, Trie>();
             _docCount = new ConcurrentDictionary<string, int>();
+            _termDocMatrix = new TermDocumentMatrix();
+            _docs = new List<IDictionary<string, string>>();
         }
 
         public void Write(IEnumerable<Dictionary<string, string>> docs)
         {
-            foreach (var doc in docs)
-            {
-                var d = new Document(doc);
-                _docWorker.Enqueue(d);
-                foreach (var field in d.Fields)
-                {
-                    Analyze(d.Id, field.Key, field.Value);
-                }
-            }
-
-            Parallel.ForEach(_tries, kvp =>
-            {
-                var field = kvp.Key;
-                var trie = kvp.Value;
-                using (var writer = new TrieWriter(field.ToTrieContainerId(), _directory))
-                {
-                    writer.Write(trie);
-                }
-            });
+            _docs.AddRange(docs);
         }
-
-        private void PutPostingsInContainer(PostingsFile posting)
-        {
-            var containerId = posting.Field.ToPostingsContainerId();
-            PostingsContainer container;
-            if (!_postingsContainers.TryGetValue(containerId, out container))
-            {
-                container = new PostingsContainer(_directory, containerId);
-            }
-            container.Put(posting);
-            _postingsContainers[container.Id] = container;
-        }
-
+        
         private void PutDocumentInContainer(Document doc)
         {
             var containerId = doc.Id.ToDocContainerId();
             DocumentFile container;
             if (!_docContainers.TryGetValue(containerId, out container))
             {
-                container = new DocumentFile(_directory, containerId);
-                _docContainers.AddOrUpdate(containerId, container, (s, file) => file);
+                lock (_sync)
+                {
+                    container = new DocumentFile(_directory, containerId);
+                    _docContainers.AddOrUpdate(containerId, container, (s, file) => file);
+                }
             }
-            container.Put(doc, _directory);
+            _docContainers[containerId].Put(doc, _directory);
         }
 
-        private void Analyze(string docId, string field, string value)
+        private void WriteToTrie(string field, string value)
         {
-            if (!_docCount.ContainsKey(field))
-            {
-                _docCount.AddOrUpdate(field, 1, (s, count) => count + 1);
-            }
-
-            var termCount = new Dictionary<string, object>();
-            _scoringScheme.Eval(field, value, _analyzer, termCount);
-            foreach (var term in termCount)
-            {
-                Write(docId, field, term.Key, term.Value);
-            }
-        }
-
-        private void Write(string docId, string field, string term, object postingData)
-        {
-            if (docId == null) throw new ArgumentNullException("docId");
             if (field == null) throw new ArgumentNullException("field");
-            if (term == null) throw new ArgumentNullException("term");
-            if (postingData == null) throw new ArgumentNullException("postingData");
+            if (value == null) throw new ArgumentNullException("value");
 
             var trie = GetTrie(field);
-            trie.Add(term);
-
-            var postingsFile = GetPostingsFile(field, term);
-            postingsFile.Postings[docId] = postingData;
-            _postingsWorker.Enqueue(postingsFile);
-        }
-
-        private PostingsFile GetPostingsFile(string field, string token)
-        {
-            var fieldTokenId = string.Format("{0}.{1}", field, token);
-            PostingsFile file;
-            if (!_postingsFiles.TryGetValue(fieldTokenId, out file))
-            {
-                var containerId = field.ToPostingsContainerId();
-                PostingsContainer container;
-                if (!_postingsContainers.TryGetValue(containerId, out container))
-                {
-                    container = new PostingsContainer(_directory, containerId);
-                }
-                _postingsContainers[containerId] = container;
-
-                if (!container.TryGet(token, out file))
-                {
-                    file = new PostingsFile(field, token);
-                }
-                _postingsFiles[fieldTokenId] = file;
-            }
-            return file;
+            trie.Add(value);
         }
 
         private Trie GetTrie(string field)
@@ -166,32 +168,51 @@ namespace Resin
 
         public void Dispose()
         {
-            Parallel.ForEach(_postingsContainers.Values, container =>
+            var ix = new Dictionary<Term, List<DocumentWeight>>();
+            foreach (var doc in _docs)
             {
-                if (container.Count > 0)
+                _docWorker.Enqueue(new Document(doc));
+                var analyzed = _analyzer.AnalyzeDocument(doc);
+                foreach (var term in analyzed.Terms)
                 {
-                    container.Flush(_directory);
-                    container.Dispose();
+                    WriteToTrie(term.Key.Field, term.Key.Token);
+                    List<DocumentWeight> weights;
+                    if (ix.TryGetValue(term.Key, out weights))
+                    {
+                        weights.Add(new DocumentWeight(analyzed.Id, (int)term.Value));
+                    }
+                    else
+                    {
+                        ix.Add(term.Key, new List<DocumentWeight> { new DocumentWeight(analyzed.Id, (int)term.Value) });
+                    }
                 }
-                else
+                foreach (var field in doc)
                 {
-                    container.Dispose();
-                    File.Delete(Path.Combine(_directory, container.Id + ".pc"));
+                    _docCount.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
+                }
+            }
+            _termDocMatrix.Weights = ix;
+            Parallel.ForEach(_tries, kvp =>
+            {
+                var field = kvp.Key;
+                var trie = kvp.Value;
+                using (var writer = new TrieWriter(field.ToTrieContainerId(), _directory))
+                {
+                    writer.Write(trie);
                 }
             });
 
+            _docWorker.Dispose();
+
             Parallel.ForEach(_docContainers.Values, container => container.Dispose());
 
-            var ixInfo = new DocumentCountFile();
+            var ixInfo = new IndexInfo {DocumentCount = new DocumentCount(_docCount.ToDictionary(x=>x.Key, y=>y.Value))};
             foreach (var field in _docCount)
             {
-                ixInfo.DocCount[field.Key] = field.Value;
+                ixInfo.DocumentCount.DocCount[field.Key] = field.Value;
             }
+            _termDocMatrix.Save(Path.Combine(_directory, "0.tdm"));
             ixInfo.Save(Path.Combine(_directory, "0.ix"));
-
-            _postingsWorker.Dispose();
-            _docWorker.Dispose();
-            
         }
     }
 }

@@ -7,12 +7,11 @@ using log4net;
 
 namespace Resin.IO
 {
-    public class PostingsContainer : IDisposable
+    public class PostingsContainer
     {
         private readonly string _directory;
         private readonly string _containerId;
         private Dictionary<string, PostingsFile> _postingsFiles;
-        private StreamWriter _writer;
         private static readonly ILog Log = LogManager.GetLogger(typeof(PostingsContainer));
 
         public string Id { get { return _containerId; } }
@@ -54,17 +53,10 @@ namespace Resin.IO
             Log.DebugFormat("read {0} in {1}", fileName, timer.Elapsed);
         }
 
-        private void InitWriteSession(string fileName)
+        private StreamWriter InitWriteSession(string fileName)
         {
-            if (_writer == null)
-            {
-                var fileStream = File.Exists(fileName) ?
-                 File.Open(fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read) :
-                 File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
-
-                _writer = new StreamWriter(fileStream);
-                _writer.AutoFlush = false;
-            }
+            var fileStream = File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+            return new StreamWriter(fileStream);
         }
 
         private void InitReadSession()
@@ -195,23 +187,16 @@ namespace Resin.IO
         public void Flush(string directory)
         {
             var fileName = Path.Combine(directory, _containerId + ".pc");
-            InitWriteSession(fileName);
-            foreach (var item in _postingsFiles.Values)
+            using (var writer = InitWriteSession(fileName))
             {
-                var bytes = Serialize(item);
-                var base64 = Convert.ToBase64String(bytes);
-                _writer.WriteLine("{0}:{1}", item.Token, base64);
+                foreach (var item in _postingsFiles.Values)
+                {
+                    var bytes = Serialize(item);
+                    var base64 = Convert.ToBase64String(bytes);
+                    writer.WriteLine("{0}:{1}", item.Token, base64);
+                }
             }
-        }
-
-        public void Dispose()
-        {
-            if (_writer != null)
-            {
-                _writer.Flush();
-                _writer.Close();
-                _writer.Dispose();
-            }
+            
         }
     }
 }

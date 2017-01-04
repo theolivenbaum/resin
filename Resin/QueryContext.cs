@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Resin
 {
-    public class QueryContext : Term
+    public class QueryContext : QueryTerm
     {
         public IList<QueryContext> Children { get; protected set; }
         public IDictionary<string, DocumentScore> Result { get; set ; }

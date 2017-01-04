@@ -14,6 +14,7 @@ namespace Resin.Cli
     class Program
     {
         //query --dir D:\resin\wikipedia -q "label:porn~" -p 0 -s 10
+        //write --file c:\temp\0wikipedia.json --dir d:\resin\wikipedia --skip 0 --take 10000
         static void Main(string[] args)
         {
             XmlConfigurator.Configure();
@@ -235,7 +236,7 @@ namespace Resin.Cli
 
             var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
             var inproc = !string.IsNullOrWhiteSpace(dir);
-            IndexWriter w = inproc ? new IndexWriter(dir, new Analyzer(), new Tfidf()) : null;
+            IndexWriter w = inproc ? new IndexWriter(dir, new Analyzer()) : null;
 
             Console.Write(inproc ? "Writing " : "Collecting docs ");
 

@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using log4net;
 
@@ -12,29 +10,30 @@ namespace Resin.IO
     {
         private readonly string _directory;
         private readonly string _containerId;
-        private StreamWriter _writer;
-        private readonly HashSet<string> _deletions;
+        private volatile StreamWriter _writer;
         private static readonly ILog Log = LogManager.GetLogger(typeof(DocumentFile));
-        
+        private static readonly object Sync = new object();
+ 
         public string Id { get { return _containerId; } }
 
         public DocumentFile(string directory, string containerId)
         {
             _directory = directory;
             _containerId = containerId;
-            _deletions = new HashSet<string>();
         }
 
         private void InitWriteSession(string fileName)
         {
             if (_writer == null)
             {
-                var fileStream = File.Exists(fileName) ?
-                    File.Open(fileName, FileMode.Append, FileAccess.Write, FileShare.Read) :
-                    File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
-
-                _writer = new StreamWriter(fileStream, Encoding.ASCII); // TODO: store token hashes instead of tokens? Tokens are Unicode.
-                _writer.AutoFlush = true;
+                lock (Sync)
+                {
+                    if (_writer == null)
+                    {
+                        var fileStream = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+                        _writer = new StreamWriter(fileStream, Encoding.ASCII);
+                    }
+                }
             }
         }
 
@@ -98,7 +97,7 @@ namespace Resin.IO
             var timer = new Stopwatch();
             timer.Start();
             var fileName = Path.Combine(_directory, _containerId + ".dc");
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None))
             using (var reader = new StreamReader(fs, Encoding.ASCII))
             {
                 string readerId = string.Empty;
@@ -135,11 +134,6 @@ namespace Resin.IO
             }
         }
 
-        public void Remove(string docId)
-        {
-            _deletions.Add(docId);
-        }
-
         public void Dispose()
         {
             if (_writer != null)
@@ -147,41 +141,7 @@ namespace Resin.IO
                 _writer.Flush();
                 _writer.Close();
                 _writer.Dispose();
-
-                if (_deletions.Count == 0) return;
-
-                var fileName = Path.Combine(_directory, _containerId + ".dc");
-                var lines = File.ReadAllLines(fileName).ToList();
-                using (var fs = File.Open(fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read))
-                using (var w = new StreamWriter(fs, Encoding.ASCII))
-                {
-                    foreach (var line in lines)
-                    {
-                        var docId = line.Substring(0, line.IndexOf(':'));
-                        if (_deletions.Contains(docId))
-                        {
-                            _deletions.Remove(docId);
-                        }
-                        else
-                        {
-                            w.WriteLine(line);
-                        }
-                    }
-                }
             }
         }
-
-        //private IEnumerable<string> ReadAllLines(string fileName)
-        //{
-        //    using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-        //    using (var sr = new StreamReader(fs, Encoding.ASCII))
-        //    {
-        //        string line;
-        //        while ((line = sr.ReadLine()) != null)
-        //        {
-        //            yield return line;
-        //        }
-        //    }
-        //} 
     }
 }

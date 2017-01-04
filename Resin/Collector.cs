@@ -13,16 +13,16 @@ namespace Resin
     {
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
-        private readonly ConcurrentDictionary<string, PostingsContainer> _postingContainers;
-        private readonly DocumentCountFile _ix;
+        private readonly IndexInfo _ix;
         private readonly ConcurrentDictionary<string, TrieStreamReader> _readers;
- 
-        public Collector(string directory, DocumentCountFile ix, ConcurrentDictionary<string, PostingsContainer> postingContainers)
+        private readonly TermDocumentMatrix _termDocMatrix;
+
+        public Collector(string directory, IndexInfo ix, TermDocumentMatrix termDocMatrix)
         {
             _directory = directory;
-            _postingContainers = postingContainers;
             _ix = ix;
             _readers = new ConcurrentDictionary<string, TrieStreamReader>();
+            _termDocMatrix = termDocMatrix;
         }
 
         public IEnumerable<DocumentScore> Collect(QueryContext queryContext, int page, int size, IScoringScheme scorer)
@@ -58,36 +58,24 @@ namespace Resin
             }
         }
 
-        private IEnumerable<DocumentScore> GetScoredResult(Term term, IScoringScheme scoringScheme)
+        private IEnumerable<DocumentScore> GetScoredResult(QueryTerm queryTerm, IScoringScheme scoringScheme)
         {
-            var trie = GetTrie(term.Field);
+            var trie = GetTrie(queryTerm.Field);
 
             if (_ix == null) yield break;
 
-            var totalNumOfDocs = _ix.DocCount[term.Field];
-            if (trie.HasWord(term.Value))
+            var totalNumOfDocs = _ix.DocumentCount.DocCount[queryTerm.Field];
+            if (trie.HasWord(queryTerm.Value))
             {
-                var termData = GetPostingsFile(term.Field, term.Value);
-                var scorer = scoringScheme.CreateScorer(totalNumOfDocs, termData.Postings.Count);
-                foreach (var posting in termData.Postings)
+                var weights = _termDocMatrix.Weights[new Term(queryTerm.Field, queryTerm.Value)];
+                var scorer = scoringScheme.CreateScorer(totalNumOfDocs, weights.Count);
+                foreach (var weight in weights)
                 {
-                    var hit = new DocumentScore(posting.Key, posting.Value, totalNumOfDocs);
+                    var hit = new DocumentScore(weight.DocumentId, weight.Weight, totalNumOfDocs);
                     scorer.Score(hit);
                     yield return hit;
                 }
             }
-        }
-
-        private PostingsFile GetPostingsFile(string field, string token)
-        {
-            var containerId = field.ToPostingsContainerId();
-            PostingsContainer container;
-            if (!_postingContainers.TryGetValue(containerId, out container))
-            {
-                container = new PostingsContainer(_directory, containerId, eager:false);
-                _postingContainers[containerId] = container;
-            }
-            return container.Get(token);
         }
 
         private void Expand(QueryContext queryContext)

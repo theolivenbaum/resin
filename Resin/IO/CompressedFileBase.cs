@@ -13,31 +13,15 @@ namespace Resin.IO
 
             var timer = new Stopwatch();
             timer.Start();
-            if (File.Exists(fileName))
+            using (var fs = File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            using (var memStream = new MemoryStream())
             {
-                using (var fs = File.Open(fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read))
-                using (var memStream = new MemoryStream())
-                {
-                    Serializer.Serialize(memStream, this);
-                    var bytes = memStream.ToArray();
-                    var compressed = QuickLZ.compress(bytes, 1);
-                    fs.Write(compressed, 0, compressed.Length);
-                }
-                Log.DebugFormat("re-wrote {0} in {1}", fileName, timer.Elapsed);
+                Serializer.Serialize(memStream, this);
+                var bytes = memStream.ToArray();
+                var compressed = QuickLZ.compress(bytes, 1);
+                fs.Write(compressed, 0, compressed.Length);
             }
-            else
-            {
-                using (var fs = File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-                using (var memStream = new MemoryStream())
-                {
-                    Serializer.Serialize(memStream, this);
-                    var bytes = memStream.ToArray();
-                    var compressed = QuickLZ.compress(bytes, 1);
-                    fs.Write(compressed, 0, compressed.Length);
-                }
-                Log.DebugFormat("created {0} in {1}", fileName, timer.Elapsed);
-
-            }
+            Log.DebugFormat("created {0} in {1}", fileName, timer.Elapsed);
         }
 
         public static T Load(string fileName)

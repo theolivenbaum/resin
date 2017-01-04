@@ -40,7 +40,7 @@ namespace Resin
             doc.Score = tf * _idf;
         }
 
-        public void Eval(string field, string value, IAnalyzer analyzer, Dictionary<string, object> postingData)
+        public void Analyze(string field, string value, IAnalyzer analyzer, Dictionary<string, object> postingData)
         {
             var analyze = field[0] != '_';
             var tokens = analyze ? analyzer.Analyze(value) : new[] {value};

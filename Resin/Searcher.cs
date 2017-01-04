@@ -18,9 +18,10 @@ namespace Resin
         private readonly string _directory;
         private readonly QueryParser _parser;
         private readonly IScoringScheme _scorer;
-        private readonly DocumentCountFile _ix;
+        private readonly IndexInfo _ix;
         private readonly ConcurrentDictionary<string, PostingsContainer> _postingContainers;
         private readonly ConcurrentDictionary<string, DocumentFile> _docContainers;
+        private readonly TermDocumentMatrix _termDocMatrix;
 
         public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
         {
@@ -30,13 +31,14 @@ namespace Resin
             _docContainers = new ConcurrentDictionary<string, DocumentFile>();
             _postingContainers = new ConcurrentDictionary<string, PostingsContainer>();
 
-            _ix = DocumentCountFile.Load(Path.Combine(_directory, "0.ix"));
+            _ix = IndexInfo.Load(Path.Combine(_directory, "0.ix"));
+            _termDocMatrix = TermDocumentMatrix.Load(Path.Combine(_directory, "0.tdm"));
         }
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
             var timer = new Stopwatch();
-            var collector = new Collector(_directory, _ix, _postingContainers);
+            var collector = new Collector(_directory, _ix, _termDocMatrix);
             timer.Start();
             var q = _parser.Parse(query);
             if (q == null)
@@ -66,11 +68,6 @@ namespace Resin
         public void Dispose()
         {
             foreach (var dc in _docContainers.Values)
-            {
-                dc.Dispose();
-            }
-
-            foreach (var dc in _postingContainers.Values)
             {
                 dc.Dispose();
             }

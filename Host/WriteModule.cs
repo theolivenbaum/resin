@@ -62,7 +62,7 @@ namespace Resin.Host
             try
             {
                 var dir = Path.Combine(Helper.GetResinDataDirectory(), indexName);
-                using (var writer = new IndexWriter(dir, new Analyzer(), new Tfidf()))
+                using (var writer = new IndexWriter(dir, new Analyzer()))
                 {
                     writer.Write(docs);
                 }

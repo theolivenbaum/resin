@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace Resin
@@ -10,9 +11,11 @@ namespace Resin
         private readonly HashSet<char> _customTokenSeparators;
         private readonly HashSet<string> _stopwords;
         private readonly CultureInfo _culture;
+        private readonly IScoringScheme _scoringScheme;
 
-        public Analyzer(CultureInfo culture = null, char[] tokenSeparators = null, string[] stopwords = null)
+        public Analyzer(IScoringScheme scoringScheme = null, CultureInfo culture = null, char[] tokenSeparators = null, string[] stopwords = null)
         {
+            _scoringScheme = scoringScheme ?? new Tfidf();
             _culture = culture ?? Thread.CurrentThread.CurrentUICulture;
             _customTokenSeparators = new HashSet<char>(tokenSeparators ?? new char[0]);
             _stopwords = new HashSet<string>(stopwords ?? GetDefaultStopwords());
@@ -24,6 +27,20 @@ namespace Resin
             var fileName = Path.Combine(dir, _culture.Name + ".txt");
             if (File.Exists(fileName)) return File.ReadAllLines(fileName);
             return new string[0];
+        }
+
+        public AnalyzedDocument AnalyzeDocument(IDictionary<string, string> document)
+        {
+            var id = document["_id"];
+            var analyzed = document.ToDictionary(field => field.Key, field => Analyze(field.Key, field.Value));
+            return new AnalyzedDocument(id, analyzed);
+        }
+
+        private IDictionary<string, object> Analyze(string field, string value)
+        {
+            var termCount = new Dictionary<string, object>();
+            _scoringScheme.Analyze(field, value, this, termCount);
+            return termCount;
         }
 
         public IEnumerable<string> Analyze(string value)

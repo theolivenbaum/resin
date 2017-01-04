@@ -57,13 +57,15 @@
     <Compile Include="IAnalyzer.cs" />
     <Compile Include="IO\CompressedFileBase.cs" />
     <Compile Include="IO\DocumentFile.cs" />
-    <Compile Include="IO\DocumentCountFile.cs" />
+    <Compile Include="IO\DocumentCount.cs" />
     <Compile Include="IO\Document.cs" />
     <Compile Include="DocumentScore.cs" />
+    <Compile Include="IO\IndexInfo.cs" />
     <Compile Include="IO\PostingsContainer.cs" />
     <Compile Include="IO\PostingsFile.cs" />
     <Compile Include="IO\FileBase.cs" />
     <Compile Include="IO\QuickLZ.cs" />
+    <Compile Include="IO\TermDocumentMatrix.cs" />
     <Compile Include="IO\TrieScanner.cs" />
     <Compile Include="IO\TrieStreamReader.cs" />
     <Compile Include="IO\TrieWriter.cs" />
@@ -79,7 +81,7 @@
     <Compile Include="Collector.cs" />
     <Compile Include="Searcher.cs" />
     <Compile Include="TaskQueue.cs" />
-    <Compile Include="Term.cs" />
+    <Compile Include="QueryTerm.cs" />
     <Compile Include="Tfidf.cs" />
     <Compile Include="TokenInfo.cs" />
     <Compile Include="IO\Trie.cs" />
@@ -87,6 +89,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+    <None Include="Properties\packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />

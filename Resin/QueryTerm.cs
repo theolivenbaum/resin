@@ -2,7 +2,7 @@ using System;
 
 namespace Resin
 {
-    public class Term
+    public class QueryTerm
     {
         private int _edits;
 
@@ -21,7 +21,7 @@ namespace Resin
             set { _edits = (int)Math.Ceiling(Value.Length*(1-value)); }
         }
 
-        public Term(string field, string value)
+        public QueryTerm(string field, string value)
         {
             Field = field;
             Value = value;

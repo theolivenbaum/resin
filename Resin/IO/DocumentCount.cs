@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Resin.IO
 {
     [Serializable]
-    public class DocumentCountFile : CompressedFileBase<DocumentCountFile>
+    public class DocumentCount
     {
         private readonly Dictionary<string, int> _docCount;
         /// <summary>
@@ -12,9 +12,13 @@ namespace Resin.IO
         /// </summary>
         public Dictionary<string, int> DocCount { get { return _docCount; } }
 
-        public DocumentCountFile()
+        public DocumentCount():this(new Dictionary<string,int>())
         {
-            _docCount = new Dictionary<string,int>();
+        }
+
+        public DocumentCount(Dictionary<string, int> docCount)
+        {
+            _docCount = docCount;
         }
     }
 }
