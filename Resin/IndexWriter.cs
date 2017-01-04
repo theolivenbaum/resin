@@ -8,100 +8,19 @@ using Resin.IO;
 
 namespace Resin
 {
-    public class AnalyzedDocument
-    {
-        private readonly string _id;
-        private readonly IDictionary<Term, object> _terms;
-
-        public IDictionary<Term, object> Terms { get { return _terms; } }
-        public string Id { get { return _id; } }
-
-        public AnalyzedDocument(string id, IDictionary<string, IDictionary<string, object>> analyzedTerms)
-        {
-            _id = id;
-            _terms = new Dictionary<Term, object>();
-            foreach (var field in analyzedTerms)
-            {
-                foreach (var term in field.Value)
-                {
-                    var key = new Term(field.Key, term.Key);
-                    object data;
-                    if (!_terms.TryGetValue(key, out data))
-                    {
-                        _terms.Add(key, term.Value);
-                    }
-                    else
-                    {
-                        _terms[key] = (int) data + (int) term.Value;
-                    }
-                }
-            }
-        }
-    }
-
-    [Serializable]
-    public class DocumentWeight : IEquatable<DocumentWeight>
-    {
-        public string DocumentId { get; private set; }
-        public int Weight { get; private set; }
-
-        public DocumentWeight(string documentId, int weight)
-        {
-            DocumentId = documentId;
-            Weight = weight;
-        }
-
-        public bool Equals(DocumentWeight other)
-        {
-            if (other == null) return false;
-            return other.DocumentId == DocumentId && other.Weight == Weight;
-        }
-
-        public override int GetHashCode()
-        {
-            int hash = 13;
-            hash = (hash*7) + DocumentId.GetHashCode();
-            hash = (hash*7) + Weight.GetHashCode();
-            return hash;
-        }
-    }
-
-    [Serializable]
-    public class Term : IEquatable<Term>
-    {
-        public string Field { get; private set; }
-        public string Token { get; private set; }
-
-        public Term(string field, string token)
-        {
-            Field = field;
-            Token = token;
-        }
-        public bool Equals(Term other)
-        {
-            if (other == null) return false;
-            return other.Field == Field && other.Token == Token;
-        }
-        public override int GetHashCode()
-        {
-            int hash = 13;
-            hash = (hash * 7) + Field.GetHashCode();
-            hash = (hash * 7) + Token.GetHashCode();
-            return hash;
-        }
-    } 
     public class IndexWriter : IDisposable
     {
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private readonly TaskQueue<Document> _docWorker;
-        private static readonly object _sync = new object();
+        private static readonly object Sync = new object();
         private readonly TermDocumentMatrix _termDocMatrix;
 
         /// <summary>
         /// field/doc count
         /// </summary>
         private readonly ConcurrentDictionary<string, int> _docCount;
+
         /// <summary>
         /// field/trie
         /// </summary>
@@ -137,7 +56,7 @@ namespace Resin
             DocumentFile container;
             if (!_docContainers.TryGetValue(containerId, out container))
             {
-                lock (_sync)
+                lock (Sync)
                 {
                     container = new DocumentFile(_directory, containerId);
                     _docContainers.AddOrUpdate(containerId, container, (s, file) => file);

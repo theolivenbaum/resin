@@ -52,7 +52,9 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnalyzedDocument.cs" />
     <Compile Include="Analyzer.cs" />
+    <Compile Include="IO\DocumentWeight.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="IAnalyzer.cs" />
     <Compile Include="IO\CompressedFileBase.cs" />
@@ -61,8 +63,6 @@
     <Compile Include="IO\Document.cs" />
     <Compile Include="DocumentScore.cs" />
     <Compile Include="IO\IndexInfo.cs" />
-    <Compile Include="IO\PostingsContainer.cs" />
-    <Compile Include="IO\PostingsFile.cs" />
     <Compile Include="IO\FileBase.cs" />
     <Compile Include="IO\QuickLZ.cs" />
     <Compile Include="IO\TermDocumentMatrix.cs" />
@@ -82,6 +82,7 @@
     <Compile Include="Searcher.cs" />
     <Compile Include="TaskQueue.cs" />
     <Compile Include="QueryTerm.cs" />
+    <Compile Include="IO\Term.cs" />
     <Compile Include="Tfidf.cs" />
     <Compile Include="TokenInfo.cs" />
     <Compile Include="IO\Trie.cs" />

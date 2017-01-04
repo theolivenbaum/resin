@@ -19,7 +19,6 @@ namespace Resin
         private readonly QueryParser _parser;
         private readonly IScoringScheme _scorer;
         private readonly IndexInfo _ix;
-        private readonly ConcurrentDictionary<string, PostingsContainer> _postingContainers;
         private readonly ConcurrentDictionary<string, DocumentFile> _docContainers;
         private readonly TermDocumentMatrix _termDocMatrix;
 
@@ -29,7 +28,6 @@ namespace Resin
             _parser = parser;
             _scorer = scorer;
             _docContainers = new ConcurrentDictionary<string, DocumentFile>();
-            _postingContainers = new ConcurrentDictionary<string, PostingsContainer>();
 
             _ix = IndexInfo.Load(Path.Combine(_directory, "0.ix"));
             _termDocMatrix = TermDocumentMatrix.Load(Path.Combine(_directory, "0.tdm"));
