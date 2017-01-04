@@ -48,7 +48,7 @@ namespace Resin.Host
 
         private Searcher GetSearcher(string name)
         {
-            var dir = Path.Combine(Helper.GetResinDataDirectory(), name);
+            var dir = Path.Combine(Helper.GetDataDirectory(), name);
             Searcher searcher;
             if (!Searchers.TryGetValue(dir, out searcher))
             {

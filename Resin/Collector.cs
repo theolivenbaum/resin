@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using log4net;
 using Resin.IO;
 
@@ -14,15 +15,13 @@ namespace Resin
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly IndexInfo _ix;
-        private readonly ConcurrentDictionary<string, TrieStreamReader> _readers;
-        private readonly TermDocumentMatrix _termDocMatrix;
+        private readonly ConcurrentDictionary<ulong, TermDocumentMatrix> _termDocMatrises;
 
-        public Collector(string directory, IndexInfo ix, TermDocumentMatrix termDocMatrix)
+        public Collector(string directory, IndexInfo ix)
         {
             _directory = directory;
             _ix = ix;
-            _readers = new ConcurrentDictionary<string, TrieStreamReader>();
-            _termDocMatrix = termDocMatrix;
+            _termDocMatrises = new ConcurrentDictionary<ulong, TermDocumentMatrix>();
         }
 
         public IEnumerable<DocumentScore> Collect(QueryContext queryContext, int page, int size, IScoringScheme scorer)
@@ -33,19 +32,32 @@ namespace Resin
             return scored;
         }
 
-        private Trie GetTrie(string field)
+        private TermDocumentMatrix GetMatrix(Term term)
         {
-            TrieStreamReader reader;
-            if (!_readers.TryGetValue(field, out reader))
+            var key = term.Token.Substring(0, 1).ToHash();
+            TermDocumentMatrix matrix;
+            if (!_termDocMatrises.TryGetValue(key, out matrix))
             {
-                var timer = new Stopwatch();
-                timer.Start();
-                var fileName = Path.Combine(_directory, field.ToTrieContainerId() + ".tc");
-                var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-                reader = new TrieStreamReader(fs);
-                _readers.AddOrUpdate(field, reader, (s, streamReader) => streamReader);
-                Log.DebugFormat("opened {0} in {1}", fileName, timer.Elapsed);
+                string fileId;
+                if (!_ix.TermFileIds.TryGetValue(term.Token.Substring(0, 1).ToHash(), out fileId))
+                {
+                    return null;
+                }
+                var fileName = Path.Combine(_directory, fileId + ".tdm");
+                matrix = TermDocumentMatrix.Load(fileName);
+                _termDocMatrises.AddOrUpdate(key, matrix, (term1, documentMatrix) => documentMatrix);
             }
+            return matrix;
+        }
+
+        private TrieScanner GetTrie(string field)
+        {
+            var timer = new Stopwatch();
+            timer.Start();
+            var fileName = Path.Combine(_directory, field.ToTrieContainerId() + ".tc");
+            var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var reader = new TrieStreamReader(fs);
+            Log.DebugFormat("opened {0} in {1}", fileName, timer.Elapsed);
             return reader.Reset();
         }
 
@@ -60,20 +72,24 @@ namespace Resin
 
         private IEnumerable<DocumentScore> GetScoredResult(QueryTerm queryTerm, IScoringScheme scoringScheme)
         {
-            var trie = GetTrie(queryTerm.Field);
-
-            if (_ix == null) yield break;
-
-            var totalNumOfDocs = _ix.DocumentCount.DocCount[queryTerm.Field];
-            if (trie.HasWord(queryTerm.Value))
+            using (var trie = GetTrie(queryTerm.Field))
             {
-                var weights = _termDocMatrix.Weights[new Term(queryTerm.Field, queryTerm.Value)];
-                var scorer = scoringScheme.CreateScorer(totalNumOfDocs, weights.Count);
-                foreach (var weight in weights)
+                if (trie == null) yield break;
+
+                var totalNumOfDocs = _ix.DocumentCount.DocCount[queryTerm.Field];
+                if (trie.HasWord(queryTerm.Value))
                 {
-                    var hit = new DocumentScore(weight.DocumentId, weight.Weight, totalNumOfDocs);
-                    scorer.Score(hit);
-                    yield return hit;
+                    var matrix = GetMatrix(new Term(queryTerm.Field, queryTerm.Value));
+                    if (matrix == null) yield break;
+
+                    var weights = matrix.Weights[new Term(queryTerm.Field, queryTerm.Value)];
+                    var scorer = scoringScheme.CreateScorer(totalNumOfDocs, weights.Count);
+                    foreach (var weight in weights)
+                    {
+                        var hit = new DocumentScore(weight.DocumentId, weight.Weight, totalNumOfDocs);
+                        scorer.Score(hit);
+                        yield return hit;
+                    }
                 }
             }
         }
@@ -86,31 +102,32 @@ namespace Resin
                 var timer = new Stopwatch();
                 timer.Start();
 
-                var trie = GetTrie(queryContext.Field);
-
-                IList<QueryContext> expanded = null;
-
-                if (queryContext.Fuzzy)
+                using (var trie = GetTrie(queryContext.Field))
                 {
-                    expanded = trie.Similar(queryContext.Value, queryContext.Edits).Select(token => new QueryContext(queryContext.Field, token)).ToList();
-                }
-                else if (queryContext.Prefix)
-                {
-                    expanded = trie.Prefixed(queryContext.Value).Select(token => new QueryContext(queryContext.Field, token)).ToList();
-                }
+                    IList<QueryContext> expanded = null;
 
-                if (expanded != null)
-                {
-                    foreach (var t in expanded.Where(e=>e.Value != queryContext.Value))
+                    if (queryContext.Fuzzy)
                     {
-                        queryContext.Children.Add(t);
+                        expanded = trie.Similar(queryContext.Value, queryContext.Edits).Select(token => new QueryContext(queryContext.Field, token)).ToList();
                     }
+                    else if (queryContext.Prefix)
+                    {
+                        expanded = trie.Prefixed(queryContext.Value).Select(token => new QueryContext(queryContext.Field, token)).ToList();
+                    }
+
+                    if (expanded != null)
+                    {
+                        foreach (var t in expanded.Where(e => e.Value != queryContext.Value))
+                        {
+                            queryContext.Children.Add(t);
+                        }
+                    }
+
+                    queryContext.Prefix = false;
+                    queryContext.Fuzzy = false;
+
+                    Log.DebugFormat("expanded {0} in {1}", queryContext, timer.Elapsed);  
                 }
-
-                queryContext.Prefix = false;
-                queryContext.Fuzzy = false;
-
-                Log.DebugFormat("expanded {0} in {1}", queryContext, timer.Elapsed);
             }
             foreach (var child in queryContext.Children)
             {
@@ -120,10 +137,6 @@ namespace Resin
 
         public void Dispose()
         {
-            foreach (var trie in _readers.Values)
-            {
-                trie.Dispose();
-            }
         }
     }
 }

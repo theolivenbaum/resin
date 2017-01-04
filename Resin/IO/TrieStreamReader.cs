@@ -12,11 +12,15 @@ namespace Resin.IO
         public TrieStreamReader(FileStream fileStream)
         {
             _fileStream = fileStream;
-            StreamReader = new StreamReader(_fileStream, Encoding.Unicode);
         }
 
         public TrieScanner Reset()
         {
+            if (StreamReader != null)
+            {
+                StreamReader.Close();
+                StreamReader.Dispose();
+            }
             TrieScanner.Skip = 0;
             _fileStream.Position = 0;
             StreamReader = new StreamReader(_fileStream, Encoding.Unicode);

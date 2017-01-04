@@ -62,7 +62,7 @@ namespace Resin.IO
         protected static readonly ILog Log = LogManager.GetLogger(typeof(FileBase));
 
         // to allow conversion between file system versions
-        public static readonly int FileSystemVersion = 4;
+        public static readonly int FileSystemVersion = 5;
 
         [NonSerialized]
         private static readonly Type[] Types =

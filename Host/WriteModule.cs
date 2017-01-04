@@ -44,7 +44,7 @@ namespace Resin.Host
         //    {
         //        var timer = new Stopwatch();
         //        timer.Start();
-        //        var dir = Path.Combine(Helper.GetResinDataDirectory(), indexName);
+        //        var dir = Path.Combine(Helper.GetDataDirectory(), indexName);
         //        using (var writer = new IndexWriter(dir, new Analyzer(), new Tfidf()))
         //        {
         //            writer.Remove(docId);
@@ -61,7 +61,7 @@ namespace Resin.Host
         {
             try
             {
-                var dir = Path.Combine(Helper.GetResinDataDirectory(), indexName);
+                var dir = Path.Combine(Helper.GetDataDirectory(), indexName);
                 using (var writer = new IndexWriter(dir, new Analyzer()))
                 {
                     writer.Write(docs);

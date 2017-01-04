@@ -12,9 +12,8 @@ namespace Resin
     {
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
-        private readonly TaskQueue<Document> _docWorker;
+        //private readonly TaskQueue<Document> _docWorker;
         private static readonly object Sync = new object();
-        private readonly TermDocumentMatrix _termDocMatrix;
 
         /// <summary>
         /// field/doc count
@@ -38,10 +37,9 @@ namespace Resin
             _directory = directory;
             _analyzer = analyzer;
             _docContainers = new ConcurrentDictionary<string, DocumentFile>();
-            _docWorker = new TaskQueue<Document>(1, PutDocumentInContainer);
+            //_docWorker = new TaskQueue<Document>(1, PutDocumentInContainer);
             _tries = new Dictionary<string, Trie>();
             _docCount = new ConcurrentDictionary<string, int>();
-            _termDocMatrix = new TermDocumentMatrix();
             _docs = new List<IDictionary<string, string>>();
         }
 
@@ -56,11 +54,11 @@ namespace Resin
             DocumentFile container;
             if (!_docContainers.TryGetValue(containerId, out container))
             {
-                lock (Sync)
-                {
+                //lock (Sync)
+                //{
                     container = new DocumentFile(_directory, containerId);
                     _docContainers.AddOrUpdate(containerId, container, (s, file) => file);
-                }
+                //}
             }
             _docContainers[containerId].Put(doc, _directory);
         }
@@ -87,22 +85,23 @@ namespace Resin
 
         public void Dispose()
         {
-            var ix = new Dictionary<Term, List<DocumentWeight>>();
+            var termDocMatrix = new Dictionary<Term, List<DocumentWeight>>();
             foreach (var doc in _docs)
             {
-                _docWorker.Enqueue(new Document(doc));
+                //_docWorker.Enqueue(new Document(doc));
+                PutDocumentInContainer(new Document(doc));
                 var analyzed = _analyzer.AnalyzeDocument(doc);
                 foreach (var term in analyzed.Terms)
                 {
                     WriteToTrie(term.Key.Field, term.Key.Token);
                     List<DocumentWeight> weights;
-                    if (ix.TryGetValue(term.Key, out weights))
+                    if (termDocMatrix.TryGetValue(term.Key, out weights))
                     {
                         weights.Add(new DocumentWeight(analyzed.Id, (int)term.Value));
                     }
                     else
                     {
-                        ix.Add(term.Key, new List<DocumentWeight> { new DocumentWeight(analyzed.Id, (int)term.Value) });
+                        termDocMatrix.Add(term.Key, new List<DocumentWeight> { new DocumentWeight(analyzed.Id, (int)term.Value) });
                     }
                 }
                 foreach (var field in doc)
@@ -110,7 +109,6 @@ namespace Resin
                     _docCount.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
                 }
             }
-            _termDocMatrix.Weights = ix;
             Parallel.ForEach(_tries, kvp =>
             {
                 var field = kvp.Key;
@@ -121,16 +119,26 @@ namespace Resin
                 }
             });
 
-            _docWorker.Dispose();
+            //_docWorker.Dispose();
 
             Parallel.ForEach(_docContainers.Values, container => container.Dispose());
 
-            var ixInfo = new IndexInfo {DocumentCount = new DocumentCount(_docCount.ToDictionary(x=>x.Key, y=>y.Value))};
-            foreach (var field in _docCount)
+            var termFileIds = new Dictionary<ulong, string>();
+            var groups = termDocMatrix.GroupBy(x => x.Key.Token.Substring(0, 1).ToHash()).ToList();
+            Parallel.ForEach(groups, group =>
             {
-                ixInfo.DocumentCount.DocCount[field.Key] = field.Value;
-            }
-            _termDocMatrix.Save(Path.Combine(_directory, "0.tdm"));
+                var fileId = Path.GetRandomFileName();
+                termFileIds.Add(group.Key, fileId);
+                var fileName = Path.Combine(_directory, fileId + ".tdm");
+                new TermDocumentMatrix {Weights = group.ToDictionary(x => x.Key, y => y.Value)}
+                    .Save(fileName);
+            });
+
+            var ixInfo = new IndexInfo
+            {
+                TermFileIds = termFileIds,
+                DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCount))
+            };
             ixInfo.Save(Path.Combine(_directory, "0.ix"));
         }
     }

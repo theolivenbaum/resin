@@ -20,7 +20,6 @@ namespace Resin
         private readonly IScoringScheme _scorer;
         private readonly IndexInfo _ix;
         private readonly ConcurrentDictionary<string, DocumentFile> _docContainers;
-        private readonly TermDocumentMatrix _termDocMatrix;
 
         public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
         {
@@ -30,13 +29,12 @@ namespace Resin
             _docContainers = new ConcurrentDictionary<string, DocumentFile>();
 
             _ix = IndexInfo.Load(Path.Combine(_directory, "0.ix"));
-            _termDocMatrix = TermDocumentMatrix.Load(Path.Combine(_directory, "0.tdm"));
         }
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
             var timer = new Stopwatch();
-            var collector = new Collector(_directory, _ix, _termDocMatrix);
+            var collector = new Collector(_directory, _ix);
             timer.Start();
             var q = _parser.Parse(query);
             if (q == null)

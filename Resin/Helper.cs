@@ -11,8 +11,6 @@ namespace Resin
     {
         public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 23);
 
-        //private static readonly ILog Log = LogManager.GetLogger(typeof(Helper));
-
         public static string GetNextCommit(string fileName, IList<string> commits)
         {
             var latestBaseline = Int64.Parse(Path.GetFileNameWithoutExtension(fileName));
@@ -46,7 +44,7 @@ namespace Resin
             return fileName;
         }
 
-        public static string GetResinDataDirectory()
+        public static string GetDataDirectory()
         {
             var configPath = ConfigurationManager.AppSettings.Get("datadirectory");
             if (!string.IsNullOrWhiteSpace(configPath)) return configPath;
@@ -93,11 +91,6 @@ namespace Resin
             if (string.IsNullOrEmpty(docId)) throw new ArgumentException("docId");
             var seed = docId.PadRight(3).Substring(0, 3);
             return seed.ToHash().ToString(CultureInfo.InvariantCulture);
-        }
-
-        public static string ToPostingsContainerId(this string field)
-        {
-            return field.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 
         public static string ToTrieContainerId(this string field)

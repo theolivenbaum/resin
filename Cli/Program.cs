@@ -238,7 +238,7 @@ namespace Resin.Cli
             var inproc = !string.IsNullOrWhiteSpace(dir);
             IndexWriter w = inproc ? new IndexWriter(dir, new Analyzer()) : null;
 
-            Console.Write(inproc ? "Writing " : "Collecting docs ");
+            Console.Write("Collecting docs: ");
 
             var cursorPos = Console.CursorLeft;
             var count = 0;
