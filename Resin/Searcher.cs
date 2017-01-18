@@ -34,19 +34,21 @@ namespace Resin
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
             var timer = new Stopwatch();
-            var collector = new Collector(_directory, _ix);
             timer.Start();
-            var q = _parser.Parse(query);
-            if (q == null)
+            using (var collector = new Collector(_directory, _ix))
             {
-                return new Result{Docs = Enumerable.Empty<IDictionary<string, string>>()};
+                var q = _parser.Parse(query);
+                if (q == null)
+                {
+                    return new Result { Docs = Enumerable.Empty<IDictionary<string, string>>() };
+                }
+                Log.DebugFormat("parsed query {0} in {1}", q, timer.Elapsed);
+                var scored = collector.Collect(q, page, size, _scorer).ToList();
+                var skip = page * size;
+                var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
+                var docs = paged.Values.Select(s => GetDoc(s.DocId));
+                return new Result { Docs = docs, Total = scored.Count };  
             }
-            Log.DebugFormat("parsed query {0} in {1}", q, timer.Elapsed);
-            var scored = collector.Collect(q, page, size, _scorer).ToList();
-            var skip = page*size;
-            var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
-            var docs = paged.Values.Select(s => GetDoc(s.DocId)); 
-            return new Result { Docs = docs, Total = scored.Count};
         }
 
         private IDictionary<string, string> GetDoc(string docId)

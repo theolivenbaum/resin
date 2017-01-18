@@ -12,7 +12,7 @@ namespace Resin
         private readonly HashSet<string> _stopwords;
         private readonly CultureInfo _culture;
         private readonly IScoringScheme _scoringScheme;
-
+ 
         public Analyzer(IScoringScheme scoringScheme = null, CultureInfo culture = null, char[] tokenSeparators = null, string[] stopwords = null)
         {
             _scoringScheme = scoringScheme ?? new Tfidf();

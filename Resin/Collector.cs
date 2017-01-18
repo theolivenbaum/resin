@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using log4net;
 using Resin.IO;
 
@@ -13,14 +14,15 @@ namespace Resin
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly IndexInfo _ix;
-        private readonly IDictionary<ulong, TermDocumentMatrix> _termDocMatrises;
-        private readonly IDictionary<string, TrieStreamReader> _readers;
+        private readonly IDictionary<Term, List<DocumentWeight>> _termCache;
+        private readonly IList<TrieStreamReader> _readers;
+ 
         public Collector(string directory, IndexInfo ix)
         {
             _directory = directory;
             _ix = ix;
-            _termDocMatrises = new Dictionary<ulong, TermDocumentMatrix>();
-            _readers = new Dictionary<string, TrieStreamReader>();
+            _termCache = new Dictionary<Term, List<DocumentWeight>>();
+            _readers = new List<TrieStreamReader>();
         }
 
         public IEnumerable<DocumentScore> Collect(QueryContext queryContext, int page, int size, IScoringScheme scorer)
@@ -31,37 +33,58 @@ namespace Resin
             return scored;
         }
 
-        private TermDocumentMatrix GetMatrix(Term term)
+        private IList<DocumentWeight> GetWeights(Term term)
         {
-            var key = term.Token.Substring(0, 1).ToHash();
-            TermDocumentMatrix matrix;
-            if (!_termDocMatrises.TryGetValue(key, out matrix))
+            List<DocumentWeight> weights;
+            if (!_termCache.TryGetValue(term, out weights))
             {
-                string fileId;
-                if (!_ix.TermFileIds.TryGetValue(term.Token.Substring(0, 1).ToHash(), out fileId))
+                int[] posAndLen;
+                if (_ix.Postings.TryGetValue(term, out posAndLen))
                 {
-                    return null;
+                    var offset = posAndLen[0];
+                    var length = posAndLen[1];
+                    return ReadWeights(Path.Combine(_directory, "0.pos"), offset, length).ToList();
                 }
-                var fileName = Path.Combine(_directory, fileId + ".tdm");
-                matrix = TermDocumentMatrix.Load(fileName);
-                _termDocMatrises.Add(key, matrix);
             }
-            return matrix;
+            return new List<DocumentWeight>();
         }
+
+        private IEnumerable<DocumentWeight> ReadWeights(string fileName, int offset, int length)
+        {
+            //return File.ReadLines(fileName, Encoding.Unicode).Skip(offset).Take(length).Select(line =>
+            //{
+            //    var segs = line.Split(':');
+            //    var documentId = segs[0];
+            //    var weight = int.Parse(segs[1]);
+            //    return new DocumentWeight(documentId, weight);
+            //});
+            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = new StreamReader(fs, Encoding.Unicode))
+            {
+                var row = 0;
+                while (row++ < offset)
+                {
+                    reader.ReadLine();
+                }
+                for (int i = 0; i < length; i++)
+                {
+                    var line = reader.ReadLine().Split(':');
+                    var documentId = line[0];
+                    var weight = int.Parse(line[1]);
+                    yield return new DocumentWeight(documentId, weight);
+                }
+            }
+        } 
 
         private TrieScanner GetTrie(string field)
         {
-            TrieStreamReader reader;
-            if (!_readers.TryGetValue(field, out reader))
-            {
-                var timer = new Stopwatch();
-                timer.Start();
-                var fileName = Path.Combine(_directory, field.ToTrieContainerId() + ".tc");
-                var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-                reader = new TrieStreamReader(fs);
-                _readers.Add(field, reader);
-                Log.DebugFormat("opened {0} in {1}", fileName, timer.Elapsed);
-            }
+            var timer = new Stopwatch();
+            timer.Start();
+            var fileName = Path.Combine(_directory, field.ToTrieContainerId() + ".tc");
+            var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var reader = new TrieStreamReader(fs);
+            _readers.Add(reader);
+            Log.DebugFormat("opened {0} in {1}", fileName, timer.Elapsed);
             return reader.Reset();
         }
 
@@ -82,10 +105,7 @@ namespace Resin
             var totalNumOfDocs = _ix.DocumentCount.DocCount[queryTerm.Field];
             if (trie.HasWord(queryTerm.Value))
             {
-                var matrix = GetMatrix(new Term(queryTerm.Field, queryTerm.Value));
-                if (matrix == null) yield break;
-
-                var weights = matrix.Weights[new Term(queryTerm.Field, queryTerm.Value)];
+                var weights = GetWeights(new Term(queryTerm.Field, queryTerm.Value));
                 var scorer = scoringScheme.CreateScorer(totalNumOfDocs, weights.Count);
                 foreach (var weight in weights)
                 {
@@ -136,7 +156,7 @@ namespace Resin
 
         public void Dispose()
         {
-            foreach (var r in _readers.Values)
+            foreach (var r in _readers)
             {
                 r.Dispose();
             }

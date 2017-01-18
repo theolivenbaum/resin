@@ -27,5 +27,10 @@ namespace Resin.IO
             hash = (hash*7) + Weight.GetHashCode();
             return hash;
         }
+
+        public override string ToString()
+        {
+            return string.Format("{0}:{1}", DocumentId, Weight);
+        }
     }
 }

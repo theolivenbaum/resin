@@ -203,7 +203,7 @@ namespace Tests
             Assert.AreEqual(1, words.Similar("ring", 0).Count());
             Assert.IsTrue(words.Similar("ring", 0).Contains("ring"));
 
-            using (var writer = new TrieWriter(fileId, Setup.Dir))
+            using (var writer = new TrieWriter(Path.Combine(Setup.Dir, fileId + ".tc")))
             {
                 writer.Write(words);
             }

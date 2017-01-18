@@ -12,14 +12,14 @@ namespace Resin.IO
         public TrieStreamReader(FileStream fileStream)
         {
             _fileStream = fileStream;
-            StreamReader = new StreamReader(_fileStream, Encoding.Unicode);
+           
         }
 
         public TrieScanner Reset()
         {
             TrieScanner.Skip = 0;
             _fileStream.Position = 0;
-            StreamReader.DiscardBufferedData();
+            StreamReader = new StreamReader(_fileStream, Encoding.Unicode);
             return (TrieScanner)Read();
         }
 
@@ -57,9 +57,10 @@ namespace Resin.IO
 
         private Trie ParseNode(string line)
         {
-            var val = line[0];
-            var eow = line[1] == '1';
-            var count = int.Parse(line.Substring(2, line.Length-2));
+            var segs = line.Split(' ');
+            var val = (char)int.Parse(segs[0]);
+            var eow = segs[1] == "1";
+            var count = int.Parse(segs[2]);
             return new TrieScanner(val, eow, count, this);
         }
 

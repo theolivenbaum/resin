@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Resin.IO;
 
@@ -12,13 +12,11 @@ namespace Resin
     {
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
-        //private readonly TaskQueue<Document> _docWorker;
-        private static readonly object Sync = new object();
 
         /// <summary>
         /// field/doc count
         /// </summary>
-        private readonly ConcurrentDictionary<string, int> _docCount;
+        private readonly ConcurrentDictionary<string, int> _docCountByField;
 
         /// <summary>
         /// field/trie
@@ -26,9 +24,9 @@ namespace Resin
         private readonly Dictionary<string, Trie> _tries;
 
         /// <summary>
-        /// containerid/file
+        /// fileid/file
         /// </summary>
-        private readonly ConcurrentDictionary<string, DocumentFile> _docContainers;
+        private readonly ConcurrentDictionary<string, DocumentFile> _docFiles;
 
         private readonly List<IDictionary<string, string>> _docs;
 
@@ -36,10 +34,9 @@ namespace Resin
         {
             _directory = directory;
             _analyzer = analyzer;
-            _docContainers = new ConcurrentDictionary<string, DocumentFile>();
-            //_docWorker = new TaskQueue<Document>(1, PutDocumentInContainer);
+            _docFiles = new ConcurrentDictionary<string, DocumentFile>();
             _tries = new Dictionary<string, Trie>();
-            _docCount = new ConcurrentDictionary<string, int>();
+            _docCountByField = new ConcurrentDictionary<string, int>();
             _docs = new List<IDictionary<string, string>>();
         }
 
@@ -52,15 +49,12 @@ namespace Resin
         {
             var containerId = doc.Id.ToDocContainerId();
             DocumentFile container;
-            if (!_docContainers.TryGetValue(containerId, out container))
+            if (!_docFiles.TryGetValue(containerId, out container))
             {
-                //lock (Sync)
-                //{
-                    container = new DocumentFile(_directory, containerId);
-                    _docContainers.AddOrUpdate(containerId, container, (s, file) => file);
-                //}
+                container = new DocumentFile(_directory, containerId);
+                _docFiles.AddOrUpdate(containerId, container, (s, file) => file);
             }
-            _docContainers[containerId].Put(doc, _directory);
+            _docFiles[containerId].Put(doc, _directory);
         }
 
         private void WriteToTrie(string field, string value)
@@ -88,7 +82,6 @@ namespace Resin
             var termDocMatrix = new Dictionary<Term, List<DocumentWeight>>();
             foreach (var doc in _docs)
             {
-                //_docWorker.Enqueue(new Document(doc));
                 PutDocumentInContainer(new Document(doc));
                 var analyzed = _analyzer.AnalyzeDocument(doc);
                 foreach (var term in analyzed.Terms)
@@ -106,40 +99,62 @@ namespace Resin
                 }
                 foreach (var field in doc)
                 {
-                    _docCount.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
+                    _docCountByField.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
                 }
             }
             Parallel.ForEach(_tries, kvp =>
             {
                 var field = kvp.Key;
                 var trie = kvp.Value;
-                using (var writer = new TrieWriter(field.ToTrieContainerId(), _directory))
+                using (var writer = new TrieWriter(Path.Combine(_directory, field.ToTrieContainerId() + ".tc")))
                 {
                     writer.Write(trie);
                 }
             });
 
-            //_docWorker.Dispose();
+            Parallel.ForEach(_docFiles.Values, container => container.Dispose());
 
-            Parallel.ForEach(_docContainers.Values, container => container.Dispose());
-
-            var termFileIds = new Dictionary<ulong, string>();
-            var groups = termDocMatrix.GroupBy(x => x.Key.Token.Substring(0, 1).ToHash()).ToList();
-            Parallel.ForEach(groups, group =>
+            var postings = new Dictionary<Term, int[]>(); 
+            using(var fs = new FileStream(Path.Combine(_directory, "0.pos"), FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            using (var writer = new StreamWriter(fs, Encoding.Unicode))
             {
-                var fileId = Path.GetRandomFileName();
-                termFileIds.Add(group.Key, fileId);
-                var fileName = Path.Combine(_directory, fileId + ".tdm");
-                new TermDocumentMatrix {Weights = group.ToDictionary(x => x.Key, y => y.Value)}
-                    .Save(fileName);
-            });
+                var row = 0;
+                foreach (var term in termDocMatrix)
+                {
+                    postings.Add(term.Key, new[] { row++, term.Value.Count});
+                    foreach (var weight in term.Value)
+                    {
+                        writer.WriteLine(weight);
+                    }
+                } 
+            }
 
             var ixInfo = new IndexInfo
             {
-                TermFileIds = termFileIds,
-                DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCount))
+                Postings = postings,
+                DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField))
             };
             ixInfo.Save(Path.Combine(_directory, "0.ix"));
+        }
+    }
+
+    public class Index
+    {
+        
+    }
+
+    public class DocumentIndexer
+    {
+        private IEnumerable<Document> _documents;
+
+        public DocumentIndexer(IEnumerable<Document> documents)
+        {
+            _documents = documents;
+        }
+
+        public Index Create()
+        {
+            
         }
     }
 }

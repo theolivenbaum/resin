@@ -6,6 +6,9 @@ namespace Resin.IO
     [Serializable]
     public class Document
     {
+        /// <summary>
+        /// Get the value of the "_id" field.
+        /// </summary>
         public string Id
         {
             get { return Fields["_id"]; }
@@ -15,9 +18,8 @@ namespace Resin.IO
 
         public IDictionary<string, string> Fields { get { return _fields; } }
 
-        public Document()
+        public Document():this(new Dictionary<string, string>())
         {
-            _fields = new Dictionary<string, string>();
         }
 
         public Document(IDictionary<string, string> fields)
