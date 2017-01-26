@@ -95,7 +95,7 @@ namespace Resin.IO
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("path");
 
             BinaryTree node;
-            if (root.TryGoPath(word, out node))
+            if (root.TryFindPath(word, out node))
             {
                 return node.EndOfWord;
             }
@@ -109,7 +109,7 @@ namespace Resin.IO
             var compressed = new List<string>();
             
             BinaryTree child;
-            if (node.TryGoPath(prefix, out child))
+            if (node.TryFindPath(prefix, out child))
             {
                 child.LeftChild.Compress(prefix, new List<char>(), compressed);
             }
@@ -138,7 +138,7 @@ namespace Resin.IO
             }
         }
 
-        public static bool TryGoPath(this BinaryTree node, string path, out BinaryTree leaf)
+        public static bool TryFindPath(this BinaryTree node, string path, out BinaryTree leaf)
         {
             var child = node.LeftChild;
             while (child != null)
@@ -156,7 +156,7 @@ namespace Resin.IO
                     leaf = child;
                     return true;
                 }
-                return TryGoPath(child, path.Substring(1), out leaf);
+                return TryFindPath(child, path.Substring(1), out leaf);
             }
             leaf = null;
             return false;
