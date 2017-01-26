@@ -117,6 +117,42 @@ namespace Resin.IO
             return compressed;
         }
 
+        public static IList<string> Near(this BinaryTree node, string word, int edits)
+        {
+            var compressed = new List<Word>();
+            if (node.LeftChild != null)
+            {
+                node.LeftChild.Compress(word, new string(word.ToCharArray()), compressed, 0, edits);
+            }
+            return compressed.OrderBy(w => w.Distance).Select(w => w.Value).ToList();
+        }
+
+        public static void Compress(this BinaryTree node, string word, string state, IList<Word> compressed, int index, int edits)
+        {
+            var childIndex = index + 1;
+
+            if (node.EndOfWord)
+            {
+                var tmp = index == state.Length ? state + node.Value : state.ReplaceAt(index, node.Value);
+                var potential = tmp.Substring(0, childIndex);
+                var distance = Levenshtein.Distance(word, potential);
+                if (distance <= edits)
+                {
+                    compressed.Add(new Word { Value = potential, Distance = distance });
+                }
+            }
+
+            if (node.LeftChild != null)
+            {
+                node.LeftChild.Compress(word, state, compressed, childIndex, edits);
+            }
+
+            if (node.RightSibling != null)
+            {
+                node.RightSibling.Compress(word, state, compressed, index, edits);
+            }
+        }
+
         public static void Compress(this BinaryTree node, string prefix, IList<char> traveled, IList<string> compressed)
         {
             var copy = new List<char>(traveled);

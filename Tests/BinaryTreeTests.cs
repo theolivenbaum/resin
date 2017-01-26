@@ -7,6 +7,36 @@ namespace Tests
     public class BinaryTreeTests
     {
         [Test]
+        public void Can_find_near()
+        {
+            var tree = new BinaryTree('\0', false);
+
+            var near = tree.Near("ba", 1);
+
+            Assert.That(near, Is.Empty);
+
+            tree.Add("bad");
+
+            near = tree.Near("ba", 1);
+
+            Assert.That(near.Count, Is.EqualTo(1));
+            Assert.IsTrue(near.Contains("bad"));
+
+            tree.Add("baby");
+
+            near = tree.Near("ba", 1);
+
+            Assert.That(near.Count, Is.EqualTo(1));
+            Assert.IsTrue(near.Contains("bad"));
+
+            near = tree.Near("ba", 2);
+
+            Assert.That(near.Count, Is.EqualTo(2));
+            Assert.IsTrue(near.Contains("bad"));
+            Assert.IsTrue(near.Contains("baby"));
+        }
+
+        [Test]
         public void Can_find_suffixes()
         {
             var tree = new BinaryTree('\0', false);
