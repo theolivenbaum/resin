@@ -138,23 +138,23 @@ namespace Resin
         }
     }
 
-    public class Index
-    {
+    //public class Index
+    //{
         
-    }
+    //}
 
-    public class DocumentIndexer
-    {
-        private IEnumerable<Document> _documents;
+    //public class DocumentIndexer
+    //{
+    //    private IEnumerable<Document> _documents;
 
-        public DocumentIndexer(IEnumerable<Document> documents)
-        {
-            _documents = documents;
-        }
+    //    public DocumentIndexer(IEnumerable<Document> documents)
+    //    {
+    //        _documents = documents;
+    //    }
 
-        public Index Create()
-        {
+    //    public Index Create()
+    //    {
             
-        }
-    }
+    //    }
+    //}
 }

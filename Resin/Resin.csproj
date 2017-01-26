@@ -62,10 +62,12 @@
     <Compile Include="IO\DocumentCount.cs" />
     <Compile Include="IO\Document.cs" />
     <Compile Include="DocumentScore.cs" />
+    <Compile Include="IO\BinaryTree.cs" />
     <Compile Include="IO\IndexInfo.cs" />
     <Compile Include="IO\FileBase.cs" />
     <Compile Include="IO\QuickLZ.cs" />
     <Compile Include="IO\TermDocumentMatrix.cs" />
+    <Compile Include="IO\Trie.cs" />
     <Compile Include="IO\TrieScanner.cs" />
     <Compile Include="IO\TrieStreamReader.cs" />
     <Compile Include="IO\TrieWriter.cs" />
@@ -85,7 +87,6 @@
     <Compile Include="IO\Term.cs" />
     <Compile Include="Tfidf.cs" />
     <Compile Include="TokenInfo.cs" />
-    <Compile Include="IO\Trie.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
