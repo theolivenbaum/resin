@@ -111,7 +111,7 @@ namespace Resin.IO
             BinaryTree child;
             if (node.TryFindPath(prefix, out child))
             {
-                child.LeftChild.Compress(prefix, new List<char>(), compressed);
+                child.LeftChild.Traverse(prefix, new List<char>(), compressed);
             }
             
             return compressed;
@@ -122,38 +122,37 @@ namespace Resin.IO
             var compressed = new List<Word>();
             if (node.LeftChild != null)
             {
-                node.LeftChild.Compress(word, new string(word.ToCharArray()), compressed, 0, edits);
+                node.LeftChild.Traverse(word, new string(word.ToCharArray()), compressed, 0, edits);
             }
             return compressed.OrderBy(w => w.Distance).Select(w => w.Value).ToList();
         }
 
-        public static void Compress(this BinaryTree node, string word, string state, IList<Word> compressed, int index, int edits)
+        public static void Traverse(this BinaryTree node, string word, string state, IList<Word> compressed, int index, int maxEdits)
         {
             var childIndex = index + 1;
+            var test = index == state.Length ? state + node.Value : state.ReplaceAt(index, node.Value);
+            var edits = Levenshtein.Distance(word, test);
 
-            if (node.EndOfWord)
+            if (edits <= maxEdits)
             {
-                var tmp = index == state.Length ? state + node.Value : state.ReplaceAt(index, node.Value);
-                var potential = tmp.Substring(0, childIndex);
-                var distance = Levenshtein.Distance(word, potential);
-                if (distance <= edits)
+                if (node.EndOfWord)
                 {
-                    compressed.Add(new Word { Value = potential, Distance = distance });
+                    compressed.Add(new Word { Value = test, Distance = edits });
                 }
-            }
 
-            if (node.LeftChild != null)
-            {
-                node.LeftChild.Compress(word, state, compressed, childIndex, edits);
-            }
+                if (node.LeftChild != null)
+                {
+                    node.LeftChild.Traverse(word, test, compressed, childIndex, maxEdits);
+                }
 
-            if (node.RightSibling != null)
-            {
-                node.RightSibling.Compress(word, state, compressed, index, edits);
+                if (node.RightSibling != null)
+                {
+                    node.RightSibling.Traverse(word, test, compressed, index, maxEdits);
+                }
             }
         }
 
-        public static void Compress(this BinaryTree node, string prefix, IList<char> traveled, IList<string> compressed)
+        public static void Traverse(this BinaryTree node, string prefix, IList<char> traveled, IList<string> compressed)
         {
             var copy = new List<char>(traveled);
             traveled.Add(node.Value);
@@ -165,12 +164,12 @@ namespace Resin.IO
 
             if (node.LeftChild != null)
             {
-                node.LeftChild.Compress(prefix, traveled, compressed);
+                node.LeftChild.Traverse(prefix, traveled, compressed);
             }
 
             if (node.RightSibling != null)
             {
-                node.RightSibling.Compress(prefix, copy, compressed);
+                node.RightSibling.Traverse(prefix, copy, compressed);
             }
         }
 

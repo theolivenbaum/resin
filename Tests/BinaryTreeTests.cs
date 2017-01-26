@@ -29,11 +29,23 @@ namespace Tests
             Assert.That(near.Count, Is.EqualTo(1));
             Assert.IsTrue(near.Contains("bad"));
 
+            //tree.Add("b");
+
+            //near = tree.Near("ba", 1);
+
+            //Assert.That(near.Count, Is.EqualTo(2));
+            //Assert.IsTrue(near.Contains("bad"));
+            //Assert.IsTrue(near.Contains("b"));
+
             near = tree.Near("ba", 2);
 
             Assert.That(near.Count, Is.EqualTo(2));
             Assert.IsTrue(near.Contains("bad"));
             Assert.IsTrue(near.Contains("baby"));
+
+            near = tree.Near("ba", 0);
+
+            Assert.That(near.Count, Is.EqualTo(0));
         }
 
         [Test]
