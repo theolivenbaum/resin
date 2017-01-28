@@ -34,7 +34,10 @@ namespace Resin.IO
             }
             else
             {
-                node.EndOfWord = eow;
+                if (!node.EndOfWord)
+                {
+                    node.EndOfWord = eow;
+                }
             }
 
             if (!eow)

@@ -49,27 +49,23 @@ namespace Tests
         public void Can_find_near()
         {
             var tree = new BinaryTree('\0', false);
-
             var near = tree.Near("ba", 1);
 
             Assert.That(near, Is.Empty);
 
             tree.Add("bad");
-
             near = tree.Near("ba", 1);
 
             Assert.That(near.Count, Is.EqualTo(1));
             Assert.IsTrue(near.Contains("bad"));
 
             tree.Add("baby");
-
             near = tree.Near("ba", 1);
 
             Assert.That(near.Count, Is.EqualTo(1));
             Assert.IsTrue(near.Contains("bad"));
 
             tree.Add("b");
-
             near = tree.Near("ba", 1);
 
             Assert.That(near.Count, Is.EqualTo(2));
@@ -86,6 +82,15 @@ namespace Tests
             near = tree.Near("ba", 0);
 
             Assert.That(near.Count, Is.EqualTo(0));
+
+            tree.Add("bananas");
+            near = tree.Near("ba", 6);
+
+            Assert.That(near.Count, Is.EqualTo(4));
+            Assert.IsTrue(near.Contains("b"));
+            Assert.IsTrue(near.Contains("bad"));
+            Assert.IsTrue(near.Contains("baby"));
+            Assert.IsTrue(near.Contains("bananas"));
         }
 
         [Test]
