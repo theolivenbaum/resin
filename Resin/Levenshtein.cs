@@ -1,15 +1,22 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Resin
 {
     public static class Levenshtein
     {
-        public static string ReplaceAt(this string input, int index, char newChar)
+        public static IEnumerable<char> ReplaceOrAppend(this string input, int index, char newChar)
         {
             var chars = input.ToCharArray();
             if (index == input.Length) return input + newChar;
             chars[index] = newChar;
-            return new string(chars);
+            return chars;
+        }
+
+        public static string ReplaceOrAppendToString(this string input, int index, char newChar)
+        {
+            return new string(input.ReplaceOrAppend(index, newChar).ToArray());
         }
         
         public static int Distance(string a, string b)

@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using System.IO;
+using System.Text;
+using NUnit.Framework;
 using Resin.IO;
 
 namespace Tests
@@ -6,6 +8,43 @@ namespace Tests
     [TestFixture]
     public class BinaryTreeTests
     {
+        [Ignore]
+        public void Can_scan_from_disk()
+        {
+            var tree = new BinaryTree('\0', false);
+            tree.Add("baby");
+            tree.Add("bad");
+            tree.Add("bank");
+            tree.Add("box");
+            tree.Add("dad");
+            tree.Add("daddy");
+            tree.Add("dance");
+            tree.Add("dancing");
+
+            tree.Serialize("0.bt");
+        }
+
+        [Test]
+        public void Can_serialize()
+        {
+            var tree = new BinaryTree('\0', false);
+            tree.Add("baby");
+            tree.Add("bad");
+            tree.Add("bank");
+            tree.Add("box");
+            tree.Add("dad");
+            tree.Add("daddy");
+            tree.Add("dance");
+            tree.Add("dancing");
+
+            tree.Serialize("0.bt");
+            var acctual = File.ReadAllText("0.bt", Encoding.Unicode);
+
+            const string expected = "d10\r\na00\r\nn10\r\nc00\r\ni10\r\nn00\r\ng01\r\ne01\r\nd00\r\nd00\r\ny01\r\nb00\r\no10\r\nx01\r\na00\r\nn10\r\nk01\r\nd11\r\nb00\r\ny01\r\n";
+
+            Assert.AreEqual(expected, acctual);
+        }
+
         [Test]
         public void Can_find_near()
         {
@@ -29,17 +68,18 @@ namespace Tests
             Assert.That(near.Count, Is.EqualTo(1));
             Assert.IsTrue(near.Contains("bad"));
 
-            //tree.Add("b");
+            tree.Add("b");
 
-            //near = tree.Near("ba", 1);
+            near = tree.Near("ba", 1);
 
-            //Assert.That(near.Count, Is.EqualTo(2));
-            //Assert.IsTrue(near.Contains("bad"));
-            //Assert.IsTrue(near.Contains("b"));
+            Assert.That(near.Count, Is.EqualTo(2));
+            Assert.IsTrue(near.Contains("bad"));
+            Assert.IsTrue(near.Contains("b"));
 
             near = tree.Near("ba", 2);
 
-            Assert.That(near.Count, Is.EqualTo(2));
+            Assert.That(near.Count, Is.EqualTo(3));
+            Assert.IsTrue(near.Contains("b"));
             Assert.IsTrue(near.Contains("bad"));
             Assert.IsTrue(near.Contains("baby"));
 

@@ -71,7 +71,7 @@ namespace Resin.IO
             var children = GetChildren().ToList();
             foreach (var child in children)
             {
-                var tmp = index == state.Length ? state + child.Value : state.ReplaceAt(index, child.Value);
+                var tmp = index == state.Length ? state + child.Value : state.ReplaceOrAppendToString(index, child.Value);
                 if (child.Eow)
                 {
                     var potential = tmp.Substring(0, childIndex);

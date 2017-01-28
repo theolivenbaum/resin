@@ -65,8 +65,11 @@
     <Compile Include="IO\BinaryTree.cs" />
     <Compile Include="IO\IndexInfo.cs" />
     <Compile Include="IO\FileBase.cs" />
+    <Compile Include="IO\FileTreeScanner.cs" />
     <Compile Include="IO\QuickLZ.cs" />
     <Compile Include="IO\TermDocumentMatrix.cs" />
+    <Compile Include="IO\InMemoryTreeScanner.cs" />
+    <Compile Include="IO\TreeSerializer.cs" />
     <Compile Include="IO\Trie.cs" />
     <Compile Include="IO\TrieScanner.cs" />
     <Compile Include="IO\TrieStreamReader.cs" />
