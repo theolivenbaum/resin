@@ -6,13 +6,13 @@ using System.Linq;
 namespace Resin.IO
 {
     
-    public class LcrsTreeStreamReader : IDisposable
+    public class LcrsTreeReader : IDisposable
     {
         private readonly StreamReader _sr;
         private LcrsNode _lastRead;
         private LcrsNode _replay;
 
-        public LcrsTreeStreamReader(StreamReader sr)
+        public LcrsTreeReader(StreamReader sr)
         {
             _sr = sr;
         }

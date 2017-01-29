@@ -66,7 +66,7 @@
     <Compile Include="IO\LcrsTrie.cs" />
     <Compile Include="IO\IndexInfo.cs" />
     <Compile Include="IO\FileBase.cs" />
-    <Compile Include="IO\LcrsTreeStreamReader.cs" />
+    <Compile Include="IO\LcrsTreeReader.cs" />
     <Compile Include="IO\QuickLZ.cs" />
     <Compile Include="IO\TermDocumentMatrix.cs" />
     <Compile Include="IO\InMemoryTrieScanner.cs" />

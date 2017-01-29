@@ -27,7 +27,7 @@ namespace Tests
 
             using (var fs = File.OpenRead(fileName))
             using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var scanner = new LcrsTreeStreamReader(sr))
+            using (var scanner = new LcrsTreeReader(sr))
             {
                 var near = scanner.Near("bazy", 1);
                 Assert.AreEqual(1, near.Count);
@@ -36,7 +36,7 @@ namespace Tests
 
             using (var fs = File.OpenRead(fileName))
             using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var scanner = new LcrsTreeStreamReader(sr))
+            using (var scanner = new LcrsTreeReader(sr))
             {
                 var near = scanner.Near("bazy", 2);
                 Assert.AreEqual(3, near.Count);
@@ -65,7 +65,7 @@ namespace Tests
 
             using (var fs = File.OpenRead(fileName))
             using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var scanner = new LcrsTreeStreamReader(sr))
+            using (var scanner = new LcrsTreeReader(sr))
             {
                 var startsWith = scanner.StartsWith("ba");
                 Assert.AreEqual(3, startsWith.Count);
@@ -76,7 +76,7 @@ namespace Tests
 
             using (var fs = File.OpenRead(fileName))
             using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var scanner = new LcrsTreeStreamReader(sr))
+            using (var scanner = new LcrsTreeReader(sr))
             {
                 Assert.IsTrue(scanner.HasWord("baby"));
             }
@@ -101,14 +101,14 @@ namespace Tests
 
             using (var fs = File.OpenRead(fileName))
             using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var scanner = new LcrsTreeStreamReader(sr))
+            using (var scanner = new LcrsTreeReader(sr))
             {
                 Assert.IsFalse(scanner.HasWord("bab"));
             }
 
             using (var fs = File.OpenRead(fileName))
             using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var scanner = new LcrsTreeStreamReader(sr))
+            using (var scanner = new LcrsTreeReader(sr))
             {
                 Assert.IsTrue(scanner.HasWord("baby"));
             }
@@ -130,7 +130,7 @@ namespace Tests
             tree.Serialize("0.bt");
             var acctual = File.ReadAllText("0.bt", Encoding.Unicode);
 
-            const string expected = "d1100\r\na0101\r\nn1102\r\nc0103\r\ni1104\r\nn0105\r\ng0016\r\ne0014\r\nd0112\r\nd0103\r\ny0014\r\nb0100\r\no1101\r\nx0012\r\na0101\r\nn1102\r\nk0013\r\nd1012\r\nb0102\r\ny0013\r\n";
+            const string expected = "d1100\na0101\nn1102\nc0103\ni1104\nn0105\ng0016\ne0014\nd0112\nd0103\ny0014\nb0100\no1101\nx0012\na0101\nn1102\nk0013\nd1012\nb0102\ny0013\n";
 
             Assert.AreEqual(expected, acctual);
         }

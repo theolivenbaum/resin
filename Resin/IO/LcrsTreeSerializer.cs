@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Text;
 
@@ -22,7 +21,7 @@ namespace Resin.IO
             sw.Write(node.LeftChild == null ? "0" : "1");
             sw.Write(node.EndOfWord ? "1" : "0");
             sw.Write(depth);
-            sw.Write(Environment.NewLine);
+            sw.Write('\n');
 
             if (node.LeftChild != null)
             {
