@@ -43,18 +43,18 @@ namespace Resin.IO
             return compressed.OrderBy(w => w.Distance).Select(w => w.Value).ToList();
         }
 
-        private static void WithinEditDistanceDepthFirst(this LcrsTrie node, string word, string state, IList<Word> compressed, int index, int maxEdits)
+        private static void WithinEditDistanceDepthFirst(this LcrsTrie node, string word, string state, IList<Word> compressed, int depth, int maxEdits)
         {
-            var childIndex = index + 1;
+            var childIndex = depth + 1;
             string test;
 
-            if (index == state.Length)
+            if (depth == state.Length)
             {
                 test = state + node.Value;
             }
             else
             {
-                test = new string(state.ReplaceOrAppend(index, node.Value).Where(c=>c!=Char.MinValue).ToArray());
+                test = new string(state.ReplaceOrAppend(depth, node.Value).Where(c=>c!=Char.MinValue).ToArray());
             }
 
             var edits = Levenshtein.Distance(word, test);
@@ -65,7 +65,10 @@ namespace Resin.IO
                 {
                     compressed.Add(new Word { Value = test, Distance = edits });
                 }
+            }
 
+            if (edits <= maxEdits || test.Length < word.Length)
+            {
                 if (node.LeftChild != null)
                 {
                     node.LeftChild.WithinEditDistanceDepthFirst(word, test, compressed, childIndex, maxEdits);
@@ -73,7 +76,7 @@ namespace Resin.IO
 
                 if (node.RightSibling != null)
                 {
-                    node.RightSibling.WithinEditDistanceDepthFirst(word, test, compressed, index, maxEdits);
+                    node.RightSibling.WithinEditDistanceDepthFirst(word, test, compressed, depth, maxEdits);
                 }
             }
         }

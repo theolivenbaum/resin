@@ -70,54 +70,52 @@ namespace Resin.IO
         public IList<string> Near(string word, int edits)
         {
             var compressed = new List<Word>();
-
             WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, edits);
-
             return compressed.OrderBy(w => w.Distance).Select(w => w.Value).ToList();
         }
 
-        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int index, int maxEdits)
+        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits)
         {
             var node = Step();
-            var siblings = new Stack<string>();
+            var nodesWithUnresolvedSiblings = new Stack<Tuple<int, string>>();
+            var childIndex = depth + 1;
 
             // Go left (deep)
-            while (node != null)
+            if (node != null)
             {
                 string test;
-
-                if (index == state.Length)
+                if (depth == state.Length)
                 {
                     test = state + node.Value;
                 }
                 else
                 {
-                    test = new string(state.ReplaceOrAppend(index, node.Value).Where(c => c != Char.MinValue).ToArray());
+                    test = new string(state.ReplaceOrAppend(depth, node.Value).Where(c => c != Char.MinValue).ToArray());
                 }
 
                 var edits = Levenshtein.Distance(word, test);
 
-                if (edits <= maxEdits)
+                if (edits <= maxEdits && node.EndOfWord)
                 {
-                    if (node.EndOfWord)
-                    {
-                        compressed.Add(new Word { Value = test, Distance = edits });
-                    }
+                    compressed.Add(new Word { Value = test, Distance = edits });
+                }
 
-                    if (node.HasSiblings)
-                    {
-                        siblings.Push(string.Copy(state));
-                    }
+                if (node.HaveSibling)
+                {
+                    nodesWithUnresolvedSiblings.Push(new Tuple<int, string>(depth, string.Copy(state)));
+                }
 
-                    node = Step();
+                if (node.HaveChild)
+                {
+                    WithinEditDistanceDepthFirst(word, string.Copy(test), compressed, childIndex, maxEdits);
+                }
+
+                // Go right (wide)
+                foreach (var siblingState in nodesWithUnresolvedSiblings)
+                {
+                    WithinEditDistanceDepthFirst(word, siblingState.Item2, compressed, siblingState.Item1, maxEdits);
                 }
             }
-
-            // Go right (wide)
-            foreach (var siblingState in siblings)
-            {
-                WithinEditDistanceDepthFirst(word, siblingState, compressed, index, maxEdits);
-            }  
         }
 
         private void DepthFirst(string prefix, IList<char> path, IList<string> compressed, int depth)
@@ -137,7 +135,7 @@ namespace Resin.IO
                     compressed.Add(prefix + new string(path.ToArray()));
                 }
 
-                if (node.HasSiblings)
+                if (node.HaveSibling)
                 {
                     siblings.Push(new Tuple<int, IList<char>>(depth, copyOfPath));
                 }

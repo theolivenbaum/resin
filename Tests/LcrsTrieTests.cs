@@ -9,6 +9,44 @@ namespace Tests
     public class LcrsTrieTests
     {
         [Test]
+        public void Can_scan_fuzzy_from_disk()
+        {
+            const string fileName = "1.bt";
+
+            var tree = new LcrsTrie('\0', false);
+            tree.Add("baby");
+            tree.Add("bad");
+            tree.Add("bank");
+            tree.Add("box");
+            tree.Add("dad");
+            tree.Add("daddy");
+            tree.Add("dance");
+            tree.Add("dancing");
+
+            tree.Serialize(fileName);
+
+            using (var fs = File.OpenRead(fileName))
+            using (var sr = new StreamReader(fs, Encoding.Unicode))
+            using (var scanner = new LcrsTreeStreamReader(sr))
+            {
+                var near = scanner.Near("bazy", 1);
+                Assert.AreEqual(1, near.Count);
+                Assert.IsTrue(near.Contains("baby"));
+            }
+
+            using (var fs = File.OpenRead(fileName))
+            using (var sr = new StreamReader(fs, Encoding.Unicode))
+            using (var scanner = new LcrsTreeStreamReader(sr))
+            {
+                var near = scanner.Near("bazy", 2);
+                Assert.AreEqual(3, near.Count);
+                Assert.IsTrue(near.Contains("baby"));
+                Assert.IsTrue(near.Contains("bank"));
+                Assert.IsTrue(near.Contains("bad"));
+            }
+        }
+
+        [Test]
         public void Can_scan_prefix_from_disk()
         {
             const string fileName = "1.bt";
@@ -92,7 +130,7 @@ namespace Tests
             tree.Serialize("0.bt");
             var acctual = File.ReadAllText("0.bt", Encoding.Unicode);
 
-            const string expected = "d100\r\na001\r\nn102\r\nc003\r\ni104\r\nn005\r\ng016\r\ne014\r\nd012\r\nd003\r\ny014\r\nb000\r\no101\r\nx012\r\na001\r\nn102\r\nk013\r\nd112\r\nb002\r\ny013\r\n";
+            const string expected = "d1100\r\na0101\r\nn1102\r\nc0103\r\ni1104\r\nn0105\r\ng0016\r\ne0014\r\nd0112\r\nd0103\r\ny0014\r\nb0100\r\no1101\r\nx0012\r\na0101\r\nn1102\r\nk0013\r\nd1012\r\nb0102\r\ny0013\r\n";
 
             Assert.AreEqual(expected, acctual);
         }
@@ -143,6 +181,20 @@ namespace Tests
             Assert.IsTrue(near.Contains("bad"));
             Assert.IsTrue(near.Contains("baby"));
             Assert.IsTrue(near.Contains("bananas"));
+
+            near = tree.Near("bazy", 1);
+
+            Assert.That(near.Count, Is.EqualTo(1));
+            Assert.IsTrue(near.Contains("baby"));
+
+            tree.Add("bank");
+            near = tree.Near("bazy", 3);
+
+            Assert.AreEqual(4, near.Count);
+            Assert.IsTrue(near.Contains("baby"));
+            Assert.IsTrue(near.Contains("bank"));
+            Assert.IsTrue(near.Contains("bad"));
+            Assert.IsTrue(near.Contains("b"));
         }
 
         [Test]
