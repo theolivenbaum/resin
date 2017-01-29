@@ -40,7 +40,7 @@ namespace Resin
             _docs = new List<IDictionary<string, string>>();
         }
 
-        public void Write(IEnumerable<Dictionary<string, string>> docs)
+        public void Write(IEnumerable<IDictionary<string, string>> docs)
         {
             _docs.AddRange(docs);
         }

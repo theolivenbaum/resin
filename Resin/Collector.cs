@@ -29,7 +29,13 @@ namespace Resin
         {
             Expand(queryContext);
             Scan(queryContext, scorer);
-            var scored = queryContext.Resolve().Values.OrderByDescending(s => s.Score).ToList();
+
+            var scored = queryContext.Resolve().Values
+                .OrderByDescending(s => s.Score)
+                .Skip(page*size)
+                .Take(size)
+                .ToList();
+
             return scored;
         }
 
@@ -51,13 +57,6 @@ namespace Resin
 
         private IEnumerable<DocumentWeight> ReadWeights(string fileName, int offset, int length)
         {
-            //return File.ReadLines(fileName, Encoding.Unicode).Skip(offset).Take(length).Select(line =>
-            //{
-            //    var segs = line.Split(':');
-            //    var documentId = segs[0];
-            //    var weight = int.Parse(segs[1]);
-            //    return new DocumentWeight(documentId, weight);
-            //});
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var reader = new StreamReader(fs, Encoding.Unicode))
             {
@@ -109,7 +108,7 @@ namespace Resin
                 var scorer = scoringScheme.CreateScorer(totalNumOfDocs, weights.Count);
                 foreach (var weight in weights)
                 {
-                    var hit = new DocumentScore(weight.DocumentId, weight.Weight, totalNumOfDocs);
+                    var hit = new DocumentScore(weight.DocumentId, weight.Weight);
                     scorer.Score(hit);
                     yield return hit;
                 }

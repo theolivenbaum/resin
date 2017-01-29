@@ -15,22 +15,11 @@ namespace Resin.IO
             if (fileName == null) throw new ArgumentNullException("fileName");
             var timer = new Stopwatch();
             timer.Start();
-            if (File.Exists(fileName))
+            using (var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                using (var fs = File.Open(fileName, FileMode.Truncate, FileAccess.Write, FileShare.Read))
-                {
-                    Serializer.Serialize(fs, this);
-                }
-                Log.DebugFormat("re-wrote {0} in {1}", fileName, timer.Elapsed);
+                Serializer.Serialize(fs, this);
             }
-            else
-            {
-                using (var fs = File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-                {
-                    Serializer.Serialize(fs, this);
-                }
-                Log.DebugFormat("created {0} in {1}", fileName, timer.Elapsed);
-            }
+            Log.DebugFormat("created {0} in {1}", fileName, timer.Elapsed);
         }
 
         public static T Load(string fileName)

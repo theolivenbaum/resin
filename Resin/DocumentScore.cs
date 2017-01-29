@@ -6,19 +6,16 @@ namespace Resin
     {
         private readonly string _docId;
         private readonly object _postingData;
-        private readonly int _docsInCorpus;
 
         public string DocId { get { return _docId; } }
         public object PostingData { get { return _postingData; } }
-        public int DocsInCorpus { get { return _docsInCorpus; } }
 
         public double Score { get; set; }
 
-        public DocumentScore(string docId, object postingData, int docsInCorpus)
+        public DocumentScore(string docId, object postingData)
         {
             _docId = docId;
             _postingData = postingData;
-            _docsInCorpus = docsInCorpus;
         }
 
         public DocumentScore Add(DocumentScore score)
@@ -51,8 +48,8 @@ namespace Resin
 
         public override string ToString()
         {
-            return string.Format("docid:{0} rawtf:{1} docsincorpus:{2} score:{3}",
-                _docId, _postingData, _docsInCorpus, Score);
+            return string.Format("docid:{0} rawtf:{1} score:{2}",
+                _docId, _postingData, Score);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Resin
         public bool Prefix { get; set; }
         public bool Fuzzy { get; set; }
 
-        public int Edits { get { return _edits; } }
+        public int Edits { get { return _edits; } set { _edits = value; }}
 
         public float Similarity
         {

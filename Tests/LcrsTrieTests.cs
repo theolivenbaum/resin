@@ -9,7 +9,7 @@ namespace Tests
     public class LcrsTrieTests
     {
         [Test]
-        public void Can_scan_fuzzy_from_disk()
+        public void Can_scan_near_from_disk()
         {
             const string fileName = "1.bt";
 

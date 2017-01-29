@@ -13,7 +13,7 @@ namespace Resin.IO
 
             var timer = new Stopwatch();
             timer.Start();
-            using (var fs = File.Open(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            using (var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             using (var memStream = new MemoryStream())
             {
                 Serializer.Serialize(memStream, this);
