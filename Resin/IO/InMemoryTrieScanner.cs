@@ -1,24 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace Resin.IO
 {
-    public class FileTreeScanner
+    public static class InMemoryTrieScanner
     {
-        private readonly StreamReader _sr;
-
-        public FileTreeScanner(StreamReader sr)
-        {
-            _sr = sr;
-        }
-
-        public bool HasWord(BinaryTree node, string word)
+        public static bool HasWord(this LcrsTrie node, string word)
         {
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("path");
 
-            BinaryTree child;
+            LcrsTrie child;
             if (node.TryFindPath(word, out child))
             {
                 return child.EndOfWord;
@@ -26,47 +18,43 @@ namespace Resin.IO
             return false;
         }
 
-        public static IList<string> StartsWith(BinaryTree node, string prefix)
+        public static IList<string> StartsWith(this LcrsTrie node, string prefix)
         {
-            if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
+            if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("traveled");
 
             var compressed = new List<string>();
             
-            BinaryTree child;
+            LcrsTrie child;
             if (node.TryFindPath(prefix, out child))
             {
-                child.LeftChild.Traverse(prefix, new List<char>(), compressed);
+                child.LeftChild.DepthFirst(prefix, new List<char>(), compressed);
             }
             
             return compressed;
         }
 
-        public static IList<string> Near(BinaryTree node, string word, int edits)
+        public static IList<string> Near(this LcrsTrie node, string word, int edits)
         {
             var compressed = new List<Word>();
             if (node.LeftChild != null)
             {
-                node.LeftChild.Traverse(word, new string(word.ToCharArray()), compressed, 0, edits);
+                node.LeftChild.WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, edits);
             }
             return compressed.OrderBy(w => w.Distance).Select(w => w.Value).ToList();
         }
 
-        public static void Traverse(BinaryTree node, string word, string state, IList<Word> compressed, int index, int maxEdits)
+        private static void WithinEditDistanceDepthFirst(this LcrsTrie node, string word, string state, IList<Word> compressed, int index, int maxEdits)
         {
             var childIndex = index + 1;
             string test;
 
-            if (index > 0)
-            {
-                test = state.Substring(state.Length + index);
-            }
-            else if (index == state.Length)
+            if (index == state.Length)
             {
                 test = state + node.Value;
             }
             else
             {
-                test = state.ReplaceOrAppendToString(index, node.Value);
+                test = new string(state.ReplaceOrAppend(index, node.Value).Where(c=>c!=Char.MinValue).ToArray());
             }
 
             var edits = Levenshtein.Distance(word, test);
@@ -80,50 +68,38 @@ namespace Resin.IO
 
                 if (node.LeftChild != null)
                 {
-                    node.LeftChild.Traverse(word, test, compressed, childIndex, maxEdits);
+                    node.LeftChild.WithinEditDistanceDepthFirst(word, test, compressed, childIndex, maxEdits);
                 }
 
                 if (node.RightSibling != null)
                 {
-                    node.RightSibling.Traverse(word, test, compressed, index, maxEdits);
-                }
-            }
-            else
-            {
-                if (node.LeftChild != null)
-                {
-                    node.LeftChild.Traverse(word, test, compressed, childIndex, maxEdits);
-                }
-
-                if (node.RightSibling != null)
-                {
-                    node.RightSibling.Traverse(word, test, compressed, index, maxEdits);
+                    node.RightSibling.WithinEditDistanceDepthFirst(word, test, compressed, index, maxEdits);
                 }
             }
         }
 
-        public static void Traverse(BinaryTree node, string prefix, IList<char> traveled, IList<string> compressed)
+        private static void DepthFirst(this LcrsTrie node, string traveled, IList<char> state, IList<string> compressed)
         {
-            var copy = new List<char>(traveled);
-            traveled.Add(node.Value);
+            var copy = new List<char>(state);
+            state.Add(node.Value);
 
             if (node.EndOfWord)
             {
-                compressed.Add(prefix + new string(traveled.ToArray()));
+                compressed.Add(traveled + new string(state.ToArray()));
             }
 
             if (node.LeftChild != null)
             {
-                node.LeftChild.Traverse(prefix, traveled, compressed);
+                node.LeftChild.DepthFirst(traveled, state, compressed);
             }
 
             if (node.RightSibling != null)
             {
-                node.RightSibling.Traverse(prefix, copy, compressed);
+                node.RightSibling.DepthFirst(traveled, copy, compressed);
             }
         }
 
-        public static bool TryFindPath(BinaryTree node, string path, out BinaryTree leaf)
+        public static bool TryFindPath(this LcrsTrie node, string path, out LcrsTrie leaf)
         {
             var child = node.LeftChild;
             while (child != null)

@@ -6,12 +6,14 @@ using Resin.IO;
 namespace Tests
 {
     [TestFixture]
-    public class BinaryTreeTests
+    public class LcrsTrieTests
     {
-        [Ignore]
-        public void Can_scan_from_disk()
+        [Test]
+        public void Can_scan_prefix_from_disk()
         {
-            var tree = new BinaryTree('\0', false);
+            const string fileName = "1.bt";
+
+            var tree = new LcrsTrie('\0', false);
             tree.Add("baby");
             tree.Add("bad");
             tree.Add("bank");
@@ -21,13 +23,63 @@ namespace Tests
             tree.Add("dance");
             tree.Add("dancing");
 
-            tree.Serialize("0.bt");
+            tree.Serialize(fileName);
+
+            using (var fs = File.OpenRead(fileName))
+            using (var sr = new StreamReader(fs, Encoding.Unicode))
+            using (var scanner = new LcrsTreeStreamReader(sr))
+            {
+                var startsWith = scanner.StartsWith("ba");
+                Assert.AreEqual(3, startsWith.Count);
+                Assert.IsTrue(startsWith.Contains("baby"));
+                Assert.IsTrue(startsWith.Contains("bad"));
+                Assert.IsTrue(startsWith.Contains("bank"));
+            }
+
+            using (var fs = File.OpenRead(fileName))
+            using (var sr = new StreamReader(fs, Encoding.Unicode))
+            using (var scanner = new LcrsTreeStreamReader(sr))
+            {
+                Assert.IsTrue(scanner.HasWord("baby"));
+            }
+        }
+
+        [Test]
+        public void Can_scan_exact_from_disk()
+        {
+            const string fileName = "0.bt";
+
+            var tree = new LcrsTrie('\0', false);
+            tree.Add("baby");
+            tree.Add("bad");
+            tree.Add("bank");
+            tree.Add("box");
+            tree.Add("dad");
+            tree.Add("daddy");
+            tree.Add("dance");
+            tree.Add("dancing");
+
+            tree.Serialize(fileName);
+
+            using (var fs = File.OpenRead(fileName))
+            using (var sr = new StreamReader(fs, Encoding.Unicode))
+            using (var scanner = new LcrsTreeStreamReader(sr))
+            {
+                Assert.IsFalse(scanner.HasWord("bab"));
+            }
+
+            using (var fs = File.OpenRead(fileName))
+            using (var sr = new StreamReader(fs, Encoding.Unicode))
+            using (var scanner = new LcrsTreeStreamReader(sr))
+            {
+                Assert.IsTrue(scanner.HasWord("baby"));
+            }
         }
 
         [Test]
         public void Can_serialize()
         {
-            var tree = new BinaryTree('\0', false);
+            var tree = new LcrsTrie('\0', false);
             tree.Add("baby");
             tree.Add("bad");
             tree.Add("bank");
@@ -40,7 +92,7 @@ namespace Tests
             tree.Serialize("0.bt");
             var acctual = File.ReadAllText("0.bt", Encoding.Unicode);
 
-            const string expected = "d10\r\na00\r\nn10\r\nc00\r\ni10\r\nn00\r\ng01\r\ne01\r\nd00\r\nd00\r\ny01\r\nb00\r\no10\r\nx01\r\na00\r\nn10\r\nk01\r\nd11\r\nb00\r\ny01\r\n";
+            const string expected = "d100\r\na001\r\nn102\r\nc003\r\ni104\r\nn005\r\ng016\r\ne014\r\nd012\r\nd003\r\ny014\r\nb000\r\no101\r\nx012\r\na001\r\nn102\r\nk013\r\nd112\r\nb002\r\ny013\r\n";
 
             Assert.AreEqual(expected, acctual);
         }
@@ -48,7 +100,7 @@ namespace Tests
         [Test]
         public void Can_find_near()
         {
-            var tree = new BinaryTree('\0', false);
+            var tree = new LcrsTrie('\0', false);
             var near = tree.Near("ba", 1);
 
             Assert.That(near, Is.Empty);
@@ -96,7 +148,7 @@ namespace Tests
         [Test]
         public void Can_find_suffixes()
         {
-            var tree = new BinaryTree('\0', false);
+            var tree = new LcrsTrie('\0', false);
 
             var prefixed = tree.StartsWith("ba");
 
@@ -121,7 +173,7 @@ namespace Tests
         [Test]
         public void Can_find_exact()
         {
-            var tree = new BinaryTree('\0', false);
+            var tree = new LcrsTrie('\0', false);
 
             Assert.False(tree.HasWord("xxx"));
 
@@ -147,7 +199,7 @@ namespace Tests
         [Test]
         public void Can_build_one_leg()
         {
-            var tree = new BinaryTree('\0', false);
+            var tree = new LcrsTrie('\0', false);
             
             tree.Add("baby");
 
@@ -162,7 +214,7 @@ namespace Tests
         [Test]
         public void Can_build_two_legs()
         {
-            var root = new BinaryTree('\0', false);
+            var root = new LcrsTrie('\0', false);
 
             root.Add("baby");
             root.Add("dad");
@@ -183,7 +235,7 @@ namespace Tests
         [Test]
         public void Can_append()
         {
-            var root = new BinaryTree('\0', false);
+            var root = new LcrsTrie('\0', false);
 
             root.Add("baby");
             root.Add("bad");

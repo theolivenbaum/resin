@@ -4,14 +4,14 @@ using System.Diagnostics;
 namespace Resin.IO
 {
     [DebuggerDisplay("{Value} {EndOfWord}")]
-    public class BinaryTree
+    public class LcrsTrie
     {
-        public BinaryTree RightSibling { get; set; }
-        public BinaryTree LeftChild { get; set; }
+        public LcrsTrie RightSibling { get; set; }
+        public LcrsTrie LeftChild { get; set; }
         public char Value { get; private set; }
         public bool EndOfWord { get; private set; }
 
-        public BinaryTree(char value, bool endOfWord)
+        public LcrsTrie(char value, bool endOfWord)
         {
             Value = value;
             EndOfWord = endOfWord;
@@ -24,10 +24,10 @@ namespace Resin.IO
             var key = path[0];
             var eow = path.Length == 1;
 
-            BinaryTree node;
+            LcrsTrie node;
             if (!TryGetChild(key, out node))
             {
-                node = new BinaryTree(key, eow);
+                node = new LcrsTrie(key, eow);
                 var sibling = LeftChild;
                 LeftChild = node;
                 LeftChild.RightSibling = sibling;
@@ -46,7 +46,7 @@ namespace Resin.IO
             }
         }
 
-        private bool TryGetChild(char c, out BinaryTree node)
+        private bool TryGetChild(char c, out LcrsTrie node)
         {
             if (LeftChild == null)
             {
@@ -69,7 +69,7 @@ namespace Resin.IO
             return RightSibling.TryGetSibling(c, out node);
         }
 
-        private bool TryGetSibling(char c, out BinaryTree node)
+        private bool TryGetSibling(char c, out LcrsTrie node)
         {
             if (RightSibling == null)
             {
