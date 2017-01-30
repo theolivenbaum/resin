@@ -13,8 +13,6 @@ namespace Resin.Host
         private static readonly object Sync = new object();
         private static readonly ILog Log = LogManager.GetLogger(typeof (SearchModule));
 
-        
-
         public SearchModule()
         {
             Get["/{indexName}/"] = parameters =>

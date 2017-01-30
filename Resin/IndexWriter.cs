@@ -80,7 +80,7 @@ namespace Resin
 
         public void Dispose()
         {
-            var termDocMatrix = new Dictionary<Term, List<DocumentWeight>>();
+            var termDocMatrix = new Dictionary<Term, List<DocumentPosting>>();
             foreach (var doc in _docs)
             {
                 PutDocumentInContainer(new Document(doc));
@@ -88,14 +88,14 @@ namespace Resin
                 foreach (var term in analyzed.Terms)
                 {
                     WriteToTrie(term.Key.Field, term.Key.Token);
-                    List<DocumentWeight> weights;
+                    List<DocumentPosting> weights;
                     if (termDocMatrix.TryGetValue(term.Key, out weights))
                     {
-                        weights.Add(new DocumentWeight(analyzed.Id, (int)term.Value));
+                        weights.Add(new DocumentPosting(analyzed.Id, (int)term.Value));
                     }
                     else
                     {
-                        termDocMatrix.Add(term.Key, new List<DocumentWeight> { new DocumentWeight(analyzed.Id, (int)term.Value) });
+                        termDocMatrix.Add(term.Key, new List<DocumentPosting> { new DocumentPosting(analyzed.Id, (int)term.Value) });
                     }
                 }
                 foreach (var field in doc)

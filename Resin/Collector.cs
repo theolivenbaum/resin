@@ -15,18 +15,18 @@ namespace Resin
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly IndexInfo _ix;
-        private readonly IDictionary<Term, List<DocumentWeight>> _termCache;
+        private readonly IDictionary<Term, List<DocumentPosting>> _termCache;
  
         public Collector(string directory, IndexInfo ix)
         {
             _directory = directory;
             _ix = ix;
-            _termCache = new Dictionary<Term, List<DocumentWeight>>();
+            _termCache = new Dictionary<Term, List<DocumentPosting>>();
         }
 
         public IEnumerable<DocumentScore> Collect(QueryContext queryContext, int page, int size, IScoringScheme scorer)
         {
-            Expand(queryContext);
+            ScanTermTree(queryContext);
             Scan(queryContext, scorer);
 
             var scored = queryContext.Resolve().Values
@@ -38,31 +38,61 @@ namespace Resin
             return scored;
         }
 
-        private IList<DocumentWeight> GetWeights(Term term)
+        private IEnumerable<DocumentScore> GetScoredResult(QueryTerm queryTerm, IScoringScheme scoringScheme)
         {
-            List<DocumentWeight> weights;
+            var timer = new Stopwatch();
+            timer.Start();
+
+            var totalNumOfDocs = _ix.DocumentCount.DocCount[queryTerm.Field];
+
+            var postings = GetPostings(new Term(queryTerm.Field, queryTerm.Value));
+            var scorer = scoringScheme.CreateScorer(totalNumOfDocs, postings.Count);
+
+            foreach (var posting in postings)
+            {
+                var hit = new DocumentScore(posting.DocumentId, posting.Count);
+
+                scorer.Score(hit);
+                yield return hit;
+            }
+
+            Log.DebugFormat("scored term {0} in {1}", queryTerm, timer.Elapsed);
+        }
+
+        private IList<DocumentPosting> GetPostings(Term term)
+        {
+            List<DocumentPosting> weights;
             if (!_termCache.TryGetValue(term, out weights))
             {
                 int rowIndex;
                 if (_ix.PostingAddressByTerm.TryGetValue(term, out rowIndex))
                 {
-                    return ReadWeights(Path.Combine(_directory, "0.pos"), rowIndex);
+                    return ReadPostingsFile(Path.Combine(_directory, "0.pos"), rowIndex);
                 }
             }
-            return new List<DocumentWeight>();
+            return new List<DocumentPosting>();
         }
 
-        private IList<DocumentWeight> ReadWeights(string fileName, int rowIndex)
+        private IList<DocumentPosting> ReadPostingsFile(string fileName, int rowIndex)
         {
+            var timer = new Stopwatch();
+            timer.Start();
+
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var reader = new StreamReader(fs, Encoding.Unicode))
             {
                 var row = 0;
+
                 while (row++ < rowIndex)
                 {
                     reader.ReadLine();
                 }
-                return JsonConvert.DeserializeObject<IList<DocumentWeight>>(reader.ReadLine());
+
+                var postings = JsonConvert.DeserializeObject<IList<DocumentPosting>>(reader.ReadLine());
+
+                Log.DebugFormat("read row {0} of {1} in {2}", rowIndex, fileName, timer.Elapsed);
+
+                return postings;
             }
         } 
 
@@ -70,17 +100,18 @@ namespace Resin
         {
             var timer = new Stopwatch();
             timer.Start();
+
             var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
             var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             var sr = new StreamReader(fs, Encoding.Unicode);
             var reader = new LcrsTreeReader(sr);
-            Log.DebugFormat("opened {0} in {1}", fileName, timer.Elapsed);
+
             return reader;
         }
 
         private void Scan(QueryContext queryContext, IScoringScheme scorer)
         {
-            queryContext.Result = GetScoredResult(queryContext, scorer)
+            queryContext.Result = GetScoredResult(queryContext.ToQueryTerm(), scorer)
                 .GroupBy(s=>s.DocId)
                 .Select(g=>new DocumentScore(g.Key, g.Sum(s=>s.Score)))
                 .ToDictionary(x => x.DocId, y => y);
@@ -91,64 +122,46 @@ namespace Resin
             }
         }
 
-        private IEnumerable<DocumentScore> GetScoredResult(QueryTerm queryTerm, IScoringScheme scoringScheme)
-        {
-            using (var reader = GetReader(queryTerm.Field))
-            {
-                var totalNumOfDocs = _ix.DocumentCount.DocCount[queryTerm.Field];
-                if (reader.HasWord(queryTerm.Value))
-                {
-                    var weights = GetWeights(new Term(queryTerm.Field, queryTerm.Value));
-                    var scorer = scoringScheme.CreateScorer(totalNumOfDocs, weights.Count);
-                    foreach (var weight in weights)
-                    {
-                        var hit = new DocumentScore(weight.DocumentId, weight.Weight);
-                        scorer.Score(hit);
-                        yield return hit;
-                    }
-                }
-            }
-        }
-
-        private void Expand(QueryContext queryContext)
+        private void ScanTermTree(QueryContext queryContext)
         {
             if (queryContext == null) throw new ArgumentNullException("queryContext");
-            
-            if (queryContext.Fuzzy || queryContext.Prefix)
+
+            var timer = new Stopwatch();
+            timer.Start();
+
+            using (var reader = GetReader(queryContext.Field))
             {
-                var timer = new Stopwatch();
-                timer.Start();
-                using (var reader = GetReader(queryContext.Field))
+                var expanded = new List<QueryContext>();
+
+                if (queryContext.Fuzzy)
                 {
-                    IList<QueryContext> expanded = null;
-
-                    if (queryContext.Fuzzy)
+                    expanded = reader.Near(queryContext.Value, queryContext.Edits)
+                        .Select(token => new QueryContext(queryContext.Field, token))
+                        .ToList();
+                }
+                else if (queryContext.Prefix)
+                {
+                    expanded = reader.StartsWith(queryContext.Value)
+                        .Select(token => new QueryContext(queryContext.Field, token))
+                        .ToList();
+                }
+                else
+                {
+                    if (reader.HasWord(queryContext.Value))
                     {
-                        expanded = reader.Near(queryContext.Value, queryContext.Edits).Select(token => new QueryContext(queryContext.Field, token)).ToList();
+                        expanded = new List<QueryContext> { new QueryContext(queryContext.Field, queryContext.Value) };
                     }
-                    else if (queryContext.Prefix)
-                    {
-                        expanded = reader.StartsWith(queryContext.Value).Select(token => new QueryContext(queryContext.Field, token)).ToList();
-                    }
+                }
 
-                    if (expanded != null)
-                    {
-                        foreach (var t in expanded.Where(e => e.Value != queryContext.Value))
-                        {
-                            queryContext.Children.Add(t);
-                        }
-                    }
+                queryContext.Prefix = false;
+                queryContext.Fuzzy = false;
 
-                    queryContext.Prefix = false;
-                    queryContext.Fuzzy = false;
+                foreach (var t in expanded.Where(e => e.Value != queryContext.Value))
+                {
+                    queryContext.Children.Add(t);
+                }
 
-                    Log.DebugFormat("expanded {0} in {1}", queryContext, timer.Elapsed); 
-                }                
-            }
-
-            foreach (var child in queryContext.Children)
-            {
-                Expand(child);
+                Log.DebugFormat("expanded {0} into {1} in {2}", queryContext.ToQueryTerm(), queryContext, timer.Elapsed);
             }
         }
     }

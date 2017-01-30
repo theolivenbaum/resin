@@ -68,9 +68,9 @@ namespace Resin.IO
             typeof (IndexInfo),
             typeof (DocumentCount),
             typeof (TermDocumentMatrix),
-            typeof (DocumentWeight),
+            typeof (DocumentPosting),
             typeof (Term),
-            typeof (Dictionary<Term, List<DocumentWeight>>)
+            typeof (Dictionary<Term, List<DocumentPosting>>)
         };
 
         [NonSerialized]

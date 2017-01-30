@@ -72,5 +72,10 @@ namespace Resin
             }
             return s.ToString();
         }
+
+        public QueryTerm ToQueryTerm()
+        {
+            return new QueryTerm(Field, Value){Edits = Edits, And = And, Fuzzy = Fuzzy, Not = Not, Prefix = Prefix};
+        }
     }
 }

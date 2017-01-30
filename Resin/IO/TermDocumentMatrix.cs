@@ -6,6 +6,6 @@ namespace Resin.IO
     [Serializable]
     public class TermDocumentMatrix
     {
-        public Dictionary<Term, List<DocumentWeight>> Weights { get; set; }
+        public Dictionary<Term, List<DocumentPosting>> Weights { get; set; }
     }
 }
