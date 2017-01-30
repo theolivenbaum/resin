@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -10,7 +9,7 @@ using Resin.IO;
 namespace Resin
 {
     /// <summary>
-    /// A reader that provides thread-safe access to an index
+    /// A reader that provides thread-safe access to an index. Not lock-free.
     /// </summary>
     public class Searcher : IDisposable
     {
@@ -19,14 +18,15 @@ namespace Resin
         private readonly QueryParser _parser;
         private readonly IScoringScheme _scorer;
         private readonly IndexInfo _ix;
-        private readonly ConcurrentDictionary<string, DocumentFile> _docContainers;
+        private readonly Dictionary<string, DocumentFile> _docContainers;
+        private static readonly object Sync = new object();
 
         public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
         {
             _directory = directory;
             _parser = parser;
             _scorer = scorer;
-            _docContainers = new ConcurrentDictionary<string, DocumentFile>();
+            _docContainers = new Dictionary<string, DocumentFile>();
 
             _ix = IndexInfo.Load(Path.Combine(_directory, "0.ix"));
         }
@@ -49,14 +49,21 @@ namespace Resin
             return new Result { Docs = docs, Total = scored.Count };  
         }
 
+
         private IDictionary<string, string> GetDoc(string docId)
         {
             var containerId = docId.ToDocContainerId();
             DocumentFile container;
             if (!_docContainers.TryGetValue(containerId, out container))
             {
-                container = new DocumentFile(_directory, containerId);
-                _docContainers[containerId] = container;
+                lock (Sync)
+                {
+                    if (!_docContainers.TryGetValue(containerId, out container))
+                    {
+                        container = new DocumentFile(_directory, containerId);
+                        _docContainers.Add(containerId, container);
+                    }
+                }
             }
             return container.Get(docId).Fields;
         }
