@@ -27,7 +27,7 @@ namespace Resin
         /// <summary>
         /// fileid/file
         /// </summary>
-        private readonly ConcurrentDictionary<string, DocumentWriter> _docFiles;
+        private readonly ConcurrentDictionary<string, DocumentWriter> _docWriters;
 
         private readonly List<Document> _docs;
 
@@ -35,7 +35,7 @@ namespace Resin
         {
             _directory = directory;
             _analyzer = analyzer;
-            _docFiles = new ConcurrentDictionary<string, DocumentWriter>();
+            _docWriters = new ConcurrentDictionary<string, DocumentWriter>();
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
             _docs = new List<Document>();
@@ -48,14 +48,17 @@ namespace Resin
         
         private void Write(Document doc)
         {
-            var containerId = doc.Id.ToDocFileId();
+            var fileId = doc.Id.ToDocFileId();
             DocumentWriter writer;
-            if (!_docFiles.TryGetValue(containerId, out writer))
+            if (!_docWriters.TryGetValue(fileId, out writer))
             {
-                writer = new DocumentWriter(_directory, containerId);
-                _docFiles.AddOrUpdate(containerId, writer, (s, file) => file);
+                var fileName = Path.Combine(_directory, fileId + ".doc");
+                var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+                var sr = new StreamWriter(fs, Encoding.ASCII);
+                writer = new DocumentWriter(sr);
+                _docWriters.AddOrUpdate(fileId, writer, (s, file) => file);
             }
-            _docFiles[containerId].Write(doc);
+            _docWriters[fileId].Write(doc);
         }
 
         private void WriteToTrie(string field, string value)
@@ -112,9 +115,13 @@ namespace Resin
                 trie.Serialize(fileName);
             });
 
-            Parallel.ForEach(_docFiles.Values, container => container.Dispose());
+            foreach (var dw in _docWriters.Values)
+            {
+                dw.Dispose();
+            }
 
-            var postings = new Dictionary<Term, int>(); 
+            var postings = new Dictionary<Term, int>();
+
             using(var fs = new FileStream(Path.Combine(_directory, "0.pos"), FileMode.Create, FileAccess.Write, FileShare.None))
             using (var writer = new StreamWriter(fs, Encoding.Unicode))
             {

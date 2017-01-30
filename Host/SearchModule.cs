@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using log4net;
@@ -9,8 +8,6 @@ namespace Resin.Host
 {
     public class SearchModule : NancyModule
     {
-        private static readonly IDictionary<string, Searcher> Searchers = new Dictionary<string, Searcher>();
-        private static readonly object Sync = new object();
         private static readonly ILog Log = LogManager.GetLogger(typeof (SearchModule));
 
         public SearchModule()
@@ -31,11 +28,13 @@ namespace Resin.Host
             {
                 var timer = new Stopwatch();
                 timer.Start();
-                var searcher = GetSearcher(indexName);
-                var lazyResult = searcher.Search(query, page, size);
-                var resolved = lazyResult.Resolve();
-                Log.InfoFormat("query-exec {0} {1}{2} hit count: {3}", timer.Elapsed, Request.Url.Path, Uri.UnescapeDataString(Request.Url.Query), resolved.Total);
-                return resolved;
+                using (var searcher = GetSearcher(indexName))
+                {
+                    var lazyResult = searcher.Search(query, page, size);
+                    var resolved = lazyResult.Resolve();
+                    Log.InfoFormat("query-exec {0} {1}{2} hit count: {3}", timer.Elapsed, Request.Url.Path, Uri.UnescapeDataString(Request.Url.Query), resolved.Total);
+                    return resolved; 
+                }
             }
             catch (Exception ex)
             {
@@ -47,27 +46,7 @@ namespace Resin.Host
         private Searcher GetSearcher(string name)
         {
             var dir = Path.Combine(Helper.GetDataDirectory(), name);
-            Searcher searcher;
-            if (!Searchers.TryGetValue(dir, out searcher))
-            {
-                lock (Sync)
-                {
-                    if (!Searchers.TryGetValue(dir, out searcher))
-                    {
-                        searcher = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf());
-                        Searchers.Add(dir, searcher);
-                    }
-                }
-            }
-            return searcher;
-        }
-
-        public static void ReleaseCache()
-        {
-            lock (Sync)
-            {
-                Searchers.Clear();
-            }
+            return new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf());
         }
     }
 }

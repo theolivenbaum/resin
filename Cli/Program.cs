@@ -116,31 +116,40 @@ namespace Resin.Cli
             if (Array.IndexOf(args, "--url") > 0) url = args[Array.IndexOf(args, "--url") + 1];
             var timer = new Stopwatch();
             timer.Start();
+
             if (inproc)
             {
-                var s = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf());
-                var result = s.Search(q, page, size);
-                var docs = result.Docs.ToList();
-                timer.Stop();
-                var position = 0 + (page * size);
-                Console.WriteLine();
-                Console.WriteLine(string.Join(string.Empty,
-                        string.Empty.PadRight(7),
-                        "docid".PadRight(10),
-                        "label".PadRight(50),
-                        "aliases"
-                    ));
-                Console.WriteLine();
-                foreach (var doc in docs)
+                using (var s = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf()))
                 {
+                    var result = s.Search(q, page, size);
+                    var docs = result.Docs.ToList();
+
+                    timer.Stop();
+
+                    var position = 0 + (page * size);
+
+                    Console.WriteLine();
                     Console.WriteLine(string.Join(string.Empty,
-                        (++position).ToString(CultureInfo.InvariantCulture).PadRight(7),
-                        doc.Fields["_id"].ToString(CultureInfo.InvariantCulture).PadRight(10),
-                        (doc.Fields["label"] ?? string.Empty).Substring(0, Math.Min(49, (doc.Fields["label"] ?? string.Empty).Length)).PadRight(50),
-                        (doc.Fields["aliases"] ?? string.Empty).Substring(0, Math.Min(100, (doc.Fields["aliases"] ?? string.Empty).Length))
-                    ));
+                            string.Empty.PadRight(7),
+                            "docid".PadRight(10),
+                            "label".PadRight(50),
+                            "aliases"
+                        ));
+                    Console.WriteLine();
+
+                    foreach (var doc in docs)
+                    {
+                        Console.WriteLine(string.Join(string.Empty,
+                            (++position).ToString(CultureInfo.InvariantCulture).PadRight(7),
+                            doc.Fields["_id"].ToString(CultureInfo.InvariantCulture).PadRight(10),
+                            (doc.Fields["label"] ?? string.Empty).Substring(0, Math.Min(49, (doc.Fields["label"] ?? string.Empty).Length)).PadRight(50),
+                            (doc.Fields["aliases"] ?? string.Empty).Substring(0, Math.Min(100, (doc.Fields["aliases"] ?? string.Empty).Length))
+                        ));
+                    }
+
+                    Console.WriteLine("\r\n{0} results of {1} in {2}", position, result.Total, timer.Elapsed);  
                 }
-                Console.WriteLine("\r\n{0} results of {1} in {2}", position, result.Total, timer.Elapsed);
+                
             }
             //else
             //{

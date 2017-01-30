@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using log4net;
 using Resin.IO;
 
@@ -10,7 +12,7 @@ namespace Resin
     /// <summary>
     /// A reader that provides thread-safe (but not lock-free) access to an index.
     /// </summary>
-    public class Searcher
+    public class Searcher : IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
         private readonly string _directory;
@@ -55,20 +57,38 @@ namespace Resin
 
         private Document GetDoc(string docId)
         {
+            var timer = new Stopwatch();
+            timer.Start();
+
             var fileId = docId.ToDocFileId();
+            var fileName = Path.Combine(_directory, fileId + ".doc");
             DocumentReader reader;
+
             if (!_readers.TryGetValue(fileId, out reader))
             {
                 lock (Sync)
                 {
                     if (!_readers.TryGetValue(fileId, out reader))
                     {
-                        reader = new DocumentReader(_directory, fileId);
+                        var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                        var sr = new StreamReader(fs, Encoding.ASCII);
+                        reader = new DocumentReader(sr);
                         _readers.Add(fileId, reader);
                     }
                 }
             }
-            return reader.Get(docId);
+
+            var doc = reader.Get(docId);
+            Log.DebugFormat("read {0} from {1} in {2}", doc.Id, fileName, timer.Elapsed);
+            return doc;
+        }
+
+        public void Dispose()
+        {
+            foreach (var dr in _readers.Values)
+            {
+                dr.Dispose();
+            }
         }
     }
 }

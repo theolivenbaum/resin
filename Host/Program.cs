@@ -34,7 +34,6 @@ namespace Resin.Host
             Log.Info("server stopped");
             if (input == "restart")
             {
-                SearchModule.ReleaseCache();
                 Run(args);
             }
         }
