@@ -86,7 +86,7 @@ namespace Resin
 
     internal static class WierdStringExtensions
     {
-        public static string ToDocContainerId(this string docId)
+        public static string ToDocFileId(this string docId)
         {
             if (string.IsNullOrEmpty(docId)) throw new ArgumentException("docId");
             var seed = docId.PadRight(3).Substring(0, 3);

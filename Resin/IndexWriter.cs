@@ -29,7 +29,7 @@ namespace Resin
         /// </summary>
         private readonly ConcurrentDictionary<string, DocumentWriter> _docFiles;
 
-        private readonly List<IDictionary<string, string>> _docs;
+        private readonly List<Document> _docs;
 
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
@@ -38,17 +38,17 @@ namespace Resin
             _docFiles = new ConcurrentDictionary<string, DocumentWriter>();
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
-            _docs = new List<IDictionary<string, string>>();
+            _docs = new List<Document>();
         }
 
-        public void Write(IEnumerable<IDictionary<string, string>> docs)
+        public void Write(IEnumerable<Document> docs)
         {
             _docs.AddRange(docs);
         }
         
-        private void PutDocumentInContainer(Document doc)
+        private void Write(Document doc)
         {
-            var containerId = doc.Id.ToDocContainerId();
+            var containerId = doc.Id.ToDocFileId();
             DocumentWriter writer;
             if (!_docFiles.TryGetValue(containerId, out writer))
             {
@@ -83,7 +83,7 @@ namespace Resin
             var termDocMatrix = new Dictionary<Term, List<DocumentPosting>>();
             foreach (var doc in _docs)
             {
-                PutDocumentInContainer(new Document(doc));
+                Write(doc);
                 var analyzed = _analyzer.AnalyzeDocument(doc);
                 foreach (var term in analyzed.Terms)
                 {
@@ -98,11 +98,12 @@ namespace Resin
                         termDocMatrix.Add(term.Key, new List<DocumentPosting> { new DocumentPosting(analyzed.Id, (int)term.Value) });
                     }
                 }
-                foreach (var field in doc)
+                foreach (var field in doc.Fields)
                 {
                     _docCountByField.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
                 }
             }
+
             Parallel.ForEach(_tries, kvp =>
             {
                 var field = kvp.Key;

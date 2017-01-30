@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Resin.IO;
 
 namespace Resin
 {
@@ -29,10 +30,10 @@ namespace Resin
             return new string[0];
         }
 
-        public AnalyzedDocument AnalyzeDocument(IDictionary<string, string> document)
+        public AnalyzedDocument AnalyzeDocument(Document document)
         {
-            var id = document["_id"];
-            var analyzed = document.ToDictionary(field => field.Key, field => Analyze(field.Key, field.Value));
+            var id = document.Id;
+            var analyzed = document.Fields.ToDictionary(field => field.Key, field => Analyze(field.Key, field.Value));
             return new AnalyzedDocument(id, analyzed);
         }
 

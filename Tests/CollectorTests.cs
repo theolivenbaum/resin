@@ -27,7 +27,7 @@ namespace Tests
             };
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(docs);
+                writer.Write(docs.Select(d=>new Document(d)));
             }
 
             var collector = new Collector(dir, IndexInfo.Load(Path.Combine(dir, "0.ix")));
@@ -55,7 +55,7 @@ namespace Tests
             };
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(docs);
+                writer.Write(docs.Select(d => new Document(d)));
             }
 
             var collector = new Collector(dir, IndexInfo.Load(Path.Combine(dir, "0.ix")));
@@ -85,7 +85,7 @@ namespace Tests
             };
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(docs);
+                writer.Write(docs.Select(d => new Document(d)));
             }
 
             var collector = new Collector(dir, IndexInfo.Load(Path.Combine(dir, "0.ix")));

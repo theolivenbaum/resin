@@ -8,6 +8,7 @@ using System.Linq;
 using log4net.Config;
 using Newtonsoft.Json;
 using Resin.Client;
+using Resin.IO;
 
 namespace Resin.Cli
 {
@@ -134,9 +135,9 @@ namespace Resin.Cli
                 {
                     Console.WriteLine(string.Join(string.Empty,
                         (++position).ToString(CultureInfo.InvariantCulture).PadRight(7),
-                        doc["_id"].ToString(CultureInfo.InvariantCulture).PadRight(10),
-                        (doc["label"] ?? string.Empty).Substring(0, Math.Min(49, (doc["label"] ?? string.Empty).Length)).PadRight(50),
-                        (doc["aliases"] ?? string.Empty).Substring(0, Math.Min(100, (doc["aliases"] ?? string.Empty).Length))
+                        doc.Fields["_id"].ToString(CultureInfo.InvariantCulture).PadRight(10),
+                        (doc.Fields["label"] ?? string.Empty).Substring(0, Math.Min(49, (doc.Fields["label"] ?? string.Empty).Length)).PadRight(50),
+                        (doc.Fields["aliases"] ?? string.Empty).Substring(0, Math.Min(100, (doc.Fields["aliases"] ?? string.Empty).Length))
                     ));
                 }
                 Console.WriteLine("\r\n{0} results of {1} in {2}", position, result.Total, timer.Elapsed);
@@ -270,7 +271,7 @@ namespace Resin.Cli
 
             if (inproc)
             {
-                w.Write(docs);
+                w.Write(docs.Select(d=>new Document(d)));
                 w.Dispose();
             }
             else

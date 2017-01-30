@@ -1,10 +1,11 @@
 using System.Collections.Generic;
+using Resin.IO;
 
 namespace Resin
 {
     public interface IAnalyzer
     {
-        AnalyzedDocument AnalyzeDocument(IDictionary<string, string> document);
+        AnalyzedDocument AnalyzeDocument(Document document);
         IEnumerable<string> Analyze(string value);
     }
 }

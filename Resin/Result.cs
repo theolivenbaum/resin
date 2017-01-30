@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
+using Resin.IO;
 
 namespace Resin
 {
     public class Result
     {
-        public IEnumerable<IDictionary<string, string>> Docs { get; set; }
+        public IEnumerable<Document> Docs { get; set; }
         public int Total { get; set; }
 
         public ResolvedResult Resolve()
@@ -18,7 +19,7 @@ namespace Resin
 
     public class ResolvedResult
     {
-        public IDictionary<string,string>[] Docs { get; set; }
+        public IList<Document> Docs { get; set; }
         public int Total { get; set; }
     }
 }

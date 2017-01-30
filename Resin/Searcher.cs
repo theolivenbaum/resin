@@ -40,7 +40,7 @@ namespace Resin
 
             if (q == null)
             {
-                return new Result { Docs = Enumerable.Empty<IDictionary<string, string>>() };
+                return new Result { Docs = Enumerable.Empty<Document>() };
             }
 
             Log.DebugFormat("parsed query {0} in {1}", q, timer.Elapsed);
@@ -53,22 +53,22 @@ namespace Resin
             return new Result { Docs = docs, Total = scored.Count };  
         }
 
-        private IDictionary<string, string> GetDoc(string docId)
+        private Document GetDoc(string docId)
         {
-            var containerId = docId.ToDocContainerId();
+            var fileId = docId.ToDocFileId();
             DocumentReader reader;
-            if (!_readers.TryGetValue(containerId, out reader))
+            if (!_readers.TryGetValue(fileId, out reader))
             {
                 lock (Sync)
                 {
-                    if (!_readers.TryGetValue(containerId, out reader))
+                    if (!_readers.TryGetValue(fileId, out reader))
                     {
-                        reader = new DocumentReader(_directory, containerId);
-                        _readers.Add(containerId, reader);
+                        reader = new DocumentReader(_directory, fileId);
+                        _readers.Add(fileId, reader);
                     }
                 }
             }
-            return reader.Get(docId).Fields;
+            return reader.Get(docId);
         }
     }
 }
