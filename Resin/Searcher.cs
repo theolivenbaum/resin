@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -11,14 +10,14 @@ namespace Resin
     /// <summary>
     /// A reader that provides thread-safe access to an index. Not lock-free.
     /// </summary>
-    public class Searcher : IDisposable
+    public class Searcher
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
         private readonly string _directory;
         private readonly QueryParser _parser;
         private readonly IScoringScheme _scorer;
         private readonly IndexInfo _ix;
-        private readonly Dictionary<string, DocumentFile> _docContainers;
+        private readonly Dictionary<string, DocumentReader> _readers;
         private static readonly object Sync = new object();
 
         public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
@@ -26,7 +25,7 @@ namespace Resin
             _directory = directory;
             _parser = parser;
             _scorer = scorer;
-            _docContainers = new Dictionary<string, DocumentFile>();
+            _readers = new Dictionary<string, DocumentReader>();
 
             _ix = IndexInfo.Load(Path.Combine(_directory, "0.ix"));
         }
@@ -53,27 +52,19 @@ namespace Resin
         private IDictionary<string, string> GetDoc(string docId)
         {
             var containerId = docId.ToDocContainerId();
-            DocumentFile container;
-            if (!_docContainers.TryGetValue(containerId, out container))
+            DocumentReader reader;
+            if (!_readers.TryGetValue(containerId, out reader))
             {
                 lock (Sync)
                 {
-                    if (!_docContainers.TryGetValue(containerId, out container))
+                    if (!_readers.TryGetValue(containerId, out reader))
                     {
-                        container = new DocumentFile(_directory, containerId);
-                        _docContainers.Add(containerId, container);
+                        reader = new DocumentReader(_directory, containerId);
+                        _readers.Add(containerId, reader);
                     }
                 }
             }
-            return container.Get(docId).Fields;
-        }
-
-        public void Dispose()
-        {
-            foreach (var dc in _docContainers.Values)
-            {
-                dc.Dispose();
-            }
+            return reader.Get(docId).Fields;
         }
     }
 }

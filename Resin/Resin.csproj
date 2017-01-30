@@ -54,11 +54,12 @@
   <ItemGroup>
     <Compile Include="AnalyzedDocument.cs" />
     <Compile Include="Analyzer.cs" />
+    <Compile Include="IO\DocumentReader.cs" />
     <Compile Include="IO\DocumentWeight.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="IAnalyzer.cs" />
     <Compile Include="IO\CompressedFileBase.cs" />
-    <Compile Include="IO\DocumentFile.cs" />
+    <Compile Include="IO\DocumentWriter.cs" />
     <Compile Include="IO\DocumentCount.cs" />
     <Compile Include="IO\Document.cs" />
     <Compile Include="DocumentScore.cs" />

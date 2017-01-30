@@ -27,7 +27,7 @@ namespace Resin
         /// <summary>
         /// fileid/file
         /// </summary>
-        private readonly ConcurrentDictionary<string, DocumentFile> _docFiles;
+        private readonly ConcurrentDictionary<string, DocumentWriter> _docFiles;
 
         private readonly List<IDictionary<string, string>> _docs;
 
@@ -35,7 +35,7 @@ namespace Resin
         {
             _directory = directory;
             _analyzer = analyzer;
-            _docFiles = new ConcurrentDictionary<string, DocumentFile>();
+            _docFiles = new ConcurrentDictionary<string, DocumentWriter>();
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
             _docs = new List<IDictionary<string, string>>();
@@ -49,13 +49,13 @@ namespace Resin
         private void PutDocumentInContainer(Document doc)
         {
             var containerId = doc.Id.ToDocContainerId();
-            DocumentFile container;
-            if (!_docFiles.TryGetValue(containerId, out container))
+            DocumentWriter writer;
+            if (!_docFiles.TryGetValue(containerId, out writer))
             {
-                container = new DocumentFile(_directory, containerId);
-                _docFiles.AddOrUpdate(containerId, container, (s, file) => file);
+                writer = new DocumentWriter(_directory, containerId);
+                _docFiles.AddOrUpdate(containerId, writer, (s, file) => file);
             }
-            _docFiles[containerId].Put(doc, _directory);
+            _docFiles[containerId].Write(doc);
         }
 
         private void WriteToTrie(string field, string value)
