@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using log4net;
 using Newtonsoft.Json;
 using Resin.IO;
 
@@ -13,6 +15,7 @@ namespace Resin
     {
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
+        private static readonly ILog Log = LogManager.GetLogger(typeof(IndexWriter));
 
         /// <summary>
         /// field/doc count
@@ -83,7 +86,13 @@ namespace Resin
 
         public void Dispose()
         {
+            var timer = new Stopwatch();
+            timer.Start();
+
             var termDocMatrix = new Dictionary<Term, List<DocumentPosting>>();
+
+            Log.Debug("analyzing documents");
+
             foreach (var doc in _docs)
             {
                 Write(doc);
@@ -107,6 +116,8 @@ namespace Resin
                 }
             }
 
+            Log.Debug("writing tries");
+
             Parallel.ForEach(_tries, kvp =>
             {
                 var field = kvp.Key;
@@ -119,6 +130,8 @@ namespace Resin
             {
                 dw.Dispose();
             }
+
+            Log.Debug("writing postings");
 
             var postings = new Dictionary<Term, int>();
 
@@ -134,12 +147,16 @@ namespace Resin
                 } 
             }
 
+            Log.Debug("writing index info");
+
             var ixInfo = new IndexInfo
             {
                 PostingAddressByTerm = postings,
                 DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField))
             };
             ixInfo.Save(Path.Combine(_directory, "0.ix"));
+
+            Log.DebugFormat("wrote index in {0}", timer.Elapsed);
         }
     }
 

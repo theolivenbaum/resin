@@ -37,9 +37,9 @@ namespace Resin
             return new AnalyzedDocument(id, analyzed);
         }
 
-        private IDictionary<string, object> Analyze(string field, string value)
+        private IDictionary<string, int> Analyze(string field, string value)
         {
-            var termCount = new Dictionary<string, object>();
+            var termCount = new Dictionary<string, int>();
             _scoringScheme.Analyze(field, value, this, termCount);
             return termCount;
         }

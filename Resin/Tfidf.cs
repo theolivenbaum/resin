@@ -40,14 +40,14 @@ namespace Resin
             doc.Score = tf * _idf;
         }
 
-        public void Analyze(string field, string value, IAnalyzer analyzer, Dictionary<string, object> postingData)
+        public void Analyze(string field, string value, IAnalyzer analyzer, Dictionary<string, int> termCount)
         {
             var analyze = field[0] != '_';
             var tokens = analyze ? analyzer.Analyze(value) : new[] {value};
             foreach (var token in tokens)
             {
-                if (postingData.ContainsKey(token)) postingData[token] = (int)postingData[token] + 1;
-                else postingData.Add(token, 1);
+                if (termCount.ContainsKey(token)) termCount[token] = termCount[token] + 1;
+                else termCount.Add(token, 1);
             }
         }
     }

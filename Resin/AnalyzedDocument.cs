@@ -6,28 +6,28 @@ namespace Resin
     public class AnalyzedDocument
     {
         private readonly string _id;
-        private readonly IDictionary<Term, object> _terms;
+        private readonly IDictionary<Term, int> _terms;
 
-        public IDictionary<Term, object> Terms { get { return _terms; } }
+        public IDictionary<Term, int> Terms { get { return _terms; } }
         public string Id { get { return _id; } }
 
-        public AnalyzedDocument(string id, IDictionary<string, IDictionary<string, object>> analyzedTerms)
+        public AnalyzedDocument(string id, IDictionary<string, IDictionary<string, int>> analyzedTerms)
         {
             _id = id;
-            _terms = new Dictionary<Term, object>();
+            _terms = new Dictionary<Term, int>();
             foreach (var field in analyzedTerms)
             {
                 foreach (var term in field.Value)
                 {
                     var key = new Term(field.Key, term.Key);
-                    object data;
-                    if (!_terms.TryGetValue(key, out data))
+                    int count;
+                    if (!_terms.TryGetValue(key, out count))
                     {
                         _terms.Add(key, term.Value);
                     }
                     else
                     {
-                        _terms[key] = (int) data + (int) term.Value;
+                        _terms[key] = count + term.Value;
                     }
                 }
             }

@@ -251,8 +251,10 @@ namespace Resin.Cli
             var cursorPos = Console.CursorLeft;
             var count = 0;
             var docs = new List<Dictionary<string, string>>();
+
             var timer = new Stopwatch();
             timer.Start();
+
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var bs = new BufferedStream(fs))
             using (var sr = new StreamReader(bs))
@@ -278,6 +280,8 @@ namespace Resin.Cli
                 Console.WriteLine();
             }
 
+            Console.WriteLine("collected docs in {0}", timer.Elapsed);
+
             if (inproc)
             {
                 w.Write(docs.Select(d=>new Document(d)));
@@ -285,13 +289,13 @@ namespace Resin.Cli
             }
             else
             {
-                Console.Write("Executing HTTP POST");
+                Console.WriteLine("Executing HTTP POST");
                 using (var client = new WriterClient(indexName, url))
                 {
                     client.Write(docs);
                 }
             }
-            Console.Write("total time elapsed {0}", timer.Elapsed);
+            
         }
     }
 }
