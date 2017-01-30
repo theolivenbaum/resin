@@ -143,21 +143,21 @@ namespace Resin.Cli
                     Console.WriteLine("\r\n{0} results of {1} in {2}", position, result.Total, timer.Elapsed);
                 }
             }
-            else
-            {
-                using (var s = new SearchClient(indexName, url))
-                {
-                    var result = s.Search(q, page, size);
-                    var docs = result.Docs.ToList();
-                    timer.Stop();
-                    var position = 0 + (page * size);
-                    foreach (var doc in docs)
-                    {
-                        Console.WriteLine(string.Join(", ", ++position, doc["_id"], doc["label"]));
-                    }
-                    Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, timer.Elapsed.TotalMilliseconds);
-                }
-            }
+            //else
+            //{
+            //    using (var s = new SearchClient(indexName, url))
+            //    {
+            //        var result = s.Search(q, page, size);
+            //        var docs = result.Docs.ToList();
+            //        timer.Stop();
+            //        var position = 0 + (page * size);
+            //        foreach (var doc in docs)
+            //        {
+            //            Console.WriteLine(string.Join(", ", ++position, doc["_id"], doc["label"]));
+            //        }
+            //        Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, timer.Elapsed.TotalMilliseconds);
+            //    }
+            //}
 
         }
 
