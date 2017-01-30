@@ -31,7 +31,7 @@ namespace Tests
             }
 
             var collector = new Collector(dir, IndexInfo.Load(Path.Combine(dir, "0.ix")));
-            var postings = collector.Collect(new QueryContext("title", "rambo"), 0, 10, new Tfidf()).ToList();
+            var postings = collector.Collect(new QueryContext("title", "rambo"), new Tfidf()).ToList();
 
             Assert.That(postings.Count, Is.EqualTo(2));
             Assert.IsTrue(postings.Any(d => d.DocId == "0"));
@@ -59,7 +59,7 @@ namespace Tests
             }
 
             var collector = new Collector(dir, IndexInfo.Load(Path.Combine(dir, "0.ix")));
-            var postings = collector.Collect(new QueryContext("title", "ra") { Prefix = true }, 0, 10, new Tfidf()).ToList();
+            var postings = collector.Collect(new QueryContext("title", "ra") { Prefix = true }, new Tfidf()).ToList();
 
             Assert.That(postings.Count, Is.EqualTo(4));
             Assert.IsTrue(postings.Any(d => d.DocId == "0"));
@@ -89,7 +89,7 @@ namespace Tests
             }
 
             var collector = new Collector(dir, IndexInfo.Load(Path.Combine(dir, "0.ix")));
-            var postings = collector.Collect(new QueryContext("title", "raider") { Fuzzy = true, Edits = 1 }, 0, 10, new Tfidf()).ToList();
+            var postings = collector.Collect(new QueryContext("title", "raider") { Fuzzy = true, Edits = 1 }, new Tfidf()).ToList();
 
             Assert.That(postings.Count, Is.EqualTo(2));
             Assert.IsTrue(postings.Any(d => d.DocId == "3"));

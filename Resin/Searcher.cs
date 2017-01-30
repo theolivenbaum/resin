@@ -45,7 +45,7 @@ namespace Resin
 
             Log.DebugFormat("parsed query {0} in {1}", q, timer.Elapsed);
 
-            var scored = collector.Collect(q, page, size, _scorer).ToList();
+            var scored = collector.Collect(q, _scorer).ToList();
             var skip = page * size;
             var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
             var docs = paged.Values.Select(s => GetDoc(s.DocId));

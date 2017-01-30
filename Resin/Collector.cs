@@ -24,15 +24,13 @@ namespace Resin
             _termCache = new Dictionary<Term, List<DocumentPosting>>();
         }
 
-        public IEnumerable<DocumentScore> Collect(QueryContext queryContext, int page, int size, IScoringScheme scorer)
+        public IEnumerable<DocumentScore> Collect(QueryContext queryContext, IScoringScheme scorer)
         {
             ScanTermTree(queryContext);
             Scan(queryContext, scorer);
 
             var scored = queryContext.Resolve().Values
                 .OrderByDescending(s => s.Score)
-                .Skip(page*size)
-                .Take(size)
                 .ToList();
 
             return scored;
