@@ -71,10 +71,6 @@
     <Compile Include="IO\TermDocumentMatrix.cs" />
     <Compile Include="IO\InMemoryTrieScanner.cs" />
     <Compile Include="IO\LcrsTreeSerializer.cs" />
-    <Compile Include="IO\Trie.cs" />
-    <Compile Include="IO\TrieScanner.cs" />
-    <Compile Include="IO\TrieStreamReader.cs" />
-    <Compile Include="IO\TrieWriter.cs" />
     <Compile Include="IO\Word.cs" />
     <Compile Include="IScoringScheme.cs" />
     <Compile Include="Levenshtein.cs" />

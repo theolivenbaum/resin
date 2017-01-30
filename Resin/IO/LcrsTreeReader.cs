@@ -5,7 +5,6 @@ using System.Linq;
 
 namespace Resin.IO
 {
-    
     public class LcrsTreeReader : IDisposable
     {
         private readonly StreamReader _sr;

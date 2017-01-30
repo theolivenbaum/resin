@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Resin.IO;
 
 namespace Resin
@@ -21,7 +22,7 @@ namespace Resin
         /// <summary>
         /// field/trie
         /// </summary>
-        private readonly Dictionary<string, Trie> _tries;
+        private readonly Dictionary<string, LcrsTrie> _tries;
 
         /// <summary>
         /// fileid/file
@@ -35,7 +36,7 @@ namespace Resin
             _directory = directory;
             _analyzer = analyzer;
             _docFiles = new ConcurrentDictionary<string, DocumentFile>();
-            _tries = new Dictionary<string, Trie>();
+            _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
             _docs = new List<IDictionary<string, string>>();
         }
@@ -66,12 +67,12 @@ namespace Resin
             trie.Add(value);
         }
 
-        private Trie GetTrie(string field)
+        private LcrsTrie GetTrie(string field)
         {
-            Trie trie;
+            LcrsTrie trie;
             if (!_tries.TryGetValue(field, out trie))
             {
-                trie = new Trie();
+                trie = new LcrsTrie('\0', false);
                 _tries[field] = trie;
             }
             return trie;
@@ -106,32 +107,28 @@ namespace Resin
             {
                 var field = kvp.Key;
                 var trie = kvp.Value;
-                using (var writer = new TrieWriter(Path.Combine(_directory, field.ToTrieContainerId() + ".tc")))
-                {
-                    writer.Write(trie);
-                }
+                var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
+                trie.Serialize(fileName);
             });
 
             Parallel.ForEach(_docFiles.Values, container => container.Dispose());
 
-            var postings = new Dictionary<Term, int[]>(); 
-            using(var fs = new FileStream(Path.Combine(_directory, "0.pos"), FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            var postings = new Dictionary<Term, int>(); 
+            using(var fs = new FileStream(Path.Combine(_directory, "0.pos"), FileMode.Create, FileAccess.Write, FileShare.None))
             using (var writer = new StreamWriter(fs, Encoding.Unicode))
             {
                 var row = 0;
                 foreach (var term in termDocMatrix)
                 {
-                    postings.Add(term.Key, new[] { row++, term.Value.Count});
-                    foreach (var weight in term.Value)
-                    {
-                        writer.WriteLine(weight);
-                    }
+                    var json = JsonConvert.SerializeObject(term.Value, Formatting.None);
+                    postings.Add(term.Key, row++);
+                    writer.WriteLine(json);
                 } 
             }
 
             var ixInfo = new IndexInfo
             {
-                Postings = postings,
+                PostingAddressByTerm = postings,
                 DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField))
             };
             ixInfo.Save(Path.Combine(_directory, "0.ix"));

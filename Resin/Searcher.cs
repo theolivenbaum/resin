@@ -35,20 +35,18 @@ namespace Resin
         {
             var timer = new Stopwatch();
             timer.Start();
-            using (var collector = new Collector(_directory, _ix))
+            var collector = new Collector(_directory, _ix);
+            var q = _parser.Parse(query);
+            if (q == null)
             {
-                var q = _parser.Parse(query);
-                if (q == null)
-                {
-                    return new Result { Docs = Enumerable.Empty<IDictionary<string, string>>() };
-                }
-                Log.DebugFormat("parsed query {0} in {1}", q, timer.Elapsed);
-                var scored = collector.Collect(q, page, size, _scorer).ToList();
-                var skip = page * size;
-                var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
-                var docs = paged.Values.Select(s => GetDoc(s.DocId));
-                return new Result { Docs = docs, Total = scored.Count };  
+                return new Result { Docs = Enumerable.Empty<IDictionary<string, string>>() };
             }
+            Log.DebugFormat("parsed query {0} in {1}", q, timer.Elapsed);
+            var scored = collector.Collect(q, page, size, _scorer).ToList();
+            var skip = page * size;
+            var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
+            var docs = paged.Values.Select(s => GetDoc(s.DocId));
+            return new Result { Docs = docs, Total = scored.Count };  
         }
 
         private IDictionary<string, string> GetDoc(string docId)

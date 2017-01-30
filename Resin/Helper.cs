@@ -93,7 +93,7 @@ namespace Resin
             return seed.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 
-        public static string ToTrieContainerId(this string field)
+        public static string ToTrieFileId(this string field)
         {
             var fieldHash = field.ToHash().ToString(CultureInfo.InvariantCulture);
             return string.Format("{0}", fieldHash);

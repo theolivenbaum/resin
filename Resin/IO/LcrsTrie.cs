@@ -28,9 +28,8 @@ namespace Resin.IO
             if (!TryGetChild(key, out node))
             {
                 node = new LcrsTrie(key, eow);
-                var sibling = LeftChild;
+                node.RightSibling = LeftChild;
                 LeftChild = node;
-                LeftChild.RightSibling = sibling;
             }
             else
             {
@@ -48,48 +47,19 @@ namespace Resin.IO
 
         private bool TryGetChild(char c, out LcrsTrie node)
         {
-            if (LeftChild == null)
+            node = LeftChild;
+            
+            while (node != null)
             {
-                node = null;
-                return false;
+                if (node.Value == c)
+                {
+                    return true;
+                }
+                node = node.RightSibling;
             }
 
-            if (LeftChild.Value.Equals(c))
-            {
-                node = LeftChild;
-                return true;
-            }
-
-            if (RightSibling == null)
-            {
-                node = null;
-                return false;
-            }
-
-            return RightSibling.TryGetSibling(c, out node);
-        }
-
-        private bool TryGetSibling(char c, out LcrsTrie node)
-        {
-            if (RightSibling == null)
-            {
-                node = null;
-                return false;
-            }
-
-            if (RightSibling.Value.Equals(c))
-            {
-                node = RightSibling;
-                return true;
-            }
-
-            if (RightSibling == null)
-            {
-                node = null;
-                return false;
-            }
-
-            return RightSibling.TryGetSibling(c, out node);
+            node = null;
+            return false;
         }
     }
 }

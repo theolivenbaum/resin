@@ -198,28 +198,36 @@ namespace Tests
         }
 
         [Test]
-        public void Can_find_suffixes()
+        public void Can_find_prefixed()
         {
             var tree = new LcrsTrie('\0', false);
 
-            var prefixed = tree.StartsWith("ba");
+            tree.Add("rambo");
+            tree.Add("rambo");
 
-            Assert.That(prefixed, Is.Empty);
+            tree.Add("2");
 
-            tree.Add("bad");
+            tree.Add("rocky");
 
-            prefixed = tree.StartsWith("ba");
+            tree.Add("2");
 
-            Assert.That(prefixed.Count, Is.EqualTo(1));
-            Assert.IsTrue(prefixed.Contains("bad"));
+            tree.Add("raiders");
 
-            tree.Add("baby");
+            tree.Add("of");
+            tree.Add("the");
+            tree.Add("lost");
+            tree.Add("ark");
 
-            prefixed = tree.StartsWith("ba");
+            tree.Add("rain");
 
-            Assert.That(prefixed.Count, Is.EqualTo(2));
-            Assert.IsTrue(prefixed.Contains("bad"));
-            Assert.IsTrue(prefixed.Contains("baby"));
+            tree.Add("man");
+
+            var prefixed = tree.StartsWith("ra");
+
+            Assert.That(prefixed.Count, Is.EqualTo(3));
+            Assert.IsTrue(prefixed.Contains("rambo"));
+            Assert.IsTrue(prefixed.Contains("raiders"));
+            Assert.IsTrue(prefixed.Contains("rain"));
         }
 
         [Test]

@@ -10,8 +10,8 @@ namespace Tests
         [SetUp]
         public void RunBeforeAnyTests()
         {
-            if (Directory.Exists(Dir)) Directory.Delete(Dir, true);
-            Directory.CreateDirectory(Dir);
+            if (!Directory.Exists(Dir)) Directory.CreateDirectory(Dir);
+            
         }
 
         [TearDown]
