@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using Resin.IO;
@@ -30,7 +31,7 @@ namespace Tests
             using (var sr = new StreamReader(fs, Encoding.Unicode))
             using (var scanner = new LcrsTreeReader(sr))
             {
-                var near = scanner.Near("bazy", 1);
+                var near = scanner.Near("bazy", 1).ToList();
                 Assert.AreEqual(1, near.Count);
                 Assert.IsTrue(near.Contains("baby"));
             }
@@ -39,7 +40,7 @@ namespace Tests
             using (var sr = new StreamReader(fs, Encoding.Unicode))
             using (var scanner = new LcrsTreeReader(sr))
             {
-                var near = scanner.Near("bazy", 2);
+                var near = scanner.Near("bazy", 2).ToList();
                 Assert.AreEqual(3, near.Count);
                 Assert.IsTrue(near.Contains("baby"));
                 Assert.IsTrue(near.Contains("bank"));
@@ -68,7 +69,7 @@ namespace Tests
             using (var sr = new StreamReader(fs, Encoding.Unicode))
             using (var scanner = new LcrsTreeReader(sr))
             {
-                var startsWith = scanner.StartsWith("ba");
+                var startsWith = scanner.StartsWith("ba").ToList();
                 Assert.AreEqual(3, startsWith.Count);
                 Assert.IsTrue(startsWith.Contains("baby"));
                 Assert.IsTrue(startsWith.Contains("bad"));
@@ -140,42 +141,42 @@ namespace Tests
         public void Can_find_near()
         {
             var tree = new LcrsTrie('\0', false);
-            var near = tree.Near("ba", 1);
+            var near = tree.Near("ba", 1).ToList();
 
             Assert.That(near, Is.Empty);
 
             tree.Add("bad");
-            near = tree.Near("ba", 1);
+            near = tree.Near("ba", 1).ToList();
 
             Assert.That(near.Count, Is.EqualTo(1));
             Assert.IsTrue(near.Contains("bad"));
 
             tree.Add("baby");
-            near = tree.Near("ba", 1);
+            near = tree.Near("ba", 1).ToList();
 
             Assert.That(near.Count, Is.EqualTo(1));
             Assert.IsTrue(near.Contains("bad"));
 
             tree.Add("b");
-            near = tree.Near("ba", 1);
+            near = tree.Near("ba", 1).ToList();
 
             Assert.That(near.Count, Is.EqualTo(2));
             Assert.IsTrue(near.Contains("bad"));
             Assert.IsTrue(near.Contains("b"));
 
-            near = tree.Near("ba", 2);
+            near = tree.Near("ba", 2).ToList();
 
             Assert.That(near.Count, Is.EqualTo(3));
             Assert.IsTrue(near.Contains("b"));
             Assert.IsTrue(near.Contains("bad"));
             Assert.IsTrue(near.Contains("baby"));
 
-            near = tree.Near("ba", 0);
+            near = tree.Near("ba", 0).ToList();
 
             Assert.That(near.Count, Is.EqualTo(0));
 
             tree.Add("bananas");
-            near = tree.Near("ba", 6);
+            near = tree.Near("ba", 6).ToList();
 
             Assert.That(near.Count, Is.EqualTo(4));
             Assert.IsTrue(near.Contains("b"));
@@ -183,13 +184,13 @@ namespace Tests
             Assert.IsTrue(near.Contains("baby"));
             Assert.IsTrue(near.Contains("bananas"));
 
-            near = tree.Near("bazy", 1);
+            near = tree.Near("bazy", 1).ToList();
 
             Assert.That(near.Count, Is.EqualTo(1));
             Assert.IsTrue(near.Contains("baby"));
 
             tree.Add("bank");
-            near = tree.Near("bazy", 3);
+            near = tree.Near("bazy", 3).ToList();
 
             Assert.AreEqual(4, near.Count);
             Assert.IsTrue(near.Contains("baby"));
@@ -223,7 +224,7 @@ namespace Tests
 
             tree.Add("man");
 
-            var prefixed = tree.StartsWith("ra");
+            var prefixed = tree.StartsWith("ra").ToList();
 
             Assert.That(prefixed.Count, Is.EqualTo(3));
             Assert.IsTrue(prefixed.Contains("rambo"));

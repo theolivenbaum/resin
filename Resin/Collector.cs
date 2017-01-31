@@ -32,7 +32,7 @@ namespace Resin
         public IEnumerable<DocumentScore> Collect(QueryContext queryContext, IScoringScheme scorer)
         {
             ScanTermTree(queryContext);
-            Scan(queryContext, scorer);
+            Score(queryContext, scorer);
 
             var scored = queryContext.Resolve().Values
                 .OrderByDescending(s => s.Score)
@@ -87,10 +87,10 @@ namespace Resin
                     }
                 }
 
-                postings = reader.Read(term);
+                postings = reader.Read(term).ToList();
                 _termCache.Add(term, postings);
 
-                Log.DebugFormat("read {0} postings from {1} in {2}", postings.Count, fileName, timer.Elapsed);
+                Log.DebugFormat("read {0} postings from {1} in {2}", postings.Count(), fileName, timer.Elapsed);
             }
 
             return postings;
@@ -98,9 +98,6 @@ namespace Resin
 
         private LcrsTreeReader GetTreeReader(string field)
         {
-            var timer = new Stopwatch();
-            timer.Start();
-
             var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
             var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             var sr = new StreamReader(fs, Encoding.Unicode);
@@ -109,7 +106,7 @@ namespace Resin
             return reader;
         }
 
-        private void Scan(QueryContext queryContext, IScoringScheme scorer)
+        private void Score(QueryContext queryContext, IScoringScheme scorer)
         {
             queryContext.Result = GetScoredResult(queryContext.ToQueryTerm(), scorer)
                 .GroupBy(s=>s.DocId)
@@ -118,7 +115,7 @@ namespace Resin
 
             foreach (var child in queryContext.Children)
             {
-                Scan(child, scorer);
+                Score(child, scorer);
             }
         }
 
@@ -131,25 +128,27 @@ namespace Resin
 
             using (var reader = GetTreeReader(queryContext.Field))
             {
-                var expanded = new List<QueryContext>();
+                IEnumerable<QueryContext> expanded;
 
                 if (queryContext.Fuzzy)
                 {
                     expanded = reader.Near(queryContext.Value, queryContext.Edits)
-                        .Select(token => new QueryContext(queryContext.Field, token))
-                        .ToList();
+                        .Select(token => new QueryContext(queryContext.Field, token));
                 }
                 else if (queryContext.Prefix)
                 {
                     expanded = reader.StartsWith(queryContext.Value)
-                        .Select(token => new QueryContext(queryContext.Field, token))
-                        .ToList();
+                        .Select(token => new QueryContext(queryContext.Field, token));
                 }
                 else
                 {
                     if (reader.HasWord(queryContext.Value))
                     {
-                        expanded = new List<QueryContext> { new QueryContext(queryContext.Field, queryContext.Value) };
+                        expanded = new List<QueryContext> {new QueryContext(queryContext.Field, queryContext.Value)};
+                    }
+                    else
+                    {
+                        expanded = new List<QueryContext>();
                     }
                 }
 

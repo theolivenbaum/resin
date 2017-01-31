@@ -52,7 +52,7 @@ namespace Resin.IO.Read
             return false;
         }
 
-        public IList<string> StartsWith(string prefix)
+        public IEnumerable<string> StartsWith(string prefix)
         {
             if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("path");
 
@@ -67,11 +67,11 @@ namespace Resin.IO.Read
             return compressed;
         }
 
-        public IList<string> Near(string word, int edits)
+        public IEnumerable<string> Near(string word, int edits)
         {
             var compressed = new List<Word>();
             WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, edits);
-            return compressed.OrderBy(w => w.Distance).Select(w => w.Value).ToList();
+            return compressed.OrderBy(w => w.Distance).Select(w => w.Value);
         }
 
         private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits)

@@ -14,7 +14,7 @@ namespace Resin.IO.Write
             _writer = writer;
         }
 
-        public void Write(Term term, IList<DocumentPosting> postings)
+        public void Write(Term term, IEnumerable<DocumentPosting> postings)
         {
             var bytes = Serialize(postings);
 
@@ -23,7 +23,7 @@ namespace Resin.IO.Write
             _writer.WriteLine("{0}:{1}", term, base64);
         }
 
-        private byte[] Serialize(IList<DocumentPosting> postings)
+        private byte[] Serialize(IEnumerable<DocumentPosting> postings)
         {
             using (var stream = new MemoryStream())
             {

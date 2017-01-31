@@ -19,7 +19,7 @@ namespace Resin.IO
             return false;
         }
 
-        public static IList<string> StartsWith(this LcrsTrie node, string prefix)
+        public static IEnumerable<string> StartsWith(this LcrsTrie node, string prefix)
         {
             if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("traveled");
 
@@ -34,14 +34,14 @@ namespace Resin.IO
             return compressed;
         }
 
-        public static IList<string> Near(this LcrsTrie node, string word, int edits)
+        public static IEnumerable<string> Near(this LcrsTrie node, string word, int edits)
         {
             var compressed = new List<Word>();
             if (node.LeftChild != null)
             {
                 node.LeftChild.WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, edits);
             }
-            return compressed.OrderBy(w => w.Distance).Select(w => w.Value).ToList();
+            return compressed.OrderBy(w => w.Distance).Select(w => w.Value);
         }
 
         private static void WithinEditDistanceDepthFirst(this LcrsTrie node, string word, string state, IList<Word> compressed, int depth, int maxEdits)

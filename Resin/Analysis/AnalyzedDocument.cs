@@ -11,7 +11,7 @@ namespace Resin.Analysis
         public IDictionary<Term, int> Terms { get { return _terms; } }
         public string Id { get { return _id; } }
 
-        public AnalyzedDocument(string id, IDictionary<string, IDictionary<string, int>> analyzedTerms)
+        public AnalyzedDocument(string id, IEnumerable<KeyValuePair<string, IDictionary<string, int>>> analyzedTerms)
         {
             _id = id;
             _terms = new Dictionary<Term, int>();

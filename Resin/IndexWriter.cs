@@ -82,7 +82,7 @@ namespace Resin
             writer.Write(doc);
         }
 
-        private void WritePostings(Term term, IList<DocumentPosting> postings)
+        private void WritePostings(Term term, IEnumerable<DocumentPosting> postings)
         {
             var fileId = term.ToPostingsFileId();
             PostingsWriter writer;

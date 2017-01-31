@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using Newtonsoft.Json;
 
 namespace Resin.IO.Read
 {
@@ -22,7 +20,7 @@ namespace Resin.IO.Read
             _sr.DiscardBufferedData();
         }
 
-        public IList<DocumentPosting> Read(Term term)
+        public IEnumerable<DocumentPosting> Read(Term term)
         {
             Reset();
 
@@ -54,7 +52,7 @@ namespace Resin.IO.Read
             }
         }
 
-        private IList<DocumentPosting> Deserialize(Stream stream)
+        private IEnumerable<DocumentPosting> Deserialize(Stream stream)
         {
             return (IList<DocumentPosting>)BinaryFile.Serializer.Deserialize(stream);
         }
