@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 
 namespace Resin.IO.Read
@@ -13,27 +12,33 @@ namespace Resin.IO.Read
             _sr = sr;
         }
 
+        private void Reset()
+        {
+            _sr.BaseStream.Position = 0;
+            _sr.BaseStream.Seek(0, SeekOrigin.Begin);
+            _sr.DiscardBufferedData();
+        }
+
         public Document Get(string docId)
         {
-            var timer = new Stopwatch();
-            timer.Start();
+            Reset();
 
-            string id = string.Empty;
             string line;
             var data = string.Empty;
 
             while ((line = _sr.ReadLine()) != null)
             {
-                id = line.Substring(0, line.IndexOf(':'));
-                if (id == docId)
+                var parts = line.Split(':');
+                var test = parts[0];
+
+                if (test == docId)
                 {
-                    data = line;
+                    data = parts[1];
                     break;
                 }
             }
 
-            var base64 = data.Substring(id.Length + 1);
-            var bytes = Convert.FromBase64String(base64);
+            var bytes = Convert.FromBase64String(data);
 
             using (var memStream = new MemoryStream(bytes))
             {

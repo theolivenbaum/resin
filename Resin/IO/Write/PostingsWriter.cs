@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
 
 namespace Resin.IO.Write
 {
@@ -14,16 +13,22 @@ namespace Resin.IO.Write
             _writer = writer;
         }
 
-        public void Write(IList<DocumentPosting> postings)
+        public void Write(Term term, IList<DocumentPosting> postings)
         {
-            var serialized = Serialize(postings);
+            var bytes = Serialize(postings);
 
-            _writer.WriteLine(serialized);
+            var base64 = Convert.ToBase64String(bytes);
+
+            _writer.WriteLine("{0}:{1}", term, base64);
         }
 
-        private string Serialize(IList<DocumentPosting> postings)
+        private byte[] Serialize(IList<DocumentPosting> postings)
         {
-            return JsonConvert.SerializeObject(postings, Formatting.None);
+            using (var stream = new MemoryStream())
+            {
+                FileBase.Serializer.Serialize(stream, postings);
+                return stream.ToArray();
+            }
         }
 
         public void Dispose()

@@ -13,18 +13,14 @@ using Resin.System;
 
 namespace Resin
 {
-    /// <summary>
-    /// A reader that provides thread-safe (but not lock-free) access to an index.
-    /// </summary>
     public class Searcher : IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
         private readonly string _directory;
         private readonly QueryParser _parser;
         private readonly IScoringScheme _scorer;
-        private readonly IndexInfo _ix;
+        private readonly IxInfo _ix;
         private readonly Dictionary<string, DocumentReader> _readers;
-        private static readonly object Sync = new object();
 
         public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
         {
@@ -32,31 +28,32 @@ namespace Resin
             _parser = parser;
             _scorer = scorer;
             _readers = new Dictionary<string, DocumentReader>();
-
-            _ix = IndexInfo.Load(Path.Combine(_directory, "0.ix"));
+            _ix = IxInfo.Load(Path.Combine(_directory, "0.ix"));
         }
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
-            var timer = new Stopwatch();
-            timer.Start();
-
-            var collector = new Collector(_directory, _ix);
-            var q = _parser.Parse(query);
-
-            if (q == null)
+            using (var collector = new Collector(_directory, _ix))
             {
-                return new Result { Docs = Enumerable.Empty<Document>() };
+                var timer = new Stopwatch();
+                timer.Start();
+
+                var q = _parser.Parse(query);
+
+                if (q == null)
+                {
+                    return new Result { Docs = Enumerable.Empty<Document>() };
+                }
+
+                Log.DebugFormat("parsed query {0} in {1}", q, timer.Elapsed);
+
+                var scored = collector.Collect(q, _scorer).ToList();
+                var skip = page * size;
+                var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
+                var docs = paged.Values.Select(s => GetDoc(s.DocId));
+
+                return new Result { Docs = docs, Total = scored.Count }; 
             }
-
-            Log.DebugFormat("parsed query {0} in {1}", q, timer.Elapsed);
-
-            var scored = collector.Collect(q, _scorer).ToList();
-            var skip = page * size;
-            var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
-            var docs = paged.Values.Select(s => GetDoc(s.DocId));
-
-            return new Result { Docs = docs, Total = scored.Count };  
         }
 
         private Document GetDoc(string docId)
@@ -70,20 +67,16 @@ namespace Resin
 
             if (!_readers.TryGetValue(fileId, out reader))
             {
-                lock (Sync)
-                {
-                    if (!_readers.TryGetValue(fileId, out reader))
-                    {
-                        var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-                        var sr = new StreamReader(fs, Encoding.ASCII);
-                        reader = new DocumentReader(sr);
-                        _readers.Add(fileId, reader);
-                    }
-                }
+                var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var sr = new StreamReader(fs, Encoding.ASCII);
+                reader = new DocumentReader(sr);
+                _readers.Add(fileId, reader);
             }
 
             var doc = reader.Get(docId);
+
             Log.DebugFormat("read {0} from {1} in {2}", doc.Id, fileName, timer.Elapsed);
+
             return doc;
         }
 

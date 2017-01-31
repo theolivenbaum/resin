@@ -8,23 +8,25 @@ using log4net;
 using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Read;
+using Resin.Querying;
 using Resin.System;
 
-namespace Resin.Querying
+namespace Resin
 {
-    public class Collector
+    public class Collector : IDisposable
     {
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
-        private readonly IndexInfo _ix;
+        private readonly IxInfo _ix;
         private readonly IDictionary<Term, IList<DocumentPosting>> _termCache;
-        private PostingsReader _pr;
+        private readonly Dictionary<string, PostingsReader> _readers;
 
-        public Collector(string directory, IndexInfo ix)
+        public Collector(string directory, IxInfo ix)
         {
             _directory = directory;
             _ix = ix;
             _termCache = new Dictionary<Term, IList<DocumentPosting>>();
+            _readers = new Dictionary<string, PostingsReader>();
         }
 
         public IEnumerable<DocumentScore> Collect(QueryContext queryContext, IScoringScheme scorer)
@@ -59,39 +61,40 @@ namespace Resin.Querying
 
             Log.DebugFormat("scored term {0} in {1}", queryTerm, timer.Elapsed);
         }
-
+        
         private IList<DocumentPosting> GetPostings(Term term)
         {
             IList<DocumentPosting> postings;
+
             if (!_termCache.TryGetValue(term, out postings))
             {
-                int rowIndex;
-                if (_ix.PostingsAddressByTerm.TryGetValue(term, out rowIndex))
+                var timer = new Stopwatch();
+                timer.Start();
+
+                var fileId = term.ToString().ToPostingsFileId();
+                var fileName = Path.Combine(_directory, fileId + ".pos");
+                PostingsReader reader;
+
+                if (!_readers.TryGetValue(fileId, out reader))
                 {
-                    postings = ReadPostingsFile(Path.Combine(_directory, "0.pos"), rowIndex);
-                    _termCache.Add(term, postings);
+                    if (!_readers.TryGetValue(fileId, out reader))
+                    {
+                        var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                        var sr = new StreamReader(fs, Encoding.ASCII);
+
+                        reader = new PostingsReader(sr);
+                        _readers.Add(fileId, reader);
+                    }
                 }
+
+                postings = reader.Read(term);
+                _termCache.Add(term, postings);
+
+                Log.DebugFormat("read {0} postings from {1} in {2}", postings.Count, fileName, timer.Elapsed);
             }
-            return postings ?? new List<DocumentPosting>();
-        }
-
-        private IList<DocumentPosting> ReadPostingsFile(string fileName, int rowIndex)
-        {
-            var timer = new Stopwatch();
-            timer.Start();
-
-            if (_pr == null)
-            {
-                var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-                var sr = new StreamReader(fs, Encoding.Unicode);
-                _pr = new PostingsReader(sr);
-            }
-            var postings = _pr.Read(rowIndex);
-
-            Log.DebugFormat("read row {0} of {1} in {2}", rowIndex, fileName, timer.Elapsed);
 
             return postings;
-        } 
+        }
 
         private LcrsTreeReader GetTreeReader(string field)
         {
@@ -159,6 +162,14 @@ namespace Resin.Querying
                 }
 
                 Log.DebugFormat("expanded {0} into {1} in {2}", queryContext.ToQueryTerm(), queryContext, timer.Elapsed);
+            }
+        }
+
+        public void Dispose()
+        {
+            foreach (var dr in _readers.Values)
+            {
+                dr.Dispose();
             }
         }
     }

@@ -22,23 +22,41 @@ namespace Resin.IO.Read
             _sr.DiscardBufferedData();
         }
 
-        public IList<DocumentPosting> Read(int rowIndex)
+        public IList<DocumentPosting> Read(Term term)
         {
             Reset();
 
-            var timer = new Stopwatch();
-            timer.Start();
+            string line;
+            var data = string.Empty;
 
-            var row = 0;
-
-            while (row++ < rowIndex)
+            while ((line = _sr.ReadLine()) != null)
             {
-                _sr.ReadLine();
+                var parts = line.Split(':');
+                var test = new Term(parts[0], parts[1]);
+
+                if (test.Equals(term))
+                {
+                    data = parts[2];
+                    break;
+                }
             }
 
-            var postings = JsonConvert.DeserializeObject<IList<DocumentPosting>>(_sr.ReadLine());
+            if (string.IsNullOrWhiteSpace(data))
+            {
+                return new List<DocumentPosting>();
+            }
 
-            return postings;
+            var bytes = Convert.FromBase64String(data);
+
+            using (var memStream = new MemoryStream(bytes))
+            {
+                return Deserialize(memStream);
+            }
+        }
+
+        private IList<DocumentPosting> Deserialize(Stream stream)
+        {
+            return (IList<DocumentPosting>)FileBase.Serializer.Deserialize(stream);
         }
 
         public void Dispose()

@@ -19,7 +19,7 @@ namespace Tests
             
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            var docs = new List<IDictionary<string, string>>
+            var docs = new List<Dictionary<string, string>>
             {
                 new Dictionary<string, string> {{"_id", "0"}, {"title", "rambo"}},
                 new Dictionary<string, string> {{"_id", "1"}, {"title", "rambo 2"}},
@@ -32,12 +32,14 @@ namespace Tests
                 writer.Write(docs.Select(d=>new Document(d)));
             }
 
-            var collector = new Collector(dir, IndexInfo.Load(Path.Combine(dir, "0.ix")));
-            var postings = collector.Collect(new QueryContext("title", "rambo"), new Tfidf()).ToList();
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix"))))
+            {
+                var postings = collector.Collect(new QueryContext("title", "rambo"), new Tfidf()).ToList();
 
-            Assert.That(postings.Count, Is.EqualTo(2));
-            Assert.IsTrue(postings.Any(d => d.DocId == "0"));
-            Assert.IsTrue(postings.Any(d => d.DocId == "1"));
+                Assert.That(postings.Count, Is.EqualTo(2));
+                Assert.IsTrue(postings.Any(d => d.DocId == "0"));
+                Assert.IsTrue(postings.Any(d => d.DocId == "1"));  
+            }
         }
 
         [Test]
@@ -47,7 +49,7 @@ namespace Tests
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            var docs = new List<IDictionary<string, string>>
+            var docs = new List<Dictionary<string, string>>
             {
                 new Dictionary<string, string> {{"_id", "0"}, {"title", "rambo"}},
                 new Dictionary<string, string> {{"_id", "1"}, {"title", "rambo 2"}},
@@ -60,14 +62,16 @@ namespace Tests
                 writer.Write(docs.Select(d => new Document(d)));
             }
 
-            var collector = new Collector(dir, IndexInfo.Load(Path.Combine(dir, "0.ix")));
-            var postings = collector.Collect(new QueryContext("title", "ra") { Prefix = true }, new Tfidf()).ToList();
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix"))))
+            {
+                var postings = collector.Collect(new QueryContext("title", "ra") { Prefix = true }, new Tfidf()).ToList();
 
-            Assert.That(postings.Count, Is.EqualTo(4));
-            Assert.IsTrue(postings.Any(d => d.DocId == "0"));
-            Assert.IsTrue(postings.Any(d => d.DocId == "1"));
-            Assert.IsTrue(postings.Any(d => d.DocId == "3"));
-            Assert.IsTrue(postings.Any(d => d.DocId == "4"));
+                Assert.That(postings.Count, Is.EqualTo(4));
+                Assert.IsTrue(postings.Any(d => d.DocId == "0"));
+                Assert.IsTrue(postings.Any(d => d.DocId == "1"));
+                Assert.IsTrue(postings.Any(d => d.DocId == "3"));
+                Assert.IsTrue(postings.Any(d => d.DocId == "4"));
+            }
         }
 
         [Test]
@@ -77,7 +81,7 @@ namespace Tests
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            var docs = new List<IDictionary<string, string>>
+            var docs = new List<Dictionary<string, string>>
             {
                 new Dictionary<string, string> {{"_id", "0"}, {"title", "rambo"}},
                 new Dictionary<string, string> {{"_id", "1"}, {"title", "rambo 2"}},
@@ -90,12 +94,14 @@ namespace Tests
                 writer.Write(docs.Select(d => new Document(d)));
             }
 
-            var collector = new Collector(dir, IndexInfo.Load(Path.Combine(dir, "0.ix")));
-            var postings = collector.Collect(new QueryContext("title", "raider") { Fuzzy = true, Edits = 1 }, new Tfidf()).ToList();
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix"))))
+            {
+                var postings = collector.Collect(new QueryContext("title", "raider") { Fuzzy = true, Edits = 1 }, new Tfidf()).ToList();
 
-            Assert.That(postings.Count, Is.EqualTo(2));
-            Assert.IsTrue(postings.Any(d => d.DocId == "3"));
-            Assert.IsTrue(postings.Any(d => d.DocId == "4"));
+                Assert.That(postings.Count, Is.EqualTo(2));
+                Assert.IsTrue(postings.Any(d => d.DocId == "3"));
+                Assert.IsTrue(postings.Any(d => d.DocId == "4"));
+            }
         }
     }
 }

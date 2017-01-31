@@ -14,15 +14,15 @@ namespace Resin.IO
             get { return Fields["_id"]; }
         }
 
-        private readonly IDictionary<string, string> _fields;
+        private readonly Dictionary<string, string> _fields;
 
-        public IDictionary<string, string> Fields { get { return _fields; } }
+        public Dictionary<string, string> Fields { get { return _fields; } }
 
         public Document():this(new Dictionary<string, string>())
         {
         }
 
-        public Document(IDictionary<string, string> fields)
+        public Document(Dictionary<string, string> fields)
         {
             if (fields == null) throw new ArgumentNullException("fields");
             _fields = fields;

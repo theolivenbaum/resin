@@ -65,7 +65,7 @@
     <Compile Include="Querying\DocumentScore.cs" />
     <Compile Include="IO\LcrsNode.cs" />
     <Compile Include="IO\LcrsTrie.cs" />
-    <Compile Include="IO\IndexInfo.cs" />
+    <Compile Include="IO\IxInfo.cs" />
     <Compile Include="IO\FileBase.cs" />
     <Compile Include="IO\Read\LcrsTreeReader.cs" />
     <Compile Include="IO\Read\PostingsReader.cs" />
@@ -82,7 +82,7 @@
     <Compile Include="Querying\QueryContext.cs" />
     <Compile Include="Querying\QueryParser.cs" />
     <Compile Include="Querying\Result.cs" />
-    <Compile Include="Querying\Collector.cs" />
+    <Compile Include="Collector.cs" />
     <Compile Include="Searcher.cs" />
     <Compile Include="System\TaskQueue.cs" />
     <Compile Include="Querying\QueryTerm.cs" />
