@@ -1,7 +1,7 @@
 <a name="top" id="top"></a>
 # Resin
 
-_A speedy, light-weight, schema-less search server and framework with zero config._
+_A speedy document based search framework and server with zero config._
 
 * _[Introduction](#intro)_
 * _[Quick usage guide](#usage)_
