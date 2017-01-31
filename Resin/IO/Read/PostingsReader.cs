@@ -56,7 +56,7 @@ namespace Resin.IO.Read
 
         private IList<DocumentPosting> Deserialize(Stream stream)
         {
-            return (IList<DocumentPosting>)FileBase.Serializer.Deserialize(stream);
+            return (IList<DocumentPosting>)BinaryFile.Serializer.Deserialize(stream);
         }
 
         public void Dispose()

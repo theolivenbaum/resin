@@ -1,23 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Diagnostics;
 using System.IO;
-using log4net;
-using NetSerializer;
 
 namespace Resin.IO
 {
     [Serializable]
-    public abstract class FileBase<T> : FileBase
+    public abstract class CompressedBinaryFile<T> : BinaryFile
     {
         public virtual void Save(string fileName)
         {
             if (fileName == null) throw new ArgumentNullException("fileName");
+
             var timer = new Stopwatch();
             timer.Start();
             using (var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (var memStream = new MemoryStream())
             {
-                Serializer.Serialize(fs, this);
+                Serializer.Serialize(memStream, this);
+                var bytes = memStream.ToArray();
+                var compressed = QuickLZ.compress(bytes, 1);
+                fs.Write(compressed, 0, compressed.Length);
             }
             Log.DebugFormat("created {0} in {1}", fileName, timer.Elapsed);
         }
@@ -31,8 +33,12 @@ namespace Resin.IO
             try
             {
                 using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var memStream = new MemoryStream())
                 {
-                    var obj = (T)Serializer.Deserialize(fs);
+                    fs.CopyTo(memStream);
+                    var bytes = memStream.ToArray();
+                    var decompressed = QuickLZ.decompress(bytes);
+                    var obj = (T)Serializer.Deserialize(new MemoryStream(decompressed));
                     Log.DebugFormat("read {0} in {1}", fileName, timer.Elapsed);
                     return obj;
                 }
@@ -42,32 +48,6 @@ namespace Resin.IO
                 return default(T);
             }
         }
-    }
 
-    [Serializable]
-    public class FileBase
-    {
-        [NonSerialized]
-        protected static readonly ILog Log = LogManager.GetLogger(typeof(FileBase));
-
-        // to allow conversion between file system versions
-        public static readonly int FileSystemVersion = 5;
-
-        [NonSerialized]
-        private static readonly Type[] Types =
-        {
-            typeof (string), 
-            typeof (int), 
-            typeof (DocumentCount),
-            typeof (Dictionary<Term, int>),
-            typeof (Dictionary<string, string>),
-            typeof (Dictionary<string, int>),
-            typeof (Document),
-            typeof (IxInfo),
-            typeof (List<DocumentPosting>)
-        };
-
-        [NonSerialized]
-        public static readonly Serializer Serializer = new Serializer(Types);
     }
 }

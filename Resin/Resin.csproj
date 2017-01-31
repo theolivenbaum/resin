@@ -58,7 +58,7 @@
     <Compile Include="IO\DocumentPosting.cs" />
     <Compile Include="System\Helper.cs" />
     <Compile Include="Analysis\IAnalyzer.cs" />
-    <Compile Include="IO\CompressedFileBase.cs" />
+    <Compile Include="IO\CompressedBinaryFile.cs" />
     <Compile Include="IO\Write\DocumentWriter.cs" />
     <Compile Include="IO\DocumentCount.cs" />
     <Compile Include="IO\Document.cs" />
@@ -66,7 +66,7 @@
     <Compile Include="IO\LcrsNode.cs" />
     <Compile Include="IO\LcrsTrie.cs" />
     <Compile Include="IO\IxInfo.cs" />
-    <Compile Include="IO\FileBase.cs" />
+    <Compile Include="IO\BinaryFile.cs" />
     <Compile Include="IO\Read\LcrsTreeReader.cs" />
     <Compile Include="IO\Read\PostingsReader.cs" />
     <Compile Include="IO\Write\PostingsWriter.cs" />

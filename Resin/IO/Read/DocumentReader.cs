@@ -48,7 +48,7 @@ namespace Resin.IO.Read
 
         private Document Deserialize(Stream stream)
         {
-            return (Document)FileBase.Serializer.Deserialize(stream);
+            return (Document)BinaryFile.Serializer.Deserialize(stream);
         }
 
         public void Dispose()
