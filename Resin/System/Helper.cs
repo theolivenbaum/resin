@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Resin.IO;
 
 namespace Resin.System
 {
@@ -68,11 +69,11 @@ namespace Resin.System
 
     internal static class WierdStringExtensions
     {
-        public static string ToPostingsFileId(this string term)
+        public static string ToPostingsFileId(this Term term)
         {
-            if (string.IsNullOrEmpty(term)) throw new ArgumentException("term");
+            if (term == null) throw new ArgumentNullException("term");
 
-            var val = term.PadRight(3).Substring(0, 3);
+            var val = term.Token.PadRight(1).Substring(0, 1);
             return val.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 

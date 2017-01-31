@@ -71,7 +71,7 @@ namespace Resin
                 var timer = new Stopwatch();
                 timer.Start();
 
-                var fileId = term.ToString().ToPostingsFileId();
+                var fileId = term.ToPostingsFileId();
                 var fileName = Path.Combine(_directory, fileId + ".pos");
                 PostingsReader reader;
 

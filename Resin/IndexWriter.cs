@@ -76,7 +76,7 @@ namespace Resin
 
         private void Write(Term term, IList<DocumentPosting> postings)
         {
-            var fileId = term.ToString().ToPostingsFileId();
+            var fileId = term.ToPostingsFileId();
             PostingsWriter writer;
             if (!_postingsWriters.TryGetValue(fileId, out writer))
             {
