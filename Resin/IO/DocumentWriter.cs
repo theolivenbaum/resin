@@ -23,11 +23,11 @@ namespace Resin.IO
             _writer.WriteLine("{0}:{1}", doc.Id, base64);
         }
 
-        private byte[] Serialize(Document item)
+        private byte[] Serialize(Document doc)
         {
             using (var stream = new MemoryStream())
             {
-                FileBase.Serializer.Serialize(stream, item);
+                FileBase.Serializer.Serialize(stream, doc);
                 return stream.ToArray();
             }
         }
@@ -36,8 +36,6 @@ namespace Resin.IO
         {
             if (_writer != null)
             {
-                _writer.Flush();
-                _writer.Close();
                 _writer.Dispose();
             }
         }

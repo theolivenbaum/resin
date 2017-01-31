@@ -11,24 +11,6 @@ namespace Resin
     {
         public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 23);
 
-        public static string GetNextCommit(string fileName, IList<string> commits)
-        {
-            var latestBaseline = Int64.Parse(Path.GetFileNameWithoutExtension(fileName));
-            foreach (var commitFileName in commits)
-            {
-                var timestamp = Int64.Parse(Path.GetFileNameWithoutExtension(commitFileName));
-                if (timestamp <= latestBaseline) continue;
-                return commitFileName;
-            }
-            return null;
-        }
-
-        public static string GetFileNameOfLatestIndex(string dir)
-        {
-            var files = GetFilesOrderedChronologically(dir, "*.ix");
-            return files.LastOrDefault();
-        }
-
         public static IEnumerable<string> GetFilesOrderedChronologically(string dir, string searchPattern)
         {
             var ids = Directory.GetFiles(dir, searchPattern)
@@ -86,11 +68,20 @@ namespace Resin
 
     internal static class WierdStringExtensions
     {
+        public static string ToPostingsFileId(this string term)
+        {
+            if (string.IsNullOrEmpty(term)) throw new ArgumentException("term");
+
+            var val = term.PadRight(3).Substring(0, 3);
+            return val.ToHash().ToString(CultureInfo.InvariantCulture);
+        }
+
         public static string ToDocFileId(this string docId)
         {
             if (string.IsNullOrEmpty(docId)) throw new ArgumentException("docId");
-            var seed = docId.PadRight(3).Substring(0, 3);
-            return seed.ToHash().ToString(CultureInfo.InvariantCulture);
+
+            var val = docId.PadRight(3).Substring(0, 3);
+            return val.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 
         public static string ToTrieFileId(this string field)
@@ -99,6 +90,11 @@ namespace Resin
             return string.Format("{0}", fieldHash);
         }
 
+        /// <summary>
+        /// Knuth hash. http://stackoverflow.com/questions/9545619/a-fast-hash-function-for-string-in-c-sharp
+        /// </summary>
+        /// <param name="read"></param>
+        /// <returns></returns>
         public static UInt64 ToHash(this string read)
         {
             UInt64 hashedValue = 3074457345618258791ul;

@@ -6,7 +6,6 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using log4net;
-using Newtonsoft.Json;
 using Resin.IO;
 
 namespace Resin
@@ -58,7 +57,9 @@ namespace Resin
                 var fileName = Path.Combine(_directory, fileId + ".doc");
                 var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
                 var sr = new StreamWriter(fs, Encoding.ASCII);
+
                 writer = new DocumentWriter(sr);
+
                 _docWriters.AddOrUpdate(fileId, writer, (s, file) => file);
             }
             _docWriters[fileId].Write(doc);
@@ -135,15 +136,15 @@ namespace Resin
 
             var postings = new Dictionary<Term, int>();
 
-            using(var fs = new FileStream(Path.Combine(_directory, "0.pos"), FileMode.Create, FileAccess.Write, FileShare.None))
-            using (var writer = new StreamWriter(fs, Encoding.Unicode))
+            var fs = new FileStream(Path.Combine(_directory, "0.pos"), FileMode.Create, FileAccess.Write, FileShare.None);
+            var sw = new StreamWriter(fs, Encoding.Unicode);
+            using (var postingsWriter = new PostingsWriter(sw))
             {
                 var row = 0;
                 foreach (var term in termDocMatrix)
                 {
-                    var json = JsonConvert.SerializeObject(term.Value, Formatting.None);
                     postings.Add(term.Key, row++);
-                    writer.WriteLine(json);
+                    postingsWriter.Write(term.Value);
                 } 
             }
 
@@ -151,7 +152,7 @@ namespace Resin
 
             var ixInfo = new IndexInfo
             {
-                PostingAddressByTerm = postings,
+                PostingsAddressByTerm = postings,
                 DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField))
             };
             ixInfo.Save(Path.Combine(_directory, "0.ix"));
@@ -159,24 +160,4 @@ namespace Resin
             Log.DebugFormat("wrote index in {0}", timer.Elapsed);
         }
     }
-
-    //public class Index
-    //{
-        
-    //}
-
-    //public class DocumentIndexer
-    //{
-    //    private IEnumerable<Document> _documents;
-
-    //    public DocumentIndexer(IEnumerable<Document> documents)
-    //    {
-    //        _documents = documents;
-    //    }
-
-    //    public Index Create()
-    //    {
-            
-    //    }
-    //}
 }

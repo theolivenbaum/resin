@@ -7,6 +7,6 @@ namespace Resin.IO
     public class IndexInfo : CompressedFileBase<IndexInfo>
     {
         public DocumentCount DocumentCount { get; set; }
-        public Dictionary<Term, int> PostingAddressByTerm { get; set; } 
+        public Dictionary<Term, int> PostingsAddressByTerm { get; set; } 
     }
 }

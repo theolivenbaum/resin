@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using log4net;
-using Newtonsoft.Json;
 using Resin.IO;
 
 namespace Resin
@@ -15,13 +14,14 @@ namespace Resin
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly IndexInfo _ix;
-        private readonly IDictionary<Term, List<DocumentPosting>> _termCache;
- 
+        private readonly IDictionary<Term, IList<DocumentPosting>> _termCache;
+        private PostingsReader _pr;
+
         public Collector(string directory, IndexInfo ix)
         {
             _directory = directory;
             _ix = ix;
-            _termCache = new Dictionary<Term, List<DocumentPosting>>();
+            _termCache = new Dictionary<Term, IList<DocumentPosting>>();
         }
 
         public IEnumerable<DocumentScore> Collect(QueryContext queryContext, IScoringScheme scorer)
@@ -59,16 +59,17 @@ namespace Resin
 
         private IList<DocumentPosting> GetPostings(Term term)
         {
-            List<DocumentPosting> weights;
-            if (!_termCache.TryGetValue(term, out weights))
+            IList<DocumentPosting> postings;
+            if (!_termCache.TryGetValue(term, out postings))
             {
                 int rowIndex;
-                if (_ix.PostingAddressByTerm.TryGetValue(term, out rowIndex))
+                if (_ix.PostingsAddressByTerm.TryGetValue(term, out rowIndex))
                 {
-                    return ReadPostingsFile(Path.Combine(_directory, "0.pos"), rowIndex);
+                    postings = ReadPostingsFile(Path.Combine(_directory, "0.pos"), rowIndex);
+                    _termCache.Add(term, postings);
                 }
             }
-            return new List<DocumentPosting>();
+            return postings ?? new List<DocumentPosting>();
         }
 
         private IList<DocumentPosting> ReadPostingsFile(string fileName, int rowIndex)
@@ -76,25 +77,20 @@ namespace Resin
             var timer = new Stopwatch();
             timer.Start();
 
-            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = new StreamReader(fs, Encoding.Unicode))
+            if (_pr == null)
             {
-                var row = 0;
-
-                while (row++ < rowIndex)
-                {
-                    reader.ReadLine();
-                }
-
-                var postings = JsonConvert.DeserializeObject<IList<DocumentPosting>>(reader.ReadLine());
-
-                Log.DebugFormat("read row {0} of {1} in {2}", rowIndex, fileName, timer.Elapsed);
-
-                return postings;
+                var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var sr = new StreamReader(fs, Encoding.Unicode);
+                _pr = new PostingsReader(sr);
             }
+            var postings = _pr.Read(rowIndex);
+
+            Log.DebugFormat("read row {0} of {1} in {2}", rowIndex, fileName, timer.Elapsed);
+
+            return postings;
         } 
 
-        private LcrsTreeReader GetReader(string field)
+        private LcrsTreeReader GetTreeReader(string field)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -127,7 +123,7 @@ namespace Resin
             var timer = new Stopwatch();
             timer.Start();
 
-            using (var reader = GetReader(queryContext.Field))
+            using (var reader = GetTreeReader(queryContext.Field))
             {
                 var expanded = new List<QueryContext>();
 
