@@ -2,6 +2,7 @@
 using System.Text;
 using NUnit.Framework;
 using Resin.IO;
+using Resin.IO.Read;
 
 namespace Tests
 {

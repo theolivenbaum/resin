@@ -54,12 +54,12 @@
   <ItemGroup>
     <Compile Include="AnalyzedDocument.cs" />
     <Compile Include="Analyzer.cs" />
-    <Compile Include="IO\DocumentReader.cs" />
+    <Compile Include="IO\Read\DocumentReader.cs" />
     <Compile Include="IO\DocumentPosting.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="IAnalyzer.cs" />
     <Compile Include="IO\CompressedFileBase.cs" />
-    <Compile Include="IO\DocumentWriter.cs" />
+    <Compile Include="IO\Write\DocumentWriter.cs" />
     <Compile Include="IO\DocumentCount.cs" />
     <Compile Include="IO\Document.cs" />
     <Compile Include="DocumentScore.cs" />
@@ -67,9 +67,9 @@
     <Compile Include="IO\LcrsTrie.cs" />
     <Compile Include="IO\IndexInfo.cs" />
     <Compile Include="IO\FileBase.cs" />
-    <Compile Include="IO\LcrsTreeReader.cs" />
-    <Compile Include="IO\PostingsReader.cs" />
-    <Compile Include="IO\PostingsWriter.cs" />
+    <Compile Include="IO\Read\LcrsTreeReader.cs" />
+    <Compile Include="IO\Read\PostingsReader.cs" />
+    <Compile Include="IO\Write\PostingsWriter.cs" />
     <Compile Include="IO\QuickLZ.cs" />
     <Compile Include="IO\TermDocumentMatrix.cs" />
     <Compile Include="IO\InMemoryTrieScanner.cs" />

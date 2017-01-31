@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 
-namespace Resin.IO
+namespace Resin.IO.Read
 {
     public class DocumentReader : IDisposable
     {

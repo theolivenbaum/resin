@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Resin.IO
+namespace Resin.IO.Write
 {
     public class DocumentWriter : IDisposable
     {

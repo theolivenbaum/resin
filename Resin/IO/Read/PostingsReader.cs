@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using Newtonsoft.Json;
 
-namespace Resin.IO
+namespace Resin.IO.Read
 {
     public class PostingsReader : IDisposable
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 
-namespace Resin.IO
+namespace Resin.IO.Write
 {
     public class PostingsWriter : IDisposable
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Resin.IO
+namespace Resin.IO.Read
 {
     public class LcrsTreeReader : IDisposable
     {

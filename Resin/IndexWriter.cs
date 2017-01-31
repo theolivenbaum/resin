@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using log4net;
 using Resin.IO;
+using Resin.IO.Write;
 
 namespace Resin
 {
