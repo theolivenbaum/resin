@@ -32,12 +32,12 @@ namespace Resin
         /// <summary>
         /// fileid/doc writer
         /// </summary>
-        private readonly ConcurrentDictionary<string, DocumentWriter> _docWriters;
+        private readonly Dictionary<string, DocumentWriter> _docWriters;
 
         /// <summary>
         /// fileid/postings writer
         /// </summary>
-        private readonly ConcurrentDictionary<string, PostingsWriter> _postingsWriters;
+        private readonly Dictionary<string, PostingsWriter> _postingsWriters;
 
         private readonly List<Document> _docs;
 
@@ -45,11 +45,11 @@ namespace Resin
         {
             _directory = directory;
             _analyzer = analyzer;
-            _docWriters = new ConcurrentDictionary<string, DocumentWriter>();
+            _docWriters = new Dictionary<string, DocumentWriter>();
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
             _docs = new List<Document>();
-            _postingsWriters = new ConcurrentDictionary<string, PostingsWriter>();
+            _postingsWriters = new Dictionary<string, PostingsWriter>();
         }
 
         public void Write(IEnumerable<Document> docs)
@@ -74,7 +74,7 @@ namespace Resin
 
                         writer = new DocumentWriter(sr);
 
-                        _docWriters.AddOrUpdate(fileId, writer, (s, file) => file);
+                        _docWriters.Add(fileId, writer);
                     }
                 }
                 
@@ -99,7 +99,7 @@ namespace Resin
 
                         writer = new PostingsWriter(sr);
 
-                        _postingsWriters.AddOrUpdate(fileId, writer, (s, file) => file);
+                        _postingsWriters.Add(fileId, writer);
                     }
                 }
             }
@@ -150,7 +150,7 @@ namespace Resin
 
             var analyzeTime = Time();
 
-            foreach (var doc in _docs)
+            foreach(var doc in _docs)
             {
                 var analyzed = _analyzer.AnalyzeDocument(doc);
 
