@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Resin.IO;
 
-namespace Resin
+namespace Resin.Analysis
 {
     public class AnalyzedDocument
     {

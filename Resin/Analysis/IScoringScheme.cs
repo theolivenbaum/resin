@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using Resin.Querying;
 
-namespace Resin
+namespace Resin.Analysis
 {
     public interface IScoringScheme
     {

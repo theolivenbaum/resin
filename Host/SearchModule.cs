@@ -3,6 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using log4net;
 using Nancy;
+using Resin.Analysis;
+using Resin.Querying;
+using Resin.System;
 
 namespace Resin.Host
 {

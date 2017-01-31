@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Resin
+namespace Resin.Querying
 {
     public class QueryContext : QueryTerm
     {

@@ -5,7 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace Resin
+namespace Resin.System
 {
     public static class Helper
     {

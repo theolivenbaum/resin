@@ -6,8 +6,10 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using log4net;
+using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Write;
+using Resin.System;
 
 namespace Resin
 {

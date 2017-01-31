@@ -3,7 +3,9 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Resin;
+using Resin.Analysis;
 using Resin.IO;
+using Resin.Querying;
 
 namespace Tests
 {

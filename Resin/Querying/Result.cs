@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Resin.IO;
 
-namespace Resin
+namespace Resin.Querying
 {
     public class Result
     {

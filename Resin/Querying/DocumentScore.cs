@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Resin
+namespace Resin.Querying
 {
     public class DocumentScore : IEquatable<DocumentScore>
     {

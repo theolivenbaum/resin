@@ -5,8 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using log4net;
+using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Read;
+using Resin.Querying;
+using Resin.System;
 
 namespace Resin
 {

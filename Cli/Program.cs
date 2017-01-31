@@ -7,8 +7,10 @@ using System.IO;
 using System.Linq;
 using log4net.Config;
 using Newtonsoft.Json;
+using Resin.Analysis;
 using Resin.Client;
 using Resin.IO;
+using Resin.Querying;
 
 namespace Resin.Cli
 {
