@@ -1,6 +1,7 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Resin.Querying
 {
@@ -16,23 +17,28 @@ namespace Resin.Querying
 
         public IDictionary<string, DocumentScore> Resolve()
         {
-            var result = Result;
-            foreach (var child in Children)
+            var result = new ConcurrentDictionary<string, DocumentScore>(Result);
+
+            Parallel.ForEach(Children, child =>
             {
                 if (child.And)
                 {
                     var childResult = child.Resolve();
-                    var docs = result.Values.ToList();
-                    foreach (var d in docs)
+                    var scores = result.Values;
+
+                    foreach (var score in scores)
                     {
-                        DocumentScore score;
-                        if (childResult.TryGetValue(d.DocId, out score))
+
+                        DocumentScore existing;
+
+                        if (childResult.TryGetValue(score.DocId, out existing))
                         {
-                            result[d.DocId] = score.Add(d);
+                            result.AddOrUpdate(score.DocId, score, (s, documentScore) => documentScore.Combine(score));
                         }
                         else
                         {
-                            result.Remove(d.DocId);
+                            DocumentScore removed;
+                            result.TryRemove(score.DocId, out removed);
                         }
                     }
                 }
@@ -40,25 +46,19 @@ namespace Resin.Querying
                 {
                     foreach (var d in child.Resolve())
                     {
-                        result.Remove(d.Key);
+                        DocumentScore removed;
+                        result.TryRemove(d.Key, out removed);
                     }
                 }
                 else // Or
                 {
                     foreach (var d in child.Resolve())
                     {
-                        DocumentScore existingScore;
-                        if (result.TryGetValue(d.Key, out existingScore))
-                        {
-                            result[d.Key] = existingScore.Add(d.Value);
-                        }
-                        else
-                        {
-                            result.Add(d);
-                        }
+                        result.AddOrUpdate(d.Key, d.Value, (s, documentScore) => documentScore.Combine(d.Value));
                     }
                 }
-            }
+            });
+
             return result;
         }
 

@@ -31,7 +31,7 @@ namespace Resin
 
         public IEnumerable<DocumentScore> Collect(QueryContext queryContext, IScoringScheme scorer)
         {
-            ScanTermTree(queryContext);
+            Expand(queryContext);
             Score(queryContext, scorer);
 
             var scored = queryContext.Resolve().Values
@@ -39,6 +39,19 @@ namespace Resin
                 .ToList();
 
             return scored;
+        }
+
+        private void Score(QueryContext queryContext, IScoringScheme scorer)
+        {
+            queryContext.Result = GetScoredResult(queryContext.ToQueryTerm(), scorer)
+                .GroupBy(s => s.DocId)
+                .Select(g => new DocumentScore(g.Key, g.Sum(s => s.Score)))
+                .ToDictionary(x => x.DocId, y => y);
+
+            foreach (var child in queryContext.Children)
+            {
+                Score(child, scorer);
+            }
         }
 
         private IEnumerable<DocumentScore> GetScoredResult(QueryTerm queryTerm, IScoringScheme scoringScheme)
@@ -106,20 +119,7 @@ namespace Resin
             return reader;
         }
 
-        private void Score(QueryContext queryContext, IScoringScheme scorer)
-        {
-            queryContext.Result = GetScoredResult(queryContext.ToQueryTerm(), scorer)
-                .GroupBy(s=>s.DocId)
-                .Select(g=>new DocumentScore(g.Key, g.Sum(s=>s.Score)))
-                .ToDictionary(x => x.DocId, y => y);
-
-            foreach (var child in queryContext.Children)
-            {
-                Score(child, scorer);
-            }
-        }
-
-        private void ScanTermTree(QueryContext queryContext)
+        private void Expand(QueryContext queryContext)
         {
             if (queryContext == null) throw new ArgumentNullException("queryContext");
 

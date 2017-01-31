@@ -5,20 +5,20 @@ namespace Resin.Querying
     public class DocumentScore : IEquatable<DocumentScore>
     {
         private readonly string _docId;
-        private readonly object _postingData;
+        private readonly double _termCount;
 
         public string DocId { get { return _docId; } }
-        public object PostingData { get { return _postingData; } }
+        public double TermCount { get { return _termCount; } }
 
         public double Score { get; set; }
 
-        public DocumentScore(string docId, object postingData)
+        public DocumentScore(string docId, double termCount)
         {
             _docId = docId;
-            _postingData = postingData;
+            _termCount = termCount;
         }
 
-        public DocumentScore Add(DocumentScore score)
+        public DocumentScore Combine(DocumentScore score)
         {
             if (!score.Equals(this)) throw new ArgumentException("Doc id differs. Cannot add.", "score");
 
@@ -33,7 +33,7 @@ namespace Resin.Querying
 
         public bool Equals(DocumentScore other)
         {
-            return other.DocId.Equals(DocId);
+            return other != null && other.DocId.Equals(DocId);
         }
 
         public int CompareTo(object obj)
@@ -49,7 +49,7 @@ namespace Resin.Querying
         public override string ToString()
         {
             return string.Format("docid:{0} rawtf:{1} score:{2}",
-                _docId, _postingData, Score);
+                _docId, _termCount, Score);
         }
     }
 }

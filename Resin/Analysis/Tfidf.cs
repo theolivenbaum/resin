@@ -37,7 +37,7 @@ namespace Resin.Analysis
 
         public void Score(DocumentScore doc)
         {
-            var tf = Math.Sqrt((int)doc.PostingData);
+            var tf = Math.Sqrt((int)doc.TermCount);
             doc.Score = tf * _idf;
         }
 
