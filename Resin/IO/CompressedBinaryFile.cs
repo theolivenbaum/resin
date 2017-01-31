@@ -21,7 +21,6 @@ namespace Resin.IO
                 var compressed = QuickLZ.compress(bytes, 1);
                 fs.Write(compressed, 0, compressed.Length);
             }
-            Log.DebugFormat("created {0} in {1}", fileName, timer.Elapsed);
         }
 
         public static T Load(string fileName)

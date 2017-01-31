@@ -6,6 +6,7 @@ namespace Resin.IO.Write
     public class DocumentWriter : IDisposable
     {
         private readonly StreamWriter _writer;
+        public static object SyncRoot = new object();
 
         public DocumentWriter(StreamWriter writer)
         {

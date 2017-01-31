@@ -7,6 +7,7 @@ namespace Resin.IO.Write
     public class PostingsWriter : IDisposable
     {
         private readonly StreamWriter _writer;
+        public static object SyncRoot = new object();
 
         public PostingsWriter(StreamWriter writer)
         {

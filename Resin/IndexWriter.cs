@@ -57,41 +57,56 @@ namespace Resin
             _docs.AddRange(docs);
         }
         
-        private void Write(Document doc)
+        private void WriteDocument(Document doc)
         {
             var fileId = doc.Id.ToDocFileId();
             DocumentWriter writer;
+
             if (!_docWriters.TryGetValue(fileId, out writer))
             {
-                var fileName = Path.Combine(_directory, fileId + ".doc");
-                var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
-                var sr = new StreamWriter(fs, Encoding.ASCII);
+                lock (DocumentWriter.SyncRoot)
+                {
+                    if (!_docWriters.TryGetValue(fileId, out writer))
+                    {
+                        var fileName = Path.Combine(_directory, fileId + ".doc");
+                        var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+                        var sr = new StreamWriter(fs, Encoding.ASCII);
 
-                writer = new DocumentWriter(sr);
+                        writer = new DocumentWriter(sr);
 
-                _docWriters.AddOrUpdate(fileId, writer, (s, file) => file);
+                        _docWriters.AddOrUpdate(fileId, writer, (s, file) => file);
+                    }
+                }
+                
             }
             writer.Write(doc);
         }
 
-        private void Write(Term term, IList<DocumentPosting> postings)
+        private void WritePostings(Term term, IList<DocumentPosting> postings)
         {
             var fileId = term.ToPostingsFileId();
             PostingsWriter writer;
+
             if (!_postingsWriters.TryGetValue(fileId, out writer))
             {
-                var fileName = Path.Combine(_directory, fileId + ".pos");
-                var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
-                var sr = new StreamWriter(fs, Encoding.ASCII);
+                lock (PostingsWriter.SyncRoot)
+                {
+                    if (!_postingsWriters.TryGetValue(fileId, out writer))
+                    {
+                        var fileName = Path.Combine(_directory, fileId + ".pos");
+                        var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+                        var sr = new StreamWriter(fs, Encoding.ASCII);
 
-                writer = new PostingsWriter(sr);
+                        writer = new PostingsWriter(sr);
 
-                _postingsWriters.AddOrUpdate(fileId, writer, (s, file) => file);
+                        _postingsWriters.AddOrUpdate(fileId, writer, (s, file) => file);
+                    }
+                }
             }
             writer.Write(term, postings);
         }
 
-        private void WriteToTrie(string field, string value)
+        private void WriteTriePath(string field, string value)
         {
             if (field == null) throw new ArgumentNullException("field");
             if (value == null) throw new ArgumentNullException("value");
@@ -111,24 +126,37 @@ namespace Resin
             return trie;
         }
 
-        public void Dispose()
+        private Stopwatch Time()
         {
             var timer = new Stopwatch();
             timer.Start();
+            return timer;
+        }
+
+        public void Dispose()
+        {
+            var indexTime = Time();
 
             var termDocMatrix = new Dictionary<Term, List<DocumentPosting>>();
 
-            Log.Debug("analyzing documents");
+            var docTime = Time();
 
             foreach (var doc in _docs)
             {
-                Write(doc);
+                WriteDocument(doc);
+            }
 
+            Log.DebugFormat("wrote docs in {0}", docTime.Elapsed);
+
+            var analyzeTime = Time();
+
+            foreach (var doc in _docs)
+            {
                 var analyzed = _analyzer.AnalyzeDocument(doc);
 
                 foreach (var term in analyzed.Terms)
                 {
-                    WriteToTrie(term.Key.Field, term.Key.Token);
+                    WriteTriePath(term.Key.Field, term.Key.Token);
 
                     List<DocumentPosting> weights;
 
@@ -141,13 +169,23 @@ namespace Resin
                         termDocMatrix.Add(term.Key, new List<DocumentPosting> { new DocumentPosting(analyzed.Id, term.Value) });
                     }
                 }
+            }
+
+            Log.DebugFormat("analyzed docs in {0}", analyzeTime.Elapsed);
+
+            var docCountTime = Time();
+
+            foreach (var doc in _docs)
+            {
                 foreach (var field in doc.Fields)
                 {
                     _docCountByField.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
                 }
             }
 
-            Log.Debug("writing tries");
+            Log.DebugFormat("counted docs per field in {0}", docCountTime.Elapsed);
+
+            var trieTime = Time();
 
             Parallel.ForEach(_tries, kvp =>
             {
@@ -158,12 +196,22 @@ namespace Resin
                 trie.Serialize(fileName);
             });
 
-            Log.Debug("writing postings");
+            Log.DebugFormat("wrote tries in {0}", trieTime.Elapsed);
+
+            var postingsTime = Time();
 
             foreach (var term in termDocMatrix)
             {
-                Write(term.Key, term.Value);
+                WritePostings(term.Key, term.Value);
             }
+
+            Log.DebugFormat("wrote postings in {0}", postingsTime.Elapsed);
+
+            var ixInfo = new IxInfo
+            {
+                DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField))
+            };
+            ixInfo.Save(Path.Combine(_directory, "0.ix"));
 
             foreach (var pw in _postingsWriters.Values)
             {
@@ -175,13 +223,7 @@ namespace Resin
                 dw.Dispose();
             }
 
-            var ixInfo = new IxInfo
-            {
-                DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField))
-            };
-            ixInfo.Save(Path.Combine(_directory, "0.ix"));
-
-            Log.DebugFormat("wrote index in {0}", timer.Elapsed);
+            Log.DebugFormat("wrote index in {0}", indexTime.Elapsed);
         }
     }
 }
