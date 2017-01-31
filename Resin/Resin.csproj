@@ -63,7 +63,7 @@
     <Compile Include="IO\DocumentCount.cs" />
     <Compile Include="IO\Document.cs" />
     <Compile Include="Querying\DocumentScore.cs" />
-    <Compile Include="IO\LcrsNode.cs" />
+    <Compile Include="IO\Read\LcrsNode.cs" />
     <Compile Include="IO\LcrsTrie.cs" />
     <Compile Include="IO\IxInfo.cs" />
     <Compile Include="IO\BinaryFile.cs" />
@@ -73,7 +73,7 @@
     <Compile Include="IO\QuickLZ.cs" />
     <Compile Include="IO\TermDocumentMatrix.cs" />
     <Compile Include="IO\InMemoryTrieScanner.cs" />
-    <Compile Include="IO\LcrsTreeSerializer.cs" />
+    <Compile Include="IO\Write\LcrsTreeSerializer.cs" />
     <Compile Include="IO\Word.cs" />
     <Compile Include="Analysis\IScoringScheme.cs" />
     <Compile Include="Analysis\Levenshtein.cs" />

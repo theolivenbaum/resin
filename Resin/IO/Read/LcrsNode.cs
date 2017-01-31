@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace Resin.IO
+namespace Resin.IO.Read
 {
     [DebuggerDisplay("{Value} {EndOfWord}")]
     public class LcrsNode

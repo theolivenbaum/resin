@@ -1,7 +1,7 @@
 using System.IO;
 using System.Text;
 
-namespace Resin.IO
+namespace Resin.IO.Write
 {
     public static class LcrsTreeSerializer
     {
