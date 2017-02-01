@@ -33,7 +33,7 @@ namespace Resin
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
-            using (var collector = new Collector(_directory, _ix))
+            using (var collector = new Collector(_directory, _ix, _scorer))
             {
                 var timer = new Stopwatch();
                 timer.Start();
@@ -47,7 +47,7 @@ namespace Resin
 
                 Log.DebugFormat("parsed query {0} in {1}", q, timer.Elapsed);
 
-                var scored = collector.Collect(q, _scorer).ToList();
+                var scored = collector.Collect(q).ToList();
                 var skip = page * size;
                 var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
                 var docs = paged.Values.Select(s => GetDoc(s.DocId));

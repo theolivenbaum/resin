@@ -19,7 +19,7 @@ namespace Resin.Querying
         {
             var result = new ConcurrentDictionary<string, DocumentScore>(Result);
 
-            Parallel.ForEach(Children, child =>
+            foreach(var child in Children)
             {
                 if (child.And)
                 {
@@ -28,7 +28,6 @@ namespace Resin.Querying
 
                     foreach (var score in scores)
                     {
-
                         DocumentScore existing;
 
                         if (childResult.TryGetValue(score.DocId, out existing))
@@ -57,7 +56,7 @@ namespace Resin.Querying
                         result.AddOrUpdate(d.Key, d.Value, (s, documentScore) => documentScore.Combine(d.Value));
                     }
                 }
-            });
+            }
 
             return result;
         }

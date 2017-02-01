@@ -5,7 +5,7 @@ namespace Resin.Querying
     public class DocumentScore : IEquatable<DocumentScore>
     {
         private readonly string _docId;
-        private readonly double _termCount;
+        private double _termCount;
 
         public string DocId { get { return _docId; } }
         public double TermCount { get { return _termCount; } }
@@ -23,6 +23,7 @@ namespace Resin.Querying
             if (!score.Equals(this)) throw new ArgumentException("Doc id differs. Cannot add.", "score");
 
             Score += score.Score;
+            _termCount = score.TermCount;
             return this;
         }
 

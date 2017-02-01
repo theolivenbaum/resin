@@ -20,19 +20,21 @@ namespace Resin
         private readonly IxInfo _ix;
         private readonly IDictionary<Term, IList<DocumentPosting>> _termCache;
         private readonly Dictionary<string, PostingsReader> _readers;
+        private readonly IScoringScheme _scorer;
 
-        public Collector(string directory, IxInfo ix)
+        public Collector(string directory, IxInfo ix, IScoringScheme scorer)
         {
             _directory = directory;
             _ix = ix;
             _termCache = new Dictionary<Term, IList<DocumentPosting>>();
             _readers = new Dictionary<string, PostingsReader>();
+            _scorer = scorer;
         }
 
-        public IEnumerable<DocumentScore> Collect(QueryContext queryContext, IScoringScheme scorer)
+        public IEnumerable<DocumentScore> Collect(QueryContext queryContext)
         {
             Expand(queryContext);
-            Score(queryContext, scorer);
+            Score(queryContext);
 
             var scored = queryContext.Resolve().Values
                 .OrderByDescending(s => s.Score)
@@ -41,20 +43,26 @@ namespace Resin
             return scored;
         }
 
-        private void Score(QueryContext queryContext, IScoringScheme scorer)
+        private void Score(QueryContext queryContext)
         {
-            queryContext.Result = GetScoredResult(queryContext.ToQueryTerm(), scorer)
-                .GroupBy(s => s.DocId)
-                .Select(g => new DocumentScore(g.Key, g.Sum(s => s.Score)))
-                .ToDictionary(x => x.DocId, y => y);
+            var results = GetScoredResult(queryContext.ToQueryTerm()).GroupBy(s => s.DocId);
+            var result = new Dictionary<string, DocumentScore>();
+
+            foreach (var group in results)
+            {
+                var combined = group.Aggregate((s1, s2) => s1.Combine(s2));
+                result.Add(combined.DocId, combined);
+            }
+
+            queryContext.Result = result;
 
             foreach (var child in queryContext.Children)
             {
-                Score(child, scorer);
+                Score(child);
             }
         }
 
-        private IEnumerable<DocumentScore> GetScoredResult(QueryTerm queryTerm, IScoringScheme scoringScheme)
+        private IEnumerable<DocumentScore> GetScoredResult(QueryTerm queryTerm)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -62,7 +70,7 @@ namespace Resin
             var totalNumOfDocs = _ix.DocumentCount.DocCount[queryTerm.Field];
 
             var postings = GetPostings(new Term(queryTerm.Field, queryTerm.Value));
-            var scorer = scoringScheme.CreateScorer(totalNumOfDocs, postings.Count);
+            var scorer = _scorer.CreateScorer(totalNumOfDocs, postings.Count);
 
             foreach (var posting in postings)
             {

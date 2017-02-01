@@ -32,9 +32,9 @@ namespace Tests
                 writer.Write(docs.Select(d=>new Document(d)));
             }
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix"))))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
             {
-                var postings = collector.Collect(new QueryContext("title", "rambo"), new Tfidf()).ToList();
+                var postings = collector.Collect(new QueryContext("title", "rambo")).ToList();
 
                 Assert.That(postings.Count, Is.EqualTo(2));
                 Assert.IsTrue(postings.Any(d => d.DocId == "0"));
@@ -62,9 +62,9 @@ namespace Tests
                 writer.Write(docs.Select(d => new Document(d)));
             }
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix"))))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
             {
-                var postings = collector.Collect(new QueryContext("title", "ra") { Prefix = true }, new Tfidf()).ToList();
+                var postings = collector.Collect(new QueryContext("title", "ra") { Prefix = true }).ToList();
 
                 Assert.That(postings.Count, Is.EqualTo(4));
                 Assert.IsTrue(postings.Any(d => d.DocId == "0"));
@@ -94,9 +94,9 @@ namespace Tests
                 writer.Write(docs.Select(d => new Document(d)));
             }
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix"))))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
             {
-                var postings = collector.Collect(new QueryContext("title", "raider") { Fuzzy = true, Edits = 1 }, new Tfidf()).ToList();
+                var postings = collector.Collect(new QueryContext("title", "raider") { Fuzzy = true, Edits = 1 }).ToList();
 
                 Assert.That(postings.Count, Is.EqualTo(2));
                 Assert.IsTrue(postings.Any(d => d.DocId == "3"));
