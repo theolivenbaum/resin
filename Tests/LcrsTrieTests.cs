@@ -41,7 +41,7 @@ namespace Tests
             using (var sr = new StreamReader(fs, Encoding.Unicode))
             using (var scanner = new LcrsTreeReader(sr))
             {
-                var near = scanner.Near("bazy", 2).ToList();
+                var near = scanner.Near("bazy", 2, 3).ToList();
                 Assert.AreEqual(3, near.Count);
                 Assert.IsTrue(near.Contains("baby"));
                 Assert.IsTrue(near.Contains("bank"));

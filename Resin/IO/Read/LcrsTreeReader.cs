@@ -69,14 +69,20 @@ namespace Resin.IO.Read
 
         public IEnumerable<string> Near(string word, int edits)
         {
+            return Near(word, edits, word.Length);
+        }
+
+        public IEnumerable<string> Near(string word, int edits, int minLength)
+        {
             var compressed = new List<Word>();
-            WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, edits);
+            WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, edits, minLength);
             return compressed.OrderBy(w => w.Distance).Select(w => w.Value);
         }
 
-        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits)
+        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits, int minLength)
         {
             var node = Step();
+
             var nodesWithUnresolvedSiblings = new Stack<Tuple<int, string>>();
             var childIndex = depth + 1;
 
@@ -95,7 +101,7 @@ namespace Resin.IO.Read
 
                 var edits = Levenshtein.Distance(word, test);
 
-                if (edits <= maxEdits && node.EndOfWord)
+                if (edits <= maxEdits && node.EndOfWord && test.Length >= minLength)
                 {
                     compressed.Add(new Word { Value = test, Distance = edits });
                 }
@@ -107,13 +113,13 @@ namespace Resin.IO.Read
 
                 if (node.HaveChild)
                 {
-                    WithinEditDistanceDepthFirst(word, string.Copy(test), compressed, childIndex, maxEdits);
+                    WithinEditDistanceDepthFirst(word, string.Copy(test), compressed, childIndex, maxEdits, minLength);
                 }
 
                 // Go right (wide)
                 foreach (var siblingState in nodesWithUnresolvedSiblings)
                 {
-                    WithinEditDistanceDepthFirst(word, siblingState.Item2, compressed, siblingState.Item1, maxEdits);
+                    WithinEditDistanceDepthFirst(word, siblingState.Item2, compressed, siblingState.Item1, maxEdits, minLength);
                 }
             }
         }
