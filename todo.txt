@@ -1,0 +1,15 @@
+query parsing: enable nesting of queries
+
+query parsing: rewrite "age of porn"~ into +"age~" +"of~" +"porn~"
+
+searching: search streaming
+
+query multiple indices
+
+merge indices
+
+fix server
+
+implement git on server (for distribution)
+
+create web gui
