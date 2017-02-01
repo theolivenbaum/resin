@@ -74,12 +74,12 @@ namespace Resin.IO.Read
 
         public IEnumerable<string> Near(string word, int edits, int minLength)
         {
-            var compressed = new List<Word>();
-            WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, edits, minLength);
-            return compressed.OrderBy(w => w.Distance).Select(w => w.Value);
+            return WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), 0, edits, minLength)
+                .OrderBy(w => w.Distance)
+                .Select(w => w.Value);
         }
 
-        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits, int minLength)
+        private IEnumerable<Word> WithinEditDistanceDepthFirst(string word, string state, int depth, int maxEdits, int minLength)
         {
             var node = Step();
 
@@ -103,7 +103,7 @@ namespace Resin.IO.Read
 
                 if (edits <= maxEdits && node.EndOfWord && test.Length >= minLength)
                 {
-                    compressed.Add(new Word { Value = test, Distance = edits });
+                    yield return new Word { Value = test, Distance = edits };
                 }
 
                 if (node.HaveSibling)
@@ -113,13 +113,19 @@ namespace Resin.IO.Read
 
                 if (node.HaveChild)
                 {
-                    WithinEditDistanceDepthFirst(word, string.Copy(test), compressed, childIndex, maxEdits, minLength);
+                    foreach (var w in WithinEditDistanceDepthFirst(word, string.Copy(test), childIndex, maxEdits, minLength))
+                    {
+                        yield return w;
+                    }
                 }
 
                 // Go right (wide)
                 foreach (var siblingState in nodesWithUnresolvedSiblings)
                 {
-                    WithinEditDistanceDepthFirst(word, siblingState.Item2, compressed, siblingState.Item1, maxEdits, minLength);
+                    foreach (var w in WithinEditDistanceDepthFirst(word, siblingState.Item2, siblingState.Item1, maxEdits, minLength))
+                    {
+                        yield return w;
+                    }
                 }
             }
         }
