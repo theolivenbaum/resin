@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Resin.Querying
@@ -7,22 +8,23 @@ namespace Resin.Querying
     public class QueryContext : QueryTerm
     {
         public IList<QueryContext> Children { get; protected set; }
-        public IDictionary<string, DocumentScore> Result { get; set ; }
+        public IEnumerable<DocumentScore> Result { get; set ; }
 
         public QueryContext(string field, string value) : base(field, value)
         {
             Children = new List<QueryContext>();
         }
 
-        public IDictionary<string, DocumentScore> Resolve()
+        public IEnumerable<DocumentScore> Reduce()
         {
-            var result = new ConcurrentDictionary<string, DocumentScore>(Result);
+            var result = new ConcurrentDictionary<string, DocumentScore>(Result.ToDictionary(x => x.DocId, x => x));
 
             foreach(var child in Children)
             {
+                var childResult = child.Reduce().ToDictionary(x=>x.DocId, x=>x);
+
                 if (child.And)
                 {
-                    var childResult = child.Resolve();
                     var scores = result.Values;
 
                     foreach (var score in scores)
@@ -42,7 +44,7 @@ namespace Resin.Querying
                 }
                 else if (child.Not)
                 {
-                    foreach (var d in child.Resolve())
+                    foreach (var d in childResult)
                     {
                         DocumentScore removed;
                         result.TryRemove(d.Key, out removed);
@@ -50,14 +52,14 @@ namespace Resin.Querying
                 }
                 else // Or
                 {
-                    foreach (var d in child.Resolve())
+                    foreach (var d in childResult)
                     {
                         result.AddOrUpdate(d.Key, d.Value, (s, documentScore) => documentScore.Combine(d.Value));
                     }
                 }
             }
 
-            return result;
+            return result.Values;
         }
 
         public override string ToString()
@@ -69,11 +71,6 @@ namespace Resin.Querying
                 s.AppendFormat(" {0}", child);
             }
             return s.ToString();
-        }
-
-        public QueryTerm ToQueryTerm()
-        {
-            return new QueryTerm(Field, Value){Edits = Edits, And = And, Fuzzy = Fuzzy, Not = Not, Prefix = Prefix};
         }
     }
 }

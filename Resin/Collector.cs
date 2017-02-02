@@ -31,46 +31,76 @@ namespace Resin
             _scorer = scorer;
         }
 
-        public IEnumerable<DocumentScore> Collect(QueryContext queryContext)
+        public IEnumerable<DocumentScore> Collect(QueryContext query)
         {
-            Expand(queryContext);
-            Score(queryContext);
+            Scan(query);
+            Map(query);
 
-            var scored = queryContext.Resolve().Values
-                .OrderByDescending(s => s.Score)
-                .ToList();
-
-            return scored;
+            return query.Reduce()
+                .OrderByDescending(s => s.Score);
         }
 
-        private void Score(QueryContext queryContext)
+        private void Scan(QueryContext query)
         {
-            var results = GetScoredResult(queryContext.ToQueryTerm()).GroupBy(s => s.DocId);
-            var result = new Dictionary<string, DocumentScore>();
+            if (query == null) throw new ArgumentNullException("query");
 
-            foreach (var group in results)
+            var timer = Time();
+
+            using (var reader = GetTreeReader(query.Field))
             {
-                var combined = group.Aggregate((s1, s2) => s1.Combine(s2));
-                result.Add(combined.DocId, combined);
+                IEnumerable<QueryContext> found;
+
+                if (query.Fuzzy)
+                {
+                    found = reader.Near(query.Value, query.Edits)
+                        .Select(token => new QueryContext(query.Field, token));
+                }
+                else if (query.Prefix)
+                {
+                    found = reader.StartsWith(query.Value)
+                        .Select(token => new QueryContext(query.Field, token));
+                }
+                else
+                {
+                    if (reader.HasWord(query.Value))
+                    {
+                        found = new List<QueryContext>();
+                    }
+                    else
+                    {
+                        found = null;
+                    }
+                }
+
+                if (found != null)
+                {
+                    foreach (var t in found)
+                    {
+                        query.Children.Add(t);
+                    }
+                }
             }
 
-            queryContext.Result = result;
+            Log.DebugFormat("scanned {0} in {1}", query, timer.Elapsed);
+        }
 
-            foreach (var child in queryContext.Children)
+        private void Map(QueryContext query)
+        {
+            var docsInCorpus = _ix.DocumentCount.DocCount[query.Field];
+            var postings = GetPostings(new Term(query.Field, query.Value));
+            var scored = Score(postings, docsInCorpus);
+
+            query.Result = scored;
+
+            foreach (var child in query.Children)
             {
-                Score(child);
+                Map(child);
             }
         }
 
-        private IEnumerable<DocumentScore> GetScoredResult(QueryTerm queryTerm)
+        private IEnumerable<DocumentScore> Score(IList<DocumentPosting> postings, int docsInCorpus)
         {
-            var timer = new Stopwatch();
-            timer.Start();
-
-            var totalNumOfDocs = _ix.DocumentCount.DocCount[queryTerm.Field];
-
-            var postings = GetPostings(new Term(queryTerm.Field, queryTerm.Value));
-            var scorer = _scorer.CreateScorer(totalNumOfDocs, postings.Count);
+            var scorer = _scorer.CreateScorer(docsInCorpus, postings.Count);
 
             foreach (var posting in postings)
             {
@@ -79,8 +109,6 @@ namespace Resin
                 scorer.Score(hit);
                 yield return hit;
             }
-
-            Log.DebugFormat("scored term {0} in {1}", queryTerm, timer.Elapsed);
         }
         
         private IList<DocumentPosting> GetPostings(Term term)
@@ -122,54 +150,15 @@ namespace Resin
             var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
             var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             var sr = new StreamReader(fs, Encoding.Unicode);
-            var reader = new LcrsTreeReader(sr);
-
-            return reader;
+            
+            return new LcrsTreeReader(sr);
         }
 
-        private void Expand(QueryContext queryContext)
+        private Stopwatch Time()
         {
-            if (queryContext == null) throw new ArgumentNullException("queryContext");
-
             var timer = new Stopwatch();
             timer.Start();
-
-            using (var reader = GetTreeReader(queryContext.Field))
-            {
-                IEnumerable<QueryContext> expanded;
-
-                if (queryContext.Fuzzy)
-                {
-                    expanded = reader.Near(queryContext.Value, queryContext.Edits)
-                        .Select(token => new QueryContext(queryContext.Field, token));
-                }
-                else if (queryContext.Prefix)
-                {
-                    expanded = reader.StartsWith(queryContext.Value)
-                        .Select(token => new QueryContext(queryContext.Field, token));
-                }
-                else
-                {
-                    if (reader.HasWord(queryContext.Value))
-                    {
-                        expanded = new List<QueryContext> {new QueryContext(queryContext.Field, queryContext.Value)};
-                    }
-                    else
-                    {
-                        expanded = new List<QueryContext>();
-                    }
-                }
-
-                queryContext.Prefix = false;
-                queryContext.Fuzzy = false;
-
-                foreach (var t in expanded.Where(e => e.Value != queryContext.Value))
-                {
-                    queryContext.Children.Add(t);
-                }
-
-                Log.DebugFormat("expanded {0} into {1} in {2}", queryContext.ToQueryTerm(), queryContext, timer.Elapsed);
-            }
+            return timer;
         }
 
         public void Dispose()
