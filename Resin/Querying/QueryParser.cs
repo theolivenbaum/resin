@@ -22,6 +22,8 @@ namespace Resin.Querying
             var state = new List<char>();
             string field = null;
             var words = new List<string>();
+            var termCount = 0;
+
             foreach (var c in query.Trim())
             {
                 if (c == ':')
@@ -36,7 +38,7 @@ namespace Resin.Querying
                     {
                         if (qc == null)
                         {
-                            qc = CreateTerm(field, words, 0);
+                            qc = CreateTerm(field, words, termCount++);
                         }
                         else
                         {
@@ -72,10 +74,12 @@ namespace Resin.Querying
             return qc;
         }
 
-        private QueryContext CreateTerm(string field, IEnumerable<string> words, int position)
+        private QueryContext CreateTerm(string field, IList<string> words, int termPositionInQuery)
         {
             var analyze = field[0] != '_';
             QueryContext qc = null;
+            var defaulTokenOperator = words.Last().Last();
+
             foreach (var word in words)
             {
                 if (analyze)
@@ -86,16 +90,20 @@ namespace Resin.Querying
                     {
                         analyzable = word.Substring(0, word.Length - 1);
                     }
+                    else
+                    {
+                        tokenOperator = defaulTokenOperator;
+                    }
                     var analyzed = _analyzer.Analyze(analyzable).ToArray();
                     foreach (string token in analyzed)
                     {
                         if (qc == null)
                         {
-                            qc = Parse(field, token, tokenOperator, position);
+                            qc = Parse(field, token, tokenOperator, termPositionInQuery);
                         }
                         else
                         {
-                            var q = Parse(field, token, tokenOperator, position);
+                            var q = Parse(field, token, tokenOperator, termPositionInQuery);
                             q.And = false;
                             q.Not = false;
                             qc.Children.Add(q);

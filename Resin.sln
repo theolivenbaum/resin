@@ -20,6 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		rnh.bat = rnh.bat
 		rnw.bat = rnw.bat
 		stopwords.txt = stopwords.txt
+		todo.txt = todo.txt
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Host", "Host\Host.csproj", "{A0C83074-0466-47DC-800C-17F3D0205713}"
