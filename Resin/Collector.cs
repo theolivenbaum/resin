@@ -134,7 +134,7 @@ namespace Resin
                 {
                     if (!_postingReaders.TryGetValue(fileId, out reader))
                     {
-                        var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                        var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
                         var sr = new StreamReader(fs, Encoding.ASCII);
 
                         reader = new PostingsReader(sr);
@@ -155,7 +155,7 @@ namespace Resin
         private LcrsTreeReader GetTreeReader(string field)
         {
             var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
-            var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
             var sr = new StreamReader(fs, Encoding.Unicode);
             var reader = new LcrsTreeReader(sr);
 
