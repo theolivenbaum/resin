@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 
-namespace Resin.System
+namespace Resin.Sys
 {
     public class TaskQueue<T> : IDisposable where T : class
     {

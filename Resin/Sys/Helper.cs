@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using Resin.IO;
 
-namespace Resin.System
+namespace Resin.Sys
 {
     public static class Helper
     {

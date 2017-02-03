@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,7 +10,7 @@ using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Read;
 using Resin.Querying;
-using Resin.System;
+using Resin.Sys;
 
 namespace Resin
 {
@@ -50,18 +51,18 @@ namespace Resin
                 var scored = collector.Collect(q).ToList();
                 var skip = page * size;
                 var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
-                var docs = paged.Values.Select(s => GetDoc(s.DocId));
+                var docs = paged.Values.Select(GetDoc);
 
                 return new Result { Docs = docs, Total = scored.Count }; 
             }
         }
 
-        private Document GetDoc(string docId)
+        private Document GetDoc(DocumentScore score)
         {
             var timer = new Stopwatch();
             timer.Start();
 
-            var fileId = docId.ToDocFileId();
+            var fileId = score.DocId.ToDocFileId();
             var fileName = Path.Combine(_directory, fileId + ".doc");
             DocumentReader reader;
 
@@ -73,7 +74,9 @@ namespace Resin
                 _readers.Add(fileId, reader);
             }
 
-            var doc = reader.Get(docId);
+            var doc = reader.Get(score.DocId);
+
+            doc.Fields["__score"] = score.Score.ToString(CultureInfo.InvariantCulture);
 
             Log.DebugFormat("read {0} from {1} in {2}", doc.Id, fileName, timer.Elapsed);
 

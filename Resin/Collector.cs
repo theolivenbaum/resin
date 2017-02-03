@@ -11,7 +11,7 @@ using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Read;
 using Resin.Querying;
-using Resin.System;
+using Resin.Sys;
 
 namespace Resin
 {

@@ -5,7 +5,7 @@ using log4net;
 using Nancy;
 using Resin.Analysis;
 using Resin.Querying;
-using Resin.System;
+using Resin.Sys;
 
 namespace Resin.Host
 {

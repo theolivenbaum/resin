@@ -56,7 +56,7 @@
     <Compile Include="Analysis\Analyzer.cs" />
     <Compile Include="IO\Read\DocumentReader.cs" />
     <Compile Include="IO\DocumentPosting.cs" />
-    <Compile Include="System\Helper.cs" />
+    <Compile Include="Sys\Helper.cs" />
     <Compile Include="Analysis\IAnalyzer.cs" />
     <Compile Include="IO\CompressedBinaryFile.cs" />
     <Compile Include="IO\Write\DocumentWriter.cs" />
@@ -84,7 +84,7 @@
     <Compile Include="Querying\Result.cs" />
     <Compile Include="Collector.cs" />
     <Compile Include="Searcher.cs" />
-    <Compile Include="System\TaskQueue.cs" />
+    <Compile Include="Sys\TaskQueue.cs" />
     <Compile Include="Querying\QueryTerm.cs" />
     <Compile Include="IO\Term.cs" />
     <Compile Include="Analysis\Tfidf.cs" />

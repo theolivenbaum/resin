@@ -9,7 +9,6 @@ using log4net.Config;
 using Newtonsoft.Json;
 using Resin.Analysis;
 using Resin.Client;
-using Resin.IO;
 using Resin.Querying;
 
 namespace Resin.Cli
@@ -52,17 +51,21 @@ namespace Resin.Cli
         {
             string dir = null;
             string indexName = null;
+
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
             if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
+
             var inproc = !string.IsNullOrWhiteSpace(dir);
 
             var q = args[Array.IndexOf(args, "-q") + 1];
             var page = 0;
             var size = 10;
             var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
+
             if (Array.IndexOf(args, "-p") > 0) page = int.Parse(args[Array.IndexOf(args, "-p") + 1]);
             if (Array.IndexOf(args, "-s") > 0) size = int.Parse(args[Array.IndexOf(args, "-s") + 1]);
             if (Array.IndexOf(args, "--url") > 0) url = args[Array.IndexOf(args, "--url") + 1];
+
             var timer = new Stopwatch();
             timer.Start();
 
@@ -81,6 +84,7 @@ namespace Resin.Cli
                     Console.WriteLine(string.Join(string.Empty,
                             string.Empty.PadRight(7),
                             "docid".PadRight(10),
+                            "score".PadRight(10),
                             "label".PadRight(50),
                             "aliases".PadRight(40),
                             "description"
@@ -91,6 +95,7 @@ namespace Resin.Cli
                     {
                         Console.WriteLine(string.Join(string.Empty,
                             (++position).ToString(CultureInfo.InvariantCulture).PadRight(7),
+                            doc.Fields["__score"].ToString(CultureInfo.InvariantCulture).PadRight(10).Substring(0, 10),
                             doc.Fields["_id"].ToString(CultureInfo.InvariantCulture).PadRight(10),
                             (doc.Fields["label"] ?? string.Empty).Substring(0, Math.Min(49, (doc.Fields["label"] ?? string.Empty).Length)).PadRight(50),
                             (doc.Fields["aliases"] ?? string.Empty).Substring(0, Math.Min(39, (doc.Fields["aliases"] ?? string.Empty).Length)).PadRight(40),
