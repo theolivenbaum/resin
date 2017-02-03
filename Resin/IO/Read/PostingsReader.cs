@@ -30,7 +30,7 @@ namespace Resin.IO.Read
             while ((line = _sr.ReadLine()) != null)
             {
                 var parts = line.Split(':');
-                var test = new Term(parts[0], parts[1]);
+                var test = new Term(parts[0], new Word{Value=parts[1]});
 
                 if (test.Equals(term))
                 {

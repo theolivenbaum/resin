@@ -13,6 +13,68 @@ namespace Tests
     public class CollectorTests
     {
         [Test]
+        public void Can_rank_fuzzy_phrase()
+        {
+            var dir = Path.Combine(Setup.Dir, "Can_rank_fuzzy_phrase");
+
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            var docs = new List<Dictionary<string, string>>
+            {
+                new Dictionary<string, string> {{"_id", "0"}, {"title", "Tage Mage"}},
+                new Dictionary<string, string> {{"_id", "1"}, {"title", "aye-aye"}},
+                new Dictionary<string, string> {{"_id", "2"}, {"title", "Cage Rage Championships"}},
+                new Dictionary<string, string> {{"_id", "3"}, {"title", "Page Up and Page Down keys"}},
+                new Dictionary<string, string> {{"_id", "4"}, {"title", "Golden Age of Porn"}}
+            };
+            using (var writer = new IndexWriter(dir, new Analyzer()))
+            {
+                writer.Write(docs.Select(d => new Document(d)));
+            }
+
+            var query = new QueryParser(new Analyzer()).Parse("+title:age of porn~");
+
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            {
+                var scores = collector.Collect(query).ToList();
+
+                Assert.That(scores.Count, Is.EqualTo(5));
+                Assert.IsTrue(scores.First().DocId.Equals("4"));
+            }
+        }
+
+        [Test]
+        public void Can_rank_fuzzy_term()
+        {
+            var dir = Path.Combine(Setup.Dir, "Can_rank_fuzzy_term");
+
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            var docs = new List<Dictionary<string, string>>
+            {
+                new Dictionary<string, string> {{"_id", "0"}, {"title", "Gustav Horn, Count of Pori"}},
+                new Dictionary<string, string> {{"_id", "1"}, {"title", "Port au Port Peninsula"}},
+                new Dictionary<string, string> {{"_id", "2"}, {"title", "Pore"}},
+                new Dictionary<string, string> {{"_id", "3"}, {"title", "Porn 2.0"}},
+                new Dictionary<string, string> {{"_id", "4"}, {"title", "Porn"}}
+            };
+            using (var writer = new IndexWriter(dir, new Analyzer()))
+            {
+                writer.Write(docs.Select(d => new Document(d)));
+            }
+
+            var query = new QueryParser(new Analyzer()).Parse("+title:porn~");
+
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            {
+                var scores = collector.Collect(query).ToList();
+
+                Assert.That(scores.Count, Is.EqualTo(5));
+                Assert.IsTrue(scores.First().DocId.Equals("4"));
+            }
+        }
+
+        [Test]
         public void Can_collect_phrase()
         {
             var dir = Path.Combine(Setup.Dir, "Can_collect_phrase");
@@ -36,10 +98,10 @@ namespace Tests
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
             {
-                var postings = collector.Collect(query).ToList();
+                var scores = collector.Collect(query).ToList();
 
-                Assert.That(postings.Count, Is.EqualTo(1));
-                Assert.IsTrue(postings.Any(d => d.DocId == "3"));
+                Assert.That(scores.Count, Is.EqualTo(1));
+                Assert.IsTrue(scores.Any(d => d.DocId == "3"));
             }
         }
 
@@ -65,11 +127,11 @@ namespace Tests
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
             {
-                var postings = collector.Collect(new QueryContext("title", "rambo")).ToList();
+                var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
 
-                Assert.That(postings.Count, Is.EqualTo(2));
-                Assert.IsTrue(postings.Any(d => d.DocId == "0"));
-                Assert.IsTrue(postings.Any(d => d.DocId == "1"));  
+                Assert.That(scores.Count, Is.EqualTo(2));
+                Assert.IsTrue(scores.Any(d => d.DocId == "0"));
+                Assert.IsTrue(scores.Any(d => d.DocId == "1"));  
             }
         }
 
@@ -95,13 +157,13 @@ namespace Tests
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
             {
-                var postings = collector.Collect(new QueryContext("title", "ra") { Prefix = true }).ToList();
+                var scores = collector.Collect(new QueryContext("title", "ra") { Prefix = true }).ToList();
 
-                Assert.That(postings.Count, Is.EqualTo(4));
-                Assert.IsTrue(postings.Any(d => d.DocId == "0"));
-                Assert.IsTrue(postings.Any(d => d.DocId == "1"));
-                Assert.IsTrue(postings.Any(d => d.DocId == "3"));
-                Assert.IsTrue(postings.Any(d => d.DocId == "4"));
+                Assert.That(scores.Count, Is.EqualTo(4));
+                Assert.IsTrue(scores.Any(d => d.DocId == "0"));
+                Assert.IsTrue(scores.Any(d => d.DocId == "1"));
+                Assert.IsTrue(scores.Any(d => d.DocId == "3"));
+                Assert.IsTrue(scores.Any(d => d.DocId == "4"));
             }
         }
 
@@ -127,11 +189,11 @@ namespace Tests
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
             {
-                var postings = collector.Collect(new QueryContext("title", "raider") { Fuzzy = true, Edits = 1 }).ToList();
+                var scores = collector.Collect(new QueryContext("title", "raider") { Fuzzy = true, Edits = 1 }).ToList();
 
-                Assert.That(postings.Count, Is.EqualTo(2));
-                Assert.IsTrue(postings.Any(d => d.DocId == "3"));
-                Assert.IsTrue(postings.Any(d => d.DocId == "4"));
+                Assert.That(scores.Count, Is.EqualTo(2));
+                Assert.IsTrue(scores.Any(d => d.DocId == "3"));
+                Assert.IsTrue(scores.Any(d => d.DocId == "4"));
             }
         }
     }

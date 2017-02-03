@@ -73,7 +73,7 @@ namespace Resin.Sys
         {
             if (term == null) throw new ArgumentNullException("term");
 
-            var val = term.Token.PadRight(1).Substring(0, 1);
+            var val = term.Value.PadRight(1).Substring(0, 1);
             return val.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 

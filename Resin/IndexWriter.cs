@@ -156,7 +156,7 @@ namespace Resin
 
                 foreach (var term in analyzed.Terms)
                 {
-                    WriteTriePath(term.Key.Field, term.Key.Token);
+                    WriteTriePath(term.Key.Field, term.Key.Value);
 
                     List<DocumentPosting> weights;
 

@@ -52,11 +52,11 @@ namespace Resin.IO.Read
             return false;
         }
 
-        public IEnumerable<string> StartsWith(string prefix)
+        public IEnumerable<Word> StartsWith(string prefix)
         {
             if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("path");
 
-            var compressed = new List<string>();
+            var compressed = new List<Word>();
             LcrsNode node;
 
             if (TryFindDepthFirst(prefix, 0, out node))
@@ -67,18 +67,16 @@ namespace Resin.IO.Read
             return compressed;
         }
 
-        public IEnumerable<string> Near(string word, int edits)
+        public IEnumerable<Word> Near(string word, int edits)
         {
             return Near(word, edits, word.Length);
         }
 
-        public IEnumerable<string> Near(string word, int edits, int minLength)
+        public IEnumerable<Word> Near(string word, int edits, int minLength)
         {
             var words = new List<Word>();
             WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), 0, edits, minLength, words);
-            return words
-                .OrderBy(w => w.Distance)
-                .Select(w => w.Value);
+            return words.OrderBy(w => w.Distance);
         }
 
         private void WithinEditDistanceDepthFirst(string word, string state, int depth, int maxEdits, int minLength, IList<Word> words)
@@ -129,7 +127,7 @@ namespace Resin.IO.Read
             }
         }
 
-        private void DepthFirst(string prefix, IList<char> path, IList<string> compressed, int depth)
+        private void DepthFirst(string prefix, IList<char> path, IList<Word> compressed, int depth)
         {
             var node = Step();
             var siblings = new Stack<Tuple<int,IList<char>>>();
@@ -143,7 +141,7 @@ namespace Resin.IO.Read
 
                 if (node.EndOfWord)
                 {
-                    compressed.Add(prefix + new string(path.ToArray()));
+                    compressed.Add(new Word {Value = prefix + new string(path.ToArray())});
                 }
 
                 if (node.HaveSibling)

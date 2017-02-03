@@ -23,11 +23,11 @@ namespace Resin.Analysis
         /// <summary>
         /// Create scorer
         /// </summary>
-        /// <param name="totalNumOfDocs"></param>
-        /// <param name="hitCount"></param>
-        public Tfidf(int totalNumOfDocs, int hitCount)
+        /// <param name="docsInCorpus"></param>
+        /// <param name="docsWithTerm"></param>
+        public Tfidf(int docsInCorpus, int docsWithTerm)
         {
-            _idf = Math.Log(totalNumOfDocs / (double)hitCount);
+            _idf = Math.Log(docsInCorpus / (double)docsWithTerm + 1) + 1;
         }
 
         public IScoringScheme CreateScorer(int docsInCorpus, int docsWithTerm)
@@ -37,8 +37,13 @@ namespace Resin.Analysis
 
         public void Score(DocumentScore doc)
         {
-            var tf = doc.TermCount;
+            var tf = GetTf(doc);
             doc.Score = tf * _idf;
+        }
+
+        private static double GetTf(DocumentScore doc)
+        {
+            return Math.Sqrt(doc.TermCount);
         }
 
         public void Analyze(string field, string value, IAnalyzer analyzer, Dictionary<string, int> termCount)

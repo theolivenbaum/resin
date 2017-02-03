@@ -34,7 +34,7 @@ namespace Tests
             {
                 var near = scanner.Near("bazy", 1).ToList();
                 Assert.AreEqual(1, near.Count);
-                Assert.IsTrue(near.Contains("baby"));
+                Assert.IsTrue(near.Contains(new Word{Value = "baby"}));
             }
 
             using (var fs = File.OpenRead(fileName))
@@ -43,9 +43,9 @@ namespace Tests
             {
                 var near = scanner.Near("bazy", 2, 3).ToList();
                 Assert.AreEqual(3, near.Count);
-                Assert.IsTrue(near.Contains("baby"));
-                Assert.IsTrue(near.Contains("bank"));
-                Assert.IsTrue(near.Contains("bad"));
+                Assert.IsTrue(near.Contains(new Word{Value = "baby"}));
+                Assert.IsTrue(near.Contains(new Word{Value = "bank"}));
+                Assert.IsTrue(near.Contains(new Word{Value = "bad"}));
             }
         }
 
@@ -72,9 +72,9 @@ namespace Tests
             {
                 var startsWith = scanner.StartsWith("ba").ToList();
                 Assert.AreEqual(3, startsWith.Count);
-                Assert.IsTrue(startsWith.Contains("baby"));
-                Assert.IsTrue(startsWith.Contains("bad"));
-                Assert.IsTrue(startsWith.Contains("bank"));
+                Assert.IsTrue(startsWith.Contains(new Word{Value = "baby"}));
+                Assert.IsTrue(startsWith.Contains(new Word{Value = "bad"}));
+                Assert.IsTrue(startsWith.Contains(new Word{Value = "bank"}));
             }
 
             using (var fs = File.OpenRead(fileName))

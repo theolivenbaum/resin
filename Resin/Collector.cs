@@ -80,18 +80,18 @@ namespace Resin
             if (query.Fuzzy)
             {
                 query.Terms = GetTreeReader(query.Field).Near(query.Value, query.Edits)
-                    .Select(token => new Term(query.Field, token));
+                    .Select(word => new Term(query.Field, word));
             }
             else if (query.Prefix)
             {
                 query.Terms = GetTreeReader(query.Field).StartsWith(query.Value)
-                    .Select(token => new Term(query.Field, token));
+                    .Select(word => new Term(query.Field, word));
             }
             else
             {
                 if (GetTreeReader(query.Field).HasWord(query.Value))
                 {
-                    query.Terms = new List<Term> { new Term(query.Field, query.Value) };
+                    query.Terms = new List<Term> { new Term(query.Field, new Word{Value=query.Value}) };
                 }
                 else
                 {
@@ -125,16 +125,16 @@ namespace Resin
                 from term in query.Terms
                 let docsInCorpus = _ix.DocumentCount.DocCount[term.Field]
                 let postings = GetPostings(term)
-                select Score(postings, docsInCorpus).ToList();
+                select Score(postings, docsInCorpus, term.Word.Distance).ToList();
         }
 
-        private IEnumerable<DocumentScore> Score(IList<DocumentPosting> postings, int docsInCorpus)
+        private IEnumerable<DocumentScore> Score(IList<DocumentPosting> postings, int docsInCorpus, int distance)
         {
             var scorer = _scorer.CreateScorer(docsInCorpus, postings.Count);
 
             foreach (var posting in postings)
             {
-                var hit = new DocumentScore(posting.DocumentId, posting.Count);
+                var hit = new DocumentScore(posting.DocumentId, posting.Count, distance);
 
                 scorer.Score(hit);
 

@@ -6,16 +6,18 @@ namespace Resin.Querying
     {
         private readonly string _docId;
         private double _termCount;
+        private readonly int _distance;
 
         public string DocId { get { return _docId; } }
         public double TermCount { get { return _termCount; } }
-
+        public int Distance { get { return _distance; } }
         public double Score { get; set; }
 
-        public DocumentScore(string docId, double termCount)
+        public DocumentScore(string docId, double termCount, int distance)
         {
             _docId = docId;
             _termCount = termCount;
+            _distance = distance;
         }
 
         public DocumentScore Combine(DocumentScore score)
