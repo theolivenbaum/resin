@@ -53,7 +53,8 @@ namespace Resin
         {
             query.Thread.Join();
 
-            query.Aggregated = query.Scores.Aggregate(QueryContext.JoinOr);
+            query.Aggregated = query.Scores
+                .Aggregate(QueryContext.JoinOr);
         }
 
         private void Scan(QueryContext query)
@@ -62,13 +63,14 @@ namespace Resin
 
             var time = Time();
 
-            var thread = new Thread(() =>
+            query.Thread = new Thread(() =>
             {
                 Thread.CurrentThread.IsBackground = true;
                 DoScan(query);
             });
-            query.Thread = thread;
-            thread.Start();
+            query.Thread.Start();
+
+            Parallel.ForEach(query.Children, DoScan);
           
             Log.DebugFormat("scanned {0} in {1}", query, time.Elapsed);
         }
@@ -96,8 +98,6 @@ namespace Resin
                     query.Terms = new List<Term>();
                 }
             }
-
-            Parallel.ForEach(query.Children, DoScan);
         }
 
         private void Score(QueryContext query)
@@ -113,6 +113,8 @@ namespace Resin
             });
             query.Thread.Start();
 
+            Parallel.ForEach(query.Children, DoScore);
+
             Log.DebugFormat("scored {0} in {1}", query, time.Elapsed);
         }
 
@@ -123,9 +125,7 @@ namespace Resin
                 from term in query.Terms
                 let docsInCorpus = _ix.DocumentCount.DocCount[term.Field]
                 let postings = GetPostings(term)
-                select Score(postings, docsInCorpus);
-
-            Parallel.ForEach(query.Children, DoScore);
+                select Score(postings, docsInCorpus).ToList();
         }
 
         private IEnumerable<DocumentScore> Score(IList<DocumentPosting> postings, int docsInCorpus)
@@ -186,7 +186,7 @@ namespace Resin
 
             _trieReaders.Add(reader);
 
-            Log.DebugFormat("opened {0} tree reader in {1}", fileName, time.Elapsed);
+            Log.DebugFormat("opened tree reader {0} (field:{1}) in {2}", fileName, field, time.Elapsed);
             
             return reader;
         }

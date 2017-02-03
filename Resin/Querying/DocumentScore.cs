@@ -23,7 +23,7 @@ namespace Resin.Querying
             if (!score.Equals(this)) throw new ArgumentException("Doc id differs. Cannot add.", "score");
 
             Score += score.Score;
-            _termCount = score.TermCount;
+            _termCount += score.TermCount;
             return this;
         }
 

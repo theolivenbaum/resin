@@ -30,9 +30,9 @@ namespace Resin.Analysis
             _idf = Math.Log(totalNumOfDocs / (double)hitCount);
         }
 
-        public IScoringScheme CreateScorer(int totalNumOfDocs, int hitCount)
+        public IScoringScheme CreateScorer(int docsInCorpus, int docsWithTerm)
         {
-            return new Tfidf(totalNumOfDocs, hitCount);
+            return new Tfidf(docsInCorpus, docsWithTerm);
         }
 
         public void Score(DocumentScore doc)
