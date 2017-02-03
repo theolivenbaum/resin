@@ -70,7 +70,7 @@ namespace Resin
                     {
                         var fileName = Path.Combine(_directory, fileId + ".doc");
                         var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
-                        var sr = new StreamWriter(fs, Encoding.ASCII);
+                        var sr = new StreamWriter(fs, Encoding.ASCII); // ASCII won't work unless Term is hashed
 
                         writer = new DocumentWriter(sr);
 
@@ -95,7 +95,7 @@ namespace Resin
                     {
                         var fileName = Path.Combine(_directory, fileId + ".pos");
                         var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
-                        var sr = new StreamWriter(fs, Encoding.ASCII);
+                        var sr = new StreamWriter(fs, Encoding.ASCII); // ASCII won't work unless Term is hashed
 
                         writer = new PostingsWriter(sr);
 

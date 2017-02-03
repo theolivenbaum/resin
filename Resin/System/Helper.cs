@@ -93,6 +93,7 @@ namespace Resin.System
 
         /// <summary>
         /// Knuth hash. http://stackoverflow.com/questions/9545619/a-fast-hash-function-for-string-in-c-sharp
+        /// One could also use https://msdn.microsoft.com/en-us/library/system.security.cryptography.sha1.aspx
         /// </summary>
         /// <param name="read"></param>
         /// <returns></returns>
