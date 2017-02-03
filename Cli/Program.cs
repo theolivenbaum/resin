@@ -30,24 +30,6 @@ namespace Resin.Cli
                 }
                 Write(args);
             }
-            //else if (args[0].ToLower() == "optimize")
-            //{
-            //    if (Array.IndexOf(args, "--dir") == -1)
-            //    {
-            //        Console.WriteLine("I need a directory.");
-            //        return;
-            //    }
-            //    Optimize(args);
-            //}
-            //else if (args[0].ToLower() == "remove")
-            //{
-            //    if (Array.IndexOf(args, "--docid") == -1)
-            //    {
-            //        Console.WriteLine("I need a doc id.");
-            //        return;
-            //    }
-            //    Remove(args);
-            //}
             else if (args[0].ToLower() == "query")
             {
                 if (Array.IndexOf(args, "-q") == -1)
@@ -57,48 +39,13 @@ namespace Resin.Cli
                 }
                 Query(args);
             }
-            //else if (args[0].ToLower() == "analyze")
-            //{
-            //    if (Array.IndexOf(args, "--field") == -1 ||
-            //        Array.IndexOf(args, "--dir") == -1)
-            //    {
-            //        Console.WriteLine("I need a directory and a field.");
-            //        return;
-            //    }
-            //    Analyze(args);
-            //}
-            else if (args[0].ToLower() == "about")
-            {
-                About();
-            }
             else
             {
                 Console.WriteLine("usage:");
                 Console.WriteLine("rn.exe write --file source.json --dir c:\\target_dir");
                 Console.WriteLine("rn.exe query --dir c:\\my_index -q field:value");
                 Console.WriteLine("rn.exe analyze --dir c:\\my_index -field field_name");
-                Console.WriteLine("rn.exe about");
             }
-        }
-
-        static void About()
-        {
-            //var about = File.ReadAllText(@"..\..\..\readme.md");
-            //var dir = Path.Combine(Environment.CurrentDirectory, "about");
-            //using (var writer = new IndexWriter(dir, new Analyzer()))
-            //{
-            //    writer.Write(new Dictionary<string, string>
-            //            {
-            //                {"body", about}
-            //            }
-            //);
-            //}
-            //var scanner = FieldScanner.MergeLoad(dir);
-            //var timer = new Stopwatch();
-            //timer.Start();
-            //var tokens = scanner.GetAllTokens("body").OrderByDescending(t => t.Count).ToList();
-            //Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
-            //File.WriteAllLines(Path.Combine(dir, "_about.txt"), tokens.Select(t => string.Format("{0} {1}", t.Token, t.Count)));
         }
 
         static void Query(string[] args)
@@ -172,64 +119,6 @@ namespace Resin.Cli
             //}
 
         }
-
-        //static void Analyze(string[] args)
-        //{
-        //    var dir = args[Array.IndexOf(args, "--dir") + 1];
-        //    var field = args[Array.IndexOf(args, "--field") + 1];
-        //    var timer = new Stopwatch();
-        //    timer.Start();
-        //    var fileName = Path.Combine(dir, field.ToHash() + ".tr");
-        //    var trie = Trie.Load(fileName);
-        //    var tokens = trie.All().Take(100).ToList();
-        //    Console.WriteLine("Tokens fetched from disk in {0} ms. Writing...\r\n", timer.ElapsedMilliseconds);
-        //    File.WriteAllLines(Path.Combine(dir, "_" + field + ".txt"), tokens);
-        //}
-
-        //static void Optimize(string[] args)
-        //{
-        //    var dir = args[Array.IndexOf(args, "--dir") + 1];
-        //    var truncate = Array.IndexOf(args, "--truncate") > 0;
-        //    var timer = new Stopwatch();
-        //    timer.Start();
-        //    var ixFileName = Helper.GetFileNameOfLatestIndex(dir);
-        //    var ix = IxFile.Load(ixFileName);
-        //    var dix = DixFile.Load(Path.Combine(dir, ix.DixFileName));
-        //    var fix = FixFile.Load(Path.Combine(dir, ix.FixFileName));
-
-        //    var optimizer = new Optimizer(dir, ixFileName, dix, fix);
-        //    optimizer.Rebase();
-        //    if (truncate) optimizer.Truncate();
-        //    optimizer.Save();
-        //}
-
-        //static void Remove(string[] args)
-        //{
-        //    string dir = null;
-        //    string indexName = null;
-        //    if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
-        //    if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
-        //    var inproc = !string.IsNullOrWhiteSpace(dir);
-        //    var docId = args[Array.IndexOf(args, "--docid") + 1];
-        //    var timer = new Stopwatch();
-        //    timer.Start();
-        //    if (inproc)
-        //    {
-        //        using (var writer = new IndexWriter(dir, new Analyzer(), new Tfidf()))
-        //        {
-        //            writer.Remove(docId);
-        //        }
-        //    }
-        //    else
-        //    {
-        //        var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
-        //        using (var client = new WriterClient(indexName, url))
-        //        {
-        //            client.Remove(docId);
-        //        }
-        //    }
-        //    Console.WriteLine("deleted {0} in {1}", docId, timer.Elapsed);
-        //}
 
         static void Write(string[] args)
         {
