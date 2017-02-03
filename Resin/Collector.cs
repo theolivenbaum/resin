@@ -35,9 +35,13 @@ namespace Resin
 
         public IEnumerable<DocumentScore> Collect(QueryContext query)
         {
+            var mappingTime = Time();
+
             Scan(query);
             Score(query);
             Reduce(query);
+
+            Log.DebugFormat("mapped {0} in {1}", query, mappingTime.Elapsed);
 
             return query.Resolve()
                 .OrderByDescending(s => s.Score);
@@ -57,12 +61,12 @@ namespace Resin
             if (query.Fuzzy)
             {
                 query.Terms = GetTreeReader(query.Field).Near(query.Value, query.Edits)
-                    .Select(token => new Term(query.Field, token)).ToList();
+                    .Select(token => new Term(query.Field, token));
             }
             else if (query.Prefix)
             {
                 query.Terms = GetTreeReader(query.Field).StartsWith(query.Value)
-                    .Select(token => new Term(query.Field, token)).ToList();
+                    .Select(token => new Term(query.Field, token));
             }
             else
             {
@@ -76,12 +80,12 @@ namespace Resin
                 }
             }
 
-            Log.DebugFormat("scanned {0} in {1}", query, time.Elapsed);
-
             foreach (var child in query.Children)
             {
                 Scan(child);
             }
+
+            Log.DebugFormat("scanned {0} in {1}", query, time.Elapsed);
         }
 
         private void Score(QueryContext query)
@@ -90,14 +94,14 @@ namespace Resin
 
             query.Scores = (from term in query.Terms 
                           let docsInCorpus = _ix.DocumentCount.DocCount[term.Field] let postings = GetPostings(term) 
-                          select Score(postings, docsInCorpus)).ToList();
-
-            Log.DebugFormat("scored {0} in {1}", query, time.Elapsed);
+                          select Score(postings, docsInCorpus));
 
             foreach (var child in query.Children)
             {
                 Score(child);
             }
+
+            Log.DebugFormat("scored {0} in {1}", query, time.Elapsed);
         }
 
         private IEnumerable<DocumentScore> Score(IList<DocumentPosting> postings, int docsInCorpus)
