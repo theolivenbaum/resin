@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using log4net;
 using Resin.IO;
 
@@ -13,7 +14,9 @@ namespace Resin.Querying
         public IList<QueryContext> Children { get; set; }
         public IEnumerable<Term> Terms { get; set; }
         public IEnumerable<IEnumerable<DocumentScore>> Scores { get; set; }
-        public IEnumerable<DocumentScore> Reduced { get; set; }
+        public IEnumerable<DocumentScore> Aggregated { get; set; }
+        public Thread Thread { get; set; }
+
         private static readonly ILog Log = LogManager.GetLogger(typeof(QueryContext));
 
         public QueryContext(string field, string value) : base(field, value)
@@ -28,13 +31,13 @@ namespace Resin.Querying
 
             ConcurrentDictionary<string, DocumentScore> resolved;
 
-            if (Reduced == null)
+            if (Aggregated == null)
             {
                 resolved = new ConcurrentDictionary<string, DocumentScore>();
             }
             else
             {
-                resolved = new ConcurrentDictionary<string, DocumentScore>(Reduced.ToDictionary(x => x.DocId, x => x));
+                resolved = new ConcurrentDictionary<string, DocumentScore>(Aggregated.ToDictionary(x => x.DocId, x => x));
             }
 
             foreach(var child in Children)

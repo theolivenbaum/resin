@@ -3,7 +3,7 @@ Prioritized backlog
 
 Rewrite "age of porn"~ into +"age~" +"of~" +"porn~" (done)
 
-Make 100K docs the measurement for fast scanning
+Use edit distance in scoring
 
 Query multiple indices
 
@@ -20,8 +20,6 @@ Prohibit first statement in a clause from being a "not" statement. "Or" and "and
 Auto-refresh collector when new index has been written to the dir
 
 Merge indices
-
-Make 1M docs the measurement for fast scanning
 
 Implement git on server (for distribution)
 

@@ -135,7 +135,8 @@ namespace Resin.Cli
                             string.Empty.PadRight(7),
                             "docid".PadRight(10),
                             "label".PadRight(50),
-                            "aliases"
+                            "aliases".PadRight(40),
+                            "description"
                         ));
                     Console.WriteLine();
 
@@ -145,7 +146,8 @@ namespace Resin.Cli
                             (++position).ToString(CultureInfo.InvariantCulture).PadRight(7),
                             doc.Fields["_id"].ToString(CultureInfo.InvariantCulture).PadRight(10),
                             (doc.Fields["label"] ?? string.Empty).Substring(0, Math.Min(49, (doc.Fields["label"] ?? string.Empty).Length)).PadRight(50),
-                            (doc.Fields["aliases"] ?? string.Empty).Substring(0, Math.Min(100, (doc.Fields["aliases"] ?? string.Empty).Length))
+                            (doc.Fields["aliases"] ?? string.Empty).Substring(0, Math.Min(39, (doc.Fields["aliases"] ?? string.Empty).Length)).PadRight(40),
+                            (doc.Fields["description"] ?? string.Empty).Substring(0, Math.Min(30, (doc.Fields["description"] ?? string.Empty).Length))
                         ));
                     }
 
@@ -257,7 +259,7 @@ namespace Resin.Cli
             var timer = new Stopwatch();
             timer.Start();
 
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None))
             using (var bs = new BufferedStream(fs))
             using (var sr = new StreamReader(bs))
             {

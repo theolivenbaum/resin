@@ -13,6 +13,37 @@ namespace Tests
     public class CollectorTests
     {
         [Test]
+        public void Can_collect_phrase()
+        {
+            var dir = Path.Combine(Setup.Dir, "Can_collect_phrase");
+
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            var docs = new List<Dictionary<string, string>>
+            {
+                new Dictionary<string, string> {{"_id", "0"}, {"title", "rambo"}},
+                new Dictionary<string, string> {{"_id", "1"}, {"title", "rambo 2"}},
+                new Dictionary<string, string> {{"_id", "2"}, {"title", "rocky 2"}},
+                new Dictionary<string, string> {{"_id", "3"}, {"title", "raiders of the lost ark"}},
+                new Dictionary<string, string> {{"_id", "4"}, {"title", "rain man"}}
+            };
+            using (var writer = new IndexWriter(dir, new Analyzer()))
+            {
+                writer.Write(docs.Select(d => new Document(d)));
+            }
+
+            var query = new QueryParser(new Analyzer()).Parse("+title:the lost ark");
+
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            {
+                var postings = collector.Collect(query).ToList();
+
+                Assert.That(postings.Count, Is.EqualTo(1));
+                Assert.IsTrue(postings.Any(d => d.DocId == "3"));
+            }
+        }
+
+        [Test]
         public void Can_collect_exact()
         {
             var dir = Path.Combine(Setup.Dir, "Can_collect_exact");

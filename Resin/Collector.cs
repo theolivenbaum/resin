@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using log4net;
 using Resin.Analysis;
 using Resin.IO;
@@ -49,7 +51,9 @@ namespace Resin
 
         private void Reduce(QueryContext query)
         {
-            query.Reduced = query.Scores.Aggregate(QueryContext.JoinOr);
+            query.Thread.Join();
+
+            query.Aggregated = query.Scores.Aggregate(QueryContext.JoinOr);
         }
 
         private void Scan(QueryContext query)
@@ -58,6 +62,19 @@ namespace Resin
 
             var time = Time();
 
+            var thread = new Thread(() =>
+            {
+                Thread.CurrentThread.IsBackground = true;
+                DoScan(query);
+            });
+            query.Thread = thread;
+            thread.Start();
+          
+            Log.DebugFormat("scanned {0} in {1}", query, time.Elapsed);
+        }
+
+        private void DoScan(QueryContext query)
+        {
             if (query.Fuzzy)
             {
                 query.Terms = GetTreeReader(query.Field).Near(query.Value, query.Edits)
@@ -80,28 +97,35 @@ namespace Resin
                 }
             }
 
-            foreach (var child in query.Children)
-            {
-                Scan(child);
-            }
-
-            Log.DebugFormat("scanned {0} in {1}", query, time.Elapsed);
+            Parallel.ForEach(query.Children, DoScan);
         }
 
         private void Score(QueryContext query)
         {
             var time = Time();
 
-            query.Scores = (from term in query.Terms 
-                          let docsInCorpus = _ix.DocumentCount.DocCount[term.Field] let postings = GetPostings(term) 
-                          select Score(postings, docsInCorpus));
+            query.Thread.Join();
 
-            foreach (var child in query.Children)
+            query.Thread = new Thread(() =>
             {
-                Score(child);
-            }
+                Thread.CurrentThread.IsBackground = true;
+                DoScore(query);
+            });
+            query.Thread.Start();
 
             Log.DebugFormat("scored {0} in {1}", query, time.Elapsed);
+        }
+
+        private void DoScore(QueryContext query)
+        {
+            query.Scores =
+
+                from term in query.Terms
+                let docsInCorpus = _ix.DocumentCount.DocCount[term.Field]
+                let postings = GetPostings(term)
+                select Score(postings, docsInCorpus);
+
+            Parallel.ForEach(query.Children, DoScore);
         }
 
         private IEnumerable<DocumentScore> Score(IList<DocumentPosting> postings, int docsInCorpus)
@@ -176,13 +200,20 @@ namespace Resin
 
         public void Dispose()
         {
-            foreach (var dr in _postingReaders.Values)
+            if (_postingReaders != null)
             {
-                dr.Dispose();
+                foreach (var dr in _postingReaders.Values)
+                {
+                    if(dr != null) dr.Dispose();
+                }
             }
-            foreach (var r in _trieReaders)
+
+            if (_trieReaders != null)
             {
-                r.Dispose();
+                foreach (var r in _trieReaders)
+                {
+                    if(r != null) r.Dispose();
+                }
             }
         }
     }
