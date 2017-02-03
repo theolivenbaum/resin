@@ -7,7 +7,7 @@ namespace Resin.Querying
 {
     public class QueryContext : QueryTerm
     {
-        public IList<QueryContext> Children { get; protected set; }
+        public IList<QueryContext> Children { get; set; }
         public IEnumerable<DocumentScore> Result { get; set ; }
 
         public QueryContext(string field, string value) : base(field, value)

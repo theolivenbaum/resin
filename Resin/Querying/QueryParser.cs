@@ -18,12 +18,12 @@ namespace Resin.Querying
         {
             if (string.IsNullOrWhiteSpace(query)) throw new ArgumentException("query");
 
-            QueryContext qc = null;
+            QueryContext term = null;
             var state = new List<char>();
             string field = null;
             var words = new List<string>();
             var termCount = 0;
-
+            
             foreach (var c in query.Trim())
             {
                 if (c == ':')
@@ -36,13 +36,13 @@ namespace Resin.Querying
                     }
                     else
                     {
-                        if (qc == null)
+                        if (term == null)
                         {
-                            qc = CreateTerm(field, words, termCount++);
+                            term = CreateTerm(field, words, termCount++);
                         }
                         else
                         {
-                            qc.Children.Add(CreateTerm(field, words, 1));
+                            ((List<QueryContext>)term.Children).Add(CreateTerm(field, words, 1));
                         }
                         words = new List<string>();
                         field = fieldName;
@@ -62,22 +62,23 @@ namespace Resin.Querying
             if (!string.IsNullOrEmpty(word))
             {
                 words.Add(word);
-                if (qc == null)
+                if (term == null)
                 {
-                    qc = CreateTerm(field, words, 0);
+                    term = CreateTerm(field, words, 0);
                 }
                 else
                 {
-                    qc.Children.Add(CreateTerm(field, words, 1));
+                    ((List<QueryContext>)term.Children).Add(CreateTerm(field, words, 1));
                 }
             }
-            return qc;
+
+            return term;
         }
 
         private QueryContext CreateTerm(string field, IList<string> words, int termPositionInQuery)
         {
             var analyze = field[0] != '_';
-            QueryContext qc = null;
+            QueryContext query = null;
             var defaulTokenOperator = words.Last().Last();
 
             foreach (var word in words)
@@ -97,38 +98,38 @@ namespace Resin.Querying
                     var analyzed = _analyzer.Analyze(analyzable).ToArray();
                     foreach (string token in analyzed)
                     {
-                        if (qc == null)
+                        if (query == null)
                         {
-                            qc = Parse(field, token, tokenOperator, termPositionInQuery);
+                            query = Parse(field, token, tokenOperator, termPositionInQuery);
                         }
                         else
                         {
-                            var q = Parse(field, token, tokenOperator, termPositionInQuery);
-                            q.And = false;
-                            q.Not = false;
-                            qc.Children.Add(q);
+                            var child = Parse(field, token, tokenOperator, termPositionInQuery);
+                            child.And = false;
+                            child.Not = false;
+                            ((List<QueryContext>)query.Children).Add(child);
                         }
                     }
                 }
                 else
                 {
-                    if (qc == null)
+                    if (query == null)
                     {
-                        qc = Parse(field, word);
+                        query = Parse(field, word);
                     }
                     else
                     {
-                        var q = Parse(field, word);
-                        q.And = false;
-                        q.Not = false;
-                        qc.Children.Add(q);
+                        var child = Parse(field, word);
+                        child.And = false;
+                        child.Not = false;
+                        ((List<QueryContext>)query.Children).Add(child);
                     }
                 }
             }
-            return qc;
+            return query;
         }
 
-        private QueryContext Parse(string field, string token, char tokenOperator = '\0', int position = 0)
+        private QueryContext Parse(string field, string value, char tokenOperator = '\0', int position = 0)
         {
             var and = false;
             var not = false;
@@ -136,6 +137,7 @@ namespace Resin.Querying
             var fuzzy = tokenOperator == '~';
 
             string fieldName;
+
             if (field[0] == '-')
             {
                 not = true;
@@ -150,8 +152,10 @@ namespace Resin.Querying
             {
                 fieldName = field;
             }
+
             if (position == 0) and = true;
-            return new QueryContext(fieldName, token) { And = and, Not = not, Prefix = prefix, Fuzzy = fuzzy, Similarity = 0.9f };
+
+            return new QueryContext(fieldName, value) { And = and, Not = not, Prefix = prefix, Fuzzy = fuzzy, Similarity = 0.9f, Children = new List<QueryContext>()};
         }
     }
 }
