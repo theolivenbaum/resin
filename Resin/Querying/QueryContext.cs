@@ -26,7 +26,16 @@ namespace Resin.Querying
             var time = new Stopwatch();
             time.Start();
 
-            var resolved = new ConcurrentDictionary<string, DocumentScore>(Reduced.ToDictionary(x => x.DocId, x => x));
+            ConcurrentDictionary<string, DocumentScore> resolved;
+
+            if (Reduced == null)
+            {
+                resolved = new ConcurrentDictionary<string, DocumentScore>();
+            }
+            else
+            {
+                resolved = new ConcurrentDictionary<string, DocumentScore>(Reduced.ToDictionary(x => x.DocId, x => x));
+            }
 
             foreach(var child in Children)
             {
