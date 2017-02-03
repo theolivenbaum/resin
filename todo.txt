@@ -1,15 +1,32 @@
-query parsing: enable nesting of queries
+Prioritized backlog
+-------------------
 
-query parsing: rewrite "age of porn"~ into +"age~" +"of~" +"porn~"
+Rewrite "age of porn"~ into +"age~" +"of~" +"porn~" (done)
 
-searching: search streaming
+Make 100K docs the measurement for fast scanning
 
-query multiple indices
+Query multiple indices
 
-merge indices
+Fix server
 
-fix server
+Create new solution for server: sir
 
-implement git on server (for distribution)
+Documentation
 
-create web gui
+Nesting of queries: +label:golden +label:age of porn~ +genre:documentaries rewritten to +label:golden +(label:age~ label:of~ label:porn~) +genre:documentaries
+
+Prohibit first statement in a clause from being a "not" statement. "Or" and "and" statements are allowed and treated like their the same.
+
+Auto-refresh collector when new index has been written to the dir
+
+Merge indices
+
+Make 1M docs the measurement for fast scanning
+
+Implement git on server (for distribution)
+
+Implement term count as PostingData<int>
+
+Implement tf-idf flavors (normalized, augumented)
+
+Implement bm25
