@@ -74,12 +74,14 @@ namespace Resin.IO.Read
 
         public IEnumerable<string> Near(string word, int edits, int minLength)
         {
-            return WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), 0, edits, minLength)
+            var words = new List<Word>();
+            WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), 0, edits, minLength, words);
+            return words
                 .OrderBy(w => w.Distance)
                 .Select(w => w.Value);
         }
 
-        private IEnumerable<Word> WithinEditDistanceDepthFirst(string word, string state, int depth, int maxEdits, int minLength)
+        private void WithinEditDistanceDepthFirst(string word, string state, int depth, int maxEdits, int minLength, IList<Word> words)
         {
             var node = Step();
 
@@ -105,7 +107,7 @@ namespace Resin.IO.Read
 
                     if (edits <= maxEdits && node.EndOfWord)
                     {
-                        yield return new Word { Value = test, Distance = edits };
+                        words.Add(new Word { Value = test, Distance = edits });
                     } 
                 }
 
@@ -116,19 +118,13 @@ namespace Resin.IO.Read
 
                 if (node.HaveChild)
                 {
-                    foreach (var w in WithinEditDistanceDepthFirst(word, string.Copy(test), childIndex, maxEdits, minLength))
-                    {
-                        yield return w;
-                    }
+                    WithinEditDistanceDepthFirst(word, string.Copy(test), childIndex, maxEdits, minLength, words);
                 }
 
                 // Go right (wide)
                 foreach (var siblingState in nodesWithUnresolvedSiblings)
                 {
-                    foreach (var w in WithinEditDistanceDepthFirst(word, siblingState.Item2, siblingState.Item1, maxEdits, minLength))
-                    {
-                        yield return w;
-                    }
+                    WithinEditDistanceDepthFirst(word, siblingState.Item2, siblingState.Item1, maxEdits, minLength, words);
                 }
             }
         }

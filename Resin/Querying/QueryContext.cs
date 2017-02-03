@@ -21,7 +21,7 @@ namespace Resin.Querying
             Children = new List<QueryContext>();
         }
 
-        public IEnumerable<DocumentScore> Resolve()
+        public IEnumerable<DocumentScore> Reduce()
         {
             var time = new Stopwatch();
             time.Start();
@@ -36,7 +36,7 @@ namespace Resin.Querying
                     {
                         DocumentScore existing;
 
-                        if (child.Resolve().ToDictionary(x => x.DocId, x => x).TryGetValue(score.DocId, out existing))
+                        if (child.Reduce().ToDictionary(x => x.DocId, x => x).TryGetValue(score.DocId, out existing))
                         {
                             resolved.AddOrUpdate(score.DocId, score, (s, documentScore) => documentScore.Combine(score));
                         }
@@ -49,7 +49,7 @@ namespace Resin.Querying
                 }
                 else if (child.Not)
                 {
-                    foreach (var d in child.Resolve())
+                    foreach (var d in child.Reduce())
                     {
                         DocumentScore removed;
                         resolved.TryRemove(d.DocId, out removed);
@@ -57,14 +57,14 @@ namespace Resin.Querying
                 }
                 else // Or
                 {
-                    foreach (var d in child.Resolve())
+                    foreach (var d in child.Reduce())
                     {
                         resolved.AddOrUpdate(d.DocId, d, (s, documentScore) => documentScore.Combine(d));
                     }
                 }
             }
 
-            Log.DebugFormat("resolved {0} in {1}", this, time.Elapsed);
+            Log.DebugFormat("reduced {0} in {1}", this, time.Elapsed);
 
             return resolved.Values;
         }

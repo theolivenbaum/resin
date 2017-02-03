@@ -43,7 +43,7 @@ namespace Resin
 
             Log.DebugFormat("mapped {0} in {1}", query, mappingTime.Elapsed);
 
-            return query.Resolve()
+            return query.Reduce()
                 .OrderByDescending(s => s.Score);
         }
 
@@ -154,12 +154,15 @@ namespace Resin
 
         private LcrsTreeReader GetTreeReader(string field)
         {
+            var time = Time();
             var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
             var sr = new StreamReader(fs, Encoding.Unicode);
             var reader = new LcrsTreeReader(sr);
 
             _trieReaders.Add(reader);
+
+            Log.DebugFormat("opened {0} tree reader in {1}", fileName, time.Elapsed);
             
             return reader;
         }
