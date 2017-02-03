@@ -99,11 +99,14 @@ namespace Resin.IO.Read
                     test = new string(state.ReplaceOrAppend(depth, node.Value).Where(c => c != Char.MinValue).ToArray());
                 }
 
-                var edits = Levenshtein.Distance(word, test);
-
-                if (edits <= maxEdits && node.EndOfWord && test.Length >= minLength)
+                if (test.Length >= minLength)
                 {
-                    yield return new Word { Value = test, Distance = edits };
+                    var edits = Levenshtein.Distance(word, test);
+
+                    if (edits <= maxEdits && node.EndOfWord)
+                    {
+                        yield return new Word { Value = test, Distance = edits };
+                    } 
                 }
 
                 if (node.HaveSibling)
