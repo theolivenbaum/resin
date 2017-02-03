@@ -109,6 +109,7 @@ namespace Resin
                 var hit = new DocumentScore(posting.DocumentId, posting.Count);
 
                 scorer.Score(hit);
+
                 yield return hit;
             }
         }
@@ -133,6 +134,7 @@ namespace Resin
                         var sr = new StreamReader(fs, Encoding.ASCII);
 
                         reader = new PostingsReader(sr);
+
                         _postingReaders.Add(fileId, reader);
                     }
                 }
@@ -151,9 +153,10 @@ namespace Resin
             var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
             var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             var sr = new StreamReader(fs, Encoding.Unicode);
-            
             var reader = new LcrsTreeReader(sr);
+
             _trieReaders.Add(reader);
+            
             return reader;
         }
 
