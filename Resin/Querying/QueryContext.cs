@@ -1,66 +1,85 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using log4net;
+using Resin.IO;
 
 namespace Resin.Querying
 {
     public class QueryContext : QueryTerm
     {
         public IList<QueryContext> Children { get; set; }
-        public IEnumerable<DocumentScore> Result { get; set ; }
+        public IEnumerable<Term> Terms { get; set; }
+        public IEnumerable<IEnumerable<DocumentScore>> Scores { get; set; }
+        public IEnumerable<DocumentScore> Reduced { get; set; }
+        private static readonly ILog Log = LogManager.GetLogger(typeof(QueryContext));
 
         public QueryContext(string field, string value) : base(field, value)
         {
             Children = new List<QueryContext>();
         }
 
-        public IEnumerable<DocumentScore> Reduce()
+        public IEnumerable<DocumentScore> Resolve()
         {
-            var result = new ConcurrentDictionary<string, DocumentScore>(Result.ToDictionary(x => x.DocId, x => x));
+            var time = new Stopwatch();
+            time.Start();
+
+            var resolved = new ConcurrentDictionary<string, DocumentScore>(Reduced.ToDictionary(x => x.DocId, x => x));
 
             foreach(var child in Children)
             {
-                var childResult = child.Reduce().ToDictionary(x=>x.DocId, x=>x);
-
                 if (child.And)
                 {
-                    var scores = result.Values;
-
-                    foreach (var score in scores)
+                    foreach (var score in resolved.Values)
                     {
                         DocumentScore existing;
 
-                        if (childResult.TryGetValue(score.DocId, out existing))
+                        if (child.Resolve().ToDictionary(x => x.DocId, x => x).TryGetValue(score.DocId, out existing))
                         {
-                            result.AddOrUpdate(score.DocId, score, (s, documentScore) => documentScore.Combine(score));
+                            resolved.AddOrUpdate(score.DocId, score, (s, documentScore) => documentScore.Combine(score));
                         }
                         else
                         {
                             DocumentScore removed;
-                            result.TryRemove(score.DocId, out removed);
+                            resolved.TryRemove(score.DocId, out removed);
                         }
                     }
                 }
                 else if (child.Not)
                 {
-                    foreach (var d in childResult)
+                    foreach (var d in child.Resolve())
                     {
                         DocumentScore removed;
-                        result.TryRemove(d.Key, out removed);
+                        resolved.TryRemove(d.DocId, out removed);
                     }
                 }
                 else // Or
                 {
-                    foreach (var d in childResult)
+                    foreach (var d in child.Resolve())
                     {
-                        result.AddOrUpdate(d.Key, d.Value, (s, documentScore) => documentScore.Combine(d.Value));
+                        resolved.AddOrUpdate(d.DocId, d, (s, documentScore) => documentScore.Combine(d));
                     }
                 }
             }
 
-            return result.Values;
+            Log.DebugFormat("resolved {0} in {1}", this, time.Elapsed);
+
+            return resolved.Values;
         }
+
+        public static IEnumerable<DocumentScore> JoinOr(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> second)
+        {
+            var resolved = new ConcurrentDictionary<string, DocumentScore>(first.ToDictionary(x => x.DocId, x => x));
+
+            foreach (var score in second)
+            {
+                resolved.AddOrUpdate(score.DocId, score, (s, documentScore) => documentScore.Combine(score));
+            }
+
+            return resolved.Values;
+        } 
 
         public override string ToString()
         {

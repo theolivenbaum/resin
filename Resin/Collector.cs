@@ -19,82 +19,84 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly IxInfo _ix;
         private readonly IDictionary<Term, IList<DocumentPosting>> _termCache;
-        private readonly Dictionary<string, PostingsReader> _readers;
+        private readonly Dictionary<string, PostingsReader> _postingReaders;
         private readonly IScoringScheme _scorer;
+        private readonly IList<LcrsTreeReader> _trieReaders;
 
         public Collector(string directory, IxInfo ix, IScoringScheme scorer)
         {
             _directory = directory;
             _ix = ix;
             _termCache = new Dictionary<Term, IList<DocumentPosting>>();
-            _readers = new Dictionary<string, PostingsReader>();
+            _postingReaders = new Dictionary<string, PostingsReader>();
             _scorer = scorer;
+            _trieReaders = new List<LcrsTreeReader>();
         }
 
         public IEnumerable<DocumentScore> Collect(QueryContext query)
         {
             Scan(query);
-            Map(query);
+            Score(query);
+            Reduce(query);
 
-            return query.Reduce()
+            return query.Resolve()
                 .OrderByDescending(s => s.Score);
+        }
+
+        private void Reduce(QueryContext query)
+        {
+            query.Reduced = query.Scores.Aggregate(QueryContext.JoinOr);
         }
 
         private void Scan(QueryContext query)
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            var timer = Time();
+            var time = Time();
 
-            using (var reader = GetTreeReader(query.Field))
+            if (query.Fuzzy)
             {
-                IEnumerable<QueryContext> found;
-
-                if (query.Fuzzy)
+                query.Terms = GetTreeReader(query.Field).Near(query.Value, query.Edits)
+                    .Select(token => new Term(query.Field, token)).ToList();
+            }
+            else if (query.Prefix)
+            {
+                query.Terms = GetTreeReader(query.Field).StartsWith(query.Value)
+                    .Select(token => new Term(query.Field, token)).ToList();
+            }
+            else
+            {
+                if (GetTreeReader(query.Field).HasWord(query.Value))
                 {
-                    found = reader.Near(query.Value, query.Edits)
-                        .Select(token => new QueryContext(query.Field, token));
-                }
-                else if (query.Prefix)
-                {
-                    found = reader.StartsWith(query.Value)
-                        .Select(token => new QueryContext(query.Field, token));
+                    query.Terms = new List<Term> { new Term(query.Field, query.Value) };
                 }
                 else
                 {
-                    if (reader.HasWord(query.Value))
-                    {
-                        found = new List<QueryContext>();
-                    }
-                    else
-                    {
-                        found = null;
-                    }
-                }
-
-                if (found != null)
-                {
-                    foreach (var t in found)
-                    {
-                        query.Children.Add(t);
-                    }
+                    query.Terms = new List<Term>();
                 }
             }
 
-            Log.DebugFormat("scanned {0} in {1}", query, timer.Elapsed);
-        }
-
-        private void Map(QueryContext query)
-        {
-            var docsInCorpus = _ix.DocumentCount.DocCount[query.Field];
-            var postings = GetPostings(new Term(query.Field, query.Value));
-            var scored = Score(postings, docsInCorpus);
-
-            query.Result = scored;
+            Log.DebugFormat("scanned {0} in {1}", query, time.Elapsed);
 
             foreach (var child in query.Children)
             {
-                Map(child);
+                Scan(child);
+            }
+        }
+
+        private void Score(QueryContext query)
+        {
+            var time = Time();
+
+            query.Scores = (from term in query.Terms 
+                          let docsInCorpus = _ix.DocumentCount.DocCount[term.Field] let postings = GetPostings(term) 
+                          select Score(postings, docsInCorpus)).ToList();
+
+            Log.DebugFormat("scored {0} in {1}", query, time.Elapsed);
+
+            foreach (var child in query.Children)
+            {
+                Score(child);
             }
         }
 
@@ -117,29 +119,28 @@ namespace Resin
 
             if (!_termCache.TryGetValue(term, out postings))
             {
-                var timer = new Stopwatch();
-                timer.Start();
+                var time = Time();
 
                 var fileId = term.ToPostingsFileId();
                 var fileName = Path.Combine(_directory, fileId + ".pos");
                 PostingsReader reader;
 
-                if (!_readers.TryGetValue(fileId, out reader))
+                if (!_postingReaders.TryGetValue(fileId, out reader))
                 {
-                    if (!_readers.TryGetValue(fileId, out reader))
+                    if (!_postingReaders.TryGetValue(fileId, out reader))
                     {
                         var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
                         var sr = new StreamReader(fs, Encoding.ASCII);
 
                         reader = new PostingsReader(sr);
-                        _readers.Add(fileId, reader);
+                        _postingReaders.Add(fileId, reader);
                     }
                 }
 
                 postings = reader.Read(term).ToList();
                 _termCache.Add(term, postings);
 
-                Log.DebugFormat("read {0} postings from {1} in {2}", postings.Count(), fileName, timer.Elapsed);
+                Log.DebugFormat("read {0} postings from {1} in {2}", postings.Count(), fileName, time.Elapsed);
             }
 
             return postings;
@@ -151,7 +152,9 @@ namespace Resin
             var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             var sr = new StreamReader(fs, Encoding.Unicode);
             
-            return new LcrsTreeReader(sr);
+            var reader = new LcrsTreeReader(sr);
+            _trieReaders.Add(reader);
+            return reader;
         }
 
         private Stopwatch Time()
@@ -163,9 +166,13 @@ namespace Resin
 
         public void Dispose()
         {
-            foreach (var dr in _readers.Values)
+            foreach (var dr in _postingReaders.Values)
             {
                 dr.Dispose();
+            }
+            foreach (var r in _trieReaders)
+            {
+                r.Dispose();
             }
         }
     }
