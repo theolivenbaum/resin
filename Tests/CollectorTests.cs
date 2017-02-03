@@ -55,7 +55,7 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "0"}, {"title", "Gustav Horn, Count of Pori"}},
                 new Dictionary<string, string> {{"_id", "1"}, {"title", "Port au Port Peninsula"}},
                 new Dictionary<string, string> {{"_id", "2"}, {"title", "Pore"}},
-                new Dictionary<string, string> {{"_id", "3"}, {"title", "Porn 2.0"}},
+                new Dictionary<string, string> {{"_id", "3"}, {"title", "Born 2.0"}},
                 new Dictionary<string, string> {{"_id", "4"}, {"title", "Porn"}}
             };
             using (var writer = new IndexWriter(dir, new Analyzer()))
@@ -71,6 +71,10 @@ namespace Tests
 
                 Assert.That(scores.Count, Is.EqualTo(5));
                 Assert.IsTrue(scores.First().DocId.Equals("4"));
+                Assert.IsTrue(scores[1].DocId.Equals("0"));
+                Assert.IsTrue(scores[2].DocId.Equals("1"));
+                Assert.IsTrue(scores[3].DocId.Equals("3"));
+                Assert.IsTrue(scores[4].DocId.Equals("2"));
             }
         }
 

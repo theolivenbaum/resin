@@ -37,13 +37,10 @@ namespace Resin.Analysis
 
         public void Score(DocumentScore doc)
         {
-            var tf = GetTf(doc);
-            doc.Score = tf * _idf;
-        }
-
-        private static double GetTf(DocumentScore doc)
-        {
-            return Math.Sqrt(doc.TermCount);
+            var tf = Math.Sqrt(doc.TermCount);
+            var k = 1 / (float)(1 + (doc.Distance*2));
+            var augTf = tf*k;
+            doc.Score = augTf * _idf;
         }
 
         public void Analyze(string field, string value, IAnalyzer analyzer, Dictionary<string, int> termCount)
