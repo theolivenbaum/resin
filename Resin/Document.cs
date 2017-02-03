@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Resin.IO
+namespace Resin
 {
     [Serializable]
     public class Document

@@ -61,7 +61,7 @@
     <Compile Include="IO\CompressedBinaryFile.cs" />
     <Compile Include="IO\Write\DocumentWriter.cs" />
     <Compile Include="IO\DocumentCount.cs" />
-    <Compile Include="IO\Document.cs" />
+    <Compile Include="Document.cs" />
     <Compile Include="Querying\DocumentScore.cs" />
     <Compile Include="IO\Read\LcrsNode.cs" />
     <Compile Include="IO\LcrsTrie.cs" />
