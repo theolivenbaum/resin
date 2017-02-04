@@ -19,7 +19,7 @@ namespace Resin.Analysis
             {
                 foreach (var term in field.Value)
                 {
-                    var key = new Term(field.Key, new Word{Value=term.Key});
+                    var key = new Term(field.Key, new Word(term.Key));
                     int count;
                     if (!_terms.TryGetValue(key, out count))
                     {

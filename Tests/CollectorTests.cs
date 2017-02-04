@@ -12,10 +12,10 @@ namespace Tests
     [TestFixture]
     public class CollectorTests
     {
-        [Test]
-        public void Can_rank_fuzzy_phrase()
+        [Ignore]
+        public void Can_rank_near_phrase()
         {
-            var dir = Path.Combine(Setup.Dir, "Can_rank_fuzzy_phrase");
+            var dir = Path.Combine(Setup.Dir, "Can_rank_near_phrase");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
@@ -43,10 +43,10 @@ namespace Tests
             }
         }
 
-        [Test]
-        public void Can_rank_fuzzy_term()
+        [Ignore]
+        public void Can_rank_near_term()
         {
-            var dir = Path.Combine(Setup.Dir, "Can_rank_fuzzy_term");
+            var dir = Path.Combine(Setup.Dir, "Can_rank_near_term");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 

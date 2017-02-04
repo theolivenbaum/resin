@@ -85,8 +85,7 @@ namespace Resin.Cli
                             string.Empty.PadRight(7),
                             "docid".PadRight(10),
                             "score".PadRight(10),
-                            "label".PadRight(50),
-                            "aliases".PadRight(40),
+                            "label".PadRight(70),
                             "description"
                         ));
                     Console.WriteLine();
@@ -95,10 +94,9 @@ namespace Resin.Cli
                     {
                         Console.WriteLine(string.Join(string.Empty,
                             (++position).ToString(CultureInfo.InvariantCulture).PadRight(7),
-                            doc.Fields["__score"].ToString(CultureInfo.InvariantCulture).PadRight(10).Substring(0, 10),
                             doc.Fields["_id"].ToString(CultureInfo.InvariantCulture).PadRight(10),
-                            (doc.Fields["label"] ?? string.Empty).Substring(0, Math.Min(49, (doc.Fields["label"] ?? string.Empty).Length)).PadRight(50),
-                            (doc.Fields["aliases"] ?? string.Empty).Substring(0, Math.Min(39, (doc.Fields["aliases"] ?? string.Empty).Length)).PadRight(40),
+                            doc.Fields["__score"].ToString(CultureInfo.InvariantCulture).PadRight(10).Substring(0, 9).PadRight(10),
+                            (doc.Fields["label"] ?? string.Empty).Substring(0, Math.Min(69, (doc.Fields["label"] ?? string.Empty).Length)).PadRight(70),
                             (doc.Fields["description"] ?? string.Empty).Substring(0, Math.Min(30, (doc.Fields["description"] ?? string.Empty).Length))
                         ));
                     }

@@ -5,19 +5,18 @@ namespace Resin.Querying
     public class DocumentScore : IEquatable<DocumentScore>
     {
         private readonly string _docId;
+        
         private double _termCount;
-        private readonly int _distance;
 
         public string DocId { get { return _docId; } }
         public double TermCount { get { return _termCount; } }
-        public int Distance { get { return _distance; } }
+
         public double Score { get; set; }
 
-        public DocumentScore(string docId, double termCount, int distance)
+        public DocumentScore(string docId, double termCount)
         {
             _docId = docId;
             _termCount = termCount;
-            _distance = distance;
         }
 
         public DocumentScore Combine(DocumentScore score)
@@ -26,6 +25,7 @@ namespace Resin.Querying
 
             Score += score.Score;
             _termCount += score.TermCount;
+
             return this;
         }
 

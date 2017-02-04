@@ -64,7 +64,7 @@ namespace Resin.IO
             {
                 if (node.EndOfWord)
                 {
-                    compressed.Add(new Word { Value = test, Distance = edits });
+                    compressed.Add(new Word(test){ Distance = edits });
                 }
             }
 
