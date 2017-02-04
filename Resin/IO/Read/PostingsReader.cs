@@ -19,7 +19,7 @@ namespace Resin.IO.Read
             _sr.BaseStream.Seek(0, SeekOrigin.Begin);
             _sr.DiscardBufferedData();
         }
-
+        
         public IEnumerable<DocumentPosting> Read(Term term)
         {
             Reset();

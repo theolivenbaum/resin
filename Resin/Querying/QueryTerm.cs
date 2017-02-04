@@ -18,7 +18,7 @@ namespace Resin.Querying
 
         public float Similarity
         {
-            set { _edits = (int)Math.Ceiling(Value.Length*(1-value)); }
+            set { _edits = (int)Math.Floor(Value.Length*(1-value)); }
         }
 
         public QueryTerm(string field, string value)

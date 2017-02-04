@@ -155,7 +155,7 @@ namespace Resin.Querying
 
             if (position == 0) and = true;
 
-            return new QueryContext(fieldName, value) { And = and, Not = not, Prefix = prefix, Fuzzy = fuzzy, Similarity = 0.9f, Children = new List<QueryContext>()};
+            return new QueryContext(fieldName, value) { And = and, Not = not, Prefix = prefix, Fuzzy = fuzzy, Similarity = 0.75f, Children = new List<QueryContext>()};
         }
     }
 }

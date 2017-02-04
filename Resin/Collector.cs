@@ -51,15 +51,13 @@ namespace Resin
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            var time = Time();
-
             Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
-         
-            Log.DebugFormat("scanned {0} in {1}", query, time.Elapsed);
-        }
+                 }
 
         private void DoScan(QueryContext query)
         {
+            var time = Time();
+
             var reader = GetTreeReader(query.Field);
 
             if (query.Fuzzy)
@@ -81,6 +79,8 @@ namespace Resin
                     query.Terms = new List<Term>();
                 }
             }
+
+            Log.DebugFormat("scanned {0} in {1}", query, time.Elapsed);
         }
 
         private void GetPostings(QueryContext query)
@@ -103,12 +103,11 @@ namespace Resin
 
         private IEnumerable<IEnumerable<DocumentPosting>> DoReadPostings(IEnumerable<Term> terms)
         {
-            var time = Time(false);
             var result = new ConcurrentBag<IEnumerable<DocumentPosting>>();
 
             Parallel.ForEach(terms, term =>
             {
-                time.Restart();
+                var time = Time();
 
                 var fileId = term.ToPostingsFileId();
                 var fileName = Path.Combine(_directory, fileId + ".pos");

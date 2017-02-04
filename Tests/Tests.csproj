@@ -52,6 +52,7 @@
     <Compile Include="LcrsTrieTests.cs" />
     <Compile Include="QueryParserTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QueryTermTests.cs" />
     <Compile Include="Setup.cs" />
   </ItemGroup>
   <ItemGroup>
