@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -23,7 +22,6 @@ namespace Resin
         private readonly IDictionary<Term, IList<DocumentPosting>> _termCache;
         private readonly IScoringScheme _scorer;
         private readonly IList<LcrsTreeReader> _trieReaders;
-        private readonly ConcurrentDictionary<string, PostingsReader> _postingReaders;
 
         public Collector(string directory, IxInfo ix, IScoringScheme scorer)
         {
@@ -32,7 +30,6 @@ namespace Resin
             _termCache = new Dictionary<Term, IList<DocumentPosting>>();
             _scorer = scorer;
             _trieReaders = new List<LcrsTreeReader>();
-            _postingReaders = new ConcurrentDictionary<string, PostingsReader>();
         }
 
         public IEnumerable<DocumentScore> Collect(QueryContext query)
@@ -123,7 +120,7 @@ namespace Resin
 
                 yield return postings;
 
-                Log.DebugFormat("read postings from {0} ({1}) in {2}", fileName, term, time.Elapsed);
+                Log.DebugFormat("read {0} postings from {1} in {2}", term, fileName, time.Elapsed);
             }
         }
 
@@ -131,19 +128,10 @@ namespace Resin
         {
             var fileId = term.ToPostingsFileId();
             var fileName = Path.Combine(_directory, fileId + ".pos");
+            var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
+            var sr = new StreamReader(fs, Encoding.ASCII);
 
-            PostingsReader reader;
-
-            if (!_postingReaders.TryGetValue(fileId, out reader))
-            {
-                var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
-                var sr = new StreamReader(fs, Encoding.ASCII);
-                reader = new PostingsReader(sr);
-
-                _postingReaders.TryAdd(fileId, reader);
-            }
-
-            return reader;
+            return new PostingsReader(sr);
         }
 
         private void Reduce(QueryContext query)
