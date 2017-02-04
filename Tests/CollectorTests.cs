@@ -87,7 +87,7 @@ namespace Tests
 
             var docs = new List<Dictionary<string, string>>
             {
-                new Dictionary<string, string> {{"_id", "0"}, {"title", "rambo"}},
+                new Dictionary<string, string> {{"_id", "0"}, {"title", "rambo first blood"}},
                 new Dictionary<string, string> {{"_id", "1"}, {"title", "rambo 2"}},
                 new Dictionary<string, string> {{"_id", "2"}, {"title", "rocky 2"}},
                 new Dictionary<string, string> {{"_id", "3"}, {"title", "raiders of the lost ark"}},
@@ -98,7 +98,7 @@ namespace Tests
                 writer.Write(docs.Select(d => new Document(d)));
             }
 
-            var query = new QueryParser(new Analyzer()).Parse("+title:the lost ark");
+            var query = new QueryParser(new Analyzer()).Parse("title:the lost ark");
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
             {

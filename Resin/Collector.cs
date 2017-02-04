@@ -121,7 +121,7 @@ namespace Resin
 
                 result.Add(postings);
 
-                Log.DebugFormat("read {0} postings from {1} in {2}", term, fileName, time.Elapsed);
+                Log.DebugFormat("read {0} {1} postings from {2} in {3}", postings.Count, term, fileName, time.Elapsed);
             });
 
             return result;
