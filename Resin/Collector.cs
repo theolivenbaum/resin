@@ -4,8 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using log4net;
 using Resin.Analysis;
 using Resin.IO;
@@ -37,24 +35,16 @@ namespace Resin
 
         public IEnumerable<DocumentScore> Collect(QueryContext query)
         {
-            var mappingTime = Time();
+            var time = Time();
 
             Scan(query);
-            Score(query);
+            GetPostings(query);
             Reduce(query);
+            Score(query);
 
-            Log.DebugFormat("mapped {0} in {1}", query, mappingTime.Elapsed);
+            Log.DebugFormat("collected {0} in {1}", query, time.Elapsed);
 
-            return query.Reduce()
-                .OrderByDescending(s => s.Score);
-        }
-
-        private void Reduce(QueryContext query)
-        {
-            query.Thread.Join();
-
-            query.Aggregated = query.Scores
-                .Aggregate(QueryContext.JoinOr);
+            return query.Scores.OrderByDescending(s => s.Score);
         }
 
         private void Scan(QueryContext query)
@@ -63,15 +53,13 @@ namespace Resin
 
             var time = Time();
 
-            query.Thread = new Thread(() =>
-            {
-                Thread.CurrentThread.IsBackground = true;
-                DoScan(query);
-            });
-            query.Thread.Start();
+            DoScan(query);
 
-            Parallel.ForEach(query.Children, DoScan);
-          
+            foreach (var child in query.Children)
+            {
+                DoScan(child);
+            }
+         
             Log.DebugFormat("scanned {0} in {1}", query, time.Elapsed);
         }
 
@@ -91,7 +79,7 @@ namespace Resin
             {
                 if (GetTreeReader(query.Field).HasWord(query.Value))
                 {
-                    query.Terms = new List<Term> { new Term(query.Field, new Word{Value=query.Value}) };
+                    query.Terms = new List<Term> { new Term(query.Field, new Word(query.Value)) };
                 }
                 else
                 {
@@ -100,41 +88,106 @@ namespace Resin
             }
         }
 
+        private void GetPostings(QueryContext query)
+        {
+            if (query == null) throw new ArgumentNullException("query");
+
+            var time = Time();
+
+            DoGetPostings(query);
+
+            foreach (var child in query.Children)
+            {
+                DoGetPostings(child);
+            }
+
+            Log.DebugFormat("got postings for {0} in {1}", query, time.Elapsed);
+        }
+
+        private void DoGetPostings(QueryContext query)
+        {
+            IEnumerable<DocumentPosting> result = null;
+            bool first = true;
+            foreach (IEnumerable<DocumentPosting> postings in GetPostings(query.Terms))
+            {
+                if (first)
+                {
+                    first = false;
+                    result = postings;
+                    continue;
+                }
+                result = DocumentPosting.JoinOr(result, postings);
+            }
+            query.Postings = result ?? Enumerable.Empty<DocumentPosting>();
+        }
+
+        private IEnumerable<IEnumerable<DocumentPosting>> GetPostings(IEnumerable<Term> terms)
+        {
+            foreach (var term in terms)
+            {
+                IList<DocumentPosting> postings;
+
+                if (!_termCache.TryGetValue(term, out postings))
+                {
+                    var fileId = term.ToPostingsFileId();
+                    var fileName = Path.Combine(_directory, fileId + ".pos");
+                    PostingsReader reader;
+
+                    if (!_postingReaders.TryGetValue(fileId, out reader))
+                    {
+                        if (!_postingReaders.TryGetValue(fileId, out reader))
+                        {
+                            var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
+                            var sr = new StreamReader(fs, Encoding.ASCII);
+
+                            reader = new PostingsReader(sr);
+
+                            _postingReaders.Add(fileId, reader);
+                        }
+                    }
+
+                    postings = reader.Read(term).ToList();
+                    _termCache.Add(term, postings);
+                }
+                yield return postings;
+            }
+        }
+
+        private void Reduce(QueryContext query)
+        {
+            var time = Time();
+
+            DoReduce(query);
+
+            Log.DebugFormat("reduced {0} in {1}", query, time.Elapsed);
+        }
+
+        private void DoReduce(QueryContext query)
+        {
+            query.Reduced = query.Reduce();
+        }
+
         private void Score(QueryContext query)
         {
             var time = Time();
 
-            query.Thread.Join();
-
-            query.Thread = new Thread(() =>
-            {
-                Thread.CurrentThread.IsBackground = true;
-                DoScore(query);
-            });
-            query.Thread.Start();
-
-            Parallel.ForEach(query.Children, DoScore);
+            DoScore(query);
 
             Log.DebugFormat("scored {0} in {1}", query, time.Elapsed);
         }
 
         private void DoScore(QueryContext query)
         {
-            query.Scores =
-
-                from term in query.Terms
-                let docsInCorpus = _ix.DocumentCount.DocCount[term.Field]
-                let postings = GetPostings(term)
-                select Score(postings, docsInCorpus, term.Word.Distance).ToList();
+            query.Scores = Score(query.Reduced);
         }
 
-        private IEnumerable<DocumentScore> Score(IList<DocumentPosting> postings, int docsInCorpus, int distance)
+        private IEnumerable<DocumentScore> Score(IEnumerable<DocumentPosting> postings)
         {
-            var scorer = _scorer.CreateScorer(docsInCorpus, postings.Count);
-
             foreach (var posting in postings)
             {
-                var hit = new DocumentScore(posting.DocumentId, posting.Count, distance);
+                var scorer = _scorer.CreateScorer(_ix.DocumentCount.DocCount[posting.Term.Field], posting.Count);
+
+                var hit = new DocumentScore(posting.DocumentId, posting.Count);
 
                 scorer.Score(hit);
 
@@ -142,40 +195,6 @@ namespace Resin
             }
         }
         
-        private IList<DocumentPosting> GetPostings(Term term)
-        {
-            IList<DocumentPosting> postings;
-
-            if (!_termCache.TryGetValue(term, out postings))
-            {
-                var time = Time();
-
-                var fileId = term.ToPostingsFileId();
-                var fileName = Path.Combine(_directory, fileId + ".pos");
-                PostingsReader reader;
-
-                if (!_postingReaders.TryGetValue(fileId, out reader))
-                {
-                    if (!_postingReaders.TryGetValue(fileId, out reader))
-                    {
-                        var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
-                        var sr = new StreamReader(fs, Encoding.ASCII);
-
-                        reader = new PostingsReader(sr);
-
-                        _postingReaders.Add(fileId, reader);
-                    }
-                }
-
-                postings = reader.Read(term).ToList();
-                _termCache.Add(term, postings);
-
-                Log.DebugFormat("read {0} postings from {1} in {2}", postings.Count(), fileName, time.Elapsed);
-            }
-
-            return postings;
-        }
-
         private LcrsTreeReader GetTreeReader(string field)
         {
             var time = Time();

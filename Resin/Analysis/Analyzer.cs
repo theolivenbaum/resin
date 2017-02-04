@@ -3,7 +3,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Resin.IO;
 using Resin.Sys;
 
 namespace Resin.Analysis
@@ -13,11 +12,9 @@ namespace Resin.Analysis
         private readonly HashSet<char> _customTokenSeparators;
         private readonly HashSet<string> _stopwords;
         private readonly CultureInfo _culture;
-        private readonly IScoringScheme _scoringScheme;
  
-        public Analyzer(IScoringScheme scoringScheme = null, CultureInfo culture = null, char[] tokenSeparators = null, string[] stopwords = null)
+        public Analyzer(CultureInfo culture = null, char[] tokenSeparators = null, string[] stopwords = null)
         {
-            _scoringScheme = scoringScheme ?? new Tfidf();
             _culture = culture ?? Thread.CurrentThread.CurrentUICulture;
             _customTokenSeparators = new HashSet<char>(tokenSeparators ?? new char[0]);
             _stopwords = new HashSet<string>(stopwords ?? GetDefaultStopwords());
@@ -41,8 +38,20 @@ namespace Resin.Analysis
         private IDictionary<string, int> Analyze(string field, string value)
         {
             var termCount = new Dictionary<string, int>();
-            _scoringScheme.Analyze(field, value, this, termCount);
+            Analyze(field, value, termCount);
             return termCount;
+        }
+
+        private void Analyze(string field, string value, Dictionary<string, int> termCount)
+        {
+            var analyze = field[0] != '_';
+            var tokens = analyze ? Analyze(value) : new[] { value };
+
+            foreach (var token in tokens)
+            {
+                if (termCount.ContainsKey(token)) termCount[token] = termCount[token] + 1;
+                else termCount.Add(token, 1);
+            }
         }
 
         public IEnumerable<string> Analyze(string value)

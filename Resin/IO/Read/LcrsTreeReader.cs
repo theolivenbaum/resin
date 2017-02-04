@@ -105,7 +105,7 @@ namespace Resin.IO.Read
 
                     if (edits <= maxEdits && node.EndOfWord)
                     {
-                        words.Add(new Word { Value = test, Distance = edits });
+                        words.Add(new Word(test){Distance = edits });
                     } 
                 }
 
@@ -141,7 +141,7 @@ namespace Resin.IO.Read
 
                 if (node.EndOfWord)
                 {
-                    compressed.Add(new Word {Value = prefix + new string(path.ToArray())});
+                    compressed.Add(new Word(prefix + new string(path.ToArray())));
                 }
 
                 if (node.HaveSibling)

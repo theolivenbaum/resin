@@ -5,12 +5,28 @@ namespace Resin.IO
     [Serializable]
     public struct Word : IEquatable<Word>, IComparable<Word>
     {
-        public string Value;
+        public readonly string Value;
         public int Distance;
+
+        public Word(string value)
+        {
+            Value = value;
+            Distance = 0;
+        }
 
         public static implicit operator string(Word w)
         {
             return w.Value;
+        }
+
+        public Word Combine(Word other)
+        {
+            if (!other.Value.Equals(Value)) throw new ArgumentException("Uncombinable", "other");
+
+            return new Word(Value)
+            {
+                Distance = Distance + other.Distance
+            };
         }
 
         public bool Equals(Word other)

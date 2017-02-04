@@ -30,7 +30,14 @@ namespace Resin.IO.Read
             while ((line = _sr.ReadLine()) != null)
             {
                 var parts = line.Split(':');
-                var test = new Term(parts[0], new Word{Value=parts[1]});
+                var token = parts[1];
+
+                if (token == null)
+                {
+                    throw new DataMisalignedException("TSNHappen");
+                }
+
+                var test = new Term(parts[0], new Word(token));
 
                 if (test.Equals(term))
                 {
@@ -39,16 +46,18 @@ namespace Resin.IO.Read
                 }
             }
 
-            if (string.IsNullOrWhiteSpace(data))
+            if (!string.IsNullOrWhiteSpace(data))
             {
-                return new List<DocumentPosting>();
-            }
+                var bytes = Convert.FromBase64String(data);
 
-            var bytes = Convert.FromBase64String(data);
-
-            using (var memStream = new MemoryStream(bytes))
-            {
-                return Deserialize(memStream);
+                using (var memStream = new MemoryStream(bytes))
+                {
+                    foreach (var posting in Deserialize(memStream))
+                    {
+                        posting.Term = term;
+                        yield return posting;
+                    }
+                }
             }
         }
 

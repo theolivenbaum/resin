@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Resin.Querying;
 
 namespace Resin.Analysis
@@ -30,28 +29,15 @@ namespace Resin.Analysis
             _idf = Math.Log(docsInCorpus / (double)docsWithTerm + 1) + 1;
         }
 
-        public IScoringScheme CreateScorer(int docsInCorpus, int docsWithTerm)
-        {
-            return new Tfidf(docsInCorpus, docsWithTerm);
-        }
-
         public void Score(DocumentScore doc)
         {
             var tf = Math.Sqrt(doc.TermCount);
-            var k = 1 / (float)(1 + (doc.Distance*2));
-            var augTf = tf*k;
-            doc.Score = augTf * _idf;
+            doc.Score = tf * _idf;
         }
 
-        public void Analyze(string field, string value, IAnalyzer analyzer, Dictionary<string, int> termCount)
+        public IScoringScheme CreateScorer(int docsInCorpus, int docsWithTerm)
         {
-            var analyze = field[0] != '_';
-            var tokens = analyze ? analyzer.Analyze(value) : new[] {value};
-            foreach (var token in tokens)
-            {
-                if (termCount.ContainsKey(token)) termCount[token] = termCount[token] + 1;
-                else termCount.Add(token, 1);
-            }
+            return new Tfidf(docsInCorpus, docsWithTerm);
         }
     }
 }
