@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -103,8 +104,9 @@ namespace Resin
         private IEnumerable<IEnumerable<DocumentPosting>> DoReadPostings(IEnumerable<Term> terms)
         {
             var time = Time(false);
+            var result = new ConcurrentBag<IEnumerable<DocumentPosting>>();
 
-            foreach (var term in terms)
+            Parallel.ForEach(terms, term =>
             {
                 time.Restart();
 
@@ -118,10 +120,12 @@ namespace Resin
                     _termCache.Add(term, postings);
                 }
 
-                yield return postings;
+                result.Add(postings);
 
                 Log.DebugFormat("read {0} postings from {1} in {2}", term, fileName, time.Elapsed);
-            }
+            });
+
+            return result;
         }
 
         private PostingsReader GetPostingsReader(Term term)
