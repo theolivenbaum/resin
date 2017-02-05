@@ -11,10 +11,12 @@ namespace Tests
     [TestFixture]
     public class LcrsTrieTests
     {
+        private const string ExpectedOutput = "d1100\na0101\nn1102\nc0103\ni1104\nn0105\ng0016\ne0014\nd0112\nd0103\ny0014\nb0100\no1101\nx0012\na0101\nn1102\nk0013\nd1012\nb0102\ny0013\n";
+
         [Test]
         public void Can_scan_near_from_disk()
         {
-            const string fileName = "1.bt";
+            const string fileName = "Can_scan_near_from_disk";
 
             var tree = new LcrsTrie('\0', false);
             tree.Add("baby");
@@ -28,18 +30,14 @@ namespace Tests
 
             tree.Serialize(fileName);
 
-            using (var fs = File.OpenRead(fileName))
-            using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var scanner = new LcrsTreeReader(sr))
+            using (var scanner = new LcrsTreeReader(fileName))
             {
                 var near = scanner.Near("bazy", 1).ToList();
                 Assert.AreEqual(1, near.Count);
                 Assert.IsTrue(near.Contains(new Word("baby")));
             }
 
-            using (var fs = File.OpenRead(fileName))
-            using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var scanner = new LcrsTreeReader(sr))
+            using (var scanner = new LcrsTreeReader(fileName))
             {
                 var near = scanner.Near("bazy", 2, 3).ToList();
                 Assert.AreEqual(3, near.Count);
@@ -52,7 +50,7 @@ namespace Tests
         [Test]
         public void Can_scan_prefix_from_disk()
         {
-            const string fileName = "1.bt";
+            const string fileName = "Can_scan_prefix_from_disk";
 
             var tree = new LcrsTrie('\0', false);
             tree.Add("baby");
@@ -66,9 +64,7 @@ namespace Tests
 
             tree.Serialize(fileName);
 
-            using (var fs = File.OpenRead(fileName))
-            using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var scanner = new LcrsTreeReader(sr))
+            using (var scanner = new LcrsTreeReader(fileName))
             {
                 var startsWith = scanner.StartsWith("ba").ToList();
                 Assert.AreEqual(3, startsWith.Count);
@@ -77,9 +73,7 @@ namespace Tests
                 Assert.IsTrue(startsWith.Contains(new Word("bank")));
             }
 
-            using (var fs = File.OpenRead(fileName))
-            using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var scanner = new LcrsTreeReader(sr))
+            using (var scanner = new LcrsTreeReader(fileName))
             {
                 Assert.IsTrue(scanner.HasWord("baby"));
             }
@@ -88,7 +82,7 @@ namespace Tests
         [Test]
         public void Can_scan_exact_from_disk()
         {
-            const string fileName = "0.bt";
+            const string fileName = "Can_scan_exact_from_disk";
 
             var tree = new LcrsTrie('\0', false);
             tree.Add("baby");
@@ -102,16 +96,12 @@ namespace Tests
 
             tree.Serialize(fileName);
 
-            using (var fs = File.OpenRead(fileName))
-            using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var scanner = new LcrsTreeReader(sr))
+            using (var scanner = new LcrsTreeReader(fileName))
             {
                 Assert.IsFalse(scanner.HasWord("bab"));
             }
 
-            using (var fs = File.OpenRead(fileName))
-            using (var sr = new StreamReader(fs, Encoding.Unicode))
-            using (var scanner = new LcrsTreeReader(sr))
+            using (var scanner = new LcrsTreeReader(fileName))
             {
                 Assert.IsTrue(scanner.HasWord("baby"));
             }
@@ -130,12 +120,40 @@ namespace Tests
             tree.Add("dance");
             tree.Add("dancing");
 
-            tree.Serialize("0.bt");
-            var acctual = File.ReadAllText("0.bt", Encoding.Unicode);
+            tree.Serialize("Can_serialize");
+            var acctual = File.ReadAllText("Can_serialize", Encoding.Unicode);
 
-            const string expected = "d1100\na0101\nn1102\nc0103\ni1104\nn0105\ng0016\ne0014\nd0112\nd0103\ny0014\nb0100\no1101\nx0012\na0101\nn1102\nk0013\nd1012\nb0102\ny0013\n";
+            Assert.AreEqual(ExpectedOutput, acctual);
+        }
 
-            Assert.AreEqual(expected, acctual);
+        [Test]
+        public void Can_find_all_children_of_depth()
+        {
+            const string fileName = "Can_find_all_children_of_depth";
+
+            var tree = new LcrsTrie('\0', false);
+            tree.Add("baby");
+            tree.Add("bad");
+            tree.Add("bank");
+            tree.Add("box");
+            tree.Add("dad");
+            tree.Add("daddy");
+            tree.Add("dance");
+            tree.Add("dancing");
+
+            tree.Serialize(fileName);
+            var acctual = File.ReadAllText(fileName, Encoding.Unicode);
+
+            Assert.AreEqual(ExpectedOutput, acctual);
+
+            using (var scanner = new LcrsTreeReader(fileName))
+            {
+                var children = scanner.AllChildrenAtDepth(0).Select(n=>n.Value).ToList();
+
+                Assert.That(children.Count, Is.EqualTo(2));
+                Assert.IsTrue(children.Contains('b'));
+                Assert.IsTrue(children.Contains('d'));
+            }
         }
 
         [Test]

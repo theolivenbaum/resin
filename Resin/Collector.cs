@@ -140,9 +140,7 @@ namespace Resin
         private LcrsTreeReader GetTreeReader(string field)
         {
             var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
-            var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
-            var sr = new StreamReader(fs, Encoding.Unicode);
-            var reader = new LcrsTreeReader(sr);
+            var reader = new LcrsTreeReader(fileName);
             
             return reader;
         }

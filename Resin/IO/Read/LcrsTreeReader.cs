@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Resin.Analysis;
 
 namespace Resin.IO.Read
@@ -12,12 +13,13 @@ namespace Resin.IO.Read
         private LcrsNode _lastRead;
         private LcrsNode _replay;
 
-        public LcrsTreeReader(StreamReader sr)
+        public LcrsTreeReader(string fileName)
         {
-            _sr = sr;
+            var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.None);
+            _sr = new StreamReader(fs, Encoding.Unicode);
         }
 
-        private LcrsNode Step()
+        private LcrsNode Step(TextReader sr)
         {
             if (_replay != null)
             {
@@ -25,7 +27,7 @@ namespace Resin.IO.Read
                 _replay = null;
                 return replayed;
             }
-            var data = _sr.ReadLine();
+            var data = sr.ReadLine();
             
             if (data == null)
             {
@@ -75,13 +77,15 @@ namespace Resin.IO.Read
         public IEnumerable<Word> Near(string word, int edits, int minLength)
         {
             var words = new List<Word>();
+            
             WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), 0, edits, minLength, words);
+            
             return words.OrderBy(w => w.Distance);
         }
 
         private void WithinEditDistanceDepthFirst(string word, string state, int depth, int maxEdits, int minLength, IList<Word> words)
         {
-            var node = Step();
+            var node = Step(_sr);
 
             var nodesWithUnresolvedSiblings = new Stack<Tuple<int, string>>();
             var childIndex = depth + 1;
@@ -129,7 +133,7 @@ namespace Resin.IO.Read
 
         private void DepthFirst(string prefix, IList<char> path, IList<Word> compressed, int depth)
         {
-            var node = Step();
+            var node = Step(_sr);
             var siblings = new Stack<Tuple<int,IList<char>>>();
 
             // Go left (deep)
@@ -150,7 +154,7 @@ namespace Resin.IO.Read
                 }
 
                 depth = node.Depth;
-                node = Step();
+                node = Step(_sr);
             }
 
             Replay();
@@ -161,14 +165,14 @@ namespace Resin.IO.Read
                 DepthFirst(prefix, siblingState.Item2, compressed, siblingState.Item1);
             }
         }
-        
+
         private bool TryFindDepthFirst(string path, int currentDepth, out LcrsNode node)
         {
-            node = Step();
+            node = Step(_sr);
 
             while (node != null && node.Depth != currentDepth)
             {
-                node = Step();
+                node = Step(_sr);
             }
 
             if (node != null)
@@ -189,12 +193,93 @@ namespace Resin.IO.Read
             return false;
         }
 
+        public IEnumerable<LcrsNode> AllChildrenAtDepth(int depth, StreamReader sr)
+        {
+            var node = Step(sr);
+
+            while (node != null)
+            {
+                if (node.Depth == depth)
+                {
+                    yield return node;
+                }
+
+                node = Step(sr);
+            } 
+        }
+
+        public IEnumerable<LcrsNode> AllChildrenAtDepth(int depth)
+        {
+            return AllChildrenAtDepth(depth, _sr);
+        }
+
         public void Dispose()
         {
             if (_sr != null)
             {
                 _sr.Dispose();
             }
+        }
+    }
+
+    public class PositioningReader : TextReader
+    {
+        private readonly TextReader _inner;
+        private long _pos;
+        private long _linePos;
+
+        public long Pos { get { return _pos; } }
+        public long LinePos { get { return _linePos; } }
+
+        public PositioningReader(TextReader inner)
+        {
+            _inner = inner;
+        }
+
+        public override void Close()
+        {
+            _inner.Close();
+        }
+
+        public override int Peek()
+        {
+            return _inner.Peek();
+        }
+
+        public override string ReadLine()
+        {
+            var c = Read();
+            if (c == -1)
+            {
+                return null;
+            }
+
+            var sb = new StringBuilder();
+            do
+            {
+                var ch = (char)c;
+                if (ch == '\n')
+                {
+                    return sb.ToString();
+                }
+                sb.Append(ch);
+            } while ((c = Read()) != -1);
+            return sb.ToString();
+        }
+
+        public override int Read()
+        {
+            var c = _inner.Read();
+
+            if (c >= 0)
+            {
+                _pos++;
+                if (c == '\n')
+                {
+                    _linePos++;
+                }
+            }
+            return c;
         }
     }
 }

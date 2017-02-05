@@ -79,9 +79,57 @@ namespace Tests
         }
 
         [Test]
-        public void Can_collect_phrase_joined_by_and()
+        public void Can_collect_near_phrase()
         {
-            var dir = Path.Combine(Setup.Dir, "Can_collect_phrase_joined_by_and");
+            var dir = Path.Combine(Setup.Dir, "Can_collect_near_phrase_joined_by_and");
+
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            var docs = new List<Dictionary<string, string>>
+            {
+                new Dictionary<string, string> {{"_id", "0"}, {"title", "rambo first blood"}},
+                new Dictionary<string, string> {{"_id", "1"}, {"title", "rambo 2"}},
+                new Dictionary<string, string> {{"_id", "2"}, {"title", "rocky 2"}},
+                new Dictionary<string, string> {{"_id", "3"}, {"title", "the raiders of the lost ark"}},
+                new Dictionary<string, string> {{"_id", "4"}, {"title", "the rain man"}},
+                new Dictionary<string, string> {{"_id", "5"}, {"title", "the good, the bad and the ugly"}}
+            };
+            using (var writer = new IndexWriter(dir, new Analyzer()))
+            {
+                writer.Write(docs.Select(d => new Document(d)));
+            }
+
+            var query = new QueryParser(new Analyzer()).Parse("+title:the rango");
+
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            {
+                var scores = collector.Collect(query).ToList();
+
+                Assert.That(scores.Count, Is.EqualTo(3));
+                Assert.IsTrue(scores.Any(d => d.DocId == "3"));
+                Assert.IsTrue(scores.Any(d => d.DocId == "4"));
+                Assert.IsTrue(scores.Any(d => d.DocId == "5"));
+            }
+
+            query = new QueryParser(new Analyzer()).Parse("+title:the ramvo~");
+
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            {
+                var scores = collector.Collect(query).ToList();
+
+                Assert.That(scores.Count, Is.EqualTo(5));
+                Assert.IsTrue(scores.Any(d => d.DocId == "0"));
+                Assert.IsTrue(scores.Any(d => d.DocId == "1"));
+                Assert.IsTrue(scores.Any(d => d.DocId == "3"));
+                Assert.IsTrue(scores.Any(d => d.DocId == "4"));
+                Assert.IsTrue(scores.Any(d => d.DocId == "5"));
+            }
+        }
+
+        [Test]
+        public void Can_collect_exact_phrase_joined_by_and()
+        {
+            var dir = Path.Combine(Setup.Dir, "Can_collect_exact_phrase_joined_by_and");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
@@ -123,9 +171,9 @@ namespace Tests
         }
 
         [Test]
-        public void Can_collect_phrase_joined_by_or()
+        public void Can_collect_exact_phrase_joined_by_or()
         {
-            var dir = Path.Combine(Setup.Dir, "Can_collect_phrase_joined_by_or");
+            var dir = Path.Combine(Setup.Dir, "Can_collect_exact_phrase_joined_by_or");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
@@ -178,9 +226,9 @@ namespace Tests
         }
 
         [Test]
-        public void Can_collect_phrase_joined_by_not()
+        public void Can_collect_exact_phrase_joined_by_not()
         {
-            var dir = Path.Combine(Setup.Dir, "Can_collect_phrase_joined_by_not");
+            var dir = Path.Combine(Setup.Dir, "Can_collect_exact_phrase_joined_by_not");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
