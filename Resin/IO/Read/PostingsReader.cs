@@ -54,7 +54,7 @@ namespace Resin.IO.Read
                 {
                     foreach (var posting in Deserialize(memStream))
                     {
-                        posting.Term = term;
+                        posting.Field = term.Field;
                         yield return posting;
                     }
                 }

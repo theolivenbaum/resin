@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using Resin;
 using Resin.Analysis;
 using Resin.Querying;
 

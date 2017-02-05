@@ -36,8 +36,7 @@ namespace Resin
         {
             using (var collector = new Collector(_directory, _ix, _scorer))
             {
-                var timer = new Stopwatch();
-                timer.Start();
+                var time = Time();
 
                 var q = _parser.Parse(query);
 
@@ -46,7 +45,7 @@ namespace Resin
                     return new Result { Docs = Enumerable.Empty<Document>() };
                 }
 
-                Log.DebugFormat("parsed query {0} in {1}", q, timer.Elapsed);
+                Log.DebugFormat("parsed query {0} in {1}", q, time.Elapsed);
 
                 var scored = collector.Collect(q).ToList();
                 var skip = page * size;
@@ -59,8 +58,7 @@ namespace Resin
 
         private Document GetDoc(DocumentScore score)
         {
-            var timer = new Stopwatch();
-            timer.Start();
+            //var time = Time();
 
             var fileId = score.DocId.ToDocFileId();
             var fileName = Path.Combine(_directory, fileId + ".doc");
@@ -78,9 +76,16 @@ namespace Resin
 
             doc.Fields["__score"] = score.Score.ToString(CultureInfo.InvariantCulture);
 
-            Log.DebugFormat("read {0} from {1} in {2}", doc.Id, fileName, timer.Elapsed);
+            //Log.DebugFormat("read {0} from {1} in {2}", doc.Id, fileName, time.Elapsed);
 
             return doc;
+        }
+
+        private static Stopwatch Time()
+        {
+            var timer = new Stopwatch();
+            timer.Start();
+            return timer;
         }
 
         public void Dispose()

@@ -30,15 +30,6 @@ namespace Resin.IO
             return hash;
         }
 
-        public Term Combine(Term other)
-        {
-            if (other == null) throw new ArgumentNullException("other");
-            if (!other.Field.Equals(Field)) throw new ArgumentException("Uncombinable fields", "other");
-            if (!other.Word.Equals(Word)) throw new ArgumentException("Uncombinable words", "other");
-
-            return new Term(Field, Word.Combine(other.Word));
-        }
-
         public int CompareTo(Term other)
         {
             if (Equals(other)) return 0;

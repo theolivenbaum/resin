@@ -2,7 +2,7 @@
 
 namespace Resin.Querying
 {
-    public class DocumentScore : IEquatable<DocumentScore>
+    public class DocumentScore : IEquatable<DocumentScore>, IComparable<DocumentScore>
     {
         private readonly string _docId;
         
@@ -19,14 +19,12 @@ namespace Resin.Querying
             _termCount = termCount;
         }
 
-        public DocumentScore Combine(DocumentScore score)
+        public void Combine(DocumentScore score)
         {
             if (!score.Equals(this)) throw new ArgumentException("Doc id differs. Cannot add.", "score");
 
             Score += score.Score;
             _termCount += score.TermCount;
-
-            return this;
         }
 
         public int CompareTo(DocumentScore other)

@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,8 +10,6 @@ namespace Resin.Querying
         public IList<QueryContext> Children { get; set; }
         public IEnumerable<Term> Terms { get; set; }
         public IEnumerable<DocumentPosting> Postings { get; set; }
-        public IEnumerable<DocumentPosting> Reduced { get; set; }
-        public IEnumerable<DocumentScore> Scores { get; set; }
 
         public QueryContext(string field, string value) : base(field, value)
         {
@@ -21,46 +18,46 @@ namespace Resin.Querying
 
         public IEnumerable<DocumentPosting> Reduce()
         {
-            var reduced = new ConcurrentDictionary<string, DocumentPosting>(Postings.ToDictionary(x => x.DocumentId, x => x));
+            var first = Postings.ToList();
 
             foreach (var child in Children)
             {
-                var join = child.Reduce().ToDictionary(x => x.DocumentId, x => x);
+                var other = child.Reduce().ToList();
 
                 if (child.And)
                 {
-                    foreach (var posting in reduced.Values)
+                    var dic =  other.ToDictionary(x => x.DocumentId);
+                    var remainder = new List<DocumentPosting>();
+                    foreach (var posting in first)
                     {
-                        DocumentPosting existing;
-
-                        if (join.TryGetValue(posting.DocumentId, out existing))
+                        DocumentPosting exists;
+                        if (dic.TryGetValue(posting.DocumentId, out exists))
                         {
-                            reduced.AddOrUpdate(posting.DocumentId, posting, (s, p) => p.Combine(posting));
-                        }
-                        else
-                        {
-                            reduced.TryRemove(posting.DocumentId, out existing);
+                            posting.Combine(exists);
+                            remainder.Add(posting);
                         }
                     }
+                    first = remainder;
                 }
                 else if (child.Not)
                 {
-                    foreach (var posting in join.Values)
+                    var dic = first.ToDictionary(x => x.DocumentId);
+                    foreach (var posting in other)
                     {
-                        DocumentPosting removed;
-                        reduced.TryRemove(posting.DocumentId, out removed);
+                        DocumentPosting exists;
+                        if (dic.TryGetValue(posting.DocumentId, out exists))
+                        {
+                            first.Remove(exists);
+                        }
                     }
                 }
                 else // Or
                 {
-                    foreach (var posting in join.Values)
-                    {
-                        reduced.AddOrUpdate(posting.DocumentId, posting, (s, p) => p.Combine(posting));
-                    }
+                    first = DocumentPosting.JoinOr(first, other).ToList();
                 }
             }
 
-            return reduced.Values;
+            return first;
         }
         
         public override string ToString()

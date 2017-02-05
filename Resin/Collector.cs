@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -35,16 +34,10 @@ namespace Resin
 
         public IEnumerable<DocumentScore> Collect(QueryContext query)
         {
-            var time = Time();
-
             Scan(query);
             GetPostings(query);
-            Reduce(query);
-            Score(query);
 
-            Log.DebugFormat("collected {0} in {1}", query, time.Elapsed);
-
-            return query.Scores.OrderByDescending(s => s.Score);
+            return query.Reduce().Select(p=>p.Score).OrderByDescending(s => s.Score);
         }
 
         private void Scan(QueryContext query)
@@ -52,7 +45,7 @@ namespace Resin
             if (query == null) throw new ArgumentNullException("query");
 
             Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
-                 }
+        }
 
         private void DoScan(QueryContext query)
         {
@@ -87,10 +80,14 @@ namespace Resin
         {
             if (query == null) throw new ArgumentNullException("query");
 
+            var time = Time();
+
             foreach (var q in new List<QueryContext> {query}.Concat(query.Children))
             {
                 DoGetPostings(q);
             }
+
+            Log.DebugFormat("read postings for {0} in {1}", query, time.Elapsed);
         }
 
         private void DoGetPostings(QueryContext query)
@@ -103,28 +100,19 @@ namespace Resin
 
         private IEnumerable<IEnumerable<DocumentPosting>> DoReadPostings(IEnumerable<Term> terms)
         {
-            var result = new ConcurrentBag<IEnumerable<DocumentPosting>>();
-
-            Parallel.ForEach(terms, term =>
+            foreach(var term in terms)
             {
-                var time = Time();
-
-                var fileId = term.ToPostingsFileId();
-                var fileName = Path.Combine(_directory, fileId + ".pos");
                 IList<DocumentPosting> postings;
 
                 if (!_termCache.TryGetValue(term, out postings))
                 {
                     postings = GetPostingsReader(term).Read(term).ToList();
+                    postings = Score(postings).ToList();
                     _termCache.Add(term, postings);
                 }
 
-                result.Add(postings);
-
-                Log.DebugFormat("read {0} {1} postings from {2} in {3}", postings.Count, term, fileName, time.Elapsed);
-            });
-
-            return result;
+                yield return postings;
+            }
         }
 
         private PostingsReader GetPostingsReader(Term term)
@@ -137,45 +125,17 @@ namespace Resin
             return new PostingsReader(sr);
         }
 
-        private void Reduce(QueryContext query)
-        {
-            var time = Time();
-
-            DoReduce(query);
-
-            Log.DebugFormat("reduced {0} in {1}", query, time.Elapsed);
-        }
-
-        private void DoReduce(QueryContext query)
-        {
-            query.Reduced = query.Reduce();
-        }
-
-        private void Score(QueryContext query)
-        {
-            var time = Time();
-
-            DoScore(query);
-
-            Log.DebugFormat("scored {0} in {1}", query, time.Elapsed);
-        }
-
-        private void DoScore(QueryContext query)
-        {
-            query.Scores = Score(query.Reduced);
-        }
-
-        private IEnumerable<DocumentScore> Score(IEnumerable<DocumentPosting> postings)
+        private IEnumerable<DocumentPosting> Score(IEnumerable<DocumentPosting> postings)
         {
             foreach (var posting in postings)
             {
-                var scorer = _scorer.CreateScorer(_ix.DocumentCount.DocCount[posting.Term.Field], posting.Count);
+                var scorer = _scorer.CreateScorer(_ix.DocumentCount.DocCount[posting.Field], posting.Count);
 
-                var hit = new DocumentScore(posting.DocumentId, posting.Count);
+                posting.Score = new DocumentScore(posting.DocumentId, posting.Count);
 
-                scorer.Score(hit);
+                scorer.Score(posting.Score);
 
-                yield return hit;
+                yield return posting;
             }
         }
         
@@ -194,10 +154,10 @@ namespace Resin
             return reader;
         }
 
-        private Stopwatch Time(bool started = true)
+        private static Stopwatch Time()
         {
             var timer = new Stopwatch();
-            if (started) timer.Start();
+            timer.Start();
             return timer;
         }
 

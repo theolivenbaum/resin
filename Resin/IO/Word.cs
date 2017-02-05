@@ -19,16 +19,6 @@ namespace Resin.IO
             return w.Value;
         }
 
-        public Word Combine(Word other)
-        {
-            if (!other.Value.Equals(Value)) throw new ArgumentException("Uncombinable", "other");
-
-            return new Word(Value)
-            {
-                Distance = Distance + other.Distance
-            };
-        }
-
         public bool Equals(Word other)
         {
             return string.Equals(Value, other.Value);
