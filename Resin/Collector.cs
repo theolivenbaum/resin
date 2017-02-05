@@ -21,7 +21,6 @@ namespace Resin
         private readonly IxInfo _ix;
         private readonly IDictionary<Term, IList<DocumentPosting>> _termCache;
         private readonly IScoringScheme _scorer;
-        private readonly IList<LcrsTreeReader> _trieReaders;
 
         public Collector(string directory, IxInfo ix, IScoringScheme scorer)
         {
@@ -29,7 +28,6 @@ namespace Resin
             _ix = ix;
             _termCache = new Dictionary<Term, IList<DocumentPosting>>();
             _scorer = scorer;
-            _trieReaders = new List<LcrsTreeReader>();
         }
 
         public IEnumerable<DocumentScore> Collect(QueryContext query)
@@ -51,28 +49,28 @@ namespace Resin
         {
             var time = Time();
 
-            var reader = GetTreeReader(query.Field);
-
-            if (query.Fuzzy)
+            using (var reader = GetTreeReader(query.Field))
             {
-                query.Terms = reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word));
-            }
-            else if (query.Prefix)
-            {
-                query.Terms = reader.StartsWith(query.Value).Select(word => new Term(query.Field, word));
-            }
-            else
-            {
-                if (reader.HasWord(query.Value))
+                if (query.Fuzzy)
                 {
-                    query.Terms = new List<Term> { new Term(query.Field, new Word(query.Value)) };
+                    query.Terms = reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word));
+                }
+                else if (query.Prefix)
+                {
+                    query.Terms = reader.StartsWith(query.Value).Select(word => new Term(query.Field, word));
                 }
                 else
                 {
-                    query.Terms = new List<Term>();
+                    if (reader.HasWord(query.Value))
+                    {
+                        query.Terms = new List<Term> {new Term(query.Field, new Word(query.Value))};
+                    }
+                    else
+                    {
+                        query.Terms = new List<Term>();
+                    }
                 }
             }
-
             Log.DebugFormat("scanned {0} in {1}", query, time.Elapsed);
         }
 
@@ -141,15 +139,10 @@ namespace Resin
         
         private LcrsTreeReader GetTreeReader(string field)
         {
-            var time = Time();
             var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
             var sr = new StreamReader(fs, Encoding.Unicode);
             var reader = new LcrsTreeReader(sr);
-
-            _trieReaders.Add(reader);
-
-            Log.DebugFormat("opened tree reader {0} (field:{1}) in {2}", fileName, field, time.Elapsed);
             
             return reader;
         }
@@ -163,13 +156,6 @@ namespace Resin
 
         public void Dispose()
         {
-            if (_trieReaders != null)
-            {
-                foreach (var r in _trieReaders)
-                {
-                    if(r != null) r.Dispose();
-                }
-            }
         }
     }
 }

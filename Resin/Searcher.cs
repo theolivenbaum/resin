@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -21,14 +20,12 @@ namespace Resin
         private readonly QueryParser _parser;
         private readonly IScoringScheme _scorer;
         private readonly IxInfo _ix;
-        private readonly Dictionary<string, DocumentReader> _readers;
 
         public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
         {
             _directory = directory;
             _parser = parser;
             _scorer = scorer;
-            _readers = new Dictionary<string, DocumentReader>();
             _ix = IxInfo.Load(Path.Combine(_directory, "0.ix"));
         }
 
@@ -58,27 +55,19 @@ namespace Resin
 
         private Document GetDoc(DocumentScore score)
         {
-            //var time = Time();
-
             var fileId = score.DocId.ToDocFileId();
             var fileName = Path.Combine(_directory, fileId + ".doc");
-            DocumentReader reader;
+            var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var sr = new StreamReader(fs, Encoding.ASCII);
 
-            if (!_readers.TryGetValue(fileId, out reader))
+            using (var reader = new DocumentReader(sr))
             {
-                var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-                var sr = new StreamReader(fs, Encoding.ASCII);
-                reader = new DocumentReader(sr);
-                _readers.Add(fileId, reader);
+                var doc = reader.Get(score.DocId);
+
+                doc.Fields["__score"] = score.Score.ToString(CultureInfo.InvariantCulture);
+
+                return doc;    
             }
-
-            var doc = reader.Get(score.DocId);
-
-            doc.Fields["__score"] = score.Score.ToString(CultureInfo.InvariantCulture);
-
-            //Log.DebugFormat("read {0} from {1} in {2}", doc.Id, fileName, time.Elapsed);
-
-            return doc;
         }
 
         private static Stopwatch Time()
@@ -90,10 +79,6 @@ namespace Resin
 
         public void Dispose()
         {
-            foreach (var dr in _readers.Values)
-            {
-                dr.Dispose();
-            }
         }
     }
 }
