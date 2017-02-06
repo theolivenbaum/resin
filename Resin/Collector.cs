@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -44,38 +45,46 @@ namespace Resin
 
             var time = Time();
 
-            foreach (var q in new List<QueryContext> { query }.Concat(query.Children))
-            {
-                DoScan(q);
-            }
-            //Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
+            //foreach (var q in new List<QueryContext> { query }.Concat(query.Children))
+            //{
+            //    DoScan(q);
+            //}
+            Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
 
             Log.DebugFormat("total scan time for {0}: {1}", query, time.Elapsed);
         }
 
         private void DoScan(QueryContext query)
         {
-            var terms = new List<Term>();
+            var terms = new ConcurrentBag<Term>();
             var readers = GetTreeReaders(query.Field).ToList();
 
-            foreach (var reader in readers)
+            //foreach (var reader in readers)
+            Parallel.ForEach(readers, reader =>
             {
                 using (reader)
                 {
                     if (query.Fuzzy)
                     {
-                        terms.AddRange(reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)));
+                        foreach (var term in reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)))
+                        {
+                            terms.Add(term);
+                        }
                     }
                     else if (query.Prefix)
                     {
-                        terms.AddRange(reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)));
+                        foreach (var term in reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)))
+                        {
+                            terms.Add(term);
+                        }
                     }
                     else if (reader.HasWord(query.Value))
                     {
                         terms.Add(new Term(query.Field, new Word(query.Value)));
                     }
                 }
-            }
+            });
+            
             query.Terms = terms;
         }
 
@@ -146,7 +155,7 @@ namespace Resin
         {
             var searchPattern = string.Format("{0}*.tri", field.ToTrieFileId());
             var files = Directory.GetFiles(_directory, searchPattern);
-            return files.Select(fileName => new LcrsTreeReader(fileName));
+            return files.OrderBy(f=>f).Select(fileName => new LcrsTreeReader(fileName));
         }
 
         private static Stopwatch Time()

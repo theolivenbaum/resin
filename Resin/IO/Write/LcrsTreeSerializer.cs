@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -35,7 +36,7 @@ namespace Resin.IO.Write
                 }
                 fileCount++;
 
-                //n.Balance(fileName);
+                n.Balance(fileName);
             }
         }
 
@@ -44,24 +45,25 @@ namespace Resin.IO.Write
             var fi = new FileInfo(fileNameTemplate);
             var size = fi.Length/1024;
 
-            if (size < 10)
+            if (size < 800)
             {
                 return;
             }
             
             var ext = Path.GetExtension(fileNameTemplate) ?? "";
-            var fileCount = 0;
-            var siblings = node.GetAllSiblings().ToList();
+            var siblings = new List<LcrsTrie> {node};
 
-            if (siblings.Count > 2)
+            siblings.AddRange(node.GetAllSiblings());
+
+            if (siblings.Count > 1)
             {
                 var nodes = siblings.Fold(siblings.Count / 2).ToList();
-
+                var fileCount = 0;
                 foreach (var n in nodes)
                 {
                     var fileName = string.IsNullOrWhiteSpace(ext) ?
-                        fileNameTemplate + "_" + fileCount :
-                        fileNameTemplate.Replace(ext, "_" + fileCount + ext);
+                        fileNameTemplate + fileCount :
+                        fileNameTemplate.Replace(ext, fileCount + ext);
 
                     using (var fs = File.Create(fileName))
                     using (var sw = new StreamWriter(fs, Encoding.Unicode))
@@ -69,10 +71,8 @@ namespace Resin.IO.Write
                         n.SerializeDepthFirst(sw, 0);
                     }
                     fileCount++;
-
                     n.Balance(fileName);
                 }
-
                 fi.Delete();
             }
         }
