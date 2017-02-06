@@ -106,7 +106,7 @@ namespace Resin
             writer.Write(term, postings);
         }
 
-        private void WriteTriePath(string field, string value)
+        private void WriteToTrie(string field, string value)
         {
             if (field == null) throw new ArgumentNullException("field");
             if (value == null) throw new ArgumentNullException("value");
@@ -156,7 +156,7 @@ namespace Resin
 
                 foreach (var term in analyzed.Terms)
                 {
-                    WriteTriePath(term.Key.Field, term.Key.Word.Value);
+                    WriteToTrie(term.Key.Field, term.Key.Word.Value);
 
                     List<DocumentPosting> weights;
 
@@ -187,14 +187,15 @@ namespace Resin
 
             var trieTime = Time();
 
-            Parallel.ForEach(_tries, kvp =>
+            foreach(var kvp in _tries)
+            //Parallel.ForEach(_tries, kvp =>
             {
                 var field = kvp.Key;
                 var trie = kvp.Value;
-                var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
-
-                trie.Serialize(fileName);
-            });
+                var fileNameTemplate = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
+                
+                trie.Serialize(fileNameTemplate);
+            }//);
 
             Log.DebugFormat("wrote tries in {0}", trieTime.Elapsed);
 

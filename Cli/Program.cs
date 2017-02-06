@@ -135,14 +135,16 @@ namespace Resin.Cli
             var fileName = args[Array.IndexOf(args, "--file") + 1];
             string dir = null;
             string indexName = null;
+
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
             if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
 
             var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
             var inproc = !string.IsNullOrWhiteSpace(dir);
+
             IndexWriter w = inproc ? new IndexWriter(dir, new Analyzer()) : null;
 
-            Console.Write("Collecting docs: ");
+            Console.Write("Preparing docs: ");
 
             var cursorPos = Console.CursorLeft;
             var count = 0;
@@ -156,16 +158,20 @@ namespace Resin.Cli
             using (var sr = new StreamReader(bs))
             {
                 string line;
+
                 sr.ReadLine();
+
                 while (skipped++ < skip)
                 {
                     sr.ReadLine();
                 }
+
                 while ((line = sr.ReadLine()) != null)
                 {
                     if (line[0] == ']') break;
 
                     var doc = JsonConvert.DeserializeObject<Dictionary<string, string>>(line.Substring(0, line.Length - 1));
+
                     Console.SetCursorPosition(cursorPos, Console.CursorTop);
                     Console.Write(++count);
 
@@ -181,11 +187,13 @@ namespace Resin.Cli
             if (inproc)
             {
                 w.Write(docs.Select(d=>new Document(d)));
+
                 w.Dispose();
             }
             else
             {
                 Console.WriteLine("Executing HTTP POST");
+
                 using (var client = new WriterClient(indexName, url))
                 {
                     client.Write(docs);

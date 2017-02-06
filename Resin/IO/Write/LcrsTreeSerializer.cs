@@ -1,20 +1,83 @@
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Resin.IO.Write
 {
     public static class LcrsTreeSerializer
     {
-        public static void Serialize(this LcrsTrie node, string path)
+        public static void SerializeOld(this LcrsTrie node, string fileName)
         {
-            using(var fs = File.Create(path))
+            using (var fs = File.Create(fileName))
             using (var sw = new StreamWriter(fs, Encoding.Unicode))
             {
-                node.LeftChild.Serialize(sw, 0);
+                node.LeftChild.SerializeDepthFirst(sw, 0);
             }
         }
 
-        public static void Serialize(this LcrsTrie node, StreamWriter sw, int depth)
+        public static void Serialize(this LcrsTrie node, string fileNameTemplate)
+        {
+            var ext = Path.GetExtension(fileNameTemplate) ?? "";
+            var fileCount = 0;
+            var all = node.GetLeftChildAndAllOfItsSiblings().ToList();
+            var nodes = all.Count == 1 ? all : all.Fold(all.Count / 2).ToList();
+
+            foreach (var n in nodes)
+            {
+                var fileName = string.IsNullOrWhiteSpace(ext) ? 
+                    fileNameTemplate + "_" + fileCount : 
+                    fileNameTemplate.Replace(ext, "_" + fileCount + ext);
+
+                using (var fs = File.Create(fileName))
+                using (var sw = new StreamWriter(fs, Encoding.Unicode))
+                {
+                    n.SerializeDepthFirst(sw, 0);
+                }
+                fileCount++;
+
+                //n.Balance(fileName);
+            }
+        }
+
+        private static void Balance(this LcrsTrie node, string fileNameTemplate)
+        {
+            var fi = new FileInfo(fileNameTemplate);
+            var size = fi.Length/1024;
+
+            if (size < 10)
+            {
+                return;
+            }
+            
+            var ext = Path.GetExtension(fileNameTemplate) ?? "";
+            var fileCount = 0;
+            var siblings = node.GetAllSiblings().ToList();
+
+            if (siblings.Count > 2)
+            {
+                var nodes = siblings.Fold(siblings.Count / 2).ToList();
+
+                foreach (var n in nodes)
+                {
+                    var fileName = string.IsNullOrWhiteSpace(ext) ?
+                        fileNameTemplate + "_" + fileCount :
+                        fileNameTemplate.Replace(ext, "_" + fileCount + ext);
+
+                    using (var fs = File.Create(fileName))
+                    using (var sw = new StreamWriter(fs, Encoding.Unicode))
+                    {
+                        n.SerializeDepthFirst(sw, 0);
+                    }
+                    fileCount++;
+
+                    n.Balance(fileName);
+                }
+
+                fi.Delete();
+            }
+        }
+
+        private static void SerializeDepthFirst(this LcrsTrie node, StreamWriter sw, int depth)
         {
             sw.Write(node.Value);
             sw.Write(node.RightSibling == null ? "0" : "1");
@@ -25,12 +88,12 @@ namespace Resin.IO.Write
 
             if (node.LeftChild != null)
             {
-                node.LeftChild.Serialize(sw, depth + 1);
+                node.LeftChild.SerializeDepthFirst(sw, depth + 1);
             }
 
             if (node.RightSibling != null)
             {
-                node.RightSibling.Serialize(sw, depth);
+                node.RightSibling.SerializeDepthFirst(sw, depth);
             }
         }
     }

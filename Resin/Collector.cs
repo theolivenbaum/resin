@@ -42,36 +42,41 @@ namespace Resin
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
+            var time = Time();
+
+            foreach (var q in new List<QueryContext> { query }.Concat(query.Children))
+            {
+                DoScan(q);
+            }
+            //Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
+
+            Log.DebugFormat("total scan time for {0}: {1}", query, time.Elapsed);
         }
 
         private void DoScan(QueryContext query)
         {
-            var time = Time();
+            var terms = new List<Term>();
+            var readers = GetTreeReaders(query.Field).ToList();
 
-            using (var reader = GetTreeReader(query.Field))
+            foreach (var reader in readers)
             {
-                if (query.Fuzzy)
+                using (reader)
                 {
-                    query.Terms = reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word));
-                }
-                else if (query.Prefix)
-                {
-                    query.Terms = reader.StartsWith(query.Value).Select(word => new Term(query.Field, word));
-                }
-                else
-                {
-                    if (reader.HasWord(query.Value))
+                    if (query.Fuzzy)
                     {
-                        query.Terms = new List<Term> {new Term(query.Field, new Word(query.Value))};
+                        terms.AddRange(reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)));
                     }
-                    else
+                    else if (query.Prefix)
                     {
-                        query.Terms = new List<Term>();
+                        terms.AddRange(reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)));
+                    }
+                    else if (reader.HasWord(query.Value))
+                    {
+                        terms.Add(new Term(query.Field, new Word(query.Value)));
                     }
                 }
             }
-            Log.DebugFormat("scanned {0} in {1}", query, time.Elapsed);
+            query.Terms = terms;
         }
 
         private void GetPostings(QueryContext query)
@@ -136,13 +141,12 @@ namespace Resin
                 yield return posting;
             }
         }
-        
-        private LcrsTreeReader GetTreeReader(string field)
+
+        private IEnumerable<LcrsTreeReader> GetTreeReaders(string field)
         {
-            var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
-            var reader = new LcrsTreeReader(fileName);
-            
-            return reader;
+            var searchPattern = string.Format("{0}*.tri", field.ToTrieFileId());
+            var files = Directory.GetFiles(_directory, searchPattern);
+            return files.Select(fileName => new LcrsTreeReader(fileName));
         }
 
         private static Stopwatch Time()

@@ -77,7 +77,9 @@ namespace Resin.IO.Read
         public IEnumerable<Word> Near(string word, int edits, int minLength)
         {
             var words = new List<Word>();
-            
+
+            //var test = AllChildrenAtDepth(0).ToList();
+
             WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), 0, edits, minLength, words);
             
             return words.OrderBy(w => w.Distance);

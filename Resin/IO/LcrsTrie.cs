@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Resin.IO
 {
@@ -60,6 +62,68 @@ namespace Resin.IO
 
             node = null;
             return false;
+        }
+
+        public IEnumerable<LcrsTrie> GetFoldedChildlist(int segmentLength)
+        {
+            return GetLeftChildAndAllOfItsSiblings().Fold(segmentLength);
+        }
+
+        public IEnumerable<LcrsTrie> GetLeftChildAndAllOfItsSiblings()
+        {
+            if (LeftChild != null)
+            {
+                yield return LeftChild;
+
+                var sibling = LeftChild.RightSibling;
+
+                while (sibling != null)
+                {
+                    yield return sibling;
+
+                    sibling = sibling.RightSibling;
+                }
+            }
+        }
+
+        public IEnumerable<LcrsTrie> GetAllSiblings()
+        {
+            if (RightSibling != null)
+            {
+                yield return RightSibling;
+
+                var sibling = RightSibling.RightSibling;
+
+                while (sibling != null)
+                {
+                    yield return sibling;
+
+                    sibling = sibling.RightSibling;
+                }
+            }
+        }
+    }
+
+    public static class LcrsTrieHelper
+    {
+        public static IEnumerable<LcrsTrie> Fold(this IEnumerable<LcrsTrie> nodes, int segmentLength)
+        {
+            var count = 0;
+
+            foreach (var child in nodes.ToList())
+            {
+                if (count == 0)
+                {
+                    yield return child;
+                }
+                else if (count == segmentLength)
+                {
+                    child.RightSibling = null;
+
+                    count = -1;
+                }
+                count++;
+            }
         }
     }
 }

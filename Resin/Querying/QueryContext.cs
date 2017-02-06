@@ -59,7 +59,7 @@ namespace Resin.Querying
 
             return first;
         }
-        
+      
         public override string ToString()
         {
             var s = new StringBuilder();
