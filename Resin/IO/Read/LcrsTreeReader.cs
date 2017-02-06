@@ -9,12 +9,14 @@ namespace Resin.IO.Read
 {
     public class LcrsTreeReader : IDisposable
     {
+        public string FileName { get; private set; }
         private readonly StreamReader _sr;
         private LcrsNode _lastRead;
         private LcrsNode _replay;
 
         public LcrsTreeReader(string fileName)
         {
+            FileName = fileName;
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.None);
             _sr = new StreamReader(fs, Encoding.Unicode);
         }

@@ -144,7 +144,7 @@ namespace Resin.Cli
 
             IndexWriter w = inproc ? new IndexWriter(dir, new Analyzer()) : null;
 
-            Console.Write("Preparing docs: ");
+            Console.Write("preparing docs: ");
 
             var cursorPos = Console.CursorLeft;
             var count = 0;
@@ -182,7 +182,7 @@ namespace Resin.Cli
                 Console.WriteLine();
             }
 
-            Console.WriteLine("collected docs in {0}", timer.Elapsed);
+            Console.WriteLine("prepared docs in {0}", timer.Elapsed);
 
             if (inproc)
             {

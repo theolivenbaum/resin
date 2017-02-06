@@ -106,8 +106,10 @@ namespace Resin.IO
 
     public static class LcrsTrieHelper
     {
-        public static IEnumerable<LcrsTrie> Fold(this IEnumerable<LcrsTrie> nodes, int segmentLength)
+        public static IEnumerable<LcrsTrie> Fold(this IEnumerable<LcrsTrie> nodes, int size)
         {
+            if (size <= 0) throw new ArgumentOutOfRangeException("size");
+
             var count = 0;
 
             foreach (var child in nodes.ToList())
@@ -116,7 +118,7 @@ namespace Resin.IO
                 {
                     yield return child;
                 }
-                else if (count == segmentLength)
+                else if (count == size)
                 {
                     child.RightSibling = null;
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -44,11 +45,11 @@ namespace Resin
 
             var time = Time();
 
-            foreach (var q in new List<QueryContext> { query }.Concat(query.Children))
-            {
-                DoScan(q);
-            }
-            //Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
+            //foreach (var q in new List<QueryContext> { query }.Concat(query.Children))
+            //{
+            //    DoScan(q);
+            //}
+            Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
 
             Log.DebugFormat("total scan time for {0}: {1}", query, time.Elapsed);
         }
@@ -56,10 +57,14 @@ namespace Resin
         private void DoScan(QueryContext query)
         {
             var terms = new List<Term>();
+            //var terms = new ConcurrentBag<Term>();
             var readers = GetTreeReaders(query.Field).ToList();
 
             foreach (var reader in readers)
+            //Parallel.ForEach(readers, reader =>
             {
+                var time = Time();
+
                 using (reader)
                 {
                     if (query.Fuzzy)
@@ -75,7 +80,10 @@ namespace Resin
                         terms.Add(new Term(query.Field, new Word(query.Value)));
                     }
                 }
-            }
+
+                Log.DebugFormat("scanned {0} {1} in\t{2}", query.AsReadable(), reader.FileName, time.Elapsed);
+            }//);
+            
             query.Terms = terms;
         }
 
@@ -96,7 +104,8 @@ namespace Resin
         private void DoGetPostings(QueryContext query)
         {
             var result = DoReadPostings(query.Terms)
-                .Aggregate<IEnumerable<DocumentPosting>, IEnumerable<DocumentPosting>>(null, DocumentPosting.JoinOr);
+                .Aggregate<IEnumerable<DocumentPosting>, IEnumerable<DocumentPosting>>(
+                    null, DocumentPosting.JoinOr);
 
             query.Postings = result ?? Enumerable.Empty<DocumentPosting>();
         }
@@ -146,7 +155,7 @@ namespace Resin
         {
             var searchPattern = string.Format("{0}*.tri", field.ToTrieFileId());
             var files = Directory.GetFiles(_directory, searchPattern);
-            return files.Select(fileName => new LcrsTreeReader(fileName));
+            return files.OrderBy(f=>f).Select(fileName => new LcrsTreeReader(fileName));
         }
 
         private static Stopwatch Time()

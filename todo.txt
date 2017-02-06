@@ -3,15 +3,15 @@ Prioritized backlog
 
 Rewrite "age of porn"~ into +"age~" +"of~" +"porn~" (done)
 
-Use edit distance in scoring
-
-Query multiple indices
-
 Fix server
 
 Create new solution for server: sir
 
 Documentation
+
+Async await instead of Parallel.ForEach
+
+Query multiple indices
 
 Nesting of queries: +label:golden +label:age of porn~ +genre:documentaries rewritten to +label:golden +(label:age~ label:of~ label:porn~) +genre:documentaries
 
