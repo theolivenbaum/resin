@@ -1,4 +1,4 @@
-[Apache Lucene](https://lucene.apache.org/) is an outstanding [information retrieval](https://en.wikipedia.org/wiki/Information_retrieval) system built on the Java runtime. There is a .Net alternative but the [Lucene.Net](https://lucenenet.apache.org/) team are to this date three major versions behind the Java team. Also, the Lucene code base is big and complex and difficult to understand. This is a great opportunity to build a new information retrieval system from scratch.
+[Apache Lucene](https://lucene.apache.org/) is an outstanding [information retrieval](https://en.wikipedia.org/wiki/Information_retrieval) system built on the Java runtime. There is a .Net alternative but the [Lucene.Net](https://lucenenet.apache.org/) team are to this date three major versions behind the Java team. Also, the Lucene code base is big and complex and difficult to understand. This is a great opportunity to build a new information retrieval system.
 
 # Resin
 
