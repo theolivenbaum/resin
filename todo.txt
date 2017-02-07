@@ -3,7 +3,9 @@ Prioritized backlog
 
 Rewrite "age of porn"~ into +"age~" +"of~" +"porn~" (done)
 
-Fix server
+Fix server (done)
+
+fix search by _id
 
 Create new solution for server: sir
 
