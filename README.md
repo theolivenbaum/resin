@@ -18,7 +18,7 @@ Great knowledge about IR can be found with the big tech corporations of today, G
 
 Even if the internet's data is available to all, because it is so vast it can't be properly digested by humans unless a machine first makes sense of it. Google, Microsoft and Facebook have great machines. We should to.
 
-IR, and Resin, is perhaps the smallest and most fundemental component of AI.
+IR is perhaps the smallest and most fundemental component of AI.
 
 AI should empower us all. It should not be monopolized by corporations. It should be free.
 
