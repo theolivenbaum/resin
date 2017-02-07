@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using Resin.Analysis;
@@ -39,8 +40,6 @@ namespace Resin
         /// </summary>
         private readonly Dictionary<string, PostingsWriter> _postingsWriters;
 
-        private readonly List<Document> _docs;
-
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
             _directory = directory;
@@ -48,13 +47,117 @@ namespace Resin
             _docWriters = new Dictionary<string, DocumentWriter>();
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
-            _docs = new List<Document>();
             _postingsWriters = new Dictionary<string, PostingsWriter>();
         }
 
-        public void Write(IEnumerable<Document> docs)
+        public void Write(IEnumerable<Document> documents)
         {
-            _docs.AddRange(docs);
+            var indexTime = Time();
+            var analyzedDocs = new List<AnalyzedDocument>();
+            var analyzeTime = Time();
+
+            using (var trieWorker = new TaskQueue<AnalyzedDocument>(1, BuildTree))
+            using (var docWorker = new TaskQueue<Document>(1, WriteDocument))
+            {
+                foreach (var doc in documents)
+                {
+                    var analyzedDoc = _analyzer.AnalyzeDocument(doc);
+                    analyzedDocs.Add(analyzedDoc);
+
+                    trieWorker.Enqueue(analyzedDoc);
+                    docWorker.Enqueue(doc);
+
+                    foreach (var field in doc.Fields)
+                    {
+                        _docCountByField.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
+                    }
+                }
+            }
+            Log.DebugFormat("stored and analyzed documents in {0}", analyzeTime.Elapsed);
+
+            var trieThread = new Thread(() =>
+            {
+                var trieTime = Time();
+
+                SerializeTries();
+
+                Log.DebugFormat("serialized tries in {0}", trieTime.Elapsed);
+            });
+            trieThread.Start();
+
+            var matrixBuildTime = Time();
+
+            var postingsMatrix = BuildPostingsMatrix(analyzedDocs);
+
+            Log.DebugFormat("built postings matrix in {0}", matrixBuildTime.Elapsed);
+
+            var postingsThread = new Thread(() =>
+            {
+                var postingsTime = Time();
+
+                foreach (var term in postingsMatrix)
+                {
+                    WritePostings(term.Key, term.Value);
+                }
+
+                Log.DebugFormat("serialized postings in {0}", postingsTime.Elapsed);
+            });
+            postingsThread.Start();
+            
+            var ixInfo = new IxInfo
+            {
+                DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField))
+            };
+            ixInfo.Save(Path.Combine(_directory, "0.ix"));
+
+            trieThread.Join();
+            postingsThread.Join();
+
+            Log.DebugFormat("indexing took {0}", indexTime.Elapsed);
+        }
+
+        private void SerializeTries()
+        {
+            //foreach(var kvp in _tries)
+            Parallel.ForEach(_tries, kvp =>
+            {
+                var field = kvp.Key;
+                var trie = kvp.Value;
+                var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
+
+                trie.Serialize(fileName);
+            });
+        }
+
+        private void BuildTree(AnalyzedDocument analyzedDoc)
+        {
+            foreach (var term in analyzedDoc.Terms)
+            {
+                WriteToTrie(term.Key.Field, term.Key.Word.Value);
+            }
+        }
+
+        private Dictionary<Term, List<DocumentPosting>> BuildPostingsMatrix(IEnumerable<AnalyzedDocument> analyzedDocs)
+        {
+            var postingsMatrix = new Dictionary<Term, List<DocumentPosting>>();
+
+            foreach (var doc in analyzedDocs)
+            {
+                foreach (var term in doc.Terms)
+                {
+                    List<DocumentPosting> weights;
+
+                    if (postingsMatrix.TryGetValue(term.Key, out weights))
+                    {
+                        weights.Add(new DocumentPosting(doc.Id, term.Value));
+                    }
+                    else
+                    {
+                        postingsMatrix.Add(term.Key, new List<DocumentPosting> { new DocumentPosting(doc.Id, term.Value) });
+                    }
+                }
+            }
+            return postingsMatrix;
         }
         
         private void WriteDocument(Document doc)
@@ -77,7 +180,6 @@ namespace Resin
                         _docWriters.Add(fileId, writer);
                     }
                 }
-                
             }
             writer.Write(doc);
         }
@@ -135,81 +237,6 @@ namespace Resin
 
         public void Dispose()
         {
-            var indexTime = Time();
-
-            var termDocMatrix = new Dictionary<Term, List<DocumentPosting>>();
-
-            var docTime = Time();
-
-            foreach (var doc in _docs)
-            {
-                WriteDocument(doc);
-            }
-
-            Log.DebugFormat("wrote docs in {0}", docTime.Elapsed);
-
-            var analyzeTime = Time();
-
-            foreach(var doc in _docs)
-            {
-                var analyzed = _analyzer.AnalyzeDocument(doc);
-
-                foreach (var term in analyzed.Terms)
-                {
-                    WriteToTrie(term.Key.Field, term.Key.Word.Value);
-
-                    List<DocumentPosting> weights;
-
-                    if (termDocMatrix.TryGetValue(term.Key, out weights))
-                    {
-                        weights.Add(new DocumentPosting(analyzed.Id, term.Value));
-                    }
-                    else
-                    {
-                        termDocMatrix.Add(term.Key, new List<DocumentPosting> { new DocumentPosting(analyzed.Id, term.Value) });
-                    }
-                }
-            }
-
-            Log.DebugFormat("analyzed docs in {0}", analyzeTime.Elapsed);
-
-            foreach (var doc in _docs)
-            {
-                foreach (var field in doc.Fields)
-                {
-                    _docCountByField.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
-                }
-            }
-
-            var trieTime = Time();
-
-            //foreach(var kvp in _tries)
-            Parallel.ForEach(_tries, kvp =>
-            {
-                var field = kvp.Key;
-                var trie = kvp.Value;
-                var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
-                
-                trie.Serialize(fileName);
-            });
-
-            Log.DebugFormat("wrote tries in {0}", trieTime.Elapsed);
-
-            var postingsTime = Time();
-
-            foreach (var term in termDocMatrix)
-            {
-                WritePostings(term.Key, term.Value);
-            }
-
-            Log.DebugFormat("wrote postings in {0}", postingsTime.Elapsed);
-
-            var ixInfo = new IxInfo
-            {
-                DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField))
-            };
-            ixInfo.Save(Path.Combine(_directory, "0.ix"));
-
             foreach (var pw in _postingsWriters.Values)
             {
                 pw.Dispose();
@@ -219,8 +246,6 @@ namespace Resin
             {
                 dw.Dispose();
             }
-
-            Log.DebugFormat("wrote index in {0}", indexTime.Elapsed);
         }
     }
 }

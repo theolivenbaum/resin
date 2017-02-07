@@ -1,1 +1,1 @@
-cli\bin\release\rn.exe %*
+src\Resin.Cli\bin\Release\rn.exe %*

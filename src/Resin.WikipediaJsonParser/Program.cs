@@ -9,15 +9,18 @@ namespace Resin.WikipediaJsonParser
 {
     class Program
     {
+        //D:\wikipedia\latest-all.json c:\temp\1wikipedia.json 1000000 2000000
         private static void Main(string[] args)
         {
             var timer = new Stopwatch();
             timer.Start();
+
             var fileName = args[0];
             var destination = args[1];
             var skip = int.Parse(args[2]);
             var length = int.Parse(args[3]);
             var count = 0;
+
             using (var w = File.CreateText(destination))
             {
                 var cursorPos = Console.CursorLeft;
