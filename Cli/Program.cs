@@ -8,8 +8,8 @@ using System.Linq;
 using log4net.Config;
 using Newtonsoft.Json;
 using Resin.Analysis;
-using Resin.Client;
 using Resin.Querying;
+using Sir.Client;
 
 namespace Resin.Cli
 {

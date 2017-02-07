@@ -7,7 +7,7 @@ Fix server (done)
 
 fix search by _id
 
-Create new solution for server: sir
+Create new solution for server: sir (done)
 
 Documentation
 
@@ -26,8 +26,6 @@ Make it possible to write a new index to the dir.
 Auto-refresh collector when new index has been written to the dir
 
 Merge indices
-
-Implement git on server (for distribution)
 
 Implement term count as PostingData<int>
 

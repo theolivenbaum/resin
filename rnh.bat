@@ -1,1 +1,0 @@
-host\bin\release\rnh.exe %*

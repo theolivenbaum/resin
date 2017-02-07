@@ -45,6 +45,9 @@
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Sir.Client">
+      <HintPath>..\lib\sir.client\Sir.Client.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -60,10 +63,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Resin.Client\Resin.Client.csproj">
-      <Project>{8d42df7a-10d6-4511-bf0d-673592d1a791}</Project>
-      <Name>Resin.Client</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Resin\Resin.csproj">
       <Project>{2be53bd7-0454-4289-af1b-e1781c983ec3}</Project>
       <Name>Resin</Name>
