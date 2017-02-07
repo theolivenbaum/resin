@@ -198,26 +198,6 @@ namespace Resin.IO.Read
             return false;
         }
 
-        public IEnumerable<LcrsNode> AllChildrenAtDepth(int depth, TextReader sr)
-        {
-            var node = Step(sr);
-
-            while (node != null)
-            {
-                if (node.Depth == depth)
-                {
-                    yield return node;
-                }
-
-                node = Step(sr);
-            } 
-        }
-
-        public IEnumerable<LcrsNode> AllChildrenAtDepth(int depth)
-        {
-            return AllChildrenAtDepth(depth, _textReader);
-        }
-
         public void Dispose()
         {
             if (_textReader != null)

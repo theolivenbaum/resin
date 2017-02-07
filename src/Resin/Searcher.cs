@@ -32,23 +32,21 @@ namespace Resin
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
+            var queryContext = _parser.Parse(query);
+
+            if (queryContext == null)
+            {
+                return new Result { Docs = new List<Document>() };
+            }
+
             using (var collector = new Collector(_directory, _ix, _scorer))
             {
-                var queryContext = _parser.Parse(query);
-
-                if (queryContext == null)
-                {
-                    return new Result { Docs = new List<Document>() };
-                }
-
                 var scored = collector.Collect(queryContext).ToList();
                 var skip = page * size;
-                var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
-
+                var paged = scored.Skip(skip).Take(size);
                 var time = Time();
-
-                var docs = paged.Values.Select(GetDoc).ToList();
-
+                var docs = paged.Select(GetDoc).ToList();
+                
                 Log.DebugFormat("read docs for {0} in {1}", queryContext, time.Elapsed);
 
                 return new Result { Docs = docs, Total = scored.Count }; 
