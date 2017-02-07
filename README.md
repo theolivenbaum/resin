@@ -27,11 +27,11 @@ Resin is a modern information retrieval system, a document based search engine l
 		writer.Write(docs);
 	}
 
-##Query the index (matching the whole term)
+##Query the index
 <a name="inproc" id="inproc"></a>
 
 	var searcher = new Searcher(dir);
-	var result = searcher.Search("label:universe");
+	var result = searcher.Search("description:matter or energy");
 
 [More here](https://github.com/kreeben/resin/wiki). 
 
