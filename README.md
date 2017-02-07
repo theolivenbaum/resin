@@ -6,7 +6,34 @@ Resin is a modern information retrieval system, a document based search engine l
 
 ## Documentation
 
-[Here](https://github.com/kreeben/resin/wiki). 
+##Say you have a document.
+
+	{
+		"_id": "Q1",
+		"label":  "universe",
+		"description": "totality of planets, stars, galaxies, intergalactic space, or all matter or all energy",
+		"aliases": "cosmos The Universe existence space outerspace"
+	}
+
+##Wait, say you have a huge number documents.
+	
+	var docs = GetWikipediaAsJson();
+
+##Add them to a Resin index
+
+	var dir = @"C:\Users\Yourname\Resin\wikipedia";
+	using (var writer = new IndexWriter(dir, new Analyzer()))
+	{
+		writer.Write(docs);
+	}
+
+##Query the index (matching the whole term)
+<a name="inproc" id="inproc"></a>
+
+	var searcher = new Searcher(dir);
+	var result = searcher.Search("label:universe");
+
+[More here](https://github.com/kreeben/resin/wiki). 
 
 ## Contribute
 
