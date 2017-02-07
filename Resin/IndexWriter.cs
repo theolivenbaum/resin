@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using log4net;
 using Resin.Analysis;
 using Resin.IO;
@@ -172,8 +173,6 @@ namespace Resin
 
             Log.DebugFormat("analyzed docs in {0}", analyzeTime.Elapsed);
 
-            var docCountTime = Time();
-
             foreach (var doc in _docs)
             {
                 foreach (var field in doc.Fields)
@@ -182,19 +181,17 @@ namespace Resin
                 }
             }
 
-            Log.DebugFormat("counted docs per field in {0}", docCountTime.Elapsed);
-
             var trieTime = Time();
 
-            foreach(var kvp in _tries)
-            //Parallel.ForEach(_tries, kvp =>
+            //foreach(var kvp in _tries)
+            Parallel.ForEach(_tries, kvp =>
             {
                 var field = kvp.Key;
                 var trie = kvp.Value;
                 var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
                 
                 trie.Serialize(fileName);
-            }//);
+            });
 
             Log.DebugFormat("wrote tries in {0}", trieTime.Elapsed);
 
