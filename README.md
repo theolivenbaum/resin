@@ -23,3 +23,7 @@ IR, and Resin, is perhaps the smallest and most fundemental component of AI.
 AI should empower us all. It should not be monopolized by corporations. It should be free.
 
 Peace
+
+## Sir
+
+[Sir](https://github.com/kreeben/sir) is an Elasticsearch clone built on Resin. In fact, Sir Is Resin. It's Superwise Information Retrieval.
