@@ -6,7 +6,7 @@ Resin is a modern information retrieval system, a document based search engine l
 
 ## Documentation
 
-##Say you have a document.
+##Here's a document.
 
 	{
 		"_id": "Q1",
@@ -15,11 +15,11 @@ Resin is a modern information retrieval system, a document based search engine l
 		"aliases": "cosmos The Universe existence space outerspace"
 	}
 
-##Wait, say you have a huge number documents.
+##Say you have a huge number of those.
 	
 	var docs = GetWikipediaAsJson();
 
-##Add them to a Resin index
+##Index them.
 
 	var dir = @"C:\Users\Yourname\Resin\wikipedia";
 	using (var writer = new IndexWriter(dir, new Analyzer()))
@@ -27,7 +27,7 @@ Resin is a modern information retrieval system, a document based search engine l
 		writer.Write(docs);
 	}
 
-##Query the index
+##Query the index.
 <a name="inproc" id="inproc"></a>
 
 	var searcher = new Searcher(dir);
@@ -43,9 +43,9 @@ Pull requests are accepted.
 
 ## Power to the people
 
-Great knowledge about IR can be found with the big tech corporations of today, Google, Microsoft, Facebook. It is undemocratic that people can reach the information available on the internet solely through the means of services that these corporations offer.
+Great knowledge about IR can be found within the big tech coorporations of today, Google, Microsoft, Facebook. It is undemocratic that people can use the information available on the internet solely through the means of services that coorporations offer.
 
-Even if the internet's data is available to all, because it is so vast it can't be properly digested by humans unless a machine first makes sense of it. Google, Microsoft and Facebook have great machines. We should to.
+The internet's data is vast. Because it is so it can't be properly digested by humans unless a machine first makes sense of it. Google, Microsoft and Facebook have great machines. That's great. There should be alternative services though, free ones, like Wikipedia, and there should be business models where the personal integrity of users are not for sale. Something else can be for sale. Maybe the integrity of the businesses can be for sale instead, for a change.
 
 IR is perhaps the smallest and most fundemental component of AI.
 
