@@ -1,14 +1,6 @@
 Prioritized backlog
 -------------------
 
-Rewrite "age of porn"~ into +"age~" +"of~" +"porn~" (done)
-
-Fix server (done)
-
-fix search by _id
-
-Create new solution for server: sir (done)
-
 Documentation
 
 Async await instead of Parallel.ForEach

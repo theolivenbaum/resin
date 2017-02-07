@@ -77,7 +77,7 @@ namespace Resin.Querying
 
         private QueryContext CreateTerm(string field, IList<string> words, int termPositionInQuery)
         {
-            var analyze = field[0] != '_';
+            var analyze = field[0] != '_' && field.Length > 1 && field[1] != '_';
             QueryContext query = null;
             var defaulTokenOperator = words.Last().Last();
 
@@ -87,6 +87,7 @@ namespace Resin.Querying
                 {
                     var tokenOperator = word.Last();
                     var analyzable = word;
+
                     if (tokenOperator == '~' || tokenOperator == '*')
                     {
                         analyzable = word.Substring(0, word.Length - 1);
@@ -95,7 +96,9 @@ namespace Resin.Querying
                     {
                         tokenOperator = defaulTokenOperator;
                     }
+
                     var analyzed = _analyzer.Analyze(analyzable).ToArray();
+
                     foreach (string token in analyzed)
                     {
                         if (query == null)

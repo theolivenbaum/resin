@@ -12,6 +12,45 @@ namespace Tests
     [TestFixture]
     public class CollectorTests
     {
+        [Test]
+        public void Can_collect_by_id()
+        {
+            var dir = Path.Combine(Setup.Dir, "Can_collect_by_id");
+
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            var docs = new List<Dictionary<string, string>>
+            {
+                new Dictionary<string, string> {{"_id", "abc0123"}, {"title", "rambo first blood"}},
+                new Dictionary<string, string> {{"_id", "1"}, {"title", "rambo 2"}},
+                new Dictionary<string, string> {{"_id", "2"}, {"title", "rocky 2"}},
+                new Dictionary<string, string> {{"_id", "3"}, {"title", "the raiders of the lost ark"}},
+                new Dictionary<string, string> {{"_id", "four"}, {"title", "the rain man"}},
+                new Dictionary<string, string> {{"_id", "5five"}, {"title", "the good, the bad and the ugly"}}
+            };
+
+            using (var writer = new IndexWriter(dir, new Analyzer()))
+            {
+                writer.Write(docs.Select(d => new Document(d)));
+            }
+
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            {
+                var scores = collector.Collect(new QueryContext("_id", "3")).ToList();
+
+                Assert.That(scores.Count, Is.EqualTo(1));
+                Assert.IsTrue(scores.Any(d => d.DocId == "3"));
+            }
+
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            {
+                var scores = collector.Collect(new QueryContext("_id", "5five")).ToList();
+
+                Assert.That(scores.Count, Is.EqualTo(1));
+                Assert.IsTrue(scores.Any(d => d.DocId == "5five"));
+            }
+        }
+
         [Ignore]
         public void Can_rank_near_phrase()
         {

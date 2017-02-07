@@ -73,16 +73,6 @@ namespace Resin.Cli
             if (Array.IndexOf(args, "-s") > 0) size = int.Parse(args[Array.IndexOf(args, "-s") + 1]);
             if (Array.IndexOf(args, "--url") > 0) url = args[Array.IndexOf(args, "--url") + 1];
 
-            Console.WriteLine();
-            Console.WriteLine(string.Join(string.Empty,
-                    string.Empty.PadRight(7),
-                    "docid".PadRight(10),
-                    "score".PadRight(10),
-                    "label".PadRight(70),
-                    "description"
-                ));
-            Console.WriteLine();
-
             var timer = new Stopwatch();
             timer.Start();
 
@@ -96,6 +86,8 @@ namespace Resin.Cli
                     timer.Stop();
 
                     position = 0 + (page * size);
+
+                    PrintHeaders();
 
                     foreach (var doc in docs)
                     {
@@ -114,6 +106,8 @@ namespace Resin.Cli
 
                     position = 0 + (page * size);
 
+                    PrintHeaders();
+
                     foreach (var doc in docs)
                     {
                         Print(doc, position++);
@@ -122,6 +116,20 @@ namespace Resin.Cli
             }
 
             Console.WriteLine("\r\n{0} results of {1} in {2}", position, result.Total, timer.Elapsed);  
+        }
+
+        private static void PrintHeaders()
+        {
+            Console.WriteLine();
+
+            Console.WriteLine(string.Join(string.Empty,
+                    string.Empty.PadRight(7),
+                    "docid".PadRight(10),
+                    "score".PadRight(10),
+                    "label".PadRight(70),
+                    "description"
+                ));
+            Console.WriteLine();
         }
 
         private static void Print(Document doc, int position)
