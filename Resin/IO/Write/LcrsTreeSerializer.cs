@@ -15,6 +15,8 @@ namespace Resin.IO.Write
             using (var w = new LcrsTreeBinaryWriter(sw))
             {
                 foreach (var child in children)
+
+            if (siblings.Count > 1)
                 {
                     child.RightSibling = null;
                     w.Write(child);
