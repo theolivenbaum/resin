@@ -12,17 +12,8 @@ namespace Resin.IO.Read
             _sr = sr;
         }
 
-        private void Reset()
-        {
-            _sr.BaseStream.Position = 0;
-            _sr.BaseStream.Seek(0, SeekOrigin.Begin);
-            _sr.DiscardBufferedData();
-        }
-
         public Document Get(string docId)
         {
-            Reset();
-
             string line;
             var data = string.Empty;
 

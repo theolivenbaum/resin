@@ -30,14 +30,14 @@ namespace Tests
 
             tree.Serialize(fileName);
 
-            using (var scanner = new LcrsTreeReader(fileName))
+            using (var scanner = new StreamTreeScanner(fileName))
             {
                 var near = scanner.Near("bazy", 1).ToList();
                 Assert.AreEqual(1, near.Count);
                 Assert.IsTrue(near.Contains(new Word("baby")));
             }
 
-            using (var scanner = new LcrsTreeReader(fileName))
+            using (var scanner = new StreamTreeScanner(fileName))
             {
                 var near = scanner.Near("bazy", 2, 3).ToList();
                 Assert.AreEqual(3, near.Count);
@@ -64,7 +64,7 @@ namespace Tests
 
             tree.Serialize(fileName);
 
-            using (var scanner = new LcrsTreeReader(fileName))
+            using (var scanner = new StreamTreeScanner(fileName))
             {
                 var startsWith = scanner.StartsWith("ba").ToList();
                 Assert.AreEqual(3, startsWith.Count);
@@ -73,7 +73,7 @@ namespace Tests
                 Assert.IsTrue(startsWith.Contains(new Word("bank")));
             }
 
-            using (var scanner = new LcrsTreeReader(fileName))
+            using (var scanner = new StreamTreeScanner(fileName))
             {
                 Assert.IsTrue(scanner.HasWord("baby"));
             }
@@ -96,12 +96,12 @@ namespace Tests
 
             tree.Serialize(fileName);
 
-            using (var scanner = new LcrsTreeReader(fileName))
+            using (var scanner = new StreamTreeScanner(fileName))
             {
                 Assert.IsFalse(scanner.HasWord("bab"));
             }
 
-            using (var scanner = new LcrsTreeReader(fileName))
+            using (var scanner = new StreamTreeScanner(fileName))
             {
                 Assert.IsTrue(scanner.HasWord("baby"));
             }
@@ -146,7 +146,7 @@ namespace Tests
 
             Assert.AreEqual(ExpectedOutput, acctual);
 
-            using (var scanner = new LcrsTreeReader(fileName))
+            using (var scanner = new StreamTreeScanner(fileName))
             {
                 var children = scanner.AllChildrenAtDepth(0).Select(n=>n.Value).ToList();
 

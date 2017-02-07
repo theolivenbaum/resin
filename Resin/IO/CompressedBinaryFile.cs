@@ -38,7 +38,6 @@ namespace Resin.IO
                     var bytes = memStream.ToArray();
                     var decompressed = QuickLZ.decompress(bytes);
                     var obj = (T)Serializer.Deserialize(new MemoryStream(decompressed));
-                    Log.DebugFormat("read {0} in {1}", fileName, timer.Elapsed);
                     return obj;
                 }
             }

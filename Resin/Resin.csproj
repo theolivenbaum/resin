@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="Analysis\AnalyzedDocument.cs" />
     <Compile Include="Analysis\Analyzer.cs" />
+    <Compile Include="IO\LcrsTrieHelper.cs" />
     <Compile Include="IO\Read\DocumentReader.cs" />
     <Compile Include="IO\DocumentPosting.cs" />
     <Compile Include="IO\Read\LcrsTreeBinaryReader.cs" />
@@ -69,7 +70,7 @@
     <Compile Include="IO\LcrsTrie.cs" />
     <Compile Include="IO\IxInfo.cs" />
     <Compile Include="IO\BinaryFile.cs" />
-    <Compile Include="IO\Read\LcrsTreeReader.cs" />
+    <Compile Include="IO\Read\StreamTreeScanner.cs" />
     <Compile Include="IO\Read\PostingsReader.cs" />
     <Compile Include="IO\Write\PostingsWriter.cs" />
     <Compile Include="IO\QuickLZ.cs" />

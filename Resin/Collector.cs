@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -50,34 +51,35 @@ namespace Resin
             //}
             Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
 
-            Log.DebugFormat("total scan time for {0}: {1}", query, time.Elapsed);
+            Log.DebugFormat("scanned {0} in {1}", query, time.Elapsed);
         }
 
         private void DoScan(QueryContext query)
         {
-            var terms = new List<Term>();
-            //var terms = new ConcurrentBag<Term>();
-            var readers = GetTreeReaders(query.Field).ToList();
+            var terms = new ConcurrentBag<Term>();
+            var readers = GetTreeReaders(query.Field);
 
             //foreach (var reader in readers)
             Parallel.ForEach(readers, reader =>
             {
-                var time = Time();
-
                 if (query.Fuzzy)
                 {
-                    terms.AddRange(reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)));
+                    foreach (var term in reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)))
+                    {
+                        terms.Add(term);
+                    }
                 }
                 else if (query.Prefix)
                 {
-                    terms.AddRange(reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)));
+                    foreach (var term in reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)))
+                    {
+                        terms.Add(term);
+                    }
                 }
                 else if (reader.HasWord(query.Value))
                 {
                     terms.Add(new Term(query.Field, new Word(query.Value)));
                 }
-
-                Log.DebugFormat("scanned {0} in\t{1}", query.AsReadable(), time.Elapsed);
             });
             
             query.Terms = terms;
@@ -147,7 +149,7 @@ namespace Resin
             }
         }
 
-        private IEnumerable<LcrsTreeReader> GetTreeReaders(string field)
+        private IEnumerable<LcrsTrie> GetTreeReaders(string field)
         {
             var fileId = field.ToTrieFileId();
             var fileName = Path.Combine(_directory, fileId + ".tri");

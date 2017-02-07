@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using Resin.Sys;
 
 namespace Resin.IO.Read
 {
@@ -15,23 +13,27 @@ namespace Resin.IO.Read
             _sr = sr;
         }
 
-        public IEnumerable<LcrsTreeReader> Read()
+        public IEnumerable<LcrsTrie> Read()
         {
             string data;
 
             while ((data = _sr.ReadLine()) != null)
             {
                 var bytes = Convert.FromBase64String(data);
-                var str = Encoding.Unicode.GetString(bytes);
-                var stream = Helper.GenerateStreamFromString(str);
-                yield return new LcrsTreeReader(new StreamReader(stream));
+                using (var memStream = new MemoryStream(bytes))
+                {
+                    var firstLevelChild = Deserialize(memStream);
+                    var root = new LcrsTrie('\0', false);
+                    root.LeftChild = firstLevelChild;
+                    yield return root;
+                }
             }
         }
 
-        //private LcrsTrie Deserialize(Stream stream)
-        //{
-        //    return (LcrsTrie)BinaryFile.Serializer.Deserialize(stream);
-        //}
+        private LcrsTrie Deserialize(Stream stream)
+        {
+            return (LcrsTrie)BinaryFile.Serializer.Deserialize(stream);
+        }
 
         public void Dispose()
         {

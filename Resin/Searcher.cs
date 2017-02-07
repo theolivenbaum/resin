@@ -33,21 +33,22 @@ namespace Resin
         {
             using (var collector = new Collector(_directory, _ix, _scorer))
             {
-                var time = Time();
+                var queryContext = _parser.Parse(query);
 
-                var q = _parser.Parse(query);
-
-                if (q == null)
+                if (queryContext == null)
                 {
                     return new Result { Docs = Enumerable.Empty<Document>() };
                 }
 
-                Log.DebugFormat("parsed query {0} in {1}", q, time.Elapsed);
-
-                var scored = collector.Collect(q).ToList();
+                var scored = collector.Collect(queryContext).ToList();
                 var skip = page * size;
                 var paged = scored.Skip(skip).Take(size).ToDictionary(x => x.DocId, x => x);
-                var docs = paged.Values.Select(GetDoc);
+
+                var time = Time();
+
+                var docs = paged.Values.Select(GetDoc).ToList();
+
+                Log.DebugFormat("read docs for {0} in {1}", queryContext, time.Elapsed);
 
                 return new Result { Docs = docs, Total = scored.Count }; 
             }

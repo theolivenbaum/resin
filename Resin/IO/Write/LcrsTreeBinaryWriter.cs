@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 
 namespace Resin.IO.Write
 {
@@ -16,7 +15,7 @@ namespace Resin.IO.Write
 
         public void Write(LcrsTrie node)
         {
-            var bytes = BuildStringRepresentation(node);
+            var bytes = Serialize(node);
 
             if (bytes.Length == 0) throw new Exception();
 
@@ -25,12 +24,12 @@ namespace Resin.IO.Write
             _writer.WriteLine(base64);
         }
 
-        private byte[] BuildStringRepresentation(LcrsTrie node)
-        {
-            var sb = new StringBuilder();
-            node.SerializeDepthFirst(sb, 0);
-            return Encoding.Unicode.GetBytes(sb.ToString());
-        }
+        //private byte[] BuildStringRepresentation(LcrsTrie node)
+        //{
+        //    var sb = new StringBuilder();
+        //    node.SerializeDepthFirst(sb, 0);
+        //    return Encoding.Unicode.GetBytes(sb.ToString());
+        //}
 
         //private byte[] Serialize(string node)
         //{
@@ -41,14 +40,14 @@ namespace Resin.IO.Write
         //    }
         //}
 
-        //private byte[] Serialize(LcrsTrie node)
-        //{
-        //    using (var stream = new MemoryStream())
-        //    {
-        //        BinaryFile.Serializer.Serialize(stream, node);
-        //        return stream.ToArray();
-        //    }
-        //}
+        private byte[] Serialize(LcrsTrie node)
+        {
+            using (var stream = new MemoryStream())
+            {
+                BinaryFile.Serializer.Serialize(stream, node);
+                return stream.ToArray();
+            }
+        }
 
         public void Dispose()
         {

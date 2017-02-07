@@ -7,19 +7,19 @@ using Resin.Analysis;
 
 namespace Resin.IO.Read
 {
-    public class LcrsTreeReader : IDisposable
+    public class StreamTreeScanner : IDisposable
     {
         private readonly TextReader _textReader;
         private LcrsNode _lastRead;
         private LcrsNode _replay;
 
-        public LcrsTreeReader(string fileName)
+        public StreamTreeScanner(string fileName)
         {
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.None);
             _textReader = new StreamReader(fs, Encoding.Unicode);
         }
 
-        public LcrsTreeReader(TextReader textReader)
+        public StreamTreeScanner(TextReader textReader)
         {
             _textReader = textReader;
         }
@@ -82,8 +82,6 @@ namespace Resin.IO.Read
         public IEnumerable<Word> Near(string word, int edits, int minLength)
         {
             var words = new List<Word>();
-
-            //var test = AllChildrenAtDepth(0).ToList();
 
             WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), 0, edits, minLength, words);
             

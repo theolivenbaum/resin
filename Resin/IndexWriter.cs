@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using log4net;
 using Resin.Analysis;
 using Resin.IO;
@@ -70,7 +69,7 @@ namespace Resin
                     {
                         var fileName = Path.Combine(_directory, fileId + ".doc");
                         var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
-                        var sr = new StreamWriter(fs, Encoding.Unicode); // ASCII won't work unless Term is hashed
+                        var sr = new StreamWriter(fs, Encoding.Unicode);
 
                         writer = new DocumentWriter(sr);
 
@@ -95,7 +94,7 @@ namespace Resin
                     {
                         var fileName = Path.Combine(_directory, fileId + ".pos");
                         var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
-                        var sw = new StreamWriter(fs, Encoding.Unicode); // ASCII won't work unless Term is hashed
+                        var sw = new StreamWriter(fs, Encoding.Unicode);
 
                         writer = new PostingsWriter(sw);
 
