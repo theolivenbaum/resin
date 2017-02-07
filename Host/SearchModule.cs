@@ -25,7 +25,7 @@ namespace Resin.Host
             };
         }
 
-        private ResolvedResult HandleRequest(string indexName, string query, int page, int size)
+        private Result HandleRequest(string indexName, string query, int page, int size)
         {
             try
             {
@@ -33,10 +33,11 @@ namespace Resin.Host
                 timer.Start();
                 using (var searcher = GetSearcher(indexName))
                 {
-                    var lazyResult = searcher.Search(query, page, size);
-                    var resolved = lazyResult.Resolve();
-                    Log.InfoFormat("query-exec {0} {1}{2} hit count: {3}", timer.Elapsed, Request.Url.Path, Uri.UnescapeDataString(Request.Url.Query), resolved.Total);
-                    return resolved; 
+                    var result = searcher.Search(query, page, size);
+
+                    Log.InfoFormat("query-exec {0} {1}{2} hit count: {3}", timer.Elapsed, Request.Url.Path, Uri.UnescapeDataString(Request.Url.Query), result.Total);
+
+                    return result; 
                 }
             }
             catch (Exception ex)
@@ -49,6 +50,7 @@ namespace Resin.Host
         private Searcher GetSearcher(string name)
         {
             var dir = Path.Combine(Helper.GetDataDirectory(), name);
+
             return new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf());
         }
     }

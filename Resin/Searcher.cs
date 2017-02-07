@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -37,7 +38,7 @@ namespace Resin
 
                 if (queryContext == null)
                 {
-                    return new Result { Docs = Enumerable.Empty<Document>() };
+                    return new Result { Docs = new List<Document>() };
                 }
 
                 var scored = collector.Collect(queryContext).ToList();

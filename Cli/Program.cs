@@ -15,11 +15,17 @@ namespace Resin.Cli
 {
     class Program
     {
+        //inproc:
         //query --dir D:\resin\wikipedia -q "label:porn~" -p 0 -s 10
         //write --file c:\temp\0wikipedia.json --dir d:\resin\wikipedia --skip 0 --take 10000
+        //
+        //out of proc
+        //query --name wikipedia -q "label:porn~" -p 0 -s 10
+        //write --file c:\temp\0wikipedia.json --name wikipedia --skip 0 --take 10000
         static void Main(string[] args)
         {
             XmlConfigurator.Configure();
+
             if (args[0].ToLower() == "write")
             {
                 if (Array.IndexOf(args, "--file") == -1)
@@ -43,7 +49,6 @@ namespace Resin.Cli
                 Console.WriteLine("usage:");
                 Console.WriteLine("rn.exe write --file source.json --dir c:\\target_dir");
                 Console.WriteLine("rn.exe query --dir c:\\my_index -q field:value");
-                Console.WriteLine("rn.exe analyze --dir c:\\my_index -field field_name");
             }
         }
 
@@ -61,10 +66,22 @@ namespace Resin.Cli
             var page = 0;
             var size = 10;
             var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
+            int position;
+            Result result;
 
             if (Array.IndexOf(args, "-p") > 0) page = int.Parse(args[Array.IndexOf(args, "-p") + 1]);
             if (Array.IndexOf(args, "-s") > 0) size = int.Parse(args[Array.IndexOf(args, "-s") + 1]);
             if (Array.IndexOf(args, "--url") > 0) url = args[Array.IndexOf(args, "--url") + 1];
+
+            Console.WriteLine();
+            Console.WriteLine(string.Join(string.Empty,
+                    string.Empty.PadRight(7),
+                    "docid".PadRight(10),
+                    "score".PadRight(10),
+                    "label".PadRight(70),
+                    "description"
+                ));
+            Console.WriteLine();
 
             var timer = new Stopwatch();
             timer.Start();
@@ -73,54 +90,49 @@ namespace Resin.Cli
             {
                 using (var s = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf()))
                 {
-                    var result = s.Search(q, page, size);
+                    result = s.Search(q, page, size);
                     var docs = result.Docs.ToList();
 
                     timer.Stop();
 
-                    var position = 0 + (page * size);
-
-                    Console.WriteLine();
-                    Console.WriteLine(string.Join(string.Empty,
-                            string.Empty.PadRight(7),
-                            "docid".PadRight(10),
-                            "score".PadRight(10),
-                            "label".PadRight(70),
-                            "description"
-                        ));
-                    Console.WriteLine();
+                    position = 0 + (page * size);
 
                     foreach (var doc in docs)
                     {
-                        Console.WriteLine(string.Join(string.Empty,
-                            (++position).ToString(CultureInfo.InvariantCulture).PadRight(7),
+                        Print(doc, position++);
+                    }
+                }
+            }
+            else
+            {
+                using (var s = new SearchClient(indexName, url))
+                {
+                    result = s.Search(q, page, size);
+                    var docs = result.Docs.ToList();
+
+                    timer.Stop();
+
+                    position = 0 + (page * size);
+
+                    foreach (var doc in docs)
+                    {
+                        Print(doc, position++);
+                    }
+                }
+            }
+
+            Console.WriteLine("\r\n{0} results of {1} in {2}", position, result.Total, timer.Elapsed);  
+        }
+
+        private static void Print(Document doc, int position)
+        {
+            Console.WriteLine(string.Join(string.Empty,
+                            (position).ToString(CultureInfo.InvariantCulture).PadRight(7),
                             doc.Fields["_id"].ToString(CultureInfo.InvariantCulture).PadRight(10),
                             doc.Fields["__score"].ToString(CultureInfo.InvariantCulture).PadRight(10).Substring(0, 9).PadRight(10),
                             (doc.Fields["label"] ?? string.Empty).Substring(0, Math.Min(69, (doc.Fields["label"] ?? string.Empty).Length)).PadRight(70),
                             (doc.Fields["description"] ?? string.Empty).Substring(0, Math.Min(30, (doc.Fields["description"] ?? string.Empty).Length))
                         ));
-                    }
-
-                    Console.WriteLine("\r\n{0} results of {1} in {2}", position, result.Total, timer.Elapsed);  
-                }
-                
-            }
-            //else
-            //{
-            //    using (var s = new SearchClient(indexName, url))
-            //    {
-            //        var result = s.Search(q, page, size);
-            //        var docs = result.Docs.ToList();
-            //        timer.Stop();
-            //        var position = 0 + (page * size);
-            //        foreach (var doc in docs)
-            //        {
-            //            Console.WriteLine(string.Join(", ", ++position, doc["_id"], doc["label"]));
-            //        }
-            //        Console.WriteLine("\r\n{0} results of {1} in {2} ms", position, result.Total, timer.Elapsed.TotalMilliseconds);
-            //    }
-            //}
-
         }
 
         static void Write(string[] args)
