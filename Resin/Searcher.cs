@@ -58,7 +58,7 @@ namespace Resin
             var fileId = score.DocId.ToDocFileId();
             var fileName = Path.Combine(_directory, fileId + ".doc");
             var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var sr = new StreamReader(fs, Encoding.ASCII);
+            var sr = new StreamReader(fs, Encoding.Unicode);
 
             using (var reader = new DocumentReader(sr))
             {

@@ -70,7 +70,7 @@ namespace Resin
                     {
                         var fileName = Path.Combine(_directory, fileId + ".doc");
                         var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
-                        var sr = new StreamWriter(fs, Encoding.ASCII); // ASCII won't work unless Term is hashed
+                        var sr = new StreamWriter(fs, Encoding.Unicode); // ASCII won't work unless Term is hashed
 
                         writer = new DocumentWriter(sr);
 
@@ -95,9 +95,9 @@ namespace Resin
                     {
                         var fileName = Path.Combine(_directory, fileId + ".pos");
                         var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
-                        var sr = new StreamWriter(fs, Encoding.ASCII); // ASCII won't work unless Term is hashed
+                        var sw = new StreamWriter(fs, Encoding.Unicode); // ASCII won't work unless Term is hashed
 
-                        writer = new PostingsWriter(sr);
+                        writer = new PostingsWriter(sw);
 
                         _postingsWriters.Add(fileId, writer);
                     }
@@ -187,15 +187,15 @@ namespace Resin
 
             var trieTime = Time();
 
-            //foreach(var kvp in _tries)
-            Parallel.ForEach(_tries, kvp =>
+            foreach(var kvp in _tries)
+            //Parallel.ForEach(_tries, kvp =>
             {
                 var field = kvp.Key;
                 var trie = kvp.Value;
-                var fileNameTemplate = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
+                var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
                 
-                trie.Serialize(fileNameTemplate);
-            });
+                trie.Serialize(fileName);
+            }//);
 
             Log.DebugFormat("wrote tries in {0}", trieTime.Elapsed);
 

@@ -16,6 +16,9 @@ namespace Resin.IO
         {
             typeof (string), 
             typeof (int), 
+            typeof (char), 
+            typeof (bool), 
+            typeof (LcrsTrie), 
             typeof (DocumentCount),
             typeof (Dictionary<Term, int>),
             typeof (Dictionary<string, string>),

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -60,29 +59,26 @@ namespace Resin
             //var terms = new ConcurrentBag<Term>();
             var readers = GetTreeReaders(query.Field).ToList();
 
-            foreach (var reader in readers)
-            //Parallel.ForEach(readers, reader =>
+            //foreach (var reader in readers)
+            Parallel.ForEach(readers, reader =>
             {
                 var time = Time();
 
-                using (reader)
+                if (query.Fuzzy)
                 {
-                    if (query.Fuzzy)
-                    {
-                        terms.AddRange(reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)));
-                    }
-                    else if (query.Prefix)
-                    {
-                        terms.AddRange(reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)));
-                    }
-                    else if (reader.HasWord(query.Value))
-                    {
-                        terms.Add(new Term(query.Field, new Word(query.Value)));
-                    }
+                    terms.AddRange(reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)));
+                }
+                else if (query.Prefix)
+                {
+                    terms.AddRange(reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)));
+                }
+                else if (reader.HasWord(query.Value))
+                {
+                    terms.Add(new Term(query.Field, new Word(query.Value)));
                 }
 
-                Log.DebugFormat("scanned {0} {1} in\t{2}", query.AsReadable(), reader.FileName, time.Elapsed);
-            }//);
+                Log.DebugFormat("scanned {0} in\t{1}", query.AsReadable(), time.Elapsed);
+            });
             
             query.Terms = terms;
         }
@@ -132,7 +128,7 @@ namespace Resin
             var fileId = term.ToPostingsFileId();
             var fileName = Path.Combine(_directory, fileId + ".pos");
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
-            var sr = new StreamReader(fs, Encoding.ASCII);
+            var sr = new StreamReader(fs, Encoding.Unicode);
 
             return new PostingsReader(sr);
         }
@@ -153,9 +149,12 @@ namespace Resin
 
         private IEnumerable<LcrsTreeReader> GetTreeReaders(string field)
         {
-            var searchPattern = string.Format("{0}*.tri", field.ToTrieFileId());
-            var files = Directory.GetFiles(_directory, searchPattern);
-            return files.OrderBy(f=>f).Select(fileName => new LcrsTreeReader(fileName));
+            var fileId = field.ToTrieFileId();
+            var fileName = Path.Combine(_directory, fileId + ".tri");
+            var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
+            var sr = new StreamReader(fs, Encoding.Unicode);
+            var reader = new LcrsTreeBinaryReader(sr);
+            return reader.Read();
         }
 
         private static Stopwatch Time()

@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Resin.IO;
 
 namespace Resin.Sys
@@ -11,6 +12,16 @@ namespace Resin.Sys
     public static class Helper
     {
         public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 23);
+
+        public static Stream GenerateStreamFromString(string s)
+        {
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream, Encoding.Unicode);
+            writer.Write(s);
+            writer.Flush();
+            stream.Position = 0;
+            return stream;
+        }
 
         /// <summary>
         /// http://stackoverflow.com/questions/5404267/streamreader-and-seeking

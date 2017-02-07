@@ -56,6 +56,8 @@
     <Compile Include="Analysis\Analyzer.cs" />
     <Compile Include="IO\Read\DocumentReader.cs" />
     <Compile Include="IO\DocumentPosting.cs" />
+    <Compile Include="IO\Read\LcrsTreeBinaryReader.cs" />
+    <Compile Include="IO\Write\LcrsTreeBinaryWriter.cs" />
     <Compile Include="Sys\Helper.cs" />
     <Compile Include="Analysis\IAnalyzer.cs" />
     <Compile Include="IO\CompressedBinaryFile.cs" />

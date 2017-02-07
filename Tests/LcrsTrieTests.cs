@@ -160,42 +160,42 @@ namespace Tests
         public void Can_find_near()
         {
             var tree = new LcrsTrie('\0', false);
-            var near = tree.Near("ba", 1).ToList();
+            var near = tree.Near("ba", 1).Select(w=>w.Value).ToList();
 
             Assert.That(near, Is.Empty);
 
             tree.Add("bad");
-            near = tree.Near("ba", 1).ToList();
+            near = tree.Near("ba", 1).Select(w => w.Value).ToList();
 
             Assert.That(near.Count, Is.EqualTo(1));
             Assert.IsTrue(near.Contains("bad"));
 
             tree.Add("baby");
-            near = tree.Near("ba", 1).ToList();
+            near = tree.Near("ba", 1).Select(w => w.Value).ToList();
 
             Assert.That(near.Count, Is.EqualTo(1));
             Assert.IsTrue(near.Contains("bad"));
 
             tree.Add("b");
-            near = tree.Near("ba", 1).ToList();
+            near = tree.Near("ba", 1).Select(w => w.Value).ToList();
 
             Assert.That(near.Count, Is.EqualTo(2));
             Assert.IsTrue(near.Contains("bad"));
             Assert.IsTrue(near.Contains("b"));
 
-            near = tree.Near("ba", 2).ToList();
+            near = tree.Near("ba", 2).Select(w => w.Value).ToList();
 
             Assert.That(near.Count, Is.EqualTo(3));
             Assert.IsTrue(near.Contains("b"));
             Assert.IsTrue(near.Contains("bad"));
             Assert.IsTrue(near.Contains("baby"));
 
-            near = tree.Near("ba", 0).ToList();
+            near = tree.Near("ba", 0).Select(w => w.Value).ToList();
 
             Assert.That(near.Count, Is.EqualTo(0));
 
             tree.Add("bananas");
-            near = tree.Near("ba", 6).ToList();
+            near = tree.Near("ba", 6).Select(w => w.Value).ToList();
 
             Assert.That(near.Count, Is.EqualTo(4));
             Assert.IsTrue(near.Contains("b"));
@@ -203,13 +203,13 @@ namespace Tests
             Assert.IsTrue(near.Contains("baby"));
             Assert.IsTrue(near.Contains("bananas"));
 
-            near = tree.Near("bazy", 1).ToList();
+            near = tree.Near("bazy", 1).Select(w => w.Value).ToList();
 
             Assert.That(near.Count, Is.EqualTo(1));
             Assert.IsTrue(near.Contains("baby"));
 
             tree.Add("bank");
-            near = tree.Near("bazy", 3).ToList();
+            near = tree.Near("bazy", 3).Select(w => w.Value).ToList();
 
             Assert.AreEqual(4, near.Count);
             Assert.IsTrue(near.Contains("baby"));
@@ -243,7 +243,7 @@ namespace Tests
 
             tree.Add("man");
 
-            var prefixed = tree.StartsWith("ra").ToList();
+            var prefixed = tree.StartsWith("ra").Select(w=>w.Value).ToList();
 
             Assert.That(prefixed.Count, Is.EqualTo(3));
             Assert.IsTrue(prefixed.Contains("rambo"));

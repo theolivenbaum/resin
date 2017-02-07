@@ -9,16 +9,19 @@ namespace Resin.IO.Read
 {
     public class LcrsTreeReader : IDisposable
     {
-        public string FileName { get; private set; }
-        private readonly StreamReader _sr;
+        private readonly TextReader _textReader;
         private LcrsNode _lastRead;
         private LcrsNode _replay;
 
         public LcrsTreeReader(string fileName)
         {
-            FileName = fileName;
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.None);
-            _sr = new StreamReader(fs, Encoding.Unicode);
+            _textReader = new StreamReader(fs, Encoding.Unicode);
+        }
+
+        public LcrsTreeReader(TextReader textReader)
+        {
+            _textReader = textReader;
         }
 
         private LcrsNode Step(TextReader sr)
@@ -89,7 +92,7 @@ namespace Resin.IO.Read
 
         private void WithinEditDistanceDepthFirst(string word, string state, int depth, int maxEdits, int minLength, IList<Word> words)
         {
-            var node = Step(_sr);
+            var node = Step(_textReader);
 
             var nodesWithUnresolvedSiblings = new Stack<Tuple<int, string>>();
             var childIndex = depth + 1;
@@ -137,7 +140,7 @@ namespace Resin.IO.Read
 
         private void DepthFirst(string prefix, IList<char> path, IList<Word> compressed, int depth)
         {
-            var node = Step(_sr);
+            var node = Step(_textReader);
             var siblings = new Stack<Tuple<int,IList<char>>>();
 
             // Go left (deep)
@@ -158,7 +161,7 @@ namespace Resin.IO.Read
                 }
 
                 depth = node.Depth;
-                node = Step(_sr);
+                node = Step(_textReader);
             }
 
             Replay();
@@ -172,11 +175,11 @@ namespace Resin.IO.Read
 
         private bool TryFindDepthFirst(string path, int currentDepth, out LcrsNode node)
         {
-            node = Step(_sr);
+            node = Step(_textReader);
 
             while (node != null && node.Depth != currentDepth)
             {
-                node = Step(_sr);
+                node = Step(_textReader);
             }
 
             if (node != null)
@@ -197,7 +200,7 @@ namespace Resin.IO.Read
             return false;
         }
 
-        public IEnumerable<LcrsNode> AllChildrenAtDepth(int depth, StreamReader sr)
+        public IEnumerable<LcrsNode> AllChildrenAtDepth(int depth, TextReader sr)
         {
             var node = Step(sr);
 
@@ -214,76 +217,15 @@ namespace Resin.IO.Read
 
         public IEnumerable<LcrsNode> AllChildrenAtDepth(int depth)
         {
-            return AllChildrenAtDepth(depth, _sr);
+            return AllChildrenAtDepth(depth, _textReader);
         }
 
         public void Dispose()
         {
-            if (_sr != null)
+            if (_textReader != null)
             {
-                _sr.Dispose();
+                _textReader.Dispose();
             }
-        }
-    }
-
-    public class PositioningReader : TextReader
-    {
-        private readonly TextReader _inner;
-        private long _pos;
-        private long _linePos;
-
-        public long Pos { get { return _pos; } }
-        public long LinePos { get { return _linePos; } }
-
-        public PositioningReader(TextReader inner)
-        {
-            _inner = inner;
-        }
-
-        public override void Close()
-        {
-            _inner.Close();
-        }
-
-        public override int Peek()
-        {
-            return _inner.Peek();
-        }
-
-        public override string ReadLine()
-        {
-            var c = Read();
-            if (c == -1)
-            {
-                return null;
-            }
-
-            var sb = new StringBuilder();
-            do
-            {
-                var ch = (char)c;
-                if (ch == '\n')
-                {
-                    return sb.ToString();
-                }
-                sb.Append(ch);
-            } while ((c = Read()) != -1);
-            return sb.ToString();
-        }
-
-        public override int Read()
-        {
-            var c = _inner.Read();
-
-            if (c >= 0)
-            {
-                _pos++;
-                if (c == '\n')
-                {
-                    _linePos++;
-                }
-            }
-            return c;
         }
     }
 }

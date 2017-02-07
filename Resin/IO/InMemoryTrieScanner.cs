@@ -19,11 +19,11 @@ namespace Resin.IO
             return false;
         }
 
-        public static IEnumerable<string> StartsWith(this LcrsTrie node, string prefix)
+        public static IEnumerable<Word> StartsWith(this LcrsTrie node, string prefix)
         {
             if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("traveled");
 
-            var compressed = new List<string>();
+            var compressed = new List<Word>();
             
             LcrsTrie child;
             if (node.TryFindPath(prefix, out child))
@@ -34,14 +34,14 @@ namespace Resin.IO
             return compressed;
         }
 
-        public static IEnumerable<string> Near(this LcrsTrie node, string word, int edits)
+        public static IEnumerable<Word> Near(this LcrsTrie node, string word, int edits)
         {
             var compressed = new List<Word>();
             if (node.LeftChild != null)
             {
                 node.LeftChild.WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, edits);
             }
-            return compressed.OrderBy(w => w.Distance).Select(w => w.Value);
+            return compressed.OrderBy(w => w.Distance);
         }
 
         private static void WithinEditDistanceDepthFirst(this LcrsTrie node, string word, string state, IList<Word> compressed, int depth, int maxEdits)
@@ -82,14 +82,14 @@ namespace Resin.IO
             }
         }
 
-        private static void DepthFirst(this LcrsTrie node, string traveled, IList<char> state, IList<string> compressed)
+        private static void DepthFirst(this LcrsTrie node, string traveled, IList<char> state, IList<Word> compressed)
         {
             var copy = new List<char>(state);
             state.Add(node.Value);
 
             if (node.EndOfWord)
             {
-                compressed.Add(traveled + new string(state.ToArray()));
+                compressed.Add(new Word(traveled + new string(state.ToArray())));
             }
 
             if (node.LeftChild != null)

@@ -11,6 +11,8 @@ Documentation
 
 Async await instead of Parallel.ForEach
 
+Honor surrogate pairs when analysing: https://msdn.microsoft.com/en-us/library/system.globalization.stringinfo(v=vs.110).aspx
+
 Query multiple indices
 
 Nesting of queries: +label:golden +label:age of porn~ +genre:documentaries rewritten to +label:golden +(label:age~ label:of~ label:porn~) +genre:documentaries

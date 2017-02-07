@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Resin.IO
 {
-    [DebuggerDisplay("{Value} {EndOfWord}")]
+    [Serializable, DebuggerDisplay("{Value} {EndOfWord}")]
     public class LcrsTrie
     {
         public LcrsTrie RightSibling { get; set; }
