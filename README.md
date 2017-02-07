@@ -26,4 +26,4 @@ Peace
 
 ## Sir
 
-[Sir](https://github.com/kreeben/sir) is an Elasticsearch clone built on Resin. In fact, Sir Is Resin. It's Superwise Information Retrieval.
+[Sir](https://github.com/kreeben/sir) is an Elasticsearch clone built on Resin.
