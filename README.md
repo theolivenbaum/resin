@@ -8,9 +8,7 @@ Build Resin, a modern information retrieval system, a document based search engi
 
 Here are some [issues](https://github.com/kreeben/resin/issues) that need to be sorted.
 
-[Pull requests](https://en.wikipedia.org/wiki/Distributed_version_control#Pull_requests) are accepted.
-
-This is a newbie-friendly project. If you are hesitant about choosing your first open source project, pick this one!
+Pull requests are accepted.
 
 ## Power to the people
 
