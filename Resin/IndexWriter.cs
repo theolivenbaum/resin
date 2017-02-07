@@ -186,15 +186,15 @@ namespace Resin
 
             var trieTime = Time();
 
-            foreach(var kvp in _tries)
-            //Parallel.ForEach(_tries, kvp =>
+            //foreach(var kvp in _tries)
+            Parallel.ForEach(_tries, kvp =>
             {
                 var field = kvp.Key;
                 var trie = kvp.Value;
                 var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
                 
                 trie.Serialize(fileName);
-            }//);
+            });
 
             Log.DebugFormat("wrote tries in {0}", trieTime.Elapsed);
 

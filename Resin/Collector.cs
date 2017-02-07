@@ -82,6 +82,7 @@ namespace Resin
                 }
             });
             
+            
             query.Terms = terms;
         }
 
