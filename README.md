@@ -1,4 +1,4 @@
-[Apache Lucene](https://lucene.apache.org/) is an outstanding [information retrieval](https://en.wikipedia.org/wiki/Information_retrieval) system built on the Java runtime. There is a .Net alternative but the [Lucene.Net](https://lucenenet.apache.org/) team are to this date three major versions behind the Java team. Also, the Lucene code base is big and complex and difficult to understand. This is a great opportunity to build a new information retrieval system.
+Here's the thing. [Apache Lucene](https://lucene.apache.org/) is an outstanding [information retrieval](https://en.wikipedia.org/wiki/Information_retrieval) system built on the Java runtime. There is a .Net alternative but the [Lucene.Net](https://lucenenet.apache.org/) team doing the line-by-line posting of Java code to c# are to this date three major versions behind the Java team. Also, the Lucene code base is big and complex and difficult to understand. Maybe .Net is better suited for IR than the JRE? This is a great opportunity to build a new information retrieval system.
 
 # Resin
 
@@ -45,11 +45,11 @@ Pull requests are accepted.
 
 Great knowledge about IR can be found within the big tech coorporations of today, Google, Microsoft, Facebook. It is undemocratic that people can use the information available on the internet solely through the means of services that coorporations offer.
 
-The internet's data is vast. Because it is so it can't be properly digested by humans unless a machine first makes sense of it. Google, Microsoft and Facebook have great machines. That's great. There should be alternative services though, free ones, like Wikipedia, and there should be business models where the personal integrity of users are not for sale. Something else can be for sale. Maybe the integrity of the businesses can be for sale instead, for a change.
+The internet's data is vast. Because it is so it can't be properly digested by humans unless a machine first makes sense of it. Google, Microsoft and Facebook have great machines. That's great. There should be alternative services though, free ones, like Wikipediabut for search, and there should be business models where the personal integrity of users are not for sale. Something else can be for sale. Maybe the integrity of the businesses can be for sale instead, for a change.
 
-IR is perhaps the smallest and most fundemental component of AI.
+Anyway, IR is perhaps the smallest and most fundemental component of AI.
 
-AI should empower us all. It should not be monopolized by corporations. It should be free.
+AI should empower us all. It should not be monopolized on by coorporations. It should be free.
 
 Peace
 
