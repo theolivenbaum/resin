@@ -47,8 +47,6 @@ Pull requests are accepted.
 - [ ] Index and scan at least as fast as the lastest JRE version of Lucene - v2.0
 - [ ] Reach almost feature parity with the lastest JRE version of Lucene - v2.9
 - [ ] Become the fastest independent IR system in the world - v3.0
-- [ ] Become the most feature-complete indie IR system in the world - v.3.9
-- [ ] Hand over to the next generation IR freaks
 
 ## Sir
 
