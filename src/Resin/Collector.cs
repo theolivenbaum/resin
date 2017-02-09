@@ -31,12 +31,12 @@ namespace Resin
             _scorer = scorer;
         }
 
-        public IEnumerable<DocumentScore> Collect(QueryContext query)
+        public IEnumerable<DocumentPosting> Collect(QueryContext query)
         {
             Scan(query);
             GetPostings(query);
 
-            return query.Reduce().Select(p=>p.Score).OrderByDescending(s => s.Score);
+            return query.Reduce();
         }
 
         private void Scan(QueryContext query)
@@ -142,9 +142,10 @@ namespace Resin
             {
                 var scorer = _scorer.CreateScorer(_ix.DocumentCount.DocCount[posting.Field], posting.Count);
 
-                posting.Score = new DocumentScore(posting.DocumentId, posting.Count);
+                posting.Scoring = new DocumentScore(posting.DocumentId, posting.Count);
+                posting.IndexName = _ix.Name;
 
-                scorer.Score(posting.Score);
+                scorer.Score(posting.Scoring);
 
                 yield return posting;
             }
@@ -157,6 +158,7 @@ namespace Resin
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
             var sr = new StreamReader(fs, Encoding.Unicode);
             var reader = new LcrsTreeBinaryReader(sr);
+
             return reader.Read();
         }
 

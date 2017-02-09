@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using log4net;
 using Resin.Analysis;
 using Resin.IO;
@@ -20,17 +22,14 @@ namespace Resin
         private readonly string _directory;
         private readonly QueryParser _parser;
         private readonly IScoringScheme _scorer;
-        private readonly IxInfo _ix;
+        private readonly IDictionary<string, IxInfo> _indices;
 
         public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
         {
             _directory = directory;
             _parser = parser;
             _scorer = scorer;
-
-            var fileName = ToolBelt.GetOldestFile(_directory, "*.ix");
-
-            _ix = IxInfo.Load(fileName);
+            _indices = GetIndexFileNamesInChronologicalOrder().Select(IxInfo.Load).ToDictionary(x=>x.Name);
         }
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
@@ -42,32 +41,43 @@ namespace Resin
                 return new Result { Docs = new List<Document>() };
             }
 
-            using (var collector = new Collector(_directory, _ix, _scorer))
-            {
-                var scored = collector.Collect(queryContext).ToList();
-                var skip = page * size;
-                var paged = scored.Skip(skip).Take(size);
-                var time = Time();
-                var docs = paged.Select(GetDoc).ToList();
-                
-                Log.DebugFormat("read docs for {0} in {1}", queryContext, time.Elapsed);
+            var scored = Collect(queryContext).ToList();
+            var skip = page * size;
+            var paged = scored.Skip(skip).Take(size);
+            var time = Time();
+            var docs = paged.Select(GetDoc).ToList();
 
-                return new Result { Docs = docs, Total = scored.Count }; 
-            }
+            Log.DebugFormat("read docs for {0} in {1}", queryContext, time.Elapsed);
+
+            return new Result { Docs = docs, Total = scored.Count }; 
         }
 
-        private Document GetDoc(DocumentScore score)
+        private string[] GetIndexFileNamesInChronologicalOrder()
         {
-            var fileId = score.DocId.ToDocFileId();
-            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.doc", _ix.Name, fileId));
+            return Directory.GetFiles(_directory, "*.ix").OrderBy(s => s).ToArray();
+        }
+
+        private IEnumerable<DocumentPosting> Collect(QueryContext query)
+        {
+            return _indices.Values
+                .Select(ix => new Collector(_directory, ix, _scorer))
+                .Select(c=>c.Collect(query))
+                .Aggregate(DocumentPosting.JoinOr)
+                .OrderBy(p => p.Scoring.Score);
+        }
+
+        private Document GetDoc(DocumentPosting posting)
+        {
+            var fileId = posting.DocumentId.ToDocFileId();
+            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.doc", posting.IndexName, fileId));
             var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             var sr = new StreamReader(fs, Encoding.Unicode);
 
             using (var reader = new DocumentReader(sr))
             {
-                var doc = reader.Get(score.DocId);
+                var doc = reader.Get(posting.DocumentId);
 
-                doc.Fields["__score"] = score.Score.ToString(CultureInfo.InvariantCulture);
+                doc.Fields["__score"] = posting.Scoring.Score.ToString(CultureInfo.InvariantCulture);
 
                 return doc;    
             }

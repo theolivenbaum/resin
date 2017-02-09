@@ -15,7 +15,10 @@ namespace Resin.IO
         private string _field;
 
         [NonSerialized]
-        private DocumentScore _score;
+        private DocumentScore _scoring;
+
+        [NonSerialized]
+        private string _indexName;
 
         public string DocumentId
         {
@@ -27,16 +30,22 @@ namespace Resin.IO
             get { return _count; }
         }
 
+        public string IndexName
+        {
+            get { return _indexName; }
+            set { _indexName = value; }
+        }
+
         public string Field
         {
             get { return _field; }
             set { _field = value; }
         }
 
-        public DocumentScore Score
+        public DocumentScore Scoring
         {
-            get { return _score; }
-            set { _score = value; }
+            get { return _scoring; }
+            set { _scoring = value; }
         }
 
         public DocumentPosting(string documentId, int count)
@@ -52,14 +61,15 @@ namespace Resin.IO
             if (other.DocumentId != DocumentId) throw new ArgumentException();
 
             _count += other.Count;
-            Score.Combine(other.Score);
+            _indexName = other.IndexName;
+            Scoring.Combine(other.Scoring);
         }
 
-        public static IEnumerable<DocumentPosting> JoinOr(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> second)
+        public static IEnumerable<DocumentPosting> JoinOr(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
         {
-            if (first == null) return second;
+            if (first == null) return other;
 
-            return first.Concat(second).GroupBy(x => x.DocumentId).Select(group =>
+            return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>
             {
                 var list = group.ToList();
                 var top = list.First();
@@ -69,6 +79,24 @@ namespace Resin.IO
                 }
                 return top;
             });
+        }
+
+        public static IEnumerable<DocumentPosting> JoinAnd(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
+        {
+            if (first == null) return other;
+
+            var dic = other.ToDictionary(x => x.DocumentId);
+            var remainder = new List<DocumentPosting>();
+            foreach (var posting in first)
+            {
+                DocumentPosting exists;
+                if (dic.TryGetValue(posting.DocumentId, out exists))
+                {
+                    posting.Combine(exists);
+                    remainder.Add(posting);
+                }
+            }
+            return remainder;
         }
 
         public override string ToString()

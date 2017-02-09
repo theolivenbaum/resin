@@ -26,18 +26,7 @@ namespace Resin.Querying
 
                 if (child.And)
                 {
-                    var dic =  other.ToDictionary(x => x.DocumentId);
-                    var remainder = new List<DocumentPosting>();
-                    foreach (var posting in first)
-                    {
-                        DocumentPosting exists;
-                        if (dic.TryGetValue(posting.DocumentId, out exists))
-                        {
-                            posting.Combine(exists);
-                            remainder.Add(posting);
-                        }
-                    }
-                    first = remainder;
+                    first = DocumentPosting.JoinAnd(first, other).ToList();
                 }
                 else if (child.Not)
                 {

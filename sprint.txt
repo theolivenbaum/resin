@@ -1,5 +1,7 @@
-write new index to dir
+stack indices in a dir
 search across two or more indices
-optimize
+merge
 optionally store doc field
 optionally analyze field
+numbers
+dates
