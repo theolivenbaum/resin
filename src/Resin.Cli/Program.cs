@@ -65,7 +65,7 @@ namespace Resin.Cli
             var q = args[Array.IndexOf(args, "-q") + 1];
             var page = 0;
             var size = 10;
-            var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
+            var url = ConfigurationManager.AppSettings.Get("sir.endpoint");
             int position;
             Result result;
 
@@ -159,7 +159,7 @@ namespace Resin.Cli
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
             if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
 
-            var url = ConfigurationManager.AppSettings.Get("resin.endpoint");
+            var url = ConfigurationManager.AppSettings.Get("sir.endpoint");
             var inproc = !string.IsNullOrWhiteSpace(dir);
 
             IndexWriter w = inproc ? new IndexWriter(dir, new Analyzer()) : null;

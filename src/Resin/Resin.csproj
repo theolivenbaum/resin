@@ -34,16 +34,16 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
+    <Reference Include="log4net, Version=2.0.7.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\log4net.2.0.7\lib\net45-full\log4net.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NetSerializer, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NetSerializer.4.0.0.0\lib\net45\NetSerializer.dll</HintPath>
+    <Reference Include="NetSerializer, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\NetSerializer.4.1.0\lib\net45\NetSerializer.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -59,7 +59,7 @@
     <Compile Include="IO\DocumentPosting.cs" />
     <Compile Include="IO\Read\LcrsTreeBinaryReader.cs" />
     <Compile Include="IO\Write\LcrsTreeBinaryWriter.cs" />
-    <Compile Include="Sys\Helper.cs" />
+    <Compile Include="Sys\ToolBelt.cs" />
     <Compile Include="Analysis\IAnalyzer.cs" />
     <Compile Include="IO\CompressedBinaryFile.cs" />
     <Compile Include="IO\Write\DocumentWriter.cs" />

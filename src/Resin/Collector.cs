@@ -129,7 +129,7 @@ namespace Resin
         private PostingsReader GetPostingsReader(Term term)
         {
             var fileId = term.ToPostingsFileId();
-            var fileName = Path.Combine(_directory, fileId + ".pos");
+            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.pos", _ix.Name, fileId));
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
             var sr = new StreamReader(fs, Encoding.Unicode);
 
@@ -153,7 +153,7 @@ namespace Resin
         private IEnumerable<LcrsTrie> GetTreeReaders(string field)
         {
             var fileId = field.ToTrieFileId();
-            var fileName = Path.Combine(_directory, fileId + ".tri");
+            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _ix.Name, fileId));
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
             var sr = new StreamReader(fs, Encoding.Unicode);
             var reader = new LcrsTreeBinaryReader(sr);

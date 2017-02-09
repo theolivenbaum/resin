@@ -9,15 +9,15 @@ using Resin.IO;
 
 namespace Resin.Sys
 {
-    public static class Helper
+    public static class ToolBelt
     {
         public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 23);
 
-        public static Stream GenerateStreamFromString(string s)
+        public static Stream GenerateStream(this string str)
         {
             var stream = new MemoryStream();
             var writer = new StreamWriter(stream, Encoding.Unicode);
-            writer.Write(s);
+            writer.Write(str);
             writer.Flush();
             stream.Position = 0;
             return stream;
@@ -27,7 +27,7 @@ namespace Resin.Sys
         /// http://stackoverflow.com/questions/5404267/streamreader-and-seeking
         /// </summary>
         /// <returns></returns>
-        public static long GetActualPosition(StreamReader reader)
+        public static long GetActualPosition(this StreamReader reader)
         {
             System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.GetField;
 
@@ -78,24 +78,20 @@ namespace Resin.Sys
             return reader.BaseStream.Position - numBytesLeft - numFragments;
         }
 
-        public static IEnumerable<string> GetFilesOrderedChronologically(string dir, string searchPattern)
+        public static string GetOldestFile(string directory, string searchPattern)
         {
-            var ids = Directory.GetFiles(dir, searchPattern)
-                .Select(f => Int64.Parse(Path.GetFileNameWithoutExtension(f)))
-                .OrderBy(id => id);
-            return ids.Select(id => Path.Combine(dir, id + searchPattern.Substring(1)));
+            return Directory.GetFiles(directory, searchPattern).OrderBy(s => s).First();
         }
 
-        public static string GenerateNewChronologicalFileName(string dir, string extensionIncDot)
+        public static string GetChronologicalFileId(string dir)
         {
             var ticks = DateTime.Now.Ticks - BeginningOfTime.Ticks;
-            var fileName = Path.Combine(dir, ticks + extensionIncDot);
-            return fileName;
+            return ticks.ToString(CultureInfo.InvariantCulture);
         }
 
         public static string GetDataDirectory()
         {
-            var configPath = ConfigurationManager.AppSettings.Get("datadirectory");
+            var configPath = ConfigurationManager.AppSettings.Get("resin.datadirectory");
             if (!string.IsNullOrWhiteSpace(configPath)) return configPath;
             string path = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
             if (Environment.OSVersion.Version.Major >= 6)

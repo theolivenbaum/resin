@@ -29,12 +29,13 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "5five"}, {"title", "the good, the bad and the ugly"}}
             };
 
+            string indexName;
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write(docs.Select(d => new Document(d)));
             }
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("_id", "3")).ToList();
 
@@ -42,7 +43,7 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocId == "3"));
             }
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("_id", "5five")).ToList();
 
@@ -66,14 +67,16 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "3"}, {"title", "Page Up and Page Down keys"}},
                 new Dictionary<string, string> {{"_id", "4"}, {"title", "Golden Age of Porn"}}
             };
+
+            string indexName;
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write(docs.Select(d => new Document(d)));
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:age of porn~");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -97,14 +100,16 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "3"}, {"title", "Born 2.0"}},
                 new Dictionary<string, string> {{"_id", "4"}, {"title", "Porn"}}
             };
+
+            string indexName;
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write(docs.Select(d => new Document(d)));
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:porn~");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -133,14 +138,16 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "4"}, {"title", "the rain man"}},
                 new Dictionary<string, string> {{"_id", "5"}, {"title", "the good, the bad and the ugly"}}
             };
+
+            string indexName;
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write(docs.Select(d => new Document(d)));
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the rango");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -152,7 +159,7 @@ namespace Tests
 
             query = new QueryParser(new Analyzer()).Parse("+title:the ramvo~");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -181,14 +188,16 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "4"}, {"title", "the rain man"}},
                 new Dictionary<string, string> {{"_id", "5"}, {"title", "the good, the bad and the ugly"}}
             };
+
+            string indexName;
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write(docs.Select(d => new Document(d)));
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -200,7 +209,7 @@ namespace Tests
 
             query = new QueryParser(new Analyzer()).Parse("+title:the +title:ugly");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -225,14 +234,16 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "4"}, {"title", "the rain man"}},
                 new Dictionary<string, string> {{"_id", "5"}, {"title", "the good, the bad and the ugly"}}
             };
+
+            string indexName;
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write(docs.Select(d => new Document(d)));
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rocky");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -242,7 +253,7 @@ namespace Tests
 
             query = new QueryParser(new Analyzer()).Parse("+title:rambo");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -253,7 +264,7 @@ namespace Tests
 
             query = new QueryParser(new Analyzer()).Parse("+title:rocky title:rambo");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -280,14 +291,16 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "4"}, {"title", "the rain man"}},
                 new Dictionary<string, string> {{"_id", "5"}, {"title", "the good, the bad and the ugly"}}
             };
+
+            string indexName;
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write(docs.Select(d => new Document(d)));
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -299,7 +312,7 @@ namespace Tests
 
             query = new QueryParser(new Analyzer()).Parse("+title:the -title:ugly");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -326,12 +339,13 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "5"}, {"title", "the good, the bad and the ugly"}}
             };
 
+            string indexName;
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(docs.Select(d=>new Document(d)));
+                indexName = writer.Write(docs.Select(d=>new Document(d)));
             }
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
 
@@ -340,7 +354,7 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocId == "1"));  
             }
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("title", "the")).ToList();
 
@@ -366,12 +380,14 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "3"}, {"title", "raiders of the lost ark"}},
                 new Dictionary<string, string> {{"_id", "4"}, {"title", "rain man"}}
             };
+
+            string indexName;
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write(docs.Select(d => new Document(d)));
             }
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("title", "ra") { Prefix = true }).ToList();
 
@@ -398,12 +414,14 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "3"}, {"title", "raiders of the lost ark"}},
                 new Dictionary<string, string> {{"_id", "4"}, {"title", "tomb raider"}}
             };
+
+            string indexName;
             using (var writer = new IndexWriter(dir, new Analyzer()))
             {
-                writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write(docs.Select(d => new Document(d)));
             }
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("title", "raider") { Fuzzy = false, Edits = 1 }).ToList();
 
@@ -411,7 +429,7 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocId == "4"));
             }
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, "0.ix")), new Tfidf()))
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("title", "raider") { Fuzzy = true, Edits = 1 }).ToList();
 

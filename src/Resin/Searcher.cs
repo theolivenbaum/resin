@@ -27,7 +27,10 @@ namespace Resin
             _directory = directory;
             _parser = parser;
             _scorer = scorer;
-            _ix = IxInfo.Load(Path.Combine(_directory, "0.ix"));
+
+            var fileName = ToolBelt.GetOldestFile(_directory, "*.ix");
+
+            _ix = IxInfo.Load(fileName);
         }
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
@@ -56,7 +59,7 @@ namespace Resin
         private Document GetDoc(DocumentScore score)
         {
             var fileId = score.DocId.ToDocFileId();
-            var fileName = Path.Combine(_directory, fileId + ".doc");
+            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.doc", _ix.Name, fileId));
             var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             var sr = new StreamReader(fs, Encoding.Unicode);
 

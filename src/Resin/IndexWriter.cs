@@ -40,6 +40,8 @@ namespace Resin
         /// </summary>
         private readonly Dictionary<string, PostingsWriter> _postingsWriters;
 
+        private readonly string _indexName;
+
         public IndexWriter(string directory, IAnalyzer analyzer)
         {
             _directory = directory;
@@ -48,9 +50,10 @@ namespace Resin
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
             _postingsWriters = new Dictionary<string, PostingsWriter>();
+            _indexName = ToolBelt.GetChronologicalFileId(_directory);
         }
 
-        public void Write(IEnumerable<Document> documents)
+        public string Write(IEnumerable<Document> documents)
         {
             var indexTime = Time();
             var analyzeTime = Time();
@@ -68,6 +71,8 @@ namespace Resin
             postingsThread.Join();
 
             Log.DebugFormat("indexing took {0}", indexTime.Elapsed);
+
+            return _indexName;
         }
 
         private IList<AnalyzedDocument> Analyze(IEnumerable<Document> documents)
@@ -118,9 +123,10 @@ namespace Resin
             {
                 var ixInfo = new IxInfo
                 {
+                    Name = _indexName,
                     DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField))
                 };
-                ixInfo.Save(Path.Combine(_directory, "0.ix"));
+                ixInfo.Save(Path.Combine(_directory, string.Format("{0}.ix", _indexName)));
             });
             thread.Start();
             return thread;
@@ -135,7 +141,7 @@ namespace Resin
                 {
                     var field = kvp.Key;
                     var trie = kvp.Value;
-                    var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
+                    var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _indexName, field.ToTrieFileId()));
 
                     trie.Serialize(fileName);
                 });
@@ -152,7 +158,7 @@ namespace Resin
             }
         }
 
-        private Dictionary<Term, List<DocumentPosting>> BuildPostingsMatrix(IEnumerable<AnalyzedDocument> analyzedDocs)
+        private Dictionary<Term, List<DocumentPosting>> BuildPostingsMatrix(IList<AnalyzedDocument> analyzedDocs)
         {
             var postingsMatrix = new Dictionary<Term, List<DocumentPosting>>();
 
@@ -186,7 +192,7 @@ namespace Resin
                 {
                     if (!_docWriters.TryGetValue(fileId, out writer))
                     {
-                        var fileName = Path.Combine(_directory, fileId + ".doc");
+                        var fileName = Path.Combine(_directory, string.Format("{0}-{1}.doc", _indexName, fileId));
                         var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
                         var sr = new StreamWriter(fs, Encoding.Unicode);
 
@@ -210,7 +216,7 @@ namespace Resin
                 {
                     if (!_postingsWriters.TryGetValue(fileId, out writer))
                     {
-                        var fileName = Path.Combine(_directory, fileId + ".pos");
+                        var fileName = Path.Combine(_directory, string.Format("{0}-{1}.pos", _indexName, fileId));
                         var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
                         var sw = new StreamWriter(fs, Encoding.Unicode);
 
