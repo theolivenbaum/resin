@@ -1,5 +1,3 @@
-_Here's the thing. [Apache Lucene](https://lucene.apache.org/) is an outstanding [information retrieval](https://en.wikipedia.org/wiki/Information_retrieval) system built on the Java runtime. There is a .Net alternative but the [Lucene.Net](https://lucenenet.apache.org/) team doing the line-by-line porting of Java code to C# code are to this date three major versions behind the Java team. Also, the Lucene code base is big and complex and difficult to understand. Maybe, the .Net runtime is better suited for IR than the JRE? This is a great opportunity to find out and to build a new information retrieval system._
-
 # Resin
 
 Resin is a modern information retrieval system, a document based search engine library and framework, and a Lucene clone.
