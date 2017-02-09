@@ -43,13 +43,13 @@ Pull requests are accepted.
 
 ## The Resin Project Mission
 
-1. Index and scan at least as fast as the lastest .Net version of Lucene
-2. Reach almost feature parity with the lastest .Net version of Lucene
-3. Index and scan at least as fast as the lastest JRE version of Lucene
-4. Reach almost feature parity with the lastest JRE version of Lucene
-5. Become the fastest IR framework in the world
-6. Become the most feature-complete IR framework in the world
-7. Hand over to the next generation IR freaks
+[] Index and scan at least as fast as the lastest .Net version of Lucene 
+[] Reach almost feature parity with the lastest .Net version of Lucene 
+[] Index and scan at least as fast as the lastest JRE version of Lucene 
+[] Reach almost feature parity with the lastest JRE version of Lucene 
+[] Become the fastest IR framework in the world 
+[] Become the most feature-complete IR framework in the world 
+[] Hand over to the next generation IR freaks 
 
 ## Power to the people
 
