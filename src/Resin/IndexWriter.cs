@@ -53,8 +53,26 @@ namespace Resin
         public void Write(IEnumerable<Document> documents)
         {
             var indexTime = Time();
-            var analyzedDocs = new List<AnalyzedDocument>();
             var analyzeTime = Time();
+            var analyzedDocs = Analyze(documents);
+            
+            Log.DebugFormat("stored and analyzed documents in {0}", analyzeTime.Elapsed);
+
+            var trieThread = SerializeTries();
+            var ixThread = SaveIxInfo();
+            var postings = BuildPostingsMatrix(analyzedDocs);
+            var postingsThread = EnqueueSerialize(postings);
+
+            trieThread.Join();
+            ixThread.Join();
+            postingsThread.Join();
+
+            Log.DebugFormat("indexing took {0}", indexTime.Elapsed);
+        }
+
+        private IList<AnalyzedDocument> Analyze(IEnumerable<Document> documents)
+        {
+            var analyzedDocs = new List<AnalyzedDocument>();
 
             using (var trieWorker = new TaskQueue<AnalyzedDocument>(1, BuildTree))
             using (var docWorker = new TaskQueue<Document>(1, WriteDocument))
@@ -74,56 +92,56 @@ namespace Resin
                     }
                 }
             }
-            Log.DebugFormat("stored and analyzed documents in {0}", analyzeTime.Elapsed);
 
-            var trieThread = new Thread(() =>
-            {
-                var trieTime = Time();
-
-                SerializeTries();
-
-                Log.DebugFormat("serialized tries in {0}", trieTime.Elapsed);
-            });
-            trieThread.Start();
-
-            var matrixBuildTime = Time();
-
-            var postingsMatrix = BuildPostingsMatrix(analyzedDocs);
-
-            Log.DebugFormat("built postings matrix in {0}", matrixBuildTime.Elapsed);
-
-            var postingsTime = Time();
-            using (var postingsWorker = new TaskQueue<Tuple<Term, IEnumerable<DocumentPosting>>>(1, t => WritePostings(t.Item1, t.Item2)))
-            {
-                foreach (var term in postingsMatrix)
-                {
-                    postingsWorker.Enqueue(new Tuple<Term, IEnumerable<DocumentPosting>>(term.Key, term.Value));
-                }
-            }
-            Log.DebugFormat("serialized postings in {0}", postingsTime.Elapsed);
-       
-            var ixInfo = new IxInfo
-            {
-                DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField))
-            };
-            ixInfo.Save(Path.Combine(_directory, "0.ix"));
-
-            trieThread.Join();
-
-            Log.DebugFormat("indexing took {0}", indexTime.Elapsed);
+            return analyzedDocs;
         }
 
-        private void SerializeTries()
+        private Thread EnqueueSerialize(Dictionary<Term, List<DocumentPosting>> postingsMatrix)
         {
-            //foreach(var kvp in _tries)
-            Parallel.ForEach(_tries, kvp =>
+            var thread = new Thread(() =>
             {
-                var field = kvp.Key;
-                var trie = kvp.Value;
-                var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
-
-                trie.Serialize(fileName);
+                using (var postingsWorker = new TaskQueue<Tuple<Term, IEnumerable<DocumentPosting>>>(1, t => WritePostings(t.Item1, t.Item2)))
+                {
+                    foreach (var term in postingsMatrix)
+                    {
+                        postingsWorker.Enqueue(new Tuple<Term, IEnumerable<DocumentPosting>>(term.Key, term.Value));
+                    }
+                }
             });
+            thread.Start();
+            return thread;
+        }
+
+        private Thread SaveIxInfo()
+        {
+            var thread = new Thread(() =>
+            {
+                var ixInfo = new IxInfo
+                {
+                    DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField))
+                };
+                ixInfo.Save(Path.Combine(_directory, "0.ix"));
+            });
+            thread.Start();
+            return thread;
+        }
+
+        private Thread SerializeTries()
+        {
+            var thread = new Thread(() =>
+            {
+                //foreach(var kvp in _tries)
+                Parallel.ForEach(_tries, kvp =>
+                {
+                    var field = kvp.Key;
+                    var trie = kvp.Value;
+                    var fileName = Path.Combine(_directory, field.ToTrieFileId() + ".tri");
+
+                    trie.Serialize(fileName);
+                });
+            });
+            thread.Start();
+            return thread;
         }
 
         private void BuildTree(AnalyzedDocument analyzedDoc)

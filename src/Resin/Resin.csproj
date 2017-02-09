@@ -74,7 +74,6 @@
     <Compile Include="IO\Read\PostingsReader.cs" />
     <Compile Include="IO\Write\PostingsWriter.cs" />
     <Compile Include="IO\QuickLZ.cs" />
-    <Compile Include="IO\TermDocumentMatrix.cs" />
     <Compile Include="IO\InMemoryTrieScanner.cs" />
     <Compile Include="IO\Write\LcrsTreeSerializer.cs" />
     <Compile Include="IO\Word.cs" />
