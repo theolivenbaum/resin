@@ -52,11 +52,11 @@ Pull requests are accepted.
 - [ ] Become the most feature-complete indie IR system in the world - v.3.9
 - [ ] Hand over to the next generation IR freaks
 
-## Power to the people
+## Power to the people (Not a communist)
 
 Great knowledge about IR can be found within the big tech coorporations of today, Google, Microsoft, Facebook. It is undemocratic that people can use the information available on the internet solely through the means of services that coorporations offer.
 
-The internet's data is vast. Because it is so it can't be properly digested by humans unless a machine first makes sense of it. Google, Microsoft and Facebook have great machines. That's great. There should be alternative services though, free ones, like Wikipediabut for search, and there should be business models where the personal integrity of users are not for sale. Something else can be for sale. Maybe the integrity of the businesses can be for sale instead, for a change.
+The internet's data is vast. Because it is so it can't be properly digested by humans unless a machine first makes sense of it. Google, Microsoft and Facebook have great machines. That's great. There should be alternative services though, free like Wikipedia but for search, and there should be business models where the personal integrity of users are not for sale. Something else can be for sale. Maybe the integrity of the businesses can be for sale instead, for a change.
 
 Anyway, IR is perhaps the smallest and most fundemental component of AI.
 
