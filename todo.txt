@@ -1,28 +1,5 @@
-Prioritized backlog
--------------------
-
-Documentation
-
-Async await instead of Parallel.ForEach
-
-Honor surrogate pairs when analysing: https://msdn.microsoft.com/en-us/library/system.globalization.stringinfo(v=vs.110).aspx
-
-Query multiple indices
-
-Nesting of queries: +label:golden +label:age of porn~ +genre:documentaries rewritten to +label:golden +(label:age~ label:of~ label:porn~) +genre:documentaries
-
-Prohibit first statement in a clause from being a "not" statement. "Or" and "and" statements are allowed.
-
-Make it possible to write a new index to the dir.
-
-Auto-refresh collector when new index has been written to the dir
-
-Merge indices
-
-Implement term count as PostingData<int>
-
-Implement tf-idf flavors (normalized, augumented)
-
-Implement bm25
-
-Document clustering / topic extraction
+write new index to dir
+search across two or more indices
+optimize
+optionally store doc field
+optionally analyze field
