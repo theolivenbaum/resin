@@ -41,6 +41,16 @@ Here are some [issues](https://github.com/kreeben/resin/issues) that need to be 
 
 Pull requests are accepted.
 
+## The Resin Project Mission
+
+1. Index and scan at least as fast as the lastest .Net version of Lucene
+2. Reach almost feature parity with the lastest .Net version of Lucene
+3. Index and scan at least as fast as the lastest JRE version of Lucene
+4. Reach almost feature parity with the lastest JRE version of Lucene
+5. Become the fastest IR framework in the world
+6. Become the most feature-complete IR framework in the world
+7. Hand over to the next generation IR freaks
+
 ## Power to the people
 
 Great knowledge about IR can be found within the big tech coorporations of today, Google, Microsoft, Facebook. It is undemocratic that people can use the information available on the internet solely through the means of services that coorporations offer.
