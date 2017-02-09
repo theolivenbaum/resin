@@ -61,11 +61,12 @@ namespace Resin
             {
                 foreach (var doc in documents)
                 {
+                    docWorker.Enqueue(doc);
+
                     var analyzedDoc = _analyzer.AnalyzeDocument(doc);
                     analyzedDocs.Add(analyzedDoc);
 
                     trieWorker.Enqueue(analyzedDoc);
-                    docWorker.Enqueue(doc);
 
                     foreach (var field in doc.Fields)
                     {
@@ -91,19 +92,16 @@ namespace Resin
 
             Log.DebugFormat("built postings matrix in {0}", matrixBuildTime.Elapsed);
 
-            var postingsThread = new Thread(() =>
+            var postingsTime = Time();
+            using (var postingsWorker = new TaskQueue<Tuple<Term, IEnumerable<DocumentPosting>>>(1, t => WritePostings(t.Item1, t.Item2)))
             {
-                var postingsTime = Time();
-
                 foreach (var term in postingsMatrix)
                 {
-                    WritePostings(term.Key, term.Value);
+                    postingsWorker.Enqueue(new Tuple<Term, IEnumerable<DocumentPosting>>(term.Key, term.Value));
                 }
-
-                Log.DebugFormat("serialized postings in {0}", postingsTime.Elapsed);
-            });
-            postingsThread.Start();
-            
+            }
+            Log.DebugFormat("serialized postings in {0}", postingsTime.Elapsed);
+       
             var ixInfo = new IxInfo
             {
                 DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField))
@@ -111,7 +109,6 @@ namespace Resin
             ixInfo.Save(Path.Combine(_directory, "0.ix"));
 
             trieThread.Join();
-            postingsThread.Join();
 
             Log.DebugFormat("indexing took {0}", indexTime.Elapsed);
         }
