@@ -4,7 +4,7 @@ Resin is a modern information retrieval system, a document based search engine l
 
 ## Documentation
 
-##Here's a document.
+##A document.
 
 	{
 		"_id": "Q1",
@@ -13,7 +13,7 @@ Resin is a modern information retrieval system, a document based search engine l
 		"aliases": "cosmos The Universe existence space outerspace"
 	}
 
-##Say you have a huge number of those.
+##A huge number.
 	
 	var docs = GetWikipediaAsJson();
 
@@ -42,10 +42,10 @@ Pull requests are accepted.
 ## Resin Project Milestones
 
 - [x] Layout basic architecture and infrastructure of a modern IR system - v0.9b
-- [ ] Index and scan at least as fast as the lastest .Net version of Lucene - v1.0
-- [ ] Reach almost feature parity with the lastest .Net version of Lucene - v1.9
-- [ ] Index and scan at least as fast as the lastest JRE version of Lucene - v2.0
-- [ ] Reach almost feature parity with the lastest JRE version of Lucene - v2.9
+- [ ] Index and scan at least as fast as .Net version of Lucene - v1.0
+- [ ] Reach almost feature parity with .Net version of Lucene - v1.9
+- [ ] Index and scan at least as fast as JRE version of Lucene - v2.0
+- [ ] Reach almost feature parity with JRE version of Lucene - v2.9
 - [ ] Become the fastest independent IR system in the world - v3.0
 
 ## Sir
