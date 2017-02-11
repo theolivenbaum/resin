@@ -162,8 +162,6 @@ namespace Resin.Cli
             var url = ConfigurationManager.AppSettings.Get("sir.endpoint");
             var inproc = !string.IsNullOrWhiteSpace(dir);
 
-            IndexWriter w = inproc ? new IndexWriter(dir, new Analyzer()) : null;
-
             Console.Write("preparing docs: ");
 
             var cursorPos = Console.CursorLeft;
@@ -206,9 +204,10 @@ namespace Resin.Cli
 
             if (inproc)
             {
-                w.Write(docs.Select(d=>new Document(d)));
-
-                w.Dispose();
+                using (var w = new WriteSession(dir, new Analyzer(), docs.Select(d => new Document(d))))
+                {
+                    w.Write();
+                }
             }
             else
             {

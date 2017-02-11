@@ -79,7 +79,7 @@
     <Compile Include="IO\Word.cs" />
     <Compile Include="Analysis\IScoringScheme.cs" />
     <Compile Include="Analysis\Levenshtein.cs" />
-    <Compile Include="IndexWriter.cs" />
+    <Compile Include="WriteSession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Querying\QueryContext.cs" />
     <Compile Include="Querying\QueryParser.cs" />

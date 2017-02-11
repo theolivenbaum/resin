@@ -63,7 +63,7 @@ namespace Resin
                 .Select(ix => new Collector(_directory, ix, _scorer))
                 .Select(c=>c.Collect(query))
                 .Aggregate(DocumentPosting.JoinOr)
-                .OrderBy(p => p.Scoring.Score);
+                .OrderByDescending(p=>p.Scoring.Score);
         }
 
         private Document GetDoc(DocumentPosting posting)

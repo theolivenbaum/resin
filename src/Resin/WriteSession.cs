@@ -14,11 +14,12 @@ using Resin.Sys;
 
 namespace Resin
 {
-    public class IndexWriter : IDisposable
+    public class WriteSession : IDisposable
     {
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
-        private static readonly ILog Log = LogManager.GetLogger(typeof(IndexWriter));
+        private readonly IEnumerable<Document> _documents;
+        private static readonly ILog Log = LogManager.GetLogger(typeof(WriteSession));
 
         /// <summary>
         /// field/doc count
@@ -42,10 +43,11 @@ namespace Resin
 
         private readonly string _indexName;
 
-        public IndexWriter(string directory, IAnalyzer analyzer)
+        public WriteSession(string directory, IAnalyzer analyzer, IEnumerable<Document> documents)
         {
             _directory = directory;
             _analyzer = analyzer;
+            _documents = documents;
             _docWriters = new Dictionary<string, DocumentWriter>();
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
@@ -53,11 +55,11 @@ namespace Resin
             _indexName = ToolBelt.GetChronologicalFileId(_directory);
         }
 
-        public string Write(IEnumerable<Document> documents)
+        public string Write()
         {
             var indexTime = Time();
             var analyzeTime = Time();
-            var analyzedDocs = Analyze(documents);
+            var analyzedDocs = Analyze(_documents);
             
             Log.DebugFormat("stored and analyzed documents in {0}", analyzeTime.Elapsed);
 
@@ -79,17 +81,17 @@ namespace Resin
         {
             var analyzedDocs = new List<AnalyzedDocument>();
 
-            using (var trieWorker = new TaskQueue<AnalyzedDocument>(1, BuildTree))
-            using (var docWorker = new TaskQueue<Document>(1, WriteDocument))
+            using (var trieBuilder = new TaskQueue<AnalyzedDocument>(1, BuildTree))
+            using (var docWriter = new TaskQueue<Document>(1, WriteDocument))
             {
                 foreach (var doc in documents)
                 {
-                    docWorker.Enqueue(doc);
+                    docWriter.Enqueue(doc);
 
                     var analyzedDoc = _analyzer.AnalyzeDocument(doc);
                     analyzedDocs.Add(analyzedDoc);
 
-                    trieWorker.Enqueue(analyzedDoc);
+                    trieBuilder.Enqueue(analyzedDoc);
 
                     foreach (var field in doc.Fields)
                     {
@@ -158,27 +160,24 @@ namespace Resin
             }
         }
 
-        private Dictionary<Term, List<DocumentPosting>> BuildPostingsMatrix(IList<AnalyzedDocument> analyzedDocs)
+        private void WriteToTrie(string field, string value)
         {
-            var postingsMatrix = new Dictionary<Term, List<DocumentPosting>>();
+            if (field == null) throw new ArgumentNullException("field");
+            if (value == null) throw new ArgumentNullException("value");
 
-            foreach (var doc in analyzedDocs)
+            var trie = GetTrie(field);
+            trie.Add(value);
+        }
+
+        private LcrsTrie GetTrie(string field)
+        {
+            LcrsTrie trie;
+            if (!_tries.TryGetValue(field, out trie))
             {
-                foreach (var term in doc.Terms)
-                {
-                    List<DocumentPosting> weights;
-
-                    if (postingsMatrix.TryGetValue(term.Key, out weights))
-                    {
-                        weights.Add(new DocumentPosting(doc.Id, term.Value));
-                    }
-                    else
-                    {
-                        postingsMatrix.Add(term.Key, new List<DocumentPosting> { new DocumentPosting(doc.Id, term.Value) });
-                    }
-                }
+                trie = new LcrsTrie('\0', false);
+                _tries[field] = trie;
             }
-            return postingsMatrix;
+            return trie;
         }
         
         private void WriteDocument(Document doc)
@@ -193,7 +192,7 @@ namespace Resin
                     if (!_docWriters.TryGetValue(fileId, out writer))
                     {
                         var fileName = Path.Combine(_directory, string.Format("{0}-{1}.doc", _indexName, fileId));
-                        var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+                        var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
                         var sr = new StreamWriter(fs, Encoding.Unicode);
 
                         writer = new DocumentWriter(sr);
@@ -217,7 +216,7 @@ namespace Resin
                     if (!_postingsWriters.TryGetValue(fileId, out writer))
                     {
                         var fileName = Path.Combine(_directory, string.Format("{0}-{1}.pos", _indexName, fileId));
-                        var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+                        var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
                         var sw = new StreamWriter(fs, Encoding.Unicode);
 
                         writer = new PostingsWriter(sw);
@@ -229,24 +228,27 @@ namespace Resin
             writer.Write(term, postings);
         }
 
-        private void WriteToTrie(string field, string value)
+        private Dictionary<Term, List<DocumentPosting>> BuildPostingsMatrix(IList<AnalyzedDocument> analyzedDocs)
         {
-            if (field == null) throw new ArgumentNullException("field");
-            if (value == null) throw new ArgumentNullException("value");
+            var postingsMatrix = new Dictionary<Term, List<DocumentPosting>>();
 
-            var trie = GetTrie(field);
-            trie.Add(value);
-        }
-
-        private LcrsTrie GetTrie(string field)
-        {
-            LcrsTrie trie;
-            if (!_tries.TryGetValue(field, out trie))
+            foreach (var doc in analyzedDocs)
             {
-                trie = new LcrsTrie('\0', false);
-                _tries[field] = trie;
+                foreach (var term in doc.Terms)
+                {
+                    List<DocumentPosting> weights;
+
+                    if (postingsMatrix.TryGetValue(term.Key, out weights))
+                    {
+                        weights.Add(new DocumentPosting(doc.Id, term.Value));
+                    }
+                    else
+                    {
+                        postingsMatrix.Add(term.Key, new List<DocumentPosting> { new DocumentPosting(doc.Id, term.Value) });
+                    }
+                }
             }
-            return trie;
+            return postingsMatrix;
         }
 
         private Stopwatch Time()

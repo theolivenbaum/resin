@@ -30,9 +30,9 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new IndexWriter(dir, new Analyzer()))
+            using (var writer = new WriteSession(dir, new Analyzer(), docs.Select(d => new Document(d))))
             {
-                indexName = writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write();
             }
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
@@ -69,9 +69,9 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new IndexWriter(dir, new Analyzer()))
+            using (var writer = new WriteSession(dir, new Analyzer(), docs.Select(d => new Document(d))))
             {
-                indexName = writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:age of porn~");
@@ -102,9 +102,9 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new IndexWriter(dir, new Analyzer()))
+            using (var writer = new WriteSession(dir, new Analyzer(), docs.Select(d => new Document(d))))
             {
-                indexName = writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:porn~");
@@ -140,9 +140,9 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new IndexWriter(dir, new Analyzer()))
+            using (var writer = new WriteSession(dir, new Analyzer(), docs.Select(d => new Document(d))))
             {
-                indexName = writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the rango");
@@ -190,9 +190,9 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new IndexWriter(dir, new Analyzer()))
+            using (var writer = new WriteSession(dir, new Analyzer(), docs.Select(d => new Document(d))))
             {
-                indexName = writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
@@ -236,9 +236,9 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new IndexWriter(dir, new Analyzer()))
+            using (var writer = new WriteSession(dir, new Analyzer(), docs.Select(d => new Document(d))))
             {
-                indexName = writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rocky");
@@ -293,9 +293,9 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new IndexWriter(dir, new Analyzer()))
+            using (var writer = new WriteSession(dir, new Analyzer(), docs.Select(d => new Document(d))))
             {
-                indexName = writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
@@ -340,9 +340,9 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new IndexWriter(dir, new Analyzer()))
+            using (var writer = new WriteSession(dir, new Analyzer(), docs.Select(d => new Document(d))))
             {
-                indexName = writer.Write(docs.Select(d=>new Document(d)));
+                indexName = writer.Write();
             }
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
@@ -382,9 +382,9 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new IndexWriter(dir, new Analyzer()))
+            using (var writer = new WriteSession(dir, new Analyzer(), docs.Select(d => new Document(d))))
             {
-                indexName = writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write();
             }
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
@@ -416,9 +416,9 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new IndexWriter(dir, new Analyzer()))
+            using (var writer = new WriteSession(dir, new Analyzer(), docs.Select(d => new Document(d))))
             {
-                indexName = writer.Write(docs.Select(d => new Document(d)));
+                indexName = writer.Write();
             }
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))

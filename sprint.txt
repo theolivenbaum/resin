@@ -1,6 +1,7 @@
-stack indices in a dir
-search across two or more indices
+stack indices in a dir (done)
+search across two or more indices (done)
 merge
+move Resin.WikipediaJsonParser to Resin.Tools
 optionally store doc field
 optionally analyze field
 numbers

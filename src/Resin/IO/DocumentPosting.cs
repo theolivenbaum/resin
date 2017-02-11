@@ -87,6 +87,7 @@ namespace Resin.IO
 
             var dic = other.ToDictionary(x => x.DocumentId);
             var remainder = new List<DocumentPosting>();
+
             foreach (var posting in first)
             {
                 DocumentPosting exists;
