@@ -6,7 +6,6 @@ namespace Resin.IO.Write
     public class LcrsTreeBinaryWriter : IDisposable
     {
         private readonly StreamWriter _writer;
-        public static object SyncRoot = new object();
 
         public LcrsTreeBinaryWriter(StreamWriter writer)
         {
@@ -23,22 +22,6 @@ namespace Resin.IO.Write
 
             _writer.WriteLine(base64);
         }
-
-        //private byte[] BuildStringRepresentation(LcrsTrie node)
-        //{
-        //    var sb = new StringBuilder();
-        //    node.SerializeDepthFirst(sb, 0);
-        //    return Encoding.Unicode.GetBytes(sb.ToString());
-        //}
-
-        //private byte[] Serialize(string node)
-        //{
-        //    using (var stream = new MemoryStream())
-        //    {
-        //        BinaryFile.Serializer.Serialize(stream, node);
-        //        return stream.ToArray();
-        //    }
-        //}
 
         private byte[] Serialize(LcrsTrie node)
         {

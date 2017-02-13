@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using log4net;
 using Resin.Analysis;
 using Resin.IO;
@@ -63,10 +62,10 @@ namespace Resin
             
             Log.DebugFormat("stored and analyzed documents in {0}", analyzeTime.Elapsed);
 
-            var trieThread = SerializeTries();
-            var ixThread = SaveIxInfo();
             var postings = BuildPostingsMatrix(analyzedDocs);
             var postingsThread = EnqueueSerialize(postings);
+            var trieThread = SerializeTries();
+            var ixThread = SaveIxInfo();
 
             trieThread.Join();
             ixThread.Join();
@@ -138,18 +137,24 @@ namespace Resin
         {
             var thread = new Thread(() =>
             {
-                //foreach(var kvp in _tries)
-                Parallel.ForEach(_tries, kvp =>
+                using (var work  = new TaskQueue<Tuple<string, LcrsTrie>>(Math.Max(_tries.Count - 1, 1), DoSerialize))
                 {
-                    var field = kvp.Key;
-                    var trie = kvp.Value;
-                    var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _indexName, field.ToTrieFileId()));
-
-                    trie.Serialize(fileName);
-                });
+                    foreach (var t in _tries)
+                    {
+                        work.Enqueue(new Tuple<string, LcrsTrie>(t.Key, t.Value));
+                    }
+                }
             });
             thread.Start();
             return thread;
+        }
+
+        private void DoSerialize(Tuple<string, LcrsTrie> trieEntry)
+        {
+            var field = trieEntry.Item1;
+            var trie = trieEntry.Item2;
+            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _indexName, field.ToTrieFileId()));
+            trie.Serialize(fileName);
         }
 
         private void BuildTree(AnalyzedDocument analyzedDoc)
