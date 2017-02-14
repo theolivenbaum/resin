@@ -22,9 +22,9 @@ Indexing is currently 30% slower than the latest .Net version of Lucene. On the 
 ##Index them.
 
 	var dir = @"C:\Users\Yourname\Resin\wikipedia";
-	using (var writer = new IndexWriter(dir, new Analyzer()))
+	using (var write = new WriteOperation(dir, new Analyzer(), docs))
 	{
-		writer.Write(docs);
+		write.Execute();
 	}
 
 ##Query the index.
