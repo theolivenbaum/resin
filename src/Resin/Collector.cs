@@ -36,7 +36,19 @@ namespace Resin
             Scan(query);
             GetPostings(query);
 
-            return query.Reduce();
+            var deletions = GetDeletions().ToList();
+
+            return query.Reduce().Where(d=>deletions.Contains(d.DocumentId) == false);
+        }
+
+        private IEnumerable<string> GetDeletions()
+        {
+            return GetDeletionsFileNames().SelectMany(fn => DelInfo.Load(fn).DocIds);
+        }
+
+        private string[] GetDeletionsFileNames()
+        {
+            return Directory.GetFiles(_directory, "*.del").ToArray();
         }
 
         private void Scan(QueryContext query)

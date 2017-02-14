@@ -17,12 +17,9 @@ namespace Resin.Cli
     class Program
     {
         //inproc:
-        //query --dir D:\resin\wikipedia -q "label:porn~" -p 0 -s 10
-        //write --file c:\temp\0wikipedia.json --dir d:\resin\wikipedia --skip 0 --take 10000
-        //
-        //out of proc
-        //query --name wikipedia -q "label:porn~" -p 0 -s 10
-        //write --file c:\temp\0wikipedia.json --name wikipedia --skip 0 --take 10000
+        // query --dir D:\resin\wikipedia -q "label:porn~" -p 0 -s 10
+        // write --file c:\temp\0wikipedia.json --dir d:\resin\wikipedia --skip 0 --take 10000
+        // delete --ids "Q1476435" --dir d:\resin\wikipedia
         static void Main(string[] args)
         {
             XmlConfigurator.Configure();
@@ -44,6 +41,10 @@ namespace Resin.Cli
                     return;
                 }
                 Query(args);
+            }
+            else if (args[0].ToLower() == "delete")
+            {
+                Delete(args);
             }
             else
             {
@@ -217,6 +218,41 @@ namespace Resin.Cli
                 using (var client = new WriterClient(indexName, url))
                 {
                     client.Write(docs);
+                }
+            }
+
+            Console.WriteLine("write operation took {0}", writeTimer.Elapsed);
+        }
+
+
+        static void Delete(string[] args)
+        {
+            var ids = args[Array.IndexOf(args, "--ids") + 1].Split(',');
+            string dir = null;
+            string indexName = null;
+
+            if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
+            if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
+
+            var url = ConfigurationManager.AppSettings.Get("sir.endpoint");
+            var inproc = !string.IsNullOrWhiteSpace(dir);
+            var writeTimer = new Stopwatch();
+            writeTimer.Start();
+
+            if (inproc)
+            {
+                var analysisTimer = new Stopwatch();
+                analysisTimer.Start();
+
+                new DeleteOperation(dir, ids).Execute();
+            }
+            else
+            {
+                Console.WriteLine("Executing HTTP POST");
+
+                using (var client = new WriterClient(indexName, url))
+                {
+                    client.Remove(ids);
                 }
             }
 

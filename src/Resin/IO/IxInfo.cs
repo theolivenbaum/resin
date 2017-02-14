@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Resin.IO
 {
@@ -7,5 +8,12 @@ namespace Resin.IO
     {
         public string Name { get; set; }
         public DocumentCount DocumentCount { get; set; }
+    }
+
+    [Serializable]
+    public class DelInfo : CompressedBinaryFile<DelInfo>
+    {
+        public string Name { get; set; }
+        public List<string> DocIds { get; set; } 
     }
 }

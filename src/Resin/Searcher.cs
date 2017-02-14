@@ -29,7 +29,9 @@ namespace Resin
             _directory = directory;
             _parser = parser;
             _scorer = scorer;
-            _indices = GetIndexFileNamesInChronologicalOrder().Select(IxInfo.Load).ToDictionary(x=>x.Name);
+
+            var ixFiles = GetIndexFileNamesInChronologicalOrder();
+            _indices = ixFiles.Select(IxInfo.Load).ToDictionary(x => x.Name);
         }
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)

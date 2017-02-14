@@ -25,7 +25,9 @@ namespace Resin.IO
             typeof (Dictionary<string, int>),
             typeof (Document),
             typeof (IxInfo),
-            typeof (List<DocumentPosting>)
+            typeof (List<DocumentPosting>),
+            typeof (DelInfo),
+            typeof (List<string>)
         };
 
         [NonSerialized]
