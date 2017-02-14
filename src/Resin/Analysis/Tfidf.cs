@@ -20,7 +20,8 @@ namespace Resin.Analysis
         }
 
         /// <summary>
-        /// Create scorer
+        /// Create scorer.
+        /// https://lucene.apache.org/core/4_0_0/core/org/apache/lucene/search/similarities/TFIDFSimilarity.html
         /// </summary>
         /// <param name="docsInCorpus"></param>
         /// <param name="docsWithTerm"></param>
