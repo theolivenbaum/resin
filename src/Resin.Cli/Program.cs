@@ -207,9 +207,9 @@ namespace Resin.Cli
             {
                 var analysisTimer = new Stopwatch();
                 analysisTimer.Start();
+
                 var ix = docs.ToIndex(dir, new Analyzer());
                 ix.Serialize(dir);
-
             }
             else
             {

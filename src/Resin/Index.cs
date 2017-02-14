@@ -54,6 +54,8 @@ namespace Resin
                 trieThread.Join();
                 postingsThread.Join();
             }
+
+            Cleanup();
             
             Log.DebugFormat("serializing took {0}", indexTime.Elapsed);
 
@@ -156,7 +158,7 @@ namespace Resin
             return timer;
         }
 
-        public void Dispose()
+        private void Cleanup()
         {
             foreach (var pw in _postingsWriters.Values)
             {
