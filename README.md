@@ -41,7 +41,7 @@ Here are some [issues](https://github.com/kreeben/resin/issues) that need to be 
 
 Pull requests are accepted.
 
-## Resin Project Milestones (a.k.a. "The plan")
+## Resin Project Milestones
 
 - [x] Layout basic architecture and infrastructure of a modern IR system - v0.9b
 - [x] Scan at least as fast as .Net version of Lucene - v1.0
