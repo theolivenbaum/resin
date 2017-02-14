@@ -1,6 +1,8 @@
 # Resin
 
-Resin is a modern information retrieval system, a document based search engine library and framework, and a Lucene clone.
+Resin is a modern information retrieval system, a document based search engine library and framework, and a Lucene clone. 
+
+Indexing is currently 30% slower than the latest .Net version of Lucene. Fuzzy __querying is currently 12% faster than the latest .Net version of Lucene__, on a machine with at least 4 cores.
 
 ## Documentation
 
