@@ -46,13 +46,14 @@ Pull requests are accepted.
 - [x] Layout basic architecture and infrastructure of a modern IR system - v0.9b
 - [x] Scan at least as fast as .Net version of Lucene - v1.0
 - [ ] Index at least as fast as .Net version of Lucene - v1.1
-- [ ] Merge best parts ofthe Lucene query language and the Elasticsearch DSL into RQL (Resin query language) - v1.2
+- [ ] Merge best parts of the Lucene query language and the Elasticsearch DSL into RQL (Resin query language) - v1.2
 - [ ] Reach almost feature parity with .Net version of Lucene - v1.9
 - [ ] Scan at least as fast as JRE version of Lucene - v2.0
 - [ ] Index at least as fast as JRE version of Lucene - v2.1
 - [ ] Merge applicable parts of SQL into RQL - v2.2
-- [ ] Reach almost feature parity with JRE version of Lucene - v2.9
-- [ ] Become the fastest independent IR system in the world - v3.0
+- [ ] Reach almost feature parity with JRE version of Lucene - v2.8
+- [ ] Become the fastest independent IR system in the world - v2.9
+- [ ] This is a two-season show. This is the end of the road.
 
 ## Sir
 
