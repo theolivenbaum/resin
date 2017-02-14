@@ -9,6 +9,7 @@ using log4net.Config;
 using Newtonsoft.Json;
 using Resin.Analysis;
 using Resin.Querying;
+using Resin.Sys;
 using Sir.Client;
 
 namespace Resin.Cli
@@ -168,8 +169,8 @@ namespace Resin.Cli
             var count = 0;
             var docs = new List<Dictionary<string, string>>();
 
-            var timer = new Stopwatch();
-            timer.Start();
+            var writeTimer = new Stopwatch();
+            writeTimer.Start();
 
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None))
             using (var bs = new BufferedStream(fs))
@@ -200,14 +201,15 @@ namespace Resin.Cli
                 Console.WriteLine();
             }
 
-            Console.WriteLine("prepared docs in {0}", timer.Elapsed);
-
+            Console.WriteLine("prepared docs in {0}", writeTimer.Elapsed);
+            
             if (inproc)
             {
-                using (var w = new WriteSession(dir, new Analyzer(), docs.Select(d => new Document(d))))
-                {
-                    w.Write();
-                }
+                var analysisTimer = new Stopwatch();
+                analysisTimer.Start();
+                var ix = docs.ToIndex(dir, new Analyzer());
+                ix.Serialize(dir);
+
             }
             else
             {
@@ -218,7 +220,8 @@ namespace Resin.Cli
                     client.Write(docs);
                 }
             }
-            
+
+            Console.WriteLine("write operation took {0}", writeTimer.Elapsed);
         }
     }
 }

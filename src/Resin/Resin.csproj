@@ -54,6 +54,8 @@
   <ItemGroup>
     <Compile Include="Analysis\AnalyzedDocument.cs" />
     <Compile Include="Analysis\Analyzer.cs" />
+    <Compile Include="Index.cs" />
+    <Compile Include="IndexBuilder.cs" />
     <Compile Include="IO\LcrsTrieHelper.cs" />
     <Compile Include="IO\Read\DocumentReader.cs" />
     <Compile Include="IO\DocumentPosting.cs" />

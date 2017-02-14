@@ -136,18 +136,21 @@ namespace Resin
             return new PostingsReader(sr);
         }
 
-        private IEnumerable<DocumentPosting> Score(IEnumerable<DocumentPosting> postings)
+        private IEnumerable<DocumentPosting> Score(IList<DocumentPosting> postings)
         {
-            foreach (var posting in postings)
+            if (postings.Any())
             {
-                var scorer = _scorer.CreateScorer(_ix.DocumentCount.DocCount[posting.Field], posting.Count);
+                var scorer = _scorer.CreateScorer(_ix.DocumentCount.DocCount[postings.First().Field], postings.Count);
 
-                posting.Scoring = new DocumentScore(posting.DocumentId, posting.Count);
-                posting.IndexName = _ix.Name;
+                foreach (var posting in postings)
+                {
+                    posting.Scoring = new DocumentScore(posting.DocumentId, posting.Count);
+                    posting.IndexName = _ix.Name;
 
-                scorer.Score(posting.Scoring);
+                    scorer.Score(posting.Scoring);
 
-                yield return posting;
+                    yield return posting;
+                }
             }
         }
 

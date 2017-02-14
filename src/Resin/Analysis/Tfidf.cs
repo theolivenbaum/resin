@@ -26,7 +26,7 @@ namespace Resin.Analysis
         /// <param name="docsWithTerm"></param>
         public Tfidf(int docsInCorpus, int docsWithTerm)
         {
-            _idf = Math.Log(docsInCorpus / (double)docsWithTerm + 1) + 1;
+            _idf = Math.Log10(docsInCorpus / (double)docsWithTerm + 1) + 1;
         }
 
         public void Score(DocumentScore doc)

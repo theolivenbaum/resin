@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Resin.Analysis;
 using Resin.IO;
 
 namespace Resin.Sys
@@ -12,6 +13,17 @@ namespace Resin.Sys
     public static class ToolBelt
     {
         public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 23);
+
+        public static Index ToIndex(this IEnumerable<IDictionary<string, string>> documents, string directory, IAnalyzer analyzer)
+        {
+            var builder = new IndexBuilder(analyzer, documents.ToDocuments());
+            return builder.ToIndex();
+        }
+
+        public static IEnumerable<Document> ToDocuments(this IEnumerable<IDictionary<string, string>> documents)
+        {
+            return documents.Select(doc => new Document(doc));
+        }
 
         public static Stream GenerateStream(this string str)
         {
@@ -83,7 +95,7 @@ namespace Resin.Sys
             return Directory.GetFiles(directory, searchPattern).OrderBy(s => s).First();
         }
 
-        public static string GetChronologicalFileId(string dir)
+        public static string GetChronologicalFileId()
         {
             var ticks = DateTime.Now.Ticks - BeginningOfTime.Ticks;
             return ticks.ToString(CultureInfo.InvariantCulture);

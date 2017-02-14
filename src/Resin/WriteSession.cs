@@ -51,18 +51,18 @@ namespace Resin
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
             _postingsWriters = new Dictionary<string, PostingsWriter>();
-            _indexName = ToolBelt.GetChronologicalFileId(_directory);
+            _indexName = ToolBelt.GetChronologicalFileId();
         }
 
         public string Write()
         {
-            var indexTime = Time();
             var analyzeTime = Time();
-            var analyzedDocs = Analyze(_documents);
-            
-            Log.DebugFormat("stored and analyzed documents in {0}", analyzeTime.Elapsed);
-
+            var analyzedDocs = Analyze(_documents);   
             var postings = BuildPostingsMatrix(analyzedDocs);
+
+            Log.DebugFormat(" analyzed documents in {0}", analyzeTime.Elapsed);
+
+            var serializeTime = Time();
             var postingsThread = EnqueueSerialize(postings);
             var trieThread = SerializeTries();
             var ixThread = SaveIxInfo();
@@ -71,7 +71,7 @@ namespace Resin
             ixThread.Join();
             postingsThread.Join();
 
-            Log.DebugFormat("indexing took {0}", indexTime.Elapsed);
+            Log.DebugFormat("serializing took {0}", serializeTime.Elapsed);
 
             return _indexName;
         }
