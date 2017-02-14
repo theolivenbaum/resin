@@ -155,7 +155,7 @@ namespace Resin.Sys
         {
             if (string.IsNullOrEmpty(docId)) throw new ArgumentException("docId");
 
-            var val = docId.PadRight(3).Substring(0, 3);
+            var val = docId.PadRight(4).Substring(0, 4);
             return val.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 
