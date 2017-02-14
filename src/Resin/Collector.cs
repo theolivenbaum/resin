@@ -43,23 +43,15 @@ namespace Resin
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            var time = Time();
-
-            //foreach (var q in new List<QueryContext> { query }.Concat(query.Children))
-            //{
-            //    DoScan(q);
-            //}
             Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
-
-            Log.DebugFormat("scanned {0} in {1}", query, time.Elapsed);
         }
 
         private void DoScan(QueryContext query)
         {
+            var time = Time();
             var terms = new ConcurrentBag<Term>();
             var readers = GetTreeReaders(query.Field);
 
-            //foreach (var reader in readers)
             Parallel.ForEach(readers, reader =>
             {
                 if (query.Fuzzy)
@@ -82,31 +74,29 @@ namespace Resin
                 }
             });
             
-            
             query.Terms = terms;
+            Log.DebugFormat("scanned {0} in {1}", query.AsReadable(), time.Elapsed);
         }
 
         private void GetPostings(QueryContext query)
         {
             if (query == null) throw new ArgumentNullException("query");
-
-            var time = Time();
-
-            foreach (var q in new List<QueryContext> {query}.Concat(query.Children))
-            {
-                DoGetPostings(q);
-            }
-
-            Log.DebugFormat("read postings for {0} in {1}", query, time.Elapsed);
+            
+            Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoGetPostings);
         }
 
         private void DoGetPostings(QueryContext query)
         {
+            var time = Time();
+
             var result = DoReadPostings(query.Terms)
                 .Aggregate<IEnumerable<DocumentPosting>, IEnumerable<DocumentPosting>>(
                     null, DocumentPosting.JoinOr);
 
             query.Postings = result ?? Enumerable.Empty<DocumentPosting>();
+
+            Log.DebugFormat("read postings for {0} in {1}", query.AsReadable(), time.Elapsed);
+
         }
 
         private IEnumerable<IEnumerable<DocumentPosting>> DoReadPostings(IEnumerable<Term> terms)
