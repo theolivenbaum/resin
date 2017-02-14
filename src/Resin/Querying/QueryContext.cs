@@ -48,6 +48,11 @@ namespace Resin.Querying
 
             return first;
         }
+
+        public QueryContext Clone()
+        {
+            return new QueryContext(Field, Value){Children = Children};
+        }
       
         public override string ToString()
         {

@@ -98,22 +98,33 @@ namespace Resin
             Log.DebugFormat("read postings for {0} in {1}", query.AsReadable(), time.Elapsed);
 
         }
-
+        
+        private static readonly object SyncRoot = new object();
+ 
         private IEnumerable<IEnumerable<DocumentPosting>> DoReadPostings(IEnumerable<Term> terms)
         {
-            foreach(var term in terms)
+            var result = new ConcurrentBag<List<DocumentPosting>>();
+
+            Parallel.ForEach(terms, term =>
             {
                 IList<DocumentPosting> postings;
 
                 if (!_termCache.TryGetValue(term, out postings))
                 {
-                    postings = GetPostingsReader(term).Read(term).ToList();
-                    postings = Score(postings).ToList();
-                    _termCache.Add(term, postings);
+                    lock (SyncRoot)
+                    {
+                        if (!_termCache.TryGetValue(term, out postings))
+                        {
+                            postings = GetPostingsReader(term).Read(term).ToList();
+                            postings = Score(postings).ToList();
+                            _termCache.Add(term, postings);
+                        }
+                    }
                 }
+                result.Add(new List<DocumentPosting>(postings));
+            });
 
-                yield return postings;
-            }
+            return result;
         }
 
         private PostingsReader GetPostingsReader(Term term)
