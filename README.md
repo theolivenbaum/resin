@@ -41,19 +41,21 @@ Here are some [issues](https://github.com/kreeben/resin/issues) that need to be 
 
 Pull requests are accepted.
 
-## Resin Project Milestones
+## Resin Project Milestones (a.k.a. "The plan")
 
 - [x] Layout basic architecture and infrastructure of a modern IR system - v0.9b
 - [x] Scan at least as fast as .Net version of Lucene - v1.0
 - [ ] Index at least as fast as .Net version of Lucene - v1.1
 - [ ] Merge best parts of the Lucene query language and the Elasticsearch DSL into RQL (Resin query language) - v1.2
+- [ ] Handover control of roadmap to the community - v1.3 - v1.8
 - [ ] Reach almost feature parity with .Net version of Lucene - v1.9
 - [ ] Scan at least as fast as JRE version of Lucene - v2.0
 - [ ] Index at least as fast as JRE version of Lucene - v2.1
 - [ ] Merge applicable parts of SQL into RQL - v2.2
+- [ ] Handover control of roadmap to the community - v2.3 - v2.7
 - [ ] Reach almost feature parity with JRE version of Lucene - v2.8
 - [ ] Become the fastest independent IR system in the world - v2.9
-- [ ] This is a two-season show. This is the end of the road.
+- [ ] A two-season show, the end of the road.
 
 ## Sir
 
