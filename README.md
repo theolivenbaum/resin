@@ -44,9 +44,11 @@ Pull requests are accepted.
 ## Resin Project Milestones
 
 - [x] Layout basic architecture and infrastructure of a modern IR system - v0.9b
-- [ ] Index and scan at least as fast as .Net version of Lucene - v1.0
+- [x] Scan at least as fast as .Net version of Lucene - v1.0
+- [ ] Index at least as fast as .Net version of Lucene - v1.1
 - [ ] Reach almost feature parity with .Net version of Lucene - v1.9
-- [ ] Index and scan at least as fast as JRE version of Lucene - v2.0
+- [ ] Scan at least as fast as JRE version of Lucene - v2.0
+- [ ] Index at least as fast as JRE version of Lucene - v2.1
 - [ ] Reach almost feature parity with JRE version of Lucene - v2.9
 - [ ] Become the fastest independent IR system in the world - v3.0
 
