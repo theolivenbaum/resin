@@ -173,8 +173,7 @@ namespace Resin.Cli
             writeTimer.Start();
 
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None))
-            using (var bs = new BufferedStream(fs))
-            using (var sr = new StreamReader(bs))
+            using (var sr = new StreamReader(fs))
             {
                 string line;
 
