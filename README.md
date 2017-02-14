@@ -55,7 +55,7 @@ Pull requests are accepted.
 - [ ] Handover control of roadmap to the community - v2.3 - v2.7
 - [ ] Reach almost feature parity with JRE version of Lucene - v2.8
 - [ ] Become the fastest independent IR system in the world - v2.9
-- [ ] A two-season show, the end of the road.
+- [ ] Tooling.
 
 ## Sir
 
