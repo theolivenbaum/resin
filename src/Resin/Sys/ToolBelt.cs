@@ -147,7 +147,7 @@ namespace Resin.Sys
         {
             if (term == null) throw new ArgumentNullException("term");
 
-            var val = term.Word.Value.PadRight(1).Substring(0, 1);
+            var val = term.Word.Value.PadRight(3).Substring(0, 3);
             return val.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 
