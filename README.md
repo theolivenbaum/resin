@@ -44,7 +44,7 @@ Pull requests are accepted.
 ## Resin Project Milestones
 
 - [x] Layout basic architecture and infrastructure of a modern IR system - v0.9b
-- [x] Scan at least as fast as .Net version of Lucene - v1.0
+- [x] Scan at least as fast as .Net version of Lucene - ___v1.0___
 - [ ] Index at least as fast as .Net version of Lucene - v1.1
 - [ ] Merge best parts of the Lucene query language and the Elasticsearch DSL into RQL (Resin query language) - v1.2
 - [ ] Handover control of roadmap to the community - v1.3 - v1.8
