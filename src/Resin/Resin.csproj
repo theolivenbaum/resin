@@ -81,6 +81,7 @@
     <Compile Include="IO\Word.cs" />
     <Compile Include="Analysis\IScoringScheme.cs" />
     <Compile Include="Analysis\Levenshtein.cs" />
+    <Compile Include="Sys\WierdStringExtensions.cs" />
     <Compile Include="WriteOperation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Querying\QueryContext.cs" />
