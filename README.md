@@ -2,7 +2,7 @@
 
 Resin is a modern information retrieval system, a document based search engine library and framework, and a Lucene clone. 
 
-## Fast fuzzy scan (faster than [Lucene.Net](https://blogs.apache.org/lucenenet/entry/lucene_net_3_0_3)
+## Fast fuzzy scan
 
 Who would even consider an alternative product if it didn't beat the competion on one or more accounts?
 
