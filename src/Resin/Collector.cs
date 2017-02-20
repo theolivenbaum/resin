@@ -55,37 +55,46 @@ namespace Resin
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
+            foreach (var q in new List<QueryContext> { query }.Concat(query.Children))
+            {
+                DoScan(q);
+            }
         }
 
         private void DoScan(QueryContext query)
         {
             var time = Time();
             var terms = new ConcurrentBag<Term>();
-            var readers = GetTreeReaders(query.Field);
+            var readers = GetTreeReaders(query.Field).ToList();
 
-            Parallel.ForEach(readers, reader =>
+            if (query.Fuzzy)
             {
-                if (query.Fuzzy)
+                foreach (var reader in readers)
+                foreach (var term in reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)))
                 {
-                    foreach (var term in reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)))
+                    terms.Add(term);
+                }
+            }
+            else if (query.Prefix)
+            {
+                foreach (var reader in readers)
+                foreach (var term in reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)))
+                {
+                    terms.Add(term);
+                }
+            }
+            else
+            {
+                foreach (var reader in readers)
+                {
+                    if (reader.HasWord(query.Value))
                     {
-                        terms.Add(term);
+                        terms.Add(new Term(query.Field, new Word(query.Value)));
+                        break;
                     }
                 }
-                else if (query.Prefix)
-                {
-                    foreach (var term in reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)))
-                    {
-                        terms.Add(term);
-                    }
-                }
-                else if (reader.HasWord(query.Value))
-                {
-                    terms.Add(new Term(query.Field, new Word(query.Value)));
-                }
-            });
-            
+            }
+
             query.Terms = terms;
             Log.DebugFormat("scanned {0} in {1}", query.AsReadable(), time.Elapsed);
         }

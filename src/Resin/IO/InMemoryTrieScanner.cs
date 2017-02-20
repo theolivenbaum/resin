@@ -48,7 +48,7 @@ namespace Resin.IO
         {
             var childIndex = depth + 1;
             string test;
-
+            
             if (depth == state.Length)
             {
                 test = state + node.Value;
