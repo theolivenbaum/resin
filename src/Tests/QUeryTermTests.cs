@@ -10,6 +10,7 @@ namespace Tests
         [TestCase("wordsss", 0.75f, Result = 1)]
         [TestCase("wordss", 0.75f, Result = 1)]
         [TestCase("words", 0.75f, Result = 1)]
+        [TestCase("words", 0.79f, Result = 1)]
         [TestCase("word", 0.75f, Result = 1)]
         [TestCase("ord", 0.75f, Result = 0)]
         [TestCase("or", 0.75f, Result = 0)]

@@ -10,7 +10,7 @@ namespace Tests
         [Test]
         public void Can_parse_phrase()
         {
-            var q = new QueryParser(new Analyzer()).Parse("title:rambo first blood");
+            var q = new QueryParser(new Analyzer()).Parse("+title:rambo first blood");
 
             Assert.AreEqual("+title:rambo title:first title:blood", q.ToString());
         }
@@ -77,6 +77,22 @@ namespace Tests
             var q = new QueryParser(new Analyzer()).Parse("title:raymbo~");
 
             Assert.AreEqual("+title:raymbo~", q.ToString());
+        }
+
+        [Test]
+        public void Can_parse_fuzzy_phrase()
+        {
+            var q = new QueryParser(new Analyzer(), 0.5f).Parse("title:was up~");
+
+            Assert.AreEqual("+title:was~ title:up~", q.ToString());
+        }
+
+        [Test]
+        public void Can_parse_phrases()
+        {
+            var q = new QueryParser(new Analyzer(), 0.5f).Parse("title:was up~ subtitle:in da house");
+
+            Assert.AreEqual("+title:was~ title:up~ subtitle:in subtitle:da subtitle:house", q.ToString());
         }
     }
 }

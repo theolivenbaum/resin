@@ -51,7 +51,7 @@ namespace Resin.Querying
 
         public QueryContext Clone()
         {
-            return new QueryContext(Field, Value){Children = Children};
+            return new QueryContext(Field, Value){Children = Children, And = And, Not = Not, Edits = Edits,Fuzzy = Fuzzy, Prefix = Prefix};
         }
       
         public override string ToString()

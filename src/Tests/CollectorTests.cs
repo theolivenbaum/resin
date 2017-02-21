@@ -134,7 +134,7 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "0"}, {"title", "rambo first blood"}},
                 new Dictionary<string, string> {{"_id", "1"}, {"title", "rambo 2"}},
                 new Dictionary<string, string> {{"_id", "2"}, {"title", "rocky 2"}},
-                new Dictionary<string, string> {{"_id", "3"}, {"title", "the raiders of the lost ark"}},
+                new Dictionary<string, string> {{"_id", "3"}, {"title", "the raid"}},
                 new Dictionary<string, string> {{"_id", "4"}, {"title", "the rain man"}},
                 new Dictionary<string, string> {{"_id", "5"}, {"title", "the good, the bad and the ugly"}}
             };
@@ -145,30 +145,25 @@ namespace Tests
                 indexName = writer.Execute();
             }
 
-            var query = new QueryParser(new Analyzer()).Parse("+title:the rango");
+            var query = new QueryParser(new Analyzer()).Parse("+title:rain man");
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
-                Assert.That(scores.Count, Is.EqualTo(3));
-                Assert.IsTrue(scores.Any(d => d.DocumentId == "3"));
+                Assert.That(scores.Count, Is.EqualTo(1));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == "4"));
-                Assert.IsTrue(scores.Any(d => d.DocumentId == "5"));
             }
 
-            query = new QueryParser(new Analyzer()).Parse("+title:the ramvo~");
+            query = new QueryParser(new Analyzer(), 0.75f).Parse("+title:rain man~");
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
-                Assert.That(scores.Count, Is.EqualTo(5));
-                Assert.IsTrue(scores.Any(d => d.DocumentId == "0"));
-                Assert.IsTrue(scores.Any(d => d.DocumentId == "1"));
+                Assert.That(scores.Count, Is.EqualTo(2));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == "3"));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == "4"));
-                Assert.IsTrue(scores.Any(d => d.DocumentId == "5"));
             }
         }
 

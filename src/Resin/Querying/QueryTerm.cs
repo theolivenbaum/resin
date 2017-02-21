@@ -14,11 +14,15 @@ namespace Resin.Querying
         public bool Prefix { get; set; }
         public bool Fuzzy { get; set; }
 
-        public int Edits { get { return _edits; } set { _edits = value; }}
+        public int Edits { get { return _edits; } set { _edits = value; } }
 
         public float Similarity
         {
-            set { _edits = (int)Math.Floor(Value.Length*(1-value)); }
+            set
+            {
+                _edits = Convert.ToInt32(Math.Floor(Value.Length * (1 - value)));
+                //_edits =Convert.ToInt32(Value.Length * (1 - value));
+            }
         }
 
         public QueryTerm(string field, string value)
