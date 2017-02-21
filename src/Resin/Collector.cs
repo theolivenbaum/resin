@@ -55,33 +55,48 @@ namespace Resin
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            foreach (var q in new List<QueryContext> { query }.Concat(query.Children))
-            {
-                DoScan(q);
-            }
+            Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
+            //foreach (var q in new List<QueryContext> { query }.Concat(query.Children))
+            //{
+            //    DoScan(q);
+            //}
         }
 
         private void DoScan(QueryContext query)
         {
             var time = Time();
             var terms = new ConcurrentBag<Term>();
-            var readers = GetTreeReaders(query.Field).ToList();
+            var readers = GetTreeReaders(query.Field);
 
             if (query.Fuzzy)
             {
-                foreach (var reader in readers)
-                foreach (var term in reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)))
+                Parallel.ForEach(readers, reader =>
                 {
-                    terms.Add(term);
-                }
+                    foreach (var term in reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)))
+                    {
+                        terms.Add(term);
+                    }
+                });
+                //foreach (var reader in readers)
+                //foreach (var term in reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)))
+                //{
+                //    terms.Add(term);
+                //}
             }
             else if (query.Prefix)
             {
-                foreach (var reader in readers)
-                foreach (var term in reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)))
+                Parallel.ForEach(readers, reader =>
                 {
-                    terms.Add(term);
-                }
+                    foreach (var term in reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)))
+                    {
+                        terms.Add(term);
+                    }
+                });
+                //foreach (var reader in readers)
+                //foreach (var term in reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)))
+                //{
+                //    terms.Add(term);
+                //}
             }
             else
             {

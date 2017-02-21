@@ -21,7 +21,6 @@ namespace Resin.Querying
             set
             {
                 _edits = Convert.ToInt32(Math.Floor(Value.Length * (1 - value)));
-                //_edits =Convert.ToInt32(Value.Length * (1 - value));
             }
         }
 

@@ -34,18 +34,18 @@ namespace Resin
     public class DeleteOperation : IDisposable
     {
         private readonly string _directory;
-        private readonly IEnumerable<string> _documents;
+        private readonly IEnumerable<string> _documentIds;
 
-        public DeleteOperation(string directory, IEnumerable<string> documents)
+        public DeleteOperation(string directory, IEnumerable<string> documentIds)
         {
             _directory = directory;
-            _documents = documents;
+            _documentIds = documentIds;
         }
 
         public void Execute()
         {
             var fileId = ToolBelt.GetChronologicalFileId();
-            new DelInfo {DocIds = _documents.ToList()}.Save(Path.Combine(_directory, fileId + ".del"));
+            new DelInfo {DocIds = _documentIds.ToList()}.Save(Path.Combine(_directory, fileId + ".del"));
         }
 
         public void Dispose()

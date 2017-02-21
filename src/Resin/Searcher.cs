@@ -61,10 +61,9 @@ namespace Resin
 
         private IEnumerable<DocumentPosting> Collect(QueryContext query)
         {
-            var collectors = _indices.Values.Select(ix => new Collector(_directory, ix, _scorer)).ToList();
-            //var postings = collectors.Select(c => c.Collect(query));
-            
+            var collectors = _indices.Values.Select(ix => new Collector(_directory, ix, _scorer)).ToList();          
             var postings = new ConcurrentBag<IEnumerable<DocumentPosting>>();
+
             Parallel.ForEach(collectors, c => postings.Add(c.Collect(query.Clone())));
 
             return postings
