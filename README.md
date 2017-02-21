@@ -4,8 +4,6 @@ Resin is a modern information retrieval system, a document based search engine l
 
 ## Fast fuzzy scan
 
-Who would even consider an alternative product if it didn't beat the competion on one or more accounts?
-
 Resin indexing is currently 30% slower than the latest .Net version of Lucene. That's being sorted next. On the other hand fuzzy querying is 12% faster than that Lucene version when querying an index weighting 2M English Wikimedia documents, on a machine able to run 4 threads in parallel. More about the test [here](https://github.com/kreeben/resin/wiki/Lucene.Net-and-Resin's-querying-performance-benchmarked).
 
 ## Documentation
