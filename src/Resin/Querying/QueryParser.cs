@@ -126,13 +126,7 @@ namespace Resin.Querying
 
             if (positionInQuery == 0) and = true;
 
-            var query = new QueryContext(fieldName, value) { And = and, Not = not, Prefix = prefix, Fuzzy = fuzzy, Similarity = _fuzzySimilarity, Children = new List<QueryContext>()};
-
-            if (query.Fuzzy && query.Edits == 0)
-            {
-                query.Fuzzy = false;
-            }
-            return query;
+            return new QueryContext(fieldName, value) { And = and, Not = not, Prefix = prefix, Fuzzy = fuzzy, Similarity = _fuzzySimilarity, Children = new List<QueryContext>()};
         }
     }
 }
