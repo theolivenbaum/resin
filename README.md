@@ -2,10 +2,6 @@
 
 Resin is a modern information retrieval system, a document based search engine library and framework, and a Lucene clone. 
 
-## Fast fuzzy scan
-
-Resin indexing is currently 30% slower than the latest .Net version of Lucene. That's being sorted next. On the other hand fuzzy querying is 12% faster than that Lucene version when querying an index weighting 2M English Wikimedia documents, on a machine able to run 4 threads in parallel. More about the test [here](https://github.com/kreeben/resin/wiki/Lucene.Net-and-Resin's-querying-performance-benchmarked).
-
 ## Documentation
 
 ##A document.
@@ -45,8 +41,8 @@ Pull requests are accepted.
 
 ## Resin Project Milestones
 
-- [x] Layout basic architecture and infrastructure of a modern IR system - v0.9b
-- [x] ___Scan at least as fast as .Net version of Lucene - v1.0___
+- [x] ___Layout basic architecture and infrastructure of a modern IR system - v0.9b___
+- [ ] Scan at least as fast as .Net version of Lucene - v1.0
 - [ ] Index at least as fast as .Net version of Lucene - v1.1
 - [ ] Merge best parts of the Lucene query language and the Elasticsearch DSL into RQL (Resin query language) - v1.2
 - [ ] Handover control of roadmap to the community - v1.3 - v1.8
