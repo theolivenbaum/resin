@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using Resin.IO;
@@ -41,15 +40,14 @@ namespace Resin
         public string Serialize(string directory)
         {
             var indexTime = Time();
-            var docThread = EnqueueWriteDocuments(directory);
-            var postingsThread = EnqueueSerialize(_postingsMatrix, directory);
-            var trieThread = SerializeTries(directory);
+
+            var docs = EnqueueWriteDocuments(directory);
+            var tries = EnqueueSerializeTries(directory);
+            var postings = EnqueueSerializePostings(_postingsMatrix, directory);
 
             _ixInfo.Save(Path.Combine(directory, _ixInfo.Name + ".ix"));
 
-            trieThread.Join();
-            postingsThread.Join();
-            docThread.Join();
+            Task.WaitAll(docs, postings, tries);
 
             Cleanup();
             
@@ -58,23 +56,20 @@ namespace Resin
             return Path.Combine(directory, _ixInfo.Name + ".ix");
         }
 
-        private Thread EnqueueWriteDocuments(string directory)
+        private Task EnqueueWriteDocuments(string directory)
         {
-            var thread = new Thread(() =>
+            return Task.Run(() =>
             {
                 foreach (var doc in _documents)
                 {
                     WriteDocument(doc, directory);
                 }
             });
-
-            thread.Start();
-            return thread;
         }
 
-        private Thread EnqueueSerialize(IDictionary<Term, List<DocumentPosting>> postingsMatrix, string directory)
+        private Task EnqueueSerializePostings(IDictionary<Term, List<DocumentPosting>> postingsMatrix, string directory)
         {
-            var thread = new Thread(() =>
+            return Task.Run(() =>
             {
                 using (var postingsWorker = new TaskQueue<Tuple<Term, IEnumerable<DocumentPosting>>>(1, t => WritePostings(t.Item1, t.Item2, directory)))
                 {
@@ -84,14 +79,11 @@ namespace Resin
                     }
                 }
             });
-
-            thread.Start();
-            return thread;
         }
 
-        private Thread SerializeTries(string directory)
+        private Task EnqueueSerializeTries(string directory)
         {
-            var thread = new Thread(() =>
+            return Task.Run(() =>
             {
                 using (var work = new TaskQueue<Tuple<string, LcrsTrie>>(Math.Max(_tries.Count - 1, 1), w=>DoSerialize(w, directory)))
                 {
@@ -101,8 +93,6 @@ namespace Resin
                     }
                 }
             });
-            thread.Start();
-            return thread;
         }
 
         private void DoSerialize(Tuple<string, LcrsTrie> trieEntry, string directory)
