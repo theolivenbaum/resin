@@ -66,48 +66,43 @@ namespace Resin
         {
             var time = Time();
             var terms = new ConcurrentBag<Term>();
-            var readers = GetTreeReaders(query.Field);
+            var readers = GetTreeReaders(query.Field).IntoBatches(32);
 
             if (query.Fuzzy)
             {
-                Parallel.ForEach(readers, reader =>
+                Parallel.ForEach(readers, batch =>
                 {
+                    foreach (var reader in batch)
                     foreach (var term in reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)))
                     {
                         terms.Add(term);
                     }
                 });
-                //foreach (var reader in readers)
-                //foreach (var term in reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)))
-                //{
-                //    terms.Add(term);
-                //}
             }
             else if (query.Prefix)
             {
-                Parallel.ForEach(readers, reader =>
+                Parallel.ForEach(readers, batch =>
                 {
+                    foreach (var reader in batch)
                     foreach (var term in reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)))
                     {
                         terms.Add(term);
                     }
                 });
-                //foreach (var reader in readers)
-                //foreach (var term in reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)))
-                //{
-                //    terms.Add(term);
-                //}
             }
             else
             {
-                foreach (var reader in readers)
+                Parallel.ForEach(readers, batch =>
                 {
-                    if (reader.HasWord(query.Value))
+                    foreach (var reader in batch)
                     {
-                        terms.Add(new Term(query.Field, new Word(query.Value)));
-                        break;
+                        if (reader.HasWord(query.Value))
+                        {
+                            terms.Add(new Term(query.Field, new Word(query.Value)));
+                            break;
+                        }
                     }
-                }
+                });
             }
 
             query.Terms = terms;
