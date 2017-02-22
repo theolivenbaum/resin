@@ -10,12 +10,13 @@ namespace Resin.Sys
         private readonly Action<T> _action;
         readonly object _sync = new object();
         readonly Thread[] _workers;
-        readonly Queue<T> _tasks = new Queue<T>();
+        readonly Queue<T> _tasks;
 
         public TaskQueue(int workerCount, Action<T> action)
         {
             _action = action;
             _workers = new Thread[workerCount];
+            _tasks = new Queue<T>();
             for (int i = 0; i < workerCount; i++)
             {
                 (_workers[i] = new Thread(Consume)).Start();

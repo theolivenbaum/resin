@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using log4net;
 using Resin.Analysis;
 using Resin.IO;
@@ -18,6 +19,7 @@ namespace Resin
         private readonly ConcurrentDictionary<string, int> _docCountByField;
         private readonly string _indexName;
         private readonly Dictionary<string, LcrsTrie> _tries;
+        private readonly object _sync = new object();
 
         public IndexBuilder(IAnalyzer analyzer, IEnumerable<Document> documents)
         {
@@ -41,25 +43,23 @@ namespace Resin
             return new Index(info, data, postings, _tries);
         }
 
-        private IList<AnalyzedDocument> Analyze(IEnumerable<Document> documents)
+        private IEnumerable<AnalyzedDocument> Analyze(IEnumerable<Document> documents)
         {
-            var analyzedDocs = new List<AnalyzedDocument>();
-
-            using (var trieBuilder = new TaskQueue<AnalyzedDocument>(1, BuildTree))
+            var analyzedDocs = new ConcurrentBag<AnalyzedDocument>();
+            
+            Parallel.ForEach(documents, doc =>
             {
-                foreach (var doc in documents)
+                var analyzedDoc = _analyzer.AnalyzeDocument(doc);
+
+                analyzedDocs.Add(analyzedDoc);
+
+                BuildTree(analyzedDoc);
+
+                foreach (var field in doc.Fields)
                 {
-                    var analyzedDoc = _analyzer.AnalyzeDocument(doc);
-                    analyzedDocs.Add(analyzedDoc);
-
-                    trieBuilder.Enqueue(analyzedDoc);
-
-                    foreach (var field in doc.Fields)
-                    {
-                        _docCountByField.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
-                    }
+                    _docCountByField.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
                 }
-            }
+            });
 
             return analyzedDocs;
         }
@@ -95,13 +95,19 @@ namespace Resin
             LcrsTrie trie;
             if (!_tries.TryGetValue(field, out trie))
             {
-                trie = new LcrsTrie('\0', false);
-                _tries[field] = trie;
+                lock (_sync)
+                {
+                    if (!_tries.TryGetValue(field, out trie))
+                    {
+                        trie = new LcrsTrie('\0', false);
+                        _tries[field] = trie;
+                    }
+                }
             }
             return trie;
         }
 
-        private Dictionary<Term, List<DocumentPosting>> BuildPostingsMatrix(IList<AnalyzedDocument> analyzedDocs)
+        private static Dictionary<Term, List<DocumentPosting>> BuildPostingsMatrix(IEnumerable<AnalyzedDocument> analyzedDocs)
         {
             var postingsMatrix = new Dictionary<Term, List<DocumentPosting>>();
 

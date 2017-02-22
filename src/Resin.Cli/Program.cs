@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using log4net.Config;
 using Newtonsoft.Json;
 using Resin.Analysis;
@@ -174,7 +175,8 @@ namespace Resin.Cli
             writeTimer.Start();
 
             using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None))
-            using (var sr = new StreamReader(fs))
+            using (var bs = new BufferedStream(fs))
+            using (var sr = new StreamReader(bs, Encoding.Unicode))
             {
                 string line;
 

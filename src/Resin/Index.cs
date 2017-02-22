@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using log4net;
 using Resin.IO;
 using Resin.IO.Write;
@@ -40,26 +41,35 @@ namespace Resin
         public string Serialize(string directory)
         {
             var indexTime = Time();
+            var docThread = EnqueueWriteDocuments(directory);
             var postingsThread = EnqueueSerialize(_postingsMatrix, directory);
             var trieThread = SerializeTries(directory);
 
-            using (var docWriter = new TaskQueue<Document>(1, d=>WriteDocument(d, directory)))
-            {
-                foreach (var doc in _documents)
-                {
-                    docWriter.Enqueue(doc);
-                }
+            _ixInfo.Save(Path.Combine(directory, _ixInfo.Name + ".ix"));
 
-                _ixInfo.Save(Path.Combine(directory, _ixInfo.Name + ".ix"));
-                trieThread.Join();
-                postingsThread.Join();
-            }
+            trieThread.Join();
+            postingsThread.Join();
+            docThread.Join();
 
             Cleanup();
             
             Log.DebugFormat("serializing took {0}", indexTime.Elapsed);
 
             return Path.Combine(directory, _ixInfo.Name + ".ix");
+        }
+
+        private Thread EnqueueWriteDocuments(string directory)
+        {
+            var thread = new Thread(() =>
+            {
+                foreach (var doc in _documents)
+                {
+                    WriteDocument(doc, directory);
+                }
+            });
+
+            thread.Start();
+            return thread;
         }
 
         private Thread EnqueueSerialize(IDictionary<Term, List<DocumentPosting>> postingsMatrix, string directory)
