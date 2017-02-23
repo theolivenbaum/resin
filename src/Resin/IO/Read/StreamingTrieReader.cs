@@ -17,26 +17,30 @@ namespace Resin.IO.Read
         {
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.None);
             _textReader = new StreamReader(fs, Encoding.Unicode);
+            _lastRead = LcrsNode.MinValue;
+            _replay = LcrsNode.MinValue;
         }
 
         public StreamingTrieReader(TextReader textReader)
         {
             _textReader = textReader;
+            _lastRead = LcrsNode.MinValue;
+            _replay = LcrsNode.MinValue;
         }
 
         private LcrsNode Step(TextReader sr)
         {
-            if (_replay != null)
+            if (_replay != LcrsNode.MinValue)
             {
                 var replayed = _replay;
-                _replay = null;
+                _replay = LcrsNode.MinValue;
                 return replayed;
             }
             var data = sr.ReadLine();
             
             if (data == null)
             {
-                return null;
+                return LcrsNode.MinValue;
             }
             _lastRead = new LcrsNode(data);
             return _lastRead;
@@ -90,7 +94,7 @@ namespace Resin.IO.Read
             var childIndex = depth + 1;
 
             // Go left (deep)
-            if (node != null)
+            if (node != LcrsNode.MinValue)
             {
                 string test;
 
@@ -137,7 +141,7 @@ namespace Resin.IO.Read
             var siblings = new Stack<Tuple<int,IList<char>>>();
 
             // Go left (deep)
-            while (node != null && node.Depth > depth)
+            while (node != LcrsNode.MinValue && node.Depth > depth)
             {
                 var copyOfPath = new List<char>(path);
 
@@ -170,12 +174,12 @@ namespace Resin.IO.Read
         {
             node = Step(_textReader);
 
-            while (node != null && node.Depth != currentDepth)
+            while (node != LcrsNode.MinValue && node.Depth != currentDepth)
             {
                 node = Step(_textReader);
             }
 
-            if (node != null)
+            if (node != LcrsNode.MinValue)
             {
                 if (node.Value == path[currentDepth])
                 {
