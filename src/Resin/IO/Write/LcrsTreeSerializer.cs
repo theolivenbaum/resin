@@ -6,7 +6,7 @@ namespace Resin.IO.Write
 {
     public static class LcrsTreeSerializer
     {
-        public static void Serialize(this LcrsTrie node, string fileName)
+        public static void SerializeBinary(this LcrsTrie node, string fileName)
         {
             var children = node.GetLeftChildAndAllOfItsSiblings().ToList();
 
@@ -22,7 +22,23 @@ namespace Resin.IO.Write
             }
         }
 
-        public static void SerializeDepthFirst(this LcrsTrie node, StringBuilder sb, int depth)
+        public static void Serialize(this LcrsTrie node, string fileName)
+        {
+            var sb = new StringBuilder();
+
+            if (node.LeftChild != null)
+            {
+                node.LeftChild.SerializeDepthFirst(sb, 0);
+            }
+
+            using (var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (var sw = new StreamWriter(fs, Encoding.Unicode))
+            {
+                sw.Write(sb.ToString());
+            } 
+        }
+
+        private static void SerializeDepthFirst(this LcrsTrie node, StringBuilder sb, int depth)
         {
             sb.Append(node.Value);
             sb.Append(node.RightSibling == null ? "0" : "1");

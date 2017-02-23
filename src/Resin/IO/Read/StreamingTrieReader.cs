@@ -7,19 +7,19 @@ using Resin.Analysis;
 
 namespace Resin.IO.Read
 {
-    public class StreamTreeScanner : IDisposable
+    public class StreamingTrieReader : IDisposable
     {
         private readonly TextReader _textReader;
         private LcrsNode _lastRead;
         private LcrsNode _replay;
 
-        public StreamTreeScanner(string fileName)
+        public StreamingTrieReader(string fileName)
         {
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.None);
             _textReader = new StreamReader(fs, Encoding.Unicode);
         }
 
-        public StreamTreeScanner(TextReader textReader)
+        public StreamingTrieReader(TextReader textReader)
         {
             _textReader = textReader;
         }
@@ -76,22 +76,16 @@ namespace Resin.IO.Read
 
         public IEnumerable<Word> Near(string word, int edits)
         {
-            return Near(word, edits, word.Length);
+            var compressed = new List<Word>();
+
+            WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, edits);
+
+            return compressed.OrderBy(w => w.Distance);
         }
 
-        public IEnumerable<Word> Near(string word, int edits, int minLength)
-        {
-            var words = new List<Word>();
-
-            WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), 0, edits, minLength, words);
-            
-            return words.OrderBy(w => w.Distance);
-        }
-
-        private void WithinEditDistanceDepthFirst(string word, string state, int depth, int maxEdits, int minLength, IList<Word> words)
+        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits)
         {
             var node = Step(_textReader);
-
             var nodesWithUnresolvedSiblings = new Stack<Tuple<int, string>>();
             var childIndex = depth + 1;
 
@@ -99,6 +93,7 @@ namespace Resin.IO.Read
             if (node != null)
             {
                 string test;
+
                 if (depth == state.Length)
                 {
                     test = state + node.Value;
@@ -108,14 +103,14 @@ namespace Resin.IO.Read
                     test = new string(state.ReplaceOrAppend(depth, node.Value).Where(c => c != Char.MinValue).ToArray());
                 }
 
-                if (test.Length >= minLength)
-                {
-                    var edits = Levenshtein.Distance(word, test);
+                var edits = Levenshtein.Distance(word, test);
 
-                    if (edits <= maxEdits && node.EndOfWord)
+                if (edits <= maxEdits)
+                {
+                    if (node.EndOfWord)
                     {
-                        words.Add(new Word(test){Distance = edits });
-                    } 
+                        compressed.Add(new Word(test) { Distance = edits });
+                    }
                 }
 
                 if (node.HaveSibling)
@@ -125,13 +120,13 @@ namespace Resin.IO.Read
 
                 if (node.HaveChild)
                 {
-                    WithinEditDistanceDepthFirst(word, string.Copy(test), childIndex, maxEdits, minLength, words);
+                    WithinEditDistanceDepthFirst(word, test, compressed, childIndex, maxEdits);
                 }
 
                 // Go right (wide)
                 foreach (var siblingState in nodesWithUnresolvedSiblings)
                 {
-                    WithinEditDistanceDepthFirst(word, siblingState.Item2, siblingState.Item1, maxEdits, minLength, words);
+                    WithinEditDistanceDepthFirst(word, siblingState.Item2, compressed, siblingState.Item1, maxEdits);
                 }
             }
         }

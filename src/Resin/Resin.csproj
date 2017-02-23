@@ -72,11 +72,11 @@
     <Compile Include="IO\LcrsTrie.cs" />
     <Compile Include="IO\IxInfo.cs" />
     <Compile Include="IO\BinaryFile.cs" />
-    <Compile Include="IO\Read\StreamTreeScanner.cs" />
+    <Compile Include="IO\Read\StreamingTrieReader.cs" />
     <Compile Include="IO\Read\PostingsReader.cs" />
     <Compile Include="IO\Write\PostingsWriter.cs" />
     <Compile Include="IO\QuickLZ.cs" />
-    <Compile Include="IO\InMemoryTrieScanner.cs" />
+    <Compile Include="IO\Read\InMemoryTrieReader.cs" />
     <Compile Include="IO\Write\LcrsTreeSerializer.cs" />
     <Compile Include="IO\Word.cs" />
     <Compile Include="Analysis\IScoringScheme.cs" />

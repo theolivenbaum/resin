@@ -1,11 +1,12 @@
 ﻿using System.Linq;
 using NUnit.Framework;
 using Resin.IO;
+using Resin.IO.Read;
 
 namespace Tests
 {
     [TestFixture]
-    public class LcrsTrieTests
+    public class InMemoryTrieReaderTests
     {
         [Test]
         public void Can_find_near()

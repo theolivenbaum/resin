@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Resin.Analysis;
 
-namespace Resin.IO
+namespace Resin.IO.Read
 {
-    public static class InMemoryTrieScanner
+    public static class InMemoryTrieReader
     {
         public static bool HasWord(this LcrsTrie node, string word)
         {
