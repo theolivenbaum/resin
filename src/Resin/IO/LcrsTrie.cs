@@ -96,5 +96,22 @@ namespace Resin.IO
                 }
             }
         }
+
+        public int GetWeight()
+        {
+            var count = 1;
+
+            if (LeftChild != null)
+            {
+                count = count + LeftChild.GetWeight();
+            }
+
+            if (RightSibling != null)
+            {
+                count = count + RightSibling.GetWeight();
+            }
+
+            return count;
+        }
     }
 }

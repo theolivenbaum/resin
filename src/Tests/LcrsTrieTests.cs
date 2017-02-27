@@ -6,8 +6,24 @@ using Resin.IO.Read;
 namespace Tests
 {
     [TestFixture]
-    public class InMemoryTrieReaderTests
+    public class LcrsTrieTests
     {
+        [Test]
+        public void Can_get_weight()
+        {
+            var tree = new LcrsTrie('\0', false);
+            tree.Add("pap");
+            tree.Add("papp");
+            tree.Add("papaya");
+
+            Assert.AreEqual(8, tree.GetWeight());
+
+            tree.Add("ape");
+            tree.Add("apelsin");
+
+            Assert.AreEqual(15, tree.GetWeight());
+        }
+
         [Test]
         public void Can_find_near()
         {

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -55,7 +56,7 @@ namespace Resin.IO.Write
 
         private static void SerializeMappedDepthFirst(this LcrsTrie node, BinaryWriter bw, int depth)
         {
-            var n = new LcrsNode(node, depth);
+            var n = new LcrsNode(node, depth, node.GetWeight());
             var bytes = TypeToBytes(n);
             bw.Write(bytes, 0, bytes.Length);
 
@@ -76,7 +77,9 @@ namespace Resin.IO.Write
             sb.Append(node.RightSibling == null ? "0" : "1");
             sb.Append(node.LeftChild == null ? "0" : "1");
             sb.Append(node.EndOfWord ? "1" : "0");
-            sb.Append(depth);
+            sb.Append(depth.ToString(CultureInfo.InvariantCulture).PadRight(10));
+            sb.Append(node.GetWeight().ToString(CultureInfo.InvariantCulture).PadRight(10));
+
             sb.Append('\n');
 
             if (node.LeftChild != null)

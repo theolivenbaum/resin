@@ -14,7 +14,7 @@ namespace Tests
         [Test]
         public void Can_serialize_struct()
         {
-            var node = new LcrsNode("a0010");
+            var node = new LcrsNode("a00100000000000000000000");
             var bytes = LcrsTrieSerializer.TypeToBytes(node);
             var resurrected = LcrsTrieSerializer.BytesToType<LcrsNode>(bytes);
 
@@ -26,7 +26,7 @@ namespace Tests
         public void Can_deserialize_struct_from_disk()
         {
             var fileName = Path.Combine(Setup.Dir, "Can_deserialize_struct_from_disk.tri");
-            var node = new LcrsNode("ä0010");
+            var node = new LcrsNode("ä00100000000000000000000");
             using (var fs = new FileStream(fileName, FileMode.Create))
             {
                 var bytes = LcrsTrieSerializer.TypeToBytes(node);
@@ -48,8 +48,8 @@ namespace Tests
         public void Can_deserialize_struct_from_disk_with_offset()
         {
             var fileName = Path.Combine(Setup.Dir, "Can_deserialize_struct_from_disk_with_offset.tri");
-            var node1 = new LcrsNode("a0010");
-            var node2 = new LcrsNode("b0010");
+            var node1 = new LcrsNode("a00100000000000000000000");
+            var node2 = new LcrsNode("b00100000000000000000000");
             using (var fs = new FileStream(fileName, FileMode.Create))
             {
                 var bytes = LcrsTrieSerializer.TypeToBytes(node1);
