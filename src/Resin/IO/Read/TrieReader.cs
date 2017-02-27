@@ -7,6 +7,9 @@ namespace Resin.IO.Read
 {
     public abstract class TrieReader : ITrieReader
     {
+        protected abstract LcrsNode Step();
+        protected abstract void Skip(int count);
+
         protected LcrsNode LastRead;
         protected LcrsNode Replay;
 
@@ -15,9 +18,6 @@ namespace Resin.IO.Read
             LastRead = LcrsNode.MinValue;
             Replay = LcrsNode.MinValue;
         }
-
-        protected abstract LcrsNode Step();
-        protected abstract void Skip(int count);
 
         private void Rewind()
         {
@@ -60,16 +60,17 @@ namespace Resin.IO.Read
             return compressed.OrderBy(w => w.Distance);
         }
 
-        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits)
+        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits, bool stop = false)
         {
             var reachedMin = maxEdits == 0 ? depth >= 0 : depth >= word.Length - 1 - maxEdits;
-            var reachedMax = depth >= (word.Length) + maxEdits;
+            var reachedMean = depth >= word.Length - 1;
+            var reachedMax = depth >= word.Length + maxEdits;
 
             var node = Step();
 
             if (node == LcrsNode.MinValue) return;
 
-            if (reachedMax)
+            if (reachedMax || stop)
             {
                 Skip(node.Weight - 1);
             }
@@ -94,15 +95,19 @@ namespace Resin.IO.Read
                     {
                         if (node.EndOfWord)
                         {
-                            compressed.Add(new Word(test) { Distance = edits });
+                            compressed.Add(new Word(test) {Distance = edits});
                         }
+                    }
+                    else if(reachedMean)
+                    {
+                        stop = true;
                     }
                 }
 
                 // Go left (deep)
                 if (node.HaveChild)
                 {
-                    WithinEditDistanceDepthFirst(word, test, compressed, depth + 1, maxEdits);
+                    WithinEditDistanceDepthFirst(word, test, compressed, depth + 1, maxEdits, stop);
                 }
 
                 // Go right (wide)
