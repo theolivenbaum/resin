@@ -56,8 +56,7 @@ namespace Resin.IO.Write
 
         private static void SerializeMappedDepthFirst(this LcrsTrie node, BinaryWriter bw, int depth)
         {
-            var n = new LcrsNode(node, depth, node.GetWeight());
-            var bytes = TypeToBytes(n);
+            var bytes = TypeToBytes(new LcrsNode(node, depth, node.GetWeight()));
             bw.Write(bytes, 0, bytes.Length);
 
             if (node.LeftChild != null)
@@ -73,14 +72,14 @@ namespace Resin.IO.Write
 
         private static void SerializeToTextDepthFirst(this LcrsTrie node, StringBuilder sb, int depth)
         {
+            var weight = node.GetWeight();
+
             sb.Append(node.Value);
             sb.Append(node.RightSibling == null ? "0" : "1");
             sb.Append(node.LeftChild == null ? "0" : "1");
             sb.Append(node.EndOfWord ? "1" : "0");
             sb.Append(depth.ToString(CultureInfo.InvariantCulture).PadRight(10));
-            sb.Append(node.GetWeight().ToString(CultureInfo.InvariantCulture).PadRight(10));
-
-            sb.Append('\n');
+            sb.Append(weight.ToString(CultureInfo.InvariantCulture).PadRight(10));
 
             if (node.LeftChild != null)
             {

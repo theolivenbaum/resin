@@ -6,6 +6,8 @@ namespace Resin.IO.Read
     [DebuggerDisplay("{Value} {EndOfWord}")]
     public struct LcrsNode : IEquatable<LcrsNode>
     {
+        public const int BlockSize = 24;
+
         public readonly char Value;
         public readonly bool HaveSibling;
         public readonly bool HaveChild;

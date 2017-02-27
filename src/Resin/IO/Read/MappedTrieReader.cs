@@ -17,6 +17,12 @@ namespace Resin.IO.Read
             _blockSize = Marshal.SizeOf(typeof(LcrsNode));
         }
 
+        protected override void Skip(int count)
+        {
+            var buffer = new byte[_blockSize*count];
+            _reader.Read(buffer, 0, buffer.Length);
+        }
+
         protected override LcrsNode Step()
         {
             if (Replay != LcrsNode.MinValue)

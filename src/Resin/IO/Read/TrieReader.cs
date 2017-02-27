@@ -17,6 +17,7 @@ namespace Resin.IO.Read
         }
 
         protected abstract LcrsNode Step();
+        protected abstract void Skip(int count);
 
         private void Rewind()
         {
@@ -61,12 +62,13 @@ namespace Resin.IO.Read
 
         private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits)
         {
+            var reachedMin = maxEdits == 0 ? depth >= 0 : depth >= word.Length - 1 - maxEdits;
+            var reachedMax = depth >= (word.Length) + maxEdits;
+
             var node = Step();
 
             if (node == LcrsNode.MinValue) return;
 
-            var reachedMin = maxEdits == 0 ? depth >= 0 : depth >= word.Length - 1 - maxEdits;
-            var reachedMax = depth >= (word.Length) + maxEdits;
             var nodesWithUnresolvedSiblings = new Stack<Tuple<int, string>>();
             var childIndex = depth + 1;
             string test;
@@ -98,16 +100,23 @@ namespace Resin.IO.Read
                 nodesWithUnresolvedSiblings.Push(new Tuple<int, string>(depth, string.Copy(state)));
             }
 
-            // Go left (deep)
-            if (node.HaveChild)
+            if (reachedMax)
             {
-                WithinEditDistanceDepthFirst(word, test, compressed, childIndex, maxEdits);
+                Skip(node.Weight-1);
             }
-
-            // Go right (wide)
-            foreach (var siblingState in nodesWithUnresolvedSiblings)
+            else
             {
-                WithinEditDistanceDepthFirst(word, siblingState.Item2, compressed, siblingState.Item1, maxEdits);
+                // Go left (deep)
+                if (node.HaveChild)
+                {
+                    WithinEditDistanceDepthFirst(word, test, compressed, childIndex, maxEdits);
+                }
+
+                // Go right (wide)
+                foreach (var siblingState in nodesWithUnresolvedSiblings)
+                {
+                    WithinEditDistanceDepthFirst(word, siblingState.Item2, compressed, siblingState.Item1, maxEdits);
+                }
             }
         }
 
@@ -150,8 +159,9 @@ namespace Resin.IO.Read
         {
             node = Step();
 
-            while (node != LcrsNode.MinValue && node.Depth != currentDepth)
+            if (node != LcrsNode.MinValue && node.Depth != currentDepth)
             {
+                Skip(node.Weight-1);
                 node = Step();
             }
 

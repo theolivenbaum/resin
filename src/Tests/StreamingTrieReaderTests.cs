@@ -168,6 +168,8 @@ namespace Tests
 
             using (var reader = new StreamingTrieReader(fileName))
             {
+                Assert.AreEqual(1, tree.GetWeight());
+
                 Assert.False(reader.HasWord("xxx"));
             }
 
@@ -176,6 +178,8 @@ namespace Tests
 
             using (var reader = new StreamingTrieReader(fileName))
             {
+                Assert.AreEqual(4, tree.GetWeight());
+
                 Assert.True(reader.HasWord("xxx"));
             }
             using (var reader = new StreamingTrieReader(fileName))
@@ -192,6 +196,8 @@ namespace Tests
 
             using (var reader = new StreamingTrieReader(fileName))
             {
+                Assert.AreEqual(8, tree.GetWeight());
+
                 Assert.True(reader.HasWord("xxx"));
             }
             using (var reader = new StreamingTrieReader(fileName))

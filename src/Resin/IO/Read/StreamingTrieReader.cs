@@ -6,19 +6,31 @@ namespace Resin.IO.Read
 {
     public class StreamingTrieReader : TrieReader, IDisposable
     {
-        private readonly TextReader _textReader;
+        private readonly TextReader _reader;
 
         public StreamingTrieReader(string fileName)
         {
-            var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.None);
-            _textReader = new StreamReader(fs, Encoding.Unicode);
+            var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 16*4096, FileOptions.SequentialScan);
+            _reader = new StreamReader(fs, Encoding.Unicode, false, 8*1024, false);
         }
 
-        public StreamingTrieReader(TextReader textReader)
+        public StreamingTrieReader(TextReader reader)
         {
-            _textReader = textReader;
+            _reader = reader;
             LastRead = LcrsNode.MinValue;
             Replay = LcrsNode.MinValue;
+        }
+
+        protected override void Skip(int count)
+        {
+            //var buffer = new char[LcrsNode.BlockSize];
+            //for (int i = 0; i < count; i++)
+            //{
+            //    _reader.ReadBlock(buffer, 0, LcrsNode.BlockSize);
+            //}
+
+            var buffer = new char[LcrsNode.BlockSize * count];
+            _reader.Read(buffer, 0, buffer.Length);
         }
 
         protected override LcrsNode Step()
@@ -30,22 +42,21 @@ namespace Resin.IO.Read
                 return replayed;
             }
 
-            var data = _textReader.ReadLine();
-            
-            if (data == null)
+            var data = new char[LcrsNode.BlockSize];
+            if (_reader.Read(data, 0, data.Length) == 0)
             {
                 return LcrsNode.MinValue;
             }
 
-            LastRead = new LcrsNode(data);
+            LastRead = new LcrsNode(new string(data));
             return LastRead;
         }
 
         public void Dispose()
         {
-            if (_textReader != null)
+            if (_reader != null)
             {
-                _textReader.Dispose();
+                _reader.Dispose();
             }
         }
     }
