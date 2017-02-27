@@ -35,7 +35,7 @@ namespace Resin.IO.Read
             _replay = LcrsNode.MinValue;
         }
 
-        private LcrsNode Step(TextReader sr)
+        private LcrsNode Step()
         {
             if (_replay != LcrsNode.MinValue)
             {
@@ -43,7 +43,7 @@ namespace Resin.IO.Read
                 _replay = LcrsNode.MinValue;
                 return replayed;
             }
-            var data = sr.ReadLine();
+            var data = _textReader.ReadLine();
             
             if (data == null)
             {
@@ -96,11 +96,11 @@ namespace Resin.IO.Read
 
         private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits)
         {
-            var node = Step(_textReader);
+            var node = Step();
 
             if (node == LcrsNode.MinValue) return;
 
-            var reachedMin = depth >= word.Length-1-maxEdits;
+            var reachedMin = maxEdits == 0 ? depth >= 0 : depth >= word.Length-1-maxEdits;
             var reachedMax = depth >= (word.Length)+maxEdits;
             var nodesWithUnresolvedSiblings = new Stack<Tuple<int, string>>();
             var childIndex = depth + 1;
@@ -148,7 +148,7 @@ namespace Resin.IO.Read
 
         private void DepthFirst(string prefix, IList<char> path, IList<Word> compressed, int depth)
         {
-            var node = Step(_textReader);
+            var node = Step();
             var siblings = new Stack<Tuple<int,IList<char>>>();
 
             // Go left (deep)
@@ -169,7 +169,7 @@ namespace Resin.IO.Read
                 }
 
                 depth = node.Depth;
-                node = Step(_textReader);
+                node = Step();
             }
 
             Replay();
@@ -183,11 +183,11 @@ namespace Resin.IO.Read
 
         private bool TryFindDepthFirst(string path, int currentDepth, out LcrsNode node)
         {
-            node = Step(_textReader);
+            node = Step();
 
             while (node != LcrsNode.MinValue && node.Depth != currentDepth)
             {
-                node = Step(_textReader);
+                node = Step();
             }
 
             if (node != LcrsNode.MinValue)
