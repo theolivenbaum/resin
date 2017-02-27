@@ -69,53 +69,46 @@ namespace Resin.IO.Read
 
             if (node == LcrsNode.MinValue) return;
 
-            var nodesWithUnresolvedSiblings = new Stack<Tuple<int, string>>();
-            var childIndex = depth + 1;
-            string test;
-
-            if (depth == state.Length)
-            {
-                test = state + node.Value;
-            }
-            else
-            {
-                test = new string(state.ReplaceOrAppend(depth, node.Value).Where(c => c != Char.MinValue).ToArray());
-            }
-
-            if (reachedMin && !reachedMax)
-            {
-                var edits = Levenshtein.Distance(word, test);
-
-                if (edits <= maxEdits)
-                {
-                    if (node.EndOfWord)
-                    {
-                        compressed.Add(new Word(test) { Distance = edits });
-                    }
-                }
-            }
-
-            if (node.HaveSibling)
-            {
-                nodesWithUnresolvedSiblings.Push(new Tuple<int, string>(depth, string.Copy(state)));
-            }
-
             if (reachedMax)
             {
-                Skip(node.Weight-1);
+                Skip(node.Weight - 1);
             }
             else
             {
+                string test;
+
+                if (depth == state.Length)
+                {
+                    test = state + node.Value;
+                }
+                else
+                {
+                    test = new string(state.ReplaceOrAppend(depth, node.Value).ToArray());
+                }
+
+                if (reachedMin)
+                {
+                    var edits = Levenshtein.Distance(word, test);
+
+                    if (edits <= maxEdits)
+                    {
+                        if (node.EndOfWord)
+                        {
+                            compressed.Add(new Word(test) { Distance = edits });
+                        }
+                    }
+                }
+
                 // Go left (deep)
                 if (node.HaveChild)
                 {
-                    WithinEditDistanceDepthFirst(word, test, compressed, childIndex, maxEdits);
+                    WithinEditDistanceDepthFirst(word, test, compressed, depth + 1, maxEdits);
                 }
 
                 // Go right (wide)
-                foreach (var siblingState in nodesWithUnresolvedSiblings)
+                if (node.HaveSibling)
                 {
-                    WithinEditDistanceDepthFirst(word, siblingState.Item2, compressed, siblingState.Item1, maxEdits);
+                    WithinEditDistanceDepthFirst(word, state, compressed, depth, maxEdits);
                 }
             }
         }
