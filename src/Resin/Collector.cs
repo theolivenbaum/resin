@@ -31,14 +31,18 @@ namespace Resin
             _scorer = scorer;
         }
 
-        public IEnumerable<DocumentPosting> Collect(QueryContext query)
+        public IList<DocumentPosting> Collect(QueryContext query)
         {
             Scan(query);
             GetPostings(query);
 
+            var time = Time();
             var deletions = GetDeletions().ToList();
+            var trimmed = query.Reduce().Where(d=>deletions.Contains(d.DocumentId) == false).ToList();
 
-            return query.Reduce().Where(d=>deletions.Contains(d.DocumentId) == false);
+            Log.DebugFormat("reduced {0} in {1}", query, time.Elapsed);
+
+            return trimmed;
         }
 
         private IEnumerable<string> GetDeletions()

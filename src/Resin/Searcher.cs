@@ -36,14 +36,17 @@ namespace Resin
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
+            var parseTime = Time();
             var queryContext = _parser.Parse(query);
+
+            Log.DebugFormat("parsed query {0} in {1}", queryContext, parseTime.Elapsed);
 
             if (queryContext == null)
             {
                 return new Result { Docs = new List<Document>() };
             }
 
-            var scored = Collect(queryContext).ToList();
+            var scored = Collect(queryContext);
             var skip = page * size;
             var paged = scored.Skip(skip).Take(size);
             var time = Time();
@@ -59,7 +62,7 @@ namespace Resin
             return Directory.GetFiles(_directory, "*.ix").OrderBy(s => s).ToArray();
         }
 
-        private IEnumerable<DocumentPosting> Collect(QueryContext query)
+        private IList<DocumentPosting> Collect(QueryContext query)
         {
             var collectors = _indices.Values.Select(ix => new Collector(_directory, ix, _scorer)).ToList();          
             var postings = new ConcurrentBag<IEnumerable<DocumentPosting>>();
@@ -68,7 +71,7 @@ namespace Resin
 
             return postings
                 .Aggregate(DocumentPosting.JoinOr)
-                .OrderByDescending(p => p.Scoring.Score);
+                .OrderByDescending(p => p.Scoring.Score).ToList();
         }
 
         private Document GetDoc(DocumentPosting posting)
