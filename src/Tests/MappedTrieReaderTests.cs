@@ -252,6 +252,7 @@ namespace Tests
             }
 
             tree.Add("dad");
+            tree.Add("daddy");
             tree.SerializeMapped(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
@@ -265,6 +266,10 @@ namespace Tests
             using (var reader = new MappedTrieReader(fileName))
             {
                 Assert.True(reader.HasWord("dad"));
+            }
+            using (var reader = new MappedTrieReader(fileName))
+            {
+                Assert.True(reader.HasWord("daddy"));
             }
         }
     }

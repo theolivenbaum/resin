@@ -20,50 +20,7 @@ namespace Resin.IO.Write
                 }
             }
         }
-
-        /// <summary>
-        /// http://stackoverflow.com/a/4074557/46645
-        /// </summary>
-        public static T BytesToType<T>(byte[] bytes)
-        {
-            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
-            T theStructure = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
-            handle.Free();
-
-            return theStructure;
-        }
-
-        /// <summary>
-        /// http://stackoverflow.com/questions/3278827/how-to-convert-a-structure-to-a-byte-array-in-c
-        /// </summary>
-        public static byte[] TypeToBytes<T>(T theStructure)
-        {
-            int size = Marshal.SizeOf(theStructure);
-            byte[] arr = new byte[size];
-
-            IntPtr ptr = Marshal.AllocHGlobal(size);
-            Marshal.StructureToPtr(theStructure, ptr, true);
-            Marshal.Copy(ptr, arr, 0, size);
-            Marshal.FreeHGlobal(ptr);
-            return arr;
-        }
-
-        private static void SerializeMappedDepthFirst(this LcrsTrie node, BinaryWriter bw, int depth)
-        {
-            var n = new LcrsNode(node, depth);
-            var bytes = TypeToBytes(n);
-            bw.Write(bytes, 0, bytes.Length);
-            if (node.LeftChild != null)
-            {
-                node.LeftChild.SerializeMappedDepthFirst(bw, depth + 1);
-            }
-
-            if (node.RightSibling != null)
-            {
-                node.RightSibling.SerializeMappedDepthFirst(bw, depth);
-            }
-        }
-
+        
         public static void SerializeBinary(this LcrsTrie node, string fileName)
         {
             var children = node.GetLeftChildAndAllOfItsSiblings().ToList();
@@ -96,6 +53,23 @@ namespace Resin.IO.Write
             } 
         }
 
+        private static void SerializeMappedDepthFirst(this LcrsTrie node, BinaryWriter bw, int depth)
+        {
+            var n = new LcrsNode(node, depth);
+            var bytes = TypeToBytes(n);
+            bw.Write(bytes, 0, bytes.Length);
+
+            if (node.LeftChild != null)
+            {
+                node.LeftChild.SerializeMappedDepthFirst(bw, depth + 1);
+            }
+
+            if (node.RightSibling != null)
+            {
+                node.RightSibling.SerializeMappedDepthFirst(bw, depth);
+            }
+        }
+
         private static void SerializeToTextDepthFirst(this LcrsTrie node, StringBuilder sb, int depth)
         {
             sb.Append(node.Value);
@@ -114,6 +88,33 @@ namespace Resin.IO.Write
             {
                 node.RightSibling.SerializeToTextDepthFirst(sb, depth);
             }
+        }
+
+        /// <summary>
+        /// http://stackoverflow.com/a/4074557/46645
+        /// </summary>
+        public static T BytesToType<T>(byte[] bytes)
+        {
+            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            T theStructure = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            handle.Free();
+
+            return theStructure;
+        }
+
+        /// <summary>
+        /// http://stackoverflow.com/questions/3278827/how-to-convert-a-structure-to-a-byte-array-in-c
+        /// </summary>
+        public static byte[] TypeToBytes<T>(T theStructure)
+        {
+            int size = Marshal.SizeOf(theStructure);
+            byte[] arr = new byte[size];
+
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+            Marshal.StructureToPtr(theStructure, ptr, true);
+            Marshal.Copy(ptr, arr, 0, size);
+            Marshal.FreeHGlobal(ptr);
+            return arr;
         }
     }
 }
