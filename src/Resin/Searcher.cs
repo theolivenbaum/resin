@@ -50,7 +50,7 @@ namespace Resin
             var skip = page * size;
             var paged = scored.Skip(skip).Take(size);
             var time = Time();
-            var docs = paged.Select(GetDoc);
+            var docs = paged.Select(GetDoc).ToList();
 
             Log.DebugFormat("read docs for {0} in {1}", queryContext, time.Elapsed);
 
