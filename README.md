@@ -1,6 +1,6 @@
 # Resin
 
-Resin is a modern information retrieval system and a document based search engine library. 
+Resin is a modern information retrieval system and a document based search engine library with fast fuzzy and prefix querying and with customizable scoring (tf-idf and other schemes supported).
 
 ## Documentation
 
