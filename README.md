@@ -1,6 +1,6 @@
 # Resin
 
-Resin is a modern information retrieval system, a document based search engine library and framework, and a Lucene clone. 
+Resin is a modern information retrieval system and a document based search engine library. 
 
 ## Documentation
 
