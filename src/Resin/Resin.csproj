@@ -59,8 +59,10 @@
     <Compile Include="IO\LcrsTrieHelper.cs" />
     <Compile Include="IO\Read\DocumentReader.cs" />
     <Compile Include="IO\DocumentPosting.cs" />
+    <Compile Include="IO\Read\ITrieReader.cs" />
     <Compile Include="IO\Read\LcrsTreeBinaryReader.cs" />
     <Compile Include="IO\Read\MappedTrieReader.cs" />
+    <Compile Include="IO\Read\TrieReader.cs" />
     <Compile Include="IO\Write\LcrsTreeBinaryWriter.cs" />
     <Compile Include="Sys\ToolBelt.cs" />
     <Compile Include="Analysis\IAnalyzer.cs" />
