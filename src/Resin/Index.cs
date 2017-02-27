@@ -100,7 +100,7 @@ namespace Resin
             var field = trieEntry.Item1;
             var trie = trieEntry.Item2;
             var fileName = Path.Combine(directory, string.Format("{0}-{1}.tri", _ixInfo.Name, field.ToTrieFileId()));
-            trie.SerializeBinary(fileName);
+            trie.SerializeToTextFile(fileName);
         }
 
         private void WriteDocument(Document doc, string directory)

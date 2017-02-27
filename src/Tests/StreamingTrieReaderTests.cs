@@ -16,7 +16,7 @@ namespace Tests
             var fileName = Path.Combine(Setup.Dir, "Can_find_near.tri");
 
             var tree = new LcrsTrie('\0', false);
-            tree.Serialize(fileName);
+            tree.SerializeToTextFile(fileName);
 
             using (var reader = new StreamingTrieReader(fileName))
             {
@@ -26,7 +26,7 @@ namespace Tests
             }
 
             tree.Add("bad");
-            tree.Serialize(fileName);
+            tree.SerializeToTextFile(fileName);
 
             using (var reader = new StreamingTrieReader(fileName))
             {
@@ -37,7 +37,7 @@ namespace Tests
             }
 
             tree.Add("baby");
-            tree.Serialize(fileName);
+            tree.SerializeToTextFile(fileName);
 
             using (var reader = new StreamingTrieReader(fileName))
             {
@@ -48,7 +48,7 @@ namespace Tests
             }
             
             tree.Add("b");
-            tree.Serialize(fileName);
+            tree.SerializeToTextFile(fileName);
 
             using (var reader = new StreamingTrieReader(fileName))
             {
@@ -77,7 +77,7 @@ namespace Tests
             }
 
             tree.Add("bananas");
-            tree.Serialize(fileName);
+            tree.SerializeToTextFile(fileName);
 
             using (var reader = new StreamingTrieReader(fileName))
             {
@@ -99,7 +99,7 @@ namespace Tests
             }
             
             tree.Add("bank");
-            tree.Serialize(fileName);
+            tree.SerializeToTextFile(fileName);
 
             using (var reader = new StreamingTrieReader(fileName))
             {
@@ -111,6 +111,14 @@ namespace Tests
                 Assert.IsTrue(near.Contains("bad"));
                 Assert.IsTrue(near.Contains("b"));
             }
+
+            //using (var reader = new StreamingTrieReader(fileName))
+            //{
+            //    var near = reader.Near("bazy", 0).Select(w => w.Value).ToList();
+
+            //    Assert.AreEqual(1, near.Count);
+            //    Assert.IsTrue(near.Contains("bazy"));
+            //}
         }
 
         [Test]
@@ -140,7 +148,7 @@ namespace Tests
 
             tree.Add("man");
 
-            tree.Serialize(fileName);
+            tree.SerializeToTextFile(fileName);
 
             var prefixed = new StreamingTrieReader(fileName).StartsWith("ra").Select(w=>w.Value).ToList();
 
@@ -156,7 +164,7 @@ namespace Tests
             var fileName = Path.Combine(Setup.Dir, "Can_find_exact.tri");
 
             var tree = new LcrsTrie('\0', false);
-            tree.Serialize(fileName);
+            tree.SerializeToTextFile(fileName);
 
             using (var reader = new StreamingTrieReader(fileName))
             {
@@ -164,7 +172,7 @@ namespace Tests
             }
 
             tree.Add("xxx");
-            tree.Serialize(fileName);
+            tree.SerializeToTextFile(fileName);
 
             using (var reader = new StreamingTrieReader(fileName))
             {
@@ -180,7 +188,7 @@ namespace Tests
             }
 
             tree.Add("baby");
-            tree.Serialize(fileName);
+            tree.SerializeToTextFile(fileName);
 
             using (var reader = new StreamingTrieReader(fileName))
             {
@@ -196,7 +204,7 @@ namespace Tests
             }
 
             tree.Add("dad");
-            tree.Serialize(fileName);
+            tree.SerializeToTextFile(fileName);
 
             using (var reader = new StreamingTrieReader(fileName))
             {

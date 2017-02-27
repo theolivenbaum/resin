@@ -66,43 +66,28 @@ namespace Resin
         {
             var time = Time();
             var terms = new ConcurrentBag<Term>();
-            var readers = GetTreeReaders(query.Field).IntoBatches(32);
+            var reader = GetTreeReader(query.Field);
 
             if (query.Fuzzy)
             {
-                Parallel.ForEach(readers, batch =>
+                foreach (var term in reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)))
                 {
-                    foreach (var reader in batch)
-                    foreach (var term in reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)))
-                    {
-                        terms.Add(term);
-                    }
-                });
+                    terms.Add(term);
+                }
             }
             else if (query.Prefix)
             {
-                Parallel.ForEach(readers, batch =>
+                foreach (var term in reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)))
                 {
-                    foreach (var reader in batch)
-                    foreach (var term in reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)))
-                    {
-                        terms.Add(term);
-                    }
-                });
+                    terms.Add(term);
+                }
             }
             else
             {
-                Parallel.ForEach(readers, batch =>
+                if (reader.HasWord(query.Value))
                 {
-                    foreach (var reader in batch)
-                    {
-                        if (reader.HasWord(query.Value))
-                        {
-                            terms.Add(new Term(query.Field, new Word(query.Value)));
-                            break;
-                        }
-                    }
-                });
+                    terms.Add(new Term(query.Field, new Word(query.Value)));
+                }
             }
 
             query.Terms = terms;
@@ -186,15 +171,13 @@ namespace Resin
             }
         }
 
-        private IEnumerable<LcrsTrie> GetTreeReaders(string field)
+        private ITrieReader GetTreeReader(string field)
         {
             var fileId = field.ToTrieFileId();
             var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _ix.Name, fileId));
-            var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
-            var sr = new StreamReader(fs, Encoding.Unicode);
-            var reader = new LcrsTreeBinaryReader(sr);
+            var reader = new StreamingTrieReader(fileName);
 
-            return reader.Read();
+            return reader;
         }
 
         private static Stopwatch Time()

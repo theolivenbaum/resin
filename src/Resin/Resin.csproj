@@ -60,6 +60,7 @@
     <Compile Include="IO\Read\DocumentReader.cs" />
     <Compile Include="IO\DocumentPosting.cs" />
     <Compile Include="IO\Read\LcrsTreeBinaryReader.cs" />
+    <Compile Include="IO\Read\MappedTrieReader.cs" />
     <Compile Include="IO\Write\LcrsTreeBinaryWriter.cs" />
     <Compile Include="Sys\ToolBelt.cs" />
     <Compile Include="Analysis\IAnalyzer.cs" />
@@ -77,7 +78,7 @@
     <Compile Include="IO\Write\PostingsWriter.cs" />
     <Compile Include="IO\QuickLZ.cs" />
     <Compile Include="IO\Read\InMemoryTrieReader.cs" />
-    <Compile Include="IO\Write\LcrsTreeSerializer.cs" />
+    <Compile Include="IO\Write\LcrsTrieSerializer.cs" />
     <Compile Include="IO\Word.cs" />
     <Compile Include="Analysis\IScoringScheme.cs" />
     <Compile Include="Analysis\Levenshtein.cs" />

@@ -11,10 +11,10 @@ namespace Resin.IO.Read
             unchecked
             {
                 int hashCode = Value.GetHashCode();
-                hashCode = (hashCode*397) ^ HaveSibling.GetHashCode();
-                hashCode = (hashCode*397) ^ HaveChild.GetHashCode();
-                hashCode = (hashCode*397) ^ EndOfWord.GetHashCode();
-                hashCode = (hashCode*397) ^ Depth;
+                hashCode = (hashCode * 397) ^ HaveSibling.GetHashCode();
+                hashCode = (hashCode * 397) ^ HaveChild.GetHashCode();
+                hashCode = (hashCode * 397) ^ EndOfWord.GetHashCode();
+                hashCode = (hashCode * 397) ^ Depth;
                 return hashCode;
             }
         }
@@ -44,6 +44,15 @@ namespace Resin.IO.Read
             Depth = int.Parse(data.Substring(4));
         }
 
+        public LcrsNode(LcrsTrie trie, int depth)
+        {
+            Value = trie.Value;
+            HaveSibling = trie.RightSibling != null;
+            HaveChild = trie.LeftChild != null;
+            EndOfWord = trie.EndOfWord;
+            Depth = depth;
+        }
+
         public static LcrsNode MinValue
         {
             get { return new LcrsNode("\00000"); }
@@ -57,7 +66,7 @@ namespace Resin.IO.Read
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is LcrsNode && Equals((LcrsNode) obj);
+            return obj is LcrsNode && Equals((LcrsNode)obj);
         }
     }
 }

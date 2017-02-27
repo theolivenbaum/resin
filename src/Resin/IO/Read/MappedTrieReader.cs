@@ -2,40 +2,29 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using Resin.Analysis;
+using Resin.IO.Write;
 
 namespace Resin.IO.Read
 {
-    public interface ITrieReader
+    public class MappedTrieReader : IDisposable
     {
-        bool HasWord(string word);
-        IEnumerable<Word> StartsWith(string prefix);
-        IEnumerable<Word> Near(string word, int edits);
-    }
-
-    public class StreamingTrieReader : IDisposable, ITrieReader
-    {
-        private readonly TextReader _textReader;
         private LcrsNode _lastRead;
         private LcrsNode _replay;
+        private readonly int _blockSize;
+        private readonly BinaryReader _reader;
 
-        public StreamingTrieReader(string fileName)
+        public MappedTrieReader(string fileName)
         {
-            var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.None);
-            _textReader = new StreamReader(fs, Encoding.Unicode);
+            _reader = new BinaryReader(new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read), Encoding.Unicode);
+            _blockSize = Marshal.SizeOf(typeof(LcrsNode));
             _lastRead = LcrsNode.MinValue;
             _replay = LcrsNode.MinValue;
         }
 
-        public StreamingTrieReader(TextReader textReader)
-        {
-            _textReader = textReader;
-            _lastRead = LcrsNode.MinValue;
-            _replay = LcrsNode.MinValue;
-        }
-
-        private LcrsNode Step(TextReader sr)
+        private LcrsNode Step()
         {
             if (_replay != LcrsNode.MinValue)
             {
@@ -43,13 +32,20 @@ namespace Resin.IO.Read
                 _replay = LcrsNode.MinValue;
                 return replayed;
             }
-            var data = sr.ReadLine();
-            
-            if (data == null)
+
+            LcrsNode data;
+            try
+            {
+                var buffer = new byte[_blockSize];
+                _reader.Read(buffer, 0, buffer.Length);
+                data = LcrsTrieSerializer.BytesToType<LcrsNode>(buffer);
+            }
+            catch (ArgumentException)
             {
                 return LcrsNode.MinValue;
             }
-            _lastRead = new LcrsNode(data);
+
+            _lastRead = data;
             return _lastRead;
         }
 
@@ -89,34 +85,31 @@ namespace Resin.IO.Read
         {
             var compressed = new List<Word>();
 
-            WithinEditDistanceDepthFirst(word, new string(new char[1]), compressed, 0, edits);
+            WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, edits);
 
             return compressed.OrderBy(w => w.Distance);
         }
 
         private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits)
         {
-            var node = Step(_textReader);
-
-            if (node == LcrsNode.MinValue) return;
-
-            var reachedMin = depth >= word.Length-1-maxEdits;
-            var reachedMax = depth >= (word.Length)+maxEdits;
+            var node = Step();
             var nodesWithUnresolvedSiblings = new Stack<Tuple<int, string>>();
             var childIndex = depth + 1;
-            string test;
 
-            if (depth == state.Length)
+            // Go left (deep)
+            if (node != LcrsNode.MinValue)
             {
-                test = state + node.Value;
-            }
-            else
-            {
-                test = new string(state.ReplaceOrAppend(depth, node.Value).Where(c => c != Char.MinValue).ToArray());
-            }
+                string test;
 
-            if (reachedMin && !reachedMax)
-            {
+                if (depth == state.Length)
+                {
+                    test = state + node.Value;
+                }
+                else
+                {
+                    test = new string(state.ReplaceOrAppend(depth, node.Value).Where(c => c != Char.MinValue).ToArray());
+                }
+
                 var edits = Levenshtein.Distance(word, test);
 
                 if (edits <= maxEdits)
@@ -126,29 +119,28 @@ namespace Resin.IO.Read
                         compressed.Add(new Word(test) { Distance = edits });
                     }
                 }
-            }
-            
-            if (node.HaveSibling)
-            {
-                nodesWithUnresolvedSiblings.Push(new Tuple<int, string>(depth, string.Copy(state)));
-            }
 
-            // Go left (deep)
-            if (node.HaveChild)
-            {
-                WithinEditDistanceDepthFirst(word, test, compressed, childIndex, maxEdits);
-            }
+                if (node.HaveSibling)
+                {
+                    nodesWithUnresolvedSiblings.Push(new Tuple<int, string>(depth, string.Copy(state)));
+                }
 
-            // Go right (wide)
-            foreach (var siblingState in nodesWithUnresolvedSiblings)
-            {
-                WithinEditDistanceDepthFirst(word, siblingState.Item2, compressed, siblingState.Item1, maxEdits);
+                if (node.HaveChild)
+                {
+                    WithinEditDistanceDepthFirst(word, test, compressed, childIndex, maxEdits);
+                }
+
+                // Go right (wide)
+                foreach (var siblingState in nodesWithUnresolvedSiblings)
+                {
+                    WithinEditDistanceDepthFirst(word, siblingState.Item2, compressed, siblingState.Item1, maxEdits);
+                }
             }
         }
 
         private void DepthFirst(string prefix, IList<char> path, IList<Word> compressed, int depth)
         {
-            var node = Step(_textReader);
+            var node = Step();
             var siblings = new Stack<Tuple<int,IList<char>>>();
 
             // Go left (deep)
@@ -169,7 +161,7 @@ namespace Resin.IO.Read
                 }
 
                 depth = node.Depth;
-                node = Step(_textReader);
+                node = Step();
             }
 
             Replay();
@@ -183,11 +175,11 @@ namespace Resin.IO.Read
 
         private bool TryFindDepthFirst(string path, int currentDepth, out LcrsNode node)
         {
-            node = Step(_textReader);
+            node = Step();
 
             while (node != LcrsNode.MinValue && node.Depth != currentDepth)
             {
-                node = Step(_textReader);
+                node = Step();
             }
 
             if (node != LcrsNode.MinValue)
@@ -210,9 +202,9 @@ namespace Resin.IO.Read
 
         public void Dispose()
         {
-            if (_textReader != null)
+            if (_reader != null)
             {
-                _textReader.Dispose();
+                _reader.Dispose();
             }
         }
     }
