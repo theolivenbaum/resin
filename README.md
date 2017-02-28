@@ -44,12 +44,6 @@ Resin is a modern information retrieval system and a document based search engin
 
 [More here](https://github.com/kreeben/resin/wiki). 
 
-## Contribute
-
-Here are some [issues](https://github.com/kreeben/resin/issues) that need to be sorted.
-
-Pull requests are accepted.
-
 ## Roadmap
 
 - [x] ___Layout basic architecture and infrastructure of a modern IR system - v0.9b___
