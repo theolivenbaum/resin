@@ -13,7 +13,7 @@ Resin is a modern information retrieval system and a document based search engin
 		"aliases": "cosmos The Universe existence space outerspace"
 	}
 
-##A huge number.
+##Many documents.
 	
 	var docs = GetWikipediaAsJson();
 
@@ -28,8 +28,19 @@ Resin is a modern information retrieval system and a document based search engin
 ##Query the index.
 <a name="inproc" id="inproc"></a>
 
-	var searcher = new Searcher(dir);
-	var result = searcher.Search("description:matter or energy");
+	// Resin will scan a disk based binary search tree (a doubly-chained tree)
+	// for terms that are an exact match, a near match or is prefixed with the query terms.
+	
+	// Resin spawns a tree scanning thread for each query term.
+	// Postings are fetched for all terms found from the scans.
+	// Resin produces a set of postings for each query statement.
+	// These are reduced to one set of postings.
+	// The reduced set is then scored.
+	
+	// The top scoring documents are returned with a number describing the total amount of documents,
+	// so that you can fetch them by the built in paging mechanism.
+	
+	var result = new Searcher(dir).Search("description:all matter~ energy* -aliases:astrology");
 
 [More here](https://github.com/kreeben/resin/wiki). 
 
@@ -39,22 +50,17 @@ Here are some [issues](https://github.com/kreeben/resin/issues) that need to be 
 
 Pull requests are accepted.
 
-## Resin Project Milestones
+## Roadmap
 
 - [x] ___Layout basic architecture and infrastructure of a modern IR system - v0.9b___
-- [ ] Scan at least as fast as .Net version of Lucene - v1.0
+- [ ] Scan as fast as .Net version of Lucene - v1.0
 - [ ] Index at least as fast as .Net version of Lucene - v1.1
 - [ ] Merge best parts of the Lucene query language and the Elasticsearch DSL into RQL (Resin query language) - v1.2
-- [ ] Handover control of roadmap to the community - v1.3 - v1.8
 - [ ] Reach almost feature parity with .Net version of Lucene - v1.9
-- [ ] Scan at least as fast as JRE version of Lucene - v2.0
+- [ ] Scan as fast as JRE version of Lucene - v2.0
 - [ ] Index at least as fast as JRE version of Lucene - v2.1
-- [ ] Merge applicable parts of SQL into RQL - v2.2
-- [ ] Handover control of roadmap to the community - v2.3 - v2.7
-- [ ] Reach almost feature parity with JRE version of Lucene - v2.8
-- [ ] Become the fastest independent IR system in the world - v2.9
 - [ ] Tooling.
 
-## Sir
+## Implementations
 
 [Sir](https://github.com/kreeben/sir) is an Elasticsearch clone built on Resin.
