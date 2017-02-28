@@ -23,14 +23,8 @@ namespace Resin.IO.Read
 
         protected override void Skip(int count)
         {
-            //var buffer = new char[LcrsNode.BlockSize];
-            //for (int i = 0; i < count; i++)
-            //{
-            //    _reader.ReadBlock(buffer, 0, LcrsNode.BlockSize);
-            //}
-
-            var buffer = new char[LcrsNode.BlockSize * count];
-            _reader.Read(buffer, 0, buffer.Length);
+            var buffer = new char[LcrsTrieHelper.NodeBlockSize * count];
+            _reader.ReadBlock(buffer, 0, buffer.Length);
         }
 
         protected override LcrsNode Step()
@@ -42,13 +36,15 @@ namespace Resin.IO.Read
                 return replayed;
             }
 
-            var data = new char[LcrsNode.BlockSize];
+            var data = new char[LcrsTrieHelper.NodeBlockSize];
+
             if (_reader.Read(data, 0, data.Length) == 0)
             {
                 return LcrsNode.MinValue;
             }
 
             LastRead = new LcrsNode(new string(data));
+
             return LastRead;
         }
 

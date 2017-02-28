@@ -57,6 +57,7 @@ namespace Resin.IO.Write
         private static void SerializeMappedDepthFirst(this LcrsTrie node, BinaryWriter bw, int depth)
         {
             var bytes = TypeToBytes(new LcrsNode(node, depth, node.GetWeight()));
+
             bw.Write(bytes, 0, bytes.Length);
 
             if (node.LeftChild != null)

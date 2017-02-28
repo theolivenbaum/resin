@@ -6,6 +6,8 @@ namespace Resin.IO
 {
     public static class LcrsTrieHelper
     {
+        public static int NodeBlockSize = 24;
+
         public static IEnumerable<LcrsTrie> Fold(this IEnumerable<LcrsTrie> nodes, int size)
         {
             if (size <= 0) throw new ArgumentOutOfRangeException("size");
