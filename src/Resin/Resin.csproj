@@ -79,7 +79,6 @@
     <Compile Include="IO\Read\PostingsReader.cs" />
     <Compile Include="IO\Write\PostingsWriter.cs" />
     <Compile Include="IO\QuickLZ.cs" />
-    <Compile Include="IO\Read\InMemoryTrieReader.cs" />
     <Compile Include="IO\Write\LcrsTrieSerializer.cs" />
     <Compile Include="IO\Word.cs" />
     <Compile Include="Analysis\IScoringScheme.cs" />

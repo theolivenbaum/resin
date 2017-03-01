@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using Resin.Analysis;
+using Resin.IO.Read;
 
 namespace Resin.IO
 {
     [Serializable, DebuggerDisplay("{Value} {EndOfWord}")]
-    public class LcrsTrie
+    public class LcrsTrie : ITrieReader
     {
         public LcrsTrie RightSibling { get; set; }
         public LcrsTrie LeftChild { get; set; }
@@ -112,6 +115,126 @@ namespace Resin.IO
             }
 
             return count;
+        }
+
+        public bool HasWord(string word)
+        {
+            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("path");
+
+            LcrsTrie child;
+            if (TryFindPath(word, out child))
+            {
+                return child.EndOfWord;
+            }
+            return false;
+        }
+
+        public IEnumerable<Word> StartsWith(string prefix)
+        {
+            if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("traveled");
+
+            var compressed = new List<Word>();
+
+            LcrsTrie child;
+            if (TryFindPath(prefix, out child))
+            {
+                child.LeftChild.DepthFirst(prefix, new List<char>(), compressed);
+            }
+
+            return compressed;
+        }
+
+        public IEnumerable<Word> Near(string word, int edits)
+        {
+            var compressed = new List<Word>();
+            if (LeftChild != null)
+            {
+                LeftChild.WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, edits);
+            }
+            return compressed.OrderBy(w => w.Distance);
+        }
+
+        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits)
+        {
+            var childIndex = depth + 1;
+            string test;
+
+            if (depth == state.Length)
+            {
+                test = state + Value;
+            }
+            else
+            {
+                test = new string(state.ReplaceOrAppend(depth, Value).Where(c => c != Char.MinValue).ToArray());
+            }
+
+            var edits = Levenshtein.Distance(word, test);
+
+            if (edits <= maxEdits)
+            {
+                if (EndOfWord)
+                {
+                    compressed.Add(new Word(test) { Distance = edits });
+                }
+            }
+
+            if (edits <= maxEdits || test.Length < word.Length)
+            {
+                if (LeftChild != null)
+                {
+                    LeftChild.WithinEditDistanceDepthFirst(word, test, compressed, childIndex, maxEdits);
+                }
+
+                if (RightSibling != null)
+                {
+                    RightSibling.WithinEditDistanceDepthFirst(word, test, compressed, depth, maxEdits);
+                }
+            }
+        }
+
+        private void DepthFirst(string traveled, IList<char> state, IList<Word> compressed)
+        {
+            var copy = new List<char>(state);
+            state.Add(Value);
+
+            if (EndOfWord)
+            {
+                compressed.Add(new Word(traveled + new string(state.ToArray())));
+            }
+
+            if (LeftChild != null)
+            {
+                LeftChild.DepthFirst(traveled, state, compressed);
+            }
+
+            if (RightSibling != null)
+            {
+                RightSibling.DepthFirst(traveled, copy, compressed);
+            }
+        }
+
+        public bool TryFindPath(string path, out LcrsTrie leaf)
+        {
+            var child = LeftChild;
+            while (child != null)
+            {
+                if (child.Value.Equals(path[0]))
+                {
+                    break;
+                }
+                child = child.RightSibling;
+            }
+            if (child != null)
+            {
+                if (path.Length == 1)
+                {
+                    leaf = child;
+                    return true;
+                }
+                return child.TryFindPath(path.Substring(1), out leaf);
+            }
+            leaf = null;
+            return false;
         }
     }
 }
