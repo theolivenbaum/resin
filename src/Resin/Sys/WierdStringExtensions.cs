@@ -10,8 +10,9 @@ namespace Resin.Sys
         {
             if (term == null) throw new ArgumentNullException("term");
 
-            var val = term.Word.Value.PadRight(3).Substring(0, 3);
-            return val.ToHash().ToString(CultureInfo.InvariantCulture);
+            var fieldHash = term.Field.ToHash();
+            var valueHash = term.Word.Value.PadRight(5).Substring(0, 5).ToHash();
+            return string.Format("{0}-{1}", fieldHash.ToString(CultureInfo.InvariantCulture), valueHash.ToString(CultureInfo.InvariantCulture));
         }
 
         public static string ToDocFileId(this string docId)

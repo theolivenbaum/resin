@@ -165,7 +165,7 @@ namespace Resin.Cli
             var url = ConfigurationManager.AppSettings.Get("sir.endpoint");
             var inproc = !string.IsNullOrWhiteSpace(dir);
 
-            Console.Write("preparing docs: ");
+            Console.Write("deserializing docs: ");
 
             var cursorPos = Console.CursorLeft;
             var count = 0;
@@ -203,7 +203,7 @@ namespace Resin.Cli
                 Console.WriteLine();
             }
 
-            Console.WriteLine("prepared docs in {0}", writeTimer.Elapsed);
+            Console.WriteLine("deserialized docs in {0}", writeTimer.Elapsed);
             
             if (inproc)
             {

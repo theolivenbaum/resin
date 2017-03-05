@@ -12,34 +12,22 @@ namespace Resin.IO.Read
         {
             _sr = sr;
         }
-        
+
         public IEnumerable<DocumentPosting> Read(Term term)
         {
-            string line;
-            var data = string.Empty;
+            var headerBytes = Convert.FromBase64String(_sr.ReadLine());
+            var header = DeserializeHeader(headerBytes);
 
-            while ((line = _sr.ReadLine()) != null)
+            if (header.ContainsKey(term))
             {
-                var parts = line.Split(':');
-                var token = parts[1];
+                var position = header[term];
 
-                if (token == null)
+                for (int i = 0; i < position; i++)
                 {
-                    throw new DataMisalignedException("TSNHappen");
+                    _sr.ReadLine();
                 }
 
-                var test = new Term(parts[0], new Word(token));
-
-                if (test.Equals(term))
-                {
-                    data = parts[2];
-                    break;
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(data))
-            {
-                var bytes = Convert.FromBase64String(data);
+                var bytes = Convert.FromBase64String(_sr.ReadLine());
 
                 using (var memStream = new MemoryStream(bytes))
                 {
@@ -49,6 +37,14 @@ namespace Resin.IO.Read
                         yield return posting;
                     }
                 }
+            }
+        }
+
+        private Dictionary<Term, int> DeserializeHeader(byte[] bytes)
+        {
+            using (var stream = new MemoryStream(bytes))
+            {
+                return (Dictionary<Term, int>) BinaryFile.Serializer.Deserialize(stream);
             }
         }
 

@@ -19,7 +19,6 @@ namespace Resin
         private readonly IDictionary<Term, List<DocumentPosting>> _postingsMatrix;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Index));
         private readonly Dictionary<string, DocumentWriter> _docWriters;
-        private readonly Dictionary<string, PostingsWriter> _postingsWriters;
 
         public IxInfo Info { get { return _ixInfo; } }
 
@@ -34,7 +33,6 @@ namespace Resin
             _postingsMatrix = postingsMatrix;
             _tries = tries;
             _docWriters = new Dictionary<string, DocumentWriter>();
-            _postingsWriters = new Dictionary<string, PostingsWriter>();
         }
 
         public string Serialize(string directory)
@@ -71,13 +69,31 @@ namespace Resin
         {
             return Task.Run(() =>
             {
-                using (var postingsWorker = new TaskQueue<Tuple<Term, IEnumerable<DocumentPosting>>>(1, t => WritePostings(t.Item1, t.Item2, directory)))
+                var byFileId = new Dictionary<string, Dictionary<Term, List<DocumentPosting>>>();
+                foreach (var term in postingsMatrix)
                 {
-                    foreach (var term in postingsMatrix)
+                    var fileId = term.Key.ToPostingsFileId();
+
+                    Dictionary<Term, List<DocumentPosting>> postings;
+                    if (!byFileId.TryGetValue(fileId, out postings))
                     {
-                        postingsWorker.Enqueue(new Tuple<Term, IEnumerable<DocumentPosting>>(term.Key, term.Value));
+                        postings = new Dictionary<Term, List<DocumentPosting>>();
+                        byFileId.Add(fileId, postings);
                     }
+                    postings.Add(term.Key, term.Value);
+
                 }
+                Parallel.ForEach(byFileId, file =>
+                {
+                    var fileName = Path.Combine(directory, string.Format("{0}-{1}.pos", _ixInfo.Name, file.Key));
+
+                    using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+                    using (var sw = new StreamWriter(fs, Encoding.Unicode))
+                    using (var writer = new PostingsWriter(sw))
+                    {
+                        writer.Write(file.Value);
+                    }
+                });
             });
         }
 
@@ -127,30 +143,6 @@ namespace Resin
             writer.Write(doc);
         }
 
-        private void WritePostings(Term term, IEnumerable<DocumentPosting> postings, string directory)
-        {
-            var fileId = term.ToPostingsFileId();
-            PostingsWriter writer;
-
-            if (!_postingsWriters.TryGetValue(fileId, out writer))
-            {
-                lock (PostingsWriter.SyncRoot)
-                {
-                    if (!_postingsWriters.TryGetValue(fileId, out writer))
-                    {
-                        var fileName = Path.Combine(directory, string.Format("{0}-{1}.pos", _ixInfo.Name, fileId));
-                        var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
-                        var sw = new StreamWriter(fs, Encoding.Unicode);
-
-                        writer = new PostingsWriter(sw);
-
-                        _postingsWriters.Add(fileId, writer);
-                    }
-                }
-            }
-            writer.Write(term, postings);
-        }
-
         private Stopwatch Time()
         {
             var timer = new Stopwatch();
@@ -160,11 +152,6 @@ namespace Resin
 
         private void Cleanup()
         {
-            foreach (var pw in _postingsWriters.Values)
-            {
-                pw.Dispose();
-            }
-
             foreach (var dw in _docWriters.Values)
             {
                 dw.Dispose();

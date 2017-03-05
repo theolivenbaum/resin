@@ -35,17 +35,24 @@ namespace Resin
     {
         private readonly string _directory;
         private readonly IEnumerable<string> _documentIds;
+        private readonly string _indexName;
 
         public DeleteOperation(string directory, IEnumerable<string> documentIds)
         {
             _directory = directory;
             _documentIds = documentIds;
+            _indexName = Util.GetChronologicalFileId();
         }
 
         public void Execute()
         {
-            var fileId = Util.GetChronologicalFileId();
-            new DelInfo {DocIds = _documentIds.ToList()}.Save(Path.Combine(_directory, fileId + ".del"));
+            var ix = new IxInfo
+            {
+                Name = _indexName,
+                DocumentCount = new DocumentCount(new Dictionary<string, int>()),
+                Deletions = _documentIds.ToList()
+            };
+            ix.Save(Path.Combine(_directory, ix.Name + ".ix"));
         }
 
         public void Dispose()

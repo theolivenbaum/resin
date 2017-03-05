@@ -69,7 +69,8 @@ namespace Resin
             return new IxInfo
             {
                 Name = _indexName,
-                DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField))
+                DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField)),
+                Deletions = new List<string>()
             };
         }
 

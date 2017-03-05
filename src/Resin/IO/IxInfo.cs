@@ -8,6 +8,7 @@ namespace Resin.IO
     {
         public string Name { get; set; }
         public DocumentCount DocumentCount { get; set; }
+        public List<string> Deletions { get; set; } 
     }
 
     [Serializable]

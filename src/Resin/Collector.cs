@@ -20,14 +20,12 @@ namespace Resin
         private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly IxInfo _ix;
-        private readonly IDictionary<Term, IList<DocumentPosting>> _termCache;
         private readonly IScoringScheme _scorer;
 
         public Collector(string directory, IxInfo ix, IScoringScheme scorer)
         {
             _directory = directory;
             _ix = ix;
-            _termCache = new Dictionary<Term, IList<DocumentPosting>>();
             _scorer = scorer;
         }
 
@@ -37,22 +35,11 @@ namespace Resin
             GetPostings(query);
 
             var time = Time();
-            var deletions = GetDeletions().ToList();
-            var trimmed = query.Reduce().Where(d=>deletions.Contains(d.DocumentId) == false).ToList();
+            var trimmed = query.Reduce().Where(d=>_ix.Deletions.Contains(d.DocumentId) == false).ToList();
 
             Log.DebugFormat("reduced {0} in {1}", query, time.Elapsed);
 
             return trimmed;
-        }
-
-        private IEnumerable<string> GetDeletions()
-        {
-            return GetDeletionsFileNames().SelectMany(fn => DelInfo.Load(fn).DocIds);
-        }
-
-        private string[] GetDeletionsFileNames()
-        {
-            return Directory.GetFiles(_directory, "*.del").ToArray();
         }
 
         private void Scan(QueryContext query)
@@ -69,22 +56,16 @@ namespace Resin
         private void DoScan(QueryContext query)
         {
             var time = Time();
-            var terms = new ConcurrentBag<Term>();
+            var terms = new List<Term>();
             var reader = GetTreeReader(query.Field);
 
             if (query.Fuzzy)
             {
-                foreach (var term in reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)))
-                {
-                    terms.Add(term);
-                }
+                terms.AddRange(reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)));
             }
             else if (query.Prefix)
             {
-                foreach (var term in reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)))
-                {
-                    terms.Add(term);
-                }
+                terms.AddRange(reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)));
             }
             else
             {
@@ -111,36 +92,22 @@ namespace Resin
 
             var result = DoReadPostings(query.Terms)
                 .Aggregate<IEnumerable<DocumentPosting>, IEnumerable<DocumentPosting>>(
-                    null, DocumentPosting.JoinOr);
+                    null, DocumentPosting.JoinOr).ToList();
 
-            query.Postings = result ?? Enumerable.Empty<DocumentPosting>();
+            query.Postings = result;
 
             Log.DebugFormat("read postings for {0} in {1}", query.AsReadable(), time.Elapsed);
 
         }
         
-        private static readonly object SyncRoot = new object();
- 
         private IEnumerable<IEnumerable<DocumentPosting>> DoReadPostings(IEnumerable<Term> terms)
         {
             var result = new ConcurrentBag<List<DocumentPosting>>();
 
             Parallel.ForEach(terms, term =>
             {
-                IList<DocumentPosting> postings;
-
-                if (!_termCache.TryGetValue(term, out postings))
-                {
-                    lock (SyncRoot)
-                    {
-                        if (!_termCache.TryGetValue(term, out postings))
-                        {
-                            postings = GetPostingsReader(term).Read(term).ToList();
-                            postings = Score(postings).ToList();
-                            _termCache.Add(term, postings);
-                        }
-                    }
-                }
+                IList<DocumentPosting> postings = GetPostingsReader(term).Read(term).ToList();
+                postings = Score(postings).ToList();
                 result.Add(new List<DocumentPosting>(postings));
             });
 

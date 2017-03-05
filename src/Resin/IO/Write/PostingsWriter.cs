@@ -1,29 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Resin.IO.Write
 {
     public class PostingsWriter : IDisposable
     {
         private readonly StreamWriter _writer;
-        public static object SyncRoot = new object();
 
         public PostingsWriter(StreamWriter writer)
         {
             _writer = writer;
         }
 
-        public void Write(Term term, IEnumerable<DocumentPosting> postings)
+        public void Write(Dictionary<Term, List<DocumentPosting>> postings)
         {
-            var bytes = Serialize(postings);
+            var index = 0;
+            var header = postings.Keys.ToList().ToDictionary(x=>x, x=>index++);
+            var headerBytes = Serialize(header);
 
-            var base64 = Convert.ToBase64String(bytes);
+            _writer.WriteLine(Convert.ToBase64String(headerBytes));
+            
+            foreach (var term in header.Keys)
+            {
+                var bytes = Serialize(postings[term]);
 
-            _writer.WriteLine("{0}:{1}", term, base64);
+                _writer.WriteLine(Convert.ToBase64String(bytes));
+            }
         }
 
-        private byte[] Serialize(IEnumerable<DocumentPosting> postings)
+        private byte[] Serialize(Dictionary<Term, int> header)
+        {
+            using (var stream = new MemoryStream())
+            {
+                BinaryFile.Serializer.Serialize(stream, header);
+                return stream.ToArray();
+            }
+        }
+
+        private byte[] Serialize(List<DocumentPosting> postings)
         {
             using (var stream = new MemoryStream())
             {
