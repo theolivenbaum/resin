@@ -5,19 +5,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Resin.Analysis;
 
 namespace Resin.Sys
 {
     public static class Util
     {
         public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 23);
-
-        public static Index ToIndex(this IEnumerable<IDictionary<string, string>> documents, string directory, IAnalyzer analyzer)
-        {
-            var builder = new IndexBuilder(analyzer, documents.ToDocuments());
-            return builder.ToIndex();
-        }
 
         public static IEnumerable<Document> ToDocuments(this IEnumerable<IDictionary<string, string>> documents)
         {

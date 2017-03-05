@@ -4,22 +4,21 @@ using Resin.IO;
 
 namespace Resin.Sys
 {
-    internal static class WierdStringExtensions
+    internal static class BucketExtensions
     {
         public static string ToPostingsFileId(this Term term)
         {
             if (term == null) throw new ArgumentNullException("term");
 
-            var fieldHash = term.Field.ToHash();
-            var valueHash = term.Word.Value.PadRight(5).Substring(0, 5).ToHash();
-            return string.Format("{0}-{1}", fieldHash.ToString(CultureInfo.InvariantCulture), valueHash.ToString(CultureInfo.InvariantCulture));
+            var wordHash = term.Word.Value.PadRight(2).Substring(0, 2).ToHash();
+            return string.Format("{0}", wordHash.ToString(CultureInfo.InvariantCulture));
         }
 
         public static string ToDocFileId(this string docId)
         {
             if (string.IsNullOrEmpty(docId)) throw new ArgumentException("docId");
 
-            var val = docId.PadRight(5).Substring(0, 5);
+            var val = docId.PadRight(3).Substring(0, 3);
             return val.ToHash().ToString(CultureInfo.InvariantCulture);
         }
 

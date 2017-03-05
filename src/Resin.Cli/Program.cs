@@ -3,14 +3,10 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text;
 using log4net.Config;
-using Newtonsoft.Json;
 using Resin.Analysis;
 using Resin.Querying;
-using Resin.Sys;
 using Sir.Client;
 
 namespace Resin.Cli
@@ -149,11 +145,8 @@ namespace Resin.Cli
         static void Write(string[] args)
         {
             var take = 1000;
-            var skip = 0;
-            var skipped = 0;
 
             if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
-            if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
 
             var fileName = args[Array.IndexOf(args, "--file") + 1];
             string dir = null;
@@ -165,53 +158,19 @@ namespace Resin.Cli
             var url = ConfigurationManager.AppSettings.Get("sir.endpoint");
             var inproc = !string.IsNullOrWhiteSpace(dir);
 
-            Console.Write("deserializing docs: ");
+            Console.WriteLine("writing...");
 
-            var cursorPos = Console.CursorLeft;
-            var count = 0;
             var docs = new List<Dictionary<string, string>>();
 
             var writeTimer = new Stopwatch();
             writeTimer.Start();
-
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None))
-            using (var bs = new BufferedStream(fs))
-            using (var sr = new StreamReader(bs, Encoding.Unicode))
-            {
-                string line;
-
-                sr.ReadLine();
-
-                while (skipped++ < skip)
-                {
-                    sr.ReadLine();
-                }
-
-                while ((line = sr.ReadLine()) != null)
-                {
-                    if (line[0] == ']') break;
-
-                    var doc = JsonConvert.DeserializeObject<Dictionary<string, string>>(line.Substring(0, line.Length - 1));
-
-                    Console.SetCursorPosition(cursorPos, Console.CursorTop);
-                    Console.Write(++count);
-
-                    docs.Add(doc);
-
-                    if (count == take) break;
-                }
-                Console.WriteLine();
-            }
-
-            Console.WriteLine("deserialized docs in {0}", writeTimer.Elapsed);
-            
+          
             if (inproc)
             {
-                var analysisTimer = new Stopwatch();
-                analysisTimer.Start();
-
-                var ix = docs.ToIndex(dir, new Analyzer());
-                ix.Serialize(dir);
+                using (var writer = new WriteOperation(dir, new Analyzer(), fileName, take))
+                {
+                    writer.Execute();
+                }
             }
             else
             {

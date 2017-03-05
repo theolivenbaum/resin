@@ -54,8 +54,6 @@
   <ItemGroup>
     <Compile Include="Analysis\AnalyzedDocument.cs" />
     <Compile Include="Analysis\Analyzer.cs" />
-    <Compile Include="Index.cs" />
-    <Compile Include="IndexBuilder.cs" />
     <Compile Include="IO\LcrsTrieHelper.cs" />
     <Compile Include="IO\Read\DocumentReader.cs" />
     <Compile Include="IO\DocumentPosting.cs" />
@@ -83,7 +81,7 @@
     <Compile Include="IO\Word.cs" />
     <Compile Include="Analysis\IScoringScheme.cs" />
     <Compile Include="Analysis\Levenshtein.cs" />
-    <Compile Include="Sys\WierdStringExtensions.cs" />
+    <Compile Include="Sys\BucketExtensions.cs" />
     <Compile Include="WriteOperation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Querying\QueryContext.cs" />
