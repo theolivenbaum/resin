@@ -44,7 +44,7 @@ namespace Resin
 
         public void Execute()
         {
-            var fileId = ToolBelt.GetChronologicalFileId();
+            var fileId = Util.GetChronologicalFileId();
             new DelInfo {DocIds = _documentIds.ToList()}.Save(Path.Combine(_directory, fileId + ".del"));
         }
 

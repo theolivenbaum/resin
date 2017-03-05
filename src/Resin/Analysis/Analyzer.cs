@@ -22,7 +22,7 @@ namespace Resin.Analysis
 
         private string[] GetDefaultStopwords()
         {
-            var dir = Path.Combine(ToolBelt.GetDataDirectory(), "stopwords");
+            var dir = Path.Combine(Util.GetDataDirectory(), "stopwords");
             var fileName = Path.Combine(dir, _culture.Name + ".txt");
             if (File.Exists(fileName)) return File.ReadAllLines(fileName);
             return new string[0];

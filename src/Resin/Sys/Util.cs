@@ -9,7 +9,7 @@ using Resin.Analysis;
 
 namespace Resin.Sys
 {
-    public static class ToolBelt
+    public static class Util
     {
         public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 23);
 

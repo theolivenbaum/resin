@@ -27,7 +27,7 @@ namespace Resin
             _documents = documents;
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
-            _indexName = ToolBelt.GetChronologicalFileId();
+            _indexName = Util.GetChronologicalFileId();
         }
 
         public Index ToIndex()

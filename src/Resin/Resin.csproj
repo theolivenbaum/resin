@@ -64,7 +64,7 @@
     <Compile Include="IO\Read\MappedTrieReader.cs" />
     <Compile Include="IO\Read\TrieReader.cs" />
     <Compile Include="IO\Write\LcrsTreeBinaryWriter.cs" />
-    <Compile Include="Sys\ToolBelt.cs" />
+    <Compile Include="Sys\Util.cs" />
     <Compile Include="Analysis\IAnalyzer.cs" />
     <Compile Include="IO\CompressedBinaryFile.cs" />
     <Compile Include="IO\Write\DocumentWriter.cs" />
