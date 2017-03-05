@@ -4,16 +4,16 @@ namespace Resin.Querying
 {
     public class DocumentScore
     {
-        private readonly string _docId;
+        private readonly int _docId;
         
         private double _termCount;
 
-        public string DocId { get { return _docId; } }
+        public int DocId { get { return _docId; } }
         public double TermCount { get { return _termCount; } }
 
         public double Score { get; set; }
 
-        public DocumentScore(string docId, double termCount)
+        public DocumentScore(int docId, double termCount)
         {
             _docId = docId;
             _termCount = termCount;

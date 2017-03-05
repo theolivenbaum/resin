@@ -50,7 +50,7 @@ namespace Resin.IO.Read
 
         private IEnumerable<DocumentPosting> Deserialize(Stream stream)
         {
-            return (IList<DocumentPosting>)BinaryFile.Serializer.Deserialize(stream);
+            return (DocumentPosting[])BinaryFile.Serializer.Deserialize(stream);
         }
 
         public void Dispose()

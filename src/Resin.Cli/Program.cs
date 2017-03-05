@@ -188,7 +188,7 @@ namespace Resin.Cli
 
         static void Delete(string[] args)
         {
-            var ids = args[Array.IndexOf(args, "--ids") + 1].Split(',');
+            var ids = args[Array.IndexOf(args, "--ids") + 1].Split(',').Select(int.Parse);
             string dir = null;
             string indexName = null;
 

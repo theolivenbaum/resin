@@ -26,6 +26,7 @@ namespace Resin.IO
             typeof (Document),
             typeof (IxInfo),
             typeof (List<DocumentPosting>),
+            typeof (DocumentPosting[]),
             typeof (DelInfo),
             typeof (List<string>)
         };

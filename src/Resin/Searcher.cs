@@ -76,7 +76,7 @@ namespace Resin
 
         private Document GetDoc(DocumentPosting posting)
         {
-            var fileId = posting.DocumentId.ToDocFileId();
+            var fileId = posting.DocumentId.ToString(CultureInfo.InvariantCulture).ToDocFileId();
             var fileName = Path.Combine(_directory, string.Format("{0}-{1}.doc", posting.IndexName, fileId));
             var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             var sr = new StreamReader(fs, Encoding.Unicode);

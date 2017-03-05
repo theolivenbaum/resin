@@ -8,7 +8,7 @@ namespace Resin.IO
     [Serializable]
     public class DocumentPosting
     {
-        private readonly string _documentId;
+        private readonly int _documentId;
         private int _count;
 
         [NonSerialized]
@@ -20,7 +20,7 @@ namespace Resin.IO
         [NonSerialized]
         private string _indexName;
 
-        public string DocumentId
+        public int DocumentId
         {
             get { return _documentId; }
         }
@@ -48,7 +48,7 @@ namespace Resin.IO
             set { _scoring = value; }
         }
 
-        public DocumentPosting(string documentId, int count)
+        public DocumentPosting(int documentId, int count)
         {
             if (count < 1) throw new ArgumentOutOfRangeException("count");
 

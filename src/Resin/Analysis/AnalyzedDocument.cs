@@ -5,13 +5,13 @@ namespace Resin.Analysis
 {
     public class AnalyzedDocument
     {
-        private readonly string _id;
+        private readonly int _id;
         private readonly IDictionary<Term, int> _terms;
 
         public IDictionary<Term, int> Terms { get { return _terms; } }
-        public string Id { get { return _id; } }
+        public int Id { get { return _id; } }
 
-        public AnalyzedDocument(string id, IEnumerable<KeyValuePair<string, IDictionary<string, int>>> analyzedTerms)
+        public AnalyzedDocument(int id, IEnumerable<KeyValuePair<string, IDictionary<string, int>>> analyzedTerms)
         {
             _id = id;
             _terms = new Dictionary<Term, int>();

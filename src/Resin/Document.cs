@@ -6,13 +6,7 @@ namespace Resin
     [Serializable]
     public class Document
     {
-        /// <summary>
-        /// Get the value of the "_id" field.
-        /// </summary>
-        public string Id
-        {
-            get { return Fields["_id"]; }
-        }
+        public int Id { get; set; }
 
         private readonly IDictionary<string, string> _fields;
 

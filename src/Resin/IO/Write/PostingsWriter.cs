@@ -43,7 +43,7 @@ namespace Resin.IO.Write
         {
             using (var stream = new MemoryStream())
             {
-                BinaryFile.Serializer.Serialize(stream, postings);
+                BinaryFile.Serializer.Serialize(stream, postings.ToArray());
                 return stream.ToArray();
             }
         }

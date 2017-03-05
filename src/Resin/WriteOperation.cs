@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -59,9 +60,12 @@ namespace Resin
         {
             var trieBuilders = new List<Task>();
             var postingsMatrix = new Dictionary<Term, List<DocumentPosting>>();
+            var index = 0;
 
             foreach (var doc in ReadSource())
             {
+                doc.Id = index++;
+
                 WriteDocument(doc);
                 
                 var analyzedDoc = _analyzer.AnalyzeDocument(doc);
@@ -75,11 +79,11 @@ namespace Resin
 
                 foreach (var term in analyzedDoc.Terms)
                 {
-                    List<DocumentPosting> weights;
+                    List<DocumentPosting> postings;
 
-                    if (postingsMatrix.TryGetValue(term.Key, out weights))
+                    if (postingsMatrix.TryGetValue(term.Key, out postings))
                     {
-                        weights.Add(new DocumentPosting(doc.Id, term.Value));
+                        postings.Add(new DocumentPosting(doc.Id, term.Value));
                     }
                     else
                     {
@@ -194,7 +198,7 @@ namespace Resin
 
         private void WriteDocument(Document doc)
         {
-            var fileId = doc.Id.ToDocFileId();
+            var fileId = doc.Id.ToString(CultureInfo.InvariantCulture).ToDocFileId();
             DocumentWriter writer;
 
             if (!_docWriters.TryGetValue(fileId, out writer))
@@ -251,7 +255,7 @@ namespace Resin
             {
                 Name = _indexName,
                 DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField)),
-                Deletions = new List<string>()
+                Deletions = new List<int>()
             };
         }
 
@@ -273,10 +277,11 @@ namespace Resin
     public class DeleteOperation : IDisposable
     {
         private readonly string _directory;
-        private readonly IEnumerable<string> _documentIds;
+        private readonly IEnumerable<int> _documentIds;
         private readonly string _indexName;
 
-        public DeleteOperation(string directory, IEnumerable<string> documentIds)
+        //TODO: replace with delete by term
+        public DeleteOperation(string directory, IEnumerable<int> documentIds)
         {
             _directory = directory;
             _documentIds = documentIds;

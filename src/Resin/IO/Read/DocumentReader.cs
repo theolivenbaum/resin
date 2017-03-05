@@ -12,7 +12,7 @@ namespace Resin.IO.Read
             _sr = sr;
         }
 
-        public Document Get(string docId)
+        public Document Get(int docId)
         {
             string line;
             var data = string.Empty;
@@ -20,7 +20,7 @@ namespace Resin.IO.Read
             while ((line = _sr.ReadLine()) != null)
             {
                 var parts = line.Split(':');
-                var test = parts[0];
+                var test = int.Parse(parts[0]);
 
                 if (test == docId)
                 {
