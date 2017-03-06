@@ -39,6 +39,9 @@ using System.Runtime.InteropServices;
 
 namespace Resin.Sys
 {
+    /// <summary>
+    /// http://landman-code.blogspot.se/2009/02/c-superfasthash-and-murmurhash2.html
+    /// </summary>
     public class MurmurHash2UInt32Hack
     {
         public UInt32 Hash(Byte[] data)
