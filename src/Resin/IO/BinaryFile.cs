@@ -25,7 +25,9 @@ namespace Resin.IO
             typeof (IxInfo),
             typeof (List<string>),
             typeof (List<int>),
-            typeof (List<DocumentPosting>)
+            typeof (List<DocumentPosting>),
+            typeof (Term),
+            typeof (Word)
         };
 
         [NonSerialized]

@@ -6,6 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CSharpTest.Net.Collections;
+using CSharpTest.Net.Serialization;
+using CSharpTest.Net.Synchronization;
 using Newtonsoft.Json;
 using Resin.Analysis;
 using Resin.IO;
@@ -33,7 +36,6 @@ namespace Resin
             _directory = directory;
             _documents = documents;
             _analyzer = analyzer;
-            _fileBased = false;
             _docWriters = new Dictionary<string, DocumentWriter>();
             _indexName = Util.GetChronologicalFileId();
             _tries = new Dictionary<string, LcrsTrie>();
@@ -41,26 +43,44 @@ namespace Resin
         }
 
         public WriteOperation(string directory, IAnalyzer analyzer, string jsonFileName, int take)
+            : this(directory, analyzer, File.Open(jsonFileName, FileMode.Open, FileAccess.Read, FileShare.None), take)
+        {
+        }
+
+        public WriteOperation(string directory, IAnalyzer analyzer, Stream documents, int take)
         {
             _directory = directory;
             _analyzer = analyzer;
             _take = take;
-            _fileBased = true;
             _docWriters = new Dictionary<string, DocumentWriter>();
             _indexName = Util.GetChronologicalFileId();
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
 
-            var fs = File.Open(jsonFileName, FileMode.Open, FileAccess.Read, FileShare.None);
-            var bs = new BufferedStream(fs);
+            _fileBased = true;
+
+            var bs = new BufferedStream(documents);
             _reader = new StreamReader(bs, Encoding.Unicode);
         }
+
+        private BPlusTree<Term, DocumentPosting[]> CreateDb()
+        {
+            var dbOptions = new BPlusTree<Term, DocumentPosting[]>.OptionsV2(
+                new TermSerializer(),
+                new ArraySerializer<DocumentPosting>(new PostingSerializer()), new TermComparer());
+
+            dbOptions.FileName = Path.Combine(_directory, string.Format("{0}-{1}.{2}", _indexName, "db", "bpt"));
+            dbOptions.CreateFile = CreatePolicy.Always;
+            dbOptions.LockingFactory = new IgnoreLockFactory();
+
+            return new BPlusTree<Term, DocumentPosting[]>(dbOptions);
+        } 
 
         public string Execute()
         {
             var trieBuilders = new List<Task>();
-            var postingsMatrix = new Dictionary<Term, List<DocumentPosting>>();
             var index = 0;
+            var matrix = new Dictionary<Term, List<DocumentPosting>>();
 
             foreach (var doc in ReadSource())
             {
@@ -81,30 +101,44 @@ namespace Resin
                 {
                     List<DocumentPosting> postings;
 
-                    if (postingsMatrix.TryGetValue(term.Key, out postings))
+                    if (matrix.TryGetValue(term.Key, out postings))
                     {
                         postings.Add(new DocumentPosting(doc.Id, term.Value));
                     }
                     else
                     {
-                        postingsMatrix.Add(term.Key, new List<DocumentPosting> { new DocumentPosting(doc.Id, term.Value) });
+                        matrix.Add(term.Key, new[]{ new DocumentPosting(doc.Id, term.Value) }.ToList());
                     }
                 }
             }
 
-            var postingsWriter = SerializePostings(postingsMatrix);
-
             Task.WaitAll(trieBuilders.ToArray());
 
             var trieWriter = SerializeTries();
+            var postingsWriter = SerializePostings(matrix);
 
             CreateIxInfo().Save(Path.Combine(_directory, _indexName + ".ix"));
 
-            Task.WaitAll(postingsWriter, trieWriter);
+            Task.WaitAll(trieWriter, postingsWriter);
 
             return _indexName;
         }
 
+
+        private Task SerializePostings(Dictionary<Term, List<DocumentPosting>> matrix)
+        {
+            return Task.Run(() =>
+            {
+                using (var db = CreateDb())
+                {
+                    foreach (var term in matrix)
+                    {
+                        db.Add(term.Key, term.Value.ToArray());
+                    }
+                }
+            });
+        }
+        
         private Task SerializeTries()
         {
             return Task.Run(() =>
@@ -125,37 +159,6 @@ namespace Resin
             var trie = trieEntry.Item2;
             var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _indexName, field.ToTrieFileId()));
             trie.SerializeToTextFile(fileName);
-        }
-
-        private Task SerializePostings(Dictionary<Term, List<DocumentPosting>> postingsMatrix)
-        {
-            return Task.Run(() =>
-            {
-                var byFileId = new Dictionary<string, Dictionary<Term, List<DocumentPosting>>>();
-                foreach (var term in postingsMatrix)
-                {
-                    var fileId = term.Key.ToPostingsFileId();
-
-                    Dictionary<Term, List<DocumentPosting>> postings;
-                    if (!byFileId.TryGetValue(fileId, out postings))
-                    {
-                        postings = new Dictionary<Term, List<DocumentPosting>>();
-                        byFileId.Add(fileId, postings);
-                    }
-                    postings.Add(term.Key, term.Value);
-
-                }
-                Parallel.ForEach(byFileId, file =>
-                {
-                    var fileName = Path.Combine(_directory, string.Format("{0}-{1}.pos", _indexName, file.Key));
-
-                    using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
-                    using (var writer = new PostingsWriter(fs))
-                    {
-                        writer.Write(file.Value);
-                    }
-                });
-            });
         }
 
         private Task BuildTree(AnalyzedDocument analyzedDoc)
@@ -300,6 +303,72 @@ namespace Resin
 
         public void Dispose()
         {
+        }
+    }
+
+    public class TermSerializer : ISerializer<Term>
+    {
+        public void WriteTo(Term value, Stream stream)
+        {
+            PrimitiveSerializer.String.WriteTo(value.Field, stream);
+            PrimitiveSerializer.String.WriteTo(value.Word.Value, stream);
+        }
+
+        public Term ReadFrom(Stream stream)
+        {
+            var field = PrimitiveSerializer.String.ReadFrom(stream);
+            var word = PrimitiveSerializer.String.ReadFrom(stream);
+
+            return new Term(field, new Word(word));
+        }
+    }
+
+    public class PostingSerializer : ISerializer<DocumentPosting>
+    {
+        public void WriteTo(DocumentPosting value, Stream stream)
+        {
+            PrimitiveSerializer.Int32.WriteTo(value.DocumentId, stream);
+            PrimitiveSerializer.Int32.WriteTo(value.Count, stream);
+        }
+
+        public DocumentPosting ReadFrom(Stream stream)
+        {
+            var docId = PrimitiveSerializer.Int32.ReadFrom(stream);
+            var count = PrimitiveSerializer.Int32.ReadFrom(stream);
+
+            return new DocumentPosting(docId, count);
+        }
+    }
+
+    public class ArraySerializer<T> : ISerializer<T[]>
+    {
+        private readonly ISerializer<T> _itemSerializer;
+        public ArraySerializer(ISerializer<T> itemSerializer)
+        {
+            _itemSerializer = itemSerializer;
+        }
+
+        public T[] ReadFrom(Stream stream)
+        {
+            int size = PrimitiveSerializer.Int32.ReadFrom(stream);
+            if (size < 0)
+                return null;
+            T[] value = new T[size];
+            for (int i = 0; i < size; i++)
+                value[i] = _itemSerializer.ReadFrom(stream);
+            return value;
+        }
+
+        public void WriteTo(T[] value, Stream stream)
+        {
+            if (value == null)
+            {
+                PrimitiveSerializer.Int32.WriteTo(-1, stream);
+                return;
+            }
+            PrimitiveSerializer.Int32.WriteTo(value.Length, stream);
+            foreach (var i in value)
+                _itemSerializer.WriteTo(i, stream);
         }
     }
 }

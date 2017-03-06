@@ -3,22 +3,8 @@ using System;
 namespace Resin.IO
 {
     [Serializable]
-    public struct Word : IEquatable<Word>, IComparable<Word>
+    public struct Word : IEquatable<Word>
     {
-        public readonly string Value;
-        public int Distance;
-
-        public Word(string value)
-        {
-            Value = value;
-            Distance = 0;
-        }
-
-        public static implicit operator string(Word w)
-        {
-            return w.Value;
-        }
-
         public bool Equals(Word other)
         {
             return string.Equals(Value, other.Value);
@@ -32,7 +18,7 @@ namespace Resin.IO
 
         public override int GetHashCode()
         {
-            return (Value != null ? Value.GetHashCode() : 0);
+            return Value.GetHashCode();
         }
 
         public static bool operator ==(Word left, Word right)
@@ -45,9 +31,15 @@ namespace Resin.IO
             return !left.Equals(right);
         }
 
-        public int CompareTo(Word other)
+        public readonly string Value;
+
+        [NonSerialized]
+        public int Distance;
+
+        public Word(string value)
         {
-            return String.Compare(other.Value, Value, StringComparison.Ordinal);
+            Value = value;
+            Distance = 0;
         }
 
         public override string ToString()

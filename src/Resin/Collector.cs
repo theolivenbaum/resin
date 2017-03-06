@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using CSharpTest.Net.Collections;
+using CSharpTest.Net.Synchronization;
 using log4net;
 using Resin.Analysis;
 using Resin.IO;
@@ -20,12 +22,23 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly IxInfo _ix;
         private readonly IScoringScheme _scorer;
+        private readonly BPlusTree<Term, DocumentPosting[]> _postingDb; 
 
         public Collector(string directory, IxInfo ix, IScoringScheme scorer)
         {
             _directory = directory;
             _ix = ix;
             _scorer = scorer;
+
+            var dbOptions = new BPlusTree<Term, DocumentPosting[]>.OptionsV2(
+                new TermSerializer(),
+                new ArraySerializer<DocumentPosting>(new PostingSerializer()), new TermComparer());
+
+            dbOptions.FileName = Path.Combine(directory, string.Format("{0}-{1}.{2}", _ix.Name, "db", "bpt"));
+            dbOptions.ReadOnly = true;
+            dbOptions.LockingFactory = new IgnoreLockFactory();
+
+            _postingDb = new BPlusTree<Term, DocumentPosting[]>(dbOptions);
         }
 
         public IList<DocumentPosting> Collect(QueryContext query)
@@ -44,21 +57,9 @@ namespace Resin
         private void Scan(QueryContext query)
         {
             if (query == null) throw new ArgumentNullException("query");
+         
+            Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
 
-            var tasks = new List<Task>();
-
-            foreach (var q in new List<QueryContext> {query}.Concat(query.Children))
-            {
-                tasks.Add(Task.Run(() =>
-                {
-                    DoScan(q);
-                }));
-            }
-
-            Task.WaitAll(tasks.ToArray());
-            
-            //Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
-            
             //foreach (var q in new List<QueryContext> { query }.Concat(query.Children))
             //{
             //    DoScan(q);
@@ -68,26 +69,24 @@ namespace Resin
         private void DoScan(QueryContext query)
         {
             var time = Time();
-            var terms = new List<Term>();
             var reader = GetTreeReader(query.Field);
 
             if (query.Fuzzy)
             {
-                terms.AddRange(reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)));
+                query.Terms = reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)).ToList();
             }
             else if (query.Prefix)
             {
-                terms.AddRange(reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)));
+                query.Terms = reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)).ToList();
             }
             else
             {
-                if (reader.HasWord(query.Value))
-                {
-                    terms.Add(new Term(query.Field, new Word(query.Value)));
-                }
+                //if (reader.HasWord(query.Value))
+                //{
+                    query.Terms = new[]{new Term(query.Field, new Word(query.Value))}.ToList();
+                //}
             }
 
-            query.Terms = terms;
             Log.DebugFormat("scanned {0} in {1}", query.AsReadable(), time.Elapsed);
 
             DoGetPostings(query);
@@ -117,10 +116,11 @@ namespace Resin
         private IEnumerable<IEnumerable<DocumentPosting>> DoReadPostings(IEnumerable<Term> terms)
         {
             var result = new ConcurrentBag<List<DocumentPosting>>();
-
+            
+            //foreach(var term in terms)
             Parallel.ForEach(terms, term =>
             {
-                IList<DocumentPosting> postings = GetPostingsReader(term).Read(term).ToList();
+                var postings = GetPostings(term).ToList();
                 postings = Score(postings).ToList();
                 result.Add(new List<DocumentPosting>(postings));
             });
@@ -128,13 +128,27 @@ namespace Resin
             return result;
         }
 
-        private PostingsReader GetPostingsReader(Term term)
+        private IEnumerable<DocumentPosting> GetPostings(Term term)
         {
-            var fileId = term.ToPostingsFileId();
-            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.pos", _ix.Name, fileId));
-            var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
-            return new PostingsReader(fs);
-        }
+            DocumentPosting[] postings;
+            if (_postingDb.TryGetValue(term, out postings))
+            {
+                foreach (var posting in postings)
+                {
+                    posting.Field = term.Field;
+                    yield return posting;
+                }
+            }
+            
+        } 
+
+        //private PostingsReader GetPostingsReader(Term term)
+        //{
+        //    var fileId = term.ToPostingsFileId();
+        //    var fileName = Path.Combine(_directory, string.Format("{0}-{1}.pos", _ix.Name, fileId));
+        //    var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
+        //    return new PostingsReader(fs);
+        //}
 
         private IEnumerable<DocumentPosting> Score(IList<DocumentPosting> postings)
         {
