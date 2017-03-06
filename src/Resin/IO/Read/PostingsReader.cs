@@ -1,63 +1,39 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Resin.Sys;
 
 namespace Resin.IO.Read
 {
     public class PostingsReader : IDisposable
     {
-        private readonly StreamReader _sr;
+        private readonly Stream _stream;
 
-        public PostingsReader(StreamReader sr)
+        public PostingsReader(Stream stream)
         {
-            _sr = sr;
+            _stream = stream;
         }
 
         public IEnumerable<DocumentPosting> Read(Term term)
         {
-            var headerBytes = Convert.FromBase64String(_sr.ReadLine());
-            var header = DeserializeHeader(headerBytes);
+            var termHash = (term.Field + term.Word.Value).ToHash();
 
-            if (header.ContainsKey(term))
+            foreach (var posting in (List<DocumentPosting>) BinaryFile.Serializer.Deserialize(_stream))
             {
-                var position = header[term];
-
-                for (int i = 0; i < position; i++)
+                if (posting.Term == termHash)
                 {
-                    _sr.ReadLine();
-                }
-
-                var bytes = Convert.FromBase64String(_sr.ReadLine());
-
-                using (var memStream = new MemoryStream(bytes))
-                {
-                    foreach (var posting in Deserialize(memStream))
-                    {
-                        posting.Field = term.Field;
-                        yield return posting;
-                    }
+                    posting.Field = term.Field;
+                    yield return posting;
                 }
             }
-        }
-
-        private Dictionary<Term, int> DeserializeHeader(byte[] bytes)
-        {
-            using (var stream = new MemoryStream(bytes))
-            {
-                return (Dictionary<Term, int>) BinaryFile.Serializer.Deserialize(stream);
-            }
-        }
-
-        private IEnumerable<DocumentPosting> Deserialize(Stream stream)
-        {
-            return (DocumentPosting[])BinaryFile.Serializer.Deserialize(stream);
         }
 
         public void Dispose()
         {
-            if (_sr != null)
+            if (_stream != null)
             {
-                _sr.Dispose();
+                _stream.Close();
+                _stream.Dispose();
             }
         }
     }

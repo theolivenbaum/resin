@@ -18,17 +18,14 @@ namespace Resin.IO
             typeof (int), 
             typeof (char), 
             typeof (bool), 
-            typeof (LcrsTrie), 
             typeof (DocumentCount),
-            typeof (Dictionary<Term, int>),
             typeof (Dictionary<string, string>),
             typeof (Dictionary<string, int>),
             typeof (Document),
             typeof (IxInfo),
-            typeof (List<DocumentPosting>),
-            typeof (DocumentPosting[]),
-            typeof (DelInfo),
-            typeof (List<string>)
+            typeof (List<string>),
+            typeof (List<int>),
+            typeof (List<DocumentPosting>)
         };
 
         [NonSerialized]

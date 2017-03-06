@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using log4net;
 using Resin.Analysis;
@@ -32,7 +31,7 @@ namespace Resin
         public IList<DocumentPosting> Collect(QueryContext query)
         {
             Scan(query);
-            GetPostings(query);
+            //GetPostings(query);
 
             var time = Time();
             var trimmed = query.Reduce().Where(d=>_ix.Deletions.Contains(d.DocumentId) == false).ToList();
@@ -46,7 +45,20 @@ namespace Resin
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
+            var tasks = new List<Task>();
+
+            foreach (var q in new List<QueryContext> {query}.Concat(query.Children))
+            {
+                tasks.Add(Task.Run(() =>
+                {
+                    DoScan(q);
+                }));
+            }
+
+            Task.WaitAll(tasks.ToArray());
+            
+            //Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
+            
             //foreach (var q in new List<QueryContext> { query }.Concat(query.Children))
             //{
             //    DoScan(q);
@@ -77,14 +89,16 @@ namespace Resin
 
             query.Terms = terms;
             Log.DebugFormat("scanned {0} in {1}", query.AsReadable(), time.Elapsed);
+
+            DoGetPostings(query);
         }
 
-        private void GetPostings(QueryContext query)
-        {
-            if (query == null) throw new ArgumentNullException("query");
-            
-            Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoGetPostings);
-        }
+        //private void GetPostings(QueryContext query)
+        //{
+        //    if (query == null) throw new ArgumentNullException("query");
+
+        //    Parallel.ForEach(new List<QueryContext> { query }.Concat(query.Children), DoGetPostings);
+        //}
 
         private void DoGetPostings(QueryContext query)
         {
@@ -119,9 +133,7 @@ namespace Resin
             var fileId = term.ToPostingsFileId();
             var fileName = Path.Combine(_directory, string.Format("{0}-{1}.pos", _ix.Name, fileId));
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
-            var sr = new StreamReader(fs, Encoding.Unicode);
-
-            return new PostingsReader(sr);
+            return new PostingsReader(fs);
         }
 
         private IEnumerable<DocumentPosting> Score(IList<DocumentPosting> postings)

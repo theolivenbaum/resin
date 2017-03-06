@@ -10,11 +10,4 @@ namespace Resin.IO
         public DocumentCount DocumentCount { get; set; }
         public List<int> Deletions { get; set; } 
     }
-
-    [Serializable]
-    public class DelInfo : CompressedBinaryFile<DelInfo>
-    {
-        public string Name { get; set; }
-        public List<string> DocIds { get; set; } 
-    }
 }

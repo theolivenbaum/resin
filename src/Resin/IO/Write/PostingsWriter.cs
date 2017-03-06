@@ -1,58 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using Resin.Sys;
 
 namespace Resin.IO.Write
 {
     public class PostingsWriter : IDisposable
     {
-        private readonly StreamWriter _writer;
+        private readonly Stream _stream;
 
-        public PostingsWriter(StreamWriter writer)
+        public PostingsWriter(Stream stream)
         {
-            _writer = writer;
+            _stream = stream;
         }
 
         public void Write(Dictionary<Term, List<DocumentPosting>> postings)
         {
-            var index = 0;
-            var header = postings.Keys.ToList().ToDictionary(x=>x, x=>index++);
-            var headerBytes = Serialize(header);
+            var tagged = new List<DocumentPosting>();
 
-            _writer.WriteLine(Convert.ToBase64String(headerBytes));
-            
-            foreach (var term in header.Keys)
+            foreach (var term in postings)
             {
-                var bytes = Serialize(postings[term]);
+                var termHash = (term.Key.Field+term.Key.Word.Value).ToHash();
 
-                _writer.WriteLine(Convert.ToBase64String(bytes));
+                foreach (var posting in term.Value)
+                {
+                    posting.Term = termHash;
+                    tagged.Add(posting);
+                }
             }
-        }
 
-        private byte[] Serialize(Dictionary<Term, int> header)
-        {
-            using (var stream = new MemoryStream())
-            {
-                BinaryFile.Serializer.Serialize(stream, header);
-                return stream.ToArray();
-            }
-        }
-
-        private byte[] Serialize(List<DocumentPosting> postings)
-        {
-            using (var stream = new MemoryStream())
-            {
-                BinaryFile.Serializer.Serialize(stream, postings.ToArray());
-                return stream.ToArray();
-            }
+            BinaryFile.Serializer.Serialize(_stream, tagged);
         }
 
         public void Dispose()
         {
-            if (_writer != null)
+            if (_stream != null)
             {
-                _writer.Dispose();
+                _stream.Close();
+                _stream.Dispose();
             }
         }
     }

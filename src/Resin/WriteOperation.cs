@@ -150,8 +150,7 @@ namespace Resin
                     var fileName = Path.Combine(_directory, string.Format("{0}-{1}.pos", _indexName, file.Key));
 
                     using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
-                    using (var sw = new StreamWriter(fs, Encoding.Unicode))
-                    using (var writer = new PostingsWriter(sw))
+                    using (var writer = new PostingsWriter(fs))
                     {
                         writer.Write(file.Value);
                     }

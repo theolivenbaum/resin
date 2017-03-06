@@ -20,6 +20,8 @@ namespace Resin.IO
         [NonSerialized]
         private string _indexName;
 
+        public UInt32 Term { get; set; }
+
         public int DocumentId
         {
             get { return _documentId; }
