@@ -9,6 +9,7 @@ using Resin.Analysis;
 using Resin.Querying;
 using Sir.Client;
 
+//TODO: move to own repo.
 namespace Resin.Cli
 {
     class Program
@@ -167,7 +168,7 @@ namespace Resin.Cli
           
             if (inproc)
             {
-                using (var writer = new WriteOperation(dir, new Analyzer(), fileName, take))
+                using (var writer = new StreamWriteOperation(dir, new Analyzer(), fileName, take))
                 {
                     writer.Execute();
                 }

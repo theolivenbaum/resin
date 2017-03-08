@@ -66,6 +66,7 @@
     <Compile Include="IO\Read\MappedTrieReader.cs" />
     <Compile Include="IO\Read\TrieReader.cs" />
     <Compile Include="IO\Write\LcrsTreeBinaryWriter.cs" />
+    <Compile Include="StreamWriteOperation.cs" />
     <Compile Include="Sys\MurmurHash2UInt32Hack.cs" />
     <Compile Include="Sys\Util.cs" />
     <Compile Include="Analysis\IAnalyzer.cs" />
@@ -98,6 +99,7 @@
     <Compile Include="Querying\QueryTerm.cs" />
     <Compile Include="IO\Term.cs" />
     <Compile Include="Analysis\Tfidf.cs" />
+    <Compile Include="Writer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
