@@ -28,7 +28,7 @@ Resin is a modern information retrieval system and a document based search engin
 ##Query the index.
 <a name="inproc" id="inproc"></a>
 
-	// Resin will scan a disk based binary search tree for terms that are an exact match,
+	// Resin will scan a disk based trie for terms that are an exact match,
 	// a near match or is prefixed with the query term/-s.
 	
 	// Postings are fetched and scored for terms found from the scans.
