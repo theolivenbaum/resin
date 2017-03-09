@@ -29,7 +29,7 @@ namespace Resin.IO.Write
                 }
             }
 
-            BinaryFile.Serializer.Serialize(_stream, tagged);
+            GraphSerializer.Serializer.Serialize(_stream, tagged);
         }
 
         public void Dispose()

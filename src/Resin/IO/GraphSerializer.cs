@@ -6,10 +6,10 @@ using NetSerializer;
 namespace Resin.IO
 {
     [Serializable]
-    public abstract class BinaryFile
+    public abstract class GraphSerializer
     {
         [NonSerialized]
-        protected static readonly ILog Log = LogManager.GetLogger(typeof(BinaryFile));
+        protected static readonly ILog Log = LogManager.GetLogger(typeof(GraphSerializer));
 
         [NonSerialized]
         private static readonly Type[] Types =

@@ -32,7 +32,7 @@ namespace Resin.IO.Read
 
         private LcrsTrie Deserialize(Stream stream)
         {
-            return (LcrsTrie)BinaryFile.Serializer.Deserialize(stream);
+            return (LcrsTrie)GraphSerializer.Serializer.Deserialize(stream);
         }
 
         public void Dispose()

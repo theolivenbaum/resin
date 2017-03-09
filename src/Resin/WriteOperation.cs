@@ -1,26 +1,63 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CSharpTest.Net.Serialization;
 using Resin.Analysis;
 using Resin.IO;
+using Resin.IO.Write;
 using Resin.Sys;
 
 namespace Resin
 {
-    public class WriteOperation : Writer
+    public class WriteOperation : Writer, IDisposable
     {
         private readonly IEnumerable<Document> _documents;
+        private readonly Dictionary<string, StreamDocumentWriter> _docWriters;
 
         public WriteOperation(string directory, IAnalyzer analyzer, IEnumerable<Document> documents) :base(directory, analyzer)
         {
             _documents = documents;
+            _docWriters = new Dictionary<string, StreamDocumentWriter>();
         }
 
         protected override IEnumerable<Document> ReadSource()
         {
             return _documents;
+        }
+
+        protected override void WriteDocument(Document doc)
+        {
+            var fileId = doc.Id.ToString(CultureInfo.InvariantCulture).ToDocFileId();
+            StreamDocumentWriter writer;
+
+            if (!_docWriters.TryGetValue(fileId, out writer))
+            {
+                lock (StreamDocumentWriter.SyncRoot)
+                {
+                    if (!_docWriters.TryGetValue(fileId, out writer))
+                    {
+                        var fileName = Path.Combine(_directory, string.Format("{0}-{1}.doc", _indexName, fileId));
+                        var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+                        var sr = new StreamWriter(fs, Encoding.Unicode);
+
+                        writer = new StreamDocumentWriter(sr);
+
+                        _docWriters.Add(fileId, writer);
+                    }
+                }
+            }
+            writer.Write(doc);
+        }
+
+        public void Dispose()
+        {
+            foreach (var writer in _docWriters.Values)
+            {
+                writer.Dispose();
+            }
         }
     }
 

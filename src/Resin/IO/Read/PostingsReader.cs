@@ -18,7 +18,7 @@ namespace Resin.IO.Read
         {
             var termHash = (term.Field + term.Word.Value).ToHash();
 
-            foreach (var posting in (List<DocumentPosting>) BinaryFile.Serializer.Deserialize(_stream))
+            foreach (var posting in (List<DocumentPosting>) GraphSerializer.Serializer.Deserialize(_stream))
             {
                 if (posting.Term == termHash)
                 {

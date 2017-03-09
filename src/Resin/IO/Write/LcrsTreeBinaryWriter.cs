@@ -27,7 +27,7 @@ namespace Resin.IO.Write
         {
             using (var stream = new MemoryStream())
             {
-                BinaryFile.Serializer.Serialize(stream, node);
+                GraphSerializer.Serializer.Serialize(stream, node);
                 return stream.ToArray();
             }
         }

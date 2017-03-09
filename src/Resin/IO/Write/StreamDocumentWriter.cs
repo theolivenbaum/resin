@@ -3,12 +3,12 @@ using System.IO;
 
 namespace Resin.IO.Write
 {
-    public class DocumentWriter : IDisposable
+    public class StreamDocumentWriter : IDisposable
     {
         private readonly StreamWriter _writer;
         public static object SyncRoot = new object();
 
-        public DocumentWriter(StreamWriter writer)
+        public StreamDocumentWriter(StreamWriter writer)
         {
             _writer = writer;
         }
@@ -28,7 +28,7 @@ namespace Resin.IO.Write
         {
             using (var stream = new MemoryStream())
             {
-                BinaryFile.Serializer.Serialize(stream, doc);
+                GraphSerializer.Serializer.Serialize(stream, doc);
                 return stream.ToArray();
             }
         }

@@ -34,7 +34,7 @@ namespace Resin
                 new TermSerializer(),
                 new ArraySerializer<DocumentPosting>(new PostingSerializer()), new TermComparer());
 
-            dbOptions.FileName = Path.Combine(directory, string.Format("{0}-{1}.{2}", _ix.Name, "db", "bpt"));
+            dbOptions.FileName = Path.Combine(directory, string.Format("{0}-{1}.{2}", _ix.Name, "pos", "db"));
             dbOptions.ReadOnly = true;
             dbOptions.LockingFactory = new IgnoreLockFactory();
 
@@ -186,6 +186,7 @@ namespace Resin
 
         public void Dispose()
         {
+            _postingDb.Dispose();
         }
     }
 }

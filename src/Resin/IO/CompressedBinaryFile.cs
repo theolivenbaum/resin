@@ -5,7 +5,7 @@ using System.IO;
 namespace Resin.IO
 {
     [Serializable]
-    public abstract class CompressedBinaryFile<T> : BinaryFile
+    public abstract class CompressedBinaryFile<T> : GraphSerializer
     {
         public virtual void Save(string fileName)
         {
