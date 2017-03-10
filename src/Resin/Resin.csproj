@@ -81,7 +81,7 @@
     <Compile Include="IO\LcrsTrie.cs" />
     <Compile Include="IO\IxInfo.cs" />
     <Compile Include="IO\GraphSerializer.cs" />
-    <Compile Include="IO\Read\StreamingTrieReader.cs" />
+    <Compile Include="IO\Read\StreamingTextTrieReader.cs" />
     <Compile Include="IO\Read\PostingsReader.cs" />
     <Compile Include="IO\Write\PostingsWriter.cs" />
     <Compile Include="IO\QuickLZ.cs" />

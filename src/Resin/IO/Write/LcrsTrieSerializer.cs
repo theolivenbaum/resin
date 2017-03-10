@@ -12,12 +12,11 @@ namespace Resin.IO.Write
     {
         public static void SerializeMapped(this LcrsTrie node, string fileName)
         {
-            using (var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
-            using (var bw = new BinaryWriter(fs, Encoding.Unicode))
+            using (var stream = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 if (node.LeftChild != null)
                 {
-                    node.LeftChild.SerializeMappedDepthFirst(bw, 0);
+                    node.LeftChild.SerializeMappedDepthFirst(stream, 0);
                 }
             }
         }
@@ -54,20 +53,20 @@ namespace Resin.IO.Write
             } 
         }
 
-        private static void SerializeMappedDepthFirst(this LcrsTrie node, BinaryWriter bw, int depth)
+        private static void SerializeMappedDepthFirst(this LcrsTrie node, Stream stream, int depth)
         {
             var bytes = TypeToBytes(new LcrsNode(node, depth, node.GetWeight()));
 
-            bw.Write(bytes, 0, bytes.Length);
+            stream.Write(bytes, 0, bytes.Length);
 
             if (node.LeftChild != null)
             {
-                node.LeftChild.SerializeMappedDepthFirst(bw, depth + 1);
+                node.LeftChild.SerializeMappedDepthFirst(stream, depth + 1);
             }
 
             if (node.RightSibling != null)
             {
-                node.RightSibling.SerializeMappedDepthFirst(bw, depth);
+                node.RightSibling.SerializeMappedDepthFirst(stream, depth);
             }
         }
 

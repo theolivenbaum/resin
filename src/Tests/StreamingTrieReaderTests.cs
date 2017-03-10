@@ -18,7 +18,7 @@ namespace Tests
             var tree = new LcrsTrie('\0', false);
             tree.SerializeToTextFile(fileName);
 
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 var near = reader.Near("ba", 1).Select(w => w.Value).ToList();
 
@@ -28,7 +28,7 @@ namespace Tests
             tree.Add("bad");
             tree.SerializeToTextFile(fileName);
 
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 var near = reader.Near("ba", 1).Select(w => w.Value).ToList();
 
@@ -39,7 +39,7 @@ namespace Tests
             tree.Add("baby");
             tree.SerializeToTextFile(fileName);
 
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 var near = reader.Near("ba", 1).Select(w => w.Value).ToList();
 
@@ -50,7 +50,7 @@ namespace Tests
             tree.Add("b");
             tree.SerializeToTextFile(fileName);
 
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 var near = reader.Near("ba", 1).Select(w => w.Value).ToList();
 
@@ -59,7 +59,7 @@ namespace Tests
                 Assert.IsTrue(near.Contains("b"));
             }
 
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 var near = reader.Near("ba", 2).Select(w => w.Value).ToList();
 
@@ -69,7 +69,7 @@ namespace Tests
                 Assert.IsTrue(near.Contains("baby"));
             }
 
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 var near = reader.Near("ba", 0).Select(w => w.Value).ToList();
 
@@ -79,7 +79,7 @@ namespace Tests
             tree.Add("bananas");
             tree.SerializeToTextFile(fileName);
 
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 var near = reader.Near("ba", 6).Select(w => w.Value).ToList();
 
@@ -90,7 +90,7 @@ namespace Tests
                 Assert.IsTrue(near.Contains("bananas"));
             }
 
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 var near = reader.Near("bazy", 1).Select(w => w.Value).ToList();
 
@@ -101,7 +101,7 @@ namespace Tests
             tree.Add("bank");
             tree.SerializeToTextFile(fileName);
 
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 var near = reader.Near("bazy", 3).Select(w => w.Value).ToList();
 
@@ -112,7 +112,7 @@ namespace Tests
                 Assert.IsTrue(near.Contains("b"));
             }
 
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 var near = reader.Near("baby", 0).Select(w => w.Value).ToList();
 
@@ -150,7 +150,7 @@ namespace Tests
 
             tree.SerializeToTextFile(fileName);
 
-            var prefixed = new StreamingTrieReader(fileName).StartsWith("ra").Select(w=>w.Value).ToList();
+            var prefixed = new StreamingTextTrieReader(fileName).StartsWith("ra").Select(w=>w.Value).ToList();
 
             Assert.That(prefixed.Count, Is.EqualTo(3));
             Assert.IsTrue(prefixed.Contains("rambo"));
@@ -166,7 +166,7 @@ namespace Tests
             var tree = new LcrsTrie('\0', false);
             tree.SerializeToTextFile(fileName);
 
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 Assert.AreEqual(1, tree.GetWeight());
 
@@ -176,17 +176,17 @@ namespace Tests
             tree.Add("xxx");
             tree.SerializeToTextFile(fileName);
 
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 Assert.AreEqual(4, tree.GetWeight());
 
                 Assert.True(reader.HasWord("xxx"));
             }
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 Assert.False(reader.HasWord("baby"));
             }
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 Assert.False(reader.HasWord("dad"));
             }
@@ -194,17 +194,17 @@ namespace Tests
             tree.Add("baby");
             tree.SerializeToTextFile(fileName);
 
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 Assert.AreEqual(8, tree.GetWeight());
 
                 Assert.True(reader.HasWord("xxx"));
             }
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 Assert.True(reader.HasWord("baby"));
             }
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 Assert.False(reader.HasWord("dad"));
             }
@@ -212,15 +212,15 @@ namespace Tests
             tree.Add("dad");
             tree.SerializeToTextFile(fileName);
 
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 Assert.True(reader.HasWord("xxx"));
             }
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 Assert.True(reader.HasWord("baby"));
             }
-            using (var reader = new StreamingTrieReader(fileName))
+            using (var reader = new StreamingTextTrieReader(fileName))
             {
                 Assert.True(reader.HasWord("dad"));
             }

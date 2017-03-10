@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Resin.IO.Read
 {
-    [DebuggerDisplay("{Value} {EndOfWord}")]
+    [Serializable, DebuggerDisplay("{Value} {EndOfWord}")]
     public struct LcrsNode : IEquatable<LcrsNode>
     {
         public readonly char Value;

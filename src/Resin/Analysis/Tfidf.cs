@@ -34,7 +34,9 @@ namespace Resin.Analysis
 
         public void Score(DocumentScore doc)
         {
-            doc.Score = Math.Sqrt(doc.TermCount) * _idf;
+            //var tf = Math.Sqrt(doc.TermCount);
+            var tf = 1 + Math.Log10(doc.TermCount);
+            doc.Score = tf * _idf;
         }
 
         public IScoringScheme CreateScorer(int docsInCorpus, int docsWithTerm)

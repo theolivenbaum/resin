@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using log4net;
 using NetSerializer;
+using Resin.IO.Read;
 
 namespace Resin.IO
 {
@@ -27,7 +28,8 @@ namespace Resin.IO
             typeof (List<int>),
             typeof (List<DocumentPosting>),
             typeof (Term),
-            typeof (Word)
+            typeof (Word),
+            typeof(LcrsNode)
         };
 
         [NonSerialized]

@@ -103,11 +103,20 @@ namespace Resin
         {
             var time = Time();
 
-            var result = DoReadPostings(query.Terms)
-                .Aggregate<IEnumerable<DocumentPosting>, IEnumerable<DocumentPosting>>(
-                    null, DocumentPosting.JoinOr).ToList();
+            var ps = DoReadPostings(query.Terms).ToList();
 
-            query.Postings = result;
+            if (ps.Count > 0)
+            {
+                var result = ps
+                    .Aggregate<IEnumerable<DocumentPosting>, IEnumerable<DocumentPosting>>(
+                        null, DocumentPosting.JoinOr).ToList();
+
+                query.Postings = result;
+            }
+            else
+            {
+                query.Postings = new DocumentPosting[0];
+            }
 
             Log.DebugFormat("read postings for {0} in {1}", query.AsReadable(), time.Elapsed);
 
@@ -117,13 +126,13 @@ namespace Resin
         {
             var result = new ConcurrentBag<List<DocumentPosting>>();
             
-            //foreach(var term in terms)
-            Parallel.ForEach(terms, term =>
+            foreach(var term in terms)
+            //Parallel.ForEach(terms, term =>
             {
                 var postings = GetPostings(term).ToList();
                 postings = Score(postings).ToList();
                 result.Add(new List<DocumentPosting>(postings));
-            });
+            }//);
 
             return result;
         }
@@ -172,7 +181,7 @@ namespace Resin
         {
             var fileId = field.ToTrieFileId();
             var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _ix.Name, fileId));
-            var reader = new StreamingTrieReader(fileName);
+            var reader = new MappedTrieReader(fileName);
 
             return reader;
         }
