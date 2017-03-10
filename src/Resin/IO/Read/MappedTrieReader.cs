@@ -10,13 +10,12 @@ namespace Resin.IO.Read
 
         public MappedTrieReader(string fileName)
         {
-            _stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            _stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.RandomAccess);
         }
 
         protected override void Skip(int count)
         {
-            var buffer = new byte[LcrsTrieHelper.NodeBlockSize*count];
-            _stream.Read(buffer, 0, buffer.Length);
+            _stream.Position += LcrsTrieHelper.NodeBlockSize*count;
         }
 
         protected override LcrsNode Step()
