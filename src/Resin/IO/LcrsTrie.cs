@@ -151,7 +151,7 @@ namespace Resin.IO
             {
                 LeftChild.WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, edits);
             }
-            return compressed.OrderBy(w => w.Distance);
+            return compressed;
         }
 
         private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits)
@@ -174,7 +174,7 @@ namespace Resin.IO
             {
                 if (EndOfWord)
                 {
-                    compressed.Add(new Word(test) { Distance = edits });
+                    compressed.Add(new Word(test));
                 }
             }
 

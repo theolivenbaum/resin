@@ -15,7 +15,10 @@ namespace Resin.IO.Read
 
         protected override void Skip(int count)
         {
-            _stream.Position += LcrsTrieHelper.NodeBlockSize*count;
+            if (count > 0)
+            {
+                _stream.Seek(LcrsTrieHelper.NodeBlockSize * count, SeekOrigin.Current);
+            }
         }
 
         protected override LcrsNode Step()

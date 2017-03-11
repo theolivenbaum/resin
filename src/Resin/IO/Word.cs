@@ -33,13 +33,9 @@ namespace Resin.IO
 
         public readonly string Value;
 
-        [NonSerialized]
-        public int Distance;
-
         public Word(string value)
         {
             Value = value;
-            Distance = 0;
         }
 
         public override string ToString()

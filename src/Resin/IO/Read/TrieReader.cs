@@ -55,15 +55,15 @@ namespace Resin.IO.Read
         {
             var compressed = new List<Word>();
 
-            WithinEditDistanceDepthFirst(word, new string(new char[1]), compressed, 0, edits);
+            WithinEditDistanceDepthFirst(word, string.Empty, compressed, 0, edits);
 
-            return compressed.OrderBy(w => w.Distance);
+            return compressed;
         }
 
         private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits, bool stop = false)
         {
-            var reachedMin = maxEdits == 0 ? depth >= 0 : depth >= word.Length - 1 - maxEdits;
-            var reachedMean = depth >= word.Length - 1;
+            var reachedMin = maxEdits == 0 || depth >= word.Length - 1 - maxEdits;
+            var reachedDepth = depth >= word.Length - 1;
             var reachedMax = depth >= word.Length + maxEdits;
 
             var node = Step();
@@ -95,10 +95,10 @@ namespace Resin.IO.Read
                     {
                         if (node.EndOfWord)
                         {
-                            compressed.Add(new Word(test) {Distance = edits});
+                            compressed.Add(new Word(test));
                         }
                     }
-                    else if(reachedMean)
+                    else if (reachedDepth)
                     {
                         stop = true;
                     }
