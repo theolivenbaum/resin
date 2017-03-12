@@ -57,11 +57,17 @@ namespace Resin.Analysis
         public IEnumerable<string> Analyze(string value)
         {
             if (value == null) yield break;
+
             int token = 0;
             var lowerStr = value.ToLower(_culture);
+
             for (int i = 0; i < lowerStr.Length; ++i)
             {
-                if (!IsSeparator(lowerStr[i])) continue;
+                if (!IsSeparator(lowerStr[i]))
+                {
+                    continue;
+                }
+
                 if (token < i)
                 {
                     var tok = lowerStr.Substring(token, i - token);
@@ -69,6 +75,7 @@ namespace Resin.Analysis
                 }
                 token = i + 1;
             }
+            
             if (token < lowerStr.Length)
             {
                 yield return lowerStr.Substring(token);
@@ -78,8 +85,16 @@ namespace Resin.Analysis
         private bool IsSeparator(char c)
         {
             if (char.IsControl(c) || char.IsSeparator(c) || char.IsWhiteSpace(c)) return true;
+
             var cat = char.GetUnicodeCategory(c);
             if (cat == UnicodeCategory.CurrencySymbol) return false;
+
+            if (char.IsPunctuation(c))
+            {
+                var code = (int) c;
+                return code != 39 && code != 96;
+            }
+
             return char.IsPunctuation(c) || _customTokenSeparators.Contains(c);
         }
     }

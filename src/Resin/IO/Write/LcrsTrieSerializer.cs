@@ -12,10 +12,11 @@ namespace Resin.IO.Write
     {
         public static void SerializeMapped(this LcrsTrie node, string fileName)
         {
-            using (var stream = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (var stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4800))
             {
                 if (node.LeftChild != null)
                 {
+                    var shallow = node.GetLeftChildAndAllOfItsSiblings().Where(n => n.EndOfWord).ToList();
                     node.LeftChild.SerializeMappedDepthFirst(stream, 0);
                 }
             }

@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using NUnit.Framework;
-using Resin;
 using Resin.Analysis;
 
 namespace Tests
