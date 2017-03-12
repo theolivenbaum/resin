@@ -29,13 +29,13 @@ namespace Resin.Analysis
         /// <param name="docsWithTerm"></param>
         public Tfidf(int docsInCorpus, int docsWithTerm)
         {
-            _idf = 1 + Math.Log10(docsInCorpus / (double)docsWithTerm + 1);
+            //_idf = Math.Log10(docsInCorpus / (double)docsWithTerm);
+            _idf = Math.Log10(docsInCorpus - docsWithTerm / (double)docsWithTerm);
         }
 
         public void Score(DocumentScore doc)
         {
-            //var tf = Math.Sqrt(doc.TermCount);
-            var tf = 1 + Math.Log10(doc.TermCount);
+            var tf = 1 + Math.Log10(Math.Pow(doc.TermCount, 1/2));
             doc.Score = tf * _idf;
         }
 

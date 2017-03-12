@@ -7,6 +7,15 @@ namespace Resin.Sys
 {
     internal static class HashExtensions
     {
+        public static string ToBucketName(this char c)
+        {
+            if (c > 47 && c < 128)
+            {
+                return ((int)c).ToString();
+            }
+            
+            return "128";
+        }
         public static string ToPostingsFileId(this Term term)
         {
             if (term == null) throw new ArgumentNullException("term");

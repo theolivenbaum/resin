@@ -78,6 +78,23 @@ namespace Resin.IO
                 foreach (var posting in list.Skip(1))
                 {
                     top.Combine(posting);
+                    top.Scoring.Score += 1;
+                }
+                return top;
+            });
+        }
+
+        public static IEnumerable<DocumentPosting> JoinOrUnbiased(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
+        {
+            if (first == null) return other;
+
+            return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>
+            {
+                var list = group.ToList();
+                var top = list.First();
+                foreach (var posting in list.Skip(1))
+                {
+                    top.Combine(posting);
                 }
                 return top;
             });

@@ -144,12 +144,12 @@ namespace Resin.IO
             return compressed;
         }
 
-        public IEnumerable<Word> Near(string word, int edits)
+        public IEnumerable<Word> Near(string word, int maxEdits)
         {
             var compressed = new List<Word>();
             if (LeftChild != null)
             {
-                LeftChild.WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, edits);
+                LeftChild.WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, maxEdits);
             }
             return compressed;
         }

@@ -126,9 +126,9 @@ namespace Resin
 
         private void DoSerializeTrie(Tuple<string, LcrsTrie> trieEntry)
         {
-            var field = trieEntry.Item1;
+            var key = trieEntry.Item1;
             var trie = trieEntry.Item2;
-            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _indexName, field.ToTrieFileId()));
+            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _indexName, key));
             trie.SerializeMapped(fileName);
         }
 
@@ -148,21 +148,22 @@ namespace Resin
             if (field == null) throw new ArgumentNullException("field");
             if (value == null) throw new ArgumentNullException("value");
 
-            var trie = GetTrie(field);
+            var trie = GetTrie(field, value[0]);
             trie.Add(value);
         }
 
-        private LcrsTrie GetTrie(string field)
+        private LcrsTrie GetTrie(string field, char c)
         {
+            var key = string.Format("{0}-{1}", field.ToTrieFileId(), c.ToBucketName());
             LcrsTrie trie;
-            if (!_tries.TryGetValue(field, out trie))
+            if (!_tries.TryGetValue(key, out trie))
             {
                 lock (_sync)
                 {
-                    if (!_tries.TryGetValue(field, out trie))
+                    if (!_tries.TryGetValue(key, out trie))
                     {
                         trie = new LcrsTrie('\0', false);
-                        _tries[field] = trie;
+                        _tries[key] = trie;
                     }
                 }
             }
@@ -171,7 +172,6 @@ namespace Resin
 
         protected abstract void WriteDocument(Document doc);
         
-
         protected abstract IEnumerable<Document> ReadSource();
 
         private IxInfo CreateIxInfo()

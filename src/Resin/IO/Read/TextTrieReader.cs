@@ -1,20 +1,23 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Resin.IO.Read
 {
-    public class StreamingTextTrieReader : TrieReader, IDisposable
+    public class TextTrieReader : TrieReader, IDisposable
     {
         private readonly TextReader _reader;
+        private readonly int _blockSize;
 
-        public StreamingTextTrieReader(string fileName)
+        public TextTrieReader(string fileName)
         {
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 16*4096, FileOptions.SequentialScan);
             _reader = new StreamReader(fs, Encoding.Unicode, false, 8*1024, false);
+            _blockSize = Marshal.SizeOf(typeof(LcrsNode));
         }
 
-        public StreamingTextTrieReader(TextReader reader)
+        public TextTrieReader(TextReader reader)
         {
             _reader = reader;
             LastRead = LcrsNode.MinValue;
@@ -23,7 +26,7 @@ namespace Resin.IO.Read
 
         protected override void Skip(int count)
         {
-            var buffer = new char[LcrsTrieHelper.NodeBlockSize * count];
+            var buffer = new char[_blockSize * count];
             _reader.ReadBlock(buffer, 0, buffer.Length);
         }
 
@@ -35,8 +38,8 @@ namespace Resin.IO.Read
                 Replay = LcrsNode.MinValue;
                 return replayed;
             }
-            
-            var data = new char[LcrsTrieHelper.NodeBlockSize];
+
+            var data = new char[_blockSize];
 
             if (_reader.Read(data, 0, data.Length) == 0)
             {

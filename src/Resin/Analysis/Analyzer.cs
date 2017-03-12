@@ -86,13 +86,11 @@ namespace Resin.Analysis
         {
             if (char.IsControl(c) || char.IsSeparator(c) || char.IsWhiteSpace(c)) return true;
 
-            var cat = char.GetUnicodeCategory(c);
-            if (cat == UnicodeCategory.CurrencySymbol) return false;
-
             if (char.IsPunctuation(c))
             {
                 var code = (int) c;
-                return code != 39 && code != 96;
+                var isExempted = code == 39 || code == 96;
+                return !isExempted;
             }
 
             return char.IsPunctuation(c) || _customTokenSeparators.Contains(c);

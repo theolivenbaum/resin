@@ -6,6 +6,6 @@ namespace Resin.IO.Read
     {
         bool HasWord(string word);
         IEnumerable<Word> StartsWith(string prefix);
-        IEnumerable<Word> Near(string word, int edits);
+        IEnumerable<Word> Near(string word, int maxEdits);
     }
 }

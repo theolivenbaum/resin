@@ -44,14 +44,13 @@ namespace Resin
         public IList<DocumentPosting> Collect(QueryContext query)
         {
             Scan(query);
-            //GetPostings(query);
 
             var time = Time();
-            var trimmed = query.Reduce().Where(d=>_ix.Deletions.Contains(d.DocumentId) == false).ToList();
+            var reduced = query.Reduce().Where(d=>_ix.Deletions.Contains(d.DocumentId) == false).ToList();
 
             Log.DebugFormat("reduced {0} in {1}", query, time.Elapsed);
 
-            return trimmed;
+            return reduced;
         }
 
         private void Scan(QueryContext query)
@@ -69,35 +68,32 @@ namespace Resin
         private void DoScan(QueryContext query)
         {
             var time = Time();
-            var reader = GetTreeReader(query.Field);
+            var reader = GetTreeReader(query.Field, query.Value[0]);
 
-            if (query.Fuzzy)
+            if (reader == null)
             {
-                query.Terms = reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)).ToList();
-            }
-            else if (query.Prefix)
-            {
-                query.Terms = reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)).ToList();
+                query.Terms = Enumerable.Empty<Term>();
             }
             else
             {
-                //if (reader.HasWord(query.Value))
-                //{
-                    query.Terms = new[]{new Term(query.Field, new Word(query.Value))}.ToList();
-                //}
+                if (query.Fuzzy)
+                {
+                    query.Terms = reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)).ToList();
+                }
+                else if (query.Prefix)
+                {
+                    query.Terms = reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)).ToList();
+                }
+                else
+                {
+                    query.Terms = new[] { new Term(query.Field, new Word(query.Value)) }.ToList();
+                }
             }
 
             Log.DebugFormat("scanned {0} in {1}", query.AsReadable(), time.Elapsed);
 
             DoGetPostings(query);
         }
-
-        //private void GetPostings(QueryContext query)
-        //{
-        //    if (query == null) throw new ArgumentNullException("query");
-
-        //    Parallel.ForEach(new List<QueryContext> { query }.Concat(query.Children), DoGetPostings);
-        //}
 
         private void DoGetPostings(QueryContext query)
         {
@@ -109,7 +105,7 @@ namespace Resin
             {
                 var result = ps
                     .Aggregate<IEnumerable<DocumentPosting>, IEnumerable<DocumentPosting>>(
-                        null, DocumentPosting.JoinOr).ToList();
+                        null, DocumentPosting.JoinOrUnbiased).ToList();
 
                 query.Postings = result;
             }
@@ -127,12 +123,11 @@ namespace Resin
             var result = new ConcurrentBag<List<DocumentPosting>>();
             
             foreach(var term in terms)
-            //Parallel.ForEach(terms, term =>
             {
                 var postings = GetPostings(term).ToList();
                 postings = Score(postings).ToList();
                 result.Add(new List<DocumentPosting>(postings));
-            }//);
+            }
 
             return result;
         }
@@ -149,15 +144,7 @@ namespace Resin
                 }
             }
             
-        } 
-
-        //private PostingsReader GetPostingsReader(Term term)
-        //{
-        //    var fileId = term.ToPostingsFileId();
-        //    var fileName = Path.Combine(_directory, string.Format("{0}-{1}.pos", _ix.Name, fileId));
-        //    var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
-        //    return new PostingsReader(fs);
-        //}
+        }
 
         private IEnumerable<DocumentPosting> Score(IList<DocumentPosting> postings)
         {
@@ -177,10 +164,14 @@ namespace Resin
             }
         }
 
-        private ITrieReader GetTreeReader(string field)
+        private ITrieReader GetTreeReader(string field, char c)
         {
+            var suffix = c.ToBucketName();
             var fileId = field.ToTrieFileId();
-            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _ix.Name, fileId));
+            var fileName = Path.Combine(_directory, string.Format("{0}-{1}-{2}.tri", _ix.Name, fileId, suffix));
+
+            if (!File.Exists(fileName)) return null;
+
             var reader = new MappedTrieReader(fileName);
 
             return reader;

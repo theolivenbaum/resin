@@ -16,7 +16,6 @@ namespace Resin.IO.Write
             {
                 if (node.LeftChild != null)
                 {
-                    var shallow = node.GetLeftChildAndAllOfItsSiblings().Where(n => n.EndOfWord).ToList();
                     node.LeftChild.SerializeMappedDepthFirst(stream, 0);
                 }
             }

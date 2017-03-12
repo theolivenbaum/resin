@@ -87,7 +87,7 @@ namespace Resin
             Parallel.ForEach(collectors, c => postings.Add(c.Collect(query.Clone())));
 
             return postings
-                .Aggregate(DocumentPosting.JoinOr)
+                .Aggregate(DocumentPosting.JoinOrUnbiased)
                 .OrderByDescending(p => p.Scoring.Score).ToList();
         }
 

@@ -51,20 +51,20 @@ namespace Resin.IO.Read
             return compressed;
         }
 
-        public IEnumerable<Word> Near(string word, int edits)
+        public IEnumerable<Word> Near(string word, int maxEdits)
         {
             var compressed = new List<Word>();
 
-            WithinEditDistanceDepthFirst(word, string.Empty, compressed, 0, edits);
+            WithinEditDistanceDepthFirst(word, string.Empty, compressed, 0, maxEdits);
 
             return compressed;
         }
 
-        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits, bool stop = false)
+        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxErrors, bool stop = false)
         {
-            var reachedMin = maxEdits == 0 || depth >= word.Length - 1 - maxEdits;
+            var reachedMin = maxErrors == 0 || depth >= word.Length - 1 - maxErrors;
             var reachedDepth = depth >= word.Length - 1;
-            var reachedMax = depth >= word.Length + maxEdits;
+            var reachedMax = depth >= word.Length + maxErrors;
 
             var node = Step();
 
@@ -91,12 +91,16 @@ namespace Resin.IO.Read
                 {
                     var edits = Levenshtein.Distance(word, test);
 
-                    if (edits <= maxEdits)
+                    if (edits <= maxErrors)
                     {
                         if (node.EndOfWord)
                         {
                             compressed.Add(new Word(test));
                         }
+                    }
+                    else if (edits > maxErrors && reachedDepth)
+                    {
+                        stop = true;
                     }
                     else if (reachedDepth)
                     {
@@ -107,13 +111,13 @@ namespace Resin.IO.Read
                 // Go left (deep)
                 if (node.HaveChild)
                 {
-                    WithinEditDistanceDepthFirst(word, test, compressed, depth + 1, maxEdits, stop);
+                    WithinEditDistanceDepthFirst(word, test, compressed, depth + 1, maxErrors, stop);
                 }
 
                 // Go right (wide)
                 if (node.HaveSibling)
                 {
-                    WithinEditDistanceDepthFirst(word, state, compressed, depth, maxEdits);
+                    WithinEditDistanceDepthFirst(word, state, compressed, depth, maxErrors);
                 }
             }
         }
