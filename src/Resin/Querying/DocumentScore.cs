@@ -19,7 +19,7 @@ namespace Resin.Querying
             _termCount = termCount;
         }
 
-        public void Combine(DocumentScore score)
+        public void Join(DocumentScore score)
         {
             if (!score.DocId.Equals(DocId)) throw new ArgumentException("Doc id differs. Cannot add.", "score");
 

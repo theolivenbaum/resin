@@ -62,12 +62,36 @@ namespace Resin.IO
         {
             if (other.DocumentId != DocumentId) throw new ArgumentException();
 
+            Join(other);
+            Scoring.Score *=2;
+        }
+
+        public void Join(DocumentPosting other)
+        {
+            if (other.DocumentId != DocumentId) throw new ArgumentException();
+
             _count += other.Count;
             _indexName = other.IndexName;
-            Scoring.Combine(other.Scoring);
+            Scoring.Join(other.Scoring);
         }
 
-        public static IEnumerable<DocumentPosting> JoinOr(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
+        public static IEnumerable<DocumentPosting> Join(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
+        {
+            if (first == null) return other;
+
+            return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>
+            {
+                var list = group.ToList();
+                var top = list.First();
+                foreach (var posting in list.Skip(1))
+                {
+                    top.Join(posting);
+                }
+                return top;
+            });
+        }
+
+        public static IEnumerable<DocumentPosting> CombineOr(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
         {
             if (first == null) return other;
 
@@ -78,29 +102,12 @@ namespace Resin.IO
                 foreach (var posting in list.Skip(1))
                 {
                     top.Combine(posting);
-                    top.Scoring.Score += 1;
                 }
                 return top;
             });
         }
 
-        public static IEnumerable<DocumentPosting> JoinOrUnbiased(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
-        {
-            if (first == null) return other;
-
-            return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>
-            {
-                var list = group.ToList();
-                var top = list.First();
-                foreach (var posting in list.Skip(1))
-                {
-                    top.Combine(posting);
-                }
-                return top;
-            });
-        }
-
-        public static IEnumerable<DocumentPosting> JoinAnd(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
+        public static IEnumerable<DocumentPosting> CombineAnd(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
         {
             if (first == null) return other;
 

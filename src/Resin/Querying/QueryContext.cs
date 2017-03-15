@@ -26,7 +26,7 @@ namespace Resin.Querying
 
                 if (child.And)
                 {
-                    first = DocumentPosting.JoinAnd(first, other).ToList();
+                    first = DocumentPosting.CombineAnd(first, other).ToList();
                 }
                 else if (child.Not)
                 {
@@ -42,7 +42,7 @@ namespace Resin.Querying
                 }
                 else // Or
                 {
-                    first = DocumentPosting.JoinOr(first, other).ToList();
+                    first = DocumentPosting.CombineOr(first, other).ToList();
                 }
             }
 

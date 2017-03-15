@@ -99,13 +99,13 @@ namespace Resin
         {
             var time = Time();
 
-            var ps = DoReadPostings(query.Terms).ToList();
+            var postings = DoReadPostings(query.Terms).ToList();
 
-            if (ps.Count > 0)
+            if (postings.Count > 0)
             {
-                var result = ps
+                var result = postings
                     .Aggregate<IEnumerable<DocumentPosting>, IEnumerable<DocumentPosting>>(
-                        null, DocumentPosting.JoinOrUnbiased).ToList();
+                        null, DocumentPosting.Join);
 
                 query.Postings = result;
             }
