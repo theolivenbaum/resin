@@ -1,7 +1,6 @@
 using System;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using Resin.IO.Read;
@@ -17,22 +16,6 @@ namespace Resin.IO.Write
                 if (node.LeftChild != null)
                 {
                     node.LeftChild.SerializeMappedDepthFirst(stream, 0);
-                }
-            }
-        }
-        
-        public static void SerializeBinary(this LcrsTrie node, string fileName)
-        {
-            var children = node.GetLeftChildAndAllOfItsSiblings().ToList();
-
-            using (var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
-            using (var sw = new StreamWriter(fs, Encoding.Unicode))
-            using (var w = new LcrsTreeBinaryWriter(sw))
-            {
-                foreach (var child in children)
-                {
-                    child.RightSibling = null;
-                    w.Write(child);
                 }
             }
         }

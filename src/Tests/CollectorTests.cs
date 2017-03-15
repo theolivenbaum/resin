@@ -6,6 +6,7 @@ using Resin;
 using Resin.Analysis;
 using Resin.IO;
 using Resin.Querying;
+using Resin.Sys;
 
 namespace Tests
 {
@@ -30,7 +31,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new WriteOperation(dir, new Analyzer(), docs.Select(d => new Document(d))))
+            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Execute();
             }
@@ -69,7 +70,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new WriteOperation(dir, new Analyzer(), docs.Select(d => new Document(d))))
+            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Execute();
             }
@@ -81,7 +82,7 @@ namespace Tests
                 var scores = collector.Collect(query).ToList();
 
                 Assert.That(scores.Count, Is.EqualTo(5));
-                Assert.IsTrue(scores.First().DocumentId.Equals("4"));
+                Assert.IsTrue(scores.First().DocumentId.Equals(4));
             }
         }
 
@@ -102,7 +103,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new WriteOperation(dir, new Analyzer(), docs.Select(d => new Document(d))))
+            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Execute();
             }
@@ -114,11 +115,11 @@ namespace Tests
                 var scores = collector.Collect(query).ToList();
 
                 Assert.That(scores.Count, Is.EqualTo(5));
-                Assert.IsTrue(scores.First().DocumentId.Equals("4"));
-                Assert.IsTrue(scores[1].DocumentId.Equals("0"));
-                Assert.IsTrue(scores[2].DocumentId.Equals("1"));
-                Assert.IsTrue(scores[3].DocumentId.Equals("3"));
-                Assert.IsTrue(scores[4].DocumentId.Equals("2"));
+                Assert.IsTrue(scores.First().DocumentId.Equals(4));
+                Assert.IsTrue(scores[1].DocumentId.Equals(0));
+                Assert.IsTrue(scores[2].DocumentId.Equals(1));
+                Assert.IsTrue(scores[3].DocumentId.Equals(3));
+                Assert.IsTrue(scores[4].DocumentId.Equals(2));
             }
         }
 
@@ -140,7 +141,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new WriteOperation(dir, new Analyzer(), docs.Select(d => new Document(d))))
+            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Execute();
             }
@@ -185,7 +186,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new WriteOperation(dir, new Analyzer(), docs.Select(d => new Document(d))))
+            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Execute();
             }
@@ -231,7 +232,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new WriteOperation(dir, new Analyzer(), docs.Select(d => new Document(d))))
+            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Execute();
             }
@@ -288,7 +289,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new WriteOperation(dir, new Analyzer(), docs.Select(d => new Document(d))))
+            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Execute();
             }
@@ -335,7 +336,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new WriteOperation(dir, new Analyzer(), docs.Select(d => new Document(d))))
+            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Execute();
             }
@@ -377,7 +378,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new WriteOperation(dir, new Analyzer(), docs.Select(d => new Document(d))))
+            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Execute();
             }
@@ -411,7 +412,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new WriteOperation(dir, new Analyzer(), docs.Select(d => new Document(d))))
+            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Execute();
             }

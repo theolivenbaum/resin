@@ -17,18 +17,19 @@ namespace Resin
         private readonly int _take;
         private readonly DbDocumentWriter _docWriter;
 
-        public StreamWriteOperation(string directory, IAnalyzer analyzer, string jsonFileName, int take)
+        public StreamWriteOperation(string directory, IAnalyzer analyzer, string jsonFileName, int take = int.MaxValue)
             : this(directory, analyzer, File.Open(jsonFileName, FileMode.Open, FileAccess.Read, FileShare.None), take)
         {
         }
 
-        public StreamWriteOperation(string directory, IAnalyzer analyzer, Stream jsonFile, int take) : base(directory, analyzer)
+        public StreamWriteOperation(string directory, IAnalyzer analyzer, Stream jsonFile, int take = int.MaxValue)
+            : base(directory, analyzer)
         {
             _take = take;
 
             var bs = new BufferedStream(jsonFile);
-            _reader = new StreamReader(bs, Encoding.Unicode);
 
+            _reader = new StreamReader(bs, Encoding.Unicode);
             _docWriter = new DbDocumentWriter(CreateDb());
         }
 
@@ -47,9 +48,7 @@ namespace Resin
 
         protected override IEnumerable<Document> ReadSource()
         {
-            _reader.ReadLine();
-
-            string line;
+            var line = _reader.ReadLine();
             var took = 0;
 
             while ((line = _reader.ReadLine()) != null)

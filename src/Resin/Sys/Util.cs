@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace Resin.Sys
 {
@@ -12,12 +13,27 @@ namespace Resin.Sys
     {
         public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 23);
 
+        public static Stream ToStream(this List<Dictionary<string, string>> documents)
+        {
+            var json = new StringBuilder();
+            json.AppendLine("[");
+
+            foreach (var doc in documents)
+            {
+                json.AppendLine(JsonConvert.SerializeObject(doc, Formatting.None)+",");
+            }
+
+            json.AppendLine("]");
+            var jsonStr = json.ToString();
+            return jsonStr.ToStream();
+        }
+
         public static IEnumerable<Document> ToDocuments(this IEnumerable<IDictionary<string, string>> documents)
         {
             return documents.Select(doc => new Document(doc));
         }
 
-        public static Stream GenerateStream(this string str)
+        public static Stream ToStream(this string str)
         {
             var stream = new MemoryStream();
             var writer = new StreamWriter(stream, Encoding.Unicode);
