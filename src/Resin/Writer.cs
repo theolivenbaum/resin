@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using CSharpTest.Net.Collections;
 using CSharpTest.Net.Serialization;
@@ -16,14 +14,17 @@ using Resin.Sys;
 
 namespace Resin
 {
-    public abstract class Writer
+    public abstract class Writer : IDisposable
     {
-        protected readonly string _directory;
+        protected abstract IEnumerable<Document> ReadSource();
+
+        private readonly string _directory;
         private readonly IAnalyzer _analyzer;
-        protected readonly string _indexName;
+        private readonly string _indexName;
         private readonly Dictionary<string, LcrsTrie> _tries;
         private readonly object _sync = new object();
         private readonly ConcurrentDictionary<string, int> _docCountByField;
+        private readonly DbDocumentWriter _docWriter;
 
         protected Writer(string directory, IAnalyzer analyzer)
         {
@@ -33,19 +34,8 @@ namespace Resin
             _indexName = Util.GetChronologicalFileId();
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
-        }
+            _docWriter = new DbDocumentWriter(CreateDocumentDb());
 
-        private BPlusTree<Term, DocumentPosting[]> CreateDb()
-        {
-            var dbOptions = new BPlusTree<Term, DocumentPosting[]>.OptionsV2(
-                new TermSerializer(),
-                new ArraySerializer<DocumentPosting>(new PostingSerializer()), new TermComparer());
-
-            dbOptions.FileName = Path.Combine(_directory, string.Format("{0}-{1}.{2}", _indexName, "pos", "db"));
-            dbOptions.CreateFile = CreatePolicy.Always;
-            dbOptions.LockingFactory = new IgnoreLockFactory();
-
-            return new BPlusTree<Term, DocumentPosting[]>(dbOptions);
         }
 
         public string Execute()
@@ -100,7 +90,7 @@ namespace Resin
         {
             return Task.Run(() =>
             {
-                using (var db = CreateDb())
+                using (var db = CreatePostingsDb())
                 {
                     foreach (var term in matrix)
                     {
@@ -143,19 +133,25 @@ namespace Resin
             });
         }
 
+        private void WriteDocument(Document doc)
+        {
+            _docWriter.Write(doc);
+        }
+
         private void WriteToTrie(string field, string value)
         {
             if (field == null) throw new ArgumentNullException("field");
             if (value == null) throw new ArgumentNullException("value");
 
-            var trie = GetTrie(field, value[0]);
+            var trie = GetTrie(field, value);
             trie.Add(value);
         }
 
-        private LcrsTrie GetTrie(string field, char c)
+        private LcrsTrie GetTrie(string field, string token)
         {
-            var key = string.Format("{0}-{1}", field.ToTrieFileId(), c.ToBucketName());
+            var key = string.Format("{0}-{1}", field.ToTrieFileId(), token.ToBucketName());
             LcrsTrie trie;
+
             if (!_tries.TryGetValue(key, out trie))
             {
                 lock (_sync)
@@ -170,9 +166,32 @@ namespace Resin
             return trie;
         }
 
-        protected abstract void WriteDocument(Document doc);
-        
-        protected abstract IEnumerable<Document> ReadSource();
+        private BPlusTree<int, byte[]> CreateDocumentDb()
+        {
+            var dbOptions = new BPlusTree<int, byte[]>.OptionsV2(
+                PrimitiveSerializer.Int32,
+                PrimitiveSerializer.Bytes);
+
+            dbOptions.FileName = Path.Combine(_directory, string.Format("{0}-{1}.{2}", _indexName, "doc", "db"));
+            dbOptions.CreateFile = CreatePolicy.Always;
+            dbOptions.LockingFactory = new IgnoreLockFactory();
+
+            return new BPlusTree<int, byte[]>(dbOptions);
+        }
+
+
+        private BPlusTree<Term, DocumentPosting[]> CreatePostingsDb()
+        {
+            var dbOptions = new BPlusTree<Term, DocumentPosting[]>.OptionsV2(
+                new TermSerializer(),
+                new ArraySerializer<DocumentPosting>(new PostingSerializer()), new TermComparer());
+
+            dbOptions.FileName = Path.Combine(_directory, string.Format("{0}-{1}.{2}", _indexName, "pos", "db"));
+            dbOptions.CreateFile = CreatePolicy.Always;
+            dbOptions.LockingFactory = new IgnoreLockFactory();
+
+            return new BPlusTree<Term, DocumentPosting[]>(dbOptions);
+        }
 
         private IxInfo CreateIxInfo()
         {
@@ -184,7 +203,11 @@ namespace Resin
             };
         }
 
-        
+        public void Dispose()
+        {
+            _docWriter.Dispose();
+
+        }
     }
 
 }

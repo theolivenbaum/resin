@@ -1,12 +1,15 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using log4net;
 using Resin.IO.Write;
 
 namespace Resin.IO.Read
 {
     public class MappedTrieReader : TrieReader, IDisposable
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(MappedTrieReader));
+
         private readonly Stream _stream;
         private readonly int _blockSize;
 
@@ -14,6 +17,8 @@ namespace Resin.IO.Read
         {
             _stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.RandomAccess);
             _blockSize = Marshal.SizeOf(typeof (LcrsNode));
+
+            Log.DebugFormat("opened {0}", fileName);
         }
 
         protected override void Skip(int count)

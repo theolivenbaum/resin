@@ -53,6 +53,7 @@ namespace Resin
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
+            var time = Time();
             var parseTime = Time();
             var queryContext = _parser.Parse(query);
 
@@ -66,10 +67,9 @@ namespace Resin
             var scored = Collect(queryContext);
             var skip = page * size;
             var paged = scored.Skip(skip).Take(size);
-            var time = Time();
             var docs = paged.Select(GetDoc).ToList();
 
-            Log.DebugFormat("read docs for {0} in {1}", queryContext, time.Elapsed);
+            Log.DebugFormat("searched {0} in {1}", queryContext, time.Elapsed);
 
             return new Result { Docs = docs, Total = scored.Count }; 
         }

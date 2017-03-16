@@ -15,7 +15,6 @@ namespace Resin
     {
         private readonly StreamReader _reader;
         private readonly int _take;
-        private readonly DbDocumentWriter _docWriter;
 
         public StreamWriteOperation(string directory, IAnalyzer analyzer, string jsonFileName, int take = int.MaxValue)
             : this(directory, analyzer, File.Open(jsonFileName, FileMode.Open, FileAccess.Read, FileShare.None), take)
@@ -30,21 +29,9 @@ namespace Resin
             var bs = new BufferedStream(jsonFile);
 
             _reader = new StreamReader(bs, Encoding.Unicode);
-            _docWriter = new DbDocumentWriter(CreateDb());
         }
 
-        private BPlusTree<int, byte[]> CreateDb()
-        {
-            var dbOptions = new BPlusTree<int, byte[]>.OptionsV2(
-                PrimitiveSerializer.Int32, 
-                PrimitiveSerializer.Bytes);
-
-            dbOptions.FileName = Path.Combine(_directory, string.Format("{0}-{1}.{2}", _indexName, "doc", "db"));
-            dbOptions.CreateFile = CreatePolicy.Always;
-            dbOptions.LockingFactory = new IgnoreLockFactory();
-
-            return new BPlusTree<int, byte[]>(dbOptions);
-        }
+       
 
         protected override IEnumerable<Document> ReadSource()
         {
@@ -63,16 +50,6 @@ namespace Resin
 
                 yield return new Document(dic);
             }
-        }
-
-        protected override void WriteDocument(Document doc)
-        {
-            _docWriter.Write(doc);
-        }
-
-        public void Dispose()
-        {
-            _docWriter.Dispose();
         }
     }
 }

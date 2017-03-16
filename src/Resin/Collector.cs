@@ -68,7 +68,7 @@ namespace Resin
         private void DoScan(QueryContext query)
         {
             var time = Time();
-            var reader = GetTreeReader(query.Field, query.Value[0]);
+            var reader = GetTreeReader(query.Field, query.Value);
 
             if (reader == null)
             {
@@ -164,9 +164,9 @@ namespace Resin
             }
         }
 
-        private ITrieReader GetTreeReader(string field, char c)
+        private ITrieReader GetTreeReader(string field, string token)
         {
-            var suffix = c.ToBucketName();
+            var suffix = token.ToBucketName();
             var fileId = field.ToTrieFileId();
             var fileName = Path.Combine(_directory, string.Format("{0}-{1}-{2}.tri", _ix.Name, fileId, suffix));
 

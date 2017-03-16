@@ -7,14 +7,23 @@ namespace Resin.Sys
 {
     internal static class HashExtensions
     {
-        public static string ToBucketName(this char c)
+        public static string ToBucketName(this string token)
         {
-            if (c > 47 && c < 128)
+            for (int index = 0; index < token.Length; index++)
             {
-                return ((int)c).ToString();
+                var c = token[index];
+
+                if (c > 127)
+                {
+                    if (c > 255)
+                    {
+                        return "256";
+                    }
+                    return "128";
+                }
             }
             
-            return "128";
+            return ((int)token[0]).ToString(CultureInfo.InvariantCulture);
         }
         public static string ToPostingsFileId(this Term term)
         {

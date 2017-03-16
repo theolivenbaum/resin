@@ -78,10 +78,11 @@ namespace Resin.Cli
                 using (var s = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf()))
                 {
                     result = s.Search(q, page, size);
-                    var docs = result.Docs.ToList();
 
                     timer.Stop();
 
+                    var docs = result.Docs;
+                    
                     position = 0 + (page * size);
 
                     PrintHeaders();
