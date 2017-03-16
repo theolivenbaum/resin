@@ -73,11 +73,10 @@ namespace Resin.Cli
 
             if (inproc)
             {
-                
+                var timer = new Stopwatch();
+                timer.Start();
                 using (var s = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf()))
                 {
-                    var timer = new Stopwatch();
-                    timer.Start();
                     result = s.Search(q, page, size);
 
                     Console.WriteLine(timer.Elapsed);

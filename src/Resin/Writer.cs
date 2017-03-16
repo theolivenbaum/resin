@@ -35,7 +35,6 @@ namespace Resin
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
             _docWriter = new DbDocumentWriter(CreateDocumentDb());
-
         }
 
         public string Execute()

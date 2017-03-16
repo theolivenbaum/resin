@@ -8,7 +8,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using CSharpTest.Net.Collections;
 using CSharpTest.Net.Serialization;
-using CSharpTest.Net.Synchronization;
 using log4net;
 using Resin.Analysis;
 using Resin.IO;
@@ -50,8 +49,6 @@ namespace Resin
 
             dbOptions.FileName = Path.Combine(_directory, string.Format("{0}-{1}.{2}", _indices.Values.First().Name, "doc", "db"));
             dbOptions.ReadOnly = true;
-            dbOptions.LockingFactory = new IgnoreLockFactory();
-
             return new BPlusTree<int, byte[]>(dbOptions);
         }
 
@@ -69,12 +66,7 @@ namespace Resin
                 return new Result { Docs = new List<Document>() };
             }
 
-            var collectTime = Time();
-
             var scored = Collect(queryContext);
-
-            Log.DebugFormat("collected {0} in {1}", queryContext, collectTime.Elapsed);
-            
             var skip = page * size;
             var paged = scored.Skip(skip).Take(size);
 

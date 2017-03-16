@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CSharpTest.Net.Collections;
-using CSharpTest.Net.Synchronization;
 using log4net;
 using Resin.Analysis;
 using Resin.IO;
@@ -30,15 +29,17 @@ namespace Resin
             _ix = ix;
             _scorer = scorer;
 
+            var initTimer = Time();
             var dbOptions = new BPlusTree<Term, DocumentPosting[]>.OptionsV2(
                 new TermSerializer(),
                 new ArraySerializer<DocumentPosting>(new PostingSerializer()), new TermComparer());
 
             dbOptions.FileName = Path.Combine(directory, string.Format("{0}-{1}.{2}", _ix.Name, "pos", "db"));
             dbOptions.ReadOnly = true;
-            dbOptions.LockingFactory = new IgnoreLockFactory();
 
             _postingDb = new BPlusTree<Term, DocumentPosting[]>(dbOptions);
+
+            Log.DebugFormat("init collector in {0}", initTimer.Elapsed);
         }
 
         public IList<DocumentPosting> Collect(QueryContext query)
