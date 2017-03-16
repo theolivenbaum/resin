@@ -46,7 +46,7 @@ namespace Resin
             Scan(query);
 
             var time = Time();
-            var reduced = query.Reduce().Where(d=>_ix.Deletions.Contains(d.DocumentId) == false).ToList();
+            var reduced = query.Reduce().Where(d => _ix.Deletions.Contains(d.DocumentId) == false).ToList();
 
             Log.DebugFormat("reduced {0} in {1}", query, time.Elapsed);
 

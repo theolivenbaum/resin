@@ -32,10 +32,14 @@ namespace Resin
             _parser = parser;
             _scorer = scorer;
 
+            var initTimer = Time();
             var ixFiles = GetIndexFileNamesInChronologicalOrder();
+            
             _indices = ixFiles.Select(IxInfo.Load).ToDictionary(x => x.Name);
-
+            
             _docReader = new DbDocumentReader(OpenDocDb());
+            
+            Log.DebugFormat("init searcher in {0}", initTimer.Elapsed);
         }
 
         private BPlusTree<int, byte[]> OpenDocDb()
@@ -53,8 +57,9 @@ namespace Resin
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
-            var time = Time();
+            var searchTime = Time();
             var parseTime = Time();
+
             var queryContext = _parser.Parse(query);
 
             Log.DebugFormat("parsed query {0} in {1}", queryContext, parseTime.Elapsed);
@@ -64,14 +69,26 @@ namespace Resin
                 return new Result { Docs = new List<Document>() };
             }
 
+            var collectTime = Time();
+
             var scored = Collect(queryContext);
+
+            Log.DebugFormat("collected {0} in {1}", queryContext, collectTime.Elapsed);
+            
             var skip = page * size;
             var paged = scored.Skip(skip).Take(size);
+
+            var docTime = Time();
+
             var docs = paged.Select(GetDoc).ToList();
 
-            Log.DebugFormat("searched {0} in {1}", queryContext, time.Elapsed);
+            Log.DebugFormat("fetched {0} docs for query {1} in {2}", docs.Count, queryContext, docTime.Elapsed);
 
-            return new Result { Docs = docs, Total = scored.Count }; 
+            var result = new Result { Docs = docs, Total = scored.Count };
+
+            Log.DebugFormat("searched {0} in {1}", queryContext, searchTime.Elapsed);
+
+            return result;
         }
 
         private string[] GetIndexFileNamesInChronologicalOrder()

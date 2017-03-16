@@ -63,38 +63,43 @@ namespace Resin.Cli
             var page = 0;
             var size = 10;
             var url = ConfigurationManager.AppSettings.Get("sir.endpoint");
-            int position;
             Result result;
 
             if (Array.IndexOf(args, "-p") > 0) page = int.Parse(args[Array.IndexOf(args, "-p") + 1]);
             if (Array.IndexOf(args, "-s") > 0) size = int.Parse(args[Array.IndexOf(args, "-s") + 1]);
             if (Array.IndexOf(args, "--url") > 0) url = args[Array.IndexOf(args, "--url") + 1];
 
-            var timer = new Stopwatch();
-            timer.Start();
+
 
             if (inproc)
             {
+                
                 using (var s = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf()))
                 {
+                    var timer = new Stopwatch();
+                    timer.Start();
                     result = s.Search(q, page, size);
+
+                    Console.WriteLine(timer.Elapsed);
 
                     timer.Stop();
 
                     var docs = result.Docs;
-                    
-                    position = 0 + (page * size);
 
                     PrintHeaders();
 
                     foreach (var doc in docs)
                     {
-                        Print(doc, position++);
+                        Print(doc);
                     }
+
+                    Console.WriteLine("\r\n{0} results of {1} in {2}", (page + 1) * size, result.Total, timer.Elapsed);  
                 }
             }
             else
             {
+                var timer = new Stopwatch();
+                timer.Start();
                 using (var s = new SearchClient(indexName, url))
                 {
                     result = s.Search(q, page, size);
@@ -102,18 +107,17 @@ namespace Resin.Cli
 
                     timer.Stop();
 
-                    position = 0 + (page * size);
-
                     PrintHeaders();
 
                     foreach (var doc in docs)
                     {
-                        Print(doc, position++);
+                        Print(doc);
                     }
+
+                    Console.WriteLine("\r\n{0} results of {1} in {2}", (page + 1) * size, result.Total, timer.Elapsed);  
                 }
             }
 
-            Console.WriteLine("\r\n{0} results of {1} in {2}", position, result.Total, timer.Elapsed);  
         }
 
         private static void PrintHeaders()
@@ -121,7 +125,6 @@ namespace Resin.Cli
             Console.WriteLine();
 
             Console.WriteLine(string.Join(string.Empty,
-                    string.Empty.PadRight(7),
                     "docid".PadRight(10),
                     "score".PadRight(10),
                     "label".PadRight(70),
@@ -130,10 +133,9 @@ namespace Resin.Cli
             Console.WriteLine();
         }
 
-        private static void Print(Document doc, int position)
+        private static void Print(Document doc)
         {
             Console.WriteLine(string.Join(string.Empty,
-                            (position).ToString(CultureInfo.InvariantCulture).PadRight(7),
                             doc.Fields["_id"].ToString(CultureInfo.InvariantCulture).PadRight(10),
                             doc.Fields["__score"].ToString(CultureInfo.InvariantCulture).PadRight(10).Substring(0, 9).PadRight(10),
                             (doc.Fields["label"] ?? string.Empty).Substring(0, Math.Min(69, (doc.Fields["label"] ?? string.Empty).Length)).PadRight(70),
