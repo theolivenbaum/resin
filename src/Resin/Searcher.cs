@@ -88,23 +88,23 @@ namespace Resin
             return Directory.GetFiles(_directory, "*.ix").OrderBy(s => s).ToArray();
         }
 
-        private IList<DocumentPosting> Collect(QueryContext query)
+        private IList<DocumentScore> Collect(QueryContext query)
         {
             var collectors = _indices.Values.Select(ix => new Collector(_directory, ix, _scorer)).ToList();          
-            var postings = new ConcurrentBag<IEnumerable<DocumentPosting>>();
+            var scores = new ConcurrentBag<IEnumerable<DocumentScore>>();
 
-            Parallel.ForEach(collectors, c => postings.Add(c.Collect(query.Clone())));
+            Parallel.ForEach(collectors, c => scores.Add(c.Collect(query.Clone())));
 
-            return postings
-                .Aggregate(DocumentPosting.Join)
-                .OrderByDescending(p => p.Scoring.Score).ToList();
+            return scores
+                .Aggregate(DocumentScore.CombineOr)
+                .OrderByDescending(p => p.Score).ToList();
         }
 
-        private Document GetDoc(DocumentPosting posting)
+        private Document GetDoc(DocumentScore score)
         {
-            var doc = _docReader.Get(posting.DocumentId);
+            var doc = _docReader.Get(score.DocumentId);
 
-            doc.Fields["__score"] = posting.Scoring.Score.ToString(CultureInfo.InvariantCulture);
+            doc.Fields["__score"] = score.Score.ToString(CultureInfo.InvariantCulture);
 
             return doc; 
         }

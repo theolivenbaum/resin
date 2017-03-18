@@ -1,4 +1,5 @@
 ﻿using System;
+using Resin.IO;
 using Resin.Querying;
 
 namespace Resin.Analysis
@@ -30,13 +31,14 @@ namespace Resin.Analysis
         public Tfidf(int docsInCorpus, int docsWithTerm)
         {
             //_idf = Math.Log10(docsInCorpus / (double)docsWithTerm);
-            _idf = Math.Log10(docsInCorpus - docsWithTerm / (double)docsWithTerm);
+            _idf = Math.Log10(docsInCorpus / (double)docsWithTerm);
         }
 
-        public void Score(DocumentScore doc)
+        public DocumentScore Score(DocumentPosting posting)
         {
-            var tf = 1 + Math.Log10(Math.Pow(doc.TermCount, 1/2));
-            doc.Score = tf * _idf;
+            //var tf = 1 + Math.Log10(Math.Pow(posting.Count, 1 / 2));
+            var score = Math.Sqrt(posting.Count) * _idf;
+            return new DocumentScore(posting.DocumentId, score);
         }
 
         public IScoringScheme CreateScorer(int docsInCorpus, int docsWithTerm)

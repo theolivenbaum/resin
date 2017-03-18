@@ -10,15 +10,16 @@ namespace Resin.Querying
         public IList<QueryContext> Children { get; set; }
         public IEnumerable<Term> Terms { get; set; }
         public IEnumerable<DocumentPosting> Postings { get; set; }
+        public IEnumerable<DocumentScore> Scored { get; set; }
 
         public QueryContext(string field, string value) : base(field, value)
         {
             Children = new List<QueryContext>();
         }
 
-        public IEnumerable<DocumentPosting> Reduce()
+        public IEnumerable<DocumentScore> Reduce()
         {
-            var first = Postings.ToList();
+            var first = Scored.ToList();
 
             foreach (var child in Children)
             {
@@ -26,14 +27,14 @@ namespace Resin.Querying
 
                 if (child.And)
                 {
-                    first = DocumentPosting.CombineAnd(first, other).ToList();
+                    first = DocumentScore.CombineAnd(first, other).ToList();
                 }
                 else if (child.Not)
                 {
                     var dic = first.ToDictionary(x => x.DocumentId);
                     foreach (var posting in other)
                     {
-                        DocumentPosting exists;
+                        DocumentScore exists;
                         if (dic.TryGetValue(posting.DocumentId, out exists))
                         {
                             first.Remove(exists);
@@ -42,7 +43,7 @@ namespace Resin.Querying
                 }
                 else // Or
                 {
-                    first = DocumentPosting.CombineOr(first, other).ToList();
+                    first = DocumentScore.CombineOr(first, other).ToList();
                 }
             }
 
@@ -51,7 +52,7 @@ namespace Resin.Querying
 
         public QueryContext Clone()
         {
-            return new QueryContext(Field, Value){Children = Children, And = And, Not = Not, Edits = Edits,Fuzzy = Fuzzy, Prefix = Prefix};
+            return new QueryContext(Field, Value) {Children = Children, And = And, Not = Not, Edits = Edits, Fuzzy = Fuzzy, Prefix = Prefix};
         }
       
         public override string ToString()

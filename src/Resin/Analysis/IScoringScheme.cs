@@ -1,10 +1,11 @@
-﻿using Resin.Querying;
+﻿using Resin.IO;
+using Resin.Querying;
 
 namespace Resin.Analysis
 {
     public interface IScoringScheme
     {
-        void Score(DocumentScore doc);
+        DocumentScore Score(DocumentPosting posting);
         IScoringScheme CreateScorer(int docsInCorpus, int docsWithTerm);
     }
 }

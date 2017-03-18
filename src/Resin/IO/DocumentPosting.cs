@@ -1,78 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Resin.Querying;
 
 namespace Resin.IO
 {
     [Serializable]
-    public class DocumentPosting
+    public struct DocumentPosting
     {
-        private readonly int _documentId;
-        private int _count;
-
-        [NonSerialized]
-        private string _field;
-
-        [NonSerialized]
-        private DocumentScore _scoring;
-
-        [NonSerialized]
-        private string _indexName;
-
-        public UInt32 Term { get; set; }
-
-        public int DocumentId
-        {
-            get { return _documentId; }
-        }
-
-        public int Count
-        {
-            get { return _count; }
-        }
-
-        public string IndexName
-        {
-            get { return _indexName; }
-            set { _indexName = value; }
-        }
-
-        public string Field
-        {
-            get { return _field; }
-            set { _field = value; }
-        }
-
-        public DocumentScore Scoring
-        {
-            get { return _scoring; }
-            set { _scoring = value; }
-        }
+        public int DocumentId;
+        public int Count;
 
         public DocumentPosting(int documentId, int count)
         {
             if (count < 1) throw new ArgumentOutOfRangeException("count");
 
-            _documentId = documentId;
-            _count = count;
+            DocumentId = documentId;
+            Count = count;
         }
 
-        public void Combine(DocumentPosting other)
+        public DocumentPosting Join(DocumentPosting other)
         {
             if (other.DocumentId != DocumentId) throw new ArgumentException();
 
-            Join(other);
-            Scoring.Score *=2;
-        }
-
-        public void Join(DocumentPosting other)
-        {
-            if (other.DocumentId != DocumentId) throw new ArgumentException();
-
-            _count += other.Count;
-            _indexName = other.IndexName;
-            Scoring.Join(other.Scoring);
+            return new DocumentPosting(DocumentId, Count + other.Count);
         }
 
         public static IEnumerable<DocumentPosting> Join(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
@@ -82,48 +32,13 @@ namespace Resin.IO
             return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>
             {
                 var list = group.ToList();
-                var top = list.First();
-                foreach (var posting in list.Skip(1))
+                var tip = list.First();
+                foreach (DocumentPosting posting in list.Skip(1))
                 {
-                    top.Join(posting);
+                    tip = tip.Join(posting);
                 }
-                return top;
+                return tip;
             });
-        }
-
-        public static IEnumerable<DocumentPosting> CombineOr(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
-        {
-            if (first == null) return other;
-
-            return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>
-            {
-                var list = group.ToList();
-                var top = list.First();
-                foreach (var posting in list.Skip(1))
-                {
-                    top.Combine(posting);
-                }
-                return top;
-            });
-        }
-
-        public static IEnumerable<DocumentPosting> CombineAnd(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
-        {
-            if (first == null) return other;
-
-            var dic = other.ToDictionary(x => x.DocumentId);
-            var remainder = new List<DocumentPosting>();
-
-            foreach (var posting in first)
-            {
-                DocumentPosting exists;
-                if (dic.TryGetValue(posting.DocumentId, out exists))
-                {
-                    posting.Combine(exists);
-                    remainder.Add(posting);
-                }
-            }
-            return remainder;
         }
 
         public override string ToString()

@@ -42,23 +42,24 @@ namespace Resin
             Log.DebugFormat("init collector in {0}", initTimer.Elapsed);
         }
 
-        public IList<DocumentPosting> Collect(QueryContext query)
+        public IList<DocumentScore> Collect(QueryContext query)
         {
-            Scan(query);
+            var queries = new List<QueryContext> {query}.Concat(query.Children).ToList();
+
+            Scan(queries);
+            Score(queries);
 
             var time = Time();
-            var reduced = query.Reduce().Where(d => _ix.Deletions.Contains(d.DocumentId) == false).ToList();
+            var reduced = query.Reduce().ToList();
 
             Log.DebugFormat("reduced {0} in {1}", query, time.Elapsed);
 
             return reduced;
         }
 
-        private void Scan(QueryContext query)
+        private void Scan(IList<QueryContext> queries)
         {
-            if (query == null) throw new ArgumentNullException("query");
-         
-            Parallel.ForEach(new List<QueryContext> {query}.Concat(query.Children), DoScan);
+            Parallel.ForEach(queries, DoScan);
 
             //foreach (var q in new List<QueryContext> { query }.Concat(query.Children))
             //{
@@ -122,13 +123,17 @@ namespace Resin
         private IEnumerable<IEnumerable<DocumentPosting>> DoReadPostings(IEnumerable<Term> terms)
         {
             var result = new ConcurrentBag<List<DocumentPosting>>();
-            
-            foreach(var term in terms)
+
+            Parallel.ForEach(terms, term =>
             {
                 var postings = GetPostings(term).ToList();
-                postings = Score(postings).ToList();
                 result.Add(new List<DocumentPosting>(postings));
-            }
+            });
+            //foreach(var term in terms)
+            //{
+            //    var postings = GetPostings(term).ToList();
+            //    result.Add(new List<DocumentPosting>(postings));
+            //}
 
             return result;
         }
@@ -140,27 +145,30 @@ namespace Resin
             {
                 foreach (var posting in postings)
                 {
-                    posting.Field = term.Field;
                     yield return posting;
                 }
             }
-            
         }
 
-        private IEnumerable<DocumentPosting> Score(IList<DocumentPosting> postings)
+        private void Score(IList<QueryContext> queries)
+        {
+            foreach (var query in queries)
+            {
+                query.Scored = DoScore(query.Postings.ToList(), query.Field);
+            }
+        }
+
+        private IEnumerable<DocumentScore> DoScore(IList<DocumentPosting> postings, string field)
         {
             if (postings.Any())
             {
-                var scorer = _scorer.CreateScorer(_ix.DocumentCount.DocCount[postings.First().Field], postings.Count);
+                var scorer = _scorer.CreateScorer(_ix.DocumentCount.DocCount[field], postings.Count);
 
                 foreach (var posting in postings)
                 {
-                    posting.Scoring = new DocumentScore(posting.DocumentId, posting.Count);
-                    posting.IndexName = _ix.Name;
+                    var score = scorer.Score(posting);
 
-                    scorer.Score(posting.Scoring);
-
-                    yield return posting;
+                    yield return score;
                 }
             }
         }
