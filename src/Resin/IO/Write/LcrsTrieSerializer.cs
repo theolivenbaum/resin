@@ -1,8 +1,6 @@
 using System;
-using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 using Resin.IO.Read;
 
 namespace Resin.IO.Write
@@ -20,22 +18,6 @@ namespace Resin.IO.Write
             }
         }
 
-        public static void SerializeToTextFile(this LcrsTrie node, string fileName)
-        {
-            var sb = new StringBuilder();
-
-            if (node.LeftChild != null)
-            {
-                node.LeftChild.SerializeToTextDepthFirst(sb, 0);
-            }
-
-            using (var fs = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
-            using (var sw = new StreamWriter(fs, Encoding.Unicode))
-            {
-                sw.Write(sb.ToString());
-            } 
-        }
-
         private static void SerializeMappedDepthFirst(this LcrsTrie node, Stream stream, int depth)
         {
             var bytes = TypeToBytes(new LcrsNode(node, depth, node.GetWeight()));
@@ -49,28 +31,6 @@ namespace Resin.IO.Write
             if (node.RightSibling != null)
             {
                 node.RightSibling.SerializeMappedDepthFirst(stream, depth);
-            }
-        }
-
-        private static void SerializeToTextDepthFirst(this LcrsTrie node, StringBuilder sb, int depth)
-        {
-            var weight = node.GetWeight();
-
-            sb.Append(node.Value);
-            sb.Append(node.RightSibling == null ? "0" : "1");
-            sb.Append(node.LeftChild == null ? "0" : "1");
-            sb.Append(node.EndOfWord ? "1" : "0");
-            sb.Append(depth.ToString(CultureInfo.InvariantCulture).PadRight(10));
-            sb.Append(weight.ToString(CultureInfo.InvariantCulture).PadRight(10));
-
-            if (node.LeftChild != null)
-            {
-                node.LeftChild.SerializeToTextDepthFirst(sb, depth + 1);
-            }
-
-            if (node.RightSibling != null)
-            {
-                node.RightSibling.SerializeToTextDepthFirst(sb, depth);
             }
         }
 
