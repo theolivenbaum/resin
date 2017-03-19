@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using log4net;
 using NetSerializer;
-using Resin.IO.Read;
 
 namespace Resin.IO
 {
@@ -17,19 +16,13 @@ namespace Resin.IO
         {
             typeof (string), 
             typeof (int), 
-            typeof (char), 
-            typeof (bool), 
+            typeof (IxInfo),
+            typeof (List<int>),
             typeof (DocumentCount),
-            typeof (Dictionary<string, string>),
             typeof (Dictionary<string, int>),
             typeof (Document),
-            typeof (IxInfo),
-            typeof (List<string>),
-            typeof (List<int>),
-            typeof (List<DocumentPosting>),
-            typeof (Term),
-            typeof (Word),
-            typeof(LcrsNode)
+            typeof (Dictionary<string, string>),
+            typeof (List<DocumentPosting>)
         };
 
         [NonSerialized]
