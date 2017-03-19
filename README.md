@@ -39,6 +39,11 @@ Resin is a vector space model implementation, a modern type information retrieva
 	// so that you can fetch them all if you will, by the built in paging mechanism.
 	
 	var result = new Searcher(dir).Search("label:good bad~ description:leone");
+	
+	// Document scores, i.e. the aggregated tf-idf weights a document recieve from a simple or compound query,
+	// is also included in the result:
+	
+	var scoreOfFirstDoc = result.Docs.First().Fields["__score"];
 
 [More documentation here](https://github.com/kreeben/resin/wiki). 
 
