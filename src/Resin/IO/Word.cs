@@ -5,6 +5,13 @@ namespace Resin.IO
     [Serializable]
     public struct Word : IEquatable<Word>
     {
+        public readonly string Value;
+
+        public Word(string value)
+        {
+            Value = value;
+        }
+
         public bool Equals(Word other)
         {
             return string.Equals(Value, other.Value);
@@ -29,13 +36,6 @@ namespace Resin.IO
         public static bool operator !=(Word left, Word right)
         {
             return !left.Equals(right);
-        }
-
-        public readonly string Value;
-
-        public Word(string value)
-        {
-            Value = value;
         }
 
         public override string ToString()

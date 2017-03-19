@@ -7,8 +7,8 @@ namespace Resin.IO
     [Serializable]
     public struct DocumentPosting
     {
-        public int DocumentId;
-        public int Count;
+        public readonly int DocumentId;
+        public readonly int Count;
 
         public DocumentPosting(int documentId, int count)
         {
