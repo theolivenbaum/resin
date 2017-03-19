@@ -88,7 +88,12 @@ namespace Resin
                 }
                 else
                 {
-                    query.Terms = new[] { new Term(query.Field, new Word(query.Value)) }.ToList();
+                    var terms = new List<Term>();
+                    if (reader.HasWord(query.Value))
+                    {
+                        terms.Add(new Term(query.Field, new Word(query.Value)));
+                    }
+                    query.Terms = terms;
                 }
             }
 
