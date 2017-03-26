@@ -1,42 +1,19 @@
-using System;
-
 namespace Resin.IO
 {
-    [Serializable]
-    public struct Word : IEquatable<Word>
+    public struct Word
     {
         public readonly string Value;
+        public readonly BlockInfo PostingsAddress;
 
-        public Word(string value)
+        public Word(string value) : this(value, BlockInfo.MinValue) { }
+
+        public Word(string value, BlockInfo postingsAddress)
         {
             Value = value;
+            PostingsAddress = postingsAddress;
         }
 
-        public bool Equals(Word other)
-        {
-            return string.Equals(Value, other.Value);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            return obj is Word && Equals((Word) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return Value.GetHashCode();
-        }
-
-        public static bool operator ==(Word left, Word right)
-        {
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(Word left, Word right)
-        {
-            return !left.Equals(right);
-        }
+        public static Word MinValue { get { return new Word(string.Empty, BlockInfo.MinValue);} }
 
         public override string ToString()
         {

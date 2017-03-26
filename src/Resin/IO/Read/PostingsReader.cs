@@ -9,5 +9,12 @@ namespace Resin.IO.Read
             : base(stream)
         {
         }
+        protected override List<DocumentPosting> Deserialize(byte[] data)
+        {
+            using (var stream = new MemoryStream(data))
+            {
+                return (List<DocumentPosting>)GraphSerializer.Serializer.Deserialize(stream);
+            }
+        }
     }
 }

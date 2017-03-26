@@ -25,13 +25,9 @@ namespace Resin.IO.Write
             return info;
         }
 
-        private byte[] Serialize(T block)
+        protected virtual byte[] Serialize(T block)
         {
-            using (var ms = new MemoryStream())
-            {
-                GraphSerializer.Serializer.Serialize(ms, block);
-                return ms.ToArray();
-            }
+            return LcrsTrieSerializer.TypeToBytes(block);
         }
 
         public void Dispose()

@@ -7,35 +7,36 @@ namespace Resin.IO.Write
 {
     public static class LcrsTrieSerializer
     {
-        public static void SerializeMapped(this LcrsTrie node, string fileName)
+        public static void SerializeMapped(this LcrsTrie trie, string fileName)
         {
             using (var stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4800))
             {
-                if (node.LeftChild != null)
+                if (trie.LeftChild != null)
                 {
-                    node.LeftChild.SerializeMappedDepthFirst(stream, 0);
+                    trie.LeftChild.SerializeMappedDepthFirst(stream, 0);
                 }
             }
         }
 
-        private static void SerializeMappedDepthFirst(this LcrsTrie node, Stream stream, int depth)
+        private static void SerializeMappedDepthFirst(this LcrsTrie trie, Stream stream, int depth)
         {
-            var bytes = TypeToBytes(new LcrsNode(node, depth, node.GetWeight()));
+            var bytes = TypeToBytes(new LcrsNode(trie, depth, trie.GetWeight(), trie.PostingsAddress));
             stream.Write(bytes, 0, bytes.Length);
 
-            if (node.LeftChild != null)
+            if (trie.LeftChild != null)
             {
-                node.LeftChild.SerializeMappedDepthFirst(stream, depth + 1);
+                trie.LeftChild.SerializeMappedDepthFirst(stream, depth + 1);
             }
 
-            if (node.RightSibling != null)
+            if (trie.RightSibling != null)
             {
-                node.RightSibling.SerializeMappedDepthFirst(stream, depth);
+                trie.RightSibling.SerializeMappedDepthFirst(stream, depth);
             }
         }
 
         /// <summary>
         /// http://stackoverflow.com/a/4074557/46645
+        /// variation: http://stackoverflow.com/questions/3278827/how-to-convert-a-structure-to-a-byte-array-in-c
         /// </summary>
         public static T BytesToType<T>(byte[] bytes)
         {

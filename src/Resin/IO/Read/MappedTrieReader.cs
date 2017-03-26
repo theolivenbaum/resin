@@ -15,7 +15,7 @@ namespace Resin.IO.Read
 
         public MappedTrieReader(string fileName)
         {
-            _stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.RandomAccess);
+            _stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan);
             _blockSize = Marshal.SizeOf(typeof (LcrsNode));
 
             Log.DebugFormat("opened {0}", fileName);

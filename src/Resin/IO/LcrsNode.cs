@@ -1,9 +1,9 @@
 using System;
 using System.Diagnostics;
 
-namespace Resin.IO.Read
+namespace Resin.IO
 {
-    [Serializable, DebuggerDisplay("{Value} {EndOfWord}")]
+    [DebuggerDisplay("{Value} {EndOfWord}")]
     public struct LcrsNode : IEquatable<LcrsNode>
     {
         public readonly char Value;
@@ -12,24 +12,9 @@ namespace Resin.IO.Read
         public readonly bool EndOfWord;
         public readonly int Depth;
         public readonly int Weight;
+        public readonly BlockInfo? PostingsAddress;
 
-        public LcrsNode(string data)
-        {
-            Value = data[0];
-            HaveSibling = data[1] == '1';
-            HaveChild = data[2] == '1';
-            EndOfWord = data[3] == '1';
-
-            var depthData = data.Substring(4, 10).TrimEnd('0');
-
-            Depth = string.IsNullOrWhiteSpace(depthData) ? 0 : int.Parse(depthData);
-
-            var weightData = data.Substring(14, 10).TrimEnd('0');
-
-            Weight = string.IsNullOrWhiteSpace(weightData) ? 0 : int.Parse(weightData);
-        }
-
-        public LcrsNode(LcrsTrie trie, int depth, int weight)
+        public LcrsNode(LcrsTrie trie, int depth, int weight, BlockInfo? postingsAddress)
         {
             Value = trie.Value;
             HaveSibling = trie.RightSibling != null;
@@ -37,6 +22,7 @@ namespace Resin.IO.Read
             EndOfWord = trie.EndOfWord;
             Depth = depth;
             Weight = weight;
+            PostingsAddress = postingsAddress;
         }
 
         public override int GetHashCode()
@@ -65,7 +51,7 @@ namespace Resin.IO.Read
 
         public static LcrsNode MinValue
         {
-            get { return new LcrsNode("\000000000000000000000000"); }
+            get { return new LcrsNode(new LcrsTrie('\0', false), 0, 0, BlockInfo.MinValue); }
         }
 
         public bool Equals(LcrsNode other)

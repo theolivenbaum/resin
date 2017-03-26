@@ -7,5 +7,14 @@ namespace Resin.IO.Write
         public DocumentWriter(Stream stream) : base(stream)
         {
         }
+
+        protected override byte[] Serialize(Document block)
+        {
+            using (var ms = new MemoryStream())
+            {
+                GraphSerializer.Serializer.Serialize(ms, block);
+                return ms.ToArray();
+            }
+        }
     }
 }

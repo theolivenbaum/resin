@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using CSharpTest.Net.Collections;
 using log4net;
 using Resin.Analysis;
 using Resin.IO;
@@ -17,27 +16,18 @@ namespace Resin
 {
     public class Collector : IDisposable
     {
-        private readonly string _directory;
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
+        private readonly string _directory;
         private readonly IxInfo _ix;
         private readonly IScoringScheme _scorer;
-        private readonly BPlusTree<Term, DocumentPosting[]> _postingDb; 
 
         public Collector(string directory, IxInfo ix, IScoringScheme scorer)
         {
+            var initTimer = Time();
+
             _directory = directory;
             _ix = ix;
             _scorer = scorer;
-
-            var initTimer = Time();
-            var dbOptions = new BPlusTree<Term, DocumentPosting[]>.OptionsV2(
-                new TermSerializer(),
-                new ArraySerializer<DocumentPosting>(new PostingSerializer()), new TermComparer());
-
-            dbOptions.FileName = Path.Combine(directory, string.Format("{0}-{1}.{2}", _ix.Name, "pos", "db"));
-            dbOptions.ReadOnly = true;
-
-            _postingDb = new BPlusTree<Term, DocumentPosting[]>(dbOptions);
 
             Log.DebugFormat("init collector in {0}", initTimer.Elapsed);
         }
@@ -54,14 +44,14 @@ namespace Resin
 
             Log.DebugFormat("reduced {0} in {1}", query, time.Elapsed);
 
-            return reduced;
+            return reduced.OrderByDescending(s=>s.Score).ToList();
         }
 
         private void Scan(IList<QueryContext> queries)
         {
             Parallel.ForEach(queries, DoScan);
 
-            //foreach (var q in new List<QueryContext> { query }.Concat(query.Children))
+            //foreach (var q in queries)
             //{
             //    DoScan(q);
             //}
@@ -89,9 +79,10 @@ namespace Resin
                 else
                 {
                     var terms = new List<Term>();
-                    if (reader.HasWord(query.Value))
+                    Word word;
+                    if (reader.HasWord(query.Value, out word))
                     {
-                        terms.Add(new Term(query.Field, new Word(query.Value)));
+                        terms.Add(new Term(query.Field, word));
                     }
                     query.Terms = terms;
                 }
@@ -129,29 +120,25 @@ namespace Resin
         {
             var result = new ConcurrentBag<List<DocumentPosting>>();
 
-            Parallel.ForEach(terms, term =>
-            {
-                var postings = GetPostings(term).ToList();
-                result.Add(new List<DocumentPosting>(postings));
-            });
-            //foreach(var term in terms)
+            //Parallel.ForEach(terms, term =>
             //{
             //    var postings = GetPostings(term).ToList();
             //    result.Add(new List<DocumentPosting>(postings));
-            //}
+            //});
+            foreach (var term in terms)
+            {
+                var postings = GetPostings(term).ToList();
+                result.Add(new List<DocumentPosting>(postings));
+            }
 
             return result;
         }
 
         private IEnumerable<DocumentPosting> GetPostings(Term term)
         {
-            DocumentPosting[] postings;
-            if (_postingDb.TryGetValue(term, out postings))
+            using (var reader = new PostingsReader(new FileStream(Path.Combine(_directory, _ix.Name + ".pos"), FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan)))
             {
-                foreach (var posting in postings)
-                {
-                    yield return posting;
-                }
+                return reader.Get(new [] {term.Word.PostingsAddress}).SelectMany(x=>x).ToList();
             }
         }
 
@@ -200,7 +187,6 @@ namespace Resin
 
         public void Dispose()
         {
-            _postingDb.Dispose();
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Resin.IO.Write;
 
 namespace Resin.IO.Read
 {
@@ -39,12 +40,9 @@ namespace Resin.IO.Read
             return Deserialize(buffer);
         }
 
-        private T Deserialize(byte[] data)
+        protected virtual T Deserialize(byte[] data)
         {
-            using (var stream = new MemoryStream(data))
-            {
-                return (T)GraphSerializer.Serializer.Deserialize(stream);
-            }
+            return LcrsTrieSerializer.BytesToType<T>(data);
         }
 
         public void Dispose()

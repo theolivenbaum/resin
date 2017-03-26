@@ -58,20 +58,17 @@
   <ItemGroup>
     <Compile Include="Analysis\AnalyzedDocument.cs" />
     <Compile Include="Analysis\Analyzer.cs" />
-    <Compile Include="IO\ArraySerializer.cs" />
-    <Compile Include="IO\PostingSerializer.cs" />
+    <Compile Include="IO\Read\DocumentAddressReader.cs" />
     <Compile Include="IO\Read\BlockReader.cs" />
-    <Compile Include="IO\Read\DbDocumentReader.cs" />
     <Compile Include="IO\DocumentPosting.cs" />
     <Compile Include="IO\Read\DocumentReader.cs" />
     <Compile Include="IO\Read\ITrieReader.cs" />
     <Compile Include="IO\Read\MappedTrieReader.cs" />
     <Compile Include="IO\Read\PostingsReader.cs" />
     <Compile Include="IO\Read\TrieReader.cs" />
-    <Compile Include="IO\TermSerializer.cs" />
     <Compile Include="IO\BlockInfo.cs" />
+    <Compile Include="IO\Write\DocumentAddressWriter.cs" />
     <Compile Include="IO\Write\BlockWriter.cs" />
-    <Compile Include="IO\Write\DbDocumentWriter.cs" />
     <Compile Include="IO\Write\DocumentWriter.cs" />
     <Compile Include="IO\Write\PostingsWriter.cs" />
     <Compile Include="IO\Write\TrieBuilder.cs" />
@@ -83,7 +80,7 @@
     <Compile Include="IO\DocumentCount.cs" />
     <Compile Include="Document.cs" />
     <Compile Include="Querying\DocumentScore.cs" />
-    <Compile Include="IO\Read\LcrsNode.cs" />
+    <Compile Include="IO\LcrsNode.cs" />
     <Compile Include="IO\LcrsTrie.cs" />
     <Compile Include="IO\IxInfo.cs" />
     <Compile Include="IO\GraphSerializer.cs" />

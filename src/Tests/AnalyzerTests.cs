@@ -1,12 +1,28 @@
-﻿using System.Linq;
+﻿using System;
+using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Resin.Analysis;
+using Resin.IO;
+using Resin.IO.Write;
 
 namespace Tests
 {
     [TestFixture]
     public class AnalyzerTests
     {
+        [Test]
+        public void Serializzzzzze()
+        {
+            using (var stream = new MemoryStream())
+            {
+                GraphSerializer.Serializer.Serialize(stream, new BlockInfo(0, 1188888880));
+                var bytes1 = stream.ToArray();
+
+                var bytes2 = LcrsTrieSerializer.TypeToBytes(new BlockInfo(0, 0));
+            }
+        }
+
         [Test]
         public void Stopwords()
         {

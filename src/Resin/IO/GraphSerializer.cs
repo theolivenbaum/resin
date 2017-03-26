@@ -22,6 +22,9 @@ namespace Resin.IO
             typeof (Dictionary<string, int>),
             typeof (Document),
             typeof (Dictionary<string, string>),
+            typeof (List<DocumentPosting>),
+            typeof (BlockInfo),
+            typeof (Document),
             typeof (List<DocumentPosting>)
         };
 

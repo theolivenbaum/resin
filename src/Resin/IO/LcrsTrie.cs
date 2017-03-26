@@ -12,6 +12,8 @@ namespace Resin.IO
     {
         public LcrsTrie RightSibling { get; set; }
         public LcrsTrie LeftChild { get; set; }
+        public BlockInfo? PostingsAddress { get; set; }
+        
         public char Value { get; private set; }
         public bool EndOfWord { get; private set; }
 
@@ -22,6 +24,11 @@ namespace Resin.IO
         }
 
         public void Add(string path)
+        {
+            Add(path, BlockInfo.MinValue);
+        }
+
+        public void Add(string path, BlockInfo postingsInfo)
         {
             if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("word");
 
@@ -43,9 +50,13 @@ namespace Resin.IO
                 }
             }
 
-            if (!eow)
+            if (eow)
             {
-                node.Add(path.Substring(1));
+                node.PostingsAddress = postingsInfo;
+            }
+            else
+            {
+                node.Add(path.Substring(1), postingsInfo);
             }
         }
 
@@ -117,21 +128,23 @@ namespace Resin.IO
             return count;
         }
 
-        public bool HasWord(string word)
+        public bool HasWord(string word, out Word found)
         {
-            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("path");
+            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 
-            LcrsTrie child;
-            if (TryFindPath(word, out child))
+            LcrsTrie node;
+            if (TryFindPath(word, out node))
             {
-                return child.EndOfWord;
+                found = new Word(word, node.PostingsAddress.Value);
+                return node.EndOfWord;
             }
+            found = Word.MinValue;
             return false;
         }
 
         public IEnumerable<Word> StartsWith(string prefix)
         {
-            if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("traveled");
+            if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
 
             var compressed = new List<Word>();
 
@@ -174,7 +187,7 @@ namespace Resin.IO
             {
                 if (EndOfWord)
                 {
-                    compressed.Add(new Word(test));
+                    compressed.Add(new Word(test, PostingsAddress.Value));
                 }
             }
 
@@ -199,7 +212,7 @@ namespace Resin.IO
 
             if (EndOfWord)
             {
-                compressed.Add(new Word(traveled + new string(state.ToArray())));
+                compressed.Add(new Word(traveled + new string(state.ToArray()), PostingsAddress.Value));
             }
 
             if (LeftChild != null)

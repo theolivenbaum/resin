@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using NUnit.Framework;
 using Resin.IO;
 using Resin.IO.Read;
@@ -11,65 +10,6 @@ namespace Tests
     [TestFixture]
     public class MappedTrieReaderTests
     {
-        [Test]
-        public void Can_serialize_struct()
-        {
-            var node = new LcrsNode("a00100000000000000000000");
-            var bytes = LcrsTrieSerializer.TypeToBytes(node);
-            var resurrected = LcrsTrieSerializer.BytesToType<LcrsNode>(bytes);
-
-            Assert.That(resurrected.Value, Is.EqualTo(node.Value));
-            Assert.IsTrue(resurrected.EndOfWord);
-        }
-
-        [Test]
-        public void Can_deserialize_struct_from_disk()
-        {
-            var fileName = Path.Combine(Setup.Dir, "Can_deserialize_struct_from_disk.tri");
-            var node = new LcrsNode("ä00100000000000000000000");
-            using (var fs = new FileStream(fileName, FileMode.Create))
-            {
-                var bytes = LcrsTrieSerializer.TypeToBytes(node);
-                fs.Write(bytes, 0, bytes.Length);
-            }
-            using (var fs = new FileStream(fileName, FileMode.Open))
-            {
-                var len = Marshal.SizeOf(typeof(LcrsNode));
-                var buffer = new byte[len];
-                fs.Read(buffer, 0, buffer.Length);
-                var resurrected = LcrsTrieSerializer.BytesToType<LcrsNode>(buffer);
-
-                Assert.That(resurrected.Value, Is.EqualTo(node.Value));
-                Assert.IsTrue(resurrected.EndOfWord);
-            }
-        }
-
-        [Test]
-        public void Can_deserialize_struct_from_disk_with_offset()
-        {
-            var fileName = Path.Combine(Setup.Dir, "Can_deserialize_struct_from_disk_with_offset.tri");
-            var node1 = new LcrsNode("a00100000000000000000000");
-            var node2 = new LcrsNode("b00100000000000000000000");
-            using (var fs = new FileStream(fileName, FileMode.Create))
-            {
-                var bytes = LcrsTrieSerializer.TypeToBytes(node1);
-                fs.Write(bytes, 0, bytes.Length);
-
-                bytes = LcrsTrieSerializer.TypeToBytes(node2);
-                fs.Write(bytes, 0, bytes.Length);
-            }
-            using (var fs = new FileStream(fileName, FileMode.Open))
-            {
-                var len = Marshal.SizeOf(typeof(LcrsNode));
-                var buffer = new byte[len];
-                fs.Seek(len, SeekOrigin.Begin);
-                fs.Read(buffer, 0, buffer.Length);
-                var resurrected = LcrsTrieSerializer.BytesToType<LcrsNode>(buffer);
-
-                Assert.That(resurrected.Value, Is.EqualTo(node2.Value));
-            }
-        }
-
         [Test]
         public void Can_find_near()
         {
@@ -222,17 +162,18 @@ namespace Tests
             tree.Add("xavier");
             tree.SerializeMapped(fileName);
 
+            Word word;
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.True(reader.HasWord("xxx"));
+                Assert.True(reader.HasWord("xxx", out word));
             }
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.False(reader.HasWord("baby"));
+                Assert.False(reader.HasWord("baby", out word));
             }
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.False(reader.HasWord("dad"));
+                Assert.False(reader.HasWord("dad", out word));
             }
 
             tree.Add("baby");
@@ -240,15 +181,15 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.True(reader.HasWord("xxx"));
+                Assert.True(reader.HasWord("xxx", out word));
             }
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.True(reader.HasWord("baby"));
+                Assert.True(reader.HasWord("baby", out word));
             }
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.False(reader.HasWord("dad"));
+                Assert.False(reader.HasWord("dad", out word));
             }
 
             tree.Add("dad");
@@ -257,19 +198,19 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.True(reader.HasWord("xxx"));
+                Assert.True(reader.HasWord("xxx", out word));
             }
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.True(reader.HasWord("baby"));
+                Assert.True(reader.HasWord("baby", out word));
             }
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.True(reader.HasWord("dad"));
+                Assert.True(reader.HasWord("dad", out word));
             }
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.True(reader.HasWord("daddy"));
+                Assert.True(reader.HasWord("daddy", out word));
             }
         }
     }

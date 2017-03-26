@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using NUnit.Framework;
 using Resin.IO;
-using Resin.IO.Read;
 
 namespace Tests
 {
@@ -123,33 +122,33 @@ namespace Tests
         public void Can_find_exact()
         {
             var tree = new LcrsTrie('\0', false);
-
-            Assert.False(tree.HasWord("xxx"));
+            Word word;
+            Assert.False(tree.HasWord("xxx", out word));
 
             tree.Add("xxx");
 
-            Assert.True(tree.HasWord("xxx"));
-            Assert.False(tree.HasWord("baby"));
-            Assert.False(tree.HasWord("dad"));
+            Assert.True(tree.HasWord("xxx", out word));
+            Assert.False(tree.HasWord("baby", out word));
+            Assert.False(tree.HasWord("dad", out word));
 
             tree.Add("baby");
 
-            Assert.True(tree.HasWord("xxx"));
-            Assert.True(tree.HasWord("baby"));
-            Assert.False(tree.HasWord("dad"));
+            Assert.True(tree.HasWord("xxx", out word));
+            Assert.True(tree.HasWord("baby", out word));
+            Assert.False(tree.HasWord("dad", out word));
 
             tree.Add("dad");
 
-            Assert.True(tree.HasWord("xxx"));
-            Assert.True(tree.HasWord("baby"));
-            Assert.True(tree.HasWord("dad"));
+            Assert.True(tree.HasWord("xxx", out word));
+            Assert.True(tree.HasWord("baby", out word));
+            Assert.True(tree.HasWord("dad", out word));
         }
 
         [Test]
         public void Can_build_one_leg()
         {
             var tree = new LcrsTrie('\0', false);
-            
+            Word word;
             tree.Add("baby");
 
             Assert.That(tree.LeftChild.Value, Is.EqualTo('b'));
@@ -157,17 +156,16 @@ namespace Tests
             Assert.That(tree.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('b'));
             Assert.That(tree.LeftChild.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('y'));
 
-            Assert.True(tree.HasWord("baby"));
+            Assert.True(tree.HasWord("baby", out word));
         }
 
         [Test]
         public void Can_build_two_legs()
         {
             var root = new LcrsTrie('\0', false);
-
             root.Add("baby");
             root.Add("dad");
-
+            Word word;
             Assert.That(root.LeftChild.Value, Is.EqualTo('d'));
             Assert.That(root.LeftChild.LeftChild.Value, Is.EqualTo('a'));
             Assert.That(root.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('d'));
@@ -177,8 +175,8 @@ namespace Tests
             Assert.That(root.LeftChild.RightSibling.LeftChild.LeftChild.Value, Is.EqualTo('b'));
             Assert.That(root.LeftChild.RightSibling.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('y'));
 
-            Assert.True(root.HasWord("baby"));
-            Assert.True(root.HasWord("dad"));
+            Assert.True(root.HasWord("baby", out word));
+            Assert.True(root.HasWord("dad", out word));
         }
 
         [Test]
@@ -188,7 +186,7 @@ namespace Tests
 
             root.Add("baby");
             root.Add("bad");
-
+            Word word;
             Assert.That(root.LeftChild.Value, Is.EqualTo('b'));
             Assert.That(root.LeftChild.LeftChild.Value, Is.EqualTo('a'));
             Assert.That(root.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('d'));
@@ -196,8 +194,8 @@ namespace Tests
             Assert.That(root.LeftChild.LeftChild.LeftChild.RightSibling.Value, Is.EqualTo('b'));
             Assert.That(root.LeftChild.LeftChild.LeftChild.RightSibling.LeftChild.Value, Is.EqualTo('y'));
 
-            Assert.True(root.HasWord("baby"));
-            Assert.True(root.HasWord("bad"));
+            Assert.True(root.HasWord("baby", out word));
+            Assert.True(root.HasWord("bad", out word));
         }
     }
 }

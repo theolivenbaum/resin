@@ -75,7 +75,7 @@ namespace Tests
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             using (var reader = new DocumentReader(fs))
             {
-                var ds = reader.Get(blocks.Values.OrderBy(b=>b.Position)).ToList();
+                var ds = reader.Get(blocks.Values.OrderBy(b=>b.Position).ToList()).ToList();
 
                 Assert.That(docs.Count, Is.EqualTo(3));
 

@@ -24,21 +24,23 @@ namespace Resin.IO.Read
             Replay = LastRead;
         }
 
-        public bool HasWord(string word)
+        public bool HasWord(string word, out Word found)
         {
-            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("path");
+            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 
             LcrsNode node;
             if (TryFindDepthFirst(word, 0, out node))
             {
+                found = new Word(word, node.PostingsAddress.Value);
                 return node.EndOfWord;
             }
+            found = Word.MinValue;
             return false;
         }
 
         public IEnumerable<Word> StartsWith(string prefix)
         {
-            if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("path");
+            if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
 
             var compressed = new List<Word>();
             LcrsNode node;
@@ -95,7 +97,7 @@ namespace Resin.IO.Read
                     {
                         if (node.EndOfWord)
                         {
-                            compressed.Add(new Word(test));
+                            compressed.Add(new Word(test, node.PostingsAddress.Value));
                         }
                     }
                     else if (edits > maxErrors && reachedDepth)
@@ -136,7 +138,7 @@ namespace Resin.IO.Read
 
                 if (node.EndOfWord)
                 {
-                    compressed.Add(new Word(prefix + new string(path.ToArray())));
+                    compressed.Add(new Word(prefix + new string(path.ToArray()), node.PostingsAddress.Value));
                 }
 
                 if (node.HaveSibling)

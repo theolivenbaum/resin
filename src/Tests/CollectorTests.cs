@@ -33,7 +33,7 @@ namespace Tests
             string indexName;
             using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Execute();
+                indexName = writer.Write();
             }
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
@@ -72,7 +72,7 @@ namespace Tests
             string indexName;
             using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Execute();
+                indexName = writer.Write();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:age of porn~");
@@ -105,7 +105,7 @@ namespace Tests
             string indexName;
             using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Execute();
+                indexName = writer.Write();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:porn~");
@@ -143,7 +143,7 @@ namespace Tests
             string indexName;
             using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Execute();
+                indexName = writer.Write();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rain man");
@@ -188,7 +188,7 @@ namespace Tests
             string indexName;
             using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Execute();
+                indexName = writer.Write();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
@@ -234,7 +234,7 @@ namespace Tests
             string indexName;
             using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Execute();
+                indexName = writer.Write();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rocky");
@@ -291,7 +291,7 @@ namespace Tests
             string indexName;
             using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Execute();
+                indexName = writer.Write();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
@@ -338,7 +338,7 @@ namespace Tests
             string indexName;
             using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Execute();
+                indexName = writer.Write();
             }
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
@@ -380,7 +380,7 @@ namespace Tests
             string indexName;
             using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Execute();
+                indexName = writer.Write();
             }
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
@@ -414,7 +414,7 @@ namespace Tests
             string indexName;
             using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Execute();
+                indexName = writer.Write();
             }
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))

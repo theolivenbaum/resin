@@ -1,13 +1,10 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using CSharpTest.Net.Collections;
-using CSharpTest.Net.Serialization;
+using System.Runtime.InteropServices;
 using log4net;
 using Resin.Analysis;
 using Resin.IO;
@@ -16,40 +13,34 @@ using Resin.Querying;
 
 namespace Resin
 {
+    /// <summary>
+    /// Queries the latest (chronologically speaking) index in a directory.
+    /// </summary>
     public class Searcher : IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
         private readonly string _directory;
         private readonly QueryParser _parser;
         private readonly IScoringScheme _scorer;
-        private readonly IDictionary<string, IxInfo> _indices;
-        private readonly DbDocumentReader _docReader;
+        private readonly IxInfo _ix;
+        private readonly DocumentReader _docReader;
+        private readonly int _blockSize;
 
         public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
         {
+            var initTimer = Time();
+
             _directory = directory;
             _parser = parser;
             _scorer = scorer;
 
-            var initTimer = Time();
-            var ixFiles = GetIndexFileNamesInChronologicalOrder();
-            
-            _indices = ixFiles.Select(IxInfo.Load).ToDictionary(x => x.Name);
-            
-            _docReader = new DbDocumentReader(OpenDocDb());
+            _ix = IxInfo.Load(GetIndexFileNamesInChronologicalOrder().Last());
+
+            _docReader = new DocumentReader(new FileStream(Path.Combine(_directory, _ix.Name + ".doc"), FileMode.Open, FileAccess.Read, FileShare.Read, 4096*4, FileOptions.SequentialScan));
             
             Log.DebugFormat("init searcher in {0}", initTimer.Elapsed);
-        }
 
-        private BPlusTree<int, byte[]> OpenDocDb()
-        {
-            var dbOptions = new BPlusTree<int, byte[]>.OptionsV2(
-                PrimitiveSerializer.Int32,
-                PrimitiveSerializer.Bytes);
-
-            dbOptions.FileName = Path.Combine(_directory, string.Format("{0}-{1}.{2}", _indices.Values.First().Name, "doc", "db"));
-            dbOptions.ReadOnly = true;
-            return new BPlusTree<int, byte[]>(dbOptions);
+            _blockSize = Marshal.SizeOf(typeof(BlockInfo));
         }
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
@@ -68,11 +59,11 @@ namespace Resin
 
             var scored = Collect(queryContext);
             var skip = page * size;
-            var paged = scored.Skip(skip).Take(size);
+            var paged = scored.Skip(skip).Take(size).ToList();
 
             var docTime = Time();
 
-            var docs = paged.Select(GetDoc).ToList();
+            var docs = GetDocs(paged);
 
             Log.DebugFormat("fetched {0} docs for query {1} in {2}", docs.Count, queryContext, docTime.Elapsed);
 
@@ -90,23 +81,27 @@ namespace Resin
 
         private IList<DocumentScore> Collect(QueryContext query)
         {
-            var collectors = _indices.Values.Select(ix => new Collector(_directory, ix, _scorer)).ToList();          
-            var scores = new ConcurrentBag<IEnumerable<DocumentScore>>();
-
-            Parallel.ForEach(collectors, c => scores.Add(c.Collect(query.Clone())));
-
-            return scores
-                .Aggregate(DocumentScore.CombineOr)
-                .OrderByDescending(p => p.Score).ToList();
+            return new Collector(_directory, _ix, _scorer).Collect(query);
         }
 
-        private Document GetDoc(DocumentScore score)
+        private IList<Document> GetDocs(IList<DocumentScore> scores)
         {
-            var doc = _docReader.Get(score.DocumentId);
+            var docs = new List<KeyValuePair<double,Document>>();
+            var dic = scores.ToDictionary(x => x.DocumentId, y => y.Score);
 
-            doc.Fields["__score"] = score.Score.ToString(CultureInfo.InvariantCulture);
+            using (var docAddressReader = new DocumentAddressReader(new FileStream(Path.Combine(_directory, _ix.Name + ".da"), FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan)))
+            {
+                var adrs = scores.Select(s => new BlockInfo(s.DocumentId*_blockSize, _blockSize)).OrderBy(b => b.Position);
+                var docAdrs = docAddressReader.Get(adrs);
 
-            return doc; 
+                foreach (var doc in _docReader.Get(docAdrs))
+                {
+                    var score = dic[doc.Id];
+                    doc.Fields["__score"] = score.ToString(CultureInfo.InvariantCulture);
+                    docs.Add(new KeyValuePair<double, Document>(score, doc));
+                }
+            }
+            return docs.OrderByDescending(kvp=>kvp.Key).Select(kvp=>kvp.Value).ToList();
         }
 
         private static Stopwatch Time()

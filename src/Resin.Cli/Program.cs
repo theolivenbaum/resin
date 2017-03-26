@@ -170,7 +170,7 @@ namespace Resin.Cli
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
                 using (var writer = new StreamWriteOperation(dir, new Analyzer(), fileName, take))
                 {
-                    writer.Execute();
+                    writer.Write();
                 }
             }
             else

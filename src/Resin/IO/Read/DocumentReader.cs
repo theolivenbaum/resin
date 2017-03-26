@@ -7,5 +7,13 @@ namespace Resin.IO.Read
         public DocumentReader(Stream stream) : base(stream)
         {
         }
+
+        protected override Document Deserialize(byte[] data)
+        {
+            using (var stream = new MemoryStream(data))
+            {
+                return (Document)GraphSerializer.Serializer.Deserialize(stream);
+            }
+        }
     }
 }

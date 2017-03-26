@@ -4,9 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using CSharpTest.Net.Collections;
-using CSharpTest.Net.Serialization;
-using CSharpTest.Net.Synchronization;
 using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Write;
@@ -24,7 +21,6 @@ namespace Resin
         private readonly Dictionary<string, LcrsTrie> _tries;
         private readonly object _sync = new object();
         private readonly ConcurrentDictionary<string, int> _docCountByField;
-        private readonly DbDocumentWriter _docWriter;
 
         protected Writer(string directory, IAnalyzer analyzer)
         {
@@ -34,81 +30,92 @@ namespace Resin
             _indexName = Util.GetChronologicalFileId();
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
-            _docWriter = new DbDocumentWriter(CreateDocumentDb());
         }
 
-        public string Execute()
+        public string Write()
         {
-            var trieBuilders = new List<Task>();
             var index = 0;
             var matrix = new Dictionary<Term, List<DocumentPosting>>();
+            var docAddresses = new List<BlockInfo>();
+            var analyzedDocs = new List<AnalyzedDocument>();
 
-            foreach (var doc in ReadSource())
+            using (var docWriter = new DocumentWriter(new FileStream(Path.Combine(_directory, _indexName + ".doc"), FileMode.Create, FileAccess.Write, FileShare.None)))
             {
-                doc.Id = index++;
-
-                WriteDocument(doc);
-
-                var analyzedDoc = _analyzer.AnalyzeDocument(doc);
-
-                trieBuilders.Add(BuildTree(analyzedDoc));
-
-                foreach (var field in doc.Fields)
+                foreach (var doc in ReadSource())
                 {
-                    _docCountByField.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
-                }
+                    doc.Id = index++;
 
-                foreach (var term in analyzedDoc.Terms)
+                    docAddresses.Add(docWriter.Write(doc));
+
+                    analyzedDocs.Add(_analyzer.AnalyzeDocument(doc));
+
+                    foreach (var field in doc.Fields)
+                    {
+                        _docCountByField.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
+                    }
+                }
+            }
+
+            for (int docId = 0; docId < analyzedDocs.Count; docId++)
+            {
+                var analyzed = analyzedDocs[docId];
+
+                foreach (var term in analyzed.Terms)
                 {
                     List<DocumentPosting> postings;
 
                     if (matrix.TryGetValue(term.Key, out postings))
                     {
-                        postings.Add(new DocumentPosting(doc.Id, term.Value));
+                        postings.Add(new DocumentPosting(docId, term.Value));
                     }
                     else
                     {
-                        matrix.Add(term.Key, new[] { new DocumentPosting(doc.Id, term.Value) }.ToList());
+                        matrix.Add(term.Key, new[] { new DocumentPosting(docId, term.Value) }.ToList());
                     }
                 }
             }
 
-            Task.WaitAll(trieBuilders.ToArray());
+            using (var postingsWriter = new PostingsWriter(new FileStream(Path.Combine(_directory, _indexName + ".pos"), FileMode.Create, FileAccess.Write, FileShare.None)))
+            {
+                foreach (var term in matrix)
+                {
+                    var postingsAddress = postingsWriter.Write(term.Value);
+
+                    GetTrie(term.Key.Field, term.Key.Word.Value).Add(term.Key.Word.Value, postingsAddress);
+                } 
+            }
+
+            using (var docAddressWriter = new DocumentAddressWriter(new FileStream(Path.Combine(_directory, _indexName + ".da"), FileMode.Create, FileAccess.Write, FileShare.None)))
+            {
+                foreach (var address in docAddresses)
+                {
+                    docAddressWriter.Write(address);
+                }
+            }
 
             var trieWriter = SerializeTries();
-            var postingsWriter = SerializePostings(matrix);
 
             CreateIxInfo().Save(Path.Combine(_directory, _indexName + ".ix"));
 
-            Task.WaitAll(trieWriter, postingsWriter);
+            Task.WaitAll(trieWriter);
 
             return _indexName;
-        }
-
-        private Task SerializePostings(Dictionary<Term, List<DocumentPosting>> matrix)
-        {
-            return Task.Run(() =>
-            {
-                using (var db = CreatePostingsDb())
-                {
-                    foreach (var term in matrix)
-                    {
-                        db.Add(term.Key, term.Value.ToArray());
-                    }
-                }
-            });
         }
 
         private Task SerializeTries()
         {
             return Task.Run(() =>
             {
-                using (var work = new TaskQueue<Tuple<string, LcrsTrie>>(Math.Max(_tries.Count - 1, 1), DoSerializeTrie))
+                //using (var work = new TaskQueue<Tuple<string, LcrsTrie>>(Math.Max(_tries.Count - 1, 1), DoSerializeTrie))
+                //{
+                //    foreach (var t in _tries)
+                //    {
+                //        work.Enqueue(new Tuple<string, LcrsTrie>(t.Key, t.Value));
+                //    }
+                //}
+                foreach (var t in _tries)
                 {
-                    foreach (var t in _tries)
-                    {
-                        work.Enqueue(new Tuple<string, LcrsTrie>(t.Key, t.Value));
-                    }
+                    DoSerializeTrie(new Tuple<string, LcrsTrie>(t.Key, t.Value));
                 }
             });
         }
@@ -119,31 +126,6 @@ namespace Resin
             var trie = trieEntry.Item2;
             var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _indexName, key));
             trie.SerializeMapped(fileName);
-        }
-
-        private Task BuildTree(AnalyzedDocument analyzedDoc)
-        {
-            return Task.Run(() =>
-            {
-                foreach (var term in analyzedDoc.Terms)
-                {
-                    WriteToTrie(term.Key.Field, term.Key.Word.Value);
-                }
-            });
-        }
-
-        private void WriteDocument(Document doc)
-        {
-            _docWriter.Write(doc);
-        }
-
-        private void WriteToTrie(string field, string value)
-        {
-            if (field == null) throw new ArgumentNullException("field");
-            if (value == null) throw new ArgumentNullException("value");
-
-            var trie = GetTrie(field, value);
-            trie.Add(value);
         }
 
         private LcrsTrie GetTrie(string field, string token)
@@ -165,33 +147,6 @@ namespace Resin
             return trie;
         }
 
-        private BPlusTree<int, byte[]> CreateDocumentDb()
-        {
-            var dbOptions = new BPlusTree<int, byte[]>.OptionsV2(
-                PrimitiveSerializer.Int32,
-                PrimitiveSerializer.Bytes);
-
-            dbOptions.FileName = Path.Combine(_directory, string.Format("{0}-{1}.{2}", _indexName, "doc", "db"));
-            dbOptions.CreateFile = CreatePolicy.Always;
-            dbOptions.LockingFactory = new IgnoreLockFactory();
-
-            return new BPlusTree<int, byte[]>(dbOptions);
-        }
-
-
-        private BPlusTree<Term, DocumentPosting[]> CreatePostingsDb()
-        {
-            var dbOptions = new BPlusTree<Term, DocumentPosting[]>.OptionsV2(
-                new TermSerializer(),
-                new ArraySerializer<DocumentPosting>(new PostingSerializer()), new TermComparer());
-
-            dbOptions.FileName = Path.Combine(_directory, string.Format("{0}-{1}.{2}", _indexName, "pos", "db"));
-            dbOptions.CreateFile = CreatePolicy.Always;
-            dbOptions.LockingFactory = new IgnoreLockFactory();
-
-            return new BPlusTree<Term, DocumentPosting[]>(dbOptions);
-        }
-
         private IxInfo CreateIxInfo()
         {
             return new IxInfo
@@ -204,8 +159,6 @@ namespace Resin
 
         public void Dispose()
         {
-            _docWriter.Dispose();
-
         }
     }
 
