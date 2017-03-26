@@ -49,8 +49,9 @@ Resin is a vector space model implementation, a modern type information retrieva
 
 ### Roadmap
 
-- [x] ___Layout basic architecture and infrastructure of a modern IR system - v0.9b___
-- [ ] Scan as fast as Lucene - v1.0
+- [x] Layout basic architecture and infrastructure of a modern IR system - v0.9b
+- [x] ___Scan as fast as Lucene - v1.0rc1___
+- [ ] Release on nuget - v1.0
 - [ ] Merge best parts of the Lucene query language and the Elasticsearch DSL into RQL (Resin query language) - v2.0
 - [ ] Make all parts of Resin distributable - v3.0
 - [ ] Tooling.
