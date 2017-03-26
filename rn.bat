@@ -1,1 +1,0 @@
-src\Resin.Cli\bin\Release\rn.exe %*
