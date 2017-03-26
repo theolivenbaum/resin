@@ -1,17 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using CSharpTest.Net.Collections;
-using CSharpTest.Net.Serialization;
-using CSharpTest.Net.Synchronization;
 using Newtonsoft.Json;
 using Resin.Analysis;
-using Resin.IO.Write;
 
 namespace Resin
 {
-    public class StreamWriteOperation : Writer, IDisposable
+    public class StreamWriteOperation : Writer
     {
         private readonly StreamReader _reader;
         private readonly int _take;
@@ -31,11 +26,10 @@ namespace Resin
             _reader = new StreamReader(bs, Encoding.Unicode);
         }
 
-       
-
         protected override IEnumerable<Document> ReadSource()
         {
-            var line = _reader.ReadLine();
+// ReSharper disable once RedundantAssignment
+            var line = _reader.ReadLine(); // intentional (first row is "[")
             var took = 0;
 
             while ((line = _reader.ReadLine()) != null)
