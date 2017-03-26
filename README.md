@@ -2,6 +2,10 @@
 
 Resin is a vector space model implementation, a modern type information retrieval system and a document based search engine library with fast fuzzy and prefix querying and with customizable tokenizers and scoring (tf-idf included, other schemes supported).
 
+## .net version
+
+4.6.1
+
 ## Documentation
 
 ### A document.
