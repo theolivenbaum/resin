@@ -20,12 +20,18 @@ namespace Resin
         private readonly string _directory;
         private readonly IxInfo _ix;
         private readonly IScoringScheme _scorer;
+        private readonly Stream _postingStream;
 
         public Collector(string directory, IxInfo ix, IScoringScheme scorer)
         {
+            var initTimer = Time();
+
             _directory = directory;
             _ix = ix;
             _scorer = scorer;
+            _postingStream = new FileStream(Path.Combine(_directory, _ix.Name + ".pos"), FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan);
+            
+            Log.DebugFormat("init collector in {0}", initTimer.Elapsed);
         }
 
         public IList<DocumentScore> Collect(QueryContext query)
@@ -45,12 +51,12 @@ namespace Resin
 
         private void Scan(IList<QueryContext> queries)
         {
-            Parallel.ForEach(queries, DoScan);
+            //Parallel.ForEach(queries, DoScan);
 
-            //foreach (var q in queries)
-            //{
-            //    DoScan(q);
-            //}
+            foreach (var q in queries)
+            {
+                DoScan(q);
+            }
         }
 
         private void DoScan(QueryContext query)
@@ -121,20 +127,19 @@ namespace Resin
             //    var postings = GetPostings(term).ToList();
             //    result.Add(new List<DocumentPosting>(postings));
             //});
-            foreach (var term in terms)
-            {
-                var postings = GetPostings(term).ToList();
-                result.Add(new List<DocumentPosting>(postings));
-            }
+            var postings = GetPostings(terms).ToList();
+            result.Add(new List<DocumentPosting>(postings));
 
             return result;
         }
 
-        private IEnumerable<DocumentPosting> GetPostings(Term term)
+        private IEnumerable<DocumentPosting> GetPostings(IEnumerable<Term> terms)
         {
-            using (var reader = new PostingsReader(new FileStream(Path.Combine(_directory, _ix.Name + ".pos"), FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan)))
+            _postingStream.Position = 0;
+
+            using (var reader = new PostingsReader(_postingStream, true))
             {
-                return reader.Get(new [] {term.Word.PostingsAddress}).SelectMany(x=>x).ToList();
+                return reader.Get(terms.Select(term=>term.Word.PostingsAddress).OrderBy(adr=>adr.Position)).SelectMany(x=>x).ToList();
             }
         }
 
@@ -183,6 +188,7 @@ namespace Resin
 
         public void Dispose()
         {
+            _postingStream.Dispose();
         }
     }
 }

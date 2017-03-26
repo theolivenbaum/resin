@@ -9,11 +9,13 @@ namespace Resin.IO.Read
     public class BlockReader<T> : IDisposable
     {
         private readonly Stream _stream;
+        private readonly bool _leaveOpen;
         private long _position;
 
-        public BlockReader(Stream stream)
+        public BlockReader(Stream stream, bool leaveOpen = false)
         {
             _stream = stream;
+            _leaveOpen = leaveOpen;
             _position = 0;
         }
 
@@ -47,7 +49,7 @@ namespace Resin.IO.Read
 
         public void Dispose()
         {
-            _stream.Dispose();
+            if(!_leaveOpen) _stream.Dispose();
         }
     }
 }

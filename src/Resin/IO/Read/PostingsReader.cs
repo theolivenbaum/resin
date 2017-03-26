@@ -5,8 +5,8 @@ namespace Resin.IO.Read
 {
     public class PostingsReader : BlockReader<List<DocumentPosting>>
     {
-        public PostingsReader(Stream stream)
-            : base(stream)
+        public PostingsReader(Stream stream, bool leaveOpen = false)
+            : base(stream, leaveOpen)
         {
         }
         protected override List<DocumentPosting> Deserialize(byte[] data)

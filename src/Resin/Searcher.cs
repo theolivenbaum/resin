@@ -81,7 +81,10 @@ namespace Resin
 
         private IList<DocumentScore> Collect(QueryContext query)
         {
-            return new Collector(_directory, _ix, _scorer).Collect(query);
+            using (var collector = new Collector(_directory, _ix, _scorer))
+            {
+                return collector.Collect(query);
+            }
         }
 
         private IList<Document> GetDocs(IList<DocumentScore> scores)
