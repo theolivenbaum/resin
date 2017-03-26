@@ -6,6 +6,10 @@ Resin is a vector space model implementation, a modern type information retrieva
 
 4.6.1
 
+## Download
+
+Latest release is [here](https://github.com/kreeben/resin/releases/latest)
+
 ## Documentation
 
 ### A document.
