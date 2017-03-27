@@ -30,7 +30,7 @@ Latest release is [here](https://github.com/kreeben/resin/releases/latest)
 	var dir = @"C:\Users\Yourname\Resin\wikipedia";
 	using (var write = new WriteOperation(dir, new Analyzer(), docs))
 	{
-		write.Execute();
+		write.Write();
 	}
 
 ### Query the index.
@@ -39,9 +39,8 @@ Latest release is [here](https://github.com/kreeben/resin/releases/latest)
 	// Resin will scan a disk based trie for terms that are an exact match,
 	// a near match or is prefixed with the query term/-s.
 	
-	// Postings for each term are fetched and scored.
 	// A set of postings is produced for each query statement.
-	// A final answer is compiled by reducing the postings to one set.
+	// A final answer is compiled by reducing the query tree into one node, postings into one set.
 		
 	// Postings are resolved into top scoring documents. A total hit count is also included.
 	// Paging is fast using the built-in paging mechanism.
