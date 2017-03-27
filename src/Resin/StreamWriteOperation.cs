@@ -29,7 +29,7 @@ namespace Resin
         protected override IEnumerable<Document> ReadSource()
         {
 // ReSharper disable once RedundantAssignment
-            var line = _reader.ReadLine(); // intentional (first row is "[")
+            var line = _reader.ReadLine(); // intentional (first row is "[\n")
             var took = 0;
 
             while ((line = _reader.ReadLine()) != null)

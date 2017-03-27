@@ -93,30 +93,18 @@ namespace Resin
                 }
             }
 
-            var trieWriter = SerializeTries();
+            SerializeTries();
 
             CreateIxInfo().Save(Path.Combine(_directory, _indexName + ".ix"));
-
-            Task.WaitAll(trieWriter);
 
             return _indexName;
         }
 
-        private Task SerializeTries()
+        private void SerializeTries()
         {
-            return Task.Run(() =>
+            Parallel.ForEach(_tries, t =>
             {
-                //using (var work = new TaskQueue<Tuple<string, LcrsTrie>>(Math.Max(_tries.Count - 1, 1), DoSerializeTrie))
-                //{
-                //    foreach (var t in _tries)
-                //    {
-                //        work.Enqueue(new Tuple<string, LcrsTrie>(t.Key, t.Value));
-                //    }
-                //}
-                foreach (var t in _tries)
-                {
-                    DoSerializeTrie(new Tuple<string, LcrsTrie>(t.Key, t.Value));
-                }
+                DoSerializeTrie(new Tuple<string, LcrsTrie>(t.Key, t.Value));
             });
         }
 
