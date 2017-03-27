@@ -58,8 +58,8 @@ Latest release is [here](https://github.com/kreeben/resin/releases/latest)
 ### Roadmap
 
 - [x] Layout basic architecture and infrastructure of a modern IR system - v0.9b
-- [x] ___Scan as fast as Lucene - v1.0rc1___
-- [ ] Merge best parts of the Lucene query language and the Elasticsearch DSL into RQL (Resin query language) - v2.0
+- [x] ___Make Resin the fastest IR system available on .net - v1.0 rc1___
+- [ ] Merge good parts of the Lucene query language and the Elasticsearch DSL into RQL (Resin query language) - v2.0
 - [ ] Make all parts of Resin distributable - v3.0
 - [ ] Tooling.
 
