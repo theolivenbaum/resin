@@ -22,13 +22,9 @@ namespace Resin
 
         public Collector(string directory, IxInfo ix, IScoringScheme scorer)
         {
-            var initTimer = Time();
-
             _directory = directory;
             _ix = ix;
             _scorer = scorer;
-           
-            Log.DebugFormat("init collector in {0}", initTimer.Elapsed);
         }
 
         public IList<DocumentScore> Collect(QueryContext query)

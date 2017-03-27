@@ -44,7 +44,7 @@ namespace Resin.IO.Read
 
         protected virtual T Deserialize(byte[] data)
         {
-            return LcrsTrieSerializer.BytesToType<T>(data);
+            return TrieSerializer.BytesToType<T>(data);
         }
 
         public void Dispose()

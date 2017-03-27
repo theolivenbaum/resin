@@ -1,11 +1,10 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using Resin.IO.Read;
 
 namespace Resin.IO.Write
 {
-    public static class LcrsTrieSerializer
+    public static class TrieSerializer
     {
         public static void SerializeMapped(this LcrsTrie trie, string fileName)
         {
@@ -36,7 +35,6 @@ namespace Resin.IO.Write
 
         /// <summary>
         /// http://stackoverflow.com/a/4074557/46645
-        /// variation: http://stackoverflow.com/questions/3278827/how-to-convert-a-structure-to-a-byte-array-in-c
         /// </summary>
         public static T BytesToType<T>(byte[] bytes)
         {

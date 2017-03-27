@@ -79,8 +79,6 @@ namespace Resin.Cli
                 {
                     result = s.Search(q, page, size);
 
-                    Console.WriteLine(timer.Elapsed);
-
                     timer.Stop();
 
                     var docs = result.Docs;

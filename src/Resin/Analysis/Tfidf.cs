@@ -30,14 +30,12 @@ namespace Resin.Analysis
         /// <param name="docsWithTerm"></param>
         public Tfidf(int docsInCorpus, int docsWithTerm)
         {
-            //_idf = Math.Log10(docsInCorpus / (double)docsWithTerm);
             _idf = Math.Log10(docsInCorpus / (double)docsWithTerm);
         }
 
         public DocumentScore Score(DocumentPosting posting)
         {
-            //var tf = 1 + Math.Log10(Math.Pow(posting.Count, 1 / 2));
-            var score = Math.Sqrt(posting.Count) * _idf;
+            var score = Math.Log10(posting.Count) * _idf;
             return new DocumentScore(posting.DocumentId, score);
         }
 

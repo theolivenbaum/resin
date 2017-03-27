@@ -15,11 +15,11 @@ namespace Resin.Querying
             Score = score;
         }
 
-        public void Join(DocumentScore score)
+        public void Join(DocumentScore score, int boost)
         {
             if (!score.DocumentId.Equals(DocumentId)) throw new ArgumentException("Document IDs differ. Cannot add.", "score");
 
-            Score += score.Score;
+            Score = (Score + score.Score) * boost;
         }
 
         public static IEnumerable<DocumentScore> CombineOr(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
@@ -29,10 +29,11 @@ namespace Resin.Querying
             return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>
             {
                 var list = group.ToList();
+                
                 var top = list.First();
                 foreach (var posting in list.Skip(1))
                 {
-                    top.Join(posting);
+                    top.Join(posting, 1);
                 }
                 return top;
             });
@@ -50,13 +51,12 @@ namespace Resin.Querying
                 DocumentScore exists;
                 if (dic.TryGetValue(posting.DocumentId, out exists))
                 {
-                    posting.Join(exists);
+                    posting.Join(exists, 1);
                     remainder.Add(posting);
                 }
             }
             return remainder;
         }
-
 
         public override string ToString()
         {

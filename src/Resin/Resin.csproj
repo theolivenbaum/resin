@@ -81,7 +81,7 @@
     <Compile Include="IO\IxInfo.cs" />
     <Compile Include="IO\GraphSerializer.cs" />
     <Compile Include="IO\QuickLZ.cs" />
-    <Compile Include="IO\Write\LcrsTrieSerializer.cs" />
+    <Compile Include="IO\Write\TrieSerializer.cs" />
     <Compile Include="IO\Word.cs" />
     <Compile Include="Analysis\IScoringScheme.cs" />
     <Compile Include="Analysis\Levenshtein.cs" />
