@@ -43,13 +43,13 @@ Latest release is [here](https://github.com/kreeben/resin/releases/latest)
 	// A set of postings is produced for each query statement.
 	// A final answer is compiled by reducing the postings to one set.
 		
-	// The top scoring documents are returned with a number describing the total amount of documents in the final set,
-	// so that you can fetch them all if you will, by the built in paging mechanism.
+	// Postings are resolved into top scoring documents. A total hit count is also included.
+	// Paging is fast using the built-in paging mechanism.
 	
 	var result = new Searcher(dir).Search("label:good bad~ description:leone");
 	
 	// Document scores, i.e. the aggregated tf-idf weights a document recieve from a simple or compound query,
-	// is also included in the result:
+	// are also included in the result:
 	
 	var scoreOfFirstDoc = result.Docs.First().Fields["__score"];
 
