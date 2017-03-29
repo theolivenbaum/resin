@@ -60,7 +60,7 @@ Latest release is [here](https://github.com/kreeben/resin/releases/latest)
 
 - [x] Layout basic architecture and infrastructure of a modern IR system - v0.9b
 - [x] ___Be fast - v1.0 rc1___
-- [ ] Create http-transportable query language with table join capabilities, or adopt GrapohQL - v2.0
+- [ ] Create http-transportable query language where you can express table joins, or adopt GrapohQL - v2.0
 - [ ] Make all parts of Resin distributable - v3.0
 - [ ] Tooling.
 
