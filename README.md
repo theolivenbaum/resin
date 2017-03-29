@@ -62,8 +62,8 @@ Latest release is [here](https://github.com/kreeben/resin/releases/latest)
 - [x] ___Be fast - v1.0 rc1___
 - [ ] Create http-transportable query language where you can express table joins, or adopt GrapohQL - v2.0
 - [ ] Make all parts of Resin distributable - v3.0
-- [ ] Tooling.
+- [ ] Build Sir
 
-### Implementations
+### Sir
 
 [Sir](https://github.com/kreeben/sir) is an Elasticsearch clone with improved querying capabilities, built on Resin.
