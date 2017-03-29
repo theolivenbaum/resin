@@ -19,7 +19,7 @@ namespace Resin.IO.Read
             _position = 0;
         }
 
-        public IEnumerable<T> Get(IEnumerable<BlockInfo> blocks)
+        public IEnumerable<T> Get(IList<BlockInfo> blocks)
         {
             return blocks.Select(Get);
         }

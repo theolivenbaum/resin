@@ -94,8 +94,12 @@ namespace Resin
 
             using (var docAddressReader = new DocumentAddressReader(new FileStream(Path.Combine(_directory, _ix.Name + ".da"), FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan)))
             {
-                var adrs = scores.Select(s => new BlockInfo(s.DocumentId*_blockSize, _blockSize)).OrderBy(b => b.Position);
-                var docAdrs = docAddressReader.Get(adrs);
+                var adrs = scores
+                    .Select(s => new BlockInfo(s.DocumentId*_blockSize, _blockSize))
+                    .OrderBy(b => b.Position)
+                    .ToList();
+
+                var docAdrs = docAddressReader.Get(adrs).ToList();
 
                 foreach (var doc in _docReader.Get(docAdrs))
                 {

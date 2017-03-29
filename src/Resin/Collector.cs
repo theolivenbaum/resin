@@ -119,7 +119,9 @@ namespace Resin
         {
             using (var reader = new PostingsReader(new FileStream(Path.Combine(_directory, _ix.Name + ".pos"), FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan)))
             {
-                return reader.Get(terms.Select(term=>term.Word.PostingsAddress).OrderBy(adr=>adr.Position)).SelectMany(x=>x).ToList();
+                var addresses = terms.Select(term => term.Word.PostingsAddress).OrderBy(adr => adr.Position).ToList();
+
+                return reader.Get(addresses).SelectMany(x=>x).ToList();
             }
         }
 
