@@ -166,14 +166,14 @@ namespace Tests
             root.Add("baby");
             root.Add("dad");
             Word word;
-            Assert.That(root.LeftChild.Value, Is.EqualTo('d'));
+            Assert.That(root.LeftChild.RightSibling.Value, Is.EqualTo('d'));
             Assert.That(root.LeftChild.LeftChild.Value, Is.EqualTo('a'));
-            Assert.That(root.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('d'));
+            Assert.That(root.LeftChild.RightSibling.LeftChild.LeftChild.Value, Is.EqualTo('d'));
 
-            Assert.That(root.LeftChild.RightSibling.Value, Is.EqualTo('b'));
+            Assert.That(root.LeftChild.Value, Is.EqualTo('b'));
             Assert.That(root.LeftChild.RightSibling.LeftChild.Value, Is.EqualTo('a'));
-            Assert.That(root.LeftChild.RightSibling.LeftChild.LeftChild.Value, Is.EqualTo('b'));
-            Assert.That(root.LeftChild.RightSibling.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('y'));
+            Assert.That(root.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('b'));
+            Assert.That(root.LeftChild.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('y'));
 
             Assert.True(root.HasWord("baby", out word));
             Assert.True(root.HasWord("dad", out word));
@@ -187,12 +187,13 @@ namespace Tests
             root.Add("baby");
             root.Add("bad");
             Word word;
+
             Assert.That(root.LeftChild.Value, Is.EqualTo('b'));
             Assert.That(root.LeftChild.LeftChild.Value, Is.EqualTo('a'));
-            Assert.That(root.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('d'));
+            Assert.That(root.LeftChild.LeftChild.LeftChild.RightSibling.Value, Is.EqualTo('d'));
 
-            Assert.That(root.LeftChild.LeftChild.LeftChild.RightSibling.Value, Is.EqualTo('b'));
-            Assert.That(root.LeftChild.LeftChild.LeftChild.RightSibling.LeftChild.Value, Is.EqualTo('y'));
+            Assert.That(root.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('b'));
+            Assert.That(root.LeftChild.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('y'));
 
             Assert.True(root.HasWord("baby", out word));
             Assert.True(root.HasWord("bad", out word));

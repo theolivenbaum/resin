@@ -28,7 +28,7 @@ namespace Resin.IO
             Add(path, BlockInfo.MinValue);
         }
 
-        public void Add(string path, BlockInfo postingsInfo)
+        public void Add(string path, BlockInfo postingsAddress)
         {
             if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("word");
 
@@ -39,8 +39,39 @@ namespace Resin.IO
             if (!TryGetChild(key, out node))
             {
                 node = new LcrsTrie(key, eow);
-                node.RightSibling = LeftChild;
-                LeftChild = node;
+
+                if (LeftChild == null)
+                {
+                    LeftChild = node;
+                }
+                else
+                {
+                    if (LeftChild == null)
+                    {
+                        LeftChild = node;
+                    }
+                    else
+                    {
+                        // place node in lexical order
+                        var left = LeftChild;
+                        while (left != null)
+                        {
+                            if (left.Value < node.Value || left.RightSibling == null)
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                left = left.RightSibling;
+                            }
+                        }
+                        var right = left.RightSibling;
+                        node.RightSibling = right;
+                        left.RightSibling = node;
+
+                    }
+
+                }                
             }
             else
             {
@@ -52,11 +83,11 @@ namespace Resin.IO
 
             if (eow)
             {
-                node.PostingsAddress = postingsInfo;
+                node.PostingsAddress = postingsAddress;
             }
             else
             {
-                node.Add(path.Substring(1), postingsInfo);
+                node.Add(path.Substring(1), postingsAddress);
             }
         }
 
