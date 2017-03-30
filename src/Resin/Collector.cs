@@ -19,12 +19,14 @@ namespace Resin
         private readonly string _directory;
         private readonly IxInfo _ix;
         private readonly IScoringScheme _scorer;
+        private readonly int _max;
 
-        public Collector(string directory, IxInfo ix, IScoringScheme scorer)
+        public Collector(string directory, IxInfo ix, IScoringScheme scorer, int max)
         {
             _directory = directory;
             _ix = ix;
             _scorer = scorer;
+            _max = max;
         }
 
         public IList<DocumentScore> Collect(QueryContext query)
@@ -112,7 +114,7 @@ namespace Resin
         
         private IEnumerable<IEnumerable<DocumentPosting>> DoReadPostings(IEnumerable<Term> terms)
         {
-            yield return GetPostings(terms);
+            yield return GetPostings(terms).OrderByDescending(p=>p.Count).Take(_max);
         }
 
         private IEnumerable<DocumentPosting> GetPostings(IEnumerable<Term> terms)
@@ -127,10 +129,10 @@ namespace Resin
 
         private void Score(IList<QueryContext> queries)
         {
-            foreach (var query in queries)
+            Parallel.ForEach(queries, query =>
             {
                 query.Scored = DoScore(query.Postings.ToList(), query.Field);
-            }
+            });
         }
 
         private IEnumerable<DocumentScore> DoScore(IList<DocumentPosting> postings, string field)
