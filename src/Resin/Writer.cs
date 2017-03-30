@@ -19,7 +19,6 @@ namespace Resin
         private readonly IAnalyzer _analyzer;
         private readonly string _indexName;
         private readonly Dictionary<string, LcrsTrie> _tries;
-        private readonly object _sync = new object();
         private readonly ConcurrentDictionary<string, int> _docCountByField;
 
         protected Writer(string directory, IAnalyzer analyzer)
@@ -123,14 +122,8 @@ namespace Resin
 
             if (!_tries.TryGetValue(key, out trie))
             {
-                lock (_sync)
-                {
-                    if (!_tries.TryGetValue(key, out trie))
-                    {
-                        trie = new LcrsTrie('\0', false);
-                        _tries[key] = trie;
-                    }
-                }
+                trie = new LcrsTrie('\0', false);
+                _tries[key] = trie;
             }
             return trie;
         }

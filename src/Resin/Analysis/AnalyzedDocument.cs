@@ -15,20 +15,14 @@ namespace Resin.Analysis
         {
             _id = id;
             _terms = new Dictionary<Term, int>();
+
             foreach (var field in analyzedTerms)
             {
                 foreach (var term in field.Value)
                 {
                     var key = new Term(field.Key, new Word(term.Key));
-                    int count;
-                    if (!_terms.TryGetValue(key, out count))
-                    {
-                        _terms.Add(key, term.Value);
-                    }
-                    else
-                    {
-                        _terms[key] = count + term.Value;
-                    }
+
+                    _terms.Add(key, term.Value);
                 }
             }
         }
