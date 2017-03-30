@@ -35,7 +35,7 @@ namespace Resin.Analysis
 
         public DocumentScore Score(DocumentPosting posting)
         {
-            var score = Math.Log10(posting.Count) * _idf;
+            var score = Math.Sqrt(posting.Count) * _idf;
             return new DocumentScore(posting.DocumentId, score);
         }
 
