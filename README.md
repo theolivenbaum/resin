@@ -30,9 +30,9 @@ Latest release is [here](https://github.com/kreeben/resin/releases/latest)
 ### Index them.
 
 	var dir = @"C:\Users\Yourname\Resin\wikipedia";
-	using (var write = new WriteOperation(dir, new Analyzer(), docs))
+	using (var write = new WriteOperation(dir, new Analyzer()))
 	{
-		write.Write();
+		write.Write(docs);
 	}
 
 ### Query the index.
