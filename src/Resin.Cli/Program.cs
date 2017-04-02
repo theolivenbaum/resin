@@ -90,7 +90,7 @@ namespace Resin.Cli
                         Print(doc);
                     }
 
-                    Console.WriteLine("\r\n{0} results of {1} in {2}", (page + 1) * size, result.Total, timer.Elapsed);  
+                    Console.WriteLine("\r\n{0} results of {1} in {2}", size, result.Total, timer.Elapsed);  
                 }
             }
             else

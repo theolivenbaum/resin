@@ -57,10 +57,9 @@ namespace Resin
                 return new Result { Docs = new List<Document>() };
             }
 
-            var take = size + (page * size);
-            var scored = Collect(queryContext, take);
             var skip = page * size;
-            var paged = scored.Skip(skip).ToList();
+            var scored = Collect(queryContext);
+            var paged = scored.Skip(skip).Take(size).ToList();
 
             var docTime = Time();
 
@@ -80,9 +79,9 @@ namespace Resin
             return Directory.GetFiles(_directory, "*.ix").OrderBy(s => s).ToArray();
         }
 
-        private IList<DocumentScore> Collect(QueryContext query, int max)
+        private IList<DocumentScore> Collect(QueryContext query)
         {
-            using (var collector = new Collector(_directory, _ix, _scorer, max))
+            using (var collector = new Collector(_directory, _ix, _scorer))
             {
                 return collector.Collect(query);
             }
