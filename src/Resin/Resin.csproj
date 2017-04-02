@@ -72,7 +72,6 @@
     <Compile Include="Sys\MurmurHash2UInt32Hack.cs" />
     <Compile Include="Sys\Util.cs" />
     <Compile Include="Analysis\IAnalyzer.cs" />
-    <Compile Include="IO\CompressedBinaryFile.cs" />
     <Compile Include="IO\DocumentCount.cs" />
     <Compile Include="Document.cs" />
     <Compile Include="Querying\DocumentScore.cs" />

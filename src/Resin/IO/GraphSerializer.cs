@@ -1,17 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using log4net;
-using NetSerializer;
 
 namespace Resin.IO
 {
-    [Serializable]
-    public abstract class GraphSerializer
+    public static class GraphSerializer
     {
-        [NonSerialized]
-        protected static readonly ILog Log = LogManager.GetLogger(typeof(GraphSerializer));
-
-        [NonSerialized]
         private static readonly Type[] Types =
         {
             typeof (string), 
