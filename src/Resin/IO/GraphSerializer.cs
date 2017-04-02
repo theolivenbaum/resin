@@ -16,7 +16,6 @@ namespace Resin.IO
         {
             typeof (string), 
             typeof (int), 
-            typeof (IxInfo),
             typeof (List<int>),
             typeof (DocumentCount),
             typeof (Dictionary<string, int>),
@@ -29,6 +28,6 @@ namespace Resin.IO
         };
 
         [NonSerialized]
-        public static readonly Serializer Serializer = new Serializer(Types);
+        public static readonly NetSerializer.Serializer Serializer = new NetSerializer.Serializer(Types);
     }
 }

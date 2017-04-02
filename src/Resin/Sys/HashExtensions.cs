@@ -7,7 +7,7 @@ namespace Resin.Sys
 {
     internal static class HashExtensions
     {
-        public static string ToBucketName(this string token)
+        public static string ToTrieBucketName(this string token)
         {
             for (int index = 0; index < token.Length; index++)
             {
@@ -41,21 +41,15 @@ namespace Resin.Sys
             return new MurmurHash2UInt32Hack().Hash(bytes).ToString(CultureInfo.InvariantCulture);
         }
 
-        public static string ToTrieFileId(this string field)
+        public static string ToHashString(this string text)
         {
-            var bytes = Encoding.Unicode.GetBytes(field);
+            var bytes = Encoding.Unicode.GetBytes(text);
             return new MurmurHash2UInt32Hack().Hash(bytes).ToString(CultureInfo.InvariantCulture);
         }
 
-        /// <summary>
-        /// Knuth hash. http://stackoverflow.com/questions/9545619/a-fast-hash-function-for-string-in-c-sharp
-        /// One could also use https://msdn.microsoft.com/en-us/library/system.security.cryptography.sha1.aspx
-        /// </summary>
-        /// <param name="read"></param>
-        /// <returns></returns>
-        public static UInt32 ToHash(this string read)
+        public static UInt32 ToHash(this string text)
         {
-            var bytes = Encoding.Unicode.GetBytes(read);
+            var bytes = Encoding.Unicode.GetBytes(text);
             return new MurmurHash2UInt32Hack().Hash(bytes);
         }
     }

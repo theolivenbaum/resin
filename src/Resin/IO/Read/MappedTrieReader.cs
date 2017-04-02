@@ -46,7 +46,7 @@ namespace Resin.IO.Read
                 return LcrsNode.MinValue;
             }
 
-            LastRead = TrieSerializer.BytesToType<LcrsNode>(data);
+            LastRead = Serializer.BytesToType<LcrsNode>(data);
 
             return LastRead;
         }

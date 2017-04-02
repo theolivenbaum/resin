@@ -12,8 +12,9 @@ namespace Resin.IO
     {
         public LcrsTrie RightSibling { get; set; }
         public LcrsTrie LeftChild { get; set; }
-        public BlockInfo? PostingsAddress { get; set; }
-        
+        public BlockInfo PostingsAddress { get; set; }
+        public List<DocumentPosting> Postings { get; set; }
+ 
         public char Value { get; private set; }
         public bool EndOfWord { get; private set; }
 
@@ -23,12 +24,36 @@ namespace Resin.IO
             EndOfWord = endOfWord;
         }
 
-        public void Add(string path)
+        public IEnumerable<LcrsTrie> EndOfWordNodes()
         {
-            Add(path, BlockInfo.MinValue);
+            if (EndOfWord)
+            {
+                yield return this;
+            }
+
+            if (LeftChild != null)
+            {
+                foreach (var node in LeftChild.EndOfWordNodes())
+                {
+                    yield return node;
+                }
+            }
+
+            if (RightSibling != null)
+            {
+                foreach (var node in RightSibling.EndOfWordNodes())
+                {
+                    yield return node;
+                }
+            }
         }
 
-        public void Add(string path, BlockInfo postingsAddress)
+        public void AddTest(string path)
+        {
+            Add(path,new DocumentPosting(0, 1));
+        }
+
+        public void Add(string path, DocumentPosting posting)
         {
             if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("word");
 
@@ -52,7 +77,7 @@ namespace Resin.IO
                     }
                     else
                     {
-                        // place node in lexical order
+                        // place new node in lexical order
                         var left = LeftChild;
                         while (left != null)
                         {
@@ -60,10 +85,7 @@ namespace Resin.IO
                             {
                                 break;
                             }
-                            else
-                            {
-                                left = left.RightSibling;
-                            }
+                            left = left.RightSibling;
                         }
                         var right = left.RightSibling;
                         node.RightSibling = right;
@@ -83,11 +105,15 @@ namespace Resin.IO
 
             if (eow)
             {
-                node.PostingsAddress = postingsAddress;
+                if (node.Postings == null)
+                {
+                    node.Postings = new List<DocumentPosting>();
+                }
+                node.Postings.Add(posting);
             }
             else
             {
-                node.Add(path.Substring(1), postingsAddress);
+                node.Add(path.Substring(1), posting);
             }
         }
 
@@ -166,7 +192,7 @@ namespace Resin.IO
             LcrsTrie node;
             if (TryFindPath(word, out node))
             {
-                found = new Word(word, node.PostingsAddress.Value);
+                found = new Word(word, node.PostingsAddress);
                 return node.EndOfWord;
             }
             found = Word.MinValue;
@@ -218,7 +244,7 @@ namespace Resin.IO
             {
                 if (EndOfWord)
                 {
-                    compressed.Add(new Word(test, PostingsAddress.Value));
+                    compressed.Add(new Word(test, PostingsAddress));
                 }
             }
 
@@ -243,7 +269,7 @@ namespace Resin.IO
 
             if (EndOfWord)
             {
-                compressed.Add(new Word(traveled + new string(state.ToArray()), PostingsAddress.Value));
+                compressed.Add(new Word(traveled + new string(state.ToArray()), PostingsAddress));
             }
 
             if (LeftChild != null)

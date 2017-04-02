@@ -11,14 +11,14 @@ namespace Tests
         public void Can_get_weight()
         {
             var tree = new LcrsTrie('\0', false);
-            tree.Add("pap");
-            tree.Add("papp");
-            tree.Add("papaya");
+            tree.AddTest("pap");
+            tree.AddTest("papp");
+            tree.AddTest("papaya");
 
             Assert.AreEqual(8, tree.GetWeight());
 
-            tree.Add("ape");
-            tree.Add("apelsin");
+            tree.AddTest("ape");
+            tree.AddTest("apelsin");
 
             Assert.AreEqual(15, tree.GetWeight());
         }
@@ -31,19 +31,19 @@ namespace Tests
 
             Assert.That(near, Is.Empty);
 
-            tree.Add("bad");
+            tree.AddTest("bad");
             near = tree.Near("ba", 1).Select(w => w.Value).ToList();
 
             Assert.That(near.Count, Is.EqualTo(1));
             Assert.IsTrue(near.Contains("bad"));
 
-            tree.Add("baby");
+            tree.AddTest("baby");
             near = tree.Near("ba", 1).Select(w => w.Value).ToList();
 
             Assert.That(near.Count, Is.EqualTo(1));
             Assert.IsTrue(near.Contains("bad"));
 
-            tree.Add("b");
+            tree.AddTest("b");
             near = tree.Near("ba", 1).Select(w => w.Value).ToList();
 
             Assert.That(near.Count, Is.EqualTo(2));
@@ -61,7 +61,7 @@ namespace Tests
 
             Assert.That(near.Count, Is.EqualTo(0));
 
-            tree.Add("bananas");
+            tree.AddTest("bananas");
             near = tree.Near("ba", 6).Select(w => w.Value).ToList();
 
             Assert.That(near.Count, Is.EqualTo(4));
@@ -75,7 +75,7 @@ namespace Tests
             Assert.That(near.Count, Is.EqualTo(1));
             Assert.IsTrue(near.Contains("baby"));
 
-            tree.Add("bank");
+            tree.AddTest("bank");
             near = tree.Near("bazy", 3).Select(w => w.Value).ToList();
 
             Assert.AreEqual(4, near.Count);
@@ -90,25 +90,25 @@ namespace Tests
         {
             var tree = new LcrsTrie('\0', false);
 
-            tree.Add("rambo");
-            tree.Add("rambo");
+            tree.AddTest("rambo");
+            tree.AddTest("rambo");
 
-            tree.Add("2");
+            tree.AddTest("2");
 
-            tree.Add("rocky");
+            tree.AddTest("rocky");
 
-            tree.Add("2");
+            tree.AddTest("2");
 
-            tree.Add("raiders");
+            tree.AddTest("raiders");
 
-            tree.Add("of");
-            tree.Add("the");
-            tree.Add("lost");
-            tree.Add("ark");
+            tree.AddTest("of");
+            tree.AddTest("the");
+            tree.AddTest("lost");
+            tree.AddTest("ark");
 
-            tree.Add("rain");
+            tree.AddTest("rain");
 
-            tree.Add("man");
+            tree.AddTest("man");
 
             var prefixed = tree.StartsWith("ra").Select(w=>w.Value).ToList();
 
@@ -125,19 +125,19 @@ namespace Tests
             Word word;
             Assert.False(tree.HasWord("xxx", out word));
 
-            tree.Add("xxx");
+            tree.AddTest("xxx");
 
             Assert.True(tree.HasWord("xxx", out word));
             Assert.False(tree.HasWord("baby", out word));
             Assert.False(tree.HasWord("dad", out word));
 
-            tree.Add("baby");
+            tree.AddTest("baby");
 
             Assert.True(tree.HasWord("xxx", out word));
             Assert.True(tree.HasWord("baby", out word));
             Assert.False(tree.HasWord("dad", out word));
 
-            tree.Add("dad");
+            tree.AddTest("dad");
 
             Assert.True(tree.HasWord("xxx", out word));
             Assert.True(tree.HasWord("baby", out word));
@@ -149,7 +149,7 @@ namespace Tests
         {
             var tree = new LcrsTrie('\0', false);
             Word word;
-            tree.Add("baby");
+            tree.AddTest("baby");
 
             Assert.That(tree.LeftChild.Value, Is.EqualTo('b'));
             Assert.That(tree.LeftChild.LeftChild.Value, Is.EqualTo('a'));
@@ -163,8 +163,8 @@ namespace Tests
         public void Can_build_two_legs()
         {
             var root = new LcrsTrie('\0', false);
-            root.Add("baby");
-            root.Add("dad");
+            root.AddTest("baby");
+            root.AddTest("dad");
             Word word;
             Assert.That(root.LeftChild.RightSibling.Value, Is.EqualTo('d'));
             Assert.That(root.LeftChild.LeftChild.Value, Is.EqualTo('a'));
@@ -184,8 +184,8 @@ namespace Tests
         {
             var root = new LcrsTrie('\0', false);
 
-            root.Add("baby");
-            root.Add("bad");
+            root.AddTest("baby");
+            root.AddTest("bad");
             Word word;
 
             Assert.That(root.LeftChild.Value, Is.EqualTo('b'));

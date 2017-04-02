@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Resin.Analysis;
 using Resin.IO;
@@ -34,55 +33,76 @@ namespace Resin
         public string Write()
         {
             var index = 0;
-            var matrix = new Dictionary<Term, List<DocumentPosting>>();
             var docAddresses = new List<BlockInfo>();
-            var analyzedDocs = new List<AnalyzedDocument>();
 
-            using (var docWriter = new DocumentWriter(new FileStream(Path.Combine(_directory, _indexName + ".doc"), FileMode.Create, FileAccess.Write, FileShare.None)))
+            using (var analyzedDocuments = new BlockingCollection<AnalyzedDocument>())
             {
-                foreach (var doc in ReadSource())
+                using (Task producer = Task.Factory.StartNew(() =>
                 {
-                    doc.Id = index++;
-
-                    docAddresses.Add(docWriter.Write(doc));
-
-                    analyzedDocs.Add(_analyzer.AnalyzeDocument(doc));
-
-                    foreach (var field in doc.Fields)
+                    // Produce
+                    using (var docWriter = new DocumentWriter(new FileStream(Path.Combine(_directory, _indexName + ".doc"), FileMode.Create, FileAccess.Write, FileShare.None)))
                     {
-                        _docCountByField.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
+                        foreach (var doc in ReadSource())
+                        {
+                            doc.Id = index++;
+
+                            docAddresses.Add(docWriter.Write(doc));
+
+                            analyzedDocuments.Add(_analyzer.AnalyzeDocument(doc));
+
+                            foreach (var field in doc.Fields)
+                            {
+                                _docCountByField.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
+                            }
+                        }
                     }
+
+                    // Signal no more work will be added
+                    analyzedDocuments.CompleteAdding();
+                }))
+                {
+                    using (Task consumer = Task.Factory.StartNew(() =>
+                    {
+                        try
+                        {
+                            // Consume
+                            while (true)
+                            {
+                                var analyzed = analyzedDocuments.Take();
+                                foreach (var term in analyzed.Terms)
+                                {
+                                    GetTrie(term.Key.Field, term.Key.Word.Value)
+                                        .Add(term.Key.Word.Value, term.Value);
+                                }
+                            }
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // We're done here
+                        }
+                    })) 
+                    Task.WaitAll(producer, consumer);
                 }
             }
 
-            for (int docId = 0; docId < analyzedDocs.Count; docId++)
+            var tasks = new List<Task>
             {
-                var analyzed = analyzedDocs[docId];
-
-                foreach (var term in analyzed.Terms)
+                Task.Run(() =>
                 {
-                    List<DocumentPosting> postings;
-
-                    if (matrix.TryGetValue(term.Key, out postings))
+                    var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexName, "pos"));
+                    using (var postingsWriter = new PostingsWriter(new FileStream(posFileName, FileMode.Create, FileAccess.Write, FileShare.None)))
                     {
-                        postings.Add(new DocumentPosting(docId, term.Value));
+                        foreach (var trie in _tries)
+                        {
+                            foreach (var node in trie.Value.EndOfWordNodes())
+                            {
+                                node.PostingsAddress = postingsWriter.Write(node.Postings);
+                            }
+                        }
                     }
-                    else
-                    {
-                        matrix.Add(term.Key, new[] { new DocumentPosting(docId, term.Value) }.ToList());
-                    }
-                }
-            }
-
-            using (var postingsWriter = new PostingsWriter(new FileStream(Path.Combine(_directory, _indexName + ".pos"), FileMode.Create, FileAccess.Write, FileShare.None)))
-            {
-                foreach (var term in matrix)
-                {
-                    var postingsAddress = postingsWriter.Write(term.Value);
-
-                    GetTrie(term.Key.Field, term.Key.Word.Value).Add(term.Key.Word.Value, postingsAddress);
-                } 
-            }
+                    SerializeTries();
+                })
+            };
 
             using (var docAddressWriter = new DocumentAddressWriter(new FileStream(Path.Combine(_directory, _indexName + ".da"), FileMode.Create, FileAccess.Write, FileShare.None)))
             {
@@ -92,9 +112,9 @@ namespace Resin
                 }
             }
 
-            SerializeTries();
+            CreateIxInfo().Serialize(Path.Combine(_directory, _indexName + ".ix"));
 
-            CreateIxInfo().Save(Path.Combine(_directory, _indexName + ".ix"));
+            Task.WaitAll(tasks.ToArray());
 
             return _indexName;
         }
@@ -117,7 +137,7 @@ namespace Resin
 
         private LcrsTrie GetTrie(string field, string token)
         {
-            var key = string.Format("{0}-{1}", field.ToTrieFileId(), token.ToBucketName());
+            var key = string.Format("{0}-{1}", field.ToHashString(), token.ToTrieBucketName());
             LcrsTrie trie;
 
             if (!_tries.TryGetValue(key, out trie))
@@ -133,8 +153,7 @@ namespace Resin
             return new IxInfo
             {
                 Name = _indexName,
-                DocumentCount = new DocumentCount(new Dictionary<string, int>(_docCountByField)),
-                Deletions = new List<int>()
+                DocumentCount = new Dictionary<string, int>(_docCountByField)
             };
         }
 

@@ -117,7 +117,9 @@ namespace Resin
 
         private IEnumerable<DocumentPosting> GetPostings(IEnumerable<Term> terms)
         {
-            using (var reader = new PostingsReader(new FileStream(Path.Combine(_directory, _ix.Name + ".pos"), FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan)))
+            var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.Name, "pos"));
+
+            using (var reader = new PostingsReader(new FileStream(posFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan)))
             {
                 var addresses = terms.Select(term => term.Word.PostingsAddress).OrderBy(adr => adr.Position).ToList();
 
@@ -137,7 +139,7 @@ namespace Resin
         {
             if (postings.Any())
             {
-                var scorer = _scorer.CreateScorer(_ix.DocumentCount.DocCount[field], postings.Count);
+                var scorer = _scorer.CreateScorer(_ix.DocumentCount[field], postings.Count);
 
                 foreach (var posting in postings)
                 {
@@ -150,8 +152,8 @@ namespace Resin
 
         private ITrieReader GetTreeReader(string field, string token)
         {
-            var suffix = token.ToBucketName();
-            var fileId = field.ToTrieFileId();
+            var suffix = token.ToTrieBucketName();
+            var fileId = field.ToHashString();
             var fileName = Path.Combine(_directory, string.Format("{0}-{1}-{2}.tri", _ix.Name, fileId, suffix));
 
             if (!File.Exists(fileName)) return null;

@@ -27,7 +27,7 @@ namespace Resin.IO.Write
 
         protected virtual byte[] Serialize(T block)
         {
-            return TrieSerializer.TypeToBytes(block);
+            return Serializer.TypeToBytes(block);
         }
 
         public void Dispose()

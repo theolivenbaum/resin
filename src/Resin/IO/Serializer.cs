@@ -1,11 +1,26 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 
-namespace Resin.IO.Write
+namespace Resin.IO
 {
-    public static class TrieSerializer
+    public static class Serializer
     {
+        public static void Serialize(this IxInfo ix, string fileName)
+        {
+            using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (var writer = new StreamWriter(fs, Encoding.Unicode))
+            {
+                writer.WriteLine(ix.Name);
+
+                foreach (var field in ix.DocumentCount)
+                {
+                    writer.WriteLine(field.Key);
+                    writer.WriteLine(field.Value);
+                }
+            }
+        }
         public static void SerializeMapped(this LcrsTrie trie, string fileName)
         {
             using (var stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4800))

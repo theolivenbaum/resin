@@ -5,24 +5,21 @@ namespace Resin.Analysis
 {
     public class AnalyzedDocument
     {
-        private readonly int _id;
-        private readonly IDictionary<Term, int> _terms;
+        private readonly IDictionary<Term, DocumentPosting> _terms;
 
-        public IDictionary<Term, int> Terms { get { return _terms; } }
-        public int Id { get { return _id; } }
+        public IDictionary<Term, DocumentPosting> Terms { get { return _terms; } } 
 
         public AnalyzedDocument(int id, IEnumerable<KeyValuePair<string, IDictionary<string, int>>> analyzedTerms)
         {
-            _id = id;
-            _terms = new Dictionary<Term, int>();
+            _terms = new Dictionary<Term, DocumentPosting>();
 
             foreach (var field in analyzedTerms)
             {
                 foreach (var term in field.Value)
                 {
-                    var key = new Term(field.Key, new Word(term.Key));
-
-                    _terms.Add(key, term.Value);
+                    _terms.Add(
+                        new Term(field.Key, new Word(term.Key)), 
+                        new DocumentPosting(id, term.Value));
                 }
             }
         }
