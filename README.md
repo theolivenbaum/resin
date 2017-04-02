@@ -2,9 +2,9 @@
 
 Resin is a vector space model implementation, a modern type search and analytics framework and a document based IR library with fast fuzzy and prefix querying and with customizable tokenizers and scoring (tf-idf included, other schemes supported).
 
-Resin outperforms [the market leader's](https://lucenenet.apache.org/) querying and indexing speed making it [the fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) IR system on the .net plaform (available Q3 on Core 2.0).
+Resin outperforms [the market leader's](https://lucenenet.apache.org/) querying and indexing speed making it [the fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) IR system on the .net plaform. Resin will be available on Core 2.0 Q3 2017.
 
-## .net version
+## Supported .net version
 
 4.6.1
 
