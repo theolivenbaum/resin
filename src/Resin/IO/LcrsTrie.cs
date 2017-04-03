@@ -48,7 +48,8 @@ namespace Resin.IO
             }
         }
 
-        public void AddTest(string path)
+        [Obsolete]
+        public void Add(string path)
         {
             Add(path,new DocumentPosting(0, 1));
         }

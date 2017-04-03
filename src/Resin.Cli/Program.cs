@@ -90,29 +90,29 @@ namespace Resin.Cli
                         Print(doc);
                     }
 
-                    Console.WriteLine("\r\n{0} results of {1} in {2}", size, result.Total, timer.Elapsed);  
+                    Console.WriteLine("\r\n{0}-{1} results of {2} in {3}", page * size, docs.Count + (page * size), result.Total, timer.Elapsed);  
                 }
             }
             else
             {
-                var timer = new Stopwatch();
-                timer.Start();
-                using (var s = new SearchClient(indexName, url))
-                {
-                    result = s.Search(q, page, size);
-                    var docs = result.Docs.ToList();
+                //var timer = new Stopwatch();
+                //timer.Start();
+                //using (var s = new SearchClient(indexName, url))
+                //{
+                //    result = s.Search(q, page, size);
+                //    var docs = result.Docs.ToList();
 
-                    timer.Stop();
+                //    timer.Stop();
 
-                    PrintHeaders();
+                //    PrintHeaders();
 
-                    foreach (var doc in docs)
-                    {
-                        Print(doc);
-                    }
+                //    foreach (var doc in docs)
+                //    {
+                //        Print(doc);
+                //    }
 
-                    Console.WriteLine("\r\n{0} results of {1} in {2}", (page + 1) * size, result.Total, timer.Elapsed);  
-                }
+                //    Console.WriteLine("\r\n{0} results of {1} in {2}", (page + 1) * size, result.Total, timer.Elapsed);  
+                //}
             }
 
         }

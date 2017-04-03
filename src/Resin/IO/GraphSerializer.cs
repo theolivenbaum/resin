@@ -9,6 +9,7 @@ namespace Resin.IO
         {
             typeof (string), 
             typeof (int), 
+            typeof (IxInfo),
             typeof (List<int>),
             typeof (DocumentCount),
             typeof (Dictionary<string, int>),
@@ -16,7 +17,7 @@ namespace Resin.IO
             typeof (Dictionary<string, string>),
             typeof (List<DocumentPosting>),
             typeof (BlockInfo),
-            typeof (Document),
+            typeof (string[]),
             typeof (List<DocumentPosting>)
         };
 

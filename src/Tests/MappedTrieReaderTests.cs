@@ -25,7 +25,7 @@ namespace Tests
                 Assert.That(near, Is.Empty);
             }
 
-            tree.AddTest("bad");
+            tree.Add("bad");
             tree.SerializeMapped(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
@@ -36,7 +36,7 @@ namespace Tests
                 Assert.IsTrue(near.Contains("bad"));
             }
 
-            tree.AddTest("baby");
+            tree.Add("baby");
             tree.SerializeMapped(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
@@ -47,7 +47,7 @@ namespace Tests
                 Assert.IsTrue(near.Contains("bad"));
             }
 
-            tree.AddTest("b");
+            tree.Add("b");
             tree.SerializeMapped(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
@@ -76,7 +76,7 @@ namespace Tests
                 Assert.That(near.Count, Is.EqualTo(0));
             }
 
-            tree.AddTest("bananas");
+            tree.Add("bananas");
             tree.SerializeMapped(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
@@ -98,7 +98,7 @@ namespace Tests
                 Assert.IsTrue(near.Contains("baby"));
             }
 
-            tree.AddTest("bank");
+            tree.Add("bank");
             tree.SerializeMapped(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
@@ -120,25 +120,25 @@ namespace Tests
 
             var tree = new LcrsTrie('\0', false);
 
-            tree.AddTest("rambo");
-            tree.AddTest("rambo");
+            tree.Add("rambo");
+            tree.Add("rambo");
 
-            tree.AddTest("2");
+            tree.Add("2");
 
-            tree.AddTest("rocky");
+            tree.Add("rocky");
 
-            tree.AddTest("2");
+            tree.Add("2");
 
-            tree.AddTest("raiders");
+            tree.Add("raiders");
 
-            tree.AddTest("of");
-            tree.AddTest("the");
-            tree.AddTest("lost");
-            tree.AddTest("ark");
+            tree.Add("of");
+            tree.Add("the");
+            tree.Add("lost");
+            tree.Add("ark");
 
-            tree.AddTest("rain");
+            tree.Add("rain");
 
-            tree.AddTest("man");
+            tree.Add("man");
 
             tree.SerializeMapped(fileName);
 
@@ -156,10 +156,10 @@ namespace Tests
             var fileName = Path.Combine(Setup.Dir, "Can_find_exact_mm.tri");
 
             var tree = new LcrsTrie('\0', false);
-            tree.AddTest("xor");
-            tree.AddTest("xxx");
-            tree.AddTest("donkey");
-            tree.AddTest("xavier");
+            tree.Add("xor");
+            tree.Add("xxx");
+            tree.Add("donkey");
+            tree.Add("xavier");
             tree.SerializeMapped(fileName);
 
             Word word;
@@ -176,7 +176,7 @@ namespace Tests
                 Assert.False(reader.HasWord("dad", out word));
             }
 
-            tree.AddTest("baby");
+            tree.Add("baby");
             tree.SerializeMapped(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
@@ -192,8 +192,8 @@ namespace Tests
                 Assert.False(reader.HasWord("dad", out word));
             }
 
-            tree.AddTest("dad");
-            tree.AddTest("daddy");
+            tree.Add("dad");
+            tree.Add("daddy");
             tree.SerializeMapped(fileName);
 
             using (var reader = new MappedTrieReader(fileName))

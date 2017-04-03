@@ -28,25 +28,29 @@ namespace Resin
 
         public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
         {
-            var initTimer = Time();
-
             _directory = directory;
             _parser = parser;
             _scorer = scorer;
 
             _ix = IxInfo.Load(GetIndexFileNamesInChronologicalOrder().Last());
 
-            _docReader = new DocumentReader(new FileStream(Path.Combine(_directory, _ix.Name + ".doc"), FileMode.Open, FileAccess.Read, FileShare.Read, 4096*4, FileOptions.SequentialScan));
-            
-            Log.DebugFormat("init searcher in {0}", initTimer.Elapsed);
+            var fields = _ix.DocumentCount.Keys.OrderBy(x => x).ToArray();
+            var docFileName = Path.Combine(_directory, _ix.Name + ".doc");
+
+            _docReader = new DocumentReader(
+                new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 4, FileOptions.SequentialScan), 
+                fields);
 
             _blockSize = Marshal.SizeOf(typeof(BlockInfo));
+            
         }
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
         {
-            var searchTime = Time();
-            var parseTime = Time();
+            var searchTime = new Stopwatch();
+            searchTime.Start();
+            var parseTime = new Stopwatch();
+            parseTime.Start();
 
             var queryContext = _parser.Parse(query);
 
@@ -61,7 +65,8 @@ namespace Resin
             var scored = Collect(queryContext);
             var paged = scored.Skip(skip).Take(size).ToList();
 
-            var docTime = Time();
+            var docTime = new Stopwatch();
+            docTime.Start();
 
             var docs = GetDocs(paged);
 
@@ -109,13 +114,6 @@ namespace Resin
                 }
             }
             return docs.OrderByDescending(kvp=>kvp.Key).Select(kvp=>kvp.Value).ToList();
-        }
-
-        private static Stopwatch Time()
-        {
-            var timer = new Stopwatch();
-            timer.Start();
-            return timer;
         }
 
         public void Dispose()

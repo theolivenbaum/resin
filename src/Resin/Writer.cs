@@ -39,8 +39,11 @@ namespace Resin
             {
                 using (Task producer = Task.Factory.StartNew(() =>
                 {
+                    var docFileName = Path.Combine(_directory, _indexName + ".doc");
+
                     // Produce
-                    using (var docWriter = new DocumentWriter(new FileStream(Path.Combine(_directory, _indexName + ".doc"), FileMode.Create, FileAccess.Write, FileShare.None)))
+                    using (var docWriter = new DocumentWriter(
+                        new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None)))
                     {
                         foreach (var doc in ReadSource())
                         {

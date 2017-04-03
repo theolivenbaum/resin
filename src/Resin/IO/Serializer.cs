@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Resin.IO
 {
@@ -10,15 +9,8 @@ namespace Resin.IO
         public static void Serialize(this IxInfo ix, string fileName)
         {
             using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
-            using (var writer = new StreamWriter(fs, Encoding.Unicode))
             {
-                writer.WriteLine(ix.Name);
-
-                foreach (var field in ix.DocumentCount)
-                {
-                    writer.WriteLine(field.Key);
-                    writer.WriteLine(field.Value);
-                }
+                GraphSerializer.Serializer.Serialize(fs, ix);
             }
         }
         public static void SerializeMapped(this LcrsTrie trie, string fileName)
