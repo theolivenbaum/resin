@@ -13,30 +13,31 @@ namespace Resin.IO
                 GraphSerializer.Serializer.Serialize(fs, ix);
             }
         }
-        public static void SerializeMapped(this LcrsTrie trie, string fileName)
+
+        public static void Serialize(this LcrsTrie trie, string fileName)
         {
             using (var stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4800))
             {
                 if (trie.LeftChild != null)
                 {
-                    trie.LeftChild.SerializeMappedDepthFirst(stream, 0);
+                    trie.LeftChild.SerializeDepthFirst(stream, 0);
                 }
             }
         }
 
-        private static void SerializeMappedDepthFirst(this LcrsTrie trie, Stream stream, int depth)
+        private static void SerializeDepthFirst(this LcrsTrie trie, Stream stream, int depth)
         {
             var bytes = TypeToBytes(new LcrsNode(trie, depth, trie.GetWeight(), trie.PostingsAddress));
             stream.Write(bytes, 0, bytes.Length);
 
             if (trie.LeftChild != null)
             {
-                trie.LeftChild.SerializeMappedDepthFirst(stream, depth + 1);
+                trie.LeftChild.SerializeDepthFirst(stream, depth + 1);
             }
 
             if (trie.RightSibling != null)
             {
-                trie.RightSibling.SerializeMappedDepthFirst(stream, depth);
+                trie.RightSibling.SerializeDepthFirst(stream, depth);
             }
         }
 

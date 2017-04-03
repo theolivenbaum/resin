@@ -135,7 +135,7 @@ namespace Resin
             var key = trieEntry.Item1;
             var trie = trieEntry.Item2;
             var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _indexName, key));
-            trie.SerializeMapped(fileName);
+            trie.Serialize(fileName);
         }
 
         private LcrsTrie GetTrie(string field, string token)

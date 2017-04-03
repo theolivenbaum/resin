@@ -12,10 +12,6 @@ namespace Resin
 
         public IDictionary<string, string> Fields { get { return _fields; } }
 
-        public Document():this(new Dictionary<string, string>())
-        {
-        }
-
         public Document(IDictionary<string, string> fields)
         {
             if (fields == null) throw new ArgumentNullException("fields");

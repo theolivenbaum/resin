@@ -24,6 +24,20 @@ namespace Resin.IO
             EndOfWord = endOfWord;
         }
 
+        public void Merge(LcrsTrie other)
+        {
+            var words = new List<Word>();
+
+            other.LeftChild.DepthFirst(string.Empty, new List<char>(), words);
+
+            var nodes = other.LeftChild.EndOfWordNodes().ToArray();
+
+            for (int index = 0;index < nodes.Length; index++)
+            {
+                Add(words[index].Value, nodes[index].Postings.ToArray());
+            }
+        }
+
         public IEnumerable<LcrsTrie> EndOfWordNodes()
         {
             if (EndOfWord)
@@ -54,7 +68,7 @@ namespace Resin.IO
             Add(path,new DocumentPosting(0, 1));
         }
 
-        public void Add(string path, DocumentPosting posting)
+        public void Add(string path, params DocumentPosting[] postings)
         {
             if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("word");
 
@@ -72,29 +86,21 @@ namespace Resin.IO
                 }
                 else
                 {
-                    if (LeftChild == null)
+                    // place new node in lexical order
+                    var left = LeftChild;
+                    while (left != null)
                     {
-                        LeftChild = node;
-                    }
-                    else
-                    {
-                        // place new node in lexical order
-                        var left = LeftChild;
-                        while (left != null)
+                        if (left.Value < node.Value || left.RightSibling == null)
                         {
-                            if (left.Value < node.Value || left.RightSibling == null)
-                            {
-                                break;
-                            }
-                            left = left.RightSibling;
+                            break;
                         }
-                        var right = left.RightSibling;
-                        node.RightSibling = right;
-                        left.RightSibling = node;
-
+                        left = left.RightSibling;
                     }
+                    var right = left.RightSibling;
+                    node.RightSibling = right;
+                    left.RightSibling = node;
 
-                }                
+                }
             }
             else
             {
@@ -110,11 +116,12 @@ namespace Resin.IO
                 {
                     node.Postings = new List<DocumentPosting>();
                 }
-                node.Postings.Add(posting);
+                foreach(var posting in postings)
+                    node.Postings.Add(posting);
             }
             else
             {
-                node.Add(path.Substring(1), posting);
+                node.Add(path.Substring(1), postings);
             }
         }
 
@@ -225,7 +232,7 @@ namespace Resin.IO
             return compressed;
         }
 
-        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxEdits)
+        private void WithinEditDistanceDepthFirst(string word, string state, List<Word> compressed, int depth, int maxEdits)
         {
             var childIndex = depth + 1;
             string test;

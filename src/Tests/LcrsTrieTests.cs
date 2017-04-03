@@ -8,6 +8,27 @@ namespace Tests
     public class LcrsTrieTests
     {
         [Test]
+        public void Can_merge()
+        {
+            var one = new LcrsTrie('\0', false);
+            one.Add("ape");
+            one.Add("app");
+            one.Add("banana");
+
+            var two = new LcrsTrie('\0', false);
+            two.Add("apple");
+            two.Add("banana");
+
+            one.Merge(two);
+
+            Word found;
+            Assert.IsTrue(one.HasWord("ape", out found));
+            Assert.IsTrue(one.HasWord("app", out found));
+            Assert.IsTrue(one.HasWord("apple", out found));
+            Assert.IsTrue(one.HasWord("banana", out found));
+        }
+
+        [Test]
         public void Can_get_weight()
         {
             var tree = new LcrsTrie('\0', false);

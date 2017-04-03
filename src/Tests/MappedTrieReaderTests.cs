@@ -16,7 +16,7 @@ namespace Tests
             var fileName = Path.Combine(Setup.Dir, "Can_find_near.tri");
 
             var tree = new LcrsTrie('\0', false);
-            tree.SerializeMapped(fileName);
+            tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
             {
@@ -26,7 +26,7 @@ namespace Tests
             }
 
             tree.Add("bad");
-            tree.SerializeMapped(fileName);
+            tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
             {
@@ -37,7 +37,7 @@ namespace Tests
             }
 
             tree.Add("baby");
-            tree.SerializeMapped(fileName);
+            tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
             {
@@ -48,7 +48,7 @@ namespace Tests
             }
 
             tree.Add("b");
-            tree.SerializeMapped(fileName);
+            tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
             {
@@ -77,7 +77,7 @@ namespace Tests
             }
 
             tree.Add("bananas");
-            tree.SerializeMapped(fileName);
+            tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
             {
@@ -99,7 +99,7 @@ namespace Tests
             }
 
             tree.Add("bank");
-            tree.SerializeMapped(fileName);
+            tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
             {
@@ -140,7 +140,7 @@ namespace Tests
 
             tree.Add("man");
 
-            tree.SerializeMapped(fileName);
+            tree.Serialize(fileName);
 
             var prefixed = new MappedTrieReader(fileName).StartsWith("ra").Select(w => w.Value).ToList();
 
@@ -160,7 +160,7 @@ namespace Tests
             tree.Add("xxx");
             tree.Add("donkey");
             tree.Add("xavier");
-            tree.SerializeMapped(fileName);
+            tree.Serialize(fileName);
 
             Word word;
             using (var reader = new MappedTrieReader(fileName))
@@ -177,7 +177,7 @@ namespace Tests
             }
 
             tree.Add("baby");
-            tree.SerializeMapped(fileName);
+            tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
             {
@@ -194,7 +194,7 @@ namespace Tests
 
             tree.Add("dad");
             tree.Add("daddy");
-            tree.SerializeMapped(fileName);
+            tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
             {
