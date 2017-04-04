@@ -16,7 +16,9 @@ That data can also be represented in a trie. By chopping the text up at only one
 
 In a relational database data is stored in tables and indexes in trees. In a search engine a compressed form of the data is stored in indices and how they store the actual data is irrelevant. In Resin, indices and documents (the actual data) are tries, both first-class citizens.
 
-Resin is like a relational database where you only use indexing feature of the database. You store data in indices and pointers to that data also in indices. What you end up with are pointers to pointers that in the end locate a document, an inverted index that can recreate the data in its initial state and query it, fast, through exact, fuzzy, prefix and range searches and with string, numbers, geolocations or dates.
+Resin is like a relational database where you only use indexing feature of the database. You store data in indices and pointers to that data also in indices. What you end up with are pointers to pointers that in the end locate a document, an inverted index that can recreate the data in its initial state and query it, fast, through exact, fuzzy, prefix and range searches and with string, numbers, geolocations or dates. 
+
+Resin is fast because of two things. First, it uses little memory. Second, the trick to resolving a query into a set of documents but do so fast is to come up with a way of finding that first pointer that you can then unravel and finally resolve into a document, by some convention that must hold in all cases, to circumvent the need of an initial lookup in a hashtable or the like. Resin has such a convention.
 
 ## Versions
 
