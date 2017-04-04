@@ -6,7 +6,7 @@ Resin outperforms [the market leader's](https://lucenenet.apache.org/) querying 
 
 ## Resin as a database
 
-What you need is somewhere to store your big data, e.g. the log files from your web site or the training corpus of a NLP machine, compressed but in a format where your data is still queryable.
+What you need is somewhere to store your big data, e.g. the log files from your web site or the training corpus of a NLP machine, compressed but in a format where your data is still queryable and easily retrievable.
 
 If you represent the corpus in a trie, which has the natural ability of compression, then you have queryability on a normalized and compressed version of the data. What you have is a search engine.
 
