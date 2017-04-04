@@ -4,6 +4,20 @@ Resin is a vector space model implementation, a modern type search and analytics
 
 Resin outperforms [the market leader's](https://lucenenet.apache.org/) querying and indexing speed making it [the fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) IR system on the .net plaform. 
 
+## Resin as a database
+
+What you need is somewhere to store your big data, e.g. the log files from your web site or the training corpus of a NLP machine, compressed but in a format where your data is still queryable.
+
+If you represent the corpus in a trie, which has the natural ability of compression, then you have queryability on a normalized and compressed version of the data. What you have is a search engine.
+
+Now you need to solve compression of the documents in the state they were in before you normalized and compressed them because that version of the data is what will be requested when you respond to queries. 
+
+That data can also be represented in a trie. By chopping the text up at only one point, the space in between words, and storing the pieces and their casing state together with their position in the document, you have a compressed form that when decompressed has a state identical to its initial state. What you now have is a database, or more precisely, a reason to use your search engine as a database.
+
+In a relational database data is stored in tables and indexes in trees. In a search engine a compressed form of the data is stored in indices and how they store the actual data is irrelevant. In Resin, indices and documents (the actual data) are tries, both first-class citizens.
+
+Resin is like a relational database where you only use indexing feature of the database. You store data in indices and pointers to that data also in indices. What you end up with are pointers to pointers that in the end locate a document, an inverted index that can recreate the data in its initial state and query it, fast, through exact, fuzzy, prefix and range searches and with string, numbers, geolocations or dates.
+
 ## Versions
 
 Resin 1.0 will be released shortly. Resin's API and file format should be considered unstable until release candidate 3. Coming featues are indexing support for IComparable instead of just strings, and improved compression of documents by representing them as tries.
