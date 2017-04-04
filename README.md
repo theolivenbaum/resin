@@ -4,7 +4,11 @@ Resin is a vector space model implementation, a modern type search and analytics
 
 Resin outperforms [the market leader's](https://lucenenet.apache.org/) querying and indexing speed making it [the fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) IR system on the .net plaform. 
 
-Resin will be available on Core 2.0 Q3 2017.
+## Versions
+
+Resin 1.0 will be released shortly. Resin's API and file format should be considered unstable until release candidate 3. Coming featues are indexing support for IComparable instead of just strings, and improved compression of documents by representing them as tries.
+
+Resin will be available on Core 2.0 Preview before Q3 2017
 
 ## Supported .net version
 
