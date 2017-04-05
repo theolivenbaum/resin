@@ -34,7 +34,6 @@ namespace Tests
                 })
             };
 
-            var fields = new[] {"_id", "title"};
             var fileName = Path.Combine(Setup.Dir, "DocumentReaderTests.Can_read");
             var blocks = new Dictionary<int, BlockInfo>();
 
@@ -50,7 +49,7 @@ namespace Tests
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            using (var reader = new DocumentReader(fs, fields))
+            using (var reader = new DocumentReader(fs))
             {
                 var doc = reader.Get(new[] {blocks[2]});
 
@@ -58,7 +57,7 @@ namespace Tests
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            using (var reader = new DocumentReader(fs, fields))
+            using (var reader = new DocumentReader(fs))
             {
                 var doc = reader.Get(new[] { blocks[1] });
 
@@ -66,7 +65,7 @@ namespace Tests
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            using (var reader = new DocumentReader(fs, fields))
+            using (var reader = new DocumentReader(fs))
             {
                 var doc = reader.Get(new[] { blocks[0] });
 
@@ -74,7 +73,7 @@ namespace Tests
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            using (var reader = new DocumentReader(fs, fields))
+            using (var reader = new DocumentReader(fs))
             {
                 var ds = reader.Get(blocks.Values.OrderBy(b=>b.Position).ToList()).ToList();
 

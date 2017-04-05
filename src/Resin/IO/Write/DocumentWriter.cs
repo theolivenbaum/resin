@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 
 namespace Resin.IO.Write
 {
@@ -12,11 +10,7 @@ namespace Resin.IO.Write
 
         protected override byte[] Serialize(Document block)
         {
-            using (var ms = new MemoryStream())
-            {
-                GraphSerializer.Serializer.Serialize(ms, block);
-                return ms.ToArray();
-            }
+            return block.Serialize();
         }
     }
 }

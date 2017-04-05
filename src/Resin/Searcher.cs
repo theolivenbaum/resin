@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using log4net;
 using Resin.Analysis;
 using Resin.IO;
@@ -34,12 +33,10 @@ namespace Resin
 
             _ix = IxInfo.Load(GetIndexFileNamesInChronologicalOrder().Last());
 
-            var fields = _ix.DocumentCount.Keys.OrderBy(x => x).ToArray();
             var docFileName = Path.Combine(_directory, _ix.Name + ".doc");
 
             _docReader = new DocumentReader(
-                new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 4, FileOptions.SequentialScan), 
-                fields);
+                new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 4, FileOptions.SequentialScan));
 
             _blockSize = sizeof(long) + sizeof(int);
             
