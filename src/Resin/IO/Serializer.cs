@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -15,7 +16,8 @@ namespace Resin.IO
         {
             using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                GraphSerializer.Serializer.Serialize(fs, ix);
+                var bytes = ix.Serialize();
+                fs.Write(bytes, 0, bytes.Length);
             }
         }
 
@@ -120,6 +122,81 @@ namespace Resin.IO
             }
         }
 
+        public static byte[] Serialize(this IxInfo ix)
+        {
+            using (var stream = new MemoryStream())
+            {
+                byte[] stringBytes = Enc.GetBytes(ix.Name);
+                byte[] lengthBytes = BitConverter.GetBytes((short)stringBytes.Length);
+                byte[] dicBytes = ix.DocumentCount.Serialize();
+                
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(stringBytes);
+                    Array.Reverse(lengthBytes);
+                    Array.Reverse(dicBytes);
+                }
+
+                stream.Write(lengthBytes, 0, sizeof(short));
+                stream.Write(stringBytes, 0, stringBytes.Length);
+                stream.Write(dicBytes, 0, dicBytes.Length);
+
+                return stream.ToArray();
+            }
+        }
+
+        public static IxInfo DeserializeIxInfo(Stream stream)
+        {
+            var lengthBytes = new byte[sizeof(short)];
+
+            stream.Read(lengthBytes, 0, sizeof(short));
+
+            var stringLength = BitConverter.ToInt16(lengthBytes, 0);
+
+            var stringBytes = new byte[stringLength];
+
+            stream.Read(stringBytes, 0, stringLength);
+
+            var dic = DeserializeStringIntDic(stream).ToList();
+
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(stringBytes);
+                Array.Reverse(lengthBytes);
+            }
+
+            return new IxInfo{Name=Enc.GetString(stringBytes), DocumentCount = dic.ToDictionary(x=>x.Key, x=>x.Value)};
+        }
+
+        public static byte[] Serialize(this IEnumerable<KeyValuePair<string, int>> entries)
+        {
+            byte[] keyBytes;
+            byte[] lengthBytes;
+            byte[] intBytes;
+
+            using (var stream = new MemoryStream())
+            {
+                foreach (var entry in entries)
+                {
+                    keyBytes = Enc.GetBytes(entry.Key);
+                    lengthBytes = BitConverter.GetBytes((short)keyBytes.Length);
+                    intBytes = BitConverter.GetBytes(entry.Value);
+
+                    if (!BitConverter.IsLittleEndian)
+                    {
+                        Array.Reverse(lengthBytes);
+                        Array.Reverse(keyBytes);
+                        Array.Reverse(intBytes);
+                    }
+
+                    stream.Write(lengthBytes, 0, sizeof(short));
+                    stream.Write(keyBytes, 0, keyBytes.Length);
+                    stream.Write(intBytes, 0, sizeof(int));
+                }
+                return stream.ToArray();
+            }
+        }
+
         public static LcrsNode DeserializeNode(Stream stream)
         {
             if (!stream.CanRead) return LcrsNode.MinValue;
@@ -168,6 +245,48 @@ namespace Resin.IO
             }
 
             return new BlockInfo(BitConverter.ToInt64(longBytes, 0), BitConverter.ToInt32(intBytes, 0));
+        }
+
+        public static IEnumerable<KeyValuePair<string, int>> DeserializeStringIntDic(Stream stream)
+        {
+            byte[] keyBytes;
+            byte[] lengthBytes = new byte[sizeof(short)];
+            byte[] intBytes = new byte[sizeof(int)];
+            short keyLength;
+            string key;
+            int value;
+            var read = 1;
+
+            while (true)
+            {
+                read = stream.Read(lengthBytes, 0, sizeof (short));
+
+                if (read == 0) break;
+
+                keyLength = BitConverter.ToInt16(lengthBytes, 0);
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(lengthBytes);
+                }
+
+                keyBytes = new byte[keyLength];
+
+                stream.Read(keyBytes, 0, keyLength);
+
+                key = Enc.GetString(keyBytes);
+
+                stream.Read(intBytes, 0, sizeof (int));
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(intBytes);
+                }
+
+                value = BitConverter.ToInt32(intBytes, 0);
+                
+                yield return new KeyValuePair<string, int>(key, value);
+            }
         }
 
         /// <summary>

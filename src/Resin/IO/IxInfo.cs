@@ -23,7 +23,7 @@ namespace Resin.IO
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                ix = (IxInfo) GraphSerializer.Serializer.Deserialize(fs);
+                ix = Serializer.DeserializeIxInfo(fs);
             }
 
             Log.DebugFormat("loaded ix in {0}", time.Elapsed);
