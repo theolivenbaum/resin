@@ -1,8 +1,6 @@
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using log4net;
-using Resin.IO.Write;
 
 namespace Resin.IO.Read
 {
@@ -16,7 +14,7 @@ namespace Resin.IO.Read
         public MappedTrieReader(string fileName)
         {
             _stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan);
-            _blockSize = Marshal.SizeOf(typeof (LcrsNode));
+            _blockSize = Serializer.SizeOfNode();
 
             Log.DebugFormat("opened {0}", fileName);
         }
@@ -38,15 +36,9 @@ namespace Resin.IO.Read
                 return replayed;
             }
 
-            var data = new byte[_blockSize];
-            var read = _stream.Read(data, 0, data.Length);
+            var node = Serializer.DeserializeNode(_stream);
 
-            if (read < _blockSize)
-            {
-                return LcrsNode.MinValue;
-            }
-
-            LastRead = Serializer.BytesToType<LcrsNode>(data);
+            LastRead = node;
 
             return LastRead;
         }

@@ -25,6 +25,17 @@ namespace Resin.IO
             PostingsAddress = postingsAddress;
         }
 
+        public LcrsNode(char value, bool haveSibling, bool haveChild, bool endOfWord, int depth, int weight, BlockInfo? postingsAddress)
+        {
+            Value = value;
+            HaveSibling = haveSibling;
+            HaveChild = haveChild;
+            EndOfWord = endOfWord;
+            Depth = depth;
+            Weight = weight;
+            PostingsAddress = postingsAddress;
+        }
+
         public override int GetHashCode()
         {
             unchecked
