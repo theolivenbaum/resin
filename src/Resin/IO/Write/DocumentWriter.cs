@@ -12,13 +12,9 @@ namespace Resin.IO.Write
 
         protected override byte[] Serialize(Document block)
         {
-            var values = block.Fields.OrderBy(x => x.Key).Select(x => x.Value).ToList();
-            
-            values.Insert(0, block.Id.ToString(CultureInfo.InvariantCulture));
-
             using (var ms = new MemoryStream())
             {
-                GraphSerializer.Serializer.Serialize(ms, values.ToArray());
+                GraphSerializer.Serializer.Serialize(ms, block);
                 return ms.ToArray();
             }
         }

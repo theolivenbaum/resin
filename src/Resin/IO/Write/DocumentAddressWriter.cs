@@ -7,5 +7,10 @@ namespace Resin.IO.Write
         public DocumentAddressWriter(Stream stream) : base(stream)
         {
         }
+
+        protected override byte[] Serialize(BlockInfo block)
+        {
+            return block.Serialize();
+        }
     }
 }

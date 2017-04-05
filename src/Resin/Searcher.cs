@@ -41,7 +41,7 @@ namespace Resin
                 new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 4, FileOptions.SequentialScan), 
                 fields);
 
-            _blockSize = Marshal.SizeOf(typeof(BlockInfo));
+            _blockSize = sizeof(long) + sizeof(int);
             
         }
 

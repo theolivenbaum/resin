@@ -10,11 +10,7 @@ namespace Resin.IO.Write
         }
         protected override byte[] Serialize(List<DocumentPosting> block)
         {
-            using (var ms = new MemoryStream())
-            {
-                GraphSerializer.Serializer.Serialize(ms, block);
-                return ms.ToArray();
-            }
+            return block.Serialize();
         }
     }
 }

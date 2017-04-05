@@ -7,5 +7,10 @@ namespace Resin.IO.Read
         public DocumentAddressReader(Stream stream) : base(stream)
         {
         }
+
+        protected override BlockInfo Deserialize(byte[] data)
+        {
+            return Serializer.DeserializeBlock(data);
+        }
     }
 }

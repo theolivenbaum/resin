@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Resin.IO
@@ -122,6 +121,26 @@ namespace Resin.IO
             }
         }
 
+        public static byte[] Serialize(this BlockInfo block)
+        {
+            using (var stream = new MemoryStream())
+            {
+                byte[] longBytes = BitConverter.GetBytes(block.Position);
+                byte[] intBytes = BitConverter.GetBytes(block.Length);
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(longBytes);
+                    Array.Reverse(intBytes);
+                }
+
+                stream.Write(longBytes, 0, longBytes.Length);
+                stream.Write(intBytes, 0, intBytes.Length);
+
+                return stream.ToArray();
+            }
+        }
+
         public static byte[] Serialize(this IxInfo ix)
         {
             using (var stream = new MemoryStream())
@@ -197,6 +216,31 @@ namespace Resin.IO
             }
         }
 
+        public static byte[] Serialize(this IEnumerable<DocumentPosting> entries)
+        {
+            byte[] idBytes;
+            byte[] countBytes;
+
+            using (var stream = new MemoryStream())
+            {
+                foreach (var entry in entries)
+                {
+                    idBytes = BitConverter.GetBytes(entry.DocumentId);
+                    countBytes = BitConverter.GetBytes(entry.Count);
+
+                    if (!BitConverter.IsLittleEndian)
+                    {
+                        Array.Reverse(idBytes);
+                        Array.Reverse(countBytes);
+                    }
+
+                    stream.Write(idBytes, 0, sizeof(int));
+                    stream.Write(countBytes, 0, sizeof(int));
+                }
+                return stream.ToArray();
+            }
+        }
+
         public static LcrsNode DeserializeNode(Stream stream)
         {
             if (!stream.CanRead) return LcrsNode.MinValue;
@@ -230,6 +274,14 @@ namespace Resin.IO
                 block);
         }
 
+        public static BlockInfo DeserializeBlock(byte[] bytes)
+        {
+            using (var stream = new MemoryStream(bytes))
+            {
+                return DeserializeBlock(stream);
+            }
+        }
+
         public static BlockInfo DeserializeBlock(Stream stream)
         {
             var longBytes = new byte[sizeof(long)];
@@ -247,6 +299,28 @@ namespace Resin.IO
             return new BlockInfo(BitConverter.ToInt64(longBytes, 0), BitConverter.ToInt32(intBytes, 0));
         }
 
+        public static IEnumerable<DocumentPosting> DeserializePostings(byte[] data)
+        {
+            byte[] chunk = new byte[sizeof(int)*2];
+            long pos = 0;
+
+            while (pos<data.Length)
+            {
+                Array.Copy(data, pos, chunk, 0, chunk.Length);
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(chunk);
+                }
+
+                yield return new DocumentPosting(
+                    BitConverter.ToInt32(chunk, 0),
+                    BitConverter.ToInt32(chunk, sizeof(int)));
+
+                pos = pos + chunk.Length;
+            }
+        }
+
         public static IEnumerable<KeyValuePair<string, int>> DeserializeStringIntDic(Stream stream)
         {
             byte[] keyBytes;
@@ -255,11 +329,10 @@ namespace Resin.IO
             short keyLength;
             string key;
             int value;
-            var read = 1;
 
             while (true)
             {
-                read = stream.Read(lengthBytes, 0, sizeof (short));
+                var read = stream.Read(lengthBytes, 0, sizeof (short));
 
                 if (read == 0) break;
 
@@ -287,33 +360,6 @@ namespace Resin.IO
                 
                 yield return new KeyValuePair<string, int>(key, value);
             }
-        }
-
-        /// <summary>
-        /// http://stackoverflow.com/a/4074557/46645
-        /// </summary>
-        public static T BytesToType<T>(byte[] bytes)
-        {
-            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
-            T theStructure = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
-            handle.Free();
-
-            return theStructure;
-        }
-
-        /// <summary>
-        /// http://stackoverflow.com/questions/3278827/how-to-convert-a-structure-to-a-byte-array-in-c
-        /// </summary>
-        public static byte[] TypeToBytes<T>(T theStructure)
-        {
-            int size = Marshal.SizeOf(theStructure);
-            byte[] arr = new byte[size];
-
-            IntPtr ptr = Marshal.AllocHGlobal(size);
-            Marshal.StructureToPtr(theStructure, ptr, true);
-            Marshal.Copy(ptr, arr, 0, size);
-            Marshal.FreeHGlobal(ptr);
-            return arr;
         }
     }
 }

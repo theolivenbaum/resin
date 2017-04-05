@@ -3,8 +3,10 @@ using System.IO;
 
 namespace Resin.IO.Write
 {
-    public class BlockWriter<T> : IDisposable
+    public abstract class BlockWriter<T> : IDisposable
     {
+        protected abstract byte[] Serialize(T block);
+
         private long _position;
         private readonly Stream _stream;
 
@@ -23,11 +25,6 @@ namespace Resin.IO.Write
             _position += bytes.Length;
 
             return info;
-        }
-
-        protected virtual byte[] Serialize(T block)
-        {
-            return Serializer.TypeToBytes(block);
         }
 
         public void Dispose()

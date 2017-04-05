@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Resin.IO.Read
 {
@@ -11,10 +12,7 @@ namespace Resin.IO.Read
         }
         protected override List<DocumentPosting> Deserialize(byte[] data)
         {
-            using (var stream = new MemoryStream(data))
-            {
-                return (List<DocumentPosting>)GraphSerializer.Serializer.Deserialize(stream);
-            }
+            return Serializer.DeserializePostings(data).ToList();
         }
     }
 }
