@@ -23,7 +23,7 @@ namespace Resin
 
             var bs = new BufferedStream(jsonFile);
 
-            _reader = new StreamReader(bs, Encoding.Unicode);
+            _reader = new StreamReader(bs, Encoding.UTF8);
         }
 
         protected override IEnumerable<Document> ReadSource()

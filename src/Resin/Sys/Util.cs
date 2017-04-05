@@ -36,7 +36,7 @@ namespace Resin.Sys
         public static Stream ToStream(this string str)
         {
             var stream = new MemoryStream();
-            var writer = new StreamWriter(stream, Encoding.Unicode);
+            var writer = new StreamWriter(stream, Encoding.UTF8);
             writer.Write(str);
             writer.Flush();
             stream.Position = 0;

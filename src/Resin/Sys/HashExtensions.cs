@@ -29,7 +29,7 @@ namespace Resin.Sys
         {
             if (term == null) throw new ArgumentNullException("term");
 
-            var bytes = Encoding.Unicode.GetBytes(term.Word.Value.PadRight(3).Substring(0, 3));
+            var bytes = Encoding.UTF8.GetBytes(term.Word.Value.PadRight(3).Substring(0, 3));
             return new MurmurHash2UInt32Hack().Hash(bytes).ToString(CultureInfo.InvariantCulture);
         }
 
@@ -37,19 +37,19 @@ namespace Resin.Sys
         {
             if (string.IsNullOrEmpty(docId)) throw new ArgumentException("docId");
 
-            var bytes = Encoding.Unicode.GetBytes(docId.PadRight(3).Substring(0, 3));
+            var bytes = Encoding.UTF8.GetBytes(docId.PadRight(3).Substring(0, 3));
             return new MurmurHash2UInt32Hack().Hash(bytes).ToString(CultureInfo.InvariantCulture);
         }
 
         public static string ToHashString(this string text)
         {
-            var bytes = Encoding.Unicode.GetBytes(text);
+            var bytes = Encoding.UTF8.GetBytes(text);
             return new MurmurHash2UInt32Hack().Hash(bytes).ToString(CultureInfo.InvariantCulture);
         }
 
         public static UInt32 ToHash(this string text)
         {
-            var bytes = Encoding.Unicode.GetBytes(text);
+            var bytes = Encoding.UTF8.GetBytes(text);
             return new MurmurHash2UInt32Hack().Hash(bytes);
         }
     }
