@@ -1,18 +1,18 @@
 # Resin
 
-Resin is a vector space model implementation, a search and analytics framework and a document store. Querying is fast and support exact,  fuzzy and prefix querying, soon also range (up-coming feature in RC 4), with both customizable tokenizers and scoring schemes.
+Resin is a vector space model implementation, a search and analytics framework and a document store. Querying support includes exact,  fuzzy and prefix, soon also range (up-coming feature in RC 4), and comes with customizable tokenizers and scoring schemes.
 
-Out-of-the-box, to support the default tf-idf scoring scheme Resin will store term counts. To support any scoring scheme, Resin give you the ability to store any additional data (up-coming feature in RC4). That data will be delivered to you neatly as a field on the document posting. In your custom IScoringScheme you then base your per-document posting calculations on that data instead of mearly the term count.
+## Supports any scoring scheme
+Out-of-the-box, to support the default tf-idf scoring scheme Resin will store term counts. To support any scoring scheme Resin gives you the ability to store any additional data (up-coming feature in RC4). That data will be delivered to you neatly as a field on the document posting. In your custom IScoringScheme you then base your per-document posting calculations on that data instead of just the term count.
 
+## Fast at indexing and querying
 In many scenarios Resin is already faster than the [market leader](https://lucenenet.apache.org/) when it comes down to querying and indexing speed, making it a [in-many-scenarios-fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) information retrieval system on the .net plaform. 
 
-In those cases where Resin is not faster than Lucene, it's because I haven't spent much time yet looking into that particular scenario yet. If you have such a scenario, let me know please, so that we can get rid of Lucene.Net once and for all.
+In those cases where Resin is not faster than Lucene, it's because I haven't spent much time yet looking into that particular scenario. If you have a scenario where you feel Resin should do better, let me know please, so that we can get rid of Lucene.Net 3.0.3 once and for all.
 
 ## Stable API and file format in RC3
 
-Resin 1.0 will be released shortly. Resin's API and file format should be considered unstable until release candidate 3. Coming features are indexing support for IComparable instead of just strings, improved compression of documents by representing them as tries, and updates/merges of documents.
-
-Resin will be available on Core 2.0 Preview before Q3 2017
+Resin's API and file format should be considered unstable until release candidate 3. Coming features are indexing support for IComparable instead of just strings, improved compression of documents by representing them as tries, and updates/merges of documents.
 
 ## Supported .net version
 
