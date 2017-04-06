@@ -1,18 +1,18 @@
 # Resin
 
-Resin is a vector space model implementation, a modern type search and analytics framework and a document based IR library with fast fuzzy and prefix querying and with customizable tokenizers and scoring (tf-idf included, other schemes supported).
+Resin is a vector space model implementation, a search and analytics framework and a document store with fast fuzzy and prefix querying and with customizable tokenizers and scoring (tf-idf included, other schemes supported).
 
-Resin, currently in beta but only a few releases away from 1.0, outperforms [the market leader's](https://lucenenet.apache.org/) querying and indexing speed. In many scenarios it is [the fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) IR system on the .net plaform. 
+In many scenarios Resin is already faster than the [market leader's](https://lucenenet.apache.org/) when it comes down to querying and indexing speed, making it a [in-many-scenarios-fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) information retrieval system on the .net plaform. In those cases where Resin is not faster than Lucene, it's because I haven't spent much time yet looking into that particular scenario yet. If you have such a scenario, let me know please, so that we can get rid of Lucene.Net once and for all.
 
 ## Stable API and file format in RC3
 
-Resin 1.0 will be released shortly. Resin's API and file format should be considered unstable until release candidate 3. Coming featues are indexing support for IComparable instead of just strings, and improved compression of documents by representing them as tries, and updates/merges of documents.
+Resin 1.0 will be released shortly. Resin's API and file format should be considered unstable until release candidate 3. Coming features are indexing support for IComparable instead of just strings, improved compression of documents by representing them as tries, and updates/merges of documents.
 
 Resin will be available on Core 2.0 Preview before Q3 2017
 
 ## Supported .net version
 
-4.6.1
+Resin is built for 4.6.1 but have no dependancies on any Core-incompatible technology. Resin will be available on both frameworks soon.
 
 ## Download
 
