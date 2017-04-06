@@ -69,10 +69,11 @@ Latest release is [here](https://github.com/kreeben/resin/releases/latest)
 ### Roadmap
 
 - [x] Layout basic architecture and infrastructure of a modern IR system - v0.9b
-- [x] ___Be fast - v1.0 rc1___
-- [ ] Create http-transportable query language where you can express table joins, or adopt [GrapohQL](http://graphql.org/) - v2.0
-- [ ] Make all parts of Resin distributable - v3.0
-- [ ] Build Sir
+- [x] ___Query faster than Lucene - v1.0 RC1___
+- [x] ___Index faster than Lucene - v1.0 RC2___
+- [ ] Compress better than Lucene - v1.0 RC3
+- [ ] Migrate to Core - v1.0
+- [ ] Build Sir, a distributed search engine
 
 ### Sir
 
