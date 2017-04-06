@@ -1,6 +1,8 @@
 # Resin
-
 Resin is a vector space model implementation, a search and analytics framework and a document store. Querying support includes exact,  fuzzy and prefix, soon also range (up-coming feature in RC 4), and comes with customizable tokenizers and scoring schemes.
+
+## It's an index (that you can read)
+From another angle Resin is an index of the same kind that you attach to database tables to make reading from them fast. Certain types of database indices are as full-featured as Resin indices are but usually you'll use one that doesn't support near or prefix matches to achieve decent write speeds. In Resin, all your data is in an index. There is no place to put data outside of an index because in Resin, everything is an index, or a LcrsTrie to be more precise. 
 
 ## Supports any scoring scheme
 Out-of-the-box, to support the default tf-idf scoring scheme Resin will store term counts. To support any scoring scheme Resin gives you the ability to store any additional data (up-coming feature in RC4). That data will be delivered to you neatly as a field on the document posting. In your custom IScoringScheme you then base your per-document posting calculations on that data instead of just the term count.
