@@ -69,7 +69,7 @@ Latest release is [here](https://github.com/kreeben/resin/releases/latest)
 ### Roadmap
 
 - [x] Layout basic architecture and infrastructure of a modern IR system - v0.9b
-- [x] ___Query faster than Lucene - v1.0 RC1___
+- [x] Query faster than Lucene - v1.0 RC1
 - [x] ___Index faster than Lucene - v1.0 RC2___
 - [ ] Compress better than Lucene - v1.0 RC3
 - [ ] Migrate to Core - v1.0
