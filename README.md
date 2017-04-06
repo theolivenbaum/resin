@@ -1,8 +1,12 @@
 # Resin
 
-Resin is a vector space model implementation, a search and analytics framework and a document store with fast fuzzy and prefix querying and with customizable tokenizers and scoring (tf-idf included, other schemes supported).
+Resin is a vector space model implementation, a search and analytics framework and a document store. Querying is fast and support exact,  fuzzy and prefix querying, soon also range (up-coming feature in RC 4), with both customizable tokenizers and scoring schemes.
 
-In many scenarios Resin is already faster than the [market leader's](https://lucenenet.apache.org/) when it comes down to querying and indexing speed, making it a [in-many-scenarios-fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) information retrieval system on the .net plaform. In those cases where Resin is not faster than Lucene, it's because I haven't spent much time yet looking into that particular scenario yet. If you have such a scenario, let me know please, so that we can get rid of Lucene.Net once and for all.
+Out-of-the-box, to support the default tf-idf scoring scheme Resin will store term counts. To support any scoring scheme, Resin give you the ability to store any additional data (up-coming feature in RC4). That data will be delivered to you neatly as a field on the document posting. In your custom IScoringScheme you then base your per-document posting calculations on that data instead of mearly the term count.
+
+In many scenarios Resin is already faster than the [market leader's](https://lucenenet.apache.org/) when it comes down to querying and indexing speed, making it a [in-many-scenarios-fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) information retrieval system on the .net plaform. 
+
+In those cases where Resin is not faster than Lucene, it's because I haven't spent much time yet looking into that particular scenario yet. If you have such a scenario, let me know please, so that we can get rid of Lucene.Net once and for all.
 
 ## Stable API and file format in RC3
 
