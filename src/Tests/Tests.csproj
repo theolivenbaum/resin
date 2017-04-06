@@ -58,6 +58,8 @@
     <Compile Include="QueryTermTests.cs" />
     <Compile Include="SearcherTests.cs" />
     <Compile Include="Setup.cs" />
+    <Compile Include="TestStreamWriteOperation.cs" />
+    <Compile Include="TestHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

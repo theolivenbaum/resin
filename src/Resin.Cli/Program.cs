@@ -4,7 +4,6 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using log4net.Config;
 using Resin.Analysis;
 using Resin.Querying;
@@ -166,7 +165,7 @@ namespace Resin.Cli
             if (inproc)
             {
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                using (var writer = new StreamWriteOperation(dir, new Analyzer(), fileName, take))
+                using (var writer = new CliWriteOperation(dir, new Analyzer(), fileName, take))
                 {
                     writer.Write();
                 }

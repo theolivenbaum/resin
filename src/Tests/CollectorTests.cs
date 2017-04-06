@@ -6,7 +6,6 @@ using Resin;
 using Resin.Analysis;
 using Resin.IO;
 using Resin.Querying;
-using Resin.Sys;
 
 namespace Tests
 {
@@ -31,7 +30,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
+            using (var writer = new TestStreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
             }
@@ -70,7 +69,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
+            using (var writer = new TestStreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
             }
@@ -103,7 +102,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
+            using (var writer = new TestStreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
             }
@@ -141,7 +140,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
+            using (var writer = new TestStreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
             }
@@ -186,7 +185,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
+            using (var writer = new TestStreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
             }
@@ -232,7 +231,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
+            using (var writer = new TestStreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
             }
@@ -289,7 +288,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
+            using (var writer = new TestStreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
             }
@@ -336,7 +335,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
+            using (var writer = new TestStreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
             }
@@ -378,7 +377,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
+            using (var writer = new TestStreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
             }
@@ -412,7 +411,7 @@ namespace Tests
             };
 
             string indexName;
-            using (var writer = new StreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
+            using (var writer = new TestStreamWriteOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
             }

@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Newtonsoft.Json;
 using Resin.Analysis;
 
 namespace Resin
 {
-    public class StreamWriteOperation : Writer
+    public abstract class StreamWriteOperation : Writer
     {
+        protected abstract IDictionary<string, string> Parse(string document);
+ 
         private readonly StreamReader _reader;
         private readonly int _take;
 
@@ -28,8 +29,7 @@ namespace Resin
 
         protected override IEnumerable<Document> ReadSource()
         {
-// ReSharper disable once RedundantAssignment
-            var line = _reader.ReadLine(); // intentional (first row is "[\n")
+            var line = _reader.ReadLine(); // first row is "["
             var took = 0;
 
             while ((line = _reader.ReadLine()) != null)
@@ -39,8 +39,7 @@ namespace Resin
                 if (took++ == _take) break;
 
                 var json = line.Substring(0, line.Length - 1);
-
-                var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+                var dic = Parse(json);
 
                 yield return new Document(dic);
             }
