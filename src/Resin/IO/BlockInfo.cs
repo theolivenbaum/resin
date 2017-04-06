@@ -1,9 +1,8 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace Resin.IO
 {
-    [Serializable, DebuggerDisplay("{Position} {Length}")]
+    [DebuggerDisplay("{Position} {Length}")]
     public struct BlockInfo
     {
         public long Position;

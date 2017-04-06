@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Resin.IO
 {
-    [Serializable]
     public class DocumentCount
     {
         private readonly Dictionary<string, int> _docCount;

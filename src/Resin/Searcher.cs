@@ -13,7 +13,7 @@ using Resin.Querying;
 namespace Resin
 {
     /// <summary>
-    /// Queries the latest (chronologically speaking) index in a directory.
+    /// Query the youngest index in a directory.
     /// </summary>
     public class Searcher : IDisposable
     {
@@ -39,7 +39,6 @@ namespace Resin
                 new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 4, FileOptions.SequentialScan));
 
             _blockSize = sizeof(long) + sizeof(int);
-            
         }
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)

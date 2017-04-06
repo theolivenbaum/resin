@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace Resin.IO
 {
-    [Serializable]
     public class Term : IEquatable<Term>, IComparable<Term>
     {
         public string Field { get; private set; }

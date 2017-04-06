@@ -4,7 +4,6 @@ using System.Linq;
 
 namespace Resin.IO
 {
-    [Serializable]
     public struct DocumentPosting
     {
         public readonly int DocumentId;

@@ -3,7 +3,6 @@ using System.Linq;
 using NUnit.Framework;
 using Resin.IO;
 using Resin.IO.Read;
-using Resin.IO.Write;
 
 namespace Tests
 {

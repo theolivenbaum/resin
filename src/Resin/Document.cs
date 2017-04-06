@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace Resin
 {
-    [Serializable]
     public class Document
     {
         public int Id { get; set; }

@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using log4net;
 
 namespace Resin.IO
 {
-    [Serializable]
     public class IxInfo
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof (IxInfo));

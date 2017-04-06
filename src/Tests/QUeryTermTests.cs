@@ -14,7 +14,7 @@ namespace Tests
         [TestCase("word", 0.75f, Result = 1)]
         [TestCase("ord", 0.75f, Result = 0)]
         [TestCase("or", 0.75f, Result = 0)]
-        public int Can_parse_similarity(string word, float similarity)
+        public int Can_translate_similarity_into_edits(string word, float similarity)
         {
             var q = new QueryTerm("field", word) {Similarity = similarity};
 

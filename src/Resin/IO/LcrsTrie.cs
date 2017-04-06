@@ -7,7 +7,7 @@ using Resin.IO.Read;
 
 namespace Resin.IO
 {
-    [Serializable, DebuggerDisplay("{Value} {EndOfWord}")]
+    [DebuggerDisplay("{Value} {EndOfWord}")]
     public class LcrsTrie : ITrieReader
     {
         public LcrsTrie RightSibling { get; set; }

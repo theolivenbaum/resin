@@ -81,7 +81,7 @@ namespace Resin
                         }
                         catch (InvalidOperationException)
                         {
-                            // We're done here
+                            // Done
                         }
                     })) 
                     Task.WaitAll(producer, consumer);
