@@ -10,10 +10,10 @@ Out-of-the-box, to support the default tf-idf scoring scheme Resin will store te
 ## Fast at indexing and querying
 In many scenarios Resin is already faster than the [market leader](https://lucenenet.apache.org/) when it comes down to querying and indexing speed, making it a [in-many-scenarios-fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) information retrieval system on the .net plaform. 
 
-When Resin is not faster than Lucene, most of the times it's because I haven't spent much time yet looking into that particular scenario. If you have a scenario where you feel Resin should do better, let me know please, so that we can get rid of Lucene.Net 3.0.3 once and for all.
+When Resin is not faster than Lucene, most of the times it's because it hasn't yet been optimized nor has it been micro-optimized for that particular scenario ;). If you have a scenario where you feel Resin should do better, this is important to me. Let me know.
 
-## Not based on a java port (but deeply influenced)
-Lucene hit version 3 a while ago. Five years ago the .net community's search engine also came in at version 3 (still is).
+## Deeply influenced, but not based on a java port
+Five years ago the .net community created a search engine, Lucene 3.0.3, that we are still using today.
 
 Who could use a modern and powerful search engine based on sound mathematics that's extensible and built on Core, though?
 
@@ -21,7 +21,7 @@ Who could use a modern and powerful search engine based on sound mathematics tha
 Resin's API and file format should be considered unstable until release candidate 3. Coming features are indexing support for IComparable instead of just strings, improved compression of documents by representing them as tries, and updates/merges of documents.
 
 ## Supported .net version
-Resin is built for 4.6.1 but have no dependancies on any Core-incompatible technology. Resin will be available on both frameworks soon.
+Resin is built for 4.6.1 but have no dependancies on any Core-incompatible technology so will be available on both frameworks soon.
 
 ## Download
 Latest release is [here](https://github.com/kreeben/resin/releases/latest)
@@ -57,10 +57,10 @@ Start [here](https://github.com/kreeben/resin/issues).
 	// Resin will scan a disk based trie for terms that are an exact match,
 	// a near match or is prefixed with the query term/-s.
 	
-	// A set of postings is produced for each query statement.
-	// A final answer is compiled by reducing the query tree into one node, postings into one set.
+	// At each EndOfWord node there is a pointer to a set of postings.
 		
-	// Postings are resolved into top scoring documents. A total hit count is also included.
+	// The postings are resolved into top scoring documents. A total hit count is also included.
+	
 	// Paging is fast using the built-in paging mechanism.
 	
 	var result = new Searcher(dir).Search("label:good bad~ description:leone");
@@ -83,4 +83,4 @@ Start [here](https://github.com/kreeben/resin/issues).
 
 ### Sir
 
-[Sir](https://github.com/kreeben/sir) is an Elasticsearch clone with improved querying capabilities, built on Resin.
+[Sir](https://github.com/kreeben/sir) is an Elasticsearch clone with faster indexing, smarter merging, higher compression and improved querying built on Resin.
