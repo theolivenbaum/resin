@@ -4,10 +4,10 @@ Resin is a vector space model, a search and analytics framework and a document s
 ## Query language
 The current query language is a copy of [Lucene's](https://lucene.apache.org/core/2_9_4/queryparsersyntax.html) (minus range and grouping). 
 
-On the roadmap is an extended query language with support for range, group, index joins, the equivalent of expressing a table join in SQL, and database joins. As these features mature they will end up in the query language. 
+On the roadmap is an extended query language with support for write and read operations, range, group, index joins, the equivalent of expressing a table join in SQL, database joins, as well as express the will to merge or append two indices. As these features mature they will end up in the query language. 
 
 ## It's an index (that you can read)
-From an angle Resin is an index of the same kind that you attach to database tables when you want to make reading from them fast. Certain types of database indices are as full-featured as Resin indices are but usually you'll use one that doesn't support near matches to achieve decent write speeds, which leaves you without two of Resin's expert features in your toolbox, the LcrsTrie and its disk-based equivalent, the LcrsNode.
+From an angle Resin is an index of the same kind that you attach to database tables when you want to make reading from them fast. Certain types of database indices are as full-featured as Resin indices are but usually you'll use one without the support for near (as in "almost") matches to achieve decent write speeds, which leave you without two of Resin's expert features in your toolbox, the LcrsTrie and its disk-based equivalent, the LcrsNode.
 
 ## Supports any scoring scheme
 Out-of-the-box, to support the default tf-idf scoring scheme Resin will store term counts. To support any scoring scheme Resin gives you the ability to store any additional data (up-coming feature in RC4). That data will be delivered to you neatly as a field on the document posting. In your custom IScoringScheme you then base your per-document posting calculations on that data instead of just the term count.
