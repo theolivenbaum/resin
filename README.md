@@ -92,4 +92,6 @@ Start [here](https://github.com/kreeben/resin/issues).
 
 ### Sir
 
-[Sir](https://github.com/kreeben/sir) is a distributed search engine, a map/reduce system and long-term data storage solution in one. It's the end-of-the road for your data but instead of being a cemetary as most Hadoop solutions of today your data is very much alive.
+[Sir](https://github.com/kreeben/sir) is a distributed search engine, map/reduce system and long-term data storage solution in one with aspirations of being a Elasticsearch+Hadoop replacement and the end-of-the road for your data, not by being a cemetary as most data archiving solutions of today but compressing it in a way where it is very much alive and responsive to querying even at vast scales. 
+
+Sir enables you to stop treating your data as nuclear waste. Don't just archive your data. Surf on top of it instead of find yourself engulfed by it.
