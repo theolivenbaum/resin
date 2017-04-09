@@ -4,7 +4,7 @@ Resin is a vector space model, a search/analytics framework and a document store
 ## Query language
 The current query language is a copy of [Lucene's](https://lucene.apache.org/core/2_9_4/queryparsersyntax.html) (minus range and grouping). 
 
-On the roadmap is an extended query language with support for write, read and merge operations and the ability to express range, grouping, index joins (the equivalent of a table join in SQL) and database joins. As these features mature they will end up as commands in the query language. 
+On the roadmap is an extended query language with support for write, read and merge operations and the ability to express ranges, groupings, sorting, index joins (the equivalent of a table join in SQL) and database joins. As these features mature they will end up as commands in the query language. 
 
 ## It's an index
 From an angle Resin is an index of the same kind you attach to database tables when you want to make reading from them fast. Certain types of database indices are as full-featured as Resin indices are but usually you'll use one without the support for near (as in "almost") matches to achieve decent write speeds, which leaves your toolbox empty of two of Resin's expert features, the LcrsTrie and its disk-based equivalent, the LcrsNode.
