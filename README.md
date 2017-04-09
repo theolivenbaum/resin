@@ -24,7 +24,7 @@ Who could use a modern and powerful search engine based on sound mathematics tha
 
 ## Philosophy
 
-There shall be nothing in its architecture and infrastructure nor anything in the platform it was built on that stops Resin from being the fastest and most precise search engine on the planet.
+There shall be nothing in its architecture and infrastructure nor anything in the platform it was built on or in the way the project is managed that stops Resin from being the fastest and most precise search engine on the planet.
 
 ## Stable API and file format in RC3
 Resin's API and file format should be considered unstable until release candidate 3. Coming features are indexing support for IComparable instead of just strings, improved compression of documents by representing them as tries, and updates/merges of documents.
@@ -92,4 +92,4 @@ Start [here](https://github.com/kreeben/resin/issues).
 
 ### Sir
 
-[Sir](https://github.com/kreeben/sir) is an Elasticsearch clone with faster indexing, smarter merging, higher compression and improved querying built on Resin.
+[Sir](https://github.com/kreeben/sir) is a distributed search engine, a map/reduce system and long-term data storage solution in one. It's the end-of-the road for your data but instead of being a cemetary as most Hadoop solutions of today your data is very much alive.
