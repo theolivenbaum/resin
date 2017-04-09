@@ -1,13 +1,13 @@
 # Resin
-Resin is a vector space model, a search and analytics framework and a document store. Querying support includes exact, fuzzy and prefix, soon also range (up-coming feature in RC 4), and comes with customizable tokenizers and scoring schemes. 
+Resin is a vector space model, a search/analytics framework and a document store that offers compression. Querying support includes exact, fuzzy and prefix, soon also range (up-coming feature in RC 4), and comes with customizable tokenizers and scoring schemes. 
 
 ## Query language
 The current query language is a copy of [Lucene's](https://lucene.apache.org/core/2_9_4/queryparsersyntax.html) (minus range and grouping). 
 
-On the roadmap is an extended query language with support for write and read operations, range, group, index joins, the equivalent of expressing a table join in SQL, database joins, as well as express the will to merge or append two indices. As these features mature they will end up in the query language. 
+On the roadmap is an extended query language with support for write, read and merge operations and the ability to express range, grouping, index joins (the equivalent of a table join in SQL) and database joins. As these features mature they will end up as commands in the query language. 
 
 ## It's an index (that you can read)
-From an angle Resin is an index of the same kind that you attach to database tables when you want to make reading from them fast. Certain types of database indices are as full-featured as Resin indices are but usually you'll use one without the support for near (as in "almost") matches to achieve decent write speeds, which leaves your toolbox empty of two of Resin's expert features, the LcrsTrie and its disk-based equivalent, the LcrsNode.
+From an angle Resin is an index of the same kind you attach to database tables when you want to make reading from them fast. Certain types of database indices are as full-featured as Resin indices are but usually you'll use one without the support for near (as in "almost") matches to achieve decent write speeds, which leaves your toolbox empty of two of Resin's expert features, the LcrsTrie and its disk-based equivalent, the LcrsNode.
 
 ## Supports any scoring scheme
 Out-of-the-box, to support the default tf-idf scoring scheme Resin will store term counts. To support any scoring scheme Resin gives you the ability to store any additional data (up-coming feature in RC4). That data will be delivered to you neatly as a field on the document posting. In your custom IScoringScheme you then base your per-document posting calculations on that data instead of just the term count.
@@ -17,14 +17,14 @@ In many scenarios Resin is already faster than the [market leader](https://lucen
 
 When Resin is not faster than Lucene, most of the times it's because it hasn't yet been optimized nor has it been micro-optimized for that particular scenario ;). If you have a scenario where you feel Resin should do better, this is important to me. Let me know.
 
-## Deeply influenced, but not based on a java port
-Five years ago the .net community created a search engine, Lucene 3.0.3, that we are still using today.
+## Deeply influenced by but not based on a java port
+Five years ago the .net community created the search engine, Lucene 3.0.3, we are still using today.
 
-Who could use a modern and powerful search engine based on sound mathematics that's extensible and built on Core, though?
+Who could use a modern and powerful search engine based on sound mathematics that's open source, extensible and built on Core, though?
 
 ## Philosophy
 
-There shall be nothing in its architecture and infrastructure nor anything in the platform it was built upon that prohibits Resin from being the fastest and most precise search engine on the planet.
+There shall be nothing in its architecture and infrastructure nor anything in the platform it was built on that stops Resin from being the fastest and most precise search engine on the planet.
 
 ## Stable API and file format in RC3
 Resin's API and file format should be considered unstable until release candidate 3. Coming features are indexing support for IComparable instead of just strings, improved compression of documents by representing them as tries, and updates/merges of documents.
