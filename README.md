@@ -7,7 +7,7 @@ The current query language is a copy of [Lucene's](https://lucene.apache.org/cor
 On the roadmap is an extended query language with support for write, read and merge operations and the ability to express ranges, groupings, sorting, index joins (the equivalent of a table join in SQL) and database joins. As these features mature they will end up as commands in the query language. 
 
 ## It's an index
-From an angle Resin is an index of the same kind you attach to database tables when you want to make reading from them fast. Certain types of database indices are as full-featured as Resin indices are but usually you'll use one without the support for near (as in "almost") matches to achieve decent write speeds, which leaves your toolbox empty of two of Resin's expert features, the LcrsTrie and its disk-based equivalent, the LcrsNode.
+From an angle Resin is an index of the same kind you attach to database tables when you want to make reading from them fast. Certain types of database indices are as full-featured as Resin indices are but usually you'll use one without the support for near (as in "almost match") to achieve decent write speeds, which leaves your toolbox empty of two of Resin's expert features, the LcrsTrie and its disk-based equivalent, the LcrsNode.
 
 ## Supports any scoring scheme
 Out-of-the-box, to support the default tf-idf scoring scheme Resin will store term counts. To support any scoring scheme Resin gives you the ability to store any additional data (up-coming feature in RC4). That data will be delivered to you neatly as a field on the document posting. In your custom IScoringScheme you then base your per-document posting calculations on that data instead of just the term count.
@@ -15,7 +15,7 @@ Out-of-the-box, to support the default tf-idf scoring scheme Resin will store te
 ## Fast at indexing and querying
 In many scenarios Resin is already faster than the [market leader](https://lucenenet.apache.org/) when it comes down to querying and indexing speed, making it a [in-many-scenarios-fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) information retrieval system on the .net plaform. 
 
-When Resin is not faster than Lucene, most of the times it's because it hasn't yet been optimized nor has it been micro-optimized for that particular scenario ;). If you have a scenario where you feel Resin should do better, this is important to me. Let me know.
+When Resin is not faster than Lucene, most of the times it's because it hasn't yet been optimized nor has it been micro-optimized for that particular scenario ;). Seriously though, if you have a scenario where you feel Resin should do better, this is important to me. Please let me know.
 
 ## Deeply influenced by but not based on a java port
 Five years ago the .net community created the search engine, Lucene 3.0.3, we are still using today.
