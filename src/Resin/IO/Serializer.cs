@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 
@@ -209,17 +210,13 @@ namespace Resin.IO
 
         public static byte[] Serialize(this IEnumerable<KeyValuePair<string, int>> entries)
         {
-            byte[] keyBytes;
-            byte[] lengthBytes;
-            byte[] intBytes;
-
             using (var stream = new MemoryStream())
             {
                 foreach (var entry in entries)
                 {
-                    keyBytes = Enc.GetBytes(entry.Key);
-                    lengthBytes = BitConverter.GetBytes((short)keyBytes.Length);
-                    intBytes = BitConverter.GetBytes(entry.Value);
+                    byte[] keyBytes = Enc.GetBytes(entry.Key);
+                    byte[] lengthBytes = BitConverter.GetBytes((short)keyBytes.Length);
+                    byte[] intBytes = BitConverter.GetBytes(entry.Value);
 
                     if (!BitConverter.IsLittleEndian)
                     {
@@ -236,21 +233,26 @@ namespace Resin.IO
             }
         }
 
+        static byte[] Decompress(byte[] data)
+        {
+            return data;
+        }
+
+        public static byte[] Compress(byte[] data)
+        {
+            return data;
+        }
+
         public static byte[] Serialize(this IEnumerable<KeyValuePair<string, string>> entries)
         {
-            byte[] keyBytes;
-            byte[] keyLengthBytes;
-            byte[] valBytes;
-            byte[] valLengthBytes;
-
             using (var stream = new MemoryStream())
             {
                 foreach (var entry in entries)
                 {
-                    keyBytes = Enc.GetBytes(entry.Key);
-                    keyLengthBytes = BitConverter.GetBytes((short)keyBytes.Length);
-                    valBytes = Enc.GetBytes(entry.Value??string.Empty);
-                    valLengthBytes = BitConverter.GetBytes(valBytes.Length);
+                    byte[] keyBytes = Enc.GetBytes(entry.Key);
+                    byte[] keyLengthBytes = BitConverter.GetBytes((short)keyBytes.Length);
+                    byte[] valBytes = Compress(Enc.GetBytes(entry.Value??string.Empty));
+                    byte[] valLengthBytes = BitConverter.GetBytes(valBytes.Length);
 
                     if (!BitConverter.IsLittleEndian)
                     {
@@ -271,15 +273,12 @@ namespace Resin.IO
 
         public static byte[] Serialize(this IEnumerable<DocumentPosting> entries)
         {
-            byte[] idBytes;
-            byte[] countBytes;
-
             using (var stream = new MemoryStream())
             {
                 foreach (var entry in entries)
                 {
-                    idBytes = BitConverter.GetBytes(entry.DocumentId);
-                    countBytes = BitConverter.GetBytes(entry.Count);
+                    byte[] idBytes = BitConverter.GetBytes(entry.DocumentId);
+                    byte[] countBytes = BitConverter.GetBytes(entry.Count);
 
                     if (!BitConverter.IsLittleEndian)
                     {
@@ -374,7 +373,7 @@ namespace Resin.IO
 
         public static IEnumerable<DocumentPosting> DeserializePostings(byte[] data)
         {
-            byte[] chunk = new byte[sizeof(int)*2];
+            var chunk = new byte[sizeof(int)*2];
             long pos = 0;
 
             while (pos<data.Length)
@@ -404,11 +403,10 @@ namespace Resin.IO
 
         public static IEnumerable<KeyValuePair<string, string>> DeserializeStringStringDic(Stream stream)
         {
-            byte[] keyLengthBytes = new byte[sizeof(short)];
-            byte[] valLengthBytes = new byte[sizeof(int)];
-
             while (true)
             {
+                var keyLengthBytes = new byte[sizeof(short)];
+
                 var read = stream.Read(keyLengthBytes, 0, sizeof(short));
 
                 if (read == 0) break;
@@ -431,6 +429,8 @@ namespace Resin.IO
 
                 string key = Enc.GetString(keyBytes);
 
+                var valLengthBytes = new byte[sizeof(int)];
+
                 stream.Read(valLengthBytes, 0, sizeof(int));
 
                 if (!BitConverter.IsLittleEndian)
@@ -449,7 +449,7 @@ namespace Resin.IO
                     Array.Reverse(valBytes);
                 }
 
-                string value = Enc.GetString(valBytes);
+                string value = Enc.GetString(Decompress(valBytes));
 
                 yield return new KeyValuePair<string, string>(key, value);
             }
@@ -457,31 +457,28 @@ namespace Resin.IO
 
         public static IEnumerable<KeyValuePair<string, int>> DeserializeStringIntDic(Stream stream)
         {
-            byte[] keyBytes;
-            byte[] lengthBytes = new byte[sizeof(short)];
-            byte[] intBytes = new byte[sizeof(int)];
-            short keyLength;
-            string key;
-            int value;
-
             while (true)
             {
+                var lengthBytes = new byte[sizeof(short)];
+
                 var read = stream.Read(lengthBytes, 0, sizeof (short));
 
                 if (read == 0) break;
 
-                keyLength = BitConverter.ToInt16(lengthBytes, 0);
+                short keyLength = BitConverter.ToInt16(lengthBytes, 0);
 
                 if (!BitConverter.IsLittleEndian)
                 {
                     Array.Reverse(lengthBytes);
                 }
 
-                keyBytes = new byte[keyLength];
+                byte[] keyBytes = new byte[keyLength];
 
                 stream.Read(keyBytes, 0, keyLength);
 
-                key = Enc.GetString(keyBytes);
+                string key = Enc.GetString(keyBytes);
+
+                var intBytes = new byte[sizeof(int)];
 
                 stream.Read(intBytes, 0, sizeof (int));
 
@@ -490,7 +487,7 @@ namespace Resin.IO
                     Array.Reverse(intBytes);
                 }
 
-                value = BitConverter.ToInt32(intBytes, 0);
+                int value = BitConverter.ToInt32(intBytes, 0);
                 
                 yield return new KeyValuePair<string, int>(key, value);
             }
