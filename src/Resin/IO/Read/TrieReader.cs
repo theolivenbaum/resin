@@ -19,11 +19,6 @@ namespace Resin.IO.Read
             Replay = LcrsNode.MinValue;
         }
 
-        private void Rewind()
-        {
-            Replay = LastRead;
-        }
-
         public bool HasWord(string word, out Word found)
         {
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
@@ -185,6 +180,11 @@ namespace Resin.IO.Read
             }
 
             return false;
+        }
+
+        private void Rewind()
+        {
+            Replay = LastRead;
         }
     }
 }

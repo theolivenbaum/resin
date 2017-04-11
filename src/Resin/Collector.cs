@@ -117,7 +117,7 @@ namespace Resin
 
         private IEnumerable<DocumentPosting> GetPostings(IEnumerable<Term> terms)
         {
-            var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.Name, "pos"));
+            var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "pos"));
 
             using (var reader = new PostingsReader(new FileStream(posFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan)))
             {
@@ -154,7 +154,7 @@ namespace Resin
         {
             var suffix = token.ToTrieBucketName();
             var fileId = field.ToHashString();
-            var fileName = Path.Combine(_directory, string.Format("{0}-{1}-{2}.tri", _ix.Name, fileId, suffix));
+            var fileName = Path.Combine(_directory, string.Format("{0}-{1}-{2}.tri", _ix.VersionId, fileId, suffix));
 
             if (!File.Exists(fileName)) return null;
 

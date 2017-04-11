@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Resin.IO.Read
+namespace Resin.IO
 {
     public interface ITrieReader
     {

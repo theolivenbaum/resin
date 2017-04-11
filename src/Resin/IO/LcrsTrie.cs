@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Resin.Analysis;
-using Resin.IO.Read;
 
 namespace Resin.IO
 {
@@ -24,7 +23,7 @@ namespace Resin.IO
             EndOfWord = endOfWord;
         }
 
-        public void Merge(LcrsTrie other)
+        public void Add(LcrsTrie other)
         {
             var words = new List<Word>();
 

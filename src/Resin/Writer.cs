@@ -158,7 +158,7 @@ namespace Resin
         {
             return new IxInfo
             {
-                Name = _indexName,
+                VersionId = _indexName,
                 DocumentCount = new Dictionary<string, int>(_docCountByField)
             };
         }

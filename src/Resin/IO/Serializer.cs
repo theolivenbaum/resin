@@ -161,7 +161,7 @@ namespace Resin.IO
         {
             using (var stream = new MemoryStream())
             {
-                byte[] nameBytes = Encoding.GetBytes(ix.Name);
+                byte[] nameBytes = Encoding.GetBytes(ix.VersionId);
                 byte[] lengthBytes = BitConverter.GetBytes((short)nameBytes.Length);
                 byte[] dicBytes = ix.DocumentCount.Serialize();
                 
@@ -200,7 +200,7 @@ namespace Resin.IO
                 Array.Reverse(lengthBytes);
             }
 
-            return new IxInfo{Name=Encoding.GetString(stringBytes), DocumentCount = dic.ToDictionary(x=>x.Key, x=>x.Value)};
+            return new IxInfo{VersionId=Encoding.GetString(stringBytes), DocumentCount = dic.ToDictionary(x=>x.Key, x=>x.Value)};
         }
 
         public static byte[] Serialize(this IEnumerable<KeyValuePair<string, int>> entries)

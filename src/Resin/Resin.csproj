@@ -51,7 +51,7 @@
     <Compile Include="IO\Read\BlockReader.cs" />
     <Compile Include="IO\DocumentPosting.cs" />
     <Compile Include="IO\Read\DocumentReader.cs" />
-    <Compile Include="IO\Read\ITrieReader.cs" />
+    <Compile Include="IO\ITrieReader.cs" />
     <Compile Include="IO\Read\MappedTrieReader.cs" />
     <Compile Include="IO\Read\PostingsReader.cs" />
     <Compile Include="IO\Read\TrieReader.cs" />

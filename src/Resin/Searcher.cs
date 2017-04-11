@@ -33,7 +33,7 @@ namespace Resin
 
             _ix = IxInfo.Load(GetIndexFileNamesInChronologicalOrder().Last());
 
-            var docFileName = Path.Combine(_directory, _ix.Name + ".doc");
+            var docFileName = Path.Combine(_directory, _ix.VersionId + ".doc");
 
             _docReader = new DocumentReader(
                 new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 4, FileOptions.SequentialScan),
@@ -94,7 +94,7 @@ namespace Resin
             var docs = new List<KeyValuePair<double,Document>>();
             var dic = scores.ToDictionary(x => x.DocumentId, y => y.Score);
 
-            using (var docAddressReader = new DocumentAddressReader(new FileStream(Path.Combine(_directory, _ix.Name + ".da"), FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan)))
+            using (var docAddressReader = new DocumentAddressReader(new FileStream(Path.Combine(_directory, _ix.VersionId + ".da"), FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan)))
             {
                 var adrs = scores
                     .Select(s => new BlockInfo(s.DocumentId*_blockSize, _blockSize))

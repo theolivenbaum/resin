@@ -8,7 +8,7 @@ namespace Tests
     public class LcrsTrieTests
     {
         [Test]
-        public void Can_merge()
+        public void Can_add_two_tries()
         {
             var one = new LcrsTrie('\0', false);
             one.Add("ape");
@@ -19,7 +19,7 @@ namespace Tests
             two.Add("apple");
             two.Add("banana");
 
-            one.Merge(two);
+            one.Add(two);
 
             Word found;
             Assert.IsTrue(one.HasWord("ape", out found));
