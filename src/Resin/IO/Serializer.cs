@@ -26,6 +26,7 @@ namespace Resin.IO
             using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 var bytes = ix.Serialize();
+
                 fs.Write(bytes, 0, bytes.Length);
             }
         }
@@ -94,29 +95,24 @@ namespace Resin.IO
         {
             using (var stream = new MemoryStream())
             {
-                byte[] posBytes;
-                byte[] lenBytes;
-
                 if (block == null)
                 {
-                    posBytes = BitConverter.GetBytes(int.MinValue);
-                    lenBytes = BitConverter.GetBytes(int.MinValue);
+                    var min = BitConverter.GetBytes(int.MinValue);
+
+                    if (!BitConverter.IsLittleEndian)
+                    {
+                        Array.Reverse(min);
+                    }
+
+                    stream.Write(min, 0, min.Length);
+                    stream.Write(min, 0, min.Length);
                 }
                 else
                 {
-                    posBytes = BitConverter.GetBytes(block.Value.Position);
-                    lenBytes = BitConverter.GetBytes(block.Value.Length);
+                    var blockBytes = block.Value.Serialize();
+
+                    stream.Write(blockBytes, 0, blockBytes.Length);
                 }
-
-                if (!BitConverter.IsLittleEndian)
-                {
-                    Array.Reverse(posBytes);
-                    Array.Reverse(lenBytes);
-                }
-
-                stream.Write(posBytes, 0, posBytes.Length);
-                stream.Write(lenBytes, 0, lenBytes.Length);
-
                 return stream.ToArray();
             }
         }
@@ -125,16 +121,16 @@ namespace Resin.IO
         {
             using (var stream = new MemoryStream())
             {
-                var intBytes = BitConverter.GetBytes(document.Id);
+                var idBytes = BitConverter.GetBytes(document.Id);
                 var dicBytes = document.Fields.Serialize(compress);
 
                 if (!BitConverter.IsLittleEndian)
                 {
-                    Array.Reverse(intBytes);
+                    Array.Reverse(idBytes);
                     Array.Reverse(dicBytes);
                 }
 
-                stream.Write(intBytes, 0, intBytes.Length);
+                stream.Write(idBytes, 0, idBytes.Length);
                 stream.Write(dicBytes, 0, dicBytes.Length);
 
                 return stream.ToArray();
@@ -165,19 +161,19 @@ namespace Resin.IO
         {
             using (var stream = new MemoryStream())
             {
-                byte[] stringBytes = Encoding.GetBytes(ix.Name);
-                byte[] lengthBytes = BitConverter.GetBytes((short)stringBytes.Length);
+                byte[] nameBytes = Encoding.GetBytes(ix.Name);
+                byte[] lengthBytes = BitConverter.GetBytes((short)nameBytes.Length);
                 byte[] dicBytes = ix.DocumentCount.Serialize();
                 
                 if (!BitConverter.IsLittleEndian)
                 {
-                    Array.Reverse(stringBytes);
+                    Array.Reverse(nameBytes);
                     Array.Reverse(lengthBytes);
                     Array.Reverse(dicBytes);
                 }
 
                 stream.Write(lengthBytes, 0, sizeof(short));
-                stream.Write(stringBytes, 0, stringBytes.Length);
+                stream.Write(nameBytes, 0, nameBytes.Length);
                 stream.Write(dicBytes, 0, dicBytes.Length);
 
                 return stream.ToArray();
@@ -340,7 +336,7 @@ namespace Resin.IO
             int byte2 = stream.ReadByte();
             stream.Read(depthBytes, 0, depthBytes.Length);
             stream.Read(weightBytes, 0, weightBytes.Length);
-            BlockInfo block = DeserializeBlock(stream);
+            BlockInfo? block = DeserializeBlock(stream);
             
             if (!BitConverter.IsLittleEndian)
             {
@@ -359,7 +355,7 @@ namespace Resin.IO
                 block);
         }
 
-        public static BlockInfo DeserializeBlock(byte[] bytes)
+        public static BlockInfo? DeserializeBlock(byte[] bytes)
         {
             using (var stream = new MemoryStream(bytes))
             {
