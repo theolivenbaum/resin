@@ -13,7 +13,7 @@ namespace Resin.IO
 
         public static int SizeOfNode()
         {
-            return sizeof(char) + 3 * sizeof(bool) + 2 * sizeof(int) + SizeOfBlock();
+            return sizeof(char) + 3 * sizeof(bool) + 1 * sizeof(int) + 1 * sizeof(short) + SizeOfBlock();
         }
 
         public static int SizeOfBlock()
@@ -41,7 +41,7 @@ namespace Resin.IO
             }
         }
 
-        private static void SerializeDepthFirst(this LcrsTrie trie, Stream stream, int depth)
+        private static void SerializeDepthFirst(this LcrsTrie trie, Stream stream, short depth)
         {
             var bytes = new LcrsNode(trie, depth, trie.GetWeight(), trie.PostingsAddress).Serialize();
 
@@ -49,7 +49,7 @@ namespace Resin.IO
 
             if (trie.LeftChild != null)
             {
-                trie.LeftChild.SerializeDepthFirst(stream, depth + 1);
+                trie.LeftChild.SerializeDepthFirst(stream, (short)(depth + 1));
             }
 
             if (trie.RightSibling != null)
@@ -58,35 +58,33 @@ namespace Resin.IO
             }
         }
 
-
-
         public static byte[] Serialize(this LcrsNode node)
         {
             using (var stream = new MemoryStream())
             {
-                var bytes0 = BitConverter.GetBytes(node.Value);
+                var valBytes = BitConverter.GetBytes(node.Value);
                 var byte0 = EncodedBoolean[node.HaveSibling];
                 var byte1 = EncodedBoolean[node.HaveChild];
                 var byte2 = EncodedBoolean[node.EndOfWord];
-                var bytes1 = BitConverter.GetBytes(node.Depth);
-                var bytes2 = BitConverter.GetBytes(node.Weight);
-                var bytes3 = Serialize(node.PostingsAddress);
+                var depthBytes = BitConverter.GetBytes(node.Depth);
+                var weightBytes = BitConverter.GetBytes(node.Weight);
+                var addrBytes = Serialize(node.PostingsAddress);
 
                 if (!BitConverter.IsLittleEndian)
                 {
-                    Array.Reverse(bytes0);
-                    Array.Reverse(bytes1);
-                    Array.Reverse(bytes2);
-                    Array.Reverse(bytes3);
+                    Array.Reverse(valBytes);
+                    Array.Reverse(depthBytes);
+                    Array.Reverse(weightBytes);
+                    Array.Reverse(addrBytes);
                 }
 
-                stream.Write(bytes0, 0, bytes0.Length);
+                stream.Write(valBytes, 0, valBytes.Length);
                 stream.WriteByte(byte0);
                 stream.WriteByte(byte1);
                 stream.WriteByte(byte2);
-                stream.Write(bytes1, 0, bytes1.Length);
-                stream.Write(bytes2, 0, bytes2.Length);
-                stream.Write(bytes3, 0, bytes3.Length);
+                stream.Write(depthBytes, 0, depthBytes.Length);
+                stream.Write(weightBytes, 0, weightBytes.Length);
+                stream.Write(addrBytes, 0, addrBytes.Length);
 
                 return stream.ToArray();
             }
@@ -332,32 +330,32 @@ namespace Resin.IO
         {
             if (!stream.CanRead) return LcrsNode.MinValue;
 
-            var bytes0 = new byte[sizeof(char)];
-            var bytes1 = new byte[sizeof(int)];
-            var bytes2 = new byte[sizeof(int)];
+            var valBytes = new byte[sizeof(char)];
+            var depthBytes = new byte[sizeof(short)];
+            var weightBytes = new byte[sizeof(int)];
 
-            stream.Read(bytes0, 0, sizeof (char));
+            stream.Read(valBytes, 0, sizeof (char));
             int byte0 = stream.ReadByte();
             int byte1 = stream.ReadByte();
             int byte2 = stream.ReadByte();
-            stream.Read(bytes1, 0, sizeof(int));
-            stream.Read(bytes2, 0, sizeof(int));
+            stream.Read(depthBytes, 0, depthBytes.Length);
+            stream.Read(weightBytes, 0, weightBytes.Length);
             BlockInfo block = DeserializeBlock(stream);
             
             if (!BitConverter.IsLittleEndian)
             {
-                Array.Reverse(bytes0);
-                Array.Reverse(bytes1);
-                Array.Reverse(bytes2);
+                Array.Reverse(valBytes);
+                Array.Reverse(depthBytes);
+                Array.Reverse(weightBytes);
             }
 
             return new LcrsNode(
-                BitConverter.ToChar(bytes0, 0),
+                BitConverter.ToChar(valBytes, 0),
                 byte0 == 1,
                 byte1 == 1,
                 byte2 == 1,
-                BitConverter.ToInt32(bytes1, 0),
-                BitConverter.ToInt32(bytes2, 0),
+                BitConverter.ToInt16(depthBytes, 0),
+                BitConverter.ToInt32(weightBytes, 0),
                 block);
         }
 

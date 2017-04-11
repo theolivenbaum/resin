@@ -10,11 +10,11 @@ namespace Resin.IO
         public readonly bool HaveSibling;
         public readonly bool HaveChild;
         public readonly bool EndOfWord;
-        public readonly int Depth;
+        public readonly short Depth;
         public readonly int Weight;
         public readonly BlockInfo? PostingsAddress;
 
-        public LcrsNode(LcrsTrie trie, int depth, int weight, BlockInfo? postingsAddress)
+        public LcrsNode(LcrsTrie trie, short depth, int weight, BlockInfo? postingsAddress)
         {
             Value = trie.Value;
             HaveSibling = trie.RightSibling != null;
@@ -25,7 +25,7 @@ namespace Resin.IO
             PostingsAddress = postingsAddress;
         }
 
-        public LcrsNode(char value, bool haveSibling, bool haveChild, bool endOfWord, int depth, int weight, BlockInfo? postingsAddress)
+        public LcrsNode(char value, bool haveSibling, bool haveChild, bool endOfWord, short depth, int weight, BlockInfo? postingsAddress)
         {
             Value = value;
             HaveSibling = haveSibling;
