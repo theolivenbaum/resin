@@ -18,7 +18,7 @@ namespace Resin.IO
 
         public static int SizeOfBlock()
         {
-            return sizeof(long) + sizeof(int);
+            return 1 * sizeof(long) + 1 * sizeof(int);
         }
 
         public static void Serialize(this IxInfo ix, string fileName)
@@ -94,28 +94,28 @@ namespace Resin.IO
         {
             using (var stream = new MemoryStream())
             {
-                byte[] longBytes;
-                byte[] intBytes;
+                byte[] posBytes;
+                byte[] lenBytes;
 
                 if (block == null)
                 {
-                    longBytes = BitConverter.GetBytes(long.MinValue);
-                    intBytes = BitConverter.GetBytes(int.MinValue);
+                    posBytes = BitConverter.GetBytes(int.MinValue);
+                    lenBytes = BitConverter.GetBytes(int.MinValue);
                 }
                 else
                 {
-                    longBytes = BitConverter.GetBytes(block.Value.Position);
-                    intBytes = BitConverter.GetBytes(block.Value.Length);
+                    posBytes = BitConverter.GetBytes(block.Value.Position);
+                    lenBytes = BitConverter.GetBytes(block.Value.Length);
                 }
 
                 if (!BitConverter.IsLittleEndian)
                 {
-                    Array.Reverse(longBytes);
-                    Array.Reverse(intBytes);
+                    Array.Reverse(posBytes);
+                    Array.Reverse(lenBytes);
                 }
 
-                stream.Write(longBytes, 0, longBytes.Length);
-                stream.Write(intBytes, 0, intBytes.Length);
+                stream.Write(posBytes, 0, posBytes.Length);
+                stream.Write(lenBytes, 0, lenBytes.Length);
 
                 return stream.ToArray();
             }
@@ -145,17 +145,17 @@ namespace Resin.IO
         {
             using (var stream = new MemoryStream())
             {
-                byte[] longBytes = BitConverter.GetBytes(block.Position);
-                byte[] intBytes = BitConverter.GetBytes(block.Length);
+                byte[] posBytes = BitConverter.GetBytes(block.Position);
+                byte[] lenBytes = BitConverter.GetBytes(block.Length);
 
                 if (!BitConverter.IsLittleEndian)
                 {
-                    Array.Reverse(longBytes);
-                    Array.Reverse(intBytes);
+                    Array.Reverse(posBytes);
+                    Array.Reverse(lenBytes);
                 }
 
-                stream.Write(longBytes, 0, longBytes.Length);
-                stream.Write(intBytes, 0, intBytes.Length);
+                stream.Write(posBytes, 0, posBytes.Length);
+                stream.Write(lenBytes, 0, lenBytes.Length);
 
                 return stream.ToArray();
             }
@@ -389,19 +389,19 @@ namespace Resin.IO
 
         public static BlockInfo DeserializeBlock(Stream stream)
         {
-            var longBytes = new byte[sizeof(long)];
-            var intBytes = new byte[sizeof(int)];
+            var posBytes = new byte[sizeof(long)];
+            var lenBytes = new byte[sizeof(int)];
 
-            stream.Read(longBytes, 0, sizeof (long));
-            stream.Read(intBytes, 0, sizeof (int));
+            stream.Read(posBytes, 0, posBytes.Length);
+            stream.Read(lenBytes, 0, lenBytes.Length);
 
             if (!BitConverter.IsLittleEndian)
             {
-                Array.Reverse(longBytes);
-                Array.Reverse(intBytes);
+                Array.Reverse(posBytes);
+                Array.Reverse(lenBytes);
             }
 
-            return new BlockInfo(BitConverter.ToInt64(longBytes, 0), BitConverter.ToInt32(intBytes, 0));
+            return new BlockInfo(BitConverter.ToInt32(posBytes, 0), BitConverter.ToInt32(lenBytes, 0));
         }
 
         public static IEnumerable<int> DeserializeIntList(byte[] data)
