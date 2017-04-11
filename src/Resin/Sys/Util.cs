@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 
 namespace Resin.Sys
 {
@@ -25,6 +27,19 @@ namespace Resin.Sys
                 path = Directory.GetParent(path).ToString();
             }
             return Path.Combine(path, "Resin");
+        }
+
+        private static IEnumerable<string> GetIndexFileNames(string directory)
+        {
+            return Directory.GetFiles(directory, "*.ix");
+        }
+
+        public static IEnumerable<string> GetIndexFileNamesInChronologicalOrder(string directory)
+        {
+            return GetIndexFileNames(directory)
+                .Select(f => new {id = long.Parse(new FileInfo(f).Name.Replace(".ix", "")), fileName = f})
+                .OrderBy(info => info.id)
+                .Select(info => info.fileName);
         }
     }
 }

@@ -9,6 +9,7 @@ using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Read;
 using Resin.Querying;
+using Resin.Sys;
 
 namespace Resin
 {
@@ -31,7 +32,7 @@ namespace Resin
             _parser = parser;
             _scorer = scorer;
 
-            _ix = IxInfo.Load(GetIndexFileNamesInChronologicalOrder().Last());
+            _ix = IxInfo.Load(Util.GetIndexFileNamesInChronologicalOrder(directory).First());
 
             var docFileName = Path.Combine(_directory, _ix.VersionId + ".doc");
 
@@ -74,11 +75,6 @@ namespace Resin
             Log.DebugFormat("searched {0} in {1}", queryContext, searchTime.Elapsed);
 
             return result;
-        }
-
-        private string[] GetIndexFileNamesInChronologicalOrder()
-        {
-            return Directory.GetFiles(_directory, "*.ix").OrderBy(s => s).ToArray();
         }
 
         private IList<DocumentScore> Collect(QueryContext query)
