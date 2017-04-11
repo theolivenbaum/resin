@@ -10,7 +10,7 @@ using Resin.Sys;
 
 namespace Resin
 {
-    public abstract class Writer : IDisposable
+    public abstract class Upsert : IDisposable
     {
         protected abstract IEnumerable<Document> ReadSource();
 
@@ -21,7 +21,7 @@ namespace Resin
         private readonly Dictionary<string, LcrsTrie> _tries;
         private readonly ConcurrentDictionary<string, int> _docCountByField;
 
-        protected Writer(string directory, IAnalyzer analyzer, bool compression = false)
+        protected Upsert(string directory, IAnalyzer analyzer, bool compression = false)
         {
             _directory = directory;
             _analyzer = analyzer;

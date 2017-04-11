@@ -5,19 +5,19 @@ using Resin.Analysis;
 
 namespace Resin
 {
-    public abstract class StreamWriteOperation : Writer
+    public abstract class StreamUpsertOperation : Upsert
     {
         protected abstract IDictionary<string, string> Parse(string document);
  
         private readonly StreamReader _reader;
         private readonly int _take;
 
-        protected StreamWriteOperation(string directory, IAnalyzer analyzer, string jsonFileName, int take = int.MaxValue)
+        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, string jsonFileName, int take = int.MaxValue)
             : this(directory, analyzer, File.Open(jsonFileName, FileMode.Open, FileAccess.Read, FileShare.None), take)
         {
         }
 
-        protected StreamWriteOperation(string directory, IAnalyzer analyzer, Stream jsonFile, int take = int.MaxValue)
+        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, Stream jsonFile, int take = int.MaxValue)
             : base(directory, analyzer)
         {
             _take = take;
