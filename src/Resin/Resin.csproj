@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="Analysis\AnalyzedDocument.cs" />
     <Compile Include="Analysis\Analyzer.cs" />
+    <Compile Include="IO\Compressor.cs" />
     <Compile Include="IO\Read\DocumentAddressReader.cs" />
     <Compile Include="IO\Read\BlockReader.cs" />
     <Compile Include="IO\DocumentPosting.cs" />

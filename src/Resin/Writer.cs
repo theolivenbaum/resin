@@ -16,15 +16,17 @@ namespace Resin
 
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
+        private readonly bool _compression;
         private readonly string _indexName;
         private readonly Dictionary<string, LcrsTrie> _tries;
         private readonly ConcurrentDictionary<string, int> _docCountByField;
 
-        protected Writer(string directory, IAnalyzer analyzer)
+        protected Writer(string directory, IAnalyzer analyzer, bool compression = false)
         {
             _directory = directory;
             _analyzer = analyzer;
-            
+            _compression = compression;
+
             _indexName = Util.GetChronologicalFileId();
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
@@ -43,7 +45,8 @@ namespace Resin
 
                     // Produce
                     using (var docWriter = new DocumentWriter(
-                        new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None)))
+                        new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None),
+                        _compression))
                     {
                         foreach (var doc in ReadSource())
                         {

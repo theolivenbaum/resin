@@ -25,7 +25,7 @@ namespace Resin
         private readonly DocumentReader _docReader;
         private readonly int _blockSize;
 
-        public Searcher(string directory, QueryParser parser, IScoringScheme scorer)
+        public Searcher(string directory, QueryParser parser, IScoringScheme scorer, bool compression = false)
         {
             _directory = directory;
             _parser = parser;
@@ -36,7 +36,8 @@ namespace Resin
             var docFileName = Path.Combine(_directory, _ix.Name + ".doc");
 
             _docReader = new DocumentReader(
-                new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 4, FileOptions.SequentialScan));
+                new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 4, FileOptions.SequentialScan),
+                compression);
 
             _blockSize = sizeof(long) + sizeof(int);
         }
