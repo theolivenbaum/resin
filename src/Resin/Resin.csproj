@@ -60,7 +60,6 @@
     <Compile Include="IO\Write\BlockWriter.cs" />
     <Compile Include="IO\Write\DocumentWriter.cs" />
     <Compile Include="IO\Write\PostingsWriter.cs" />
-    <Compile Include="IO\Write\TrieBuilder.cs" />
     <Compile Include="StreamWriteOperation.cs" />
     <Compile Include="Sys\MurmurHash2UInt32Hack.cs" />
     <Compile Include="Sys\Util.cs" />
