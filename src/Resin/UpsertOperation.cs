@@ -2,15 +2,17 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Write;
+using Resin.Querying;
 using Resin.Sys;
 
 namespace Resin
 {
-    public abstract class Upsert : IDisposable
+    public abstract class UpsertOperation : IDisposable
     {
         protected abstract IEnumerable<Document> ReadSource();
 
@@ -20,8 +22,9 @@ namespace Resin
         private readonly string _indexName;
         private readonly Dictionary<string, LcrsTrie> _tries;
         private readonly ConcurrentDictionary<string, int> _docCountByField;
+        private readonly IxInfo _ix;
 
-        protected Upsert(string directory, IAnalyzer analyzer, bool compression = false)
+        protected UpsertOperation(string directory, IAnalyzer analyzer, bool compression = false)
         {
             _directory = directory;
             _analyzer = analyzer;
@@ -30,6 +33,12 @@ namespace Resin
             _indexName = Util.GetChronologicalFileId();
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
+
+            var ixFileName = Util.GetIndexFileNamesInChronologicalOrder(directory).FirstOrDefault();
+            if (ixFileName != null)
+            {
+                _ix = IxInfo.Load(ixFileName);
+            }
         }
 
         public string Write()
@@ -63,7 +72,7 @@ namespace Resin
                         }
                     }
 
-                    // Signal no more work will be added
+                    // Signal no more work
                     analyzedDocuments.CompleteAdding();
                 }))
                 {
@@ -75,6 +84,7 @@ namespace Resin
                             while (true)
                             {
                                 var analyzed = analyzedDocuments.Take();
+
                                 foreach (var term in analyzed.Terms)
                                 {
                                     GetTrie(term.Key.Field, term.Key.Word.Value)
@@ -90,6 +100,25 @@ namespace Resin
                     Task.WaitAll(producer, consumer);
                 }
             }
+
+            //if (_ix != null)
+            //{
+            //    // upsert
+
+            //    using (var collector = new Collector(_directory, _ix))
+            //    {
+            //        foreach (var trie in _tries)
+            //        {
+            //            var field = trie.Key;
+
+            //            foreach (var posting in trie.Value.Words().SelectMany(word => word.Postings).ToList())
+            //            {
+            //                var query = new QueryContext(field, posting)  
+            //            }
+
+            //        }
+            //    }
+            //}
 
             var tasks = new List<Task>
             {

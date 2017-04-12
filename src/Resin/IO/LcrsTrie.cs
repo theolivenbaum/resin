@@ -37,6 +37,15 @@ namespace Resin.IO
             }
         }
 
+        public IEnumerable<Word> Words()
+        {
+            var words = new List<Word>();
+
+            DepthFirst(string.Empty, new List<char>(), words);
+
+            return words;
+        }
+
         public IEnumerable<LcrsTrie> EndOfWordNodes()
         {
             if (EndOfWord)
@@ -199,7 +208,7 @@ namespace Resin.IO
             LcrsTrie node;
             if (TryFindPath(word, out node))
             {
-                found = new Word(word, node.PostingsAddress);
+                found = new Word(word, node.PostingsAddress, node.Postings);
                 return node.EndOfWord;
             }
             found = Word.MinValue;
@@ -251,7 +260,7 @@ namespace Resin.IO
             {
                 if (EndOfWord)
                 {
-                    compressed.Add(new Word(test, PostingsAddress));
+                    compressed.Add(new Word(test, PostingsAddress, Postings));
                 }
             }
 
@@ -276,7 +285,7 @@ namespace Resin.IO
 
             if (EndOfWord)
             {
-                compressed.Add(new Word(traveled + new string(state.ToArray()), PostingsAddress));
+                compressed.Add(new Word(traveled + new string(state.ToArray()), PostingsAddress, Postings));
             }
 
             if (LeftChild != null)

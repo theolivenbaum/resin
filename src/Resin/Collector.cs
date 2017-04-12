@@ -20,7 +20,7 @@ namespace Resin
         private readonly IxInfo _ix;
         private readonly IScoringScheme _scorer;
 
-        public Collector(string directory, IxInfo ix, IScoringScheme scorer)
+        public Collector(string directory, IxInfo ix, IScoringScheme scorer = null)
         {
             _directory = directory;
             _ix = ix;
@@ -36,10 +36,11 @@ namespace Resin
 
             var time = Time();
             var reduced = query.Reduce().ToList();
+            var result = reduced.OrderByDescending(s=>s.Score).ToList();
 
-            Log.DebugFormat("reduced {0} in {1}", query, time.Elapsed);
+            Log.DebugFormat("reduced and sorted {0} in {1}", query, time.Elapsed);
 
-            return reduced.OrderByDescending(s=>s.Score).ToList();
+            return result;
         }
 
         private void Scan(IList<QueryContext> queries)
@@ -121,7 +122,7 @@ namespace Resin
 
             using (var reader = new PostingsReader(new FileStream(posFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan)))
             {
-                var addresses = terms.Select(term => term.Word.PostingsAddress).OrderBy(adr => adr.Position).ToList();
+                var addresses = terms.Select(term => term.Word.PostingsAddress.Value).OrderBy(adr => adr.Position).ToList();
 
                 return reader.Get(addresses).SelectMany(x=>x).ToList();
             }
@@ -137,17 +138,28 @@ namespace Resin
 
         private IEnumerable<DocumentScore> DoScore(IList<DocumentPosting> postings, string field)
         {
-            if (postings.Any())
+            if (_scorer == null)
             {
-                var scorer = _scorer.CreateScorer(_ix.DocumentCount[field], postings.Count);
-
                 foreach (var posting in postings)
                 {
-                    var score = scorer.Score(posting);
-
-                    yield return score;
+                    yield return new DocumentScore(posting.DocumentId, 0);
                 }
             }
+            else
+            {
+                if (postings.Any())
+                {
+                    var scorer = _scorer.CreateScorer(_ix.DocumentCount[field], postings.Count);
+
+                    foreach (var posting in postings)
+                    {
+                        var score = scorer.Score(posting);
+
+                        yield return score;
+                    }
+                } 
+            }
+            
         }
 
         private ITrieReader GetTreeReader(string field, string token)

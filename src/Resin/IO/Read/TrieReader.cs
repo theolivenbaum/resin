@@ -26,7 +26,7 @@ namespace Resin.IO.Read
             LcrsNode node;
             if (TryFindDepthFirst(word, 0, out node))
             {
-                found = new Word(word, node.PostingsAddress.Value);
+                found = new Word(word, node.PostingsAddress);
                 return node.EndOfWord;
             }
             found = Word.MinValue;
@@ -92,7 +92,7 @@ namespace Resin.IO.Read
                     {
                         if (node.EndOfWord)
                         {
-                            compressed.Add(new Word(test, node.PostingsAddress.Value));
+                            compressed.Add(new Word(test, node.PostingsAddress));
                         }
                     }
                     else if (edits > maxErrors && reachedDepth)
@@ -133,7 +133,7 @@ namespace Resin.IO.Read
 
                 if (node.EndOfWord)
                 {
-                    compressed.Add(new Word(prefix + new string(path.ToArray()), node.PostingsAddress.Value));
+                    compressed.Add(new Word(prefix + new string(path.ToArray()), node.PostingsAddress));
                 }
 
                 if (node.HaveSibling)
