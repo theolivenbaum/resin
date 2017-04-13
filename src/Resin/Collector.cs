@@ -19,12 +19,15 @@ namespace Resin
         private readonly string _directory;
         private readonly IxInfo _ix;
         private readonly IScoringScheme _scorer;
+        private readonly IDictionary<string, int> _documentCount;
 
-        public Collector(string directory, IxInfo ix, IScoringScheme scorer = null)
+        public Collector(string directory, IxInfo ix, IScoringScheme scorer = null, IDictionary<string, int> documentCount = null)
         {
             _directory = directory;
             _ix = ix;
             _scorer = scorer;
+
+            _documentCount = documentCount ?? ix.DocumentCount;
         }
 
         public IList<DocumentScore> Collect(QueryContext query)
@@ -43,7 +46,7 @@ namespace Resin
             return result;
         }
 
-        private void Scan(IList<QueryContext> queries)
+        private void Scan(IEnumerable<QueryContext> queries)
         {
             Parallel.ForEach(queries, DoScan);
 
@@ -113,22 +116,17 @@ namespace Resin
         
         private IEnumerable<IEnumerable<DocumentPosting>> DoReadPostings(IEnumerable<Term> terms)
         {
-            yield return GetPostings(terms);
-        }
-
-        private IEnumerable<DocumentPosting> GetPostings(IEnumerable<Term> terms)
-        {
             var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "pos"));
 
             using (var reader = new PostingsReader(new FileStream(posFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan)))
             {
                 var addresses = terms.Select(term => term.Word.PostingsAddress.Value).OrderBy(adr => adr.Position).ToList();
 
-                return reader.Get(addresses).SelectMany(x=>x).ToList();
+                yield return reader.Get(addresses).SelectMany(x => x).ToList();
             }
         }
 
-        private void Score(IList<QueryContext> queries)
+        private void Score(IEnumerable<QueryContext> queries)
         {
             Parallel.ForEach(queries, query =>
             {
@@ -142,24 +140,26 @@ namespace Resin
             {
                 foreach (var posting in postings)
                 {
-                    yield return new DocumentScore(posting.DocumentId, 0);
+                    yield return new DocumentScore(posting.DocumentId, 0, _ix);
                 }
             }
             else
             {
                 if (postings.Any())
                 {
-                    var scorer = _scorer.CreateScorer(_ix.DocumentCount[field], postings.Count);
+                    var docsInCorpus = _documentCount[field];
+                    var docsWithTerm = postings.Count;
+
+                    var scorer = _scorer.CreateScorer(docsInCorpus, docsWithTerm);
 
                     foreach (var posting in postings)
                     {
                         var score = scorer.Score(posting);
 
-                        yield return score;
+                        yield return  new DocumentScore(posting.DocumentId, score, _ix);
                     }
                 } 
             }
-            
         }
 
         private ITrieReader GetTreeReader(string field, string token)

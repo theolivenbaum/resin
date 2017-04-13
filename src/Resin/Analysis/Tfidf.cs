@@ -1,6 +1,5 @@
 ﻿using System;
 using Resin.IO;
-using Resin.Querying;
 
 namespace Resin.Analysis
 {
@@ -14,7 +13,7 @@ namespace Resin.Analysis
         }
 
         /// <summary>
-        /// Create scoring scheme
+        /// Create scoring scheme factory.
         /// </summary>
         public Tfidf()
         {
@@ -33,10 +32,9 @@ namespace Resin.Analysis
             _idf = Math.Log10(docsInCorpus / (double)docsWithTerm);
         }
 
-        public DocumentScore Score(DocumentPosting posting)
+        public double Score(DocumentPosting posting)
         {
-            var score = Math.Sqrt(posting.Count) * _idf;
-            return new DocumentScore(posting.DocumentId, score);
+            return Math.Sqrt(posting.Count) * _idf;
         }
 
         public IScoringScheme CreateScorer(int docsInCorpus, int docsWithTerm)

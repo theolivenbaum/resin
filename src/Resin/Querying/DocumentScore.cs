@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Resin.IO;
 
 namespace Resin.Querying
 {
     public class DocumentScore
     {
-        public int DocumentId;
-        public double Score;
+        public int DocumentId { get; private set; }
+        public double Score { get; private set; }
+        public IxInfo Ix { get; private set; }
 
-        public DocumentScore(int documentId, double score)
+        public DocumentScore(int documentId, double score, IxInfo ix)
         {
             DocumentId = documentId;
             Score = score;
+            Ix = ix;
         }
 
         public void Join(DocumentScore score, int boost)
