@@ -23,7 +23,7 @@ namespace Resin.IO
             EndOfWord = endOfWord;
         }
 
-        public void Add(LcrsTrie other)
+        public void Append(LcrsTrie other)
         {
             var words = new List<Word>();
 
