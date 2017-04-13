@@ -22,23 +22,21 @@ namespace Resin
         private readonly string _directory;
         private readonly QueryParser _parser;
         private readonly IScoringScheme _scorer;
+        private readonly bool _compression;
         private readonly IxInfo _ix;
-        private readonly DocumentReader _docReader;
         private readonly int _blockSize;
+        private readonly string _docFileName;
 
         public Searcher(string directory, QueryParser parser, IScoringScheme scorer, bool compression = false)
         {
             _directory = directory;
             _parser = parser;
             _scorer = scorer;
+            _compression = compression;
 
             _ix = IxInfo.Load(Util.GetIndexFileNamesInChronologicalOrder(directory).First());
 
-            var docFileName = Path.Combine(_directory, _ix.VersionId + ".doc");
-
-            _docReader = new DocumentReader(
-                new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 4, FileOptions.SequentialScan),
-                compression);
+            _docFileName = Path.Combine(_directory, _ix.VersionId + ".doc");
 
             _blockSize = sizeof(long) + sizeof(int);
         }
@@ -87,8 +85,7 @@ namespace Resin
 
         private IList<Document> GetDocs(IList<DocumentScore> scores)
         {
-            var docs = new List<KeyValuePair<double,Document>>();
-            var dic = scores.ToDictionary(x => x.DocumentId, y => y.Score);
+            IList<BlockInfo> docAdrs;
 
             using (var docAddressReader = new DocumentAddressReader(new FileStream(Path.Combine(_directory, _ix.VersionId + ".da"), FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan)))
             {
@@ -97,16 +94,22 @@ namespace Resin
                     .OrderBy(b => b.Position)
                     .ToList();
 
-                var docAdrs = docAddressReader.Get(adrs).ToList();
+                docAdrs = docAddressReader.Get(adrs).ToList();
+            }
 
-                foreach (var doc in _docReader.Get(docAdrs))
+            using (var docReader = new DocumentReader(new FileStream(_docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096*4, FileOptions.SequentialScan), _compression))
+            {
+                var docs = new List<KeyValuePair<double, Document>>();
+                var dic = scores.ToDictionary(x => x.DocumentId, y => y.Score);
+
+                foreach (var doc in docReader.Get(docAdrs))
                 {
                     var score = dic[doc.Id];
                     doc.Fields["__score"] = score.ToString(CultureInfo.InvariantCulture);
                     docs.Add(new KeyValuePair<double, Document>(score, doc));
                 }
+                return docs.OrderByDescending(kvp=>kvp.Key).Select(kvp=>kvp.Value).ToList();
             }
-            return docs.OrderByDescending(kvp=>kvp.Key).Select(kvp=>kvp.Value).ToList();
         }
 
         public void Dispose()
