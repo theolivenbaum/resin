@@ -32,16 +32,19 @@ namespace Resin
 
         public IList<DocumentScore> Collect(QueryContext query)
         {
-            var queries = new List<QueryContext> {query}.Concat(query.Children).ToList();
+            var time = new Stopwatch();
+            time.Start();
+
+            var queries = query.ToList();
 
             Scan(queries);
             Score(queries);
 
-            var time = Time();
+
             var reduced = query.Reduce().ToList();
             var result = reduced.OrderByDescending(s=>s.Score).ToList();
 
-            Log.DebugFormat("reduced and sorted {0} in {1}", query, time.Elapsed);
+            Log.DebugFormat("collected {0} in {1}", query, time.Elapsed);
 
             return result;
         }
@@ -58,7 +61,8 @@ namespace Resin
 
         private void DoScan(QueryContext query)
         {
-            var time = Time();
+            var time = new Stopwatch();
+            time.Start();
             var reader = GetTreeReader(query.Field, query.Value);
 
             if (reader == null)
@@ -94,7 +98,8 @@ namespace Resin
 
         private void DoGetPostings(QueryContext query)
         {
-            var time = Time();
+            var time = new Stopwatch();
+            time.Start();
 
             var postings = DoReadPostings(query.Terms).ToList();
 
@@ -173,13 +178,6 @@ namespace Resin
             var reader = new MappedTrieReader(fileName);
 
             return reader;
-        }
-
-        private static Stopwatch Time()
-        {
-            var timer = new Stopwatch();
-            timer.Start();
-            return timer;
         }
 
         public void Dispose()

@@ -12,7 +12,7 @@ namespace Tests
         {
             var q = new QueryParser(new Analyzer()).Parse("+title:rambo first blood");
 
-            Assert.AreEqual("+title:rambo title:first title:blood", q.ToString());
+            Assert.AreEqual("+title:rambo +title:first +title:blood", q.ToString());
         }
 
         [Test]

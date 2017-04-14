@@ -161,8 +161,7 @@ namespace Tests
             {
                 var scores = collector.Collect(query).ToList();
 
-                Assert.That(scores.Count, Is.EqualTo(2));
-                Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
+                Assert.That(scores.Count, Is.EqualTo(1));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
             }
         }

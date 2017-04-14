@@ -7,64 +7,82 @@ namespace Resin.Querying
 {
     public class QueryContext : QueryTerm
     {
-        public IList<QueryContext> Children { get; set; }
+        public QueryContext Next { get; set; }
         public IEnumerable<Term> Terms { get; set; }
         public IEnumerable<DocumentPosting> Postings { get; set; }
         public IEnumerable<DocumentScore> Scored { get; set; }
 
         public QueryContext(string field, string value) : base(field, value)
         {
-            Children = new List<QueryContext>();
         }
 
         public IEnumerable<DocumentScore> Reduce()
         {
-            var first = Scored.ToList();
-
-            foreach (var child in Children)
+            if (Next == null)
             {
-                var other = child.Reduce().ToList();
-
-                if (child.And)
-                {
-                    first = DocumentScore.CombineAnd(first, other).ToList();
-                }
-                else if (child.Not)
-                {
-                    var dic = first.ToDictionary(x => x.DocumentId);
-                    foreach (var posting in other)
-                    {
-                        DocumentScore exists;
-                        if (dic.TryGetValue(posting.DocumentId, out exists))
-                        {
-                            first.Remove(exists);
-                        }
-                    }
-                }
-                else // Or
-                {
-                    first = DocumentScore.CombineOr(first, other).ToList();
-                }
+                return Scored;
             }
 
-            return first;
-        }
+            var next = Next.Reduce().ToList();
 
-        public QueryContext Clone()
-        {
-            return new QueryContext(Field, Value) {Children = Children, And = And, Not = Not, Edits = Edits, Fuzzy = Fuzzy, Prefix = Prefix};
+            if (Next.And)
+            {
+                return DocumentScore.CombineAnd(Scored, next);
+            }
+            if (Next.Not)
+            {
+                var dic = Scored.ToDictionary(x => x.DocumentId);
+                foreach (var score in next)
+                {
+                    DocumentScore exists;
+                    if (dic.TryGetValue(score.DocumentId, out exists))
+                    {
+                        dic.Remove(exists.DocumentId);
+                    }
+                }
+                return dic.Values;
+            }
+            return DocumentScore.CombineOr(Scored, next);
         }
       
         public override string ToString()
         {
             var s = new StringBuilder();
+
             s.AppendFormat(base.ToString());
 
-            foreach (var child in Children)
-            {
-                s.AppendFormat(" {0}", child);
-            }
+            if(Next!=null) s.AppendFormat(" {0}", Next);
+
             return s.ToString();
+        }
+
+        public IList<QueryContext> ToList()
+        {
+            return ToListInternal().ToList();
+        }
+
+        private IEnumerable<QueryContext> ToListInternal()
+        {
+            yield return this;
+
+            if (Next == null) yield break;
+            
+            foreach (var q in Next.ToList())
+            {
+                yield return q;
+            }
+        }
+
+        public void Add(QueryContext queryContext)
+        {
+            var parent = this;
+
+            while (parent.Next != null)
+            {
+                parent = parent.Next;
+            }
+
+            parent.Next = queryContext;
         }
     }
 }

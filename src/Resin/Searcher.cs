@@ -53,7 +53,7 @@ namespace Resin
                 }
             }
 
-            _blockSize = sizeof(long) + sizeof(int);
+            _blockSize = Serializer.SizeOfBlock();
         }
 
         public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
