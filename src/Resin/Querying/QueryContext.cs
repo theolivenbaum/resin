@@ -31,17 +31,9 @@ namespace Resin.Querying
             }
             if (Next.Not)
             {
-                var dic = Scored.ToDictionary(x => x.DocumentId);
-                foreach (var score in next)
-                {
-                    DocumentScore exists;
-                    if (dic.TryGetValue(score.DocumentId, out exists))
-                    {
-                        dic.Remove(exists.DocumentId);
-                    }
-                }
-                return dic.Values;
+                return DocumentScore.Not(Scored, next);
             }
+
             return DocumentScore.CombineOr(Scored, next);
         }
       
