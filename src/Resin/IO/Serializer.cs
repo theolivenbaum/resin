@@ -165,6 +165,7 @@ namespace Resin.IO
                 byte[] lengthBytes = BitConverter.GetBytes((short)nameBytes.Length);
                 byte[] dicBytes = ix.DocumentCount.Serialize();
                 byte[] docIdBytes = BitConverter.GetBytes(ix.NextDocId);
+                byte[] startDocIdBytes = BitConverter.GetBytes(ix.StartDocId);
 
                 if (!BitConverter.IsLittleEndian)
                 {
@@ -172,8 +173,10 @@ namespace Resin.IO
                     Array.Reverse(lengthBytes);
                     Array.Reverse(dicBytes);
                     Array.Reverse(docIdBytes);
+                    Array.Reverse(startDocIdBytes);
                 }
 
+                stream.Write(startDocIdBytes, 0, sizeof(int));
                 stream.Write(docIdBytes, 0, sizeof(int));
                 stream.Write(lengthBytes, 0, sizeof(short));
                 stream.Write(nameBytes, 0, nameBytes.Length);
@@ -185,6 +188,10 @@ namespace Resin.IO
 
         public static IxInfo DeserializeIxInfo(Stream stream)
         {
+            var startDocIdBytes = new byte[sizeof(int)];
+
+            stream.Read(startDocIdBytes, 0, sizeof(int));
+
             var docIdBytes = new byte[sizeof(int)];
 
             stream.Read(docIdBytes, 0, sizeof(int));
@@ -206,12 +213,14 @@ namespace Resin.IO
                 Array.Reverse(stringBytes);
                 Array.Reverse(lengthBytes);
                 Array.Reverse(docIdBytes);
+                Array.Reverse(startDocIdBytes);
             }
 
             return new IxInfo
             {
                 VersionId= Encoding.GetString(stringBytes), 
                 DocumentCount = dic.ToDictionary(x=>x.Key, x=>x.Value),
+                StartDocId = BitConverter.ToInt32(startDocIdBytes, 0),
                 NextDocId = BitConverter.ToInt32(docIdBytes, 0)
             };
         }

@@ -11,6 +11,7 @@ namespace Resin.IO
 
         public string VersionId { get; set; }
         public Dictionary<string, int> DocumentCount { get; set; }
+        public int StartDocId { get; set; }
         public int NextDocId { get; set; }
 
         public static IxInfo Load(string fileName)

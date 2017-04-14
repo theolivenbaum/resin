@@ -21,7 +21,8 @@ namespace Resin
         private readonly string _indexName;
         private readonly Dictionary<string, LcrsTrie> _tries;
         private readonly ConcurrentDictionary<string, int> _docCountByField;
-
+        private readonly int _startDocId;
+        
         private int _docId;
 
         protected UpsertOperation(string directory, IAnalyzer analyzer, bool compression = false)
@@ -37,6 +38,7 @@ namespace Resin
             var ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
 
             _docId = ixs.Count == 0 ? 0 : ixs.OrderByDescending(x => x.NextDocId).First().NextDocId;
+            _startDocId = _docId;
         }
 
         public string Write()
@@ -186,6 +188,7 @@ namespace Resin
             {
                 VersionId = _indexName,
                 DocumentCount = new Dictionary<string, int>(_docCountByField),
+                StartDocId = _startDocId,
                 NextDocId = _docId
             };
         }
