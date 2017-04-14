@@ -18,11 +18,11 @@ namespace Resin.Querying
             Ix = ix;
         }
 
-        public void Join(DocumentScore score, int boost)
+        public void Join(DocumentScore score)
         {
             if (!score.DocumentId.Equals(DocumentId)) throw new ArgumentException("Document IDs differ. Cannot add.", "score");
 
-            Score = (Score + score.Score) * boost;
+            Score = (Score + score.Score);
         }
 
         public static IEnumerable<DocumentScore> CombineOr(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
@@ -36,7 +36,7 @@ namespace Resin.Querying
                 var top = list.First();
                 foreach (var posting in list.Skip(1))
                 {
-                    top.Join(posting, 1);
+                    top.Join(posting);
                 }
                 return top;
             });
@@ -54,7 +54,7 @@ namespace Resin.Querying
                 DocumentScore exists;
                 if (dic.TryGetValue(posting.DocumentId, out exists))
                 {
-                    posting.Join(exists, 1);
+                    posting.Join(exists);
                     remainder.Add(posting);
                 }
             }

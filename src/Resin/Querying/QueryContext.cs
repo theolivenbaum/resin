@@ -45,17 +45,6 @@ namespace Resin.Querying
             return DocumentScore.CombineOr(Scored, next);
         }
       
-        public override string ToString()
-        {
-            var s = new StringBuilder();
-
-            s.AppendFormat(base.ToString());
-
-            if(Next!=null) s.AppendFormat(" {0}", Next);
-
-            return s.ToString();
-        }
-
         public IList<QueryContext> ToList()
         {
             return ToListInternal().ToList();
@@ -83,6 +72,17 @@ namespace Resin.Querying
             }
 
             parent.Next = queryContext;
+        }
+
+        public override string ToString()
+        {
+            var s = new StringBuilder();
+
+            s.AppendFormat(base.ToString());
+
+            if (Next != null) s.AppendFormat(" {0}", Next);
+
+            return s.ToString();
         }
     }
 }
