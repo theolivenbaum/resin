@@ -146,9 +146,9 @@ namespace Resin
                 }
             }
 
-            CreateIxInfo().Serialize(Path.Combine(_directory, _indexName + ".ix"));
-
             Task.WaitAll(tasks.ToArray());
+
+            CreateIxInfo().Serialize(Path.Combine(_directory, _indexName + ".ix"));
 
             return _indexName;
         }
