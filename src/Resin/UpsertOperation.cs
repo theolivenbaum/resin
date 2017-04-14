@@ -25,7 +25,7 @@ namespace Resin
         
         private int _docId;
 
-        protected UpsertOperation(string directory, IAnalyzer analyzer, bool compression = false)
+        protected UpsertOperation(string directory, IAnalyzer analyzer, bool compression)
         {
             _directory = directory;
             _analyzer = analyzer;

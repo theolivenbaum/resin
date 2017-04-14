@@ -67,8 +67,6 @@ namespace Resin.Cli
             if (Array.IndexOf(args, "-s") > 0) size = int.Parse(args[Array.IndexOf(args, "-s") + 1]);
             if (Array.IndexOf(args, "--url") > 0) url = args[Array.IndexOf(args, "--url") + 1];
 
-
-
             if (inproc)
             {
                 var timer = new Stopwatch();
