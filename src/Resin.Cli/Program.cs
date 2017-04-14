@@ -9,7 +9,6 @@ using Resin.Analysis;
 using Resin.Querying;
 using Sir.Client;
 
-//TODO: move to own repo.
 namespace Resin.Cli
 {
     class Program
@@ -129,13 +128,13 @@ namespace Resin.Cli
             Console.WriteLine();
         }
 
-        private static void Print(Document doc)
+        private static void Print(ScoredDocument doc)
         {
             Console.WriteLine(string.Join(string.Empty,
-                            doc.Fields["_id"].ToString(CultureInfo.InvariantCulture).PadRight(10),
-                            doc.Fields["__score"].ToString(CultureInfo.InvariantCulture).PadRight(10).Substring(0, 9).PadRight(10),
-                            (doc.Fields["label"] ?? string.Empty).Substring(0, Math.Min(69, (doc.Fields["label"] ?? string.Empty).Length)).PadRight(70),
-                            (doc.Fields["description"] ?? string.Empty).Substring(0, Math.Min(30, (doc.Fields["description"] ?? string.Empty).Length))
+                            doc.Document.Fields["_id"].ToString(CultureInfo.InvariantCulture).PadRight(10),
+                            doc.Score.ToString(CultureInfo.InvariantCulture).PadRight(10).Substring(0, 9).PadRight(10),
+                            (doc.Document.Fields["label"] ?? string.Empty).Substring(0, Math.Min(69, (doc.Document.Fields["label"] ?? string.Empty).Length)).PadRight(70),
+                            (doc.Document.Fields["description"] ?? string.Empty).Substring(0, Math.Min(30, (doc.Document.Fields["description"] ?? string.Empty).Length))
                         ));
         }
 

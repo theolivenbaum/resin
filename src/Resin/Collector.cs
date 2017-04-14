@@ -41,7 +41,7 @@ namespace Resin
             Score(queries);
 
             var reduced = query.Reduce().ToList();
-            var result = reduced.OrderByDescending(s=>s.Score).ToList();
+            var result = reduced;
 
             Log.DebugFormat("collected {0} in {1}", query, time.Elapsed);
 

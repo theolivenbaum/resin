@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using log4net;
@@ -50,14 +49,14 @@ namespace Resin
 
             if (queryContext == null)
             {
-                return new Result { Docs = new List<Document>() };
+                return new Result { Docs = new List<ScoredDocument>() };
             }
 
             var skip = page * size;
             var scored = Collect(queryContext);
-            var paged = scored.Skip(skip).Take(size).ToList();
-            var docs = new List<Document>();
-            var result = new Result { Total = scored.Count, Docs = docs};
+            var paged = scored.OrderByDescending(s=>s.Score).Skip(skip).Take(size).ToList();
+            var docs = new List<ScoredDocument>();
+            var result = new Result { Total = scored.Count};
             var groupedByIx = paged.GroupBy(s => s.Ix);
 
             var docTime = new Stopwatch();
@@ -67,6 +66,8 @@ namespace Resin
             {
                 docs.AddRange(GetDocs(group.ToList(), group.Key));
             }
+
+            result.Docs = docs.OrderByDescending(d => d.Score).ToList();
 
             Log.DebugFormat("fetched {0} docs for query {1} in {2}", docs.Count, queryContext, docTime.Elapsed);
             Log.DebugFormat("searched {0} in {1}", queryContext, searchTime.Elapsed);
@@ -91,11 +92,14 @@ namespace Resin
                         null, DocumentScore.CombineOr).ToList();
         }
 
-        private IList<Document> GetDocs(IList<DocumentScore> scores, IxInfo ix)
+        private IEnumerable<ScoredDocument> GetDocs(IList<DocumentScore> scores, IxInfo ix)
         {
+            var docAddressFileName = Path.Combine(_directory, ix.VersionId + ".da");
+
             IList<BlockInfo> docAdrs;
 
-            using (var docAddressReader = new DocumentAddressReader(new FileStream(Path.Combine(_directory, ix.VersionId + ".da"), FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan)))
+            using (var docAddressReader = new DocumentAddressReader(
+                new FileStream(docAddressFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan)))
             {
                 var adrs = scores
                     .Select(s => new BlockInfo((s.DocumentId - ix.StartDocId) * _blockSize, _blockSize))
@@ -109,16 +113,14 @@ namespace Resin
 
             using (var docReader = new DocumentReader(new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096*4, FileOptions.SequentialScan), _compression))
             {
-                var docs = new List<KeyValuePair<double, Document>>();
                 var dic = scores.ToDictionary(x => x.DocumentId, y => y.Score);
 
                 foreach (var doc in docReader.Get(docAdrs))
                 {
                     var score = dic[doc.Id];
-                    doc.Fields["__score"] = score.ToString(CultureInfo.InvariantCulture);
-                    docs.Add(new KeyValuePair<double, Document>(score, doc));
+
+                    yield return new ScoredDocument{Document = doc, Score = score};
                 }
-                return docs.OrderByDescending(kvp=>kvp.Key).Select(kvp=>kvp.Value).ToList();
             }
         }
 
