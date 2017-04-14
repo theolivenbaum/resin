@@ -25,7 +25,7 @@ namespace Resin
         private readonly bool _compression;
         private readonly IList<IxInfo> _ixs;
         private readonly int _blockSize;
-        private readonly Dictionary<string, int> _documentCount;
+        private readonly IDictionary<string, int> _documentCount;
 
         public Searcher(string directory, QueryParser parser, IScoringScheme scorerFactory, bool compression = false)
         {
@@ -36,22 +36,7 @@ namespace Resin
 
             _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
 
-            _documentCount = new Dictionary<string, int>();
-
-            foreach (var x in _ixs)
-            {
-                foreach (var field in x.DocumentCount)
-                {
-                    if (_documentCount.ContainsKey(field.Key))
-                    {
-                        _documentCount[field.Key] += field.Value;
-                    }
-                    else
-                    {
-                        _documentCount[field.Key] = field.Value;
-                    }
-                }
-            }
+            _documentCount = Util.GetDocumentCount(_ixs);
 
             _blockSize = Serializer.SizeOfBlock();
         }

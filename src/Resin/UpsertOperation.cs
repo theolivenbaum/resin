@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Write;
-using Resin.Querying;
 using Resin.Sys;
 
 namespace Resin
@@ -22,7 +21,8 @@ namespace Resin
         private readonly string _indexName;
         private readonly Dictionary<string, LcrsTrie> _tries;
         private readonly ConcurrentDictionary<string, int> _docCountByField;
-        private readonly IxInfo _ix;
+
+        private int _docId;
 
         protected UpsertOperation(string directory, IAnalyzer analyzer, bool compression = false)
         {
@@ -34,16 +34,13 @@ namespace Resin
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
 
-            var ixFileName = Util.GetIndexFileNamesInChronologicalOrder(directory).FirstOrDefault();
-            if (ixFileName != null)
-            {
-                _ix = IxInfo.Load(ixFileName);
-            }
+            var ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
+
+            _docId = ixs.Count == 0 ? 0 : ixs.OrderByDescending(x => x.NextDocId).First().NextDocId;
         }
 
         public string Write()
         {
-            var index = 0;
             var docAddresses = new List<BlockInfo>();
 
             using (var analyzedDocuments = new BlockingCollection<AnalyzedDocument>())
@@ -59,7 +56,7 @@ namespace Resin
                     {
                         foreach (var doc in ReadSource())
                         {
-                            doc.Id = index++;
+                            doc.Id = _docId++;
 
                             docAddresses.Add(docWriter.Write(doc));
 
@@ -188,7 +185,8 @@ namespace Resin
             return new IxInfo
             {
                 VersionId = _indexName,
-                DocumentCount = new Dictionary<string, int>(_docCountByField)
+                DocumentCount = new Dictionary<string, int>(_docCountByField),
+                NextDocId = _docId
             };
         }
 

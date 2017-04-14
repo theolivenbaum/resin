@@ -9,8 +9,9 @@ namespace Resin.IO
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof (IxInfo));
 
-        public virtual string VersionId { get; set; }
-        public virtual Dictionary<string, int> DocumentCount { get; set; }
+        public string VersionId { get; set; }
+        public Dictionary<string, int> DocumentCount { get; set; }
+        public int NextDocId { get; set; }
 
         public static IxInfo Load(string fileName)
         {

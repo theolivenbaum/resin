@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Resin.IO;
 
 namespace Resin.Sys
 {
@@ -41,5 +42,26 @@ namespace Resin.Sys
                 .OrderBy(info => info.id)
                 .Select(info => info.fileName);
         }
+
+        public static IDictionary<string, int> GetDocumentCount(IEnumerable<IxInfo> ixs)
+        {
+            var documentCount = new Dictionary<string, int>();
+
+            foreach (var x in ixs)
+            {
+                foreach (var field in x.DocumentCount)
+                {
+                    if (documentCount.ContainsKey(field.Key))
+                    {
+                        documentCount[field.Key] += field.Value;
+                    }
+                    else
+                    {
+                        documentCount[field.Key] = field.Value;
+                    }
+                }
+            }
+            return documentCount;
+        } 
     }
 }
