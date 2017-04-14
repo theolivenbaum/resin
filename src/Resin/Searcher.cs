@@ -21,17 +21,17 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
         private readonly string _directory;
         private readonly QueryParser _parser;
-        private readonly IScoringScheme _scorer;
+        private readonly IScoringScheme _scorerFactory;
         private readonly bool _compression;
         private readonly IList<IxInfo> _ixs;
         private readonly int _blockSize;
         private readonly Dictionary<string, int> _documentCount;
 
-        public Searcher(string directory, QueryParser parser, IScoringScheme scorer, bool compression = false)
+        public Searcher(string directory, QueryParser parser, IScoringScheme scorerFactory, bool compression = false)
         {
             _directory = directory;
             _parser = parser;
-            _scorer = scorer;
+            _scorerFactory = scorerFactory;
             _compression = compression;
 
             _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
@@ -91,11 +91,11 @@ namespace Resin
 
         private IList<DocumentScore> Collect(QueryContext query)
         {
-            var results = new List<IEnumerable<DocumentScore>>();
+            var results = new List<IList<DocumentScore>>();
 
             foreach (var ix in _ixs)
             {
-                using (var collector = new Collector(_directory, ix, _scorer, _documentCount))
+                using (var collector = new Collector(_directory, ix, _scorerFactory, _documentCount))
                 {
                     results.Add(collector.Collect(query));
                 }
@@ -121,6 +121,7 @@ namespace Resin
             }
 
             var docFileName = Path.Combine(_directory, ix.VersionId + ".doc");
+
             using (var docReader = new DocumentReader(new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096*4, FileOptions.SequentialScan), _compression))
             {
                 var docs = new List<KeyValuePair<double, Document>>();

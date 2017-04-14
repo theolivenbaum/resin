@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
@@ -9,13 +8,13 @@ namespace Tests
 {
     public class TestStreamUpsertOperation : StreamUpsertOperation
     {
-        public TestStreamUpsertOperation(string directory, IAnalyzer analyzer, string jsonFileName, int take = Int32.MaxValue)
-            : base(directory, analyzer, jsonFileName, take)
+        public TestStreamUpsertOperation(string directory, IAnalyzer analyzer, string jsonFileName)
+            : base(directory, analyzer, jsonFileName)
         {
         }
 
-        public TestStreamUpsertOperation(string directory, IAnalyzer analyzer, Stream jsonFile, int take = Int32.MaxValue)
-            : base(directory, analyzer, jsonFile, take)
+        public TestStreamUpsertOperation(string directory, IAnalyzer analyzer, Stream jsonFile)
+            : base(directory, analyzer, jsonFile)
         {
         }
 
@@ -26,14 +25,11 @@ namespace Tests
 
         protected override IEnumerable<Document> ReadSource()
         {
-            var line = Reader.ReadLine(); // first row is "["
-            var took = 0;
-
+            Reader.ReadLine(); // first row is "["
+            string line;
             while ((line = Reader.ReadLine()) != null)
             {
                 if (line[0] == ']') break;
-
-                if (took++ == Take) break;
 
                 var json = line.Substring(0, line.Length - 1);
                 var dic = Parse(json);

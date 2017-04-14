@@ -142,8 +142,10 @@ namespace Resin.Cli
         static void Write(string[] args)
         {
             var take = 1000;
+            var skip = 0;
 
             if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
+            if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
 
             var fileName = args[Array.IndexOf(args, "--file") + 1];
             string dir = null;
@@ -165,7 +167,7 @@ namespace Resin.Cli
             if (inproc)
             {
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                using (var writer = new CliUpsertOperation(dir, new Analyzer(), fileName, take))
+                using (var writer = new CliUpsertOperation(dir, new Analyzer(), fileName, skip, take))
                 {
                     writer.Write();
                 }

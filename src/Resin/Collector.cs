@@ -18,14 +18,14 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly string _directory;
         private readonly IxInfo _ix;
-        private readonly IScoringScheme _scorer;
+        private readonly IScoringScheme _scorerFactory;
         private readonly IDictionary<string, int> _documentCount;
 
-        public Collector(string directory, IxInfo ix, IScoringScheme scorer = null, IDictionary<string, int> documentCount = null)
+        public Collector(string directory, IxInfo ix, IScoringScheme scorerFactory = null, IDictionary<string, int> documentCount = null)
         {
             _directory = directory;
             _ix = ix;
-            _scorer = scorer;
+            _scorerFactory = scorerFactory;
 
             _documentCount = documentCount ?? ix.DocumentCount;
         }
@@ -39,7 +39,6 @@ namespace Resin
 
             Scan(queries);
             Score(queries);
-
 
             var reduced = query.Reduce().ToList();
             var result = reduced.OrderByDescending(s=>s.Score).ToList();
@@ -63,6 +62,7 @@ namespace Resin
         {
             var time = new Stopwatch();
             time.Start();
+
             var reader = GetTreeReader(query.Field, query.Value);
 
             if (reader == null)
@@ -93,15 +93,15 @@ namespace Resin
 
             Log.DebugFormat("scanned {0} in {1}", query.AsReadable(), time.Elapsed);
 
-            DoGetPostings(query);
+            GetPostings(query);
         }
 
-        private void DoGetPostings(QueryContext query)
+        private void GetPostings(QueryContext query)
         {
             var time = new Stopwatch();
             time.Start();
 
-            var postings = DoReadPostings(query.Terms).ToList();
+            var postings = ReadPostings(query.Terms).ToList();
 
             if (postings.Count > 0)
             {
@@ -119,7 +119,7 @@ namespace Resin
             Log.DebugFormat("read postings for {0} in {1}", query.AsReadable(), time.Elapsed);
         }
         
-        private IEnumerable<IEnumerable<DocumentPosting>> DoReadPostings(IEnumerable<Term> terms)
+        private IEnumerable<IList<DocumentPosting>> ReadPostings(IEnumerable<Term> terms)
         {
             var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "pos"));
 
@@ -141,7 +141,7 @@ namespace Resin
 
         private IEnumerable<DocumentScore> DoScore(IList<DocumentPosting> postings, string field)
         {
-            if (_scorer == null)
+            if (_scorerFactory == null)
             {
                 foreach (var posting in postings)
                 {
@@ -155,7 +155,7 @@ namespace Resin
                     var docsInCorpus = _documentCount[field];
                     var docsWithTerm = postings.Count;
 
-                    var scorer = _scorer.CreateScorer(docsInCorpus, docsWithTerm);
+                    var scorer = _scorerFactory.CreateScorer(docsInCorpus, docsWithTerm);
 
                     foreach (var posting in postings)
                     {

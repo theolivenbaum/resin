@@ -7,17 +7,15 @@ namespace Resin
     public abstract class StreamUpsertOperation : UpsertOperation
     {
         protected readonly StreamReader Reader;
-        protected readonly int Take;
 
-        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, string jsonFileName, int take = int.MaxValue)
-            : this(directory, analyzer, File.Open(jsonFileName, FileMode.Open, FileAccess.Read, FileShare.None), take)
+        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, string jsonFileName)
+            : this(directory, analyzer, File.Open(jsonFileName, FileMode.Open, FileAccess.Read, FileShare.None))
         {
         }
 
-        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, Stream jsonFile, int take = int.MaxValue)
+        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, Stream jsonFile)
             : base(directory, analyzer)
         {
-            Take = take;
 
             var bs = new BufferedStream(jsonFile);
 
