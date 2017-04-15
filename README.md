@@ -1,5 +1,5 @@
 # Resin
-Resin is a vector space model and a document store. It's a search engine, an indexer. Querying support includes exact, fuzzy and prefix, soon also range (up-coming feature in RC 4), and comes with customizable tokenizers and scoring schemes. 
+Resin is a search engine and a document store. Querying support includes exact, fuzzy and prefix, soon also range (up-coming feature in RC 4), and comes with customizable tokenizers and scoring schemes. 
 
 ## Query language
 The current query language is a copy of [Lucene's](https://lucene.apache.org/core/2_9_4/queryparsersyntax.html) (minus range and grouping). 
@@ -7,12 +7,12 @@ The current query language is a copy of [Lucene's](https://lucene.apache.org/cor
 On the roadmap is an extended query language with support for write, read and merge operations and the ability to express ranges, groupings, sorting, index joins (the equivalent of a table join in SQL) and database joins. As these features mature they will end up as commands in the query language. 
 
 ## It's an index
-From an angle Resin is an index of the same kind you attach to database tables when you want to make reading from them fast. Resin indices are fast to write and read from and support near (as in "almost match").
+From an angle Resin is an index of the same kind you attach to database tables when you want to make reading from them fast. Resin indices are fast to write and read from and support near (as in "almost match") which is out-of-scope for most database index types.
 
 Apart from offering fast lookups, like a database index, Resin also scores document based on their relevance. Relevance in turn is based on the distance from a document and a query in vector space.
 
 ## Supports any scoring scheme
-Out-of-the-box, to support the default tf-idf scoring scheme Resin stores term counts. To support any scoring scheme Resin gives you the ability to store any additional data (up-coming feature in RC4). That data will be delivered to you neatly as a field on the document posting. In your custom IScoringScheme you then base your per-document posting calculations on that data instead of just the term count.
+To support the default tf-idf scoring scheme Resin stores term counts. Resin supports any scoring scheme by giving you the ability to store additional document/sentence/token meta-data your model might need (up-coming feature in RC4). That data will be delivered to you neatly as a field on the document posting. In your custom IScoringScheme you then base your per-document posting calculations on that instead of just the term count.
 
 ## Fast at indexing and querying
 In many scenarios Resin is already faster than the [market leader](https://lucenenet.apache.org/) when it comes down to querying and indexing speed, making it a [in-many-scenarios-fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) information retrieval system on the .net plaform. 
