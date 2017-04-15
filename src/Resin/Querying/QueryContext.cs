@@ -7,14 +7,28 @@ namespace Resin.Querying
 {
     public class QueryContext : QueryTerm
     {
-        public QueryContext Next { get; set; }
         public IEnumerable<Term> Terms { get; set; }
         public IEnumerable<DocumentPosting> Postings { get; set; }
         public IEnumerable<DocumentScore> Scored { get; set; }
 
+        protected QueryContext Next { get { return _queries == null ? null : _queries.FirstOrDefault(); } }
+
+        private IList<QueryContext> _queries;
+ 
         public QueryContext(string field, string value) : base(field, value)
         {
         }
+
+        public IList<QueryContext> ToList()
+        {
+            return YieldAll().ToList();
+        }
+
+        private IEnumerable<QueryContext> YieldAll()
+        {
+            yield return this;
+            foreach (var q in _queries) yield return q;
+        } 
 
         public IEnumerable<DocumentScore> Reduce()
         {
@@ -36,34 +50,12 @@ namespace Resin.Querying
 
             return DocumentScore.CombineOr(Scored, next);
         }
-      
-        public IList<QueryContext> ToList()
-        {
-            return ToListInternal().ToList();
-        }
-
-        private IEnumerable<QueryContext> ToListInternal()
-        {
-            yield return this;
-
-            if (Next == null) yield break;
-            
-            foreach (var q in Next.ToList())
-            {
-                yield return q;
-            }
-        }
 
         public void Add(QueryContext queryContext)
         {
-            var parent = this;
+            if (_queries == null) _queries = new List<QueryContext>();
 
-            while (parent.Next != null)
-            {
-                parent = parent.Next;
-            }
-
-            parent.Next = queryContext;
+            _queries.Add(queryContext);
         }
 
         public override string ToString()

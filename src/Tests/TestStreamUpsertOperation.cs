@@ -9,12 +9,12 @@ namespace Tests
     public class TestStreamUpsertOperation : StreamUpsertOperation
     {
         public TestStreamUpsertOperation(string directory, IAnalyzer analyzer, string jsonFileName)
-            : base(directory, analyzer, jsonFileName, false)
+            : base(directory, analyzer, jsonFileName, false, null)
         {
         }
 
         public TestStreamUpsertOperation(string directory, IAnalyzer analyzer, Stream jsonFile)
-            : base(directory, analyzer, jsonFile, false)
+            : base(directory, analyzer, jsonFile, false, null)
         {
         }
 

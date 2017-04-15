@@ -84,6 +84,7 @@
     <Compile Include="Querying\QueryTerm.cs" />
     <Compile Include="IO\Term.cs" />
     <Compile Include="Analysis\Tfidf.cs" />
+    <Compile Include="AppendOperation.cs" />
     <Compile Include="UpsertOperation.cs" />
   </ItemGroup>
   <ItemGroup>

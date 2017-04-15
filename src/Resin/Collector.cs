@@ -21,6 +21,8 @@ namespace Resin
         private readonly IScoringScheme _scorerFactory;
         private readonly IDictionary<string, int> _documentCount;
 
+        public IxInfo Ix { get { return _ix; } }
+
         public Collector(string directory, IxInfo ix, IScoringScheme scorerFactory = null, IDictionary<string, int> documentCount = null)
         {
             _directory = directory;
@@ -41,11 +43,10 @@ namespace Resin
             Score(queries);
 
             var reduced = query.Reduce().ToList();
-            var result = reduced;
 
-            Log.DebugFormat("collected {0} in {1}", query, time.Elapsed);
+            Log.DebugFormat("collected {0} scores for query {1} in {2}", reduced.Count, query, time.Elapsed);
 
-            return result;
+            return reduced;
         }
 
         private void Scan(IEnumerable<QueryContext> queries)

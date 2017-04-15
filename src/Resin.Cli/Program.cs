@@ -140,9 +140,11 @@ namespace Resin.Cli
         {
             var take = 1000;
             var skip = 0;
+            bool compress = false;
 
             if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
             if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
+            if (Array.IndexOf(args, "--compress") > 0) compress = true;
 
             var fileName = args[Array.IndexOf(args, "--file") + 1];
             string dir = null;
@@ -164,7 +166,7 @@ namespace Resin.Cli
             if (inproc)
             {
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                using (var writer = new CliUpsertOperation(dir, new Analyzer(), fileName, skip, take))
+                using (var writer = new CliUpsertOperation(dir, new Analyzer(), fileName, skip, take, compress, "_id"))
                 {
                     writer.Write();
                 }

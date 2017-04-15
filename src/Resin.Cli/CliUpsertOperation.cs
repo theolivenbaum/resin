@@ -10,15 +10,15 @@ namespace Resin.Cli
         private readonly int _take;
         private readonly int _skip;
 
-        public CliUpsertOperation(string directory, IAnalyzer analyzer, string jsonFileName, int skip, int take, bool compression = false) 
-            : base(directory, analyzer, jsonFileName, compression)
+        public CliUpsertOperation(string directory, IAnalyzer analyzer, string jsonFileName, int skip, int take, bool compression, string primaryKey)
+            : base(directory, analyzer, jsonFileName, compression, primaryKey)
         {
             _take = take;
             _skip = skip;
         }
 
-        public CliUpsertOperation(string directory, IAnalyzer analyzer, Stream jsonFile, int skip, int take, bool compression = false) 
-            : base(directory, analyzer, jsonFile, compression)
+        public CliUpsertOperation(string directory, IAnalyzer analyzer, Stream jsonFile, int skip, int take, bool compression, string primaryKey) 
+            : base(directory, analyzer, jsonFile, compression, primaryKey)
         {
             _take = take;
             _skip = skip;

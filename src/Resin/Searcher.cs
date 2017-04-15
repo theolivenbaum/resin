@@ -74,6 +74,11 @@ namespace Resin
 
             return result;
         }
+        
+        private bool IsObsolete(int docId)
+        {
+            return false;
+        }
 
         private IList<DocumentScore> Collect(QueryContext query)
         {
@@ -88,8 +93,9 @@ namespace Resin
             }
 
             return results
-                .Aggregate<IEnumerable<DocumentScore>, IEnumerable<DocumentScore>>(
-                        null, DocumentScore.CombineOr).ToList();
+                .Aggregate<IEnumerable<DocumentScore>, IEnumerable<DocumentScore>>(null, DocumentScore.CombineOr)
+                .Where(s=>!IsObsolete(s.DocumentId))
+                .ToList();
         }
 
         private IEnumerable<ScoredDocument> GetDocs(IList<DocumentScore> scores, IxInfo ix)

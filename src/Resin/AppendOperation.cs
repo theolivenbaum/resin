@@ -7,41 +7,35 @@ using System.Threading.Tasks;
 using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Write;
-using Resin.Querying;
 using Resin.Sys;
 
 namespace Resin
 {
-    public abstract class UpsertOperation
+    public abstract class AppendOperation
     {
         protected abstract IEnumerable<Document> ReadSource();
 
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private readonly bool _compression;
-        private readonly string _primaryKey;
         private readonly string _indexName;
         private readonly Dictionary<string, LcrsTrie> _tries;
         private readonly ConcurrentDictionary<string, int> _docCountByField;
         private readonly int _startDocId;
-        private readonly List<Collector> _collectors;
         
         private int _docId;
 
-        protected UpsertOperation(string directory, IAnalyzer analyzer, bool compression, string primaryKey)
+        protected AppendOperation(string directory, IAnalyzer analyzer, bool compression)
         {
             _directory = directory;
             _analyzer = analyzer;
             _compression = compression;
-            _primaryKey = primaryKey;
 
             _indexName = Util.GetChronologicalFileId();
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
 
             var ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
-
-            _collectors = ixs.Select(x => new Collector(_directory, x)).ToList();
 
             _docId = ixs.Count == 0 ? 0 : ixs.OrderByDescending(x => x.NextDocId).First().NextDocId;
             _startDocId = _docId;
@@ -50,9 +44,6 @@ namespace Resin
         public string Write()
         {
             var docAddresses = new List<BlockInfo>();
-            var primaryKeyValues = new List<string>();
-
-            // https://msdn.microsoft.com/en-us/library/dd267312.aspx
 
             using (var analyzedDocuments = new BlockingCollection<AnalyzedDocument>())
             {
@@ -62,7 +53,8 @@ namespace Resin
 
                     // Produce
                     using (var docWriter = new DocumentWriter(
-                        new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None), _compression))
+                        new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None),
+                        _compression))
                     {
                         foreach (var doc in ReadSource())
                         {
@@ -75,11 +67,6 @@ namespace Resin
                             foreach (var field in doc.Fields)
                             {
                                 _docCountByField.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
-                            }
-
-                            if (_primaryKey != null)
-                            {
-                                primaryKeyValues.Add(doc.Fields[_primaryKey]);
                             }
                         }
                     }
@@ -99,11 +86,8 @@ namespace Resin
 
                                 foreach (var term in analyzed.Terms)
                                 {
-                                    var field = term.Key.Field;
-                                    var token = term.Key.Word.Value;
-                                    var posting = term.Value;
-
-                                    GetTrie(field, token).Add(token, posting);
+                                    GetTrie(term.Key.Field, term.Key.Word.Value)
+                                        .Add(term.Key.Word.Value, term.Value);
                                 }
                             }
                         }
@@ -115,6 +99,25 @@ namespace Resin
                     Task.WaitAll(producer, consumer);
                 }
             }
+
+            //if (_ix != null)
+            //{
+            //    // upsert
+
+            //    using (var collector = new Collector(_directory, _ix))
+            //    {
+            //        foreach (var trie in _tries)
+            //        {
+            //            var field = trie.Key;
+
+            //            foreach (var posting in trie.Value.Words().SelectMany(word => word.Postings).ToList())
+            //            {
+            //                var query = new QueryContext(field, posting)  
+            //            }
+
+            //        }
+            //    }
+            //}
 
             var tasks = new List<Task>
             {
@@ -143,41 +146,11 @@ namespace Resin
                 }
             }
 
-            if (primaryKeyValues.Count > 0)
-            {
-                var root = new QueryContext(_primaryKey, primaryKeyValues.First());
-                
-                foreach (var primaryKeyValue in primaryKeyValues.Skip(1))
-                {
-                    root.Add(new QueryContext(_primaryKey, primaryKeyValue));
-                }
-
-                MarkObsolete(root);
-            }
-
             Task.WaitAll(tasks.ToArray());
 
             CreateIxInfo().Serialize(Path.Combine(_directory, _indexName + ".ix"));
 
             return _indexName;
-        }
-
-        private void MarkObsolete(QueryContext query)
-        {
-            foreach (var collector in _collectors)
-            {
-                var score = collector.Collect(query).FirstOrDefault();
-                
-                if (score != null)
-                {
-                    MarkObsolete(score.DocumentId);
-                }
-            }
-        }
-
-        private void MarkObsolete(int docId)
-        {
-
         }
 
         private void SerializeTries()
@@ -220,5 +193,4 @@ namespace Resin
             };
         }
     }
-
 }
