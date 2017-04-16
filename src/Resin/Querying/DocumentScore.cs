@@ -18,11 +18,23 @@ namespace Resin.Querying
             Ix = ix;
         }
 
-        public void Join(DocumentScore score)
+        public void Combine(DocumentScore score)
         {
-            if (!score.DocumentId.Equals(DocumentId)) throw new ArgumentException("Document IDs differ. Cannot add.", "score");
+            if (!score.DocumentId.Equals(DocumentId)) throw new ArgumentException("Document IDs differ. Cannot combine.", "score");
 
             Score = (Score + score.Score);
+        }
+
+        public DocumentScore TakeLatestVersion(DocumentScore score)
+        {
+            if (!score.DocumentId.Equals(DocumentId)) throw new ArgumentException("Document IDs differ. Cannot take latest version.", "score");
+
+            if (score.Ix.VersionId > Ix.VersionId)
+            {
+                return score;
+            }
+
+            return this;
         }
 
         public static IEnumerable<DocumentScore> Not(IEnumerable<DocumentScore> source, IEnumerable<DocumentScore> exclude)
@@ -50,12 +62,19 @@ namespace Resin.Querying
                 var list = group.ToList();
                 
                 var top = list.First();
-                foreach (var posting in list.Skip(1))
+                foreach (var score in list.Skip(1))
                 {
-                    top.Join(posting);
+                    top.Combine(score);
                 }
                 return top;
             });
+        }
+
+        public static IEnumerable<DocumentScore> CombineTakingLatestVersion(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
+        {
+            if (first == null) return other;
+
+            return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>group.OrderBy(s=>s.Ix.VersionId).Last());
         }
 
         public static IEnumerable<DocumentScore> CombineAnd(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
@@ -65,13 +84,13 @@ namespace Resin.Querying
             var dic = other.ToDictionary(x => x.DocumentId);
             var remainder = new List<DocumentScore>();
 
-            foreach (var posting in first)
+            foreach (var score in first)
             {
                 DocumentScore exists;
-                if (dic.TryGetValue(posting.DocumentId, out exists))
+                if (dic.TryGetValue(score.DocumentId, out exists))
                 {
-                    posting.Join(exists);
-                    remainder.Add(posting);
+                    score.Combine(exists);
+                    remainder.Add(score);
                 }
             }
             return remainder;

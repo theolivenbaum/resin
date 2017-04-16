@@ -9,8 +9,7 @@ namespace Resin.IO
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof (IxInfo));
 
-        //TODO: change into long
-        public string VersionId { get; set; }
+        public long VersionId { get; set; }
 
         public Dictionary<string, int> DocumentCount { get; set; }
         public int StartDocId { get; set; }

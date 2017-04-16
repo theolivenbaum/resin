@@ -18,7 +18,7 @@ namespace Resin
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private readonly bool _compression;
-        private readonly string _indexName;
+        private readonly long _indexVersionId;
         private readonly Dictionary<string, LcrsTrie> _tries;
         private readonly ConcurrentDictionary<string, int> _docCountByField;
         private readonly int _startDocId;
@@ -31,7 +31,7 @@ namespace Resin
             _analyzer = analyzer;
             _compression = compression;
 
-            _indexName = Util.GetChronologicalFileId();
+            _indexVersionId = Util.GetChronologicalFileId();
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
 
@@ -41,7 +41,7 @@ namespace Resin
             _startDocId = _docId;
         }
 
-        public string Write()
+        public long Write()
         {
             var docAddresses = new List<BlockInfo>();
 
@@ -49,7 +49,7 @@ namespace Resin
             {
                 using (Task producer = Task.Factory.StartNew(() =>
                 {
-                    var docFileName = Path.Combine(_directory, _indexName + ".doc");
+                    var docFileName = Path.Combine(_directory, _indexVersionId + ".doc");
 
                     // Produce
                     using (var docWriter = new DocumentWriter(
@@ -123,7 +123,7 @@ namespace Resin
             {
                 Task.Run(() =>
                 {
-                    var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexName, "pos"));
+                    var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
                     using (var postingsWriter = new PostingsWriter(new FileStream(posFileName, FileMode.Create, FileAccess.Write, FileShare.None)))
                     {
                         foreach (var trie in _tries)
@@ -138,7 +138,7 @@ namespace Resin
                 })
             };
 
-            using (var docAddressWriter = new DocumentAddressWriter(new FileStream(Path.Combine(_directory, _indexName + ".da"), FileMode.Create, FileAccess.Write, FileShare.None)))
+            using (var docAddressWriter = new DocumentAddressWriter(new FileStream(Path.Combine(_directory, _indexVersionId + ".da"), FileMode.Create, FileAccess.Write, FileShare.None)))
             {
                 foreach (var address in docAddresses)
                 {
@@ -148,9 +148,9 @@ namespace Resin
 
             Task.WaitAll(tasks.ToArray());
 
-            CreateIxInfo().Serialize(Path.Combine(_directory, _indexName + ".ix"));
+            CreateIxInfo().Serialize(Path.Combine(_directory, _indexVersionId + ".ix"));
 
-            return _indexName;
+            return _indexVersionId;
         }
 
         private void SerializeTries()
@@ -165,7 +165,7 @@ namespace Resin
         {
             var key = trieEntry.Item1;
             var trie = trieEntry.Item2;
-            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _indexName, key));
+            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _indexVersionId, key));
             trie.Serialize(fileName);
         }
 
@@ -186,7 +186,7 @@ namespace Resin
         {
             return new IxInfo
             {
-                VersionId = _indexName,
+                VersionId = _indexVersionId,
                 DocumentCount = new Dictionary<string, int>(_docCountByField),
                 StartDocId = _startDocId,
                 NextDocId = _docId

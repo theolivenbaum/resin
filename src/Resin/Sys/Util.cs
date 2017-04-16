@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using Resin.IO;
@@ -13,10 +12,10 @@ namespace Resin.Sys
     {
         public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 23);
 
-        public static string GetChronologicalFileId()
+        public static long GetChronologicalFileId()
         {
             var ticks = DateTime.Now.Ticks - BeginningOfTime.Ticks;
-            return ticks.ToString(CultureInfo.InvariantCulture);
+            return ticks;
         }
 
         public static string GetDataDirectory()

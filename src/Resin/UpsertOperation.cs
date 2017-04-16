@@ -19,7 +19,7 @@ namespace Resin
         private readonly IAnalyzer _analyzer;
         private readonly bool _compression;
         private readonly string _primaryKey;
-        private readonly string _indexVersionId;
+        private readonly long _indexVersionId;
         private readonly Dictionary<string, LcrsTrie> _tries;
         private readonly ConcurrentDictionary<string, int> _docCountByField;
         private readonly int _startDocId;
@@ -41,22 +41,23 @@ namespace Resin
             _primaryKey = _ixs.Count == 0 ? null : primaryKey;
         }
 
-        public string Write()
+        public long Write()
         {
             var docAddresses = new List<BlockInfo>();
 
             var primaryKeyValues = new List<Word>();
             var primaryKeyColumn = new LcrsTrie('\0', false);
-            var latestIndexVersionId = string.Empty;
 
-            if (_primaryKey != null)
+            if (_ixs.Count > 0)
             {
-                latestIndexVersionId = _ixs.OrderBy(x => x.VersionId).Last().VersionId;
-
-                primaryKeyColumn = Serializer.DeserializeTrie(_directory, latestIndexVersionId, _primaryKey);
+                foreach (var ix in _ixs)
+                {
+                    var trie = Serializer.DeserializeTrie(_directory, ix.VersionId, _primaryKey);;
+                    primaryKeyColumn.Append(trie);
+                }
             }
             
-            // producer/consumer: https://msdn.microsoft.com/en-us/library/dd267312.aspx
+            // producer/consumer acc. to: https://msdn.microsoft.com/en-us/library/dd267312.aspx
 
             using (var analyzedDocuments = new BlockingCollection<AnalyzedDocument>())
             {
@@ -158,25 +159,20 @@ namespace Resin
                     }                    
             }));
 
-            var latestDelFileName = Path.Combine(_directory, string.Format("{0}.del", latestIndexVersionId));
-            var deletions = new LcrsTrie('\0', false);
-
-            if (File.Exists(latestDelFileName))
+            if (_ixs.Count > 0)
             {
-                deletions = Serializer.DeserializeTrie(latestDelFileName);
+                var deletions = new LcrsTrie('\0', false);
 
-                if (primaryKeyValues.Count > 0)
+                foreach (var word in primaryKeyValues)
                 {
-                    foreach (var word in primaryKeyValues)
-                    {
-                        deletions.Add(word.Value);
-                    }
+                    deletions.Add(word.Value);
                 }
+
+                var latestVersion = _ixs.OrderBy(x => x.VersionId).Last();
+                var delFileName = Path.Combine(_directory, string.Format("{0}.del", latestVersion.VersionId));
+
+                deletions.Serialize(delFileName);
             }
-
-            var delFileName = Path.Combine(_directory, string.Format("{0}.del", _indexVersionId));
-
-            deletions.Serialize(delFileName);  
 
             Task.WaitAll(tasks.ToArray());
 

@@ -75,7 +75,7 @@ namespace Resin
             return result;
         }
         
-        private bool IsObsolete(int docId)
+        private bool IsDeleted(int docId)
         {
             return false;
         }
@@ -92,10 +92,12 @@ namespace Resin
                 }
             }
 
-            return results
-                .Aggregate<IEnumerable<DocumentScore>, IEnumerable<DocumentScore>>(null, DocumentScore.CombineOr)
-                .Where(s=>!IsObsolete(s.DocumentId))
+            var agg = results
+                .Aggregate<IEnumerable<DocumentScore>, IEnumerable<DocumentScore>>(null, DocumentScore.CombineTakingLatestVersion)
+                .Where(s=>!IsDeleted(s.DocumentId))
                 .ToList();
+
+            return agg;
         }
 
         private IEnumerable<ScoredDocument> GetDocs(IList<DocumentScore> scores, IxInfo ix)

@@ -163,25 +163,21 @@ namespace Resin.IO
         {
             using (var stream = new MemoryStream())
             {
-                byte[] nameBytes = Encoding.GetBytes(ix.VersionId);
-                byte[] lengthBytes = BitConverter.GetBytes((short)nameBytes.Length);
+                byte[] versionBytes = BitConverter.GetBytes(ix.VersionId);
                 byte[] dicBytes = ix.DocumentCount.Serialize();
                 byte[] docIdBytes = BitConverter.GetBytes(ix.NextDocId);
                 byte[] startDocIdBytes = BitConverter.GetBytes(ix.StartDocId);
 
                 if (!BitConverter.IsLittleEndian)
                 {
-                    Array.Reverse(nameBytes);
-                    Array.Reverse(lengthBytes);
-                    Array.Reverse(dicBytes);
+                    Array.Reverse(versionBytes);
                     Array.Reverse(docIdBytes);
                     Array.Reverse(startDocIdBytes);
                 }
 
                 stream.Write(startDocIdBytes, 0, sizeof(int));
                 stream.Write(docIdBytes, 0, sizeof(int));
-                stream.Write(lengthBytes, 0, sizeof(short));
-                stream.Write(nameBytes, 0, nameBytes.Length);
+                stream.Write(versionBytes, 0, sizeof(long));
                 stream.Write(dicBytes, 0, dicBytes.Length);
 
                 return stream.ToArray();
@@ -198,29 +194,22 @@ namespace Resin.IO
 
             stream.Read(docIdBytes, 0, sizeof(int));
 
-            var lengthBytes = new byte[sizeof(short)];
+            var versionBytes = new byte[sizeof(long)];
 
-            stream.Read(lengthBytes, 0, sizeof(short));
-
-            var stringLength = BitConverter.ToInt16(lengthBytes, 0);
-
-            var stringBytes = new byte[stringLength];
-
-            stream.Read(stringBytes, 0, stringLength);
+            stream.Read(versionBytes, 0, sizeof(long));
 
             var dic = DeserializeStringIntDic(stream).ToList();
 
             if (!BitConverter.IsLittleEndian)
             {
-                Array.Reverse(stringBytes);
-                Array.Reverse(lengthBytes);
+                Array.Reverse(versionBytes);
                 Array.Reverse(docIdBytes);
                 Array.Reverse(startDocIdBytes);
             }
 
             return new IxInfo
             {
-                VersionId= Encoding.GetString(stringBytes), 
+                VersionId= BitConverter.ToInt64(versionBytes, 0), 
                 DocumentCount = dic.ToDictionary(x=>x.Key, x=>x.Value),
                 StartDocId = BitConverter.ToInt32(startDocIdBytes, 0),
                 NextDocId = BitConverter.ToInt32(docIdBytes, 0)
@@ -608,7 +597,7 @@ namespace Resin.IO
             }
         }
 
-        public static LcrsTrie DeserializeTrie(string directory, string indexVersionId, string field)
+        public static LcrsTrie DeserializeTrie(string directory, long indexVersionId, string field)
         {
             var searchPattern = string.Format("{0}-{1}-*", indexVersionId, field.ToHashString());
 
@@ -639,19 +628,6 @@ namespace Resin.IO
             }
 
             return root;
-        }
-
-        public static LcrsTrie DeserializeTrie(string fileName)
-        {
-            using (var reader = new MappedTrieReader(fileName))
-            {
-                var root = new LcrsTrie('\0', false);
-                var trie = reader.ReadWholeFile();
-
-                root.LeftChild = trie;
-
-                return root;
-            }
         }
     }
 }

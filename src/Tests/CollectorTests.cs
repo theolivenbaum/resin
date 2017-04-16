@@ -29,7 +29,7 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "5five"}, {"title", "the good, the bad and the ugly"}}
             };
 
-            string indexName;
+            long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
@@ -68,7 +68,7 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "4"}, {"title", "Golden Age of Porn"}}
             };
 
-            string indexName;
+            long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
@@ -101,7 +101,7 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "4"}, {"title", "Porn"}}
             };
 
-            string indexName;
+            long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
@@ -139,7 +139,7 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "5"}, {"title", "the good, the bad and the ugly"}}
             };
 
-            string indexName;
+            long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
@@ -183,7 +183,7 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "5"}, {"title", "the good, the bad and the ugly"}}
             };
 
-            string indexName;
+            long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
@@ -229,7 +229,7 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "5"}, {"title", "the good, the bad and the ugly"}}
             };
 
-            string indexName;
+            long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
@@ -286,7 +286,7 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "5"}, {"title", "the good, the bad and the ugly"}}
             };
 
-            string indexName;
+            long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
@@ -333,7 +333,7 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "5"}, {"title", "the good, the bad and the ugly"}}
             };
 
-            string indexName;
+            long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
@@ -375,7 +375,7 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "4"}, {"title", "rain man"}}
             };
 
-            string indexName;
+            long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
@@ -409,7 +409,7 @@ namespace Tests
                 new Dictionary<string, string> {{"_id", "4"}, {"title", "tomb raider"}}
             };
 
-            string indexName;
+            long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
                 indexName = writer.Write();
