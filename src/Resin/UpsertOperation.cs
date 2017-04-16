@@ -22,7 +22,6 @@ namespace Resin
         private readonly long _indexVersionId;
         private readonly Dictionary<string, LcrsTrie> _tries;
         private readonly ConcurrentDictionary<string, int> _docCountByField;
-        private readonly int _startDocId;
         private readonly List<IxInfo> _ixs;
         
         private int _docId;
@@ -36,15 +35,14 @@ namespace Resin
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
             _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
-            _docId = _ixs.Count == 0 ? 0 : _ixs.OrderByDescending(x => x.NextDocId).First().NextDocId;
-            _startDocId = _docId;
-            _primaryKey = _ixs.Count == 0 ? null : primaryKey;
+            _docId = 0;
+            _primaryKey = primaryKey;
         }
 
         public long Write()
         {
             var docAddresses = new List<BlockInfo>();
-
+            var docHashes = new List<UInt32>();
             var primaryKeyValues = new List<Word>();
             var primaryKeyColumn = new LcrsTrie('\0', false);
 
@@ -52,7 +50,7 @@ namespace Resin
             {
                 foreach (var ix in _ixs)
                 {
-                    var trie = Serializer.DeserializeTrie(_directory, ix.VersionId, _primaryKey);;
+                    var trie = Serializer.DeserializeTrie(_directory, ix.VersionId, _primaryKey);
                     primaryKeyColumn.Append(trie);
                 }
             }
@@ -72,6 +70,8 @@ namespace Resin
                         foreach (var doc in ReadSource())
                         {
                             doc.Id = _docId++;
+
+                            docHashes.Add(doc.Fields[_primaryKey].ToHash());
 
                             docAddresses.Add(docWriter.Write(doc));
 
@@ -144,10 +144,7 @@ namespace Resin
                         }
                     }
                     SerializeTries();
-                })
-            };
-
-            tasks.Add(
+                }),
                 Task.Run(() =>
                 {
                     using (var docAddressWriter = new DocumentAddressWriter(new FileStream(Path.Combine(_directory, _indexVersionId + ".da"), FileMode.Create, FileAccess.Write, FileShare.None)))
@@ -156,8 +153,16 @@ namespace Resin
                         {
                             docAddressWriter.Write(address);
                         }
-                    }                    
-            }));
+                    }
+                })
+                ,
+                Task.Run(() =>
+                {
+                    var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "dhs"));
+
+                    docHashes.Serialize(docHashesFileName);
+                })
+            };
 
             if (_ixs.Count > 0)
             {
@@ -215,9 +220,7 @@ namespace Resin
             return new IxInfo
             {
                 VersionId = _indexVersionId,
-                DocumentCount = new Dictionary<string, int>(_docCountByField),
-                StartDocId = _startDocId,
-                NextDocId = _docId
+                DocumentCount = new Dictionary<string, int>(_docCountByField)
             };
         }
     }

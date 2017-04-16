@@ -47,6 +47,7 @@
     <Compile Include="Analysis\AnalyzedDocument.cs" />
     <Compile Include="Analysis\Analyzer.cs" />
     <Compile Include="IO\Compressor.cs" />
+    <Compile Include="IO\Read\DocHashReader.cs" />
     <Compile Include="IO\Read\DocumentAddressReader.cs" />
     <Compile Include="IO\Read\BlockReader.cs" />
     <Compile Include="IO\DocumentPosting.cs" />
@@ -84,7 +85,6 @@
     <Compile Include="Querying\QueryTerm.cs" />
     <Compile Include="IO\Term.cs" />
     <Compile Include="Analysis\Tfidf.cs" />
-    <Compile Include="AppendOperation.cs" />
     <Compile Include="UpsertOperation.cs" />
   </ItemGroup>
   <ItemGroup>

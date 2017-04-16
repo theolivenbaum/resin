@@ -10,12 +10,14 @@ namespace Resin.Querying
         public int DocumentId { get; private set; }
         public double Score { get; private set; }
         public IxInfo Ix { get; private set; }
+        public UInt32 DocHash { get; private set; }
 
-        public DocumentScore(int documentId, double score, IxInfo ix)
+        public DocumentScore(int documentId, UInt32 docHash, double score, IxInfo ix)
         {
             DocumentId = documentId;
             Score = score;
             Ix = ix;
+            DocHash = docHash;
         }
 
         public void Combine(DocumentScore score)
@@ -27,7 +29,7 @@ namespace Resin.Querying
 
         public DocumentScore TakeLatestVersion(DocumentScore score)
         {
-            if (!score.DocumentId.Equals(DocumentId)) throw new ArgumentException("Document IDs differ. Cannot take latest version.", "score");
+            if (!score.DocHash.Equals(DocHash)) throw new ArgumentException("Document hashed differ. Cannot take latest version.", "score");
 
             if (score.Ix.VersionId > Ix.VersionId)
             {

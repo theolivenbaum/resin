@@ -129,35 +129,44 @@ namespace Resin
         {
             Parallel.ForEach(queries, query =>
             {
-                query.Scored = DoScore(query.Postings.ToList(), query.Field);
+                query.Scored = DoScore(query.Postings.OrderBy(p=>p.DocumentId).ToList(), query.Field);
             });
         }
 
         private IEnumerable<DocumentScore> DoScore(IList<DocumentPosting> postings, string field)
         {
-            if (_scorerFactory == null)
-            {
-                foreach (var posting in postings)
-                {
-                    yield return new DocumentScore(posting.DocumentId, 0, _ix);
-                }
-            }
-            else
-            {
-                if (postings.Any())
-                {
-                    var docsInCorpus = _documentCount[field];
-                    var docsWithTerm = postings.Count;
+            var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "dhs"));
 
-                    var scorer = _scorerFactory.CreateScorer(docsInCorpus, docsWithTerm);
-
+            using (var docHashReader = new DocHashReader(docHashesFileName))
+            {
+                if (_scorerFactory == null)
+                {
                     foreach (var posting in postings)
                     {
-                        var score = scorer.Score(posting);
+                        var docHash = docHashReader.Read(posting.DocumentId);
 
-                        yield return  new DocumentScore(posting.DocumentId, score, _ix);
+                        yield return new DocumentScore(posting.DocumentId, docHash, 0, _ix);
                     }
-                } 
+                }
+                else
+                {
+                    if (postings.Any())
+                    {
+                        var docsInCorpus = _documentCount[field];
+                        var docsWithTerm = postings.Count;
+
+                        var scorer = _scorerFactory.CreateScorer(docsInCorpus, docsWithTerm);
+
+                        foreach (var posting in postings)
+                        {
+                            var score = scorer.Score(posting);
+
+                            var docHash = docHashReader.Read(posting.DocumentId);
+
+                            yield return new DocumentScore(posting.DocumentId, docHash, score, _ix);
+                        }
+                    }
+                }
             }
         }
 

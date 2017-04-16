@@ -110,7 +110,7 @@ namespace Resin
                 new FileStream(docAddressFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan)))
             {
                 var adrs = scores
-                    .Select(s => new BlockInfo((s.DocumentId - ix.StartDocId) * _blockSize, _blockSize))
+                    .Select(s => new BlockInfo(s.DocumentId * _blockSize, _blockSize))
                     .OrderBy(b => b.Position)
                     .ToList();
 

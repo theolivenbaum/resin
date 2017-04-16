@@ -165,18 +165,12 @@ namespace Resin.IO
             {
                 byte[] versionBytes = BitConverter.GetBytes(ix.VersionId);
                 byte[] dicBytes = ix.DocumentCount.Serialize();
-                byte[] docIdBytes = BitConverter.GetBytes(ix.NextDocId);
-                byte[] startDocIdBytes = BitConverter.GetBytes(ix.StartDocId);
 
                 if (!BitConverter.IsLittleEndian)
                 {
                     Array.Reverse(versionBytes);
-                    Array.Reverse(docIdBytes);
-                    Array.Reverse(startDocIdBytes);
                 }
 
-                stream.Write(startDocIdBytes, 0, sizeof(int));
-                stream.Write(docIdBytes, 0, sizeof(int));
                 stream.Write(versionBytes, 0, sizeof(long));
                 stream.Write(dicBytes, 0, dicBytes.Length);
 
@@ -186,14 +180,6 @@ namespace Resin.IO
 
         public static IxInfo DeserializeIxInfo(Stream stream)
         {
-            var startDocIdBytes = new byte[sizeof(int)];
-
-            stream.Read(startDocIdBytes, 0, sizeof(int));
-
-            var docIdBytes = new byte[sizeof(int)];
-
-            stream.Read(docIdBytes, 0, sizeof(int));
-
             var versionBytes = new byte[sizeof(long)];
 
             stream.Read(versionBytes, 0, sizeof(long));
@@ -203,16 +189,12 @@ namespace Resin.IO
             if (!BitConverter.IsLittleEndian)
             {
                 Array.Reverse(versionBytes);
-                Array.Reverse(docIdBytes);
-                Array.Reverse(startDocIdBytes);
             }
 
             return new IxInfo
             {
                 VersionId= BitConverter.ToInt64(versionBytes, 0), 
                 DocumentCount = dic.ToDictionary(x=>x.Key, x=>x.Value),
-                StartDocId = BitConverter.ToInt32(startDocIdBytes, 0),
-                NextDocId = BitConverter.ToInt32(docIdBytes, 0)
             };
         }
 
@@ -335,6 +317,47 @@ namespace Resin.IO
             }
         }
 
+        public static void Serialize(this IEnumerable<UInt32> entries, string fileName)
+        {
+            using (var stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                foreach (var entry in entries)
+                {
+                    byte[] valBytes = BitConverter.GetBytes(entry);
+
+                    if (!BitConverter.IsLittleEndian)
+                    {
+                        Array.Reverse(valBytes);
+                    }
+
+                    stream.Write(valBytes, 0, sizeof(UInt32));
+                }
+            }
+        }
+
+        public static byte[] DeSerialize(string fileName)
+        {
+            using (var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                return ReadToEnd(stream);
+            }
+        }
+
+        //http://stackoverflow.com/questions/221925/creating-a-byte-array-from-a-stream
+        public static byte[] ReadToEnd(Stream input)
+        {
+            var buffer = new byte[16 * 1024];
+            using (var ms = new MemoryStream())
+            {
+                int read;
+                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+                return ms.ToArray();
+            }
+        }
+
         public static LcrsNode DeserializeNode(Stream stream)
         {
             if (!stream.CanRead) return LcrsNode.MinValue;
@@ -429,6 +452,25 @@ namespace Resin.IO
                 yield return val;
 
                 pos = pos + sizeof(int);
+            }
+        }
+
+        public static IEnumerable<UInt32> DeserializeUInt32List(byte[] data)
+        {
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(data);
+            }
+
+            int pos = 0;
+
+            while (pos < data.Length)
+            {
+                var val = BitConverter.ToUInt32(data, pos);
+
+                yield return val;
+
+                pos = pos + sizeof(UInt32);
             }
         }
 
