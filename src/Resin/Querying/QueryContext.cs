@@ -11,8 +11,6 @@ namespace Resin.Querying
         public IEnumerable<DocumentPosting> Postings { get; set; }
         public IEnumerable<DocumentScore> Scored { get; set; }
 
-        protected QueryContext Next { get { return _queries == null ? null : _queries.FirstOrDefault(); } }
-
         private IList<QueryContext> _queries;
  
         public QueryContext(string field, string value) : base(field, value)
@@ -27,28 +25,38 @@ namespace Resin.Querying
         private IEnumerable<QueryContext> YieldAll()
         {
             yield return this;
+
+            if (_queries == null) yield break;
+
             foreach (var q in _queries) yield return q;
         } 
 
         public IEnumerable<DocumentScore> Reduce()
         {
-            if (Next == null)
+            var first = Scored.ToList();
+
+            if (_queries != null)
             {
-                return Scored;
+                foreach (var child in _queries)
+                {
+                    var other = child.Reduce().ToList();
+
+                    if (child.And)
+                    {
+                        first = DocumentScore.CombineAnd(first, other).ToList();
+                    }
+                    else if (child.Not)
+                    {
+                        first = DocumentScore.Not(first, other).ToList();
+                    }
+                    else // Or
+                    {
+                        first = DocumentScore.CombineOr(first, other).ToList();
+                    }
+                } 
             }
 
-            var next = Next.Reduce().ToList();
-
-            if (Next.And)
-            {
-                return DocumentScore.CombineAnd(Scored, next);
-            }
-            if (Next.Not)
-            {
-                return DocumentScore.Not(Scored, next);
-            }
-
-            return DocumentScore.CombineOr(Scored, next);
+            return first;
         }
 
         public void Add(QueryContext queryContext)
@@ -60,13 +68,29 @@ namespace Resin.Querying
 
         public override string ToString()
         {
-            var s = new StringBuilder();
+            var log = new StringBuilder();
 
-            s.AppendFormat(base.ToString());
+            log.Append(base.ToString());
 
-            if (Next != null) s.AppendFormat(" {0}", Next);
+            if (_queries != null)
+            {
+                log.Append(' ');
 
-            return s.ToString();
+                var entries = new List<string>();
+
+                foreach (var q in _queries)
+                {
+                    entries.Add(q.ToString());
+                    entries.Add(" ");
+                }
+
+                foreach (var e in entries.Take(entries.Count-1))
+                {
+                    log.Append(e);
+                }
+            }
+            
+            return log.ToString();
         }
     }
 }

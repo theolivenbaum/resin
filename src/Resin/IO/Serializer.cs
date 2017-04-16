@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Resin.IO.Read;
+using Resin.Sys;
 
 namespace Resin.IO
 {
@@ -603,6 +605,52 @@ namespace Resin.IO
                 int value = BitConverter.ToInt32(intBytes, 0);
                 
                 yield return new KeyValuePair<string, int>(key, value);
+            }
+        }
+
+        public static LcrsTrie DeserializeTrie(string directory, string indexVersionId, string field)
+        {
+            var searchPattern = string.Format("{0}-{1}-*", indexVersionId, field.ToHashString());
+
+            return DeserializeTrie(directory, searchPattern);
+        }
+
+        public static LcrsTrie DeserializeTrie(string directory, string searchPattern)
+        {
+            var root = new LcrsTrie('\0', false);
+            LcrsTrie next = null;
+
+            foreach (var fileName in Directory.GetFiles(directory, searchPattern).OrderBy(f => f))
+            {
+                using (var reader = new MappedTrieReader(fileName))
+                {
+                    var trie = reader.ReadWholeFile();
+
+                    if (next == null)
+                    {
+                        root.LeftChild = trie;
+                    }
+                    else
+                    {
+                        next.RightSibling = trie;
+                    }
+                    next = trie;
+                }
+            }
+
+            return root;
+        }
+
+        public static LcrsTrie DeserializeTrie(string fileName)
+        {
+            using (var reader = new MappedTrieReader(fileName))
+            {
+                var root = new LcrsTrie('\0', false);
+                var trie = reader.ReadWholeFile();
+
+                root.LeftChild = trie;
+
+                return root;
             }
         }
     }

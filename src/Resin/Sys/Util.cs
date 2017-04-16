@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Resin.IO;
+using Resin.IO.Read;
 
 namespace Resin.Sys
 {
@@ -62,6 +63,18 @@ namespace Resin.Sys
                 }
             }
             return documentCount;
-        } 
+        }
+
+        public static IEnumerable<IList<DocumentPosting>> ReadPostings(string directory, IxInfo ix, IEnumerable<Term> terms)
+        {
+            var posFileName = Path.Combine(directory, string.Format("{0}.{1}", ix.VersionId, "pos"));
+
+            using (var reader = new PostingsReader(new FileStream(posFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan)))
+            {
+                var addresses = terms.Select(term => term.Word.PostingsAddress.Value).OrderBy(adr => adr.Position).ToList();
+
+                yield return reader.Get(addresses).SelectMany(x => x).ToList();
+            }
+        }
     }
 }

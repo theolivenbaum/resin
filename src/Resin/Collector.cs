@@ -122,14 +122,7 @@ namespace Resin
         
         private IEnumerable<IList<DocumentPosting>> ReadPostings(IEnumerable<Term> terms)
         {
-            var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "pos"));
-
-            using (var reader = new PostingsReader(new FileStream(posFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan)))
-            {
-                var addresses = terms.Select(term => term.Word.PostingsAddress.Value).OrderBy(adr => adr.Position).ToList();
-
-                yield return reader.Get(addresses).SelectMany(x => x).ToList();
-            }
+            return Util.ReadPostings(_directory, _ix, terms);
         }
 
         private void Score(IEnumerable<QueryContext> queries)

@@ -154,6 +154,21 @@ namespace Resin.IO.Read
             }
         }
 
+        public LcrsTrie ReadWholeFile()
+        {
+            var words = new List<Word>();
+            DepthFirst(string.Empty, new List<char>(), words, -1);
+
+            var root = new LcrsTrie('\0', false);
+
+            foreach (var word in words)
+            {
+                root.Add(word.Value);
+            }
+
+            return root.LeftChild;
+        }
+
         private bool TryFindDepthFirst(string path, int currentDepth, out LcrsNode node)
         {
             node = Step();

@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Write;
-using Resin.Querying;
 using Resin.Sys;
 
 namespace Resin
@@ -20,11 +19,11 @@ namespace Resin
         private readonly IAnalyzer _analyzer;
         private readonly bool _compression;
         private readonly string _primaryKey;
-        private readonly string _indexName;
+        private readonly string _indexVersionId;
         private readonly Dictionary<string, LcrsTrie> _tries;
         private readonly ConcurrentDictionary<string, int> _docCountByField;
         private readonly int _startDocId;
-        private readonly List<Collector> _collectors;
+        private readonly List<IxInfo> _ixs;
         
         private int _docId;
 
@@ -33,32 +32,37 @@ namespace Resin
             _directory = directory;
             _analyzer = analyzer;
             _compression = compression;
-            _primaryKey = primaryKey;
-
-            _indexName = Util.GetChronologicalFileId();
+            _indexVersionId = Util.GetChronologicalFileId();
             _tries = new Dictionary<string, LcrsTrie>();
             _docCountByField = new ConcurrentDictionary<string, int>();
-
-            var ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
-
-            _collectors = ixs.Select(x => new Collector(_directory, x)).ToList();
-
-            _docId = ixs.Count == 0 ? 0 : ixs.OrderByDescending(x => x.NextDocId).First().NextDocId;
+            _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
+            _docId = _ixs.Count == 0 ? 0 : _ixs.OrderByDescending(x => x.NextDocId).First().NextDocId;
             _startDocId = _docId;
+            _primaryKey = _ixs.Count == 0 ? null : primaryKey;
         }
 
         public string Write()
         {
             var docAddresses = new List<BlockInfo>();
-            var primaryKeyValues = new List<string>();
 
-            // https://msdn.microsoft.com/en-us/library/dd267312.aspx
+            var primaryKeyValues = new List<Word>();
+            var primaryKeyColumn = new LcrsTrie('\0', false);
+            var latestIndexVersionId = string.Empty;
+
+            if (_primaryKey != null)
+            {
+                latestIndexVersionId = _ixs.OrderBy(x => x.VersionId).Last().VersionId;
+
+                primaryKeyColumn = Serializer.DeserializeTrie(_directory, latestIndexVersionId, _primaryKey);
+            }
+            
+            // producer/consumer: https://msdn.microsoft.com/en-us/library/dd267312.aspx
 
             using (var analyzedDocuments = new BlockingCollection<AnalyzedDocument>())
             {
                 using (Task producer = Task.Factory.StartNew(() =>
                 {
-                    var docFileName = Path.Combine(_directory, _indexName + ".doc");
+                    var docFileName = Path.Combine(_directory, _indexVersionId + ".doc");
 
                     // Produce
                     using (var docWriter = new DocumentWriter(
@@ -79,7 +83,14 @@ namespace Resin
 
                             if (_primaryKey != null)
                             {
-                                primaryKeyValues.Add(doc.Fields[_primaryKey]);
+                                var word = doc.Fields[_primaryKey];
+
+                                Word found;
+
+                                if (primaryKeyColumn.HasWord(word, out found))
+                                {
+                                    primaryKeyValues.Add(found);
+                                }
                             }
                         }
                     }
@@ -120,7 +131,7 @@ namespace Resin
             {
                 Task.Run(() =>
                 {
-                    var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexName, "pos"));
+                    var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
                     using (var postingsWriter = new PostingsWriter(new FileStream(posFileName, FileMode.Create, FileAccess.Write, FileShare.None)))
                     {
                         foreach (var trie in _tries)
@@ -135,49 +146,43 @@ namespace Resin
                 })
             };
 
-            using (var docAddressWriter = new DocumentAddressWriter(new FileStream(Path.Combine(_directory, _indexName + ".da"), FileMode.Create, FileAccess.Write, FileShare.None)))
-            {
-                foreach (var address in docAddresses)
+            tasks.Add(
+                Task.Run(() =>
                 {
-                    docAddressWriter.Write(address);
+                    using (var docAddressWriter = new DocumentAddressWriter(new FileStream(Path.Combine(_directory, _indexVersionId + ".da"), FileMode.Create, FileAccess.Write, FileShare.None)))
+                    {
+                        foreach (var address in docAddresses)
+                        {
+                            docAddressWriter.Write(address);
+                        }
+                    }                    
+            }));
+
+            var latestDelFileName = Path.Combine(_directory, string.Format("{0}.del", latestIndexVersionId));
+            var deletions = new LcrsTrie('\0', false);
+
+            if (File.Exists(latestDelFileName))
+            {
+                deletions = Serializer.DeserializeTrie(latestDelFileName);
+
+                if (primaryKeyValues.Count > 0)
+                {
+                    foreach (var word in primaryKeyValues)
+                    {
+                        deletions.Add(word.Value);
+                    }
                 }
             }
 
-            if (primaryKeyValues.Count > 0)
-            {
-                var root = new QueryContext(_primaryKey, primaryKeyValues.First());
-                
-                foreach (var primaryKeyValue in primaryKeyValues.Skip(1))
-                {
-                    root.Add(new QueryContext(_primaryKey, primaryKeyValue));
-                }
+            var delFileName = Path.Combine(_directory, string.Format("{0}.del", _indexVersionId));
 
-                MarkObsolete(root);
-            }
+            deletions.Serialize(delFileName);  
 
             Task.WaitAll(tasks.ToArray());
 
-            CreateIxInfo().Serialize(Path.Combine(_directory, _indexName + ".ix"));
+            CreateIxInfo().Serialize(Path.Combine(_directory, _indexVersionId + ".ix"));
 
-            return _indexName;
-        }
-
-        private void MarkObsolete(QueryContext query)
-        {
-            foreach (var collector in _collectors)
-            {
-                var score = collector.Collect(query).FirstOrDefault();
-                
-                if (score != null)
-                {
-                    MarkObsolete(score.DocumentId);
-                }
-            }
-        }
-
-        private void MarkObsolete(int docId)
-        {
-
+            return _indexVersionId;
         }
 
         private void SerializeTries()
@@ -192,7 +197,7 @@ namespace Resin
         {
             var key = trieEntry.Item1;
             var trie = trieEntry.Item2;
-            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _indexName, key));
+            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _indexVersionId, key));
             trie.Serialize(fileName);
         }
 
@@ -213,7 +218,7 @@ namespace Resin
         {
             return new IxInfo
             {
-                VersionId = _indexName,
+                VersionId = _indexVersionId,
                 DocumentCount = new Dictionary<string, int>(_docCountByField),
                 StartDocId = _startDocId,
                 NextDocId = _docId

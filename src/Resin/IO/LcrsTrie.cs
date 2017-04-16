@@ -70,10 +70,9 @@ namespace Resin.IO
             }
         }
 
-        [Obsolete]
         public void Add(string path)
         {
-            Add(path,new DocumentPosting(0, 1));
+            Add(path,new DocumentPosting(-1, 1));
         }
 
         public void Add(string path, params DocumentPosting[] postings)
@@ -95,19 +94,29 @@ namespace Resin.IO
                 else
                 {
                     // place new node in lexical order
-                    var left = LeftChild;
-                    while (left != null)
-                    {
-                        if (left.Value < node.Value || left.RightSibling == null)
-                        {
-                            break;
-                        }
-                        left = left.RightSibling;
-                    }
-                    var right = left.RightSibling;
-                    node.RightSibling = right;
-                    left.RightSibling = node;
 
+                    if (LeftChild.Value > node.Value)
+                    {
+                        var tmp = LeftChild;
+                        LeftChild = node;
+                        node.RightSibling = tmp;
+                    }
+                    else
+                    {
+                        var sibling = LeftChild;
+
+                        while (true)
+                        {
+                            if (sibling.Value < node.Value && (sibling.RightSibling == null || sibling.RightSibling.Value > node.Value))
+                            {
+                                break;
+                            }
+                            sibling = sibling.RightSibling;
+                        }
+                        var rightSibling = sibling.RightSibling;
+                        sibling.RightSibling = node;
+                        node.RightSibling = rightSibling; 
+                    }
                 }
             }
             else

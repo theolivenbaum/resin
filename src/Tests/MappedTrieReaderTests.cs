@@ -212,5 +212,39 @@ namespace Tests
                 Assert.True(reader.HasWord("daddy", out word));
             }
         }
+
+        [Test]
+        public void Can_deserialize_whole_file()
+        {
+            var fileName = Path.Combine(Setup.Dir, "Can_serialize_whole_file.tri");
+
+            var tree = new LcrsTrie('\0', false);
+            tree.Add("baby");
+            tree.Add("bad");
+            tree.Add("bank");
+            tree.Add("box");
+            tree.Add("dad");
+            tree.Add("dance");
+
+            Word found;
+
+            Assert.IsTrue(tree.HasWord("baby", out found));
+            Assert.IsTrue(tree.HasWord("bad", out found));
+            Assert.IsTrue(tree.HasWord("bank", out found));
+            Assert.IsTrue(tree.HasWord("box", out found));
+            Assert.IsTrue(tree.HasWord("dad", out found));
+            Assert.IsTrue(tree.HasWord("dance", out found));
+
+            tree.Serialize(fileName);
+
+            var recreated = Serializer.DeserializeTrie(Setup.Dir, new FileInfo(fileName).Name);
+
+            Assert.IsTrue(recreated.HasWord("baby", out found));
+            Assert.IsTrue(recreated.HasWord("bad", out found));
+            Assert.IsTrue(recreated.HasWord("bank", out found));
+            Assert.IsTrue(recreated.HasWord("box", out found));
+            Assert.IsTrue(recreated.HasWord("dad", out found));
+            Assert.IsTrue(recreated.HasWord("dance", out found));
+        }
     }
 }
