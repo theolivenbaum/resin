@@ -76,7 +76,7 @@ namespace Resin.Querying
         {
             if (first == null) return other;
 
-            return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>group.OrderBy(s=>s.Ix.VersionId).Last());
+            return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>group.OrderBy(s=>s.Ix.VersionId).Last()); // Slow. TODO: make faster
         }
 
         public static IEnumerable<DocumentScore> CombineAnd(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
