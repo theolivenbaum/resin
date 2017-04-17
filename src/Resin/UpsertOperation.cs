@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using log4net;
 using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Write;
@@ -13,6 +14,8 @@ namespace Resin
 {
     public abstract class UpsertOperation
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(UpsertOperation));
+
         protected abstract IEnumerable<Document> ReadSource();
 
         private readonly string _directory;
@@ -55,9 +58,15 @@ namespace Resin
                     {
                         foreach (var doc in ReadSource())
                         {
-                            var hash = doc.Fields[_primaryKey].ToHash();
+                            var pkVal = doc.Fields[_primaryKey];
+                            var hash = pkVal.ToHash();
 
-                            if (!pks.ContainsKey(hash))
+                            if (pks.ContainsKey(hash))
+                            {
+                                Log.InfoFormat("Found multiple occurrences of document with {0}:{1}. Only first occurrence will be stored.",
+                                    _primaryKey, pkVal);
+                            }
+                            else
                             {
                                 primaryKeyValues.Add(hash);
 
@@ -65,7 +74,7 @@ namespace Resin
 
                                 docAddresses.Add(docWriter.Write(doc));
 
-                                analyzedDocuments.Add(_analyzer.AnalyzeDocument(doc));  
+                                analyzedDocuments.Add(_analyzer.AnalyzeDocument(doc)); 
                             }
                         }
                     }
@@ -100,6 +109,15 @@ namespace Resin
                     })) 
                     Task.WaitAll(producer, consumer);
                 }
+            }
+
+            Log.InfoFormat("Analyzed {0} documents", primaryKeyValues.Count);
+
+            if (primaryKeyValues.Count == 0)
+            {
+                Log.Info("Aborted write (source is empty).");
+
+                return 0;
             }
 
             var tasks = new List<Task>

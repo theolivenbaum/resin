@@ -161,12 +161,12 @@ namespace Resin
 
                         foreach (var posting in postings)
                         {
-                            var score = scorer.Score(posting);
-
                             var docHash = docHashReader.Read(posting.DocumentId);
 
                             if (!docHash.IsObsolete)
                             {
+                                var score = scorer.Score(posting);
+
                                 yield return new DocumentScore(posting.DocumentId, docHash.Hash, score, _ix);
                             }
                         }
