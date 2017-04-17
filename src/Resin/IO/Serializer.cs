@@ -23,9 +23,19 @@ namespace Resin.IO
             return 1 * sizeof(long) + 1 * sizeof(int);
         }
 
+        public static int SizeOfPosting()
+        {
+            return 2 * sizeof(int);
+        }
+
+        public static int SizeOfDocHash()
+        {
+            return sizeof (UInt32) + sizeof (byte);
+        }
+
         public static void Serialize(this IxInfo ix, string fileName)
         {
-            using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough))
             {
                 var bytes = ix.Serialize();
 
@@ -164,7 +174,7 @@ namespace Resin.IO
             using (var stream = new MemoryStream())
             {
                 byte[] versionBytes = BitConverter.GetBytes(ix.VersionId);
-                byte[] dicBytes = ix.DocumentCount.Serialize();
+                byte[] docCountBytes = BitConverter.GetBytes(ix.DocumentCount);
 
                 if (!BitConverter.IsLittleEndian)
                 {
@@ -172,7 +182,7 @@ namespace Resin.IO
                 }
 
                 stream.Write(versionBytes, 0, sizeof(long));
-                stream.Write(dicBytes, 0, dicBytes.Length);
+                stream.Write(docCountBytes, 0, sizeof(int));
 
                 return stream.ToArray();
             }
@@ -184,17 +194,20 @@ namespace Resin.IO
 
             stream.Read(versionBytes, 0, sizeof(long));
 
-            var dic = DeserializeStringIntDic(stream).ToList();
+            var docCountBytes = new byte[sizeof(int)];
+
+            stream.Read(docCountBytes, 0, sizeof(int));
 
             if (!BitConverter.IsLittleEndian)
             {
                 Array.Reverse(versionBytes);
+                Array.Reverse(docCountBytes);
             }
 
             return new IxInfo
             {
-                VersionId= BitConverter.ToInt64(versionBytes, 0), 
-                DocumentCount = dic.ToDictionary(x=>x.Key, x=>x.Value),
+                VersionId= BitConverter.ToInt64(versionBytes, 0),
+                DocumentCount = BitConverter.ToInt32(docCountBytes, 0)
             };
         }
 
@@ -276,14 +289,14 @@ namespace Resin.IO
             }
         }
 
-        public static byte[] Serialize(this IEnumerable<DocumentPosting> entries)
+        public static byte[] Serialize(this IEnumerable<DocumentPosting> postings)
         {
             using (var stream = new MemoryStream())
             {
-                foreach (var entry in entries)
+                foreach (var posting in postings)
                 {
-                    byte[] idBytes = BitConverter.GetBytes(entry.DocumentId);
-                    byte[] countBytes = BitConverter.GetBytes(entry.Count);
+                    byte[] idBytes = BitConverter.GetBytes(posting.DocumentId);
+                    byte[] countBytes = BitConverter.GetBytes(posting.Count);
 
                     if (!BitConverter.IsLittleEndian)
                     {
@@ -317,25 +330,32 @@ namespace Resin.IO
             }
         }
 
-        public static void Serialize(this IEnumerable<UInt32> entries, string fileName)
+        public static void Serialize(this IEnumerable<DocHash> docHashes, string fileName)
         {
             using (var stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                foreach (var entry in entries)
+                foreach (var docHash in docHashes)
                 {
-                    byte[] valBytes = BitConverter.GetBytes(entry);
-
-                    if (!BitConverter.IsLittleEndian)
-                    {
-                        Array.Reverse(valBytes);
-                    }
-
-                    stream.Write(valBytes, 0, sizeof(UInt32));
+                    docHash.Serialize(stream);
                 }
             }
         }
 
-        public static byte[] DeSerialize(string fileName)
+        public static void Serialize(this DocHash docHash, Stream stream)
+        {
+            byte[] hashBytes = BitConverter.GetBytes(docHash.Hash);
+            byte isObsoleteByte = EncodedBoolean[docHash.IsObsolete];
+
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(hashBytes);
+            }
+
+            stream.WriteByte(isObsoleteByte);
+            stream.Write(hashBytes, 0, sizeof(UInt32));
+        }
+
+        public static byte[] DeSerializeFile(string fileName)
         {
             using (var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -455,28 +475,47 @@ namespace Resin.IO
             }
         }
 
-        public static IEnumerable<UInt32> DeserializeUInt32List(byte[] data)
+        public static DocHash DeserializeDocHash(Stream stream)
         {
+            var isObsoleteByte = stream.ReadByte();
+
+            if (isObsoleteByte == -1) return null;
+
+            var hashBytes = new byte[sizeof(UInt32)];
+
+            stream.Read(hashBytes, 0, sizeof(UInt32));
+
             if (!BitConverter.IsLittleEndian)
             {
-                Array.Reverse(data);
+                Array.Reverse(hashBytes);
             }
 
-            int pos = 0;
+            return new DocHash(BitConverter.ToUInt32(hashBytes, 0), isObsoleteByte == 1);
+        }
 
-            while (pos < data.Length)
+        public static IEnumerable<DocHash> DeserializeDocHashes(string fileName)
+        {
+            using (var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                var val = BitConverter.ToUInt32(data, pos);
+                return DeserializeDocHashes(stream);
+            }
+        }
 
-                yield return val;
+        public static IEnumerable<DocHash> DeserializeDocHashes(Stream stream)
+        {
+            while (true)
+            {
+                var hash = DeserializeDocHash(stream);
 
-                pos = pos + sizeof(UInt32);
+                if (hash == null) break;
+
+                yield return hash;
             }
         }
 
         public static IEnumerable<DocumentPosting> DeserializePostings(byte[] data)
         {
-            var chunk = new byte[sizeof(int)*2];
+            var chunk = new byte[SizeOfPosting()];
             long pos = 0;
 
             while (pos<data.Length)
@@ -485,14 +524,15 @@ namespace Resin.IO
 
                 if (!BitConverter.IsLittleEndian)
                 {
-                    Array.Reverse(chunk);
+                    Array.Reverse(chunk);//ain't gonna work. TODO: reverse individual byte streams, not entire chunk (this is a bug).
                 }
 
                 yield return new DocumentPosting(
                     BitConverter.ToInt32(chunk, 0),
-                    BitConverter.ToInt32(chunk, sizeof(int)));
+                    BitConverter.ToInt32(chunk, sizeof(int))
+                    );
 
-                pos = pos + chunk.Length;
+                pos = pos + chunk.Length; 
             }
         }
 

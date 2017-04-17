@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using log4net;
 
@@ -11,7 +10,7 @@ namespace Resin.IO
 
         public long VersionId { get; set; }
 
-        public Dictionary<string, int> DocumentCount { get; set; }
+        public int DocumentCount { get; set; }
 
         public static IxInfo Load(string fileName)
         {

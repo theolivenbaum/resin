@@ -24,7 +24,7 @@ namespace Resin
         private readonly bool _compression;
         private readonly IList<IxInfo> _ixs;
         private readonly int _blockSize;
-        private readonly IDictionary<string, int> _documentCount;
+        private readonly int _documentCount;
 
         public Searcher(string directory, QueryParser parser, IScoringScheme scorerFactory, bool compression = false)
         {
@@ -74,11 +74,6 @@ namespace Resin
 
             return result;
         }
-        
-        private bool IsDeleted(int docId)
-        {
-            return false;
-        }
 
         private IList<DocumentScore> Collect(QueryContext query)
         {
@@ -94,7 +89,6 @@ namespace Resin
 
             var agg = results
                 .Aggregate<IEnumerable<DocumentScore>, IEnumerable<DocumentScore>>(null, DocumentScore.CombineTakingLatestVersion)
-                .Where(s=>!IsDeleted(s.DocumentId))
                 .ToList();
 
             return agg;

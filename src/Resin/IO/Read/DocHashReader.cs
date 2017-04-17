@@ -14,9 +14,9 @@ namespace Resin.IO.Read
             _position = 0;
         }
 
-        public UInt32 Read(int docId)
+        public DocHash Read(int docId)
         {
-            var distance = (docId*sizeof (UInt32)) - _position;
+            var distance = (docId*Serializer.SizeOfDocHash()) - _position;
 
             if (distance < 0) throw new ArgumentOutOfRangeException("docId");
 
@@ -25,18 +25,11 @@ namespace Resin.IO.Read
                 _stream.Seek(distance, SeekOrigin.Current);
             }
 
-            _position = distance + sizeof (UInt32);
+            var doc = Serializer.DeserializeDocHash(_stream);
 
-            var bytes = new byte[sizeof (UInt32)];
+            _position += distance+Serializer.SizeOfDocHash();
 
-            _stream.Read(bytes, 0, sizeof (UInt32));
-
-            if (!BitConverter.IsLittleEndian)
-            {
-                Array.Reverse(bytes);
-            }
-
-            return BitConverter.ToUInt32(bytes, 0);
+            return doc;
         }
 
         public void Dispose()

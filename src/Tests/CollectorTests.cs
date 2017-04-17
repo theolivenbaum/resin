@@ -32,7 +32,7 @@ namespace Tests
             long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Write();
+                indexName = writer.Commit();
             }
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
@@ -71,7 +71,7 @@ namespace Tests
             long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Write();
+                indexName = writer.Commit();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:age of porn~");
@@ -104,7 +104,7 @@ namespace Tests
             long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Write();
+                indexName = writer.Commit();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:porn~");
@@ -142,7 +142,7 @@ namespace Tests
             long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Write();
+                indexName = writer.Commit();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rain man");
@@ -186,7 +186,7 @@ namespace Tests
             long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Write();
+                indexName = writer.Commit();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
@@ -232,7 +232,7 @@ namespace Tests
             long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Write();
+                indexName = writer.Commit();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rocky");
@@ -289,7 +289,7 @@ namespace Tests
             long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Write();
+                indexName = writer.Commit();
             }
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
@@ -336,7 +336,7 @@ namespace Tests
             long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Write();
+                indexName = writer.Commit();
             }
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
@@ -378,7 +378,7 @@ namespace Tests
             long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Write();
+                indexName = writer.Commit();
             }
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName+".ix")), new Tfidf()))
@@ -412,7 +412,7 @@ namespace Tests
             long indexName;
             using (var writer = new TestStreamUpsertOperation(dir, new Analyzer(), docs.ToStream()))
             {
-                indexName = writer.Write();
+                indexName = writer.Commit();
             }
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))

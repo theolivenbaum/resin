@@ -19,17 +19,17 @@ namespace Resin
         private readonly string _directory;
         private readonly IxInfo _ix;
         private readonly IScoringScheme _scorerFactory;
-        private readonly IDictionary<string, int> _documentCount;
+        private readonly int _documentCount;
 
         public IxInfo Ix { get { return _ix; } }
 
-        public Collector(string directory, IxInfo ix, IScoringScheme scorerFactory = null, IDictionary<string, int> documentCount = null)
+        public Collector(string directory, IxInfo ix, IScoringScheme scorerFactory = null, int documentCount = -1)
         {
             _directory = directory;
             _ix = ix;
             _scorerFactory = scorerFactory;
 
-            _documentCount = documentCount ?? ix.DocumentCount;
+            _documentCount = documentCount == -1 ? ix.DocumentCount : documentCount;
         }
 
         public IList<DocumentScore> Collect(QueryContext query)
@@ -122,18 +122,18 @@ namespace Resin
         
         private IEnumerable<IList<DocumentPosting>> ReadPostings(IEnumerable<Term> terms)
         {
-            return Util.ReadPostings(_directory, _ix, terms);
+            return PostingsReader.ReadPostings(_directory, _ix, terms);
         }
 
         private void Score(IEnumerable<QueryContext> queries)
         {
             Parallel.ForEach(queries, query =>
             {
-                query.Scored = DoScore(query.Postings.OrderBy(p=>p.DocumentId).ToList(), query.Field);
+                query.Scored = DoScore(query.Postings.OrderBy(p=>p.DocumentId).ToList());
             });
         }
 
-        private IEnumerable<DocumentScore> DoScore(IList<DocumentPosting> postings, string field)
+        private IEnumerable<DocumentScore> DoScore(IList<DocumentPosting> postings)
         {
             var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "dhs"));
 
@@ -145,17 +145,19 @@ namespace Resin
                     {
                         var docHash = docHashReader.Read(posting.DocumentId);
 
-                        yield return new DocumentScore(posting.DocumentId, docHash, 0, _ix);
+                        if (!docHash.IsObsolete)
+                        {
+                            yield return new DocumentScore(posting.DocumentId, docHash.Hash, 0, _ix);
+                        }
                     }
                 }
                 else
                 {
                     if (postings.Any())
                     {
-                        var docsInCorpus = _documentCount[field];
                         var docsWithTerm = postings.Count;
 
-                        var scorer = _scorerFactory.CreateScorer(docsInCorpus, docsWithTerm);
+                        var scorer = _scorerFactory.CreateScorer(_documentCount, docsWithTerm);
 
                         foreach (var posting in postings)
                         {
@@ -163,7 +165,10 @@ namespace Resin
 
                             var docHash = docHashReader.Read(posting.DocumentId);
 
-                            yield return new DocumentScore(posting.DocumentId, docHash, score, _ix);
+                            if (!docHash.IsObsolete)
+                            {
+                                yield return new DocumentScore(posting.DocumentId, docHash.Hash, score, _ix);
+                            }
                         }
                     }
                 }

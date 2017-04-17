@@ -32,6 +32,7 @@ namespace Resin.IO
             {
                 var list = group.ToList();
                 var tip = list.First();
+
                 foreach (DocumentPosting posting in list.Skip(1))
                 {
                     tip = tip.Join(posting);

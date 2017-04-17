@@ -21,8 +21,6 @@ namespace Resin
         private readonly string _primaryKey;
         private readonly long _indexVersionId;
         private readonly Dictionary<string, LcrsTrie> _tries;
-        private readonly ConcurrentDictionary<string, int> _docCountByField;
-        private readonly List<IxInfo> _ixs;
         
         private int _docId;
 
@@ -33,28 +31,15 @@ namespace Resin
             _compression = compression;
             _indexVersionId = Util.GetChronologicalFileId();
             _tries = new Dictionary<string, LcrsTrie>();
-            _docCountByField = new ConcurrentDictionary<string, int>();
-            _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
             _docId = 0;
             _primaryKey = primaryKey;
         }
 
-        public long Write()
+        public long Commit()
         {
             var docAddresses = new List<BlockInfo>();
             var docHashes = new List<UInt32>();
-            var primaryKeyValues = new List<Word>();
-            var primaryKeyColumn = new LcrsTrie('\0', false);
-
-            if (_ixs.Count > 0)
-            {
-                foreach (var ix in _ixs)
-                {
-                    var trie = Serializer.DeserializeTrie(_directory, ix.VersionId, _primaryKey);
-                    primaryKeyColumn.Append(trie);
-                }
-            }
-            
+          
             // producer/consumer acc. to: https://msdn.microsoft.com/en-us/library/dd267312.aspx
 
             using (var analyzedDocuments = new BlockingCollection<AnalyzedDocument>())
@@ -76,23 +61,6 @@ namespace Resin
                             docAddresses.Add(docWriter.Write(doc));
 
                             analyzedDocuments.Add(_analyzer.AnalyzeDocument(doc));
-
-                            foreach (var field in doc.Fields)
-                            {
-                                _docCountByField.AddOrUpdate(field.Key, 1, (s, count) => count + 1);
-                            }
-
-                            if (_primaryKey != null)
-                            {
-                                var word = doc.Fields[_primaryKey];
-
-                                Word found;
-
-                                if (primaryKeyColumn.HasWord(word, out found))
-                                {
-                                    primaryKeyValues.Add(found);
-                                }
-                            }
                         }
                     }
 
@@ -154,30 +122,14 @@ namespace Resin
                             docAddressWriter.Write(address);
                         }
                     }
-                })
-                ,
+                }),
                 Task.Run(() =>
                 {
                     var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "dhs"));
 
-                    docHashes.Serialize(docHashesFileName);
+                    docHashes.OrderBy(h=>h).Select(h=>new DocHash(h)).Serialize(docHashesFileName);
                 })
             };
-
-            if (_ixs.Count > 0)
-            {
-                var deletions = new LcrsTrie('\0', false);
-
-                foreach (var word in primaryKeyValues)
-                {
-                    deletions.Add(word.Value);
-                }
-
-                var latestVersion = _ixs.OrderBy(x => x.VersionId).Last();
-                var delFileName = Path.Combine(_directory, string.Format("{0}.del", latestVersion.VersionId));
-
-                deletions.Serialize(delFileName);
-            }
 
             Task.WaitAll(tasks.ToArray());
 
@@ -220,9 +172,8 @@ namespace Resin
             return new IxInfo
             {
                 VersionId = _indexVersionId,
-                DocumentCount = new Dictionary<string, int>(_docCountByField)
+                DocumentCount = _docId
             };
         }
     }
-
 }

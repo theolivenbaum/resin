@@ -46,6 +46,9 @@
   <ItemGroup>
     <Compile Include="Analysis\AnalyzedDocument.cs" />
     <Compile Include="Analysis\Analyzer.cs" />
+    <Compile Include="DeleteByPrimaryKeyOperation.cs" />
+    <Compile Include="DocHash.cs" />
+    <Compile Include="DocumentUpsertOperation.cs" />
     <Compile Include="IO\Compressor.cs" />
     <Compile Include="IO\Read\DocHashReader.cs" />
     <Compile Include="IO\Read\DocumentAddressReader.cs" />
@@ -61,6 +64,7 @@
     <Compile Include="IO\Write\BlockWriter.cs" />
     <Compile Include="IO\Write\DocumentWriter.cs" />
     <Compile Include="IO\Write\PostingsWriter.cs" />
+    <Compile Include="ScoredDocument.cs" />
     <Compile Include="StreamUpsertOperation.cs" />
     <Compile Include="Sys\MurmurHash2UInt32Hack.cs" />
     <Compile Include="Sys\Util.cs" />
