@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -12,14 +11,11 @@ namespace Resin
     {
         private readonly string _directory;
         private readonly IEnumerable<string> _values;
-        private readonly ConcurrentDictionary<string, int> _docCountByField;
         private readonly List<IxInfo> _ixs;
-        
 
         public DeleteByPrimaryKeyOperation(string directory, IEnumerable<string> values)
         {
             _directory = directory;
-            _docCountByField = new ConcurrentDictionary<string, int>();
             _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
             _values = values;
         }
