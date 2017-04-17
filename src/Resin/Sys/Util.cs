@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Linq;
 using Resin.IO;
@@ -15,18 +14,6 @@ namespace Resin.Sys
         {
             var ticks = DateTime.Now.Ticks - BeginningOfTime.Ticks;
             return ticks;
-        }
-
-        public static string GetDataDirectory()
-        {
-            var configPath = ConfigurationManager.AppSettings.Get("resin.datadirectory");
-            if (!string.IsNullOrWhiteSpace(configPath)) return configPath;
-            string path = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
-            if (Environment.OSVersion.Version.Major >= 6)
-            {
-                path = Directory.GetParent(path).ToString();
-            }
-            return Path.Combine(path, "Resin");
         }
 
         private static IEnumerable<string> GetIndexFileNames(string directory)
@@ -44,7 +31,7 @@ namespace Resin.Sys
 
         public static int GetDocumentCount(IEnumerable<IxInfo> ixs)
         {
-            return ixs.Sum(x => x.DocumentCount);
+            return ixs.Sum(x => x.DocumentCount); //TODO: this is a bug. Instead, return distinct doc hashes.
         }
     }
 }

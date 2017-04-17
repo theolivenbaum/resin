@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Threading;
-using Resin.Sys;
 
 namespace Resin.Analysis
 {
@@ -17,15 +15,7 @@ namespace Resin.Analysis
         {
             _culture = culture ?? Thread.CurrentThread.CurrentUICulture;
             _customTokenSeparators = new HashSet<char>(tokenSeparators ?? new char[0]);
-            _stopwords = new HashSet<string>(stopwords ?? GetDefaultStopwords());
-        }
-
-        private string[] GetDefaultStopwords()
-        {
-            var dir = Path.Combine(Util.GetDataDirectory(), "stopwords");
-            var fileName = Path.Combine(dir, _culture.Name + ".txt");
-            if (File.Exists(fileName)) return File.ReadAllLines(fileName);
-            return new string[0];
+            _stopwords = new HashSet<string>(stopwords ?? new string[0]);
         }
 
         public AnalyzedDocument AnalyzeDocument(Document document)
