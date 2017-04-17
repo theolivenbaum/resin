@@ -131,7 +131,9 @@ namespace Resin
                         {
                             foreach (var node in trie.Value.EndOfWordNodes())
                             {
-                                node.PostingsAddress = postingsWriter.Write(node.Postings);
+                                var postings = node.Postings.OrderByDescending(n => n.Count).ToList();
+
+                                node.PostingsAddress = postingsWriter.Write(postings);
                             }
                         }
                     }
