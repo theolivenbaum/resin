@@ -38,7 +38,8 @@ namespace Resin
         public long Commit()
         {
             var docAddresses = new List<BlockInfo>();
-            var docHashes = new List<UInt32>();
+            var primaryKeyValues = new List<UInt64>();
+            var pks = new Dictionary<UInt64, object>();
           
             // producer/consumer acc. to: https://msdn.microsoft.com/en-us/library/dd267312.aspx
 
@@ -54,13 +55,18 @@ namespace Resin
                     {
                         foreach (var doc in ReadSource())
                         {
-                            doc.Id = _docId++;
+                            var hash = doc.Fields[_primaryKey].ToHash();
 
-                            docHashes.Add(doc.Fields[_primaryKey].ToHash());
+                            if (!pks.ContainsKey(hash))
+                            {
+                                primaryKeyValues.Add(hash);
 
-                            docAddresses.Add(docWriter.Write(doc));
+                                doc.Id = _docId++;
 
-                            analyzedDocuments.Add(_analyzer.AnalyzeDocument(doc));
+                                docAddresses.Add(docWriter.Write(doc));
+
+                                analyzedDocuments.Add(_analyzer.AnalyzeDocument(doc));  
+                            }
                         }
                     }
 
@@ -125,9 +131,9 @@ namespace Resin
                 }),
                 Task.Run(() =>
                 {
-                    var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "dhs"));
+                    var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pk"));
 
-                    docHashes.OrderBy(h=>h).Select(h=>new DocHash(h)).Serialize(docHashesFileName);
+                    primaryKeyValues.Select(h=>new DocHash(h)).Serialize(docHashesFileName);
                 })
             };
 
@@ -153,7 +159,7 @@ namespace Resin
 
         private LcrsTrie GetTrie(string field, string token)
         {
-            var key = string.Format("{0}-{1}", field.ToHashString(), token.ToTrieBucketName());
+            var key = string.Format("{0}-{1}", field.ToHash(), token.ToTrieBucketName());
             LcrsTrie trie;
 
             if (!_tries.TryGetValue(key, out trie))

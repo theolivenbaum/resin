@@ -135,7 +135,7 @@ namespace Resin
 
         private IEnumerable<DocumentScore> DoScore(IList<DocumentPosting> postings)
         {
-            var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "dhs"));
+            var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "pk"));
 
             using (var docHashReader = new DocHashReader(docHashesFileName))
             {
@@ -178,7 +178,7 @@ namespace Resin
         private ITrieReader GetTreeReader(string field, string token)
         {
             var suffix = token.ToTrieBucketName();
-            var fileId = field.ToHashString();
+            var fileId = field.ToHash().ToString();
             var fileName = Path.Combine(_directory, string.Format("{0}-{1}-{2}.tri", _ix.VersionId, fileId, suffix));
 
             if (!File.Exists(fileName)) return null;

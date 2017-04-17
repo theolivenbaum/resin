@@ -17,7 +17,7 @@ namespace Resin.IO
         public char Value { get; private set; }
         public bool EndOfWord { get; private set; }
 
-        public LcrsTrie():this('0', false)
+        public LcrsTrie():this('\0', false)
         {
         }
 

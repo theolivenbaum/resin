@@ -29,6 +29,13 @@ namespace Resin.Sys
                 .Select(info => info.fileName);
         }
 
+        public static int GetDocumentCount(string directory)
+        {
+            return GetIndexFileNamesInChronologicalOrder(directory)
+                .Select(IxInfo.Load)
+                .Sum(x=>x.DocumentCount);   
+        }
+
         public static int GetDocumentCount(IEnumerable<IxInfo> ixs)
         {
             return ixs.Sum(x => x.DocumentCount); //TODO: this is a bug. Instead, return distinct doc hashes.

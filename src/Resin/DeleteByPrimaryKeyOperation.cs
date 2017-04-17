@@ -26,35 +26,53 @@ namespace Resin
 
             foreach (var value in _values)
             {
-                var hashString = value.ToHashString();
+                var hashString = value.ToHash().ToString(CultureInfo.InvariantCulture);
 
                 deleteSet.Add(hashString);
             }
 
             foreach (var ix in _ixs)
             {
-                var docHashFileName = Path.Combine(_directory, string.Format("{0}.{1}", ix.VersionId, "dhs.tmp"));
+                var docHashFileName = Path.Combine(_directory, string.Format("{0}.{1}", ix.VersionId, "pk"));
+                var tmpDocHashFileName = Path.Combine(_directory, string.Format("{0}.{1}", ix.VersionId, "pk.tmp"));
+
+                var tmpIxFileName = Path.Combine(_directory, ix.VersionId + ".ix.tmp");
+                var ixFileName = Path.Combine(_directory, ix.VersionId + ".ix");
+
                 var deleted = 0;
 
-                using (var stream = new FileStream(docHashFileName, FileMode.Create, FileAccess.Write, FileShare.None))
+                using (var stream = new FileStream(tmpDocHashFileName, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
                     foreach (var document in Serializer.DeserializeDocHashes(docHashFileName))
                     {
                         Word found;
 
-                        if (deleteSet.HasWord(document.Hash.ToString(CultureInfo.InvariantCulture), out found))
+                        var hash = document.Hash.ToString(CultureInfo.InvariantCulture);
+
+                        if (deleteSet.HasWord(hash, out found))
                         {
-                            document.IsObsolete = true;
-                            deleted++;
+                            if (!document.IsObsolete)
+                            {
+                                document.IsObsolete = true;
+                                deleted++;    
+                            }
                         }
 
                         document.Serialize(stream);
                     }
+                }               
+
+                if (deleted > 0)
+                {
+                    ix.DocumentCount -= deleted;
+                    ix.Serialize(tmpIxFileName);
+
+                    File.Copy(tmpIxFileName, ixFileName, overwrite: true);
+                    File.Copy(tmpDocHashFileName, docHashFileName, overwrite: true);
+
+                    File.Delete(tmpIxFileName);
+                    File.Delete(tmpDocHashFileName);
                 }
-
-                ix.DocumentCount -= deleted;
-
-                ix.Serialize(Path.Combine(_directory, ix.VersionId + ".ix.tmp"));
             }
         }
     }

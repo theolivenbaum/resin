@@ -39,12 +39,44 @@ namespace Resin.Cli
                 }
                 Query(args);
             }
+            else if (args[0].ToLower() == "delete")
+            {
+                Delete(args);
+            }
             else
             {
                 Console.WriteLine("usage:");
                 Console.WriteLine("rn.exe write --file source.json --dir c:\\target_dir");
                 Console.WriteLine("rn.exe query --dir c:\\my_index -q field:value");
             }
+        }
+
+        static void Delete(string[] args)
+        {
+            var ids = args[Array.IndexOf(args, "--ids") + 1].Split(',');
+            string dir = null;
+            string indexName = null;
+
+            if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
+            if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
+
+            var inproc = !string.IsNullOrWhiteSpace(dir);
+
+            var timer = new Stopwatch();
+            timer.Start();
+
+            if (inproc)
+            {
+                new DeleteByPrimaryKeyOperation(dir, ids).Commit();
+            }
+            else
+            {
+                Console.WriteLine("Executing HTTP POST");
+
+                var url = ConfigurationManager.AppSettings.Get("sir.endpoint");
+            }
+
+            Console.WriteLine("delete operation took {0}", timer.Elapsed);
         }
 
         static void Query(string[] args)

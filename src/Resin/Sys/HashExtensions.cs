@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using System.Text;
 
 namespace Resin.Sys
 {
@@ -25,15 +24,27 @@ namespace Resin.Sys
             return ((int)token[0]).ToString(CultureInfo.InvariantCulture);
         }
 
-        public static string ToHashString(this string text)
-        {
-            return text.ToHash().ToString(CultureInfo.InvariantCulture);
-        }
+        //public static UInt32 ToHash(this string text)
+        //{
+        //    var bytes = Encoding.UTF8.GetBytes(text);
+        //    return new MurmurHash2UInt32Hack().Hash(bytes);
+        //}
 
-        public static UInt32 ToHash(this string text)
+        /// <summary>
+        /// Knuth hash. http://stackoverflow.com/questions/9545619/a-fast-hash-function-for-string-in-c-sharp
+        /// One could also use https://msdn.microsoft.com/en-us/library/system.security.cryptography.sha1.aspx
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static UInt64 ToHash(this string text)
         {
-            var bytes = Encoding.UTF8.GetBytes(text);
-            return new MurmurHash2UInt32Hack().Hash(bytes);
+            UInt64 hashedValue = 3074457345618258791ul;
+            for (int i = 0; i < text.Length; i++)
+            {
+                hashedValue += text[i];
+                hashedValue *= 3074457345618258799ul;
+            }
+            return hashedValue;
         }
     }
 }

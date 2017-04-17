@@ -10,9 +10,9 @@ namespace Resin.Querying
         public int DocumentId { get; private set; }
         public double Score { get; private set; }
         public IxInfo Ix { get; private set; }
-        public UInt32 DocHash { get; private set; }
+        public UInt64 DocHash { get; private set; }
 
-        public DocumentScore(int documentId, UInt32 docHash, double score, IxInfo ix)
+        public DocumentScore(int documentId, UInt64 docHash, double score, IxInfo ix)
         {
             DocumentId = documentId;
             Score = score;
