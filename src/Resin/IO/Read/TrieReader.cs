@@ -159,7 +159,7 @@ namespace Resin.IO.Read
             var words = new List<Word>();
             DepthFirst(string.Empty, new List<char>(), words, -1);
 
-            var root = new LcrsTrie('\0', false);
+            var root = new LcrsTrie();
 
             foreach (var word in words)
             {

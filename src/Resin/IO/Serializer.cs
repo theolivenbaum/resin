@@ -688,7 +688,7 @@ namespace Resin.IO
 
         public static LcrsTrie DeserializeTrie(string directory, string searchPattern)
         {
-            var root = new LcrsTrie('\0', false);
+            var root = new LcrsTrie();
             LcrsTrie next = null;
 
             foreach (var fileName in Directory.GetFiles(directory, searchPattern).OrderBy(f => f))

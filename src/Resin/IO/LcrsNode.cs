@@ -62,7 +62,7 @@ namespace Resin.IO
 
         public static LcrsNode MinValue
         {
-            get { return new LcrsNode(new LcrsTrie('\0', false), 0, 0, BlockInfo.MinValue); }
+            get { return new LcrsNode(new LcrsTrie(), 0, 0, BlockInfo.MinValue); }
         }
 
         public bool Equals(LcrsNode other)

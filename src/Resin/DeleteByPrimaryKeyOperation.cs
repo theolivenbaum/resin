@@ -22,7 +22,7 @@ namespace Resin
 
         public void Commit()
         {
-            var deleteSet = new LcrsTrie('0', false);
+            var deleteSet = new LcrsTrie();
 
             foreach (var value in _values)
             {

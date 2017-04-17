@@ -140,10 +140,7 @@ namespace Resin
 
         private void SerializeTries()
         {
-            Parallel.ForEach(_tries, t =>
-            {
-                DoSerializeTrie(new Tuple<string, LcrsTrie>(t.Key, t.Value));
-            });
+            Parallel.ForEach(_tries, t => DoSerializeTrie(new Tuple<string, LcrsTrie>(t.Key, t.Value)));
         }
 
         private void DoSerializeTrie(Tuple<string, LcrsTrie> trieEntry)
@@ -161,7 +158,7 @@ namespace Resin
 
             if (!_tries.TryGetValue(key, out trie))
             {
-                trie = new LcrsTrie('\0', false);
+                trie = new LcrsTrie();
                 _tries[key] = trie;
             }
             return trie;
