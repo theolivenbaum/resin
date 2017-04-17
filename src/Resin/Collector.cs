@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -34,17 +35,23 @@ namespace Resin
 
         public IList<DocumentScore> Collect(QueryContext query)
         {
-            var time = new Stopwatch();
-            time.Start();
-
             var queries = query.ToList();
 
             Scan(queries);
+
+            var scoreTime = new Stopwatch();
+            scoreTime.Start();
+
             Score(queries);
+
+            Log.DebugFormat("scored query {0} in {1}", query, scoreTime.Elapsed);
+
+            var reduceTime = new Stopwatch();
+            reduceTime.Start();
 
             var reduced = query.Reduce().ToList();
 
-            Log.DebugFormat("collected {0} scores for query {1} in {2}", reduced.Count, query, time.Elapsed);
+            Log.DebugFormat("reduced query {0} producing {1} scores in {2}", query, reduced.Count, scoreTime.Elapsed);
 
             return reduced;
         }
@@ -178,7 +185,7 @@ namespace Resin
         private ITrieReader GetTreeReader(string field, string token)
         {
             var suffix = token.ToTrieBucketName();
-            var fileId = field.ToHash().ToString();
+            var fileId = field.ToHash().ToString(CultureInfo.InvariantCulture);
             var fileName = Path.Combine(_directory, string.Format("{0}-{1}-{2}.tri", _ix.VersionId, fileId, suffix));
 
             if (!File.Exists(fileName)) return null;
