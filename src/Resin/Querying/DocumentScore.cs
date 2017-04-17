@@ -74,9 +74,27 @@ namespace Resin.Querying
 
         public static IEnumerable<DocumentScore> CombineTakingLatestVersion(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
         {
-            if (first == null) return other;
+            if (first == null)
+            {
+                foreach (var score in other) yield return score;
+                yield break;
+            }
 
-            return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>group.OrderBy(s=>s.Ix.VersionId).Last()); // Slow. TODO: make faster
+            var unique = new Dictionary<int, DocumentScore>();
+
+            foreach (var score in first)
+            {
+                DocumentScore exists;
+
+                if (unique.TryGetValue(score.DocumentId, out exists))
+                {
+                    yield return exists.TakeLatestVersion(score);
+                }
+                else
+                {
+                    yield return score; 
+                }
+            }
         }
 
         public static IEnumerable<DocumentScore> CombineAnd(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
