@@ -27,7 +27,7 @@ Who could use a modern and powerful search engine based on sound mathematics tha
 ## Philosophy
 There shall be nothing in its mathematical model, architecture, infrastructure nor anything in the platform it was built on nor in the way the project is managed that stops Resin from being the fastest and most precise search engine on the planet.
 
-## Stable API and file format in RC3
+## Stable (API and file format) in RC3
 Resin's API and file format should be considered unstable until release candidate 3. Coming features are indexing support for IComparable instead of just strings, improved compression of documents by representing them as tries, and updates/merges of documents.
 
 ## Supported .net version
