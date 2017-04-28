@@ -58,8 +58,14 @@ namespace Resin
                     {
                         foreach (var doc in ReadSource())
                         {
-                            var pkVal = doc.Fields[_primaryKey];
-                            var hash = pkVal.ToHash();
+                            UInt64 hash = UInt64.MinValue;
+                            string pkVal = string.Empty;
+
+                            if (doc.Fields.ContainsKey(_primaryKey))
+                            {
+                                pkVal = doc.Fields[_primaryKey];
+                                hash = pkVal.ToHash();
+                            }
 
                             if (pks.ContainsKey(hash))
                             {
@@ -131,7 +137,7 @@ namespace Resin
                         {
                             foreach (var node in trie.Value.EndOfWordNodes())
                             {
-                                var postings = node.Postings.OrderByDescending(n => n.Count).ToList();
+                                var postings = node.Postings.ToList();
 
                                 node.PostingsAddress = postingsWriter.Write(postings);
                             }

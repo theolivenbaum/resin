@@ -58,6 +58,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CliLineDocUpsertOperation.cs" />
     <Compile Include="CliUpsertOperation.cs" />
     <Compile Include="CliHelper.cs" />
     <Compile Include="Program.cs" />

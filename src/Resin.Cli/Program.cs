@@ -111,7 +111,7 @@ namespace Resin.Cli
 
                     var docs = result.Docs;
 
-                    PrintHeaders();
+                    PrintHeaders(docs[0].Document.Fields.Keys);
 
                     foreach (var doc in docs)
                     {
@@ -145,32 +145,30 @@ namespace Resin.Cli
 
         }
 
-        private static void PrintHeaders()
+        private static void PrintHeaders(IEnumerable<string> labels)
         {
             Console.WriteLine();
 
-            Console.WriteLine(string.Join(string.Empty,
-                    "docid".PadRight(10),
-                    "score".PadRight(10),
-                    "label".PadRight(70),
-                    "description"
-                ));
+            Console.Write("score\t");
+
+            Console.WriteLine(string.Join("\t", labels));
+
             Console.WriteLine();
         }
 
         private static void Print(ScoredDocument doc)
         {
-            Console.WriteLine(string.Join(string.Empty,
-                            doc.Document.Fields["_id"].ToString(CultureInfo.InvariantCulture).PadRight(10),
-                            doc.Score.ToString(CultureInfo.InvariantCulture).PadRight(10).Substring(0, 9).PadRight(10),
-                            (doc.Document.Fields["label"] ?? string.Empty).Substring(0, Math.Min(69, (doc.Document.Fields["label"] ?? string.Empty).Length)).PadRight(70),
-                            (doc.Document.Fields["description"] ?? string.Empty).Substring(0, Math.Min(30, (doc.Document.Fields["description"] ?? string.Empty).Length))
-                        ));
+            Console.Write(doc.Score + "\t");
+            foreach(var field in doc.Document.Fields)
+            {
+                Console.Write(field.Value.ToString(CultureInfo.InvariantCulture).Substring(0, Math.Min(75, field.Value.Length)));
+            }
+            Console.WriteLine();
         }
 
         static void Write(string[] args)
         {
-            var take = 1000;
+            var take = int.MaxValue;
             var skip = 0;
             bool compress = false;
 
@@ -198,7 +196,7 @@ namespace Resin.Cli
             if (inproc)
             {
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                using (var writer = new CliUpsertOperation(dir, new Analyzer(), fileName, skip, take, compress, "_id"))
+                using (var writer = new CliLineDocUpsertOperation(dir, new Analyzer(), fileName, skip, take, compress, "_id"))
                 {
                     writer.Commit();
                 }

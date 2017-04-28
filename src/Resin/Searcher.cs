@@ -53,7 +53,7 @@ namespace Resin
             }
 
             var skip = page * size;
-            var scored = Collect(queryContext, skip, size);
+            var scored = Collect(queryContext);
             var paged = scored.OrderByDescending(s=>s.Score).Skip(skip).Take(size).ToList();
             var docs = new List<ScoredDocument>();
             var result = new Result { Total = scored.Count};
@@ -75,7 +75,7 @@ namespace Resin
             return result;
         }
 
-        private IList<DocumentScore> Collect(QueryContext query, int skip, int take)
+        private IList<DocumentScore> Collect(QueryContext query)
         {
             var results = new List<IList<DocumentScore>>();
 
@@ -83,7 +83,7 @@ namespace Resin
             {
                 using (var collector = new Collector(_directory, ix, _scorerFactory, _documentCount))
                 {
-                    results.Add(collector.Collect(query).Take(skip+take).ToList());
+                    results.Add(collector.Collect(query).ToList());
                 }
             }
 
