@@ -17,6 +17,16 @@ namespace Resin.IO
         public char Value { get; private set; }
         public bool EndOfWord { get; private set; }
 
+        public int Weight
+        {
+            get
+            {
+                return 1 
+                    + (LeftChild == null ? 0 : LeftChild.Weight) 
+                    + (RightSibling == null ? 0 : RightSibling.Weight);
+            }
+        }
+
         public LcrsTrie():this('\0', false)
         {
         }
@@ -94,6 +104,7 @@ namespace Resin.IO
                 if (LeftChild == null)
                 {
                     LeftChild = node;
+
                 }
                 else
                 {
@@ -119,7 +130,7 @@ namespace Resin.IO
                         }
                         var rightSibling = sibling.RightSibling;
                         sibling.RightSibling = node;
-                        node.RightSibling = rightSibling; 
+                        node.RightSibling = rightSibling;
                     }
                 }
             }
@@ -156,6 +167,9 @@ namespace Resin.IO
                 {
                     return true;
                 }
+
+                if (c < node.Value) break;
+
                 node = node.RightSibling;
             }
 
@@ -195,23 +209,6 @@ namespace Resin.IO
                     sibling = sibling.RightSibling;
                 }
             }
-        }
-
-        public int GetWeight()
-        {
-            var count = 1;
-
-            if (LeftChild != null)
-            {
-                count = count + LeftChild.GetWeight();
-            }
-
-            if (RightSibling != null)
-            {
-                count = count + RightSibling.GetWeight();
-            }
-
-            return count;
         }
 
         public bool HasWord(string word, out Word found)

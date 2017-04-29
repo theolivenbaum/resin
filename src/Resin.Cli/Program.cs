@@ -83,7 +83,9 @@ namespace Resin.Cli
         {
             string dir = null;
             string indexName = null;
+            bool deflate = false;
 
+            if (Array.IndexOf(args, "--deflate") > 0) deflate = true;
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
             if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
 
@@ -103,7 +105,7 @@ namespace Resin.Cli
             {
                 var timer = new Stopwatch();
                 timer.Start();
-                using (var s = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf()))
+                using (var s = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf(), deflate))
                 {
                     result = s.Search(q, page, size);
 
@@ -158,10 +160,10 @@ namespace Resin.Cli
 
         private static void Print(ScoredDocument doc)
         {
-            Console.Write(doc.Score + "\t");
+            Console.Write(doc.Score.ToString() + "\t");
             foreach(var field in doc.Document.Fields)
             {
-                Console.Write(field.Value.ToString(CultureInfo.InvariantCulture).Substring(0, Math.Min(75, field.Value.Length)));
+                Console.Write(field.Value.ToString(CultureInfo.InvariantCulture).Substring(0, Math.Min(55, field.Value.Length)) + "\t");
             }
             Console.WriteLine();
         }

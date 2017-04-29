@@ -36,12 +36,12 @@ namespace Tests
             tree.Add("papp");
             tree.Add("papaya");
 
-            Assert.AreEqual(8, tree.GetWeight());
+            Assert.AreEqual(8, tree.Weight);
 
             tree.Add("ape");
             tree.Add("apelsin");
 
-            Assert.AreEqual(15, tree.GetWeight());
+            Assert.AreEqual(15, tree.Weight);
         }
 
         [Test]

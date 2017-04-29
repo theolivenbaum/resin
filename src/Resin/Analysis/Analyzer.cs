@@ -46,30 +46,26 @@ namespace Resin.Analysis
 
         public IEnumerable<string> Analyze(string value)
         {
-            if (value == null) yield break;
+            var normalized = value.ToLower(_culture);
 
-            int token = 0;
-            var lowerStr = value.ToLower(_culture);
+            var washed = new char[normalized.Length];
 
-            for (int i = 0; i < lowerStr.Length; ++i)
+            for (int index = 0; index < normalized.Length; index++)
             {
-                if (!IsSeparator(lowerStr[i]))
-                {
-                    continue;
-                }
+                var c = normalized[index];
 
-                if (token < i)
+                if (char.IsLetterOrDigit(c) && !_customTokenSeparators.Contains(c))
                 {
-                    var tok = lowerStr.Substring(token, i - token);
-                    if (!_stopwords.Contains(tok)) yield return tok;
+                    washed[index] = c;
                 }
-                token = i + 1;
+                else
+                {
+                    washed[index] = ' ';
+                }
             }
-            
-            if (token < lowerStr.Length)
-            {
-                yield return lowerStr.Substring(token);
-            }
+
+            return new string(washed).Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries)
+                .Except(_stopwords);
         }
 
         private bool IsSeparator(char c)

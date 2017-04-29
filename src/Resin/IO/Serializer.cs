@@ -56,7 +56,7 @@ namespace Resin.IO
 
         private static void SerializeDepthFirst(this LcrsTrie trie, Stream stream, short depth)
         {
-            var bytes = new LcrsNode(trie, depth, trie.GetWeight(), trie.PostingsAddress).Serialize();
+            var bytes = new LcrsNode(trie, depth, trie.Weight, trie.PostingsAddress).Serialize();
 
             stream.Write(bytes, 0, bytes.Length);
 

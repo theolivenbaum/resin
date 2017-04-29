@@ -58,15 +58,19 @@ namespace Resin
                     {
                         foreach (var doc in ReadSource())
                         {
-                            UInt64 hash = UInt64.MinValue;
-                            string pkVal = string.Empty;
+                            UInt64 hash;
+                            string pkVal;
 
                             if (doc.Fields.ContainsKey(_primaryKey))
                             {
                                 pkVal = doc.Fields[_primaryKey];
                                 hash = pkVal.ToHash();
                             }
-
+                            else
+                            {
+                                pkVal = Guid.NewGuid().ToString();
+                                hash = pkVal.ToHash();
+                            }
                             if (pks.ContainsKey(hash))
                             {
                                 Log.InfoFormat("Found multiple occurrences of document with {0}:{1}. Only first occurrence will be stored.",
@@ -140,6 +144,14 @@ namespace Resin
                                 var postings = node.Postings.ToList();
 
                                 node.PostingsAddress = postingsWriter.Write(postings);
+                            }
+
+                            if (Log.IsDebugEnabled)
+                            {
+                                foreach(var word in trie.Value.Words())
+                                {
+                                    Log.Debug(word);
+                                }
                             }
                         }
                     }

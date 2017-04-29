@@ -10,15 +10,15 @@ namespace Resin.Cli
         private readonly int _take;
         private readonly int _skip;
 
-        public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, string jsonFileName, int skip, int take, bool compression, string primaryKey)
-            : base(directory, analyzer, jsonFileName, compression, primaryKey)
+        public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, string fileName, int skip, int take, bool compression, string primaryKey)
+            : base(directory, analyzer, fileName, compression, primaryKey)
         {
             _take = take;
             _skip = skip;
         }
 
-        public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, Stream jsonFile, int skip, int take, bool compression, string primaryKey)
-            : base(directory, analyzer, jsonFile, compression, primaryKey)
+        public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, Stream file, int skip, int take, bool compression, string primaryKey)
+            : base(directory, analyzer, file, compression, primaryKey)
         {
             _take = take;
             _skip = skip;
@@ -26,10 +26,10 @@ namespace Resin.Cli
 
         protected IDictionary<string, string> Parse(string document)
         {
-            var parts = document.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
+            var parts = document.Split(new[] { '\t' }, System.StringSplitOptions.RemoveEmptyEntries);
             return new KeyValuePair<string, string>[] {
                 new KeyValuePair<string, string>("doctitle", parts[0]),
-                new KeyValuePair<string, string>("docdate", parts[1]),
+                //new KeyValuePair<string, string>("docdate", parts[1]),
                 new KeyValuePair<string, string>("body", parts[2]) }.ToDictionary(x => x.Key, x => x.Value);
         }
 

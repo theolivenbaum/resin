@@ -14,11 +14,11 @@ namespace Resin
         {
         }
 
-        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, Stream jsonFile, bool compression, string primaryKey)
+        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, Stream stream, bool compression, string primaryKey)
             : base(directory, analyzer, compression, primaryKey)
         {
 
-            var bs = new BufferedStream(jsonFile);
+            var bs = new BufferedStream(stream);
 
             Reader = new StreamReader(bs, Encoding.UTF8);
         }
