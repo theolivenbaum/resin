@@ -9,6 +9,7 @@ using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Write;
 using Resin.Sys;
+using System.Diagnostics;
 
 namespace Resin
 {
@@ -42,13 +43,16 @@ namespace Resin
 
         public long Commit()
         {
+            var analyzedTimer = new Stopwatch();
+            analyzedTimer.Start();
+
             var docAddresses = new List<BlockInfo>();
             var primaryKeyValues = new List<UInt64>();
             var pks = new Dictionary<UInt64, object>();
           
             // producer/consumer acc. to: https://msdn.microsoft.com/en-us/library/dd267312.aspx
 
-            using (var analyzedDocuments = new BlockingCollection<AnalyzedDocument>())
+            using (var documents = new BlockingCollection<Document>())
             {
                 using (Task producer = Task.Factory.StartNew(() =>
                 {
@@ -86,13 +90,13 @@ namespace Resin
 
                                 docAddresses.Add(docWriter.Write(doc));
 
-                                analyzedDocuments.Add(_analyzer.AnalyzeDocument(doc)); 
+                                documents.Add(doc); 
                             }
                         }
                     }
 
                     // Signal no more work
-                    analyzedDocuments.CompleteAdding();
+                    documents.CompleteAdding();
                 }))
                 {
                     using (Task consumer = Task.Factory.StartNew(() =>
@@ -102,7 +106,8 @@ namespace Resin
                             // Consume
                             while (true)
                             {
-                                var analyzed = analyzedDocuments.Take();
+                                var doc = documents.Take();
+                                var analyzed = _analyzer.AnalyzeDocument(doc);
 
                                 foreach (var term in analyzed.Words)
                                 {
@@ -124,7 +129,7 @@ namespace Resin
                 }
             }
 
-            Log.InfoFormat("Analyzed {0} documents", primaryKeyValues.Count);
+            Log.InfoFormat("Analyzed {0} documents in {1}", primaryKeyValues.Count, analyzedTimer.Elapsed);
 
             if (primaryKeyValues.Count == 0)
             {
@@ -137,6 +142,9 @@ namespace Resin
             {
                 Task.Run(() =>
                 {
+                    var postingsTimer = new Stopwatch();
+                    postingsTimer.Start();
+
                     var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
                     using (var postingsWriter = new PostingsWriter(new FileStream(posFileName, FileMode.Create, FileAccess.Write, FileShare.None)))
                     {
@@ -158,10 +166,20 @@ namespace Resin
                             }
                         }
                     }
+                    Log.InfoFormat("Serialized postings in {0}", postingsTimer.Elapsed);
+
+                    var trieTimer = new Stopwatch();
+                    trieTimer.Start();
+
                     SerializeTries();
+
+                    Log.InfoFormat("Serialized tries in {0}", trieTimer.Elapsed);
                 }),
                 Task.Run(() =>
                 {
+                    var docAdrTimer = new Stopwatch();
+                    docAdrTimer.Start();
+
                     using (var docAddressWriter = new DocumentAddressWriter(new FileStream(Path.Combine(_directory, _indexVersionId + ".da"), FileMode.Create, FileAccess.Write, FileShare.None)))
                     {
                         foreach (var address in docAddresses)
@@ -169,12 +187,19 @@ namespace Resin
                             docAddressWriter.Write(address);
                         }
                     }
+
+                     Log.InfoFormat("Serialized doc addresses in {0}", docAdrTimer.Elapsed);
                 }),
                 Task.Run(() =>
                 {
+                    var docHasTimer = new Stopwatch();
+                    docHasTimer.Start();
+
                     var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pk"));
 
                     primaryKeyValues.Select(h=>new DocHash(h)).Serialize(docHashesFileName);
+
+                    Log.InfoFormat("Serialized doc hashes in {0}", docHasTimer.Elapsed);
                 })
             };
 
