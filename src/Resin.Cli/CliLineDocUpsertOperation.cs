@@ -27,9 +27,9 @@ namespace Resin.Cli
         protected IDictionary<string, string> Parse(string document)
         {
             var parts = document.Split(new[] { '\t' }, System.StringSplitOptions.RemoveEmptyEntries);
+
             return new KeyValuePair<string, string>[] {
                 new KeyValuePair<string, string>("doctitle", parts[0]),
-                //new KeyValuePair<string, string>("docdate", parts[1]),
                 new KeyValuePair<string, string>("body", parts[2]) }.ToDictionary(x => x.Key, x => x.Value);
         }
 

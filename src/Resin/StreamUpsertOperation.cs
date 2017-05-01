@@ -9,8 +9,8 @@ namespace Resin
     {
         protected readonly StreamReader Reader;
 
-        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, string jsonFileName, bool compression, string primaryKey)
-            : this(directory, analyzer, File.Open(jsonFileName, FileMode.Open, FileAccess.Read, FileShare.None), compression, primaryKey)
+        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, string fileName, bool compression, string primaryKey)
+            : this(directory, analyzer, File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None), compression, primaryKey)
         {
         }
 

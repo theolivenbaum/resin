@@ -5,19 +5,19 @@ using Resin.Analysis;
 
 namespace Resin.Cli
 {
-    public class CliUpsertOperation : StreamUpsertOperation
+    public class CliJsonUpsertOperation : StreamUpsertOperation
     {
         private readonly int _take;
         private readonly int _skip;
 
-        public CliUpsertOperation(string directory, IAnalyzer analyzer, string jsonFileName, int skip, int take, bool compression, string primaryKey)
+        public CliJsonUpsertOperation(string directory, IAnalyzer analyzer, string jsonFileName, int skip, int take, bool compression, string primaryKey)
             : base(directory, analyzer, jsonFileName, compression, primaryKey)
         {
             _take = take;
             _skip = skip;
         }
 
-        public CliUpsertOperation(string directory, IAnalyzer analyzer, Stream jsonFile, int skip, int take, bool compression, string primaryKey) 
+        public CliJsonUpsertOperation(string directory, IAnalyzer analyzer, Stream jsonFile, int skip, int take, bool compression, string primaryKey) 
             : base(directory, analyzer, jsonFile, compression, primaryKey)
         {
             _take = take;

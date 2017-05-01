@@ -8,6 +8,7 @@ using log4net.Config;
 using Resin.Analysis;
 using Resin.Querying;
 using Sir.Client;
+using System.Linq;
 
 namespace Resin.Cli
 {
@@ -115,7 +116,7 @@ namespace Resin.Cli
 
                     PrintHeaders(docs[0].Document.Fields.Keys);
 
-                    var highlight = new QueryParser(new Analyzer()).Parse(q).Value;
+                    var highlight = new QueryParser(new Analyzer()).Parse(q).ToList().GroupBy(y => y.Field).ToDictionary(g => g.Key, g => g.First().Value);
 
                     foreach (var doc in docs)
                     {
@@ -160,13 +161,13 @@ namespace Resin.Cli
             Console.WriteLine();
         }
 
-        private static void Print(ScoredDocument doc, string highlight)
+        private static void Print(ScoredDocument doc, IDictionary<string, string> highlight)
         {
             Console.Write(doc.Score.ToString("#.##") + "\t");
 
             foreach(var field in doc.Document.Fields)
             {
-                Print(field.Value, highlight);
+                Print(field.Value, highlight[field.Key]);
             }
             Console.WriteLine();
         }
@@ -180,6 +181,7 @@ namespace Resin.Cli
             {
                 body = body.Substring(ix, body.Length - ix);
             }
+
             Console.Write(body.Substring(0, Math.Min(100, body.Length)) + "\t\t");
         }
 
