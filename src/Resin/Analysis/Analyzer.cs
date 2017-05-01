@@ -40,16 +40,6 @@ namespace Resin.Analysis
                     }
                 }
             }
-            var ws = new List<Word>();
-            foreach (var field in fields.Values)
-            {
-                foreach (var word in field.Words())
-                {
-                    System.Diagnostics.Debug.WriteLine(word);
-                    ws.Add(word);
-                }
-            }
-
             return new AnalyzedDocument(document.Id, fields);
         }
         
