@@ -104,12 +104,14 @@ namespace Resin
                             {
                                 var analyzed = analyzedDocuments.Take();
 
-                                foreach (var word in analyzed.Words)
+                                foreach (var term in analyzed.Words)
                                 {
-                                    var token = word.Key.Word.Value;
+                                    var field = term.Key.Field;
+                                    var token = term.Key.Word.Value;
+                                    var posting = term.Value;
 
-                                    GetTrie(word.Key.Field, token)
-                                        .Add(token, word.Value);
+                                    GetTrie(field, token)
+                                        .Add(token, posting);
                                 }
                             }
                         }

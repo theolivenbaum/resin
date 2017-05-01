@@ -58,12 +58,12 @@ namespace Resin
 
         private void Scan(IEnumerable<QueryContext> queries)
         {
-            //Parallel.ForEach(queries, DoScan);
+            Parallel.ForEach(queries, DoScan);
 
-            foreach (var q in queries)
-            {
-                DoScan(q);
-            }
+            //foreach (var q in queries)
+            //{
+            //    DoScan(q);
+            //}
         }
 
         private void DoScan(QueryContext query)
@@ -185,7 +185,7 @@ namespace Resin
         private ITrieReader GetTreeReader(string field, string token)
         {
             var suffix = token.ToTokenBasedBucket();
-            var fileId = field.ToHash().ToString(CultureInfo.InvariantCulture);
+            var fileId = field.ToHash();
             var fileName = Path.Combine(_directory, string.Format("{0}-{1}-{2}.tri", 
                 _ix.VersionId, fileId, suffix));
 

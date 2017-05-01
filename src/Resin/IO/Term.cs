@@ -18,9 +18,6 @@ namespace Resin.IO
 
         public int CompareTo(Term other)
         {
-            //if (other.Field == Field && other.Word == Word) return 0;
-            //if (other.Field == Field && other.Word != Word) return 1;
-            //return -1;
             return String.Compare(other.ToString(), ToString(), StringComparison.Ordinal);
         }
 
@@ -33,7 +30,7 @@ namespace Resin.IO
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return string.Equals(Field, other.Field) && Word.Equals(other.Word);
+            return string.Equals(other.ToString(), ToString());
         }
 
         public override bool Equals(object obj)
@@ -48,7 +45,7 @@ namespace Resin.IO
         {
             unchecked
             {
-                return ((Field != null ? Field.GetHashCode() : 0)*397) ^ Word.GetHashCode();
+                return (Field.GetHashCode()*397) ^ Word.GetHashCode();
             }
         }
 

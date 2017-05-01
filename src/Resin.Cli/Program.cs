@@ -115,9 +115,11 @@ namespace Resin.Cli
 
                     PrintHeaders(docs[0].Document.Fields.Keys);
 
+                    var highlight = new QueryParser(new Analyzer()).Parse(q).Value;
+
                     foreach (var doc in docs)
                     {
-                        Print(doc);
+                        Print(doc, highlight);
                     }
 
                     Console.WriteLine("\r\n{0}-{1} results of {2} in {3}", page * size, docs.Count + (page * size), result.Total, timer.Elapsed);  
@@ -158,14 +160,27 @@ namespace Resin.Cli
             Console.WriteLine();
         }
 
-        private static void Print(ScoredDocument doc)
+        private static void Print(ScoredDocument doc, string highlight)
         {
-            Console.Write(doc.Score.ToString() + "\t");
+            Console.Write(doc.Score.ToString("#.##") + "\t");
+
             foreach(var field in doc.Document.Fields)
             {
-                Console.Write(field.Value.ToString(CultureInfo.InvariantCulture).Substring(0, Math.Min(100, field.Value.Length)) + "\t");
+                Print(field.Value, highlight);
             }
             Console.WriteLine();
+        }
+
+        private static void Print(string value, string highlight)
+        {
+            var body = value;
+            var ix = body.IndexOf(highlight, StringComparison.InvariantCultureIgnoreCase);
+
+            if (ix > 0)
+            {
+                body = body.Substring(ix, body.Length - ix);
+            }
+            Console.Write(body.Substring(0, Math.Min(100, body.Length)) + "\t\t");
         }
 
         static void Write(string[] args)
