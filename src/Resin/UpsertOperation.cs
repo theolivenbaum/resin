@@ -287,8 +287,6 @@ namespace Resin
             trie.Serialize(fileName);
         }
 
-        private readonly object _sync = new object();
-
         private LcrsTrie GetTrie(string field, string token)
         {
             var key = string.Format("{0}-{1}", field.ToHash(), token.ToTokenBasedBucket());
@@ -296,14 +294,8 @@ namespace Resin
 
             if (!_tries.TryGetValue(key, out trie))
             {
-                lock (_sync)
-                {
-                    if (!_tries.TryGetValue(key, out trie))
-                    {
-                        trie = new LcrsTrie();
-                        _tries[key] = trie;
-                    }
-                }
+                trie = new LcrsTrie();
+                _tries[key] = trie;
             }
 
             return trie;
