@@ -198,7 +198,7 @@ namespace Resin.Cli
             if (inproc)
             {
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                using (var writer = new CliLineDocUpsertOperation(dir, new Analyzer(), fileName, skip, take, compress, "_id"))
+                using (var writer = new CliLineDocUpsertOperation(dir, new Analyzer(), fileName, skip, take, compress, null))
                 {
                     writer.Commit();
                 }

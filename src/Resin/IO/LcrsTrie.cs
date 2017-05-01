@@ -86,17 +86,17 @@ namespace Resin.IO
             }
         }
 
-        public void Add(string path)
+        public void Add(string word)
         {
-            Add(path,new DocumentPosting(-1, 1));
+            Add(word,new DocumentPosting(-1, 1));
         }
 
-        public void Add(string path, params DocumentPosting[] postings)
+        public void Add(string word, params DocumentPosting[] postings)
         {
-            if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("word");
+            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 
-            var key = path[0];
-            var eow = path.Length == 1;
+            var key = word[0];
+            var eow = word.Length == 1;
 
             LcrsTrie node;
             if (!TryGetChild(key, out node))
@@ -155,7 +155,7 @@ namespace Resin.IO
             }
             else
             {
-                node.Add(path.Substring(1), postings);
+                node.Add(word.Substring(1), postings);
             }
         }
 

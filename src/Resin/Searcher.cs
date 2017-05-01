@@ -26,6 +26,11 @@ namespace Resin
         private readonly int _blockSize;
         private readonly int _documentCount;
 
+        public Searcher(string directory, bool compression = false)
+            :this(directory, new QueryParser(new Analyzer()), new Tfidf(), compression)
+        {
+        }
+
         public Searcher(string directory, QueryParser parser, IScoringScheme scorerFactory, bool compression = false)
         {
             _directory = directory;
@@ -40,7 +45,7 @@ namespace Resin
             _blockSize = Serializer.SizeOfBlock();
         }
 
-        public Result Search(string query, int page = 0, int size = 10000, bool returnTrace = false)
+        public Result Search(string query, int page = 0, int size = 10000)
         {
             var searchTime = new Stopwatch();
             searchTime.Start();

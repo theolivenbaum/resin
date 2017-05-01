@@ -26,6 +26,7 @@ namespace Resin
         private readonly Dictionary<string, LcrsTrie> _tries;
         
         private int _docId;
+        private readonly bool _autoGeneratePk;
 
         protected UpsertOperation(string directory, IAnalyzer analyzer, bool compression, string primaryKey)
         {
@@ -36,6 +37,7 @@ namespace Resin
             _tries = new Dictionary<string, LcrsTrie>();
             _docId = 0;
             _primaryKey = primaryKey;
+            _autoGeneratePk = string.IsNullOrWhiteSpace(_primaryKey);
         }
 
         public long Commit()
@@ -58,22 +60,22 @@ namespace Resin
                     {
                         foreach (var doc in ReadSource())
                         {
-                            UInt64 hash;
                             string pkVal;
 
-                            if (doc.Fields.ContainsKey(_primaryKey))
+                            if (_autoGeneratePk)
                             {
-                                pkVal = doc.Fields[_primaryKey];
-                                hash = pkVal.ToHash();
+                                pkVal = Guid.NewGuid().ToString();
                             }
                             else
                             {
-                                pkVal = Guid.NewGuid().ToString();
-                                hash = pkVal.ToHash();
+                                pkVal = doc.Fields[_primaryKey];
                             }
+
+                            var hash = pkVal.ToHash();
+
                             if (pks.ContainsKey(hash))
                             {
-                                Log.InfoFormat("Found multiple occurrences of document with {0}:{1}. Only first occurrence will be stored.",
+                                Log.InfoFormat("Found multiple occurrences of documents with {0}:{1}. Only first occurrence will be stored.",
                                     _primaryKey, pkVal);
                             }
                             else
