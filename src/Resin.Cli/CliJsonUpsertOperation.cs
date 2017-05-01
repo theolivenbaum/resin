@@ -2,6 +2,7 @@
 using System.IO;
 using Newtonsoft.Json;
 using Resin.Analysis;
+using System;
 
 namespace Resin.Cli
 {
@@ -31,6 +32,8 @@ namespace Resin.Cli
 
         protected override IEnumerable<Document> ReadSource()
         {
+            var cursorPos = Console.CursorLeft;
+
             Reader.ReadLine(); // first row is "["
 
             int skipped = 0;
@@ -53,6 +56,9 @@ namespace Resin.Cli
                 var dic = Parse(json);
 
                 yield return new Document(dic);
+
+                Console.SetCursorPosition(cursorPos, Console.CursorTop);
+                Console.Write(took);
             }
         }
     }
