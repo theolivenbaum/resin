@@ -58,135 +58,113 @@ namespace Resin
         public long Commit()
         {
             var docAddresses = new List<BlockInfo>();
-            var primaryKeyValues = new List<UInt64>();
             var pks = new Dictionary<UInt64, object>();
+            var ts = new ConcurrentBag<Task>();
 
             using (var words = new BlockingCollection<WordInfo>())
+            using (var documents = new BlockingCollection<Document>())
             {
-                using (Task wordProducer = Task.Factory.StartNew(() =>
+                ts.Add(Task.Run(() =>
                 {
                     var docWriterTimer = new Stopwatch();
                     docWriterTimer.Start();
 
-                    using (var documents = new BlockingCollection<Document>())
+                    var docFileName = Path.Combine(_directory, _indexVersionId + ".doc");
+
+                    using (var docWriter = new DocumentWriter(new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None), _compression))
                     {
-                        using (Task documentProducer = Task.Factory.StartNew(() =>
+                        foreach (var doc in ReadSource())
                         {
-                            var docFileName = Path.Combine(_directory, _indexVersionId + ".doc");
+                            string pkVal;
 
-                            using (var docWriter = new DocumentWriter(new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None), _compression))
+                            if (_autoGeneratePk)
                             {
-                                foreach (var doc in ReadSource())
-                                {
-                                    string pkVal;
-
-                                    if (_autoGeneratePk)
-                                    {
-                                        pkVal = Guid.NewGuid().ToString();
-                                    }
-                                    else
-                                    {
-                                        pkVal = doc.Fields[_primaryKey];
-                                    }
-
-                                    var hash = pkVal.ToHash();
-
-                                    if (pks.ContainsKey(hash))
-                                    {
-                                        Log.InfoFormat("Found multiple occurrences of documents with {0}:{1}. Only first occurrence will be stored.",
-                                            _primaryKey, pkVal);
-                                    }
-                                    else
-                                    {
-                                        documents.Add(doc);
-
-                                        primaryKeyValues.Add(hash);
-
-                                        doc.Id = _docId++;
-
-                                        var adr = docWriter.Write(doc);
-
-                                        docAddresses.Add(adr);
-                                    }
-                                }
+                                pkVal = Guid.NewGuid().ToString();
                             }
-                            documents.CompleteAdding();
-                            Log.InfoFormat("Serialized {0} documents in {1}", primaryKeyValues.Count, docWriterTimer.Elapsed);
-
-                        }))
-                        {
-                            var analyzedTimer = new Stopwatch();
-
-                            using (Task documentConsumer = Task.Factory.StartNew(() =>
+                            else
                             {
-                                try
-                                {
-                                    analyzedTimer.Start();
+                                pkVal = doc.Fields[_primaryKey];
+                            }
 
-                                    while (true)
-                                    {
-                                        var doc = documents.Take();
-                                        var analyzed = _analyzer.AnalyzeDocument(doc);
+                            var hash = pkVal.ToHash();
 
-                                        foreach (var term in analyzed.Words)
-                                        {
-                                            var field = term.Key.Field;
-                                            var token = term.Key.Word.Value;
-                                            var posting = term.Value;
+                            if (pks.ContainsKey(hash))
+                            {
+                                Log.WarnFormat("Found multiple occurrences of documents with {0}:{1}. Only first occurrence will be stored.",
+                                    _primaryKey, pkVal);
+                            }
+                            else
+                            {
+                                documents.Add(doc);
 
-                                            words.Add(new WordInfo(field, token, posting));
-                                        }
-                                    }
-                                }
-                                catch (InvalidOperationException)
-                                {
-                                    // Done
-                                }
-                            }))
+                                pks.Add(hash, null);
 
-                            Task.WaitAll(documentProducer, documentConsumer);
-                            Log.InfoFormat("Analyzed {0} documents in {1}", primaryKeyValues.Count, analyzedTimer.Elapsed);
+                                doc.Id = _docId++;
+
+                                var adr = docWriter.Write(doc);
+
+                                docAddresses.Add(adr);
+                            }
                         }
                     }
+                    documents.CompleteAdding();
+                    Log.InfoFormat("Serialized {0} documents in {1}", pks.Count, docWriterTimer.Elapsed);
 
+                }));
 
+                ts.Add(Task.Run(() =>
+                {
+                    var analyzeTimer = new Stopwatch();
+                    analyzeTimer.Start();
 
+                    try
+                    {
+                        while (true)
+                        {
+                            var doc = documents.Take();
+                            var analyzed = _analyzer.AnalyzeDocument(doc);
 
+                            foreach (var term in analyzed.Words)
+                            {
+                                var field = term.Key.Field;
+                                var token = term.Key.Word.Value;
+                                var posting = term.Value;
 
-
-
-
-
-
-
-
+                                words.Add(new WordInfo(field, token, posting));
+                            }
+                        }
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Done
+                    }
+                    Log.InfoFormat("Analyzed {0} documents in {1}", pks.Count, analyzeTimer.Elapsed);
                     words.CompleteAdding();
-                }))
+
+                }));
+
+                ts.Add(Task.Run(() =>
                 {
                     var trieTimer = new Stopwatch();
                     trieTimer.Start();
 
-                    using (Task wordConsumer = Task.Factory.StartNew(() =>
+                    try
                     {
-                        try
+                        while (true)
                         {
+                            var word = words.Take();
 
-                            while (true)
-                            {
-                                var word = words.Take();
-
-                                GetTrie(word.Field, word.Token)
-                                    .Add(word.Token, word.Posting);
-                            }
+                            GetTrie(word.Field, word.Token)
+                                .Add(word.Token, word.Posting);
                         }
-                        catch (InvalidOperationException)
-                        {
-                            // Done
-                        }
-                    }))
-                    Task.WaitAll(wordProducer, wordConsumer);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Done
+                    }
                     Log.InfoFormat("Built tries in {0}", trieTimer.Elapsed);
-                }
+                }));
+                Task.WaitAll(ts.ToArray());
             }
 
             
@@ -194,7 +172,7 @@ namespace Resin
 
 
 
-            if (primaryKeyValues.Count == 0)
+            if (pks.Count == 0)
             {
                 Log.Info("Aborted write (source is empty).");
 
@@ -260,7 +238,7 @@ namespace Resin
 
                     var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pk"));
 
-                    primaryKeyValues.Select(h=>new DocHash(h)).Serialize(docHashesFileName);
+                    pks.Keys.Select(h=>new DocHash(h)).Serialize(docHashesFileName);
 
                     Log.InfoFormat("Serialized doc hashes in {0}", docHasTimer.Elapsed);
                 })
