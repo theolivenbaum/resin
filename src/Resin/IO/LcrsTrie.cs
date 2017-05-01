@@ -251,14 +251,13 @@ namespace Resin.IO
             var compressed = new List<Word>();
             if (LeftChild != null)
             {
-                LeftChild.WithinEditDistanceDepthFirst(word, new string(new char[word.Length]), compressed, 0, maxEdits);
+                LeftChild.WithinEditDistanceDepthFirst(word, string.Empty, compressed, 0, maxEdits);
             }
             return compressed;
         }
 
         private void WithinEditDistanceDepthFirst(string word, string state, List<Word> compressed, int depth, int maxEdits)
         {
-            var childIndex = depth + 1;
             string test;
 
             if (depth == state.Length)
@@ -267,7 +266,7 @@ namespace Resin.IO
             }
             else
             {
-                test = new string(state.ReplaceOrAppend(depth, Value).Where(c => c != Char.MinValue).ToArray());
+                test = new string(state.ReplaceOrAppend(depth, Value).ToArray());
             }
 
             var edits = Levenshtein.Distance(word, test);
@@ -284,7 +283,7 @@ namespace Resin.IO
             {
                 if (LeftChild != null)
                 {
-                    LeftChild.WithinEditDistanceDepthFirst(word, test, compressed, childIndex, maxEdits);
+                    LeftChild.WithinEditDistanceDepthFirst(word, test, compressed, depth+1, maxEdits);
                 }
 
                 if (RightSibling != null)
