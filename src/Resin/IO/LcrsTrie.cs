@@ -305,7 +305,9 @@ namespace Resin.IO
 
             if (EndOfWord)
             {
-                compressed.Add(new Word(traveled + new string(state.ToArray()), WordCount, PostingsAddress, Postings));
+                var value = traveled + new string(state.ToArray());
+                var word = new Word(value, WordCount, PostingsAddress, Postings);
+                compressed.Add(word);
             }
 
             if (LeftChild != null)
