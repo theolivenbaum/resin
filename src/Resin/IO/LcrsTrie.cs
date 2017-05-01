@@ -224,7 +224,7 @@ namespace Resin.IO
                 {
                     throw new InvalidOperationException("WordCount");
                 }
-                found = new Word(word, 1, node.PostingsAddress, node.Postings);
+                found = new Word(word, node.WordCount, node.PostingsAddress, node.Postings);
                 return node.EndOfWord;
             }
             found = Word.MinValue;
@@ -276,7 +276,7 @@ namespace Resin.IO
             {
                 if (EndOfWord)
                 {
-                    compressed.Add(new Word(test, 1, PostingsAddress, Postings));
+                    compressed.Add(new Word(test, WordCount, PostingsAddress, Postings));
                 }
             }
 
@@ -305,7 +305,7 @@ namespace Resin.IO
 
             if (EndOfWord)
             {
-                compressed.Add(new Word(traveled + new string(state.ToArray()), 1, PostingsAddress, Postings));
+                compressed.Add(new Word(traveled + new string(state.ToArray()), WordCount, PostingsAddress, Postings));
             }
 
             if (LeftChild != null)

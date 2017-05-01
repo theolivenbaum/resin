@@ -107,8 +107,8 @@ namespace Resin
                                     var words = field.Value.Words();
                                     foreach (var word in words)
                                     {
-                                        var posting = new DocumentPosting(analyzed.Id, word.Count);
-                                        GetTrie(field.Key, word.Value).Add(word.Value, posting);
+                                        GetTrie(field.Key, word.Value)
+                                        .Add(word.Value, word.Postings.ToArray());
                                     }
                                 }
                             }

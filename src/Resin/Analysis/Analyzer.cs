@@ -30,13 +30,13 @@ namespace Resin.Analysis
 
                 if (field.Key.StartsWith("_"))
                 {
-                    trie.Add(field.Value);
+                    trie.Add(field.Value, new DocumentPosting(document.Id, 1));
                 }
                 else
                 {
-                    foreach (var token in Analyze(field.Value))
+                    foreach (var tokenGroup in Analyze(field.Value).GroupBy(token=>token))
                     {
-                        trie.Add(token);
+                        trie.Add(tokenGroup.Key, new DocumentPosting(document.Id, tokenGroup.Count()));
                     }
                 }
             }
