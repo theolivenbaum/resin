@@ -19,7 +19,7 @@ namespace Tests
             two.Add("apple");
             two.Add("banana");
 
-            one.Append(two);
+            one.Merge(two);
 
             Word found;
             Assert.IsTrue(one.HasWord("ape", out found));

@@ -39,7 +39,7 @@ namespace Resin.IO
             if (EndOfWord) WordCount++;
         }
 
-        public void Append(LcrsTrie other)
+        public void Merge(LcrsTrie other)
         {
             var words = new List<Word>();
 
