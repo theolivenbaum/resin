@@ -109,7 +109,7 @@ namespace Resin
                                 var doc = documents.Take();
                                 var analyzed = _analyzer.AnalyzeDocument(doc);
 
-                                foreach (var term in analyzed.Words)
+                                foreach(var term in analyzed.Words)
                                 {
                                     var field = term.Key.Field;
                                     var token = term.Key.Word.Value;
@@ -220,8 +220,11 @@ namespace Resin
             var key = trieEntry.Item1;
             var trie = trieEntry.Item2;
             var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", _indexVersionId, key));
+
             trie.Serialize(fileName);
         }
+
+        private readonly object _sync = new object();
 
         private LcrsTrie GetTrie(string field, string token)
         {
@@ -230,9 +233,16 @@ namespace Resin
 
             if (!_tries.TryGetValue(key, out trie))
             {
-                trie = new LcrsTrie();
-                _tries[key] = trie;
+                lock (_sync)
+                {
+                    if (!_tries.TryGetValue(key, out trie))
+                    {
+                        trie = new LcrsTrie();
+                        _tries[key] = trie;
+                    }
+                }
             }
+
             return trie;
         }
 

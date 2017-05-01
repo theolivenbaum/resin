@@ -25,11 +25,10 @@ namespace Resin.Analysis
 
             foreach(var field in document.Fields)
             {
-                DocumentPosting posting;
-
                 if (field.Key.StartsWith("_"))
                 {
                     var term = new Term(field.Key, new Word(field.Value));
+                    DocumentPosting posting;
 
                     if (words.TryGetValue(term, out posting))
                     {
@@ -42,9 +41,10 @@ namespace Resin.Analysis
                 }
                 else
                 {
-                    foreach (var tokenGroup in Analyze(field.Value).GroupBy(token=>token))
+                    foreach (var tokenGroup in Analyze(field.Value).GroupBy(token => token))
                     {
                         var term = new Term(field.Key, new Word(tokenGroup.Key));
+                        DocumentPosting posting;
 
                         if (words.TryGetValue(term, out posting))
                         {
