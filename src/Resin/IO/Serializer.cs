@@ -183,6 +183,7 @@ namespace Resin.IO
 
                 stream.Write(versionBytes, 0, sizeof(long));
                 stream.Write(docCountBytes, 0, sizeof(int));
+                stream.WriteByte(EncodedBoolean[ix.Compressed]);
 
                 return stream.ToArray();
             }
@@ -198,6 +199,8 @@ namespace Resin.IO
 
             stream.Read(docCountBytes, 0, sizeof(int));
 
+            var compressed = stream.ReadByte();
+
             if (!BitConverter.IsLittleEndian)
             {
                 Array.Reverse(versionBytes);
@@ -207,7 +210,8 @@ namespace Resin.IO
             return new IxInfo
             {
                 VersionId= BitConverter.ToInt64(versionBytes, 0),
-                DocumentCount = BitConverter.ToInt32(docCountBytes, 0)
+                DocumentCount = BitConverter.ToInt32(docCountBytes, 0),
+                Compressed = compressed==1
             };
         }
 
@@ -419,7 +423,7 @@ namespace Resin.IO
             }
         }
 
-        public static Document DeserializeDocument(byte[] data, bool wasCompressed)
+        public static Document DeserializeDocument(byte[] data, bool deflate)
         {
             var idBytes = new byte[sizeof(int)];
             Array.Copy(data, 0, idBytes, 0, sizeof(int));
@@ -434,7 +438,7 @@ namespace Resin.IO
             }
 
             var id = BitConverter.ToInt32(idBytes, 0);
-            var dic = DeserializeStringStringDic(dicBytes, wasCompressed).ToDictionary(x=>x.Key, y=>y.Value);
+            var dic = DeserializeStringStringDic(dicBytes, deflate).ToDictionary(x=>x.Key, y=>y.Value);
 
             return new Document(dic) {Id = id};
         }
@@ -536,15 +540,15 @@ namespace Resin.IO
             }
         }
 
-        public static IEnumerable<KeyValuePair<string, string>> DeserializeStringStringDic(byte[] data, bool wasCompressed)
+        public static IEnumerable<KeyValuePair<string, string>> DeserializeStringStringDic(byte[] data, bool deflate)
         {
             using (var stream = new MemoryStream(data))
             {
-                return DeserializeStringStringDic(stream, wasCompressed).ToList();
+                return DeserializeStringStringDic(stream, deflate).ToList();
             }
         }
 
-        public static IEnumerable<KeyValuePair<string, string>> DeserializeStringStringDic(Stream stream, bool wasCompressed)
+        public static IEnumerable<KeyValuePair<string, string>> DeserializeStringStringDic(Stream stream, bool deflate)
         {
             while (true)
             {
@@ -592,7 +596,7 @@ namespace Resin.IO
                     Array.Reverse(valBytes);
                 }
 
-                string value = wasCompressed ? Compressor.DecompressText(valBytes) : Encoding.GetString(valBytes);
+                string value = deflate ? Compressor.DecompressText(valBytes) : Encoding.GetString(valBytes);
 
                 yield return new KeyValuePair<string, string>(key, value);
             }

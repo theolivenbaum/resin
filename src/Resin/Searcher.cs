@@ -21,22 +21,20 @@ namespace Resin
         private readonly string _directory;
         private readonly QueryParser _parser;
         private readonly IScoringScheme _scorerFactory;
-        private readonly bool _compression;
         private readonly IList<IxInfo> _ixs;
         private readonly int _blockSize;
         private readonly int _documentCount;
 
-        public Searcher(string directory, bool compression = false)
-            :this(directory, new QueryParser(new Analyzer()), new Tfidf(), compression)
+        public Searcher(string directory)
+            :this(directory, new QueryParser(new Analyzer()), new Tfidf())
         {
         }
 
-        public Searcher(string directory, QueryParser parser, IScoringScheme scorerFactory, bool compression = false)
+        public Searcher(string directory, QueryParser parser, IScoringScheme scorerFactory)
         {
             _directory = directory;
             _parser = parser;
             _scorerFactory = scorerFactory;
-            _compression = compression;
 
             _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
 
@@ -123,7 +121,9 @@ namespace Resin
 
             var docFileName = Path.Combine(_directory, ix.VersionId + ".doc");
 
-            using (var docReader = new DocumentReader(new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096*4, FileOptions.SequentialScan), _compression))
+            using (var docReader = new DocumentReader(
+                new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096*4, FileOptions.SequentialScan),
+                ix.Compressed))
             {
                 var dic = scores.ToDictionary(x => x.DocumentId, y => y.Score);
 

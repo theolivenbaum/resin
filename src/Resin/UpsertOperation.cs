@@ -284,7 +284,8 @@ namespace Resin
             return new IxInfo
             {
                 VersionId = _indexVersionId,
-                DocumentCount = _docId
+                DocumentCount = _docId,
+                Compressed = _compression
             };
         }
     }

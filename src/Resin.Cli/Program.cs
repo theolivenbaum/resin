@@ -84,9 +84,7 @@ namespace Resin.Cli
         {
             string dir = null;
             string indexName = null;
-            bool deflate = false;
 
-            if (Array.IndexOf(args, "--deflate") > 0) deflate = true;
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
             if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
 
@@ -106,7 +104,7 @@ namespace Resin.Cli
             {
                 var timer = new Stopwatch();
                 timer.Start();
-                using (var s = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf(), deflate))
+                using (var s = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf()))
                 {
                     result = s.Search(q, page, size);
 

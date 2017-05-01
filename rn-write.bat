@@ -1,7 +1,10 @@
-call rn write --file c:\temp\10Mwikipedia.json --dir d:\resin\wikipedia --skip 0 --take 1000000
-call rn write --file c:\temp\10Mwikipedia.json --dir d:\resin\wikipedia --skip 1000000 --take 1000000
-call rn write --file c:\temp\10Mwikipedia.json --dir d:\resin\wikipedia --skip 2000000 --take 1000000
-call rn write --file c:\temp\10Mwikipedia.json --dir d:\resin\wikipedia --skip 3000000 --take 1000000
-call rn write --file c:\temp\10Mwikipedia.json --dir d:\resin\wikipedia --skip 4000000 --take 1000000
-call rn write --file c:\temp\10Mwikipedia.json --dir d:\resin\wikipedia --skip 5000000 --take 1000000
-call rn write --file c:\temp\10Mwikipedia.json --dir d:\resin\wikipedia --skip 6000000 --take 1000000
+rem call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --take 100000 --compress
+call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 100000 --take 100000 --compress
+call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 200000 --take 100000 --compress
+call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 300000 --take 100000 --compress
+call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 400000 --take 100000 --compress
+call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 500000 --take 100000 --compress
+call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 600000 --take 100000 --compress
+call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 700000 --take 100000 --compress
+call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 800000 --take 100000 --compress
+call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 900000 --take 100000 --compress
