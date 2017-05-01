@@ -15,7 +15,7 @@ namespace Resin.Analysis
         public Analyzer(CultureInfo culture = null, char[] tokenSeparators = null, string[] stopwords = null)
         {
             _culture = culture ?? Thread.CurrentThread.CurrentUICulture;
-            _customTokenSeparators = new HashSet<char>(tokenSeparators ?? new char[0]);
+            _customTokenSeparators = tokenSeparators == null ? null : new HashSet<char>(tokenSeparators);
             _stopwords = new HashSet<string>(stopwords ?? new string[0]);
         }
 
@@ -69,6 +69,8 @@ namespace Resin.Analysis
 
         protected virtual bool IsNoice(char c)
         {
+            if (_customTokenSeparators == null) return !char.IsLetterOrDigit(c);
+
             if (char.IsLetterOrDigit(c)) return _customTokenSeparators.Contains(c);
 
             return true;
