@@ -19,7 +19,7 @@ namespace Resin.Analysis
             _stopwords = new HashSet<string>(stopwords ?? new string[0]);
         }
 
-        public AnalyzedDocument AnalyzeDocument(Document document)
+        public virtual AnalyzedDocument AnalyzeDocument(Document document)
         {
             var fields = new Dictionary<string, LcrsTrie>();
 
@@ -43,7 +43,7 @@ namespace Resin.Analysis
             return new AnalyzedDocument(document.Id, fields);
         }
         
-        public IEnumerable<string> Analyze(string value)
+        public virtual IEnumerable<string> Analyze(string value)
         {
             var normalized = value.ToLower(_culture);
 
@@ -67,7 +67,7 @@ namespace Resin.Analysis
                 .Except(_stopwords);
         }
 
-        private bool IsNoice(char c)
+        protected virtual bool IsNoice(char c)
         {
             if (char.IsLetterOrDigit(c)) return _customTokenSeparators.Contains(c);
 
