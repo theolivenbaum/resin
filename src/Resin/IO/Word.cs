@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Resin.IO
 {
-    [System.Diagnostics.DebuggerDisplay("{ToString()}")]
+    [System.Diagnostics.DebuggerDisplay("{Value} {Count}")]
     public struct Word
     {
         public readonly string Value;
@@ -22,7 +22,12 @@ namespace Resin.IO
 
         public override string ToString()
         {
-            return string.Format("{0}:{1}", Value, Count);
+            return Value;
+        }
+
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
         }
     }
 }

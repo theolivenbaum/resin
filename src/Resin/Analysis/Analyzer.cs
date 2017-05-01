@@ -21,26 +21,43 @@ namespace Resin.Analysis
 
         public virtual AnalyzedDocument AnalyzeDocument(Document document)
         {
-            var fields = new Dictionary<string, LcrsTrie>();
+            var words = new Dictionary<Term, DocumentPosting>();
 
             foreach(var field in document.Fields)
             {
-                var trie = new LcrsTrie();
-                fields.Add(field.Key, trie);
+                DocumentPosting posting;
 
                 if (field.Key.StartsWith("_"))
                 {
-                    trie.Add(field.Value, new DocumentPosting(document.Id, 1));
+                    var term = new Term(field.Key, new Word(field.Value));
+
+                    if (words.TryGetValue(term, out posting))
+                    {
+                        posting.Count++;
+                    }
+                    else
+                    {
+                        words.Add(term, new DocumentPosting(document.Id, 1));
+                    }
                 }
                 else
                 {
                     foreach (var tokenGroup in Analyze(field.Value).GroupBy(token=>token))
                     {
-                        trie.Add(tokenGroup.Key, new DocumentPosting(document.Id, tokenGroup.Count()));
+                        var term = new Term(field.Key, new Word(tokenGroup.Key));
+
+                        if (words.TryGetValue(term, out posting))
+                        {
+                            posting.Count += tokenGroup.Count();
+                        }
+                        else
+                        {
+                            words.Add(term, new DocumentPosting(document.Id, tokenGroup.Count()));
+                        }
                     }
                 }
             }
-            return new AnalyzedDocument(document.Id, fields);
+            return new AnalyzedDocument(document.Id, words);
         }
         
         public virtual IEnumerable<string> Analyze(string value)

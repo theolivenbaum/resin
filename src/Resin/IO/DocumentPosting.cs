@@ -4,10 +4,10 @@ using System.Linq;
 
 namespace Resin.IO
 {
-    public struct DocumentPosting
+    public class DocumentPosting
     {
-        public readonly int DocumentId;
-        public readonly int Count;
+        public int DocumentId { get; private set; }
+        public int Count { get; set; }
 
         public DocumentPosting(int documentId, int count)
         {
@@ -21,7 +21,9 @@ namespace Resin.IO
         {
             if (other.DocumentId != DocumentId) throw new ArgumentException();
 
-            return new DocumentPosting(DocumentId, Count + other.Count);
+            Count += other.Count;
+
+            return this;
         }
 
         public static IEnumerable<DocumentPosting> Join(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)

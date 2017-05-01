@@ -5,16 +5,16 @@ namespace Resin.Analysis
 {
     public class AnalyzedDocument
     {
-        private readonly IDictionary<string, LcrsTrie> _fields;
+        private readonly IDictionary<Term, DocumentPosting> _words;
 
-        public IDictionary<string, LcrsTrie> Fields { get { return _fields; } }
+        public IDictionary<Term, DocumentPosting> Words { get { return _words; } }
 
         public int Id { get; private set; }
 
-        public AnalyzedDocument(int id, IDictionary<string, LcrsTrie> fields)
+        public AnalyzedDocument(int id, IDictionary<Term, DocumentPosting> words)
         {
             Id = id;
-            _fields = fields;
+            _words = words;
         }
     }
 }

@@ -163,7 +163,7 @@ namespace Resin.Cli
             Console.Write(doc.Score.ToString() + "\t");
             foreach(var field in doc.Document.Fields)
             {
-                Console.Write(field.Value.ToString(CultureInfo.InvariantCulture).Substring(0, Math.Min(55, field.Value.Length)) + "\t");
+                Console.Write(field.Value.ToString(CultureInfo.InvariantCulture).Substring(0, Math.Min(100, field.Value.Length)) + "\t");
             }
             Console.WriteLine();
         }

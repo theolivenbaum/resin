@@ -184,9 +184,10 @@ namespace Resin
 
         private ITrieReader GetTreeReader(string field, string token)
         {
-            var suffix = token.ToTrieBucketName();
+            var suffix = token.ToTokenBasedBucket();
             var fileId = field.ToHash().ToString(CultureInfo.InvariantCulture);
-            var fileName = Path.Combine(_directory, string.Format("{0}-{1}-{2}.tri", _ix.VersionId, fileId, suffix));
+            var fileName = Path.Combine(_directory, string.Format("{0}-{1}-{2}.tri", 
+                _ix.VersionId, fileId, suffix));
 
             if (!File.Exists(fileName)) return null;
 

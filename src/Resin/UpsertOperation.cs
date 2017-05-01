@@ -102,14 +102,12 @@ namespace Resin
                             {
                                 var analyzed = analyzedDocuments.Take();
 
-                                foreach (var field in analyzed.Fields)
+                                foreach (var word in analyzed.Words)
                                 {
-                                    var words = field.Value.Words();
-                                    foreach (var word in words)
-                                    {
-                                        GetTrie(field.Key, word.Value)
-                                        .Add(word.Value, word.Postings.ToArray());
-                                    }
+                                    var token = word.Key.Word.Value;
+
+                                    GetTrie(word.Key.Field, token)
+                                        .Add(token, word.Value);
                                 }
                             }
                         }
@@ -198,7 +196,7 @@ namespace Resin
 
         private LcrsTrie GetTrie(string field, string token)
         {
-            var key = string.Format("{0}-{1}", field.ToHash(), token.ToTrieBucketName());
+            var key = string.Format("{0}-{1}", field.ToHash(), token.ToTokenBasedBucket());
             LcrsTrie trie;
 
             if (!_tries.TryGetValue(key, out trie))
