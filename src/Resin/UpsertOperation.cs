@@ -59,7 +59,7 @@ namespace Resin
         {
             var docAddresses = new List<BlockInfo>();
             var pks = new Dictionary<UInt64, object>();
-            var ts = new ConcurrentBag<Task>();
+            var ts = new List<Task>();
 
             using (var words = new BlockingCollection<WordInfo>())
             using (var documents = new BlockingCollection<Document>())
