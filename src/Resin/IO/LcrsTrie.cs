@@ -13,7 +13,7 @@ namespace Resin.IO
         public LcrsTrie LeftChild { get; set; }
         public BlockInfo PostingsAddress { get; set; }
         public List<DocumentPosting> Postings { get; set; }
- 
+        public int WordCount { get; private set; }
         public char Value { get; private set; }
         public bool EndOfWord { get; private set; }
 
@@ -35,6 +35,8 @@ namespace Resin.IO
         {
             Value = value;
             EndOfWord = endOfWord;
+
+            if (EndOfWord) WordCount++;
         }
 
         public void Append(LcrsTrie other)
@@ -134,12 +136,10 @@ namespace Resin.IO
                     }
                 }
             }
-            else
+            else if (eow)
             {
-                if (!node.EndOfWord)
-                {
-                    node.EndOfWord = eow;
-                }
+                node.EndOfWord = true;
+                node.WordCount++;
             }
 
             if (eow)
@@ -148,8 +148,10 @@ namespace Resin.IO
                 {
                     node.Postings = new List<DocumentPosting>();
                 }
-                foreach(var posting in postings)
+                foreach (var posting in postings)
+                {
                     node.Postings.Add(posting);
+                }
             }
             else
             {
@@ -218,7 +220,11 @@ namespace Resin.IO
             LcrsTrie node;
             if (TryFindPath(word, out node))
             {
-                found = new Word(word, node.PostingsAddress, node.Postings);
+                if (node.WordCount == 0)
+                {
+                    throw new InvalidOperationException("WordCount");
+                }
+                found = new Word(word, 1, node.PostingsAddress, node.Postings);
                 return node.EndOfWord;
             }
             found = Word.MinValue;
@@ -270,7 +276,7 @@ namespace Resin.IO
             {
                 if (EndOfWord)
                 {
-                    compressed.Add(new Word(test, PostingsAddress, Postings));
+                    compressed.Add(new Word(test, 1, PostingsAddress, Postings));
                 }
             }
 
@@ -291,11 +297,15 @@ namespace Resin.IO
         private void DepthFirst(string traveled, IList<char> state, IList<Word> compressed)
         {
             var copy = new List<char>(state);
-            state.Add(Value);
+
+            if (Value != char.MinValue)
+            {
+                state.Add(Value);
+            }
 
             if (EndOfWord)
             {
-                compressed.Add(new Word(traveled + new string(state.ToArray()), PostingsAddress, Postings));
+                compressed.Add(new Word(traveled + new string(state.ToArray()), 1, PostingsAddress, Postings));
             }
 
             if (LeftChild != null)

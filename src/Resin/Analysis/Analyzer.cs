@@ -1,3 +1,4 @@
+using Resin.IO;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -20,30 +21,38 @@ namespace Resin.Analysis
 
         public AnalyzedDocument AnalyzeDocument(Document document)
         {
-            var id = document.Id;
-            var analyzed = document.Fields.ToDictionary(field => field.Key, field => Analyze(field.Key, field.Value));
-            return new AnalyzedDocument(id, analyzed);
-        }
+            var fields = new Dictionary<string, LcrsTrie>();
 
-        private IDictionary<string, int> Analyze(string field, string value)
-        {
-            var termCount = new Dictionary<string, int>();
-            Analyze(field, value, termCount);
-            return termCount;
-        }
-
-        private void Analyze(string field, string value, Dictionary<string, int> termCount)
-        {
-            var analyze = field[0] != '_';
-            var tokens = analyze ? Analyze(value) : new[] { value };
-
-            foreach (var token in tokens)
+            foreach(var field in document.Fields)
             {
-                if (termCount.ContainsKey(token)) termCount[token] = termCount[token] + 1;
-                else termCount.Add(token, 1);
-            }
-        }
+                var trie = new LcrsTrie();
+                fields.Add(field.Key, trie);
 
+                if (field.Key.StartsWith("_"))
+                {
+                    trie.Add(field.Value);
+                }
+                else
+                {
+                    foreach (var token in Analyze(field.Value))
+                    {
+                        trie.Add(token);
+                    }
+                }
+            }
+            var ws = new List<Word>();
+            foreach (var field in fields.Values)
+            {
+                foreach (var word in field.Words())
+                {
+                    System.Diagnostics.Debug.WriteLine(word);
+                    ws.Add(word);
+                }
+            }
+
+            return new AnalyzedDocument(document.Id, fields);
+        }
+        
         public IEnumerable<string> Analyze(string value)
         {
             var normalized = value.ToLower(_culture);
@@ -54,13 +63,13 @@ namespace Resin.Analysis
             {
                 var c = normalized[index];
 
-                if (char.IsLetterOrDigit(c) && !_customTokenSeparators.Contains(c))
+                if (IsNoice(c))
                 {
-                    washed[index] = c;
+                    washed[index] = ' ';
                 }
                 else
                 {
-                    washed[index] = ' ';
+                    washed[index] = c;
                 }
             }
 
@@ -68,18 +77,11 @@ namespace Resin.Analysis
                 .Except(_stopwords);
         }
 
-        private bool IsSeparator(char c)
+        private bool IsNoice(char c)
         {
-            if (char.IsControl(c) || char.IsSeparator(c) || char.IsWhiteSpace(c)) return true;
+            if (char.IsLetterOrDigit(c)) return _customTokenSeparators.Contains(c);
 
-            if (char.IsPunctuation(c))
-            {
-                var code = (int) c;
-                var isExempted = code == 39 || code == 96;
-                return !isExempted;
-            }
-
-            return char.IsPunctuation(c) || _customTokenSeparators.Contains(c);
+            return true;
         }
     }
 }

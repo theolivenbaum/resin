@@ -58,12 +58,12 @@ namespace Resin
 
         private void Scan(IEnumerable<QueryContext> queries)
         {
-            Parallel.ForEach(queries, DoScan);
+            //Parallel.ForEach(queries, DoScan);
 
-            //foreach (var q in queries)
-            //{
-            //    DoScan(q);
-            //}
+            foreach (var q in queries)
+            {
+                DoScan(q);
+            }
         }
 
         private void DoScan(QueryContext query)

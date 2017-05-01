@@ -102,13 +102,14 @@ namespace Resin
                             {
                                 var analyzed = analyzedDocuments.Take();
 
-                                foreach (var term in analyzed.Terms)
+                                foreach (var field in analyzed.Fields)
                                 {
-                                    var field = term.Key.Field;
-                                    var token = term.Key.Word.Value;
-                                    var posting = term.Value;
-
-                                    GetTrie(field, token).Add(token, posting);
+                                    var words = field.Value.Words();
+                                    foreach (var word in words)
+                                    {
+                                        var posting = new DocumentPosting(analyzed.Id, word.Count);
+                                        GetTrie(field.Key, word.Value).Add(word.Value, posting);
+                                    }
                                 }
                             }
                         }
