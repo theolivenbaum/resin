@@ -41,16 +41,28 @@ namespace Resin
             _autoGeneratePk = string.IsNullOrWhiteSpace(_primaryKey);
         }
 
+        private struct WordInfo
+        {
+            public readonly string Field;
+            public readonly string Token;
+            public readonly DocumentPosting Posting;
+
+            public WordInfo(string field, string token, DocumentPosting posting)
+            {
+                Field = field;
+                Token = token;
+                Posting = posting;
+            }
+        }
+
         public long Commit()
         {
             var analyzedTimer = new Stopwatch();
-            analyzedTimer.Start();
 
             var docAddresses = new List<BlockInfo>();
             var primaryKeyValues = new List<UInt64>();
             var pks = new Dictionary<UInt64, object>();
-          
-            // producer/consumer acc. to: https://msdn.microsoft.com/en-us/library/dd267312.aspx
+            var words = new List<WordInfo>();
 
             using (var documents = new BlockingCollection<Document>())
             {
@@ -58,10 +70,11 @@ namespace Resin
                 {
                     var docFileName = Path.Combine(_directory, _indexVersionId + ".doc");
 
-                    // Produce
-                    using (var docWriter = new DocumentWriter(
-                        new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None), _compression))
+                    using (var docWriter = new DocumentWriter(new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None), _compression))
                     {
+                        var docWriterTimer = new Stopwatch();
+                        docWriterTimer.Start();
+
                         foreach (var doc in ReadSource())
                         {
                             string pkVal;
@@ -93,9 +106,10 @@ namespace Resin
                                 documents.Add(doc); 
                             }
                         }
+                        Log.InfoFormat("Serialized {0} documents in {1}", primaryKeyValues.Count, docWriterTimer.Elapsed);
+
                     }
 
-                    // Signal no more work
                     documents.CompleteAdding();
                 }))
                 {
@@ -103,7 +117,8 @@ namespace Resin
                     {
                         try
                         {
-                            // Consume
+                            analyzedTimer.Start();
+
                             while (true)
                             {
                                 var doc = documents.Take();
@@ -115,10 +130,13 @@ namespace Resin
                                     var token = term.Key.Word.Value;
                                     var posting = term.Value;
 
-                                    GetTrie(field, token)
-                                        .Add(token, posting);
+                                    words.Add(new WordInfo(field, token, posting));
+
+                                    
                                 }
                             }
+
+
                         }
                         catch (InvalidOperationException)
                         {
@@ -130,6 +148,12 @@ namespace Resin
             }
 
             Log.InfoFormat("Analyzed {0} documents in {1}", primaryKeyValues.Count, analyzedTimer.Elapsed);
+
+            foreach(var word in words)
+            {
+                GetTrie(word.Field, word.Token)
+                    .Add(word.Token, word.Posting);
+            }
 
             if (primaryKeyValues.Count == 0)
             {
