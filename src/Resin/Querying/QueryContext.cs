@@ -28,7 +28,10 @@ namespace Resin.Querying
 
             if (_queries == null) yield break;
 
-            foreach (var q in _queries) yield return q;
+            foreach (var q in _queries)
+            {
+                foreach (var sq in q.YieldAll()) yield return sq;
+            }
         } 
 
         public IEnumerable<DocumentScore> Reduce()
