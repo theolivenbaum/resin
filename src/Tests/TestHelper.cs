@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
 using Resin;
+using Resin.IO;
 
 namespace Tests
 {

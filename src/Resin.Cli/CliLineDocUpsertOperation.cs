@@ -3,6 +3,7 @@ using System.IO;
 using Resin.Analysis;
 using System.Linq;
 using System;
+using Resin.IO;
 
 namespace Resin.Cli
 {

@@ -3,6 +3,7 @@ using System.IO;
 using Newtonsoft.Json;
 using Resin;
 using Resin.Analysis;
+using Resin.IO;
 
 namespace Tests
 {

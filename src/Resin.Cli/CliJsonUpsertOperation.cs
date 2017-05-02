@@ -3,6 +3,7 @@ using System.IO;
 using Newtonsoft.Json;
 using Resin.Analysis;
 using System;
+using Resin.IO;
 
 namespace Resin.Cli
 {

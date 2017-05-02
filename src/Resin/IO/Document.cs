@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Resin
+namespace Resin.IO
 {
     public class Document
     {
