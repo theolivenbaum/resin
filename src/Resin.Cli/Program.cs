@@ -165,7 +165,7 @@ namespace Resin.Cli
 
             foreach(var field in doc.Document.Fields)
             {
-                Print(field.Value, highlight[field.Key]);
+                Print(field.Value, highlight.ContainsKey(field.Key) ? highlight[field.Key] : null);
             }
             Console.WriteLine();
         }
@@ -173,11 +173,15 @@ namespace Resin.Cli
         private static void Print(string value, string highlight)
         {
             var body = value;
-            var ix = body.IndexOf(highlight, StringComparison.InvariantCultureIgnoreCase);
 
-            if (ix > 0)
+            if (highlight != null)
             {
-                body = body.Substring(ix, body.Length - ix);
+                var ix = body.IndexOf(highlight, StringComparison.InvariantCultureIgnoreCase);
+
+                if (ix > 0)
+                {
+                    body = body.Substring(ix, body.Length - ix);
+                }
             }
 
             Console.Write(body.Substring(0, Math.Min(80, body.Length)) + "\t");
