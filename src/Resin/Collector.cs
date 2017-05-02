@@ -71,7 +71,7 @@ namespace Resin
             var time = new Stopwatch();
             time.Start();
 
-            var reader = GetTreeReader(query.Field, query.Value);
+            var reader = GetTreeReader(query.Field);
 
             if (reader == null)
             {
@@ -184,18 +184,14 @@ namespace Resin
             }
         }
 
-        private ITrieReader GetTreeReader(string field, string token)
+        private ITrieReader GetTreeReader(string field)
         {
-            var suffix = token.ToTokenBasedBucket();
-            var fileId = field.ToHash();
-            var fileName = Path.Combine(_directory, string.Format("{0}-{1}-{2}.tri", 
-                _ix.VersionId, fileId, suffix));
+            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", 
+                _ix.VersionId, field.ToHash()));
 
             if (!File.Exists(fileName)) return null;
 
-            var reader = new MappedTrieReader(fileName);
-
-            return reader;
+            return new MappedTrieReader(fileName);
         }
 
         public void Dispose()

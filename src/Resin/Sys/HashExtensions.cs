@@ -5,12 +5,6 @@ namespace Resin.Sys
 {
     internal static class HashExtensions
     {
-        public static string ToTokenBasedBucket(this string token)
-        {
-            var num = (int)token[0] % 100;
-            return num.ToString();
-        }
-
         public static UInt32 ToHash(this string text)
         {
             var bytes = Encoding.UTF8.GetBytes(text);

@@ -280,7 +280,7 @@ namespace Resin.IO
                     }
                     else
                     {
-                        valBytes = Encoding.GetBytes((entry.Value ?? string.Empty));
+                        valBytes = QuickLZ.compress(Encoding.GetBytes((entry.Value ?? string.Empty)), 1);
                     }
 
                     byte[] valLengthBytes = BitConverter.GetBytes(valBytes.Length);
@@ -607,7 +607,7 @@ namespace Resin.IO
 
                 string value = deflate ?
                     Encoding.GetString(Compressor.Decompress(valBytes)) : 
-                    Encoding.GetString(valBytes);
+                    Encoding.GetString(QuickLZ.decompress(valBytes));
 
                 yield return new KeyValuePair<string, string>(key, value);
             }

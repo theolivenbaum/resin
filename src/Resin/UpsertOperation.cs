@@ -155,8 +155,7 @@ namespace Resin
                         {
                             var word = words.Take();
 
-                            GetTrie(word.Field, word.Token)
-                                .Add(word.Token, word.Posting);
+                            GetTrie(word.Field).Add(word.Token, word.Posting);
                         }
                     }
                     catch (InvalidOperationException)
@@ -261,9 +260,10 @@ namespace Resin
             trie.Serialize(fileName);
         }
 
-        private LcrsTrie GetTrie(string field, string token)
+        private LcrsTrie GetTrie(string field)
         {
-            var key = string.Format("{0}-{1}", field.ToHash(), token.ToTokenBasedBucket());
+            var key = field.ToHash().ToString();
+
             LcrsTrie trie;
 
             if (!_tries.TryGetValue(key, out trie))
