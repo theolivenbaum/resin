@@ -21,7 +21,7 @@ namespace Resin.Analysis
 
         public virtual AnalyzedDocument AnalyzeDocument(Document document)
         {
-            var words = new SortedDictionary<Term, DocumentPosting>();
+            var words = new Dictionary<Term, DocumentPosting>();
 
             foreach(var field in document.Fields)
             {
