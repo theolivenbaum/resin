@@ -58,7 +58,7 @@ namespace Resin
         public long Commit()
         {
             var docAddresses = new List<BlockInfo>();
-            var pks = new Dictionary<UInt64, object>();
+            var pks = new Dictionary<UInt32, object>();
             var ts = new List<Task>();
 
             using (var words = new BlockingCollection<WordInfo>())
@@ -80,7 +80,7 @@ namespace Resin
 
                             if (_autoGeneratePk)
                             {
-                                pkVal = Guid.NewGuid().ToString();
+                                pkVal = Path.GetRandomFileName();
                             }
                             else
                             {
@@ -141,7 +141,6 @@ namespace Resin
                         words.CompleteAdding();
                     }
                     Log.InfoFormat("Analyzed {0} documents in {1}", pks.Count, analyzeTimer.Elapsed);
-                    
 
                 }));
 
@@ -168,11 +167,6 @@ namespace Resin
                 }));
                 Task.WaitAll(ts.ToArray());
             }
-
-            
-
-
-
 
             if (pks.Count == 0)
             {

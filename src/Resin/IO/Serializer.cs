@@ -30,7 +30,7 @@ namespace Resin.IO
 
         public static int SizeOfDocHash()
         {
-            return sizeof (UInt64) + sizeof (byte);
+            return sizeof (UInt32) + sizeof (byte);
         }
 
         public static void Serialize(this IxInfo ix, string fileName)
@@ -365,7 +365,7 @@ namespace Resin.IO
             }
 
             stream.WriteByte(isObsoleteByte);
-            stream.Write(hashBytes, 0, sizeof(UInt64));
+            stream.Write(hashBytes, 0, sizeof(UInt32));
         }
 
         public static byte[] DeSerializeFile(string fileName)
@@ -494,16 +494,16 @@ namespace Resin.IO
 
             if (isObsoleteByte == -1) return null;
 
-            var hashBytes = new byte[sizeof(UInt64)];
+            var hashBytes = new byte[sizeof(UInt32)];
 
-            stream.Read(hashBytes, 0, sizeof(UInt64));
+            stream.Read(hashBytes, 0, sizeof(UInt32));
 
             if (!BitConverter.IsLittleEndian)
             {
                 Array.Reverse(hashBytes);
             }
 
-            return new DocHash(BitConverter.ToUInt64(hashBytes, 0), isObsoleteByte == 1);
+            return new DocHash(BitConverter.ToUInt32(hashBytes, 0), isObsoleteByte == 1);
         }
 
         public static IList<DocHash> DeserializeDocHashes(string fileName)
