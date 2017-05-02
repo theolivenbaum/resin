@@ -248,6 +248,8 @@ namespace Resin
 
             CreateIxInfo().Serialize(Path.Combine(_directory, _indexVersionId + ".ix"));
 
+            if(_compression) Log.Info("compression: true");
+
             return _indexVersionId;
         }
 
