@@ -180,7 +180,7 @@ namespace Resin.Cli
                 body = body.Substring(ix, body.Length - ix);
             }
 
-            Console.Write(body.Substring(0, Math.Min(100, body.Length)) + "\t\t");
+            Console.Write(body.Substring(0, Math.Min(80, body.Length)) + "\t\t");
         }
 
         static void Write(string[] args)

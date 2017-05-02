@@ -45,7 +45,7 @@ namespace Resin.IO
         {
             unchecked
             {
-                return (Field.GetHashCode()*397) ^ Word.GetHashCode();
+                return ToString().GetHashCode();
             }
         }
 

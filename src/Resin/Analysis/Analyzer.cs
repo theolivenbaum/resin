@@ -16,12 +16,12 @@ namespace Resin.Analysis
         {
             _culture = culture ?? Thread.CurrentThread.CurrentUICulture;
             _customTokenSeparators = tokenSeparators == null ? null : new HashSet<char>(tokenSeparators);
-            _stopwords = new HashSet<string>(stopwords ?? new string[0]);
+            _stopwords =stopwords == null ? null : new HashSet<string>(stopwords);
         }
 
         public virtual AnalyzedDocument AnalyzeDocument(Document document)
         {
-            var words = new Dictionary<Term, DocumentPosting>();
+            var words = new SortedDictionary<Term, DocumentPosting>();
 
             foreach(var field in document.Fields)
             {
@@ -41,18 +41,20 @@ namespace Resin.Analysis
                 }
                 else
                 {
-                    foreach (var tokenGroup in Analyze(field.Value).GroupBy(token => token))
+                    var tokens = Analyze(field.Value).ToList();
+                    foreach (var tokenGroup in tokens.GroupBy(token => token))
                     {
                         var term = new Term(field.Key, new Word(tokenGroup.Key));
                         DocumentPosting posting;
+                        var count = tokenGroup.Count();
 
                         if (words.TryGetValue(term, out posting))
                         {
-                            posting.Count += tokenGroup.Count();
+                            posting.Count += count;
                         }
                         else
                         {
-                            words.Add(term, new DocumentPosting(document.Id, tokenGroup.Count()));
+                            words.Add(term, new DocumentPosting(document.Id, count));
                         }
                     }
                 }
@@ -79,9 +81,12 @@ namespace Resin.Analysis
                     washed[index] = c;
                 }
             }
+            var text = new string(washed);
+            var result = text.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
 
-            return new string(washed).Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries)
-                .Except(_stopwords);
+            if (_stopwords == null) return result;
+
+            return result.Where(s => !_stopwords.Contains(s));
         }
 
         protected virtual bool IsNoice(char c)

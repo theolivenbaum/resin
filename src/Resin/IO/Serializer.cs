@@ -273,7 +273,17 @@ namespace Resin.IO
                 {
                     byte[] keyBytes = Encoding.GetBytes(entry.Key);
                     byte[] keyLengthBytes = BitConverter.GetBytes((short)keyBytes.Length);
-                    byte[] valBytes = compress ? Compressor.Compress((entry.Value ?? string.Empty)) : Encoding.GetBytes((entry.Value ?? string.Empty));
+                    byte[] valBytes;
+
+                    if (compress)
+                    {
+                        valBytes = Compressor.Compress(Encoding.GetBytes((entry.Value ?? string.Empty)));
+                    }
+                    else
+                    {
+                        valBytes = Encoding.GetBytes((entry.Value ?? string.Empty));
+                    }
+
                     byte[] valLengthBytes = BitConverter.GetBytes(valBytes.Length);
 
                     if (!BitConverter.IsLittleEndian)
@@ -596,7 +606,9 @@ namespace Resin.IO
                     Array.Reverse(valBytes);
                 }
 
-                string value = deflate ? Compressor.DecompressText(valBytes) : Encoding.GetString(valBytes);
+                string value = deflate ? 
+                    Compressor.DecompressText(valBytes) : 
+                    Encoding.GetString(valBytes);
 
                 yield return new KeyValuePair<string, string>(key, value);
             }
