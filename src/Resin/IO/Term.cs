@@ -1,8 +1,9 @@
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Resin.IO
 {
+    [DebuggerDisplay("{Field}:{Word}")]
     public class Term : IEquatable<Term>, IComparable<Term>
     {
         public string Field { get; private set; }
@@ -16,21 +17,12 @@ namespace Resin.IO
             Word = word;
         }
 
-        public int CompareTo(Term other)
-        {
-            return String.Compare(other.ToString(), ToString(), StringComparison.Ordinal);
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0}:{1}", Field, Word);
-        }
-
         public bool Equals(Term other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return string.Equals(other.ToString(), ToString());
+
+            return string.Equals(Field, other.Field) && Word.Value.Equals(other.Word.Value);
         }
 
         public override bool Equals(object obj)
@@ -38,15 +30,22 @@ namespace Resin.IO
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            return Equals((Term) obj);
+
+            return Equals((Term)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ToString().GetHashCode();
+                return ((Field != null ? Field.GetHashCode() : 0) * 397) ^ Word.GetHashCode();
             }
+        }
+
+        public int CompareTo(Term other)
+        {
+            if (Equals(other)) return 0;
+            return -1;
         }
 
         public static bool operator ==(Term left, Term right)
@@ -57,14 +56,6 @@ namespace Resin.IO
         public static bool operator !=(Term left, Term right)
         {
             return !Equals(left, right);
-        }
-    }
-
-    public class TermComparer : IComparer<Term>
-    {
-        public int Compare(Term x, Term y)
-        {
-            return x.CompareTo(y);
         }
     }
 }
