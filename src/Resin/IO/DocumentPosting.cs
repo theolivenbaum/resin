@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Resin.IO
 {
+    [DebuggerDisplay("{DocumentId}:{Count}")]
     public class DocumentPosting
     {
         public int DocumentId { get; private set; }
@@ -19,7 +21,7 @@ namespace Resin.IO
 
         public DocumentPosting Join(DocumentPosting other)
         {
-            if (other.DocumentId != DocumentId) throw new ArgumentException();
+            if (other.DocumentId != DocumentId) throw new ArgumentException("other");
 
             Count += other.Count;
 
@@ -41,11 +43,6 @@ namespace Resin.IO
                 }
                 return tip;
             });
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0}:{1}", DocumentId, Count);
         }
     }
 }

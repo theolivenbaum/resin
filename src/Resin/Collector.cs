@@ -58,12 +58,12 @@ namespace Resin
 
         private void Scan(IEnumerable<QueryContext> queries)
         {
-            Parallel.ForEach(queries, DoScan);
+            //Parallel.ForEach(queries, DoScan);
 
-            //foreach (var q in queries)
-            //{
-            //    DoScan(q);
-            //}
+            foreach (var q in queries)
+            {
+                DoScan(q);
+            }
         }
 
         private void DoScan(QueryContext query)
@@ -109,20 +109,15 @@ namespace Resin
             var time = new Stopwatch();
             time.Start();
 
-            var postings = ReadPostings(query.Terms).ToList();
+            var terms = query.Terms.ToList();
 
-            if (postings.Count > 0)
-            {
-                var result = postings
+            var postings = terms.Count > 0 ? ReadPostings(terms).ToList() : new List<IList<DocumentPosting>>();
+
+            var result = postings
                     .Aggregate<IEnumerable<DocumentPosting>, IEnumerable<DocumentPosting>>(
                         null, DocumentPosting.Join);
 
-                query.Postings = result;
-            }
-            else
-            {
-                query.Postings = new DocumentPosting[0];
-            }
+            query.Postings = result;
 
             Log.DebugFormat("read postings for {0} in {1}", query.AsReadable(), time.Elapsed);
         }
@@ -136,7 +131,14 @@ namespace Resin
         {
             Parallel.ForEach(queries, query =>
             {
-                query.Scored = DoScore(query.Postings.OrderBy(p=>p.DocumentId).ToList());
+                if (query.Postings == null)
+                {
+                    query.Scored = new List<DocumentScore>();
+                }
+                else
+                {
+                    query.Scored = DoScore(query.Postings.OrderBy(p => p.DocumentId).ToList());
+                }
             });
         }
 

@@ -5,13 +5,6 @@ namespace Resin.IO
 {
     public static class Compressor
     {
-        public static string DecompressText(byte[] data)
-        {
-            var bytes = Decompress(data);
-
-            return Serializer.Encoding.GetString(bytes);
-        }
-
         public static byte[] Compress(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return new byte[0];

@@ -26,7 +26,7 @@ namespace Resin
         private readonly long _indexVersionId;
         private readonly Dictionary<string, LcrsTrie> _tries;
         
-        private int _docId;
+        private volatile int _docId;
         private readonly bool _autoGeneratePk;
 
         protected UpsertOperation(string directory, IAnalyzer analyzer, bool compression, string primaryKey)
@@ -71,7 +71,8 @@ namespace Resin
 
                     var docFileName = Path.Combine(_directory, _indexVersionId + ".doc");
 
-                    using (var docWriter = new DocumentWriter(new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None), _compression))
+                    using (var docWriter = new DocumentWriter(
+                        new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None), _compression))
                     {
                         foreach (var doc in ReadSource())
                         {
@@ -95,11 +96,11 @@ namespace Resin
                             }
                             else
                             {
+                                doc.Id = _docId++;
+
                                 documents.Add(doc);
 
                                 pks.Add(hash, null);
-
-                                doc.Id = _docId++;
 
                                 var adr = docWriter.Write(doc);
 
@@ -137,9 +138,10 @@ namespace Resin
                     catch (InvalidOperationException)
                     {
                         // Done
+                        words.CompleteAdding();
                     }
                     Log.InfoFormat("Analyzed {0} documents in {1}", pks.Count, analyzeTimer.Elapsed);
-                    words.CompleteAdding();
+                    
 
                 }));
 
@@ -193,9 +195,7 @@ namespace Resin
                         {
                             foreach (var node in trie.Value.EndOfWordNodes())
                             {
-                                var postings = node.Postings.ToList();
-
-                                node.PostingsAddress = postingsWriter.Write(postings);
+                                node.PostingsAddress = postingsWriter.Write(node.Postings);
                             }
 
                             if (Log.IsDebugEnabled)

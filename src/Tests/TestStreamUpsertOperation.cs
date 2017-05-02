@@ -14,8 +14,8 @@ namespace Tests
         {
         }
 
-        public TestStreamUpsertOperation(string directory, IAnalyzer analyzer, Stream file)
-            : base(directory, analyzer, file, false, null)
+        public TestStreamUpsertOperation(string directory, IAnalyzer analyzer, Stream file, bool compress = false)
+            : base(directory, analyzer, file, compress, null)
         {
         }
 

@@ -23,7 +23,8 @@ namespace Resin.IO.Read
 
             using (var reader = new PostingsReader(new FileStream(posFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan)))
             {
-                yield return reader.Get(addresses).SelectMany(x => x).ToList();
+                var postings = reader.Get(addresses).SelectMany(x => x).ToList();
+                yield return postings;
             }
         }
     }

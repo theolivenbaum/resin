@@ -45,7 +45,7 @@ namespace Resin.IO
 
         public static void Serialize(this LcrsTrie trie, string fileName)
         {
-            using (var stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4800))
+            using (var stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 if (trie.LeftChild != null)
                 {
@@ -139,7 +139,6 @@ namespace Resin.IO
                 if (!BitConverter.IsLittleEndian)
                 {
                     Array.Reverse(idBytes);
-                    Array.Reverse(dicBytes);
                 }
 
                 stream.Write(idBytes, 0, idBytes.Length);
@@ -606,8 +605,8 @@ namespace Resin.IO
                     Array.Reverse(valBytes);
                 }
 
-                string value = deflate ? 
-                    Compressor.DecompressText(valBytes) : 
+                string value = deflate ?
+                    Encoding.GetString(Compressor.Decompress(valBytes)) : 
                     Encoding.GetString(valBytes);
 
                 yield return new KeyValuePair<string, string>(key, value);

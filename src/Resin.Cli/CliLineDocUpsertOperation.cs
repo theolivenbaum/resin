@@ -64,6 +64,7 @@ namespace Resin.Cli
                 Console.SetCursorPosition(cursorPos, Console.CursorTop);
                 Console.Write(took);
             }
+            Console.WriteLine("");
         }
     }
 }
