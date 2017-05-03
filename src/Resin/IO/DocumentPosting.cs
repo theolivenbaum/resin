@@ -6,7 +6,7 @@ using System.Linq;
 namespace Resin.IO
 {
     [DebuggerDisplay("{DocumentId}:{Count}")]
-    public class DocumentPosting
+    public struct DocumentPosting
     {
         public int DocumentId { get; private set; }
         public int Count { get; set; }

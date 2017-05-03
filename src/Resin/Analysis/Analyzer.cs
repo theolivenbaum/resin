@@ -25,7 +25,7 @@ namespace Resin.Analysis
 
             foreach(var field in document.Fields)
             {
-                if (field.Key.StartsWith("_"))
+                if (field.Key[0] == '_')
                 {
                     var term = new Term(field.Key, new Word(field.Value));
                     DocumentPosting posting;
@@ -41,12 +41,27 @@ namespace Resin.Analysis
                 }
                 else
                 {
-                    var tokens = Analyze(field.Value).ToList();
-                    foreach (var tokenGroup in tokens.GroupBy(token => token))
+                    var tokenDic = new Dictionary<string, int>();
+                    foreach(var token in Analyze(field.Value))
                     {
-                        var term = new Term(field.Key, new Word(tokenGroup.Key));
+                        if (tokenDic.ContainsKey(token))
+                        {
+                            tokenDic[token]++;
+                        }
+                        else
+                        {
+                            tokenDic[token] = 1;
+                        }
+                    }
+
+                    foreach (var tokenGroup in tokenDic)
+                    {
+                        var word = new Word(tokenGroup.Key);
+                        var term = new Term(field.Key, word);
+
                         DocumentPosting posting;
-                        var count = tokenGroup.Count();
+
+                        var count = tokenGroup.Value;
 
                         if (words.TryGetValue(term, out posting))
                         {
@@ -54,7 +69,8 @@ namespace Resin.Analysis
                         }
                         else
                         {
-                            words.Add(term, new DocumentPosting(document.Id, count));
+                            posting = new DocumentPosting(document.Id, count);
+                            words.Add(term, posting);
                         }
                     }
                 }

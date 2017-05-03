@@ -41,20 +41,6 @@ namespace Resin
             _autoGeneratePk = string.IsNullOrWhiteSpace(_primaryKey);
         }
 
-        private struct WordInfo
-        {
-            public readonly string Field;
-            public readonly string Token;
-            public readonly DocumentPosting Posting;
-
-            public WordInfo(string field, string token, DocumentPosting posting)
-            {
-                Field = field;
-                Token = token;
-                Posting = posting;
-            }
-        }
-
         public long Commit()
         {
             var docAddresses = new List<BlockInfo>();
@@ -64,6 +50,59 @@ namespace Resin
             using (var words = new BlockingCollection<WordInfo>())
             using (var documents = new BlockingCollection<Document>())
             {
+                ts.Add(Task.Run(() =>
+                {
+                    var trieTimer = new Stopwatch();
+                    trieTimer.Start();
+
+                    try
+                    {
+                        while (true)
+                        {
+                            var word = words.Take();
+
+                            GetTrie(word.Field)
+                                .Add(word.Token, word.Posting);
+                        }
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Done
+                    }
+                    Log.InfoFormat("Built tries in {0}", trieTimer.Elapsed);
+                }));
+
+                ts.Add(Task.Run(() =>
+                {
+                    var analyzeTimer = new Stopwatch();
+                    analyzeTimer.Start();
+
+                    try
+                    {
+                        while (true)
+                        {
+                            var doc = documents.Take();
+                            var analyzed = _analyzer.AnalyzeDocument(doc);
+
+                            foreach (var term in analyzed.Words)
+                            {
+                                var field = term.Key.Field;
+                                var token = term.Key.Word.Value;
+                                var posting = term.Value;
+
+                                words.Add(new WordInfo(field, token, posting));
+                            }
+                        }
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Done
+                        words.CompleteAdding();
+                    }
+                    Log.InfoFormat("Analyzed {0} documents in {1}", pks.Count, analyzeTimer.Elapsed);
+
+                }));
+
                 ts.Add(Task.Run(() =>
                 {
                     var docWriterTimer = new Stopwatch();
@@ -113,57 +152,6 @@ namespace Resin
 
                 }));
 
-                ts.Add(Task.Run(() =>
-                {
-                    var analyzeTimer = new Stopwatch();
-                    analyzeTimer.Start();
-
-                    try
-                    {
-                        while (true)
-                        {
-                            var doc = documents.Take();
-                            var analyzed = _analyzer.AnalyzeDocument(doc);
-
-                            foreach (var term in analyzed.Words)
-                            {
-                                var field = term.Key.Field;
-                                var token = term.Key.Word.Value;
-                                var posting = term.Value;
-
-                                words.Add(new WordInfo(field, token, posting));
-                            }
-                        }
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        // Done
-                        words.CompleteAdding();
-                    }
-                    Log.InfoFormat("Analyzed {0} documents in {1}", pks.Count, analyzeTimer.Elapsed);
-
-                }));
-
-                ts.Add(Task.Run(() =>
-                {
-                    var trieTimer = new Stopwatch();
-                    trieTimer.Start();
-
-                    try
-                    {
-                        while (true)
-                        {
-                            var word = words.Take();
-
-                            GetTrie(word.Field).Add(word.Token, word.Posting);
-                        }
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        // Done
-                    }
-                    Log.InfoFormat("Built tries in {0}", trieTimer.Elapsed);
-                }));
                 Task.WaitAll(ts.ToArray());
             }
 

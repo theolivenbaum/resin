@@ -91,6 +91,7 @@
     <Compile Include="IO\Term.cs" />
     <Compile Include="Analysis\Tfidf.cs" />
     <Compile Include="UpsertOperation.cs" />
+    <Compile Include="WordInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
