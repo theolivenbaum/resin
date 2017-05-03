@@ -121,7 +121,7 @@ namespace Resin
             }
             else
             {
-                result = postings.Reduce();
+                result = postings.Sum();
             }
 
             query.Postings = result;
