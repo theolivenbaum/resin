@@ -33,17 +33,15 @@ namespace Resin.Querying
         public static IEnumerable<DocumentScore> Not(IEnumerable<DocumentScore> source, IEnumerable<DocumentScore> exclude)
         {
             var dic = exclude.ToDictionary(x => x.DocumentId);
-            var remainder = new List<DocumentScore>();
 
             foreach (var score in source)
             {
                 DocumentScore exists;
                 if (!dic.TryGetValue(score.DocumentId, out exists))
                 {
-                    remainder.Add(score);
+                    yield return score;
                 }
             }
-            return remainder;
         }
 
         public static IEnumerable<DocumentScore> CombineOr(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
