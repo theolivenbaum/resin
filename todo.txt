@@ -1,8 +1,4 @@
-delete
 range
-stack indices in a dir (done)
-search across two or more indices (done)
-merge
 optionally store doc field
 numbers
 dates
