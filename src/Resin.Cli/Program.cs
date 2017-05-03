@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using log4net.Config;
 using Resin.Analysis;
 using Resin.Querying;
-using Sir.Client;
 using System.Linq;
+using System.Reflection;
+using log4net.Config;
+using log4net;
 
 namespace Resin.Cli
 {
@@ -20,8 +19,11 @@ namespace Resin.Cli
         // delete --ids "Q1476435" --dir d:\resin\wikipedia
         static void Main(string[] args)
         {
-            XmlConfigurator.Configure();
-
+            var assembly = Assembly.GetEntryAssembly();
+            var logRepository = LogManager.GetRepository(assembly);
+            var currentDir = Path.GetDirectoryName(assembly.Location);
+            XmlConfigurator.Configure(logRepository, new FileInfo(Path.Combine(currentDir, "log4net.config")));
+            
             if (args[0].ToLower() == "write")
             {
                 if (Array.IndexOf(args, "--file") == -1)
@@ -56,26 +58,13 @@ namespace Resin.Cli
         {
             var ids = args[Array.IndexOf(args, "--ids") + 1].Split(',');
             string dir = null;
-            string indexName = null;
 
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
-            if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
-
-            var inproc = !string.IsNullOrWhiteSpace(dir);
 
             var timer = new Stopwatch();
             timer.Start();
 
-            if (inproc)
-            {
-                new DeleteByPrimaryKeyOperation(dir, ids).Commit();
-            }
-            else
-            {
-                Console.WriteLine("Executing HTTP POST");
-
-                var url = ConfigurationManager.AppSettings.Get("sir.endpoint");
-            }
+            new DeleteByPrimaryKeyOperation(dir, ids).Commit();
 
             Console.WriteLine("delete operation took {0}", timer.Elapsed);
         }
@@ -83,67 +72,40 @@ namespace Resin.Cli
         static void Query(string[] args)
         {
             string dir = null;
-            string indexName = null;
 
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
-            if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
 
-            var inproc = !string.IsNullOrWhiteSpace(dir);
 
             var q = args[Array.IndexOf(args, "-q") + 1];
             var page = 0;
             var size = 10;
-            var url = ConfigurationManager.AppSettings.Get("sir.endpoint");
+
             Result result;
 
             if (Array.IndexOf(args, "-p") > 0) page = int.Parse(args[Array.IndexOf(args, "-p") + 1]);
             if (Array.IndexOf(args, "-s") > 0) size = int.Parse(args[Array.IndexOf(args, "-s") + 1]);
-            if (Array.IndexOf(args, "--url") > 0) url = args[Array.IndexOf(args, "--url") + 1];
 
-            if (inproc)
+            var timer = new Stopwatch();
+            timer.Start();
+
+            using (var s = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf()))
             {
-                var timer = new Stopwatch();
-                timer.Start();
-                using (var s = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf()))
+                result = s.Search(q, page, size);
+
+                timer.Stop();
+
+                var docs = result.Docs;
+
+                PrintHeaders(docs[0].Document.Fields.Keys);
+
+                var highlight = new QueryParser(new Analyzer()).Parse(q).ToList().GroupBy(y => y.Field).ToDictionary(g => g.Key, g => g.First().Value);
+
+                foreach (var doc in docs)
                 {
-                    result = s.Search(q, page, size);
-
-                    timer.Stop();
-
-                    var docs = result.Docs;
-
-                    PrintHeaders(docs[0].Document.Fields.Keys);
-
-                    var highlight = new QueryParser(new Analyzer()).Parse(q).ToList().GroupBy(y => y.Field).ToDictionary(g => g.Key, g => g.First().Value);
-
-                    foreach (var doc in docs)
-                    {
-                        Print(doc, highlight);
-                    }
-
-                    Console.WriteLine("\r\n{0}-{1} results of {2} in {3}", page * size, docs.Count + (page * size), result.Total, timer.Elapsed);  
+                    Print(doc, highlight);
                 }
-            }
-            else
-            {
-                //var timer = new Stopwatch();
-                //timer.Start();
-                //using (var s = new SearchClient(indexName, url))
-                //{
-                //    result = s.Search(q, page, size);
-                //    var docs = result.Docs.ToList();
 
-                //    timer.Stop();
-
-                //    PrintHeaders();
-
-                //    foreach (var doc in docs)
-                //    {
-                //        Print(doc);
-                //    }
-
-                //    Console.WriteLine("\r\n{0} results of {1} in {2}", (page + 1) * size, result.Total, timer.Elapsed);  
-                //}
+                Console.WriteLine("\r\n{0}-{1} results of {2} in {3}", page * size, docs.Count + (page * size), result.Total, timer.Elapsed);
             }
 
         }
@@ -176,7 +138,7 @@ namespace Resin.Cli
 
             if (highlight != null)
             {
-                var ix = body.IndexOf(highlight, StringComparison.InvariantCultureIgnoreCase);
+                var ix = body.IndexOf(highlight, StringComparison.CurrentCultureIgnoreCase);
 
                 if (ix > 0)
                 {
@@ -204,8 +166,6 @@ namespace Resin.Cli
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
             if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
 
-            var url = ConfigurationManager.AppSettings.Get("sir.endpoint");
-            var inproc = !string.IsNullOrWhiteSpace(dir);
 
             Console.WriteLine("writing...");
 
@@ -213,23 +173,12 @@ namespace Resin.Cli
 
             var writeTimer = new Stopwatch();
             writeTimer.Start();
-          
-            if (inproc)
-            {
-                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                using (var writer = new CliLineDocUpsertOperation(dir, new Analyzer(), fileName, skip, take, compress, null))
-                {
-                    writer.Commit();
-                }
-            }
-            else
-            {
-                Console.WriteLine("Executing HTTP POST");
 
-                using (var client = new WriterClient(indexName, url))
-                {
-                    client.Write(docs);
-                }
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            using (var writer = new CliLineDocUpsertOperation(dir, new Analyzer(), fileName, skip, take, compress, null))
+            {
+                writer.Commit();
             }
 
             Console.WriteLine("write operation took {0}", writeTimer.Elapsed);

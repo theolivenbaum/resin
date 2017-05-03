@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Resin.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "query --dir d:\\resin\\wikipedia -q \"body:the\" -p 0 -s 10"
+    }
+  }
+}

@@ -1,1 +1,1 @@
-src\Resin.Cli\bin\Release\rn.exe %*
+dotnet src\Resin.Cli\bin\Release\netcoreapp1.1\rn.dll %*
