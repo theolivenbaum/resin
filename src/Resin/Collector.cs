@@ -122,8 +122,6 @@ namespace Resin
             else
             {
                 result = postings.Reduce();
-
-                var distinct = result.GroupBy(s => s.DocumentId).Count();
             }
 
             query.Postings = result;

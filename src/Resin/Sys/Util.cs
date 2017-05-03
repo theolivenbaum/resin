@@ -38,7 +38,7 @@ namespace Resin.Sys
 
         public static int GetDocumentCount(IEnumerable<IxInfo> ixs)
         {
-            return ixs.Sum(x => x.DocumentCount); //TODO: this is a bug. Instead, return distinct doc hashes.
+            return ixs.Sum(x => x.DocumentCount);
         }
     }
 }
