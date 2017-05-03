@@ -63,10 +63,7 @@ namespace Resin.Querying
 
         public static IEnumerable<DocumentScore> CombineAnd(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
         {
-            if (first == null) return other;
-
             var dic = other.ToDictionary(x => x.DocumentId);
-            var remainder = new List<DocumentScore>();
 
             foreach (var score in first)
             {
@@ -74,10 +71,9 @@ namespace Resin.Querying
                 if (dic.TryGetValue(score.DocumentId, out exists))
                 {
                     score.Add(exists);
-                    remainder.Add(score);
+                    yield return score;
                 }
             }
-            return remainder;
         }
 
         public override string ToString()
