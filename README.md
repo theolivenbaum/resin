@@ -4,8 +4,6 @@ Resin is a document-based search engine and analytics tool. Querying support inc
 ## Query language
 The current query language is a copy of [Lucene's](https://lucene.apache.org/core/2_9_4/queryparsersyntax.html) (minus range and grouping (coming soon)). 
 
-On the roadmap is an extended query language with support for write, read and merge operations and the ability to express ranges, groupings, sorting, index joins (the equivalent of a table join in SQL) and database joins. As these features mature they will end up as commands available from the CLI tool. 
-
 ## It's a smarter index
 Resin can be seen as an index of the same kind you attach to database tables when you want to make reading from them fast. Resin indices are fast to write and read from and support near (as in "almost match") which is out-of-scope for most database index types.
 
