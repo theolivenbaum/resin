@@ -41,11 +41,11 @@ namespace Resin
             _autoGeneratePk = string.IsNullOrWhiteSpace(_primaryKey);
         }
 
-        private struct WordInfo
+        private class WordInfo
         {
-            public readonly string Field;
-            public readonly string Token;
-            public readonly DocumentPosting Posting;
+            public string Field { get; private set; }
+            public string Token { get; private set; }
+            public DocumentPosting Posting { get; private set; }
 
             public WordInfo(string field, string token, DocumentPosting posting)
             {
