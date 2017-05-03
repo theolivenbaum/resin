@@ -1,21 +1,21 @@
 # Resin
-Resin is a search engine and a document store. Querying support includes exact, fuzzy and prefix, soon also range (up-coming feature in RC 4), and comes with customizable tokenizers and scoring schemes. 
+Resin is a document-based search engine and analytics tool. Querying support includes exact, fuzzy and prefix. Analyzers, tokenizers and scoring schemes are customizable. 
 
 ## Query language
-The current query language is a copy of [Lucene's](https://lucene.apache.org/core/2_9_4/queryparsersyntax.html) (minus range and grouping). 
+The current query language is a copy of [Lucene's](https://lucene.apache.org/core/2_9_4/queryparsersyntax.html) (minus range and grouping (coming soon)). 
 
-On the roadmap is an extended query language with support for write, read and merge operations and the ability to express ranges, groupings, sorting, index joins (the equivalent of a table join in SQL) and database joins. As these features mature they will end up as commands in the query language. 
+On the roadmap is an extended query language with support for write, read and merge operations and the ability to express ranges, groupings, sorting, index joins (the equivalent of a table join in SQL) and database joins. As these features mature they will end up as commands available from the CLI tool. 
 
-## It's an index
-From an angle Resin is an index of the same kind you attach to database tables when you want to make reading from them fast. Resin indices are fast to write and read from and support near (as in "almost match") which is out-of-scope for most database index types.
+## It's a smarter index
+Resin can be seen as an index of the same kind you attach to database tables when you want to make reading from them fast. Resin indices are fast to write and read from and support near (as in "almost match") which is out-of-scope for most database index types.
 
-Apart from offering fast lookups, like a database index, Resin also scores document based on their relevance. Relevance in turn is based on the distance from a document and a query in vector space.
+Apart from offering fast lookups, like a database index, Resin also scores documents based on their relevance. Relevance in turn is based on the distance from a document and a query in vector space.
 
 ## Supports any scoring scheme
-To support the default tf-idf scoring scheme Resin stores term counts. Resin supports any scoring scheme by giving you the ability to store additional document/sentence/token meta-data your model might need (up-coming feature in RC4). That data will be delivered to you neatly as a field on the document posting. In your custom IScoringScheme you then base your per-document posting calculations on that instead of just the term count.
+To support the default tf-idf scoring scheme Resin stores term counts. Resin supports any scoring scheme and also gives you the ability to store additional document/sentence/token meta-data your model might need (up-coming feature in RC4). That data will be delivered to you neatly as a field on the document posting. In your custom IScoringScheme you then base your per-document posting calculations on that instead of just the term count.
 
 ## Fast at indexing and querying
-In many scenarios Resin is already faster than the [market leader](https://lucenenet.apache.org/) when it comes down to querying and indexing speed, making it a [in-many-scenarios-fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) information retrieval system on the .net plaform. 
+In many scenarios Resin is already faster than the [market leader](https://lucenenet.apache.org/) when it comes down to querying and indexing speed, making it a [in-many-scenarios-fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) information retrieval system on the .net plaform and certainly a good choice if you're on dotnet core being there is no real alternative. 
 
 If you have a scenario where you feel Resin should do better, this is important to me. Please let me know.
 
@@ -24,14 +24,11 @@ Five years ago the .net community created the search engine, Lucene 3.0.3, we ar
 
 Who could use a modern and powerful search engine based on sound mathematics that's open source, extensible and built on Core, though?
 
-## Philosophy
-There shall be nothing in its mathematical model, architecture, infrastructure nor anything in the platform it was built on nor in the way the project is managed that stops Resin from being the fastest and most precise search engine on the planet.
-
-## Stable (API and file format) in RC3
-Resin's API and file format should be considered unstable until release candidate 3. Coming features are indexing support for IComparable instead of just strings, improved compression of documents by representing them as tries, and updates/merges of documents.
+## Stable (API and file format) in RC4
+Resin's API and file format should be considered unstable until release candidate 4. Coming features are indexing support for numbers and dates as well as support for range queries.
 
 ## Supported .net version
-Resin is built for 4.6.1 but have no dependancies on any Core-incompatible technology so will be available on both frameworks soon.
+Resin is built for dotnet Core 1.1.
 
 ## Download
 Latest release is [here](https://github.com/kreeben/resin/releases/latest)
@@ -56,27 +53,18 @@ Start [here](https://github.com/kreeben/resin/issues).
 ### Index them.
 
 	var dir = @"C:\Users\Yourname\Resin\wikipedia";
-	using (var write = new WriteOperation(dir, new Analyzer()))
+	using (var upsert = new DocumentUpsertOperation(dir, new Analyzer(), compression:true, primaryKey:"_id", docs))
 	{
-		write.Write(docs);
+		upsert.Commit();
 	}
 
 ### Query the index.
 <a name="inproc" id="inproc"></a>
 
-	// Resin will scan a disk based trie for terms that are an exact match,
-	// a near match or is prefixed with the query term/-s.
+	varr result = new Searcher(dir).Search("label:good bad~ description:leone", page:0, size:15);
 	
-	// At each EndOfWord node there is a pointer to a set of postings.
-		
-	// The postings are resolved into top scoring documents. A total hit count is also included.
-	
-	// Paging is fast using the built-in paging mechanism.
-	
-	var result = new Searcher(dir).Search("label:good bad~ description:leone");
-	
-	// Document scores, i.e. the aggregated tf-idf weights a document recieve from a simple or compound query,
-	// are also included in the result:
+	// Document scores, i.e. the aggregated tf-idf weights a document recieve from a simple 
+	// or compound query, are included in the result:
 	
 	var scoreOfFirstDoc = result.Docs.First().Fields["__score"];
 
@@ -86,13 +74,11 @@ Start [here](https://github.com/kreeben/resin/issues).
 
 - [x] Layout basic architecture and infrastructure of a modern IR system - v0.9b
 - [x] Query faster than Lucene - v1.0 RC1
-- [x] ___Index faster than Lucene - v1.0 RC2___
-- [ ] Compress better than Lucene - v1.0 RC3
-- [ ] Migrate to Core - v1.0
+- [x] Index faster than Lucene - v1.0 RC2
+- [x] ___Compress more impressively than Lucene - v1.0 RC3___
+- [ ] Numbers, dates, range, grouping of query statements - 1.0
 - [ ] Build Sir, a distributed search engine
 
 ### Sir
 
-[Sir](https://github.com/kreeben/sir) is a distributed incarnation of Resin, a search engine, map/reduce system and long-term data storage solution in one with aspirations of being a Elasticsearch+Hadoop replacement and the end-of-the road for your data, not by being a cemetary as most archiving solutions of today but by compressing data in a way where it is very much alive and responsive to querying even at vast scales and after many years of usage. 
-
-Don't just archive your data. Surf on top of it or you'll find yourself engulfed by it.
+[Sir](https://github.com/kreeben/sir) is Resin distributed, a search engine, map/reduce system and long-term data storage solution in one, a Elasticsearch+Hadoop replacement.
