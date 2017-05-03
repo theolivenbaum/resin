@@ -4,6 +4,7 @@ using log4net;
 
 namespace Resin.IO
 {
+    [DebuggerDisplay("{VersionId}")]
     public class IxInfo
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof (IxInfo));

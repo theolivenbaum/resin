@@ -34,7 +34,7 @@ namespace Resin.Querying
             }
         } 
 
-        public IEnumerable<DocumentScore> Reduce()
+        public IEnumerable<DocumentScore> Calculate()
         {
             var first = Scored.ToList();
 
@@ -42,7 +42,7 @@ namespace Resin.Querying
             {
                 foreach (var child in _queries)
                 {
-                    var other = child.Reduce().ToList();
+                    var other = child.Calculate().ToList();
 
                     if (child.And)
                     {

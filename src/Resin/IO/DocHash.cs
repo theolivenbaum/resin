@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Resin
+namespace Resin.IO
 {
-    public class DocHash
+    public class DocHash : IEquatable<DocHash>
     {
         public UInt64 Hash { get; private set; }
         public bool IsObsolete { get; set; }
@@ -16,6 +16,11 @@ namespace Resin
         {
             Hash = hash;
             IsObsolete = isObsolete;
+        }
+
+        public bool Equals(DocHash other)
+        {
+            return other.Hash.Equals(Hash);
         }
     }
 }

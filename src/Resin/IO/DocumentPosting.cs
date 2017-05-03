@@ -19,19 +19,34 @@ namespace Resin.IO
             Count = count;
         }
 
-        public DocumentPosting Join(DocumentPosting other)
+        public void Add(DocumentPosting other)
         {
             if (other.DocumentId != DocumentId) throw new ArgumentException("other");
 
             Count += other.Count;
+        }
+    }
 
-            return this;
+    public static class DocumentPostingExtensions
+    {
+        public static IEnumerable<DocumentPosting> Reduce(this IList<IList<DocumentPosting>> source)
+        {
+            if (source.Count == 0) return new List<DocumentPosting>();
+
+            if (source.Count == 1) return source[0];
+
+            var first = source[0];
+
+            foreach(var list in source.Skip(1))
+            {
+                first = Reduce(first, list).ToList();
+            }
+
+            return first;
         }
 
-        public static IEnumerable<DocumentPosting> Join(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
+        public static IEnumerable<DocumentPosting> Reduce(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
         {
-            if (first == null) return other;
-
             return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>
             {
                 var list = group.ToList();
@@ -39,7 +54,7 @@ namespace Resin.IO
 
                 foreach (DocumentPosting posting in list.Skip(1))
                 {
-                    tip = tip.Join(posting);
+                    tip.Add(posting);
                 }
                 return tip;
             });

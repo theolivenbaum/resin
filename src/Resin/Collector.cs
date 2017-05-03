@@ -49,7 +49,7 @@ namespace Resin
             var reduceTime = new Stopwatch();
             reduceTime.Start();
 
-            var reduced = query.Reduce().ToList();
+            var reduced = query.Calculate().ToList();
 
             Log.DebugFormat("reduced query {0} producing {1} scores in {2}", query, reduced.Count, scoreTime.Elapsed);
 
@@ -110,12 +110,21 @@ namespace Resin
             time.Start();
 
             var terms = query.Terms.ToList();
+            var postings = terms.Count > 0 ? ReadPostings(terms).ToList() : null;
 
-            var postings = terms.Count > 0 ? ReadPostings(terms).ToList() : new List<IList<DocumentPosting>>();
+            IEnumerable<DocumentPosting> result;
 
-            var result = postings
-                    .Aggregate<IEnumerable<DocumentPosting>, IEnumerable<DocumentPosting>>(
-                        null, DocumentPosting.Join);
+            if (postings == null)
+            {
+                result = null;
+                
+            }
+            else
+            {
+                result = postings.Reduce();
+
+                var distinct = result.GroupBy(s => s.DocumentId).Count();
+            }
 
             query.Postings = result;
 

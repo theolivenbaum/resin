@@ -5,6 +5,9 @@ using Resin.IO;
 
 namespace Resin.Querying
 {
+    /// <summary>
+    /// Scored posting. To combine inside a index, use doc ID. To combine between indices, use doc hash.
+    /// </summary>
     public class DocumentScore
     {
         public int DocumentId { get; private set; }
@@ -20,23 +23,11 @@ namespace Resin.Querying
             DocHash = docHash;
         }
 
-        public void Combine(DocumentScore score)
+        public void Add(DocumentScore score)
         {
             if (!score.DocumentId.Equals(DocumentId)) throw new ArgumentException("Document IDs differ. Cannot combine.", "score");
 
             Score = (Score + score.Score);
-        }
-
-        public DocumentScore TakeLatestVersion(DocumentScore score)
-        {
-            if (!score.DocHash.Equals(DocHash)) throw new ArgumentException("Document hashed differ. Cannot take latest version.", "score");
-
-            if (score.Ix.VersionId > Ix.VersionId)
-            {
-                return score;
-            }
-
-            return this;
         }
 
         public static IEnumerable<DocumentScore> Not(IEnumerable<DocumentScore> source, IEnumerable<DocumentScore> exclude)
@@ -66,35 +57,10 @@ namespace Resin.Querying
                 var top = list.First();
                 foreach (var score in list.Skip(1))
                 {
-                    top.Combine(score);
+                    top.Add(score);
                 }
                 return top;
             });
-        }
-
-        public static IEnumerable<DocumentScore> CombineTakingLatestVersion(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
-        {
-            if (first == null)
-            {
-                foreach (var score in other) yield return score;
-                yield break;
-            }
-
-            var unique = new Dictionary<int, DocumentScore>();
-
-            foreach (var score in first)
-            {
-                DocumentScore exists;
-
-                if (unique.TryGetValue(score.DocumentId, out exists))
-                {
-                    yield return exists.TakeLatestVersion(score);
-                }
-                else
-                {
-                    yield return score; 
-                }
-            }
         }
 
         public static IEnumerable<DocumentScore> CombineAnd(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
@@ -109,7 +75,7 @@ namespace Resin.Querying
                 DocumentScore exists;
                 if (dic.TryGetValue(score.DocumentId, out exists))
                 {
-                    score.Combine(exists);
+                    score.Add(exists);
                     remainder.Add(score);
                 }
             }
@@ -119,6 +85,58 @@ namespace Resin.Querying
         public override string ToString()
         {
             return string.Format("docid:{0} score:{1}", DocumentId, Score);
+        }
+    }
+
+    public static class DocumentScoreExtensions
+    {
+        public static IEnumerable<DocumentScore> CombineTakingLatestVersion(this IList<IList<DocumentScore>> source)
+        {
+            if (source.Count == 0) return new List<DocumentScore>();
+
+            if (source.Count == 1) return source[0];
+
+            var first = source[0];
+
+            foreach (var list in source.Skip(1))
+            {
+                first = CombineTakingLatestVersion(first, list).ToList();
+            }
+            return first;
+        }
+
+        public static IEnumerable<DocumentScore> CombineTakingLatestVersion(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> second)
+        {
+            var unique = new Dictionary<UInt64, DocumentScore>();
+
+            foreach (var score in first.Concat(second))
+            {
+                DocumentScore exists;
+
+                if (unique.TryGetValue(score.DocHash, out exists))
+                {
+                    exists = TakeLatestVersion(exists, score);
+                }
+                else
+                {
+                    unique.Add(score.DocHash, score);
+                }
+            }
+            foreach(var score in unique.Values)
+            {
+                yield return score;
+            }
+        }
+
+        public static DocumentScore TakeLatestVersion(DocumentScore first, DocumentScore second)
+        {
+            if (!first.DocHash.Equals(second.DocHash)) throw new ArgumentException("Document hashes differ. Cannot take latest version.", "score");
+
+            if (first.Ix.VersionId > second.Ix.VersionId)
+            {
+                return first;
+            }
+            return second;
         }
     }
 }

@@ -6,6 +6,7 @@ namespace Resin.IO
     public class Document
     {
         public int Id { get; set; }
+        public UInt64 Hash { get; set; }
 
         private readonly IDictionary<string, string> _fields;
 

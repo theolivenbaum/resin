@@ -47,7 +47,7 @@
     <Compile Include="Analysis\AnalyzedDocument.cs" />
     <Compile Include="Analysis\Analyzer.cs" />
     <Compile Include="DeleteByPrimaryKeyOperation.cs" />
-    <Compile Include="DocHash.cs" />
+    <Compile Include="IO\DocHash.cs" />
     <Compile Include="DocumentUpsertOperation.cs" />
     <Compile Include="IO\Compressor.cs" />
     <Compile Include="IO\Read\DocHashReader.cs" />

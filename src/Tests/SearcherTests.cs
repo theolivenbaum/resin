@@ -60,7 +60,7 @@ namespace Tests
         [Test]
         public void Can_search_exact()
         {
-            var dir = Path.Combine(Setup.Dir, "Can_search_exact");
+            var dir = Path.Combine(Setup.Dir, "SearcherTests.Can_search_exact");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 

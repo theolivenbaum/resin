@@ -92,10 +92,13 @@ namespace Resin
 
             var timer = new Stopwatch();
             timer.Start();
+
+            if (results.Count == 1)
+            {
+                return results[0];
+            }
             
-            var agg = results
-                .Aggregate<IEnumerable<DocumentScore>, IEnumerable<DocumentScore>>(null, DocumentScore.CombineTakingLatestVersion)
-                .ToList();
+            var agg = results.CombineTakingLatestVersion().ToList();
 
             Log.DebugFormat("reduced multi-index collections for query {0} in {1}", query, timer.Elapsed);
 

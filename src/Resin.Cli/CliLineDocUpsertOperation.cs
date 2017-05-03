@@ -11,12 +11,14 @@ namespace Resin.Cli
     {
         private readonly int _take;
         private readonly int _skip;
+        private int _cursorPos;
 
         public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, string fileName, int skip, int take, bool compression, string primaryKey)
             : base(directory, analyzer, fileName, compression, primaryKey)
         {
             _take = take;
             _skip = skip;
+            _cursorPos = Console.CursorLeft;
         }
 
         public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, Stream file, int skip, int take, bool compression, string primaryKey)
@@ -24,11 +26,14 @@ namespace Resin.Cli
         {
             _take = take;
             _skip = skip;
+            _cursorPos = Console.CursorLeft;
         }
 
         protected IDictionary<string, string> Parse(string document)
         {
             var parts = document.Split(new[] { '\t' }, System.StringSplitOptions.RemoveEmptyEntries);
+
+            if (parts.Length < 3) return null;
 
             return new KeyValuePair<string, string>[] {
                 new KeyValuePair<string, string>("doctitle", parts[0]),
@@ -37,32 +42,38 @@ namespace Resin.Cli
 
         protected override IEnumerable<Document> ReadSource()
         {
-            var cursorPos = Console.CursorLeft;
-
             Reader.ReadLine(); // first row is junk
 
-            int skipped = 0;
-
-            while (skipped++ < _skip)
+            if (_skip > 0)
             {
-                Reader.ReadLine();
+                int skipped = 0;
+
+                while (skipped++ < _skip)
+                {
+                    Reader.ReadLine();
+                }
             }
 
+            return ReadInternal().Take(_take);
+        }
+
+        private IEnumerable<Document> ReadInternal()
+        {
             var took = 0;
             string line;
 
-            while (true)
+            while ((line = Reader.ReadLine()) != null)
             {
-                if ((line = Reader.ReadLine()) == null) break;
-                if (took++ == _take) break;
-
                 var doc = line.Substring(0, line.Length - 1);
                 var dic = Parse(doc);
 
-                yield return new Document(dic);
+                if (dic != null)
+                {
+                    yield return new Document(dic);
 
-                Console.SetCursorPosition(cursorPos, Console.CursorTop);
-                Console.Write(took);
+                    Console.SetCursorPosition(_cursorPos, Console.CursorTop);
+                    Console.Write(++took);
+                }
             }
             Console.WriteLine("");
         }
