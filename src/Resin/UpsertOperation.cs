@@ -58,7 +58,7 @@ namespace Resin
         public long Commit()
         {
             var docAddresses = new List<BlockInfo>();
-            var pks = new Dictionary<UInt32, object>();
+            var pks = new Dictionary<UInt64, object>();
             var ts = new List<Task>();
 
             using (var words = new BlockingCollection<WordInfo>())
@@ -80,7 +80,7 @@ namespace Resin
 
                             if (_autoGeneratePk)
                             {
-                                pkVal = Path.GetRandomFileName();
+                                pkVal = Guid.NewGuid().ToString();
                             }
                             else
                             {
@@ -91,17 +91,17 @@ namespace Resin
 
                             if (pks.ContainsKey(hash))
                             {
-                                Log.WarnFormat("Found multiple occurrences of documents with {0}:{1}. Only first occurrence will be stored.",
-                                    _primaryKey, pkVal);
+                                Log.WarnFormat("Found multiple occurrences of documents with pk value of {0} (id:{1}). Only first occurrence will be stored.",
+                                    pkVal, _docId);
                             }
                             else
                             {
+                                pks.Add(hash, null);
+
                                 doc.Id = _docId++;
 
                                 documents.Add(doc);
-
-                                pks.Add(hash, null);
-
+                                
                                 var adr = docWriter.Write(doc);
 
                                 docAddresses.Add(adr);
