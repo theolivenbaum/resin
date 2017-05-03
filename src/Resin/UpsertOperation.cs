@@ -86,9 +86,9 @@ namespace Resin
 
                             foreach (var term in analyzed.Words)
                             {
-                                var field = term.Key.Field;
-                                var token = term.Key.Word.Value;
-                                var posting = term.Value;
+                                var field = term.Term.Field;
+                                var token = term.Term.Word.Value;
+                                var posting = term.Posting;
 
                                 words.Add(new WordInfo(field, token, posting));
                             }

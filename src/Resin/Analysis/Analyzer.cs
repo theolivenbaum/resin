@@ -21,23 +21,16 @@ namespace Resin.Analysis
 
         public virtual AnalyzedDocument AnalyzeDocument(Document document)
         {
-            var words = new Dictionary<Term, DocumentPosting>();
+            var words = new List<AnalyzedTerm>();
 
             foreach(var field in document.Fields)
             {
                 if (field.Key[0] == '_')
                 {
                     var term = new Term(field.Key, new Word(field.Value));
-                    DocumentPosting posting;
+                    var posting = new DocumentPosting(document.Id, 1);
 
-                    if (words.TryGetValue(term, out posting))
-                    {
-                        posting.Count++;
-                    }
-                    else
-                    {
-                        words.Add(term, new DocumentPosting(document.Id, 1));
-                    }
+                    words.Add(new AnalyzedTerm(term, posting));
                 }
                 else
                 {
@@ -58,20 +51,9 @@ namespace Resin.Analysis
                     {
                         var word = new Word(tokenGroup.Key);
                         var term = new Term(field.Key, word);
+                        var posting = new DocumentPosting(document.Id, tokenGroup.Value);
 
-                        DocumentPosting posting;
-
-                        var count = tokenGroup.Value;
-
-                        if (words.TryGetValue(term, out posting))
-                        {
-                            posting.Count += count;
-                        }
-                        else
-                        {
-                            posting = new DocumentPosting(document.Id, count);
-                            words.Add(term, posting);
-                        }
+                        words.Add(new AnalyzedTerm(term, posting));
                     }
                 }
             }

@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Analysis\AnalyzedDocument.cs" />
+    <Compile Include="Analysis\AnalyzedTerm.cs" />
     <Compile Include="Analysis\Analyzer.cs" />
     <Compile Include="DeleteByPrimaryKeyOperation.cs" />
     <Compile Include="IO\DocHash.cs" />

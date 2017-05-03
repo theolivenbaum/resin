@@ -1,17 +1,16 @@
 using System.Collections.Generic;
-using Resin.IO;
 
 namespace Resin.Analysis
 {
     public class AnalyzedDocument
     {
-        private readonly IDictionary<Term, DocumentPosting> _words;
+        private readonly IList<AnalyzedTerm> _words;
 
-        public IDictionary<Term, DocumentPosting> Words { get { return _words; } }
+        public IList<AnalyzedTerm> Words { get { return _words; } }
 
         public int Id { get; private set; }
 
-        public AnalyzedDocument(int id, IDictionary<Term, DocumentPosting> words)
+        public AnalyzedDocument(int id, IList<AnalyzedTerm> words)
         {
             Id = id;
             _words = words;
