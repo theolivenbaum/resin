@@ -7,9 +7,9 @@ namespace Resin
 {
     public class DocumentUpsertOperation : UpsertOperation
     {
-        private readonly IEnumerable<IDictionary<string, string>> _documents;
+        private readonly IEnumerable<IList<Field>> _documents;
 
-        public DocumentUpsertOperation(string directory, IAnalyzer analyzer, bool compression, string primaryKey, IEnumerable<IDictionary<string, string>> documents) 
+        public DocumentUpsertOperation(string directory, IAnalyzer analyzer, bool compression, string primaryKey, IEnumerable<IList<Field>> documents) 
             : base(directory, analyzer, compression, primaryKey)
         {
             _documents = documents;

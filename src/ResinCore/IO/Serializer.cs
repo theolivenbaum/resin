@@ -264,23 +264,24 @@ namespace Resin.IO
             }
         }
 
-        public static byte[] Serialize(this IEnumerable<KeyValuePair<string, string>> entries, bool compress)
+        public static byte[] Serialize(this IList<Field> fields, bool compress)
         {
             using (var stream = new MemoryStream())
             {
-                foreach (var entry in entries)
+                foreach (var field in fields)
                 {
-                    byte[] keyBytes = Encoding.GetBytes(entry.Key);
+                    byte[] keyBytes = Encoding.GetBytes(field.Key);
                     byte[] keyLengthBytes = BitConverter.GetBytes((short)keyBytes.Length);
                     byte[] valBytes;
+                    string toStore = field.Store ? field.Value ?? string.Empty : string.Empty;
 
                     if (compress)
                     {
-                        valBytes = Compressor.Compress(Encoding.GetBytes((entry.Value ?? string.Empty)));
+                        valBytes = Compressor.Compress(Encoding.GetBytes(toStore));
                     }
                     else
                     {
-                        valBytes = QuickLZ.compress(Encoding.GetBytes((entry.Value ?? string.Empty)), 1);
+                        valBytes = QuickLZ.compress(Encoding.GetBytes(toStore), 1);
                     }
 
                     byte[] valLengthBytes = BitConverter.GetBytes(valBytes.Length);
@@ -447,9 +448,9 @@ namespace Resin.IO
             }
 
             var id = BitConverter.ToInt32(idBytes, 0);
-            var dic = DeserializeStringStringDic(dicBytes, deflate).ToDictionary(x=>x.Key, y=>y.Value);
+            var doc = DeserializeFields(dicBytes, deflate).ToList();
 
-            return new Document(dic) {Id = id};
+            return new Document(doc) {Id = id};
         }
 
         public static BlockInfo DeserializeBlock(Stream stream)
@@ -549,15 +550,15 @@ namespace Resin.IO
             }
         }
 
-        public static IEnumerable<KeyValuePair<string, string>> DeserializeStringStringDic(byte[] data, bool deflate)
+        public static IEnumerable<Field> DeserializeFields(byte[] data, bool deflate)
         {
             using (var stream = new MemoryStream(data))
             {
-                return DeserializeStringStringDic(stream, deflate).ToList();
+                return DeserializeFields(stream, deflate).ToList();
             }
         }
 
-        public static IEnumerable<KeyValuePair<string, string>> DeserializeStringStringDic(Stream stream, bool deflate)
+        public static IEnumerable<Field> DeserializeFields(Stream stream, bool deflate)
         {
             while (true)
             {
@@ -609,7 +610,7 @@ namespace Resin.IO
                     Encoding.GetString(Compressor.Decompress(valBytes)) : 
                     Encoding.GetString(QuickLZ.decompress(valBytes));
 
-                yield return new KeyValuePair<string, string>(key, value);
+                yield return new Field(key, value);
             }
         }
 

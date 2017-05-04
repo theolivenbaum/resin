@@ -123,7 +123,7 @@ namespace Resin
                             }
                             else
                             {
-                                pkVal = doc.Fields[_primaryKey];
+                                pkVal = doc.Fields.First(f=>f.Key ==_primaryKey).Value;
                             }
 
                             var hash = pkVal.ToHash();

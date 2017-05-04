@@ -11,9 +11,9 @@ namespace Resin.IO.Write
             _withCompression = withCompression;
         }
 
-        protected override byte[] Serialize(Document block)
+        protected override byte[] Serialize(Document document)
         {
-            return block.Serialize(_withCompression);
+            return document.Serialize(_withCompression);
         }
     }
 }

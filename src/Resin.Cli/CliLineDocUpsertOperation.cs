@@ -29,15 +29,17 @@ namespace Resin.Cli
             _cursorPos = Console.CursorLeft;
         }
 
-        protected IDictionary<string, string> Parse(string document)
+        protected IList<Field> Parse(string document)
         {
             var parts = document.Split(new[] { '\t' }, System.StringSplitOptions.RemoveEmptyEntries);
 
             if (parts.Length < 3) return null;
 
-            return new KeyValuePair<string, string>[] {
-                new KeyValuePair<string, string>("doctitle", parts[0]),
-                new KeyValuePair<string, string>("body", parts[2]) }.ToDictionary(x => x.Key, x => x.Value);
+            return new Field[] 
+            {
+                new Field("doctitle", parts[0]),
+                new Field("body", parts[2])
+            };
         }
 
         protected override IEnumerable<Document> ReadSource()

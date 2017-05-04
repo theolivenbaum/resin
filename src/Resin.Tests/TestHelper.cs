@@ -8,7 +8,7 @@ namespace Tests
 {
     public static class TestHelper
     {
-        public static IEnumerable<Document> ToDocuments(this IEnumerable<IDictionary<string, string>> documents)
+        public static IEnumerable<Document> ToDocuments(this IEnumerable<IList<Field>> documents)
         {
             return documents.Select(doc => new Document(doc));
         }

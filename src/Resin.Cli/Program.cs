@@ -96,7 +96,7 @@ namespace Resin.Cli
 
                 var docs = result.Docs;
 
-                PrintHeaders(docs[0].Document.Fields.Keys);
+                PrintHeaders(docs[0].Document.Fields.Select(f=>f.Key).ToArray());
 
                 var highlight = new QueryParser(new Analyzer()).Parse(q).ToList().GroupBy(y => y.Field).ToDictionary(g => g.Key, g => g.First().Value);
 
