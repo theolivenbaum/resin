@@ -1,4 +1,3 @@
 range
-optionally store doc field
 numbers
 dates
