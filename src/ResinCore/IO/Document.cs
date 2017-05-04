@@ -27,6 +27,9 @@ namespace Resin.IO
 
         public Field(string key, string value, bool store = true)
         {
+            if (key == null) throw new ArgumentNullException("key");
+            if (value == null) throw new ArgumentNullException("value");
+
             Key = key;
             Value = value;
             Store = store;

@@ -273,7 +273,7 @@ namespace Resin.IO
                     byte[] keyBytes = Encoding.GetBytes(field.Key);
                     byte[] keyLengthBytes = BitConverter.GetBytes((short)keyBytes.Length);
                     byte[] valBytes;
-                    string toStore = field.Store ? field.Value ?? string.Empty : string.Empty;
+                    string toStore = field.Store ? field.Value : string.Empty;
 
                     if (compress)
                     {
