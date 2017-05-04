@@ -1,7 +1,7 @@
 ﻿using Resin.IO;
 using System;
 
-namespace Resin
+namespace Resin.IO
 {
     public struct WordInfo : IEquatable<WordInfo>
     {
