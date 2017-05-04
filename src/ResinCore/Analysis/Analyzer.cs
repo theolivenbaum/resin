@@ -16,21 +16,28 @@ namespace Resin.Analysis
             _stopwords =stopwords == null ? null : new HashSet<string>(stopwords);
         }
 
-        public virtual AnalyzedDocument AnalyzeDocument(Document document)
+        public AnalyzedDocument AnalyzeDocument(Document document)
         {
-            var words = new List<AnalyzedTerm>();
+            return new AnalyzedDocument(document.Id, AnalyzeDocumentInternal(document));
+        }
 
+        public IEnumerable<AnalyzedTerm> AnalyzeDocumentInternal(Document document)
+        {
             foreach(var field in document.Fields)
             {
                 if (field.Key[0] == '_')
                 {
+                    // don't analyze
+
                     var term = new Term(field.Key, new Word(field.Value));
                     var posting = new DocumentPosting(document.Id, 1);
 
-                    words.Add(new AnalyzedTerm(term, posting));
+                    yield return new AnalyzedTerm(term, posting);
                 }
                 else
                 {
+                    // analyze
+
                     var tokenDic = new Dictionary<string, int>();
                     foreach(var token in Analyze(field.Value))
                     {
@@ -50,14 +57,13 @@ namespace Resin.Analysis
                         var term = new Term(field.Key, word);
                         var posting = new DocumentPosting(document.Id, tokenGroup.Value);
 
-                        words.Add(new AnalyzedTerm(term, posting));
+                        yield return new AnalyzedTerm(term, posting);
                     }
                 }
             }
-            return new AnalyzedDocument(document.Id, words);
         }
         
-        public virtual IEnumerable<string> Analyze(string value)
+        public IEnumerable<string> Analyze(string value)
         {
             var normalized = value.ToLower();
 
