@@ -129,12 +129,12 @@ namespace Resin.IO
             }
         }
 
-        public static byte[] Serialize(this Document document, bool compress)
+        public static byte[] Serialize(this Document document, Compression compression)
         {
             using (var stream = new MemoryStream())
             {
                 var idBytes = BitConverter.GetBytes(document.Id);
-                var dicBytes = document.Fields.Serialize(compress);
+                var dicBytes = document.Fields.Serialize(compression);
 
                 if (!BitConverter.IsLittleEndian)
                 {
@@ -174,15 +174,18 @@ namespace Resin.IO
             {
                 byte[] versionBytes = BitConverter.GetBytes(ix.VersionId);
                 byte[] docCountBytes = BitConverter.GetBytes(ix.DocumentCount);
+                byte[] compressionEnumBytes = BitConverter.GetBytes((int)ix.Compression);
 
                 if (!BitConverter.IsLittleEndian)
                 {
                     Array.Reverse(versionBytes);
+                    Array.Reverse(docCountBytes);
+                    Array.Reverse(compressionEnumBytes);
                 }
 
                 stream.Write(versionBytes, 0, sizeof(long));
                 stream.Write(docCountBytes, 0, sizeof(int));
-                stream.WriteByte(EncodedBoolean[ix.Compressed]);
+                stream.Write(compressionEnumBytes, 0, sizeof(int));
 
                 return stream.ToArray();
             }
@@ -198,19 +201,22 @@ namespace Resin.IO
 
             stream.Read(docCountBytes, 0, sizeof(int));
 
-            var compressed = stream.ReadByte();
+            var compression = new byte[sizeof(int)];
+
+            stream.Read(compression, 0, sizeof(int));
 
             if (!BitConverter.IsLittleEndian)
             {
                 Array.Reverse(versionBytes);
                 Array.Reverse(docCountBytes);
+                Array.Reverse(compression);
             }
 
             return new IxInfo
             {
                 VersionId= BitConverter.ToInt64(versionBytes, 0),
                 DocumentCount = BitConverter.ToInt32(docCountBytes, 0),
-                Compressed = compressed==1
+                Compression = (Compression)BitConverter.ToInt32(compression, 0),
             };
         }
 
@@ -264,7 +270,7 @@ namespace Resin.IO
             }
         }
 
-        public static byte[] Serialize(this IList<Field> fields, bool compress)
+        public static byte[] Serialize(this IList<Field> fields, Compression compression)
         {
             using (var stream = new MemoryStream())
             {
@@ -275,13 +281,17 @@ namespace Resin.IO
                     byte[] valBytes;
                     string toStore = field.Store ? field.Value : string.Empty;
 
-                    if (compress)
+                    if (compression == Compression.GZip)
                     {
-                        valBytes = Compressor.Compress(Encoding.GetBytes(toStore));
+                        valBytes = Deflator.Compress(Encoding.GetBytes(toStore));
+                    }
+                    else if (compression == Compression.QuickLz)
+                    {
+                        valBytes = QuickLZ.compress(Encoding.GetBytes(toStore), 1);
                     }
                     else
                     {
-                        valBytes = QuickLZ.compress(Encoding.GetBytes(toStore), 1);
+                        valBytes = Encoding.GetBytes(toStore);
                     }
 
                     byte[] valLengthBytes = BitConverter.GetBytes(valBytes.Length);
@@ -433,7 +443,7 @@ namespace Resin.IO
             }
         }
 
-        public static Document DeserializeDocument(byte[] data, bool deflate)
+        public static Document DeserializeDocument(byte[] data, Compression compression)
         {
             var idBytes = new byte[sizeof(int)];
             Array.Copy(data, 0, idBytes, 0, sizeof(int));
@@ -448,7 +458,7 @@ namespace Resin.IO
             }
 
             var id = BitConverter.ToInt32(idBytes, 0);
-            var doc = DeserializeFields(dicBytes, deflate).ToList();
+            var doc = DeserializeFields(dicBytes, compression).ToList();
 
             return new Document(doc) {Id = id};
         }
@@ -550,15 +560,15 @@ namespace Resin.IO
             }
         }
 
-        public static IEnumerable<Field> DeserializeFields(byte[] data, bool deflate)
+        public static IEnumerable<Field> DeserializeFields(byte[] data, Compression compression)
         {
             using (var stream = new MemoryStream(data))
             {
-                return DeserializeFields(stream, deflate).ToList();
+                return DeserializeFields(stream, compression).ToList();
             }
         }
 
-        public static IEnumerable<Field> DeserializeFields(Stream stream, bool deflate)
+        public static IEnumerable<Field> DeserializeFields(Stream stream, Compression compression)
         {
             while (true)
             {
@@ -606,9 +616,22 @@ namespace Resin.IO
                     Array.Reverse(valBytes);
                 }
 
-                string value = deflate ?
-                    Encoding.GetString(Compressor.Decompress(valBytes)) : 
-                    Encoding.GetString(QuickLZ.decompress(valBytes));
+
+                string value;
+
+                if (compression == Compression.GZip)
+                {
+                    value = Encoding.GetString(Deflator.Deflate(valBytes));
+                }
+                else if (compression == Compression.QuickLz)
+                {
+                    value = Encoding.GetString(QuickLZ.decompress(valBytes));
+                }
+                else
+                {
+                    value = Encoding.GetString(valBytes);
+                }
+
 
                 yield return new Field(key, value);
             }
@@ -727,5 +750,11 @@ namespace Resin.IO
 
             return root;
         }
+    }
+    public enum Compression
+    {
+        NoCompression=0,
+        QuickLz=1,
+        GZip=2
     }
 }

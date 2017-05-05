@@ -4,16 +4,16 @@ namespace Resin.IO.Write
 {
     public class DocumentWriter : BlockWriter<Document>
     {
-        private readonly bool _withCompression;
+        private readonly Compression _compression;
 
-        public DocumentWriter(Stream stream, bool withCompression) : base(stream)
+        public DocumentWriter(Stream stream, Compression compression) : base(stream)
         {
-            _withCompression = withCompression;
+            _compression = compression;
         }
 
         protected override byte[] Serialize(Document document)
         {
-            return document.Serialize(_withCompression);
+            return document.Serialize(_compression);
         }
     }
 }

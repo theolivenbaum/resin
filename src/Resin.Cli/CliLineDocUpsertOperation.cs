@@ -13,7 +13,7 @@ namespace Resin.Cli
         private readonly int _skip;
         private int _cursorPos;
 
-        public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, string fileName, int skip, int take, bool compression, string primaryKey)
+        public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, string fileName, int skip, int take, Compression compression, string primaryKey)
             : base(directory, analyzer, fileName, compression, primaryKey)
         {
             _take = take;
@@ -21,7 +21,7 @@ namespace Resin.Cli
             _cursorPos = Console.CursorLeft;
         }
 
-        public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, Stream file, int skip, int take, bool compression, string primaryKey)
+        public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, Stream file, int skip, int take, Compression compression, string primaryKey)
             : base(directory, analyzer, file, compression, primaryKey)
         {
             _take = take;

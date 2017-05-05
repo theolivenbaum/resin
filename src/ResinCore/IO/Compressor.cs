@@ -3,7 +3,7 @@ using System.IO.Compression;
 
 namespace Resin.IO
 {
-    public static class Compressor
+    public static class Deflator
     {
         public static byte[] Compress(string text)
         {
@@ -25,7 +25,7 @@ namespace Resin.IO
             return output.ToArray();
         }
 
-        public static byte[] Decompress(byte[] data)
+        public static byte[] Deflate(byte[] data)
         {
             var input = new MemoryStream(data);
             var output = new MemoryStream();

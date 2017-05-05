@@ -38,7 +38,7 @@ namespace Tests
             var blocks = new Dictionary<int, BlockInfo>();
 
             using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write))
-            using (var writer = new DocumentWriter(fs, false))
+            using (var writer = new DocumentWriter(fs, Compression.GZip))
             {
                 var index = 0;
                 foreach (var doc in docs)
@@ -49,7 +49,7 @@ namespace Tests
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            using (var reader = new DocumentReader(fs, false))
+            using (var reader = new DocumentReader(fs, Compression.GZip))
             {
                 var doc = reader.Get(new[] { blocks[2] });
 
@@ -57,7 +57,7 @@ namespace Tests
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            using (var reader = new DocumentReader(fs, false))
+            using (var reader = new DocumentReader(fs, Compression.GZip))
             {
                 var doc = reader.Get(new[] { blocks[1] });
 
@@ -65,7 +65,7 @@ namespace Tests
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            using (var reader = new DocumentReader(fs, false))
+            using (var reader = new DocumentReader(fs, Compression.GZip))
             {
                 var doc = reader.Get(new[] { blocks[0] });
 
@@ -73,7 +73,7 @@ namespace Tests
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            using (var reader = new DocumentReader(fs, false))
+            using (var reader = new DocumentReader(fs, Compression.GZip))
             {
                 var ds = reader.Get(blocks.Values.OrderBy(b => b.Position).ToList()).ToList();
 

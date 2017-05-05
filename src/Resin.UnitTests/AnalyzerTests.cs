@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using Resin.Analysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.IO;
 
 namespace Tests
 {

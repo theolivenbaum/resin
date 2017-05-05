@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using log4net.Config;
 using log4net;
+using Resin.IO;
 
 namespace Resin.Cli
 {
@@ -176,7 +177,7 @@ namespace Resin.Cli
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            using (var writer = new CliLineDocUpsertOperation(dir, new Analyzer(), fileName, skip, take, compress, null))
+            using (var writer = new CliLineDocUpsertOperation(dir, new Analyzer(), fileName, skip, take, Compression.GZip, null))
             {
                 writer.Commit();
             }

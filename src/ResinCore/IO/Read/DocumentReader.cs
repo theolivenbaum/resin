@@ -4,16 +4,16 @@ namespace Resin.IO.Read
 {
     public class DocumentReader : BlockReader<Document>
     {
-        private readonly bool _deflate;
+        private readonly Compression _compression;
 
-        public DocumentReader(Stream stream, bool deflate) : base(stream)
+        public DocumentReader(Stream stream, Compression compression) : base(stream)
         {
-            _deflate = deflate;
+            _compression = compression;
         }
 
         protected override Document Deserialize(byte[] data)
         {
-            return Serializer.DeserializeDocument(data, _deflate);
+            return Serializer.DeserializeDocument(data, _compression);
         }
     }
 }

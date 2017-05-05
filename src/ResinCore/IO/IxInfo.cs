@@ -13,7 +13,7 @@ namespace Resin.IO
 
         public int DocumentCount { get; set; }
 
-        public bool Compressed { get; set; }
+        public Compression Compression { get; set; }
 
         public static IxInfo Load(string fileName)
         {

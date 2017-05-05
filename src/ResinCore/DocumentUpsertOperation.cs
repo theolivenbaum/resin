@@ -9,7 +9,7 @@ namespace Resin
     {
         private readonly IEnumerable<IList<Field>> _documents;
 
-        public DocumentUpsertOperation(string directory, IAnalyzer analyzer, bool compression, string primaryKey, IEnumerable<IList<Field>> documents) 
+        public DocumentUpsertOperation(string directory, IAnalyzer analyzer, Compression compression, string primaryKey, IEnumerable<IList<Field>> documents) 
             : base(directory, analyzer, compression, primaryKey)
         {
             _documents = documents;

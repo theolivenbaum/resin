@@ -21,7 +21,7 @@ namespace Resin
 
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
-        private readonly bool _compression;
+        private readonly Compression _compression;
         private readonly string _primaryKey;
         private readonly long _indexVersionId;
         private readonly Dictionary<string, LcrsTrie> _tries;
@@ -29,7 +29,7 @@ namespace Resin
         private volatile int _docId;
         private readonly bool _autoGeneratePk;
 
-        protected StreamingUpsertOperation(string directory, IAnalyzer analyzer, bool compression, string primaryKey)
+        protected StreamingUpsertOperation(string directory, IAnalyzer analyzer, Compression compression, string primaryKey)
         {
             _directory = directory;
             _analyzer = analyzer;
@@ -229,7 +229,7 @@ namespace Resin
 
             CreateIxInfo().Serialize(Path.Combine(_directory, _indexVersionId + ".ix"));
 
-            if(_compression) Log.Info("compression: true");
+            if(_compression>0) Log.Info("compression: true");
 
             return _indexVersionId;
         }
@@ -269,7 +269,7 @@ namespace Resin
             {
                 VersionId = _indexVersionId,
                 DocumentCount = _docId,
-                Compressed = _compression
+                Compression = _compression
             };
         }
     }

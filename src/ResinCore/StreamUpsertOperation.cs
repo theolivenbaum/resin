@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using Resin.Analysis;
+using Resin.IO;
 
 namespace Resin
 {
@@ -9,12 +10,12 @@ namespace Resin
     {
         protected readonly StreamReader Reader;
 
-        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, string fileName, bool compression, string primaryKey)
+        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, string fileName, Compression compression, string primaryKey)
             : this(directory, analyzer, File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None), compression, primaryKey)
         {
         }
 
-        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, Stream stream, bool compression, string primaryKey)
+        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, Stream stream, Compression compression, string primaryKey)
             : base(directory, analyzer, compression, primaryKey)
         {
 

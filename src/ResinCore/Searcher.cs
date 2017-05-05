@@ -126,7 +126,7 @@ namespace Resin
 
             using (var docReader = new DocumentReader(
                 new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096*4, FileOptions.SequentialScan),
-                ix.Compressed))
+                (Compression)ix.Compression))
             {
                 var dic = scores.ToDictionary(x => x.DocumentId, y => y.Score);
 
