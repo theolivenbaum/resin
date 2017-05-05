@@ -1,5 +1,5 @@
 # Resin
-Resin is a document-based search engine and analytics tool. Querying support includes exact, fuzzy and prefix. Analyzers, tokenizers and scoring schemes are customizable. 
+Resin can analyze, index and store documents and includes querying support for term, fuzzy and prefix. It's a document-based search engine and analytics tool. Analyzers, tokenizers and scoring schemes are customizable. 
 
 ## Query language
 The current query language is a copy of [Lucene's](https://lucene.apache.org/core/2_9_4/queryparsersyntax.html) (minus range and grouping (coming soon)). 
