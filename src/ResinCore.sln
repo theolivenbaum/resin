@@ -18,6 +18,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Resources", "Resources", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resin.UnitTests", "Resin.UnitTests\Resin.UnitTests.csproj", "{B9CEA923-07C2-4ADE-8DD5-E2CDAC3EA9A7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{47C9EBB6-39BE-4B19-BA51-401EC9777BA6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,5 +41,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B9CEA923-07C2-4ADE-8DD5-E2CDAC3EA9A7} = {47C9EBB6-39BE-4B19-BA51-401EC9777BA6}
 	EndGlobalSection
 EndGlobal
