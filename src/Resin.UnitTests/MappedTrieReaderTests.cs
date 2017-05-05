@@ -7,12 +7,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Tests
 {
     [TestClass]
-    public class MappedTrieReaderTests
+    public class MappedTrieReaderTests : Setup
     {
         [TestMethod]
         public void Can_find_near()
         {
-            var fileName = Path.Combine(Setup.Dir, "Can_find_near.tri");
+            var fileName = Path.Combine(Dir, "Can_find_near.tri");
 
             var tree = new LcrsTrie('\0', false);
             tree.Serialize(fileName);
@@ -115,7 +115,7 @@ namespace Tests
         [TestMethod]
         public void Can_find_prefixed()
         {
-            var fileName = Path.Combine(Setup.Dir, "Can_find_prefixed.tri");
+            var fileName = Path.Combine(Dir, "Can_find_prefixed.tri");
 
             var tree = new LcrsTrie('\0', false);
 
@@ -152,7 +152,7 @@ namespace Tests
         [TestMethod]
         public void Can_find_exact()
         {
-            var fileName = Path.Combine(Setup.Dir, "Can_find_exact_mm.tri");
+            var fileName = Path.Combine(Dir, "Can_find_exact_mm.tri");
 
             var tree = new LcrsTrie('\0', false);
             tree.Add("xor");
@@ -216,7 +216,7 @@ namespace Tests
         [TestMethod]
         public void Can_deserialize_whole_file()
         {
-            var fileName = Path.Combine(Setup.Dir, "Can_serialize_whole_file.tri");
+            var fileName = Path.Combine(Dir, "Can_serialize_whole_file.tri");
 
             var tree = new LcrsTrie('\0', false);
             tree.Add("baby");
@@ -237,7 +237,7 @@ namespace Tests
 
             tree.Serialize(fileName);
 
-            var recreated = Serializer.DeserializeTrie(Setup.Dir, new FileInfo(fileName).Name);
+            var recreated = Serializer.DeserializeTrie(Dir, new FileInfo(fileName).Name);
 
             Assert.IsTrue(recreated.HasWord("baby", out found));
             Assert.IsTrue(recreated.HasWord("bad", out found));

@@ -6,7 +6,7 @@ using System.IO;
 namespace Tests
 {
     [TestClass]
-    public class AnalyzerTests
+    public class AnalyzerTests : Setup
     {
         [TestMethod]
         public void Stopwords()

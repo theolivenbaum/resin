@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Tests
 {
     [TestClass]
-    public class DocumentReaderTests
+    public class DocumentReaderTests : Setup
     {
         [TestMethod]
         public void Can_read()
@@ -34,7 +34,7 @@ namespace Tests
                 })
             };
 
-            var fileName = Path.Combine(Setup.Dir, "DocumentReaderTests.Can_read");
+            var fileName = Path.Combine(Dir, "DocumentReaderTests.Can_read");
             var blocks = new Dictionary<int, BlockInfo>();
 
             using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write))

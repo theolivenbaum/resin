@@ -9,12 +9,12 @@ using System.Linq;
 namespace Tests
 {
     [TestClass]
-    public class SearcherTests
+    public class SearcherTests : Setup
     {
         [TestMethod]
         public void Can_search_compressed_index()
         {
-            var dir = Path.Combine(Setup.Dir, "Can_search_exact");
+            var dir = Path.Combine(Dir, "Can_search_exact");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
@@ -61,7 +61,7 @@ namespace Tests
         [TestMethod]
         public void Can_search_exact()
         {
-            var dir = Path.Combine(Setup.Dir, "SearcherTests.Can_search_exact");
+            var dir = Path.Combine(Dir, "SearcherTests.Can_search_exact");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
