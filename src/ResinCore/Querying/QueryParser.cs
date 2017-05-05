@@ -126,6 +126,13 @@ namespace Resin.Querying
 
             if (positionInQuery == 0) and = true;
 
+            DateTime date;
+
+            if (DateTime.TryParse(value, out date))
+            {
+                value = date.Ticks.ToString();
+            }
+
             return new QueryContext(fieldName, value) { And = and, Not = not, Prefix = prefix, Fuzzy = fuzzy, Similarity = _fuzzySimilarity};
         }
     }
