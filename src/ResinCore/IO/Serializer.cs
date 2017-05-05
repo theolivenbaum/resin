@@ -15,7 +15,7 @@ namespace Resin.IO
 
         public static int SizeOfNode()
         {
-            return sizeof(char) + 3 * sizeof(bool) + 1 * sizeof(int) + 1 * sizeof(short) + SizeOfBlock();
+            return sizeof(char) + 3 * sizeof(byte) + 1 * sizeof(int) + 1 * sizeof(short) + SizeOfBlock();
         }
 
         public static int SizeOfBlock()

@@ -1,11 +1,13 @@
 ﻿using System.Linq;
 using Resin.IO;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests
 {
+    [TestClass]
     public class LcrsTrieTests
     {
-        [Fact]
+        [TestMethod]
         public void Can_append_tries()
         {
             var one = new LcrsTrie('\0', false);
@@ -26,7 +28,7 @@ namespace Tests
             Assert.IsTrue(one.HasWord("banana", out found));
         }
 
-        [Test]
+        [TestMethod]
         public void Can_get_weight()
         {
             var tree = new LcrsTrie('\0', false);
@@ -42,48 +44,48 @@ namespace Tests
             Assert.AreEqual(15, tree.Weight);
         }
 
-        [Test]
+        [TestMethod]
         public void Can_find_near()
         {
             var tree = new LcrsTrie('\0', false);
             var near = tree.Near("ba", 1).Select(w=>w.Value).ToList();
 
-            Assert.That(near, Is.Empty);
+            Assert.IsFalse(near.Any());
 
             tree.Add("bad");
             near = tree.Near("ba", 1).Select(w => w.Value).ToList();
 
-            Assert.That(near.Count, Is.EqualTo(1));
+            Assert.AreEqual(1, near.Count);
             Assert.IsTrue(near.Contains("bad"));
 
             tree.Add("baby");
             near = tree.Near("ba", 1).Select(w => w.Value).ToList();
 
-            Assert.That(near.Count, Is.EqualTo(1));
+            Assert.AreEqual(1, near.Count);
             Assert.IsTrue(near.Contains("bad"));
 
             tree.Add("b");
             near = tree.Near("ba", 1).Select(w => w.Value).ToList();
 
-            Assert.That(near.Count, Is.EqualTo(2));
+            Assert.AreEqual(2, near.Count);
             Assert.IsTrue(near.Contains("bad"));
             Assert.IsTrue(near.Contains("b"));
 
             near = tree.Near("ba", 2).Select(w => w.Value).ToList();
 
-            Assert.That(near.Count, Is.EqualTo(3));
+            Assert.AreEqual(3, near.Count);
             Assert.IsTrue(near.Contains("b"));
             Assert.IsTrue(near.Contains("bad"));
             Assert.IsTrue(near.Contains("baby"));
 
             near = tree.Near("ba", 0).Select(w => w.Value).ToList();
 
-            Assert.That(near.Count, Is.EqualTo(0));
+            Assert.AreEqual(0, near.Count);
 
             tree.Add("bananas");
             near = tree.Near("ba", 6).Select(w => w.Value).ToList();
 
-            Assert.That(near.Count, Is.EqualTo(4));
+            Assert.AreEqual(4, near.Count);
             Assert.IsTrue(near.Contains("b"));
             Assert.IsTrue(near.Contains("bad"));
             Assert.IsTrue(near.Contains("baby"));
@@ -91,7 +93,7 @@ namespace Tests
 
             near = tree.Near("bazy", 1).Select(w => w.Value).ToList();
 
-            Assert.That(near.Count, Is.EqualTo(1));
+            Assert.AreEqual(1, near.Count);
             Assert.IsTrue(near.Contains("baby"));
 
             tree.Add("bank");
@@ -104,7 +106,7 @@ namespace Tests
             Assert.IsTrue(near.Contains("b"));
         }
 
-        [Test]
+        [TestMethod]
         public void Can_find_prefixed()
         {
             var tree = new LcrsTrie('\0', false);
@@ -131,74 +133,74 @@ namespace Tests
 
             var prefixed = tree.StartsWith("ra").Select(w=>w.Value).ToList();
 
-            Assert.That(prefixed.Count, Is.EqualTo(3));
+            Assert.AreEqual(3, prefixed.Count);
             Assert.IsTrue(prefixed.Contains("rambo"));
             Assert.IsTrue(prefixed.Contains("raiders"));
             Assert.IsTrue(prefixed.Contains("rain"));
         }
 
-        [Test]
+        [TestMethod]
         public void Can_find_exact()
         {
             var tree = new LcrsTrie('\0', false);
             Word word;
-            Assert.False(tree.HasWord("xxx", out word));
+            Assert.IsFalse(tree.HasWord("xxx", out word));
 
             tree.Add("xxx");
 
-            Assert.True(tree.HasWord("xxx", out word));
-            Assert.False(tree.HasWord("baby", out word));
-            Assert.False(tree.HasWord("dad", out word));
+            Assert.IsTrue(tree.HasWord("xxx", out word));
+            Assert.IsFalse(tree.HasWord("baby", out word));
+            Assert.IsFalse(tree.HasWord("dad", out word));
 
             tree.Add("baby");
 
-            Assert.True(tree.HasWord("xxx", out word));
-            Assert.True(tree.HasWord("baby", out word));
-            Assert.False(tree.HasWord("dad", out word));
+            Assert.IsTrue(tree.HasWord("xxx", out word));
+            Assert.IsTrue(tree.HasWord("baby", out word));
+            Assert.IsFalse(tree.HasWord("dad", out word));
 
             tree.Add("dad");
 
-            Assert.True(tree.HasWord("xxx", out word));
-            Assert.True(tree.HasWord("baby", out word));
-            Assert.True(tree.HasWord("dad", out word));
+            Assert.IsTrue(tree.HasWord("xxx", out word));
+            Assert.IsTrue(tree.HasWord("baby", out word));
+            Assert.IsTrue(tree.HasWord("dad", out word));
         }
 
-        [Test]
+        [TestMethod]
         public void Can_build_one_leg()
         {
             var tree = new LcrsTrie('\0', false);
             Word word;
             tree.Add("baby");
 
-            Assert.That(tree.LeftChild.Value, Is.EqualTo('b'));
-            Assert.That(tree.LeftChild.LeftChild.Value, Is.EqualTo('a'));
-            Assert.That(tree.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('b'));
-            Assert.That(tree.LeftChild.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('y'));
+            Assert.AreEqual('b', tree.LeftChild.Value);
+            Assert.AreEqual('a', tree.LeftChild.LeftChild.Value);
+            Assert.AreEqual('b', tree.LeftChild.LeftChild.LeftChild.Value);
+            Assert.AreEqual('y', tree.LeftChild.LeftChild.LeftChild.LeftChild.Value);
 
-            Assert.True(tree.HasWord("baby", out word));
+            Assert.IsTrue(tree.HasWord("baby", out word));
         }
 
-        [Test]
+        [TestMethod]
         public void Can_build_two_legs()
         {
             var root = new LcrsTrie('\0', false);
             root.Add("baby");
             root.Add("dad");
             Word word;
-            Assert.That(root.LeftChild.RightSibling.Value, Is.EqualTo('d'));
-            Assert.That(root.LeftChild.LeftChild.Value, Is.EqualTo('a'));
-            Assert.That(root.LeftChild.RightSibling.LeftChild.LeftChild.Value, Is.EqualTo('d'));
+            Assert.AreEqual('d', root.LeftChild.RightSibling.Value);
+            Assert.AreEqual('a', root.LeftChild.LeftChild.Value);
+            Assert.AreEqual('d', root.LeftChild.RightSibling.LeftChild.LeftChild.Value);
 
-            Assert.That(root.LeftChild.Value, Is.EqualTo('b'));
-            Assert.That(root.LeftChild.RightSibling.LeftChild.Value, Is.EqualTo('a'));
-            Assert.That(root.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('b'));
-            Assert.That(root.LeftChild.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('y'));
+            Assert.AreEqual('b', root.LeftChild.Value);
+            Assert.AreEqual('a', root.LeftChild.RightSibling.LeftChild.Value);
+            Assert.AreEqual('b', root.LeftChild.LeftChild.LeftChild.Value);
+            Assert.AreEqual('y', root.LeftChild.LeftChild.LeftChild.LeftChild.Value);
 
-            Assert.True(root.HasWord("baby", out word));
-            Assert.True(root.HasWord("dad", out word));
+            Assert.IsTrue(root.HasWord("baby", out word));
+            Assert.IsTrue(root.HasWord("dad", out word));
         }
 
-        [Test]
+        [TestMethod]
         public void Can_append()
         {
             var root = new LcrsTrie('\0', false);
@@ -207,15 +209,15 @@ namespace Tests
             root.Add("bad");
             Word word;
 
-            Assert.That(root.LeftChild.Value, Is.EqualTo('b'));
-            Assert.That(root.LeftChild.LeftChild.Value, Is.EqualTo('a'));
-            Assert.That(root.LeftChild.LeftChild.LeftChild.RightSibling.Value, Is.EqualTo('d'));
+            Assert.AreEqual('b', root.LeftChild.Value);
+            Assert.AreEqual('a', root.LeftChild.LeftChild.Value);
+            Assert.AreEqual('d', root.LeftChild.LeftChild.LeftChild.RightSibling.Value);
 
-            Assert.That(root.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('b'));
-            Assert.That(root.LeftChild.LeftChild.LeftChild.LeftChild.Value, Is.EqualTo('y'));
+            Assert.AreEqual('b', root.LeftChild.LeftChild.LeftChild.Value);
+            Assert.AreEqual('y', root.LeftChild.LeftChild.LeftChild.LeftChild.Value);
 
-            Assert.True(root.HasWord("baby", out word));
-            Assert.True(root.HasWord("bad", out word));
+            Assert.IsTrue(root.HasWord("baby", out word));
+            Assert.IsTrue(root.HasWord("bad", out word));
         }
     }
 }

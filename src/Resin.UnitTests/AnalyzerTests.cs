@@ -1,11 +1,13 @@
 ﻿using System.Linq;
 using Resin.Analysis;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests
 {
+    [TestClass]
     public class AnalyzerTests
     {
-        [Fact]
+        [TestMethod]
         public void Stopwords()
         {
             var terms = new Analyzer(stopwords:new[]{"the", "a"}).Analyze("The americans sent us a new movie.").ToList();
@@ -17,7 +19,7 @@ namespace Tests
             Assert.AreEqual("movie", terms[4]);
         }
 
-        [Test]
+        [TestMethod]
         public void Separators()
         {
             var terms = new Analyzer(tokenSeparators:new []{'o'}).Analyze("hello world").ToList();
@@ -27,7 +29,7 @@ namespace Tests
             Assert.AreEqual("rld", terms[2]);
         }
 
-        [Test]
+        [TestMethod]
         public void Can_analyze()
         {
             var terms = new Analyzer().Analyze("Hello!World?").ToList();
@@ -36,7 +38,7 @@ namespace Tests
             Assert.AreEqual("world", terms[1]);
         }
 
-        [Test]
+        [TestMethod]
         public void Can_analyze_common()
         {
             var terms = new Analyzer().Analyze("German politician (CDU)").ToList();
@@ -46,7 +48,7 @@ namespace Tests
             Assert.AreEqual("cdu", terms[2]);
         }
 
-        [Test]
+        [TestMethod]
         public void Can_analyze_space()
         {
             var terms = new Analyzer().Analyze("   (abc)   ").ToList();

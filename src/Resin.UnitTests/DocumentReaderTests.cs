@@ -1,0 +1,88 @@
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Resin;
+using Resin.IO;
+using Resin.IO.Read;
+using Resin.IO.Write;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Tests
+{
+    [TestClass]
+    public class DocumentReaderTests
+    {
+        [TestMethod]
+        public void Can_read()
+        {
+            var docs = new List<Document>
+            {
+                new Document(new List<Field>
+                {
+                    new Field("title", "rambo"),
+                    new Field("_id", "0")
+                }),
+                new Document(new List<Field>
+                {
+                    new Field("title", "rocky"),
+                    new Field("_id", "1")
+                }),
+                new Document(new List<Field>
+                {
+                    new Field("title", "rocky 2"),
+                    new Field("_id", "2")
+                })
+            };
+
+            var fileName = Path.Combine(Setup.Dir, "DocumentReaderTests.Can_read");
+            var blocks = new Dictionary<int, BlockInfo>();
+
+            using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write))
+            using (var writer = new DocumentWriter(fs, false))
+            {
+                var index = 0;
+                foreach (var doc in docs)
+                {
+                    doc.Id = index++;
+                    blocks.Add(doc.Id, writer.Write(doc));
+                }
+            }
+
+            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            using (var reader = new DocumentReader(fs, false))
+            {
+                var doc = reader.Get(new[] { blocks[2] });
+
+                Assert.AreEqual(2, doc.First().Id);
+            }
+
+            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            using (var reader = new DocumentReader(fs, false))
+            {
+                var doc = reader.Get(new[] { blocks[1] });
+
+                Assert.AreEqual(1, doc.First().Id);
+            }
+
+            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            using (var reader = new DocumentReader(fs, false))
+            {
+                var doc = reader.Get(new[] { blocks[0] });
+
+                Assert.AreEqual(0, doc.First().Id);
+            }
+
+            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            using (var reader = new DocumentReader(fs, false))
+            {
+                var ds = reader.Get(blocks.Values.OrderBy(b => b.Position).ToList()).ToList();
+
+                Assert.AreEqual(3, docs.Count);
+
+                Assert.IsTrue(ds.Any(d => d.Id == 0));
+                Assert.IsTrue(ds.Any(d => d.Id == 1));
+                Assert.IsTrue(ds.Any(d => d.Id == 2));
+            }
+        }
+    }
+}
