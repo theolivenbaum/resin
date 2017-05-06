@@ -109,15 +109,17 @@ namespace Resin.IO
             {
                 if (block == null)
                 {
-                    var min = BitConverter.GetBytes(int.MinValue);
+                    var pos = BitConverter.GetBytes(long.MinValue);
+                    var len = BitConverter.GetBytes(int.MinValue);
 
                     if (!BitConverter.IsLittleEndian)
                     {
-                        Array.Reverse(min);
+                        Array.Reverse(pos);
+                        Array.Reverse(len);
                     }
 
-                    stream.Write(min, 0, min.Length);
-                    stream.Write(min, 0, min.Length);
+                    stream.Write(pos, 0, pos.Length);
+                    stream.Write(len, 0, len.Length);
                 }
                 else
                 {
@@ -477,7 +479,7 @@ namespace Resin.IO
                 Array.Reverse(lenBytes);
             }
 
-            return new BlockInfo(BitConverter.ToInt32(posBytes, 0), BitConverter.ToInt32(lenBytes, 0));
+            return new BlockInfo(BitConverter.ToInt64(posBytes, 0), BitConverter.ToInt32(lenBytes, 0));
         }
 
         public static IEnumerable<int> DeserializeIntList(byte[] data)
