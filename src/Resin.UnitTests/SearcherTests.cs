@@ -28,7 +28,7 @@ namespace Tests
                 new List<Field> {new Field("_id", "5"), new Field("title", "the good, the bad and the ugly") }
             };
 
-            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.NoCompression, primaryKey: "_id", documents: docs);
+            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.GZip, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             using (var searcher = new Searcher(dir))
