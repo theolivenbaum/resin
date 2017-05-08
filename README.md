@@ -35,7 +35,7 @@ Resin is built for dotnet Core 1.1.
 Latest release is [here](https://github.com/kreeben/resin/releases/latest)
 
 ## Help out?
-Start [here](https://github.com/kreeben/resin/issues).
+Definitely start [here](https://github.com/kreeben/resin/issues).
 
 ## Documentation
 ### A document.
@@ -49,7 +49,7 @@ Start [here](https://github.com/kreeben/resin/issues).
 
 ### Many like that.
 	
-	var docs = GetWikipediaAsJson();
+	var docs = GetWikipedia();
 
 ### Index them.
 
@@ -58,7 +58,17 @@ Start [here](https://github.com/kreeben/resin/issues).
 	{
 		upsert.Commit();
 	}
+	
+### Or from a stream
 
+	using(var fs = new FileStream(fileName))
+	using (var upsert = new StreamUpsertOperation(dir, new Analyzer(), compression:true, primaryKey:"_id", fs))
+	{
+		upsert.Commit();
+	}
+	
+	// Or from anything, really. Implement the base class UpsertOperation to use whatever document source you need.
+	
 ### Query the index.
 <a name="inproc" id="inproc"></a>
 
@@ -76,8 +86,8 @@ Start [here](https://github.com/kreeben/resin/issues).
 - [x] Layout basic architecture and infrastructure of a modern IR system - v0.9b
 - [x] Query faster than Lucene - v1.0 RC1
 - [x] Index faster than Lucene - v1.0 RC2
-- [x] ___Compress more impressively than Lucene - v1.0 RC3___
-- [ ] Numbers, dates, range, grouping of query statements - 1.0
+- [x] ___Compress denser than Lucene - v1.0 RC3___
+- [ ] Range query, grouping of query statements - 1.0
 - [ ] Build Sir, a distributed search engine
 
 ### Sir
