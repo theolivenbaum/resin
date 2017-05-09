@@ -15,7 +15,7 @@ If you skip the scoring, i.e. create a searcher without a scorer, then Resin is 
 ## Fast at indexing and querying
 In many scenarios Resin is already faster than the [market leader](https://lucenenet.apache.org/) when it comes down to querying and indexing speed, making it a [in-many-scenarios-fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) information retrieval system on the .net plaform and certainly a good choice if you're on dotnet core being there is no real alternative. 
 
-If you have a scenario where you feel Resin should do better, this is important information for me. Please let me know. I love to optimize code.
+If you have a scenario where you feel Resin should do better, this is important information for me. Please let me know. I'm both curious about those special cases and I'd love to optimize for them.
 
 ## Deeply influenced but not based on a java port
 [Half a decade](https://blogs.apache.org/lucenenet/entry/lucene_net_3_0_3) has passed since what we in the .net community consider to be state-of-the-art search tech was built.
