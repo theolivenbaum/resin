@@ -61,7 +61,7 @@ Definitely start [here](https://github.com/kreeben/resin/issues).
 		upsert.Commit();
 	}
 	
-	// Or from anything, really. Implement the base class UpsertOperation to use whatever document source you need.
+	// Implement the base class UpsertOperation to use whatever document source you need.
 	
 ### Query the index.
 <a name="inproc" id="inproc"></a>
