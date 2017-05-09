@@ -44,12 +44,9 @@ Definitely start [here](https://github.com/kreeben/resin/issues).
 		"aliases": "cosmos The Universe existence space outerspace"
 	}
 
-### Many like that.
-	
+### Index many like that.
+
 	var docs = GetWikipedia();
-
-### Index them.
-
 	var dir = @"C:\Users\Yourname\Resin\wikipedia";
 	using (var upsert = new DocumentUpsertOperation(dir, new Analyzer(), compression:true, primaryKey:"_id", docs))
 	{
@@ -58,8 +55,8 @@ Definitely start [here](https://github.com/kreeben/resin/issues).
 	
 ### Documents as a stream
 
-	using(var fs = new FileStream(fileName))
-	using (var upsert = new StreamUpsertOperation(dir, new Analyzer(), compression:true, primaryKey:"_id", fs))
+	using(var docs = new FileStream(fileName))
+	using (var upsert = new StreamUpsertOperation(dir, new Analyzer(), compression:true, primaryKey:"_id", docs))
 	{
 		upsert.Commit();
 	}
