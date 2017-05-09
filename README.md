@@ -29,7 +29,13 @@ Resin's API and file format should be considered unstable until release candidat
 Resin is built for dotnet Core 1.1.
 
 ## Download
-Latest release is [here](https://github.com/kreeben/resin/releases/latest)
+Latest release is [here](https://github.com/kreeben/resin/releases/latest) but I suggest you clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run. 
+
+## Start with the CLI
+The command line tool, rn.exe, can be executed after you have built the source.
+1. Find the folder where you have the Resin source code. 
+2. Right-click on that folder while pressing Shift on your keyboard to open a command prompt. 
+3. Use it like I do in this [benchmark test](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC1).
 
 ## Help out?
 Definitely start [here](https://github.com/kreeben/resin/issues).
