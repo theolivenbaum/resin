@@ -56,7 +56,7 @@ Definitely start [here](https://github.com/kreeben/resin/issues).
 		upsert.Commit();
 	}
 	
-### Or from a stream
+### Documents as a stream
 
 	using(var fs = new FileStream(fileName))
 	using (var upsert = new StreamUpsertOperation(dir, new Analyzer(), compression:true, primaryKey:"_id", fs))
