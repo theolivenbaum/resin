@@ -17,20 +17,20 @@ namespace Tests
         {
             var docs = new List<Document>
             {
-                new Document(new List<Field>
+                new Document(0, new List<Field>
                 {
-                    new Field("title", "rambo"),
-                    new Field("_id", "0")
+                    new Field(0, "title", "rambo"),
+                    new Field(0, "_id", "0")
                 }),
-                new Document(new List<Field>
+                new Document(1, new List<Field>
                 {
-                    new Field("title", "rocky"),
-                    new Field("_id", "1")
+                    new Field(1, "title", "rocky"),
+                    new Field(1, "_id", "1")
                 }),
-                new Document(new List<Field>
+                new Document(2, new List<Field>
                 {
-                    new Field("title", "rocky 2"),
-                    new Field("_id", "2")
+                    new Field(2, "title", "rocky 2"),
+                    new Field(2, "_id", "2")
                 })
             };
 
@@ -40,10 +40,8 @@ namespace Tests
             using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write))
             using (var writer = new DocumentWriter(fs, Compression.GZip))
             {
-                var index = 0;
                 foreach (var doc in docs)
                 {
-                    doc.Id = index++;
                     blocks.Add(doc.Id, writer.Write(doc));
                 }
             }

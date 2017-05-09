@@ -15,84 +15,56 @@ namespace Resin
 {
     public abstract class UpsertOperation
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(UpsertOperation));
+        protected static readonly ILog Log = LogManager.GetLogger(typeof(UpsertOperation));
+
+        protected readonly Dictionary<ulong, object> Pks;
 
         protected abstract IEnumerable<Document> ReadSource();
 
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private readonly Compression _compression;
-        private readonly string _primaryKey;
         private readonly long _indexVersionId;
-        private readonly Dictionary<string, LcrsTrie> _tries;
-        
-        private int _docCount;
-        private readonly bool _autoGeneratePk;
 
-        protected UpsertOperation(string directory, IAnalyzer analyzer, Compression compression, string primaryKey)
+        protected UpsertOperation(string directory, IAnalyzer analyzer, Compression compression)
         {
             _directory = directory;
             _analyzer = analyzer;
             _compression = compression;
             _indexVersionId = Util.GetChronologicalFileId();
-            _tries = new Dictionary<string, LcrsTrie>();
-            _docCount = 0;
-            _primaryKey = primaryKey;
-            _autoGeneratePk = string.IsNullOrWhiteSpace(_primaryKey);
+
+            Pks = new Dictionary<UInt64, object>();
         }
 
         public long Commit()
         {
             var docAddresses = new List<BlockInfo>();
-            var pks = new Dictionary<UInt64, object>();
             var ts = new List<Task>();
+            var trieBuilder = new TrieBuilder();
 
             using (var documentsToStore = new BlockingCollection<Document>())
             using (var documentsToAnalyze = new BlockingCollection<Document>())
-            using (var words = new BlockingCollection<List<WordInfo>>())
             {
                 ts.Add(Task.Run(() =>
                 {
-                    var count = 0;
+                    Log.Info("reading documents");
+
                     var readTimer = new Stopwatch();
                     readTimer.Start();
 
+                    var count = 0;
+
                     foreach (var doc in ReadSource())
                     {
-                        string pkVal;
+                        documentsToAnalyze.Add(doc);
+                        documentsToStore.Add(doc);
 
-                        if (_autoGeneratePk)
-                        {
-                            pkVal = Guid.NewGuid().ToString();
-                        }
-                        else
-                        {
-                            pkVal = doc.Fields.First(f => f.Key == _primaryKey).Value;
-                        }
-
-                        var hash = pkVal.ToHash();
-
-                        if (pks.ContainsKey(hash))
-                        {
-                            Log.WarnFormat("Found multiple occurrences of documents with pk value of {0} (id:{1}). Only first occurrence will be stored.",
-                                pkVal, _docCount);
-                        }
-                        else
-                        {
-                            pks.Add(hash, null);
-
-                            doc.Id = count++;
-
-                            documentsToAnalyze.Add(doc);
-                            documentsToStore.Add(doc);
-                        }
+                        count++;
                     }
                     documentsToAnalyze.CompleteAdding();
                     documentsToStore.CompleteAdding();
 
-                    _docCount = count;
-
-                    Log.InfoFormat("Read {0} documents in {1}", _docCount, readTimer.Elapsed);
+                    Log.InfoFormat("read {0} documents in {1}", count, readTimer.Elapsed);
 
                 }));
 
@@ -101,100 +73,79 @@ namespace Resin
                     var analyzeTimer = new Stopwatch();
                     analyzeTimer.Start();
 
+                    Log.Info("analyzing");
+
+                    var count = 0;
+
                     try
                     {
                         while (true)
                         {
                             var doc = documentsToAnalyze.Take();
                             var analyzed = _analyzer.AnalyzeDocument(doc);
-                            var docWords = new List<WordInfo>();
 
-                            foreach (var term in analyzed.Words)
+                            foreach (var term in analyzed.Words.GroupBy(t=>t.Term.Field))
                             {
-                                var field = term.Term.Field;
-                                var token = term.Term.Word.Value;
-                                var posting = term.Posting;
-
-                                docWords.Add(new WordInfo(field, token, posting));
+                                trieBuilder.Add(term.Key, term.Select(t =>
+                                {
+                                    var field = t.Term.Field;
+                                    var token = t.Term.Word.Value;
+                                    var posting = t.Posting;
+                                    return new WordInfo(field, token, posting);
+                                }).ToList());
                             }
 
-                            words.Add(docWords);
+                            count++;
                         }
                     }
                     catch (InvalidOperationException)
                     {
                         // Done
-                        words.CompleteAdding();
+                        trieBuilder.CompleteAdding();
                     }
-                    Log.InfoFormat("Analyzed {0} documents in {1}", pks.Count, analyzeTimer.Elapsed);
+                    Log.InfoFormat("analyzed {0} documents in {1}", count, analyzeTimer.Elapsed);
 
                 }));
-                ts.Add(Task.Run(() =>
-                {
-                    var trieTimer = new Stopwatch();
-                    trieTimer.Start();
-
-                    try
-                    {
-                        while (true)
-                        {
-                            var docWords = words.Take();
-
-                            foreach(var word in docWords)
-                            {
-                                GetTrie(word.Field)
-                                .Add(word.Token, word.Posting);
-                            }
-                        }
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        // Done
-                    }
-
-                    Log.InfoFormat("Built tries in {0}", trieTimer.Elapsed);
-                }));
-
+                
                 ts.Add(Task.Run(() =>
                 {
                     var docWriterTimer = new Stopwatch();
                     docWriterTimer.Start();
 
-                var docFileName = Path.Combine(_directory, _indexVersionId + ".doc");
+                    Log.Info("serializing documents");
 
-                using (var docWriter = new DocumentWriter(
-                    new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None), _compression))
-                {
-                    try
+                    var docFileName = Path.Combine(_directory, _indexVersionId + ".doc");
+                    var count = 0;
+
+                    using (var docWriter = new DocumentWriter(
+                        new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None), _compression))
                     {
-                        while (true)
+                        try
                         {
-                            var doc = documentsToStore.Take();
+                            while (true)
+                            {
+                                var doc = documentsToStore.Take();
 
-                            var adr = docWriter.Write(doc);
+                                var adr = docWriter.Write(doc);
 
-                            docAddresses.Add(adr);
+                                docAddresses.Add(adr);
+
+                                count++;
+                            }
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // Done
                         }
                     }
-                    catch (InvalidOperationException)
-                    {
-                        // Done
-                    }
-                }
 
-                Log.InfoFormat("Serialized {0} documents in {1}", _docCount, docWriterTimer.Elapsed);
+                    Log.InfoFormat("serialized {0} documents in {1}", count, docWriterTimer.Elapsed);
 
                 }));
 
                 Task.WaitAll(ts.ToArray());
             }
-
-            if (pks.Count == 0)
-            {
-                Log.Info("Aborted write (source is empty).");
-
-                return 0;
-            }
+            var tries = trieBuilder.GetTries();
 
             var tasks = new List<Task>
             {
@@ -203,10 +154,12 @@ namespace Resin
                     var postingsTimer = new Stopwatch();
                     postingsTimer.Start();
 
+                    Log.Info("serializing postings");
+
                     var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
                     using (var postingsWriter = new PostingsWriter(new FileStream(posFileName, FileMode.Create, FileAccess.Write, FileShare.None)))
                     {
-                        foreach (var trie in _tries)
+                        foreach (var trie in tries)
                         {
                             foreach (var node in trie.Value.EndOfWordNodes())
                             {
@@ -222,19 +175,26 @@ namespace Resin
                             }
                         }
                     }
-                    Log.InfoFormat("Serialized postings in {0}", postingsTimer.Elapsed);
 
+                    Log.InfoFormat("serialized postings in {0}", postingsTimer.Elapsed);
+                }),
+                Task.Run(() =>
+                {
                     var trieTimer = new Stopwatch();
                     trieTimer.Start();
 
-                    SerializeTries();
+                    Log.Info("serializing tries");
 
-                    Log.InfoFormat("Serialized tries in {0}", trieTimer.Elapsed);
+                    SerializeTries(tries);
+
+                    Log.InfoFormat("serialized tries in {0}", trieTimer.Elapsed);
                 }),
                 Task.Run(() =>
                 {
                     var docAdrTimer = new Stopwatch();
                     docAdrTimer.Start();
+
+                    Log.Info("serializing doc addresses");
 
                     using (var docAddressWriter = new DocumentAddressWriter(new FileStream(Path.Combine(_directory, _indexVersionId + ".da"), FileMode.Create, FileAccess.Write, FileShare.None)))
                     {
@@ -244,18 +204,20 @@ namespace Resin
                         }
                     }
 
-                     Log.InfoFormat("Serialized doc addresses in {0}", docAdrTimer.Elapsed);
+                     Log.InfoFormat("serialized doc addresses in {0}", docAdrTimer.Elapsed);
                 }),
                 Task.Run(() =>
                 {
                     var docHasTimer = new Stopwatch();
                     docHasTimer.Start();
 
+                    Log.Info("serializing doc hashes");
+
                     var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pk"));
 
-                    pks.Keys.Select(h=>new DocHash(h)).Serialize(docHashesFileName);
+                    Pks.Keys.Select(h=>new DocHash(h)).Serialize(docHashesFileName);
 
-                    Log.InfoFormat("Serialized doc hashes in {0}", docHasTimer.Elapsed);
+                    Log.InfoFormat("serialized doc hashes in {0}", docHasTimer.Elapsed);
                 })
             };
 
@@ -263,14 +225,21 @@ namespace Resin
 
             CreateIxInfo().Serialize(Path.Combine(_directory, _indexVersionId + ".ix"));
 
-            if(_compression > 0) Log.Info("compression: true");
+            if (_compression > 0)
+            {
+                Log.Info("compression: true");
+            }
+            else
+            {
+                Log.Info("compression: false");
+            }
 
             return _indexVersionId;
         }
 
-        private void SerializeTries()
+        private void SerializeTries(IDictionary<string, LcrsTrie> tries)
         {
-            Parallel.ForEach(_tries, t => DoSerializeTrie(new Tuple<string, LcrsTrie>(t.Key, t.Value)));
+            Parallel.ForEach(tries, t => DoSerializeTrie(new Tuple<string, LcrsTrie>(t.Key, t.Value)));
         }
 
         private void DoSerializeTrie(Tuple<string, LcrsTrie> trieEntry)
@@ -282,27 +251,12 @@ namespace Resin
             trie.Serialize(fileName);
         }
 
-        private LcrsTrie GetTrie(string field)
-        {
-            var key = field.ToHash().ToString();
-
-            LcrsTrie trie;
-
-            if (!_tries.TryGetValue(key, out trie))
-            {
-                trie = new LcrsTrie();
-                _tries[key] = trie;
-            }
-
-            return trie;
-        }
-
         private IxInfo CreateIxInfo()
         {
             return new IxInfo
             {
                 VersionId = _indexVersionId,
-                DocumentCount = _docCount,
+                DocumentCount = Pks.Count,
                 Compression = _compression
             };
         }

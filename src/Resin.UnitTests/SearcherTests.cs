@@ -18,15 +18,15 @@ namespace Tests
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            var docs = new List<List<Field>>
+            var docs = new List<Field>
             {
-                new List<Field> {new Field("_id", "0"), new Field("title", "Rambo First Blood") },
-                new List<Field> {new Field("_id", "1"), new Field("title", "rambo 2") },
-                new List<Field> {new Field("_id", "2"), new Field("title", "rocky 2") },
-                new List<Field> {new Field("_id", "3"), new Field("title", "the raiders of the lost ark") },
-                new List<Field> {new Field("_id", "4"), new Field("title", "the rain man") },
-                new List<Field> {new Field("_id", "5"), new Field("title", "the good, the bad and the ugly") }
-            };
+                new Field(0, "_id", "0"), new Field(0, "title", "Rambo First Blood"),
+                new Field(1, "_id", "1"), new Field(1, "title", "rambo 2"),
+                new Field(2, "_id", "2"), new Field(2, "title", "rocky 2"),
+                new Field(3, "_id", "3"), new Field(3, "title", "the raiders of the lost ark"),
+                new Field(4, "_id", "4"), new Field(4, "title", "the rain man"),
+                new Field(5, "_id", "5"), new Field(5, "title", "the good, the bad and the ugly")
+            }.GroupBy(f => f.DocumentId).Select(g => new Document(g.Key, g.ToList()));
 
             var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.GZip, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
@@ -65,15 +65,15 @@ namespace Tests
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            var docs = new List<List<Field>>
+            var docs = new List<Field>
             {
-                new List<Field> {new Field("_id", "0"), new Field("title", "Rambo First Blood") },
-                new List<Field> {new Field("_id", "1"), new Field("title", "rambo 2") },
-                new List<Field> {new Field("_id", "2"), new Field("title", "rocky 2") },
-                new List<Field> {new Field("_id", "3"), new Field("title", "the raiders of the lost ark") },
-                new List<Field> {new Field("_id", "4"), new Field("title", "the rain man") },
-                new List<Field> {new Field("_id", "5"), new Field("title", "the good, the bad and the ugly") }
-            };
+                new Field(0, "_id", "0"), new Field(0, "title", "Rambo First Blood"),
+                new Field(1, "_id", "1"), new Field(1, "title", "rambo 2"),
+                new Field(2, "_id", "2"), new Field(2, "title", "rocky 2"),
+                new Field(3, "_id", "3"), new Field(3, "title", "the raiders of the lost ark"),
+                new Field(4, "_id", "4"), new Field(4, "title", "the rain man"),
+                new Field(5, "_id", "5"), new Field(5, "title", "the good, the bad and the ugly")
+            }.GroupBy(f => f.DocumentId).Select(g => new Document(g.Key, g.ToList()));
 
             var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.NoCompression, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();

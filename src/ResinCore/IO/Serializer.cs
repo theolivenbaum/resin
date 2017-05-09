@@ -460,9 +460,9 @@ namespace Resin.IO
             }
 
             var id = BitConverter.ToInt32(idBytes, 0);
-            var doc = DeserializeFields(dicBytes, compression).ToList();
+            var doc = DeserializeFields(dicBytes, id, compression).ToList();
 
-            return new Document(doc) {Id = id};
+            return new Document(id, doc);
         }
 
         public static BlockInfo DeserializeBlock(Stream stream)
@@ -505,7 +505,7 @@ namespace Resin.IO
         {
             var isObsoleteByte = stream.ReadByte();
 
-            if (isObsoleteByte == -1) return null;
+            if (isObsoleteByte == 1) return null;
 
             var hashBytes = new byte[sizeof(UInt64)];
 
@@ -562,15 +562,15 @@ namespace Resin.IO
             }
         }
 
-        public static IEnumerable<Field> DeserializeFields(byte[] data, Compression compression)
+        public static IEnumerable<Field> DeserializeFields(byte[] data, int documentId, Compression compression)
         {
             using (var stream = new MemoryStream(data))
             {
-                return DeserializeFields(stream, compression).ToList();
+                return DeserializeFields(stream, documentId, compression).ToList();
             }
         }
 
-        public static IEnumerable<Field> DeserializeFields(Stream stream, Compression compression)
+        public static IEnumerable<Field> DeserializeFields(Stream stream, int documentId, Compression compression)
         {
             while (true)
             {
@@ -635,7 +635,7 @@ namespace Resin.IO
                 }
 
 
-                yield return new Field(key, value);
+                yield return new Field(documentId, key, value);
             }
         }
 

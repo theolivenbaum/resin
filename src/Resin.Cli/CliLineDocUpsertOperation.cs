@@ -4,6 +4,8 @@ using Resin.Analysis;
 using System.Linq;
 using System;
 using Resin.IO;
+using Resin.Sys;
+using log4net;
 
 namespace Resin.Cli
 {
@@ -12,24 +14,30 @@ namespace Resin.Cli
         private readonly int _take;
         private readonly int _skip;
         private int _cursorPos;
+        private readonly bool _autoGeneratePk;
+        private readonly string _primaryKey;
 
         public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, string fileName, int skip, int take, Compression compression, string primaryKey)
-            : base(directory, analyzer, fileName, compression, primaryKey)
+            : base(directory, analyzer, fileName, compression)
         {
             _take = take;
             _skip = skip;
             _cursorPos = Console.CursorLeft;
+            _autoGeneratePk = string.IsNullOrWhiteSpace(primaryKey);
+            _primaryKey = primaryKey;
+
         }
 
         public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, Stream file, int skip, int take, Compression compression, string primaryKey)
-            : base(directory, analyzer, file, compression, primaryKey)
+            : base(directory, analyzer, file, compression)
         {
             _take = take;
             _skip = skip;
             _cursorPos = Console.CursorLeft;
+            _autoGeneratePk = string.IsNullOrWhiteSpace(primaryKey);
         }
 
-        protected IList<Field> Parse(string document)
+        protected IList<Field> Parse(int id, string document)
         {
             var parts = document.Split(new[] { '\t' }, System.StringSplitOptions.RemoveEmptyEntries);
 
@@ -37,8 +45,8 @@ namespace Resin.Cli
 
             return new Field[] 
             {
-                new Field("doctitle", parts[0]),
-                new Field("body", parts[2])
+                new Field(id, "doctitle", parts[0]),
+                new Field(id, "body", parts[2])
             };
         }
 
@@ -59,22 +67,48 @@ namespace Resin.Cli
             return ReadInternal().Take(_take);
         }
 
-        private IEnumerable<Document> ReadInternal()
+        protected virtual IEnumerable<Document> ReadInternal()
         {
-            var took = 0;
             string line;
+            var count = 0;
 
             while ((line = Reader.ReadLine()) != null)
             {
                 var doc = line.Substring(0, line.Length - 1);
-                var dic = Parse(doc);
+                var id = count++;
+                var fields = Parse(id, doc);
 
-                if (dic != null)
+                if (fields != null)
                 {
-                    yield return new Document(dic);
+                    string pkVal;
 
-                    Console.SetCursorPosition(_cursorPos, Console.CursorTop);
-                    Console.Write(++took);
+                    if (_autoGeneratePk)
+                    {
+                        pkVal = Guid.NewGuid().ToString();
+                    }
+                    else
+                    {
+                        pkVal = fields.First(f => f.Key == _primaryKey).Value;
+                    }
+
+                    var hash = pkVal.ToHash();
+
+                    if (Pks.ContainsKey(hash))
+                    {
+                        Log.WarnFormat("Found multiple occurrences of documents with pk value of {0} (id:{1}). Only first occurrence will be stored.",
+                            pkVal, fields[0].DocumentId);
+                    }
+                    else
+                    {
+                        Pks.Add(hash, null);
+
+                        var d = new Document(id, fields);
+                        d.Hash = hash;
+                        yield return d;
+
+                        Console.SetCursorPosition(_cursorPos, Console.CursorTop);
+                        Console.Write(count);
+                    }
                 }
             }
             Console.WriteLine("");

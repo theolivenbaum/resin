@@ -177,7 +177,7 @@ namespace Resin.Cli
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            using (var writer = new CliLineDocUpsertOperation(dir, new Analyzer(), fileName, skip, take, Compression.GZip, null))
+            using (var writer = new CliLineDocUpsertOperation(dir, new Analyzer(), fileName, skip, take, Compression.NoCompression, null))
             {
                 writer.Commit();
             }

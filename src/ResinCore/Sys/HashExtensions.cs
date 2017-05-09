@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Resin.Sys
 {
-    internal static class HashExtensions
+    public static class HashExtensions
     {
         /// <summary>
         /// Knuth hash. http://stackoverflow.com/questions/9545619/a-fast-hash-function-for-string-in-c-sharp
