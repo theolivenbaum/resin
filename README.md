@@ -17,7 +17,7 @@ In many scenarios Resin is already faster than the [market leader](https://lucen
 
 If you have a scenario where you feel Resin should do better, this is important information for me. Please let me know. I'm both curious about those special cases and I'd love to optimize for them.
 
-## Deeply influenced but not based on a java port
+## Deeply influenced but not based on Lucene
 [Half a decade](https://blogs.apache.org/lucenenet/entry/lucene_net_3_0_3) has passed since what we in the .net community consider to be state-of-the-art search tech was built.
 
 Who could use a modern and powerful search engine based on sound mathematics that's open source, extensible and built on Core, though?
