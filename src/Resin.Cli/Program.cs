@@ -154,11 +154,15 @@ namespace Resin.Cli
         {
             var take = int.MaxValue;
             var skip = 0;
-            bool compress = false;
+            bool gzip = false;
+            bool lz = false;
 
             if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
             if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
-            if (Array.IndexOf(args, "--compress") > 0) compress = true;
+            if (Array.IndexOf(args, "--gzip") > 0) gzip = true;
+            if (Array.IndexOf(args, "--lz") > 0) lz = true;
+
+            var compression = gzip ? Compression.GZip : lz ? Compression.Lz : Compression.NoCompression;
 
             var fileName = args[Array.IndexOf(args, "--file") + 1];
             string dir = null;
@@ -177,7 +181,7 @@ namespace Resin.Cli
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            using (var writer = new CliLineDocUpsertOperation(dir, new Analyzer(), fileName, skip, take, Compression.NoCompression, null))
+            using (var writer = new CliLineDocUpsertOperation(dir, new Analyzer(), fileName, skip, take, compression, null))
             {
                 writer.Commit();
             }

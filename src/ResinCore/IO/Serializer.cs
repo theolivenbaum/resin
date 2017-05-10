@@ -282,7 +282,7 @@ namespace Resin.IO
                 {
                     valBytes = Deflator.Compress(Encoding.GetBytes(toStore));
                 }
-                else if (compression == Compression.QuickLz)
+                else if (compression == Compression.Lz)
                 {
                     valBytes = QuickLZ.compress(Encoding.GetBytes(toStore), 1);
                 }
@@ -618,7 +618,7 @@ namespace Resin.IO
                 {
                     value = Encoding.GetString(Deflator.Deflate(valBytes));
                 }
-                else if (compression == Compression.QuickLz)
+                else if (compression == Compression.Lz)
                 {
                     value = Encoding.GetString(QuickLZ.decompress(valBytes));
                 }
@@ -745,11 +745,5 @@ namespace Resin.IO
 
             return root;
         }
-    }
-    public enum Compression
-    {
-        NoCompression=0,
-        QuickLz=1,
-        GZip=2
     }
 }

@@ -29,7 +29,7 @@ namespace Tests
                 new Field(5, "_id", "5five"), new Field(5, "title", "the good, the bad and the ugly")
             }.GroupBy(f=>f.DocumentId).Select(g=>new Document(g.Key, g.ToList())).OrderBy(d=>d.Id);
 
-            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.QuickLz, primaryKey: "_id", documents: docs);
+            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
@@ -66,7 +66,7 @@ namespace Tests
                 new Field(5, "_id", "5"), new Field(5, "title", "the good, the bad and the ugly")
             }.GroupBy(f => f.DocumentId).Select(g => new Document(g.Key, g.ToList()));
 
-            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.QuickLz, primaryKey: "_id", documents: docs);
+            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rain man");
@@ -107,7 +107,7 @@ namespace Tests
                 new Field(5, "_id", "5"), new Field(5, "title", "the good, the bad and the ugly")
             }.GroupBy(f => f.DocumentId).Select(g => new Document(g.Key, g.ToList()));
 
-            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.QuickLz, primaryKey: "_id", documents: docs);
+            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
@@ -150,7 +150,7 @@ namespace Tests
                 new Field(5, "_id", "5"), new Field(5, "title", "the good, the bad and the ugly")
             }.GroupBy(f => f.DocumentId).Select(g => new Document(g.Key, g.ToList()));
 
-            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.QuickLz, primaryKey: "_id", documents: docs);
+            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rocky");
@@ -204,7 +204,7 @@ namespace Tests
                 new Field(5, "_id", "5"), new Field(5, "title", "the good, the bad and the ugly")
             }.GroupBy(f => f.DocumentId).Select(g => new Document(g.Key, g.ToList()));
 
-            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.QuickLz, primaryKey: "_id", documents: docs);
+            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
@@ -248,7 +248,7 @@ namespace Tests
                 new Field(5, "_id", "5"), new Field(5, "title", "the good, the bad and the ugly")
             }.GroupBy(f => f.DocumentId).Select(g => new Document(g.Key, g.ToList()));
 
-            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.QuickLz, primaryKey: "_id", documents: docs);
+            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
@@ -287,7 +287,7 @@ namespace Tests
                 new Field(4, "_id", "4"), new Field(4, "title", "rain man")
             }.GroupBy(f => f.DocumentId).Select(g => new Document(g.Key, g.ToList()));
 
-            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.QuickLz, primaryKey: "_id", documents: docs);
+            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
@@ -318,7 +318,7 @@ namespace Tests
                 new Field(4, "_id", "4"), new Field(4, "title", "tomb raider")
             }.GroupBy(f => f.DocumentId).Select(g => new Document(g.Key, g.ToList()));
 
-            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.QuickLz, primaryKey: "_id", documents: docs);
+            var writer = new DocumentUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
