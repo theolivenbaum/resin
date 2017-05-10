@@ -28,6 +28,7 @@ namespace Resin.Cli
             _autoGeneratePk = string.IsNullOrWhiteSpace(primaryKey);
             _primaryKey = primaryKey;
 
+            Console.WriteLine();
         }
 
         public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, Stream file, int skip, int take, Compression compression, string primaryKey)
@@ -109,8 +110,11 @@ namespace Resin.Cli
                         d.Hash = hash;
                         yield return d;
 
+                        var left = Console.CursorLeft;
+                        var top = Console.CursorTop;
                         Console.SetCursorPosition(_cursorPosLeft, _cursorPosTop);
                         Console.Write(count);
+                        Console.SetCursorPosition(left, top);
                     }
                 }
             }

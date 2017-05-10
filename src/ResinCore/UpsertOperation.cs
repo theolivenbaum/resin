@@ -146,6 +146,7 @@ namespace Resin
 
                 Task.WaitAll(ts.ToArray());
             }
+
             var tries = trieBuilder.GetTries();
 
             var tasks = new List<Task>
