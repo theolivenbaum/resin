@@ -1,5 +1,4 @@
 ﻿using log4net;
-using Resin.IO;
 using Resin.Sys;
 using System;
 using System.Collections.Concurrent;
@@ -38,9 +37,9 @@ namespace Resin.IO
 
                 _queues.Add(fieldName, queue);
 
-                var hash = fieldName.ToHash().ToString();
+                var key = fieldName.ToHash().ToString();
 
-                InitTrie(hash);
+                InitTrie(key);
 
                 _consumers.Add(Task.Run(() =>
                 {
@@ -48,7 +47,7 @@ namespace Resin.IO
                     {
                         Log.InfoFormat("building trie for field {0}", fieldName);
 
-                        var trie = _tries[hash];
+                        var trie = _tries[key];
 
                         while (true)
                         {

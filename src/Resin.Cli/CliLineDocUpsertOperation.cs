@@ -13,7 +13,8 @@ namespace Resin.Cli
     {
         private readonly int _take;
         private readonly int _skip;
-        private int _cursorPos;
+        private int _cursorPosLeft;
+        private int _cursorPosTop;
         private readonly bool _autoGeneratePk;
         private readonly string _primaryKey;
 
@@ -22,7 +23,8 @@ namespace Resin.Cli
         {
             _take = take;
             _skip = skip;
-            _cursorPos = Console.CursorLeft;
+            _cursorPosLeft = Console.CursorLeft;
+            _cursorPosTop = Console.CursorTop;
             _autoGeneratePk = string.IsNullOrWhiteSpace(primaryKey);
             _primaryKey = primaryKey;
 
@@ -33,7 +35,8 @@ namespace Resin.Cli
         {
             _take = take;
             _skip = skip;
-            _cursorPos = Console.CursorLeft;
+            _cursorPosLeft = Console.CursorLeft;
+            _cursorPosTop = Console.CursorTop;
             _autoGeneratePk = string.IsNullOrWhiteSpace(primaryKey);
         }
 
@@ -106,7 +109,7 @@ namespace Resin.Cli
                         d.Hash = hash;
                         yield return d;
 
-                        Console.SetCursorPosition(_cursorPos, Console.CursorTop);
+                        Console.SetCursorPosition(_cursorPosLeft, _cursorPosTop);
                         Console.Write(count);
                     }
                 }

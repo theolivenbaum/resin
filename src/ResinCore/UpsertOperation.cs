@@ -82,6 +82,7 @@ namespace Resin
                         while (true)
                         {
                             var doc = documentsToAnalyze.Take();
+
                             var analyzed = _analyzer.AnalyzeDocument(doc);
 
                             foreach (var term in analyzed.Words.GroupBy(t=>t.Term.Field))

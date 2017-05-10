@@ -5,11 +5,14 @@ using System.Linq;
 using System.Text;
 using Resin.IO.Read;
 using Resin.Sys;
+using log4net;
 
 namespace Resin.IO
 {
     public static class Serializer
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Serializer));
+
         public static readonly Encoding Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
         private static readonly Dictionary<bool, byte> EncodedBoolean = new Dictionary<bool, byte> { { true, 1 }, { false, 0 } };
 
@@ -49,85 +52,79 @@ namespace Resin.IO
             {
                 if (trie.LeftChild != null)
                 {
-                    trie.LeftChild.SerializeDepthFirst(stream, 0);
+                    trie.LeftChild.SerializeDepthFirst(stream, 0, 0);
                 }
             }
         }
 
-        private static void SerializeDepthFirst(this LcrsTrie trie, Stream stream, short depth)
+        private static void SerializeDepthFirst(this LcrsTrie trie, Stream stream, short depth, int count)
         {
-            var bytes = new LcrsNode(trie, depth, trie.Weight, trie.PostingsAddress).Serialize();
+            if (count++ > 1000 * 100)
+            {
+                Log.Info("cut off trie at 1000 * 100");
+                return;
+            }
 
-            stream.Write(bytes, 0, bytes.Length);
+            new LcrsNode(trie, depth, trie.Weight, trie.PostingsAddress).Serialize(stream);
 
             if (trie.LeftChild != null)
             {
-                trie.LeftChild.SerializeDepthFirst(stream, (short)(depth + 1));
+                trie.LeftChild.SerializeDepthFirst(stream, (short)(depth + 1), count);
             }
 
             if (trie.RightSibling != null)
             {
-                trie.RightSibling.SerializeDepthFirst(stream, depth);
+                trie.RightSibling.SerializeDepthFirst(stream, depth, count);
             }
         }
 
-        public static byte[] Serialize(this LcrsNode node)
+        public static void Serialize(this LcrsNode node, Stream stream)
         {
-            using (var stream = new MemoryStream())
+            var valBytes = BitConverter.GetBytes(node.Value);
+            var byte0 = EncodedBoolean[node.HaveSibling];
+            var byte1 = EncodedBoolean[node.HaveChild];
+            var byte2 = EncodedBoolean[node.EndOfWord];
+            var depthBytes = BitConverter.GetBytes(node.Depth);
+            var weightBytes = BitConverter.GetBytes(node.Weight);
+
+            if (!BitConverter.IsLittleEndian)
             {
-                var valBytes = BitConverter.GetBytes(node.Value);
-                var byte0 = EncodedBoolean[node.HaveSibling];
-                var byte1 = EncodedBoolean[node.HaveChild];
-                var byte2 = EncodedBoolean[node.EndOfWord];
-                var depthBytes = BitConverter.GetBytes(node.Depth);
-                var weightBytes = BitConverter.GetBytes(node.Weight);
-                var addrBytes = Serialize(node.PostingsAddress);
+                Array.Reverse(valBytes);
+                Array.Reverse(depthBytes);
+                Array.Reverse(weightBytes);
+            }
+
+            stream.Write(valBytes, 0, valBytes.Length);
+            stream.WriteByte(byte0);
+            stream.WriteByte(byte1);
+            stream.WriteByte(byte2);
+            stream.Write(depthBytes, 0, depthBytes.Length);
+            stream.Write(weightBytes, 0, weightBytes.Length);
+
+            Serialize(node.PostingsAddress, stream);
+        }
+
+        public static void Serialize(this BlockInfo? block, Stream stream)
+        {
+            if (block == null)
+            {
+                var pos = BitConverter.GetBytes(long.MinValue);
+                var len = BitConverter.GetBytes(int.MinValue);
 
                 if (!BitConverter.IsLittleEndian)
                 {
-                    Array.Reverse(valBytes);
-                    Array.Reverse(depthBytes);
-                    Array.Reverse(weightBytes);
-                    Array.Reverse(addrBytes);
+                    Array.Reverse(pos);
+                    Array.Reverse(len);
                 }
 
-                stream.Write(valBytes, 0, valBytes.Length);
-                stream.WriteByte(byte0);
-                stream.WriteByte(byte1);
-                stream.WriteByte(byte2);
-                stream.Write(depthBytes, 0, depthBytes.Length);
-                stream.Write(weightBytes, 0, weightBytes.Length);
-                stream.Write(addrBytes, 0, addrBytes.Length);
-
-                return stream.ToArray();
+                stream.Write(pos, 0, pos.Length);
+                stream.Write(len, 0, len.Length);
             }
-        }
-
-        public static byte[] Serialize(this BlockInfo? block)
-        {
-            using (var stream = new MemoryStream())
+            else
             {
-                if (block == null)
-                {
-                    var pos = BitConverter.GetBytes(long.MinValue);
-                    var len = BitConverter.GetBytes(int.MinValue);
+                var blockBytes = block.Value.Serialize();
 
-                    if (!BitConverter.IsLittleEndian)
-                    {
-                        Array.Reverse(pos);
-                        Array.Reverse(len);
-                    }
-
-                    stream.Write(pos, 0, pos.Length);
-                    stream.Write(len, 0, len.Length);
-                }
-                else
-                {
-                    var blockBytes = block.Value.Serialize();
-
-                    stream.Write(blockBytes, 0, blockBytes.Length);
-                }
-                return stream.ToArray();
+                stream.Write(blockBytes, 0, blockBytes.Length);
             }
         }
 
@@ -136,7 +133,6 @@ namespace Resin.IO
             using (var stream = new MemoryStream())
             {
                 var idBytes = BitConverter.GetBytes(document.Id);
-                var dicBytes = document.Fields.Serialize(compression);
 
                 if (!BitConverter.IsLittleEndian)
                 {
@@ -144,7 +140,8 @@ namespace Resin.IO
                 }
 
                 stream.Write(idBytes, 0, idBytes.Length);
-                stream.Write(dicBytes, 0, dicBytes.Length);
+
+                document.Fields.Serialize(compression, stream);
 
                 return stream.ToArray();
             }
@@ -272,46 +269,42 @@ namespace Resin.IO
             }
         }
 
-        public static byte[] Serialize(this IList<Field> fields, Compression compression)
+        public static void Serialize(this IList<Field> fields, Compression compression, Stream stream)
         {
-            using (var stream = new MemoryStream())
+            foreach (var field in fields)
             {
-                foreach (var field in fields)
+                byte[] keyBytes = Encoding.GetBytes(field.Key);
+                byte[] keyLengthBytes = BitConverter.GetBytes((short)keyBytes.Length);
+                byte[] valBytes;
+                string toStore = field.Store ? field.Value : string.Empty;
+
+                if (compression == Compression.GZip)
                 {
-                    byte[] keyBytes = Encoding.GetBytes(field.Key);
-                    byte[] keyLengthBytes = BitConverter.GetBytes((short)keyBytes.Length);
-                    byte[] valBytes;
-                    string toStore = field.Store ? field.Value : string.Empty;
-
-                    if (compression == Compression.GZip)
-                    {
-                        valBytes = Deflator.Compress(Encoding.GetBytes(toStore));
-                    }
-                    else if (compression == Compression.QuickLz)
-                    {
-                        valBytes = QuickLZ.compress(Encoding.GetBytes(toStore), 1);
-                    }
-                    else
-                    {
-                        valBytes = Encoding.GetBytes(toStore);
-                    }
-
-                    byte[] valLengthBytes = BitConverter.GetBytes(valBytes.Length);
-
-                    if (!BitConverter.IsLittleEndian)
-                    {
-                        Array.Reverse(keyLengthBytes);
-                        Array.Reverse(keyBytes);
-                        Array.Reverse(valBytes);
-                        Array.Reverse(valLengthBytes);
-                    }
-
-                    stream.Write(keyLengthBytes, 0, sizeof(short));
-                    stream.Write(keyBytes, 0, keyBytes.Length);
-                    stream.Write(valLengthBytes, 0, sizeof(int));
-                    stream.Write(valBytes, 0, valBytes.Length);
+                    valBytes = Deflator.Compress(Encoding.GetBytes(toStore));
                 }
-                return stream.ToArray();
+                else if (compression == Compression.QuickLz)
+                {
+                    valBytes = QuickLZ.compress(Encoding.GetBytes(toStore), 1);
+                }
+                else
+                {
+                    valBytes = Encoding.GetBytes(toStore);
+                }
+
+                byte[] valLengthBytes = BitConverter.GetBytes(valBytes.Length);
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(keyLengthBytes);
+                    Array.Reverse(keyBytes);
+                    Array.Reverse(valBytes);
+                    Array.Reverse(valLengthBytes);
+                }
+
+                stream.Write(keyLengthBytes, 0, sizeof(short));
+                stream.Write(keyBytes, 0, keyBytes.Length);
+                stream.Write(valLengthBytes, 0, sizeof(int));
+                stream.Write(valBytes, 0, valBytes.Length);
             }
         }
 
