@@ -234,7 +234,7 @@ namespace Tests
         [TestMethod]
         public void Can_collect_exact()
         {
-            var dir = Path.Combine(Dir, "Can_collect_exact");
+            var dir = Path.Combine(Dir, "CollectorTests.Can_collect_exact");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Resin.Analysis;
+using Resin.Sys;
 
 namespace Resin.IO
 {
@@ -245,18 +246,20 @@ namespace Resin.IO
 
             return compressed;
         }
-
-        public IEnumerable<Word> Near(string word, int maxEdits)
+        
+        public IEnumerable<Word> Near(string word, int maxEdits, IDistanceResolver distanceResolver = null)
         {
-            var compressed = new List<Word>();
+            if (distanceResolver == null) distanceResolver = new Levenshtein();
+
+             var compressed = new List<Word>();
             if (LeftChild != null)
             {
-                LeftChild.WithinEditDistanceDepthFirst(word, string.Empty, compressed, 0, maxEdits);
+                LeftChild.WithinEditDistanceDepthFirst(word, string.Empty, compressed, 0, maxEdits, distanceResolver);
             }
             return compressed;
         }
 
-        private void WithinEditDistanceDepthFirst(string word, string state, List<Word> compressed, int depth, int maxEdits)
+        private void WithinEditDistanceDepthFirst(string word, string state, List<Word> compressed, int depth, int maxEdits, IDistanceResolver distanceResolver)
         {
             string test;
 
@@ -269,7 +272,7 @@ namespace Resin.IO
                 test = new string(state.ReplaceOrAppend(depth, Value).ToArray());
             }
 
-            var edits = Levenshtein.Distance(word, test);
+            var edits = distanceResolver.Distance(word, test);
 
             if (edits <= maxEdits)
             {
@@ -283,12 +286,12 @@ namespace Resin.IO
             {
                 if (LeftChild != null)
                 {
-                    LeftChild.WithinEditDistanceDepthFirst(word, test, compressed, depth+1, maxEdits);
+                    LeftChild.WithinEditDistanceDepthFirst(word, test, compressed, depth+1, maxEdits, distanceResolver);
                 }
 
                 if (RightSibling != null)
                 {
-                    RightSibling.WithinEditDistanceDepthFirst(word, test, compressed, depth, maxEdits);
+                    RightSibling.WithinEditDistanceDepthFirst(word, test, compressed, depth, maxEdits, distanceResolver);
                 }
             }
         }

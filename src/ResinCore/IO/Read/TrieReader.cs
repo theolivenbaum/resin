@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Resin.Analysis;
+using Resin.Sys;
 
 namespace Resin.IO.Read
 {
@@ -48,16 +49,18 @@ namespace Resin.IO.Read
             return compressed;
         }
 
-        public IEnumerable<Word> Near(string word, int maxEdits)
+        public IEnumerable<Word> Near(string word, int maxEdits, IDistanceResolver distanceResolver = null)
         {
+            if (distanceResolver == null) distanceResolver = new Levenshtein();
+
             var compressed = new List<Word>();
 
-            WithinEditDistanceDepthFirst(word, string.Empty, compressed, 0, maxEdits);
+            WithinEditDistanceDepthFirst(word, string.Empty, compressed, 0, maxEdits, distanceResolver);
 
             return compressed;
         }
 
-        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxErrors, bool stop = false)
+        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxErrors, IDistanceResolver distanceResolver, bool stop = false)
         {
             var reachedMin = maxErrors == 0 || depth >= word.Length - 1 - maxErrors;
             var reachedDepth = depth >= word.Length - 1;
@@ -86,7 +89,7 @@ namespace Resin.IO.Read
 
                 if (reachedMin)
                 {
-                    var edits = Levenshtein.Distance(word, test);
+                    var edits = distanceResolver.Distance(word, test);
 
                     if (edits <= maxErrors)
                     {
@@ -108,13 +111,13 @@ namespace Resin.IO.Read
                 // Go left (deep)
                 if (node.HaveChild)
                 {
-                    WithinEditDistanceDepthFirst(word, test, compressed, depth + 1, maxErrors, stop);
+                    WithinEditDistanceDepthFirst(word, test, compressed, depth + 1, maxErrors, distanceResolver, stop);
                 }
 
                 // Go right (wide)
                 if (node.HaveSibling)
                 {
-                    WithinEditDistanceDepthFirst(word, state, compressed, depth, maxErrors);
+                    WithinEditDistanceDepthFirst(word, state, compressed, depth, maxErrors, distanceResolver);
                 }
             }
         }

@@ -10,6 +10,19 @@ namespace Resin.Sys
     {
         public static readonly DateTime BeginningOfTime = new DateTime(2016, 4, 23);
 
+        public static IEnumerable<char> ReplaceOrAppend(this string input, int index, char newChar)
+        {
+            var chars = input.ToCharArray();
+            if (index == input.Length) return input + newChar;
+            chars[index] = newChar;
+            return chars;
+        }
+
+        public static string ReplaceOrAppendToString(this string input, int index, char newChar)
+        {
+            return new string(input.ReplaceOrAppend(index, newChar).ToArray());
+        }
+
         public static long GetChronologicalFileId()
         {
             var ticks = DateTime.Now.Ticks - BeginningOfTime.Ticks;

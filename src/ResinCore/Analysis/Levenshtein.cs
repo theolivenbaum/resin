@@ -1,25 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Resin.Analysis
 {
-    public static class Levenshtein
+    public class Levenshtein : IDistanceResolver
     {
-        public static IEnumerable<char> ReplaceOrAppend(this string input, int index, char newChar)
-        {
-            var chars = input.ToCharArray();
-            if (index == input.Length) return input + newChar;
-            chars[index] = newChar;
-            return chars;
-        }
-
-        public static string ReplaceOrAppendToString(this string input, int index, char newChar)
-        {
-            return new string(input.ReplaceOrAppend(index, newChar).ToArray());
-        }
-        
-        public static int Distance(string a, string b)
+        public int Distance(string a, string b)
         {
             if (string.IsNullOrEmpty(a))
             {

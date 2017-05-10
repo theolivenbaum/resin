@@ -89,7 +89,7 @@ namespace Resin.Cli
             var timer = new Stopwatch();
             timer.Start();
 
-            using (var s = new Searcher(dir, new QueryParser(new Analyzer()), new Tfidf()))
+            using (var s = new Searcher(dir))
             {
                 result = s.Search(q, page, size);
 

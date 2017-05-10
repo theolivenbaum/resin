@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Resin;
 using Resin.IO;
 using Resin.IO.Read;
 using Resin.IO.Write;

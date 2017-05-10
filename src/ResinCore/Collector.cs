@@ -21,15 +21,16 @@ namespace Resin
         private readonly IxInfo _ix;
         private readonly IScoringScheme _scorerFactory;
         private readonly int _documentCount;
+        private IDistanceResolver _distanceResolver;
 
         public IxInfo Ix { get { return _ix; } }
 
-        public Collector(string directory, IxInfo ix, IScoringScheme scorerFactory = null, int documentCount = -1)
+        public Collector(string directory, IxInfo ix, IScoringScheme scorerFactory = null, IDistanceResolver distanceResolver = null, int documentCount = -1)
         {
             _directory = directory;
             _ix = ix;
             _scorerFactory = scorerFactory;
-
+            _distanceResolver = distanceResolver ?? new Levenshtein();
             _documentCount = documentCount == -1 ? ix.DocumentCount : documentCount;
         }
 
@@ -81,7 +82,9 @@ namespace Resin
             {
                 if (query.Fuzzy)
                 {
-                    query.Terms = reader.Near(query.Value, query.Edits).Select(word => new Term(query.Field, word)).ToList();
+                    query.Terms = reader.Near(query.Value, query.Edits, _distanceResolver)
+                        .Select(word => new Term(query.Field, word))
+                        .ToList();
                 }
                 else if (query.Prefix)
                 {
