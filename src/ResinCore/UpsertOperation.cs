@@ -38,10 +38,10 @@ namespace Resin
 
         public long Commit()
         {
-            var docAddresses = new List<BlockInfo>();
             var ts = new List<Task>();
             var trieBuilder = new TrieBuilder();
 
+            using (var docAddresses = new BlockingCollection<BlockInfo>())
             using (var documentsToStore = new BlockingCollection<Document>())
             using (var documentsToAnalyze = new BlockingCollection<Document>())
             {
@@ -137,6 +137,7 @@ namespace Resin
                         catch (InvalidOperationException)
                         {
                             // Done
+                            docAddresses.CompleteAdding();
                         }
                     }
 
@@ -144,54 +145,7 @@ namespace Resin
 
                 }));
 
-                Task.WaitAll(ts.ToArray());
-            }
-
-            var tries = trieBuilder.GetTries();
-
-            var tasks = new List<Task>
-            {
-                Task.Run(() =>
-                {
-                    var postingsTimer = new Stopwatch();
-                    postingsTimer.Start();
-
-                    Log.Info("serializing postings");
-
-                    var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
-                    using (var postingsWriter = new PostingsWriter(new FileStream(posFileName, FileMode.Create, FileAccess.Write, FileShare.None)))
-                    {
-                        foreach (var trie in tries)
-                        {
-                            foreach (var node in trie.Value.EndOfWordNodes())
-                            {
-                                node.PostingsAddress = postingsWriter.Write(node.Postings);
-                            }
-
-                            if (Log.IsDebugEnabled)
-                            {
-                                foreach(var word in trie.Value.Words())
-                                {
-                                    Log.Debug(word);
-                                }
-                            }
-                        }
-                    }
-
-                    Log.InfoFormat("serialized postings in {0}", postingsTimer.Elapsed);
-                }),
-                Task.Run(() =>
-                {
-                    var trieTimer = new Stopwatch();
-                    trieTimer.Start();
-
-                    Log.Info("serializing tries");
-
-                    SerializeTries(tries);
-
-                    Log.InfoFormat("serialized tries in {0}", trieTimer.Elapsed);
-                }),
-                Task.Run(() =>
+                ts.Add(Task.Run(() =>
                 {
                     var docAdrTimer = new Stopwatch();
                     docAdrTimer.Start();
@@ -200,28 +154,87 @@ namespace Resin
 
                     using (var docAddressWriter = new DocumentAddressWriter(new FileStream(Path.Combine(_directory, _indexVersionId + ".da"), FileMode.Create, FileAccess.Write, FileShare.None)))
                     {
-                        foreach (var address in docAddresses)
+                        try
                         {
-                            docAddressWriter.Write(address);
+                            while (true)
+                            {
+                                var address = docAddresses.Take();
+
+                                docAddressWriter.Write(address);
+                            }
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // Done
                         }
                     }
 
-                     Log.InfoFormat("serialized doc addresses in {0}", docAdrTimer.Elapsed);
-                }),
-                Task.Run(() =>
+                    Log.InfoFormat("serialized doc addresses in {0}", docAdrTimer.Elapsed);
+                }));
+
+                Task.WaitAll(ts.ToArray());
+
+
+            }
+
+            var tries = trieBuilder.GetTries();
+
+            var tasks = new List<Task>
                 {
-                    var docHasTimer = new Stopwatch();
-                    docHasTimer.Start();
+                    Task.Run(() =>
+                    {
+                        var postingsTimer = new Stopwatch();
+                        postingsTimer.Start();
 
-                    Log.Info("serializing doc hashes");
+                        Log.Info("serializing postings");
 
-                    var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pk"));
+                        var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
+                        using (var postingsWriter = new PostingsWriter(new FileStream(posFileName, FileMode.Create, FileAccess.Write, FileShare.None)))
+                        {
+                            foreach (var trie in tries)
+                            {
+                                foreach (var node in trie.Value.EndOfWordNodes())
+                                {
+                                    node.PostingsAddress = postingsWriter.Write(node.Postings);
+                                }
 
-                    Pks.Keys.Select(h=>new DocHash(h)).Serialize(docHashesFileName);
+                                if (Log.IsDebugEnabled)
+                                {
+                                    foreach(var word in trie.Value.Words())
+                                    {
+                                        Log.Debug(word);
+                                    }
+                                }
+                            }
+                        }
 
-                    Log.InfoFormat("serialized doc hashes in {0}", docHasTimer.Elapsed);
-                })
-            };
+                        Log.InfoFormat("serialized postings in {0}", postingsTimer.Elapsed);
+                    }),
+                    Task.Run(() =>
+                    {
+                        var trieTimer = new Stopwatch();
+                        trieTimer.Start();
+
+                        Log.Info("serializing tries");
+
+                        SerializeTries(tries);
+
+                        Log.InfoFormat("serialized tries in {0}", trieTimer.Elapsed);
+                    }),
+                    Task.Run(() =>
+                    {
+                        var docHasTimer = new Stopwatch();
+                        docHasTimer.Start();
+
+                        Log.Info("serializing doc hashes");
+
+                        var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pk"));
+
+                        Pks.Keys.Select(h=>new DocHash(h)).Serialize(docHashesFileName);
+
+                        Log.InfoFormat("serialized doc hashes in {0}", docHasTimer.Elapsed);
+                    })
+                };
 
             Task.WaitAll(tasks.ToArray());
 

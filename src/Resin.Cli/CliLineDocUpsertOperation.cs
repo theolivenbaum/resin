@@ -13,8 +13,6 @@ namespace Resin.Cli
     {
         private readonly int _take;
         private readonly int _skip;
-        private int _cursorPosLeft;
-        private int _cursorPosTop;
         private readonly bool _autoGeneratePk;
         private readonly string _primaryKey;
 
@@ -23,12 +21,9 @@ namespace Resin.Cli
         {
             _take = take;
             _skip = skip;
-            _cursorPosLeft = Console.CursorLeft;
-            _cursorPosTop = Console.CursorTop;
+
             _autoGeneratePk = string.IsNullOrWhiteSpace(primaryKey);
             _primaryKey = primaryKey;
-
-            Console.WriteLine();
         }
 
         public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, Stream file, int skip, int take, Compression compression, string primaryKey)
@@ -36,8 +31,6 @@ namespace Resin.Cli
         {
             _take = take;
             _skip = skip;
-            _cursorPosLeft = Console.CursorLeft;
-            _cursorPosTop = Console.CursorTop;
             _autoGeneratePk = string.IsNullOrWhiteSpace(primaryKey);
         }
 
@@ -109,12 +102,6 @@ namespace Resin.Cli
                         var d = new Document(id, fields);
                         d.Hash = hash;
                         yield return d;
-
-                        var left = Console.CursorLeft;
-                        var top = Console.CursorTop;
-                        Console.SetCursorPosition(_cursorPosLeft, _cursorPosTop);
-                        Console.Write(count);
-                        Console.SetCursorPosition(left, top);
                     }
                 }
             }
