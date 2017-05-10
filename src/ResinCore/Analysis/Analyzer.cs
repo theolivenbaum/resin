@@ -23,7 +23,7 @@ namespace Resin.Analysis
 
         public IEnumerable<AnalyzedTerm> AnalyzeDocumentInternal(Document document)
         {
-            foreach(var field in document.Fields)
+            foreach(var field in document.Fields.Values)
             {
                 if (field.Analyze)
                 {

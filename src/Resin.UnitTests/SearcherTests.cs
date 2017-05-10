@@ -43,7 +43,7 @@ namespace Tests
 
                 Assert.AreEqual(
                     "Rambo First Blood",
-                    result.Docs.First(d => d.Document.Id == 0).Document.Fields.First(f => f.Key == "title").Value);
+                    result.Docs.First(d => d.Document.Id == 0).Document.Fields["title"].Value);
             }
 
             using (var searcher = new Searcher(dir))
@@ -90,7 +90,7 @@ namespace Tests
 
                 Assert.AreEqual(
                     "Rambo First Blood", 
-                    result.Docs.First(d => d.Document.Id == 0).Document.Fields.First(f=>f.Key == "title").Value);
+                    result.Docs.First(d => d.Document.Id == 0).Document.Fields["title"].Value);
             }
 
             using (var searcher = new Searcher(dir))

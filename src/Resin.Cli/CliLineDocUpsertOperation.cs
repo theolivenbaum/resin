@@ -16,8 +16,8 @@ namespace Resin.Cli
         private readonly bool _autoGeneratePk;
         private readonly string _primaryKey;
 
-        public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, string fileName, int skip, int take, Compression compression, string primaryKey)
-            : base(directory, analyzer, fileName, compression)
+        public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, int skip, int take, Compression compression, string primaryKey, string fileName)
+            : base(directory, analyzer, compression, primaryKey, fileName)
         {
             _take = take;
             _skip = skip;
@@ -26,8 +26,8 @@ namespace Resin.Cli
             _primaryKey = primaryKey;
         }
 
-        public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, Stream file, int skip, int take, Compression compression, string primaryKey)
-            : base(directory, analyzer, file, compression)
+        public CliLineDocUpsertOperation(string directory, IAnalyzer analyzer, int skip, int take, Compression compression, string primaryKey, Stream documents)
+            : base(directory, analyzer, compression, primaryKey, documents)
         {
             _take = take;
             _skip = skip;
@@ -74,36 +74,7 @@ namespace Resin.Cli
                 var doc = line.Substring(0, line.Length - 1);
                 var id = count++;
                 var fields = Parse(id, doc);
-
-                if (fields != null)
-                {
-                    string pkVal;
-
-                    if (_autoGeneratePk)
-                    {
-                        pkVal = Guid.NewGuid().ToString();
-                    }
-                    else
-                    {
-                        pkVal = fields.First(f => f.Key == _primaryKey).Value;
-                    }
-
-                    var hash = pkVal.ToHash();
-
-                    if (Pks.ContainsKey(hash))
-                    {
-                        Log.WarnFormat("Found multiple occurrences of documents with pk value of {0} (id:{1}). Only first occurrence will be stored.",
-                            pkVal, fields[0].DocumentId);
-                    }
-                    else
-                    {
-                        Pks.Add(hash, null);
-
-                        var d = new Document(id, fields);
-                        d.Hash = hash;
-                        yield return d;
-                    }
-                }
+                yield return new Document(id, fields);
             }
             Console.WriteLine("");
         }

@@ -126,7 +126,7 @@ namespace Resin.Cli
         {
             Console.Write(doc.Score.ToString("#.##") + "\t");
 
-            foreach(var field in doc.Document.Fields)
+            foreach(var field in doc.Document.Fields.Values)
             {
                 Print(field.Value, highlight.ContainsKey(field.Key) ? highlight[field.Key] : null);
             }
@@ -171,7 +171,6 @@ namespace Resin.Cli
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
             if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
 
-
             Console.WriteLine("writing...");
 
             var docs = new List<Dictionary<string, string>>();
@@ -181,7 +180,7 @@ namespace Resin.Cli
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            using (var writer = new CliLineDocUpsertOperation(dir, new Analyzer(), fileName, skip, take, compression, null))
+            using (var writer = new CliLineDocUpsertOperation(dir, new Analyzer(), skip, take, compression, null, fileName))
             {
                 writer.Commit();
             }

@@ -15,25 +15,63 @@ namespace Resin
 {
     public abstract class UpsertOperation
     {
+        protected abstract IEnumerable<Document> ReadSource();
+
         protected static readonly ILog Log = LogManager.GetLogger(typeof(UpsertOperation));
 
         protected readonly Dictionary<ulong, object> Pks;
-
-        protected abstract IEnumerable<Document> ReadSource();
 
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private readonly Compression _compression;
         private readonly long _indexVersionId;
+        private readonly bool _autoGeneratePk;
+        private readonly string _primaryKey;
 
-        protected UpsertOperation(string directory, IAnalyzer analyzer, Compression compression)
+        protected UpsertOperation(
+            string directory, IAnalyzer analyzer, Compression compression, string primaryKey)
         {
             _directory = directory;
             _analyzer = analyzer;
             _compression = compression;
             _indexVersionId = Util.GetChronologicalFileId();
+            _autoGeneratePk = string.IsNullOrWhiteSpace(primaryKey);
+            _primaryKey = primaryKey;
 
             Pks = new Dictionary<UInt64, object>();
+        }
+
+        private IEnumerable<Document> ReadSourceAndAssignHash()
+        {
+            foreach (var document in ReadSource())
+            {
+                string pkVal;
+
+                if (_autoGeneratePk)
+                {
+                    pkVal = Guid.NewGuid().ToString();
+                }
+                else
+                {
+                    pkVal = document.Fields[_primaryKey].Value;
+                }
+
+                var hash = pkVal.ToHash();
+
+                if (Pks.ContainsKey(hash))
+                {
+                    Log.WarnFormat("Found multiple occurrences of documents with pk value of {0} (id:{1}). Only first occurrence will be stored.",
+                        pkVal, document.Id);
+                }
+                else
+                {
+                    Pks.Add(hash, null);
+
+                    document.Hash = hash;
+
+                    yield return document;
+                }
+            }
         }
 
         public long Commit()
@@ -54,7 +92,7 @@ namespace Resin
 
                     var count = 0;
 
-                    foreach (var doc in ReadSource())
+                    foreach (var doc in ReadSourceAndAssignHash())
                     {
                         documentsToAnalyze.Add(doc);
                         documentsToStore.Add(doc);

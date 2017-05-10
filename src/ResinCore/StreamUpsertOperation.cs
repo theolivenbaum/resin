@@ -10,13 +10,13 @@ namespace Resin
     {
         protected readonly StreamReader Reader;
 
-        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, string fileName, Compression compression)
-            : this(directory, analyzer, File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None), compression)
+        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, Compression compression, string primaryKey, string fileName)
+            : this(directory, analyzer, compression, primaryKey, File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None))
         {
         }
 
-        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, Stream stream, Compression compression)
-            : base(directory, analyzer, compression)
+        protected StreamUpsertOperation(string directory, IAnalyzer analyzer, Compression compression, string primaryKey, Stream stream)
+            : base(directory, analyzer, compression, primaryKey)
         {
 
             var bs = new BufferedStream(stream);

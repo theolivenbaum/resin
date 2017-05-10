@@ -141,7 +141,7 @@ namespace Resin.IO
 
                 stream.Write(idBytes, 0, idBytes.Length);
 
-                document.Fields.Serialize(compression, stream);
+                document.Fields.Values.Serialize(compression, stream);
 
                 return stream.ToArray();
             }
@@ -269,7 +269,7 @@ namespace Resin.IO
             }
         }
 
-        public static void Serialize(this IList<Field> fields, Compression compression, Stream stream)
+        public static void Serialize(this IEnumerable<Field> fields, Compression compression, Stream stream)
         {
             foreach (var field in fields)
             {
