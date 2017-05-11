@@ -4,6 +4,8 @@ Resin can analyze, index and store documents and has querying support for term, 
 ## It's a smarter index
 Resin can be seen as an index of the same kind you attach to relational database tables when you want to make reading from them fast. Resin indices are fast to write and read from and support near (as in "almost match") which is out-of-scope for most database index types.
 
+More formally, Resin's index is a doubly chained character trie optimized for fast disk-based tree traversing.
+
 Apart from offering fast lookups, like a database index, Resin also scores documents based on their relevance. Relevance in turn is based on the distance from a document and a query in vector space.
 
 ## Supports any scoring scheme
