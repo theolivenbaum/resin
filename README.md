@@ -94,4 +94,4 @@ Definitely start [here](https://github.com/kreeben/resin/issues).
 
 ### Sir
 
-[Sir](https://github.com/kreeben/sir) is Resin distributed, a search engine, map/reduce system and long-term data storage solution in one, a Elasticsearch+Hadoop replacement.
+[Sir](https://github.com/kreeben/sir) is Resin distributed, a search engine, map/reduce system and long-term data storage solution in one, a Elasticsearch+Hadoop replacement for on-premise or cloud architectures.
