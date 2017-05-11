@@ -15,7 +15,7 @@ To support the default tf-idf scoring scheme Resin stores term counts. Resin sup
 If you skip the scoring, i.e. create a searcher without a scorer, then Resin is a auto-indexing key-value store, where keys are strings and values are the string representation of any object.
 
 ## Fast at indexing and querying
-In many scenarios Resin is already faster than the [market leader](https://lucenenet.apache.org/) when it comes down to querying and indexing speed, making it a [in-many-scenarios-fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) information retrieval system on the .net plaform and certainly a good choice if you're on dotnet core being there is no real alternative. 
+In many scenarios Resin is already faster than the [market leader](https://lucenenet.apache.org/) when it comes down to querying and indexing speed, making it a [in-many-scenarios-fastest](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC2) information retrieval system on the .net plaform and certainly a good choice if you're on dotnet core being there is no real alternative, if you're looking for a in-process alternative. [Here](https://github.com/kreeben/sir) is an out-of-process implementation of Resin.
 
 If you have a scenario where you feel Resin should do better, this is important information for me. Please let me know. I'm both curious about those special cases and I'd love to optimize for them.
 
