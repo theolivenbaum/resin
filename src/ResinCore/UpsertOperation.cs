@@ -153,7 +153,7 @@ namespace Resin
 
                     Log.Info("serializing documents");
 
-                    var docFileName = Path.Combine(_directory, _indexVersionId + ".doc");
+                    var docFileName = Path.Combine(_directory, _indexVersionId + ".rsin");
                     var count = 0;
 
                     using (var docWriter = new DocumentWriter(
