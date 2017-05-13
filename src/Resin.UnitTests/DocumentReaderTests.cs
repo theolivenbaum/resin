@@ -33,7 +33,7 @@ namespace Tests
                 })
             };
 
-            var fileName = Path.Combine(Dir, "DocumentReaderTests.Can_read");
+            var fileName = Path.Combine(CreateDir(), "DocumentReaderTests.Can_read");
             var blocks = new Dictionary<int, BlockInfo>();
 
             using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write))

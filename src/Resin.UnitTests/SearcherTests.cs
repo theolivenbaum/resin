@@ -14,7 +14,7 @@ namespace Tests
         [TestMethod]
         public void Can_search_compressed_index()
         {
-            var dir = Path.Combine(Dir, "SearcherTests.Can_search_compressed_index");
+            var dir = Path.Combine(CreateDir(), "SearcherTests.Can_search_compressed_index");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
@@ -61,7 +61,7 @@ namespace Tests
         [TestMethod]
         public void Can_search_exact()
         {
-            var dir = Path.Combine(Dir, "SearcherTests.Can_search_exact");
+            var dir = Path.Combine(CreateDir(), "SearcherTests.Can_search_exact");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 

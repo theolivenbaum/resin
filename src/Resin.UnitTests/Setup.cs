@@ -4,20 +4,24 @@ using System.IO;
 
 namespace Tests
 {
+    [TestClass()]
     public class Setup
     {
-        private string _dir;
+        private const string root = @"c:\temp\resin_tests\";
 
-        public string Dir
+        protected static string CreateDir()
         {
-            get
+            var dir = root + Guid.NewGuid().ToString();
+            Directory.CreateDirectory(dir);
+            return dir;
+        }
+
+        [AssemblyInitialize()]
+        public static void AssemblyInit(TestContext context)
+        {
+            foreach(var dir in Directory.GetDirectories(root))
             {
-                if (_dir == null)
-                {
-                    _dir = @"c:\temp\resin_tests\" + Guid.NewGuid().ToString();
-                    Directory.CreateDirectory(_dir);
-                }
-                return _dir;
+                Directory.Delete(dir, true);
             }
         }
     }

@@ -15,7 +15,7 @@ namespace Tests
         [TestMethod]
         public void Can_collect_by_id()
         {
-            var dir = Path.Combine(Dir, "Can_collect_by_id");
+            var dir = Path.Combine(CreateDir(), "Can_collect_by_id");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
@@ -52,7 +52,7 @@ namespace Tests
         [TestMethod]
         public void Can_collect_near_phrase()
         {
-            var dir = Path.Combine(Dir, "Can_collect_near_phrase_joined_by_and");
+            var dir = Path.Combine(CreateDir(), "Can_collect_near_phrase_joined_by_and");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
@@ -93,7 +93,7 @@ namespace Tests
         [TestMethod]
         public void Can_collect_exact_phrase_joined_by_and()
         {
-            var dir = Path.Combine(Dir, "Can_collect_exact_phrase_joined_by_and");
+            var dir = Path.Combine(CreateDir(), "Can_collect_exact_phrase_joined_by_and");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
@@ -136,7 +136,7 @@ namespace Tests
         [TestMethod]
         public void Can_collect_exact_phrase_joined_by_or()
         {
-            var dir = Path.Combine(Dir, "Can_collect_exact_phrase_joined_by_or");
+            var dir = Path.Combine(CreateDir(), "Can_collect_exact_phrase_joined_by_or");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
@@ -190,7 +190,7 @@ namespace Tests
         [TestMethod]
         public void Can_collect_exact_phrase_joined_by_not()
         {
-            var dir = Path.Combine(Dir, "Can_collect_exact_phrase_joined_by_not");
+            var dir = Path.Combine(CreateDir(), "Can_collect_exact_phrase_joined_by_not");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
@@ -234,7 +234,7 @@ namespace Tests
         [TestMethod]
         public void Can_collect_exact()
         {
-            var dir = Path.Combine(Dir, "CollectorTests.Can_collect_exact");
+            var dir = Path.Combine(CreateDir(), "CollectorTests.Can_collect_exact");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
@@ -274,7 +274,7 @@ namespace Tests
         [TestMethod]
         public void Can_collect_prefixed()
         {
-            var dir = Path.Combine(Dir, "Can_collect_prefixed");
+            var dir = Path.Combine(CreateDir(), "Can_collect_prefixed");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
@@ -305,7 +305,7 @@ namespace Tests
         [TestMethod]
         public void Can_collect_near()
         {
-            var dir = Path.Combine(Dir, "Can_collect_near");
+            var dir = Path.Combine(CreateDir(), "Can_collect_near");
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
