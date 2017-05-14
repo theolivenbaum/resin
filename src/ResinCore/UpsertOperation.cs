@@ -46,30 +46,37 @@ namespace Resin
             var ts = new List<Task>();
             var trieBuilder = new TrieBuilder();
 
-            using (var docAddresses = new BlockingCollection<BlockInfo>())
-            using (var documentsToStore = new BlockingCollection<Document>())
             using (var documentsToAnalyze = new BlockingCollection<Document>())
             {
                 ts.Add(Task.Run(() =>
                 {
-                    Log.Info("reading documents");
-
-                    var readTimer = new Stopwatch();
-                    readTimer.Start();
+                    Log.Info("serializing documents");
 
                     var count = 0;
+                    var docFileName = Path.Combine(_directory, _indexVersionId + ".rdoc");
+                    var docAddressFn = Path.Combine(_directory, _indexVersionId + ".da");
+                    var readTimer = new Stopwatch();
 
-                    foreach (var doc in ReadSourceAndAssignIdentifiers())
+                    readTimer.Start();
+
+                    using (var docAddressWriter = new DocumentAddressWriter(new FileStream(docAddressFn, FileMode.Create, FileAccess.Write)))
+                    using (var docWriter = new DocumentWriter(new FileStream(docFileName, FileMode.Create, FileAccess.Write), _compression))
                     {
-                        documentsToAnalyze.Add(doc);
-                        documentsToStore.Add(doc);
+                        foreach (var doc in ReadSourceAndAssignIdentifiers())
+                        {
+                            documentsToAnalyze.Add(doc);
 
-                        count++;
+                            var adr = docWriter.Write(doc);
+
+                            docAddressWriter.Write(adr);
+
+                            count++;
+                        }
                     }
-                    documentsToAnalyze.CompleteAdding();
-                    documentsToStore.CompleteAdding();
 
-                    Log.InfoFormat("read {0} documents in {1}", count, readTimer.Elapsed);
+                    documentsToAnalyze.CompleteAdding();
+
+                    Log.InfoFormat("serialized {0} documents in {1}", count, readTimer.Elapsed);
 
                 }));
 
@@ -112,74 +119,8 @@ namespace Resin
                     Log.InfoFormat("analyzed {0} documents in {1}", count, analyzeTimer.Elapsed);
 
                 }));
-                
-                ts.Add(Task.Run(() =>
-                {
-                    var docWriterTimer = new Stopwatch();
-                    docWriterTimer.Start();
-
-                    Log.Info("serializing documents");
-
-                    var docFileName = Path.Combine(_directory, _indexVersionId + ".rsin");
-                    var count = 0;
-
-                    using (var docWriter = new DocumentWriter(
-                        new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None), _compression))
-                    {
-                        try
-                        {
-                            while (true)
-                            {
-                                var doc = documentsToStore.Take();
-
-                                var adr = docWriter.Write(doc);
-
-                                docAddresses.Add(adr);
-
-                                count++;
-                            }
-                        }
-                        catch (InvalidOperationException)
-                        {
-                            // Done
-                            docAddresses.CompleteAdding();
-                        }
-                    }
-
-                    Log.InfoFormat("serialized {0} documents in {1}", count, docWriterTimer.Elapsed);
-
-                }));
-
-                ts.Add(Task.Run(() =>
-                {
-                    var docAdrTimer = new Stopwatch();
-                    docAdrTimer.Start();
-
-                    Log.Info("serializing doc addresses");
-
-                    using (var docAddressWriter = new DocumentAddressWriter(new FileStream(Path.Combine(_directory, _indexVersionId + ".da"), FileMode.Create, FileAccess.Write, FileShare.None)))
-                    {
-                        try
-                        {
-                            while (true)
-                            {
-                                var address = docAddresses.Take();
-
-                                docAddressWriter.Write(address);
-                            }
-                        }
-                        catch (InvalidOperationException)
-                        {
-                            // Done
-                        }
-                    }
-
-                    Log.InfoFormat("serialized doc addresses in {0}", docAdrTimer.Elapsed);
-                }));
 
                 Task.WaitAll(ts.ToArray());
-
-
             }
 
             var tries = trieBuilder.GetTries();

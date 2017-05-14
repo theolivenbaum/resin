@@ -11,11 +11,11 @@ using System.Threading;
 
 namespace Resin
 {
-    public abstract class MergingUpsertOperation
+    public abstract class CascadingUpsertOperation
     {
         protected abstract IEnumerable<Document> ReadSource();
 
-        protected static readonly ILog Log = LogManager.GetLogger(typeof(MergingUpsertOperation));
+        protected static readonly ILog Log = LogManager.GetLogger(typeof(CascadingUpsertOperation));
 
         protected readonly Dictionary<ulong, object> Pks;
 
@@ -26,7 +26,7 @@ namespace Resin
         private readonly bool _autoGeneratePk;
         private readonly string _primaryKey;
 
-        protected MergingUpsertOperation(
+        protected CascadingUpsertOperation(
             string directory, IAnalyzer analyzer, Compression compression, string primaryKey)
         {
             _directory = directory;

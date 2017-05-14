@@ -58,7 +58,7 @@ namespace Resin
             trieBuilder.CompleteAdding();
 
             var indexVersionId = Util.GetChronologicalFileId();
-            var docFileName = Path.Combine(_directory, indexVersionId + ".rsin");
+            var docFileName = Path.Combine(_directory, indexVersionId + ".rdoc");
             var docAddressesFn = Path.Combine(_directory, indexVersionId + ".da");
 
             BlockInfo adr;
