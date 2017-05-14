@@ -19,7 +19,7 @@ namespace Resin
 
         protected static readonly ILog Log = LogManager.GetLogger(typeof(UpsertOperation));
 
-        protected readonly Dictionary<ulong, object> Pks;
+        protected readonly Dictionary<ulong, object> _primaryKeys;
 
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
@@ -38,40 +38,7 @@ namespace Resin
             _autoGeneratePk = string.IsNullOrWhiteSpace(primaryKey);
             _primaryKey = primaryKey;
 
-            Pks = new Dictionary<UInt64, object>();
-        }
-
-        private IEnumerable<Document> ReadSourceAndAssignHash()
-        {
-            foreach (var document in ReadSource())
-            {
-                string pkVal;
-
-                if (_autoGeneratePk)
-                {
-                    pkVal = Guid.NewGuid().ToString();
-                }
-                else
-                {
-                    pkVal = document.Fields[_primaryKey].Value;
-                }
-
-                var hash = pkVal.ToHash();
-
-                if (Pks.ContainsKey(hash))
-                {
-                    Log.WarnFormat("Found multiple occurrences of documents with pk value of {0} (id:{1}). Only first occurrence will be stored.",
-                        pkVal, document.Id);
-                }
-                else
-                {
-                    Pks.Add(hash, null);
-
-                    document.Hash = hash;
-
-                    yield return document;
-                }
-            }
+            _primaryKeys = new Dictionary<UInt64, object>();
         }
 
         public long Commit()
@@ -92,7 +59,7 @@ namespace Resin
 
                     var count = 0;
 
-                    foreach (var doc in ReadSourceAndAssignHash())
+                    foreach (var doc in ReadSourceAndAssignIdentifiers())
                     {
                         documentsToAnalyze.Add(doc);
                         documentsToStore.Add(doc);
@@ -268,7 +235,7 @@ namespace Resin
 
                         var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pk"));
 
-                        Pks.Keys.Select(h=>new DocHash(h)).Serialize(docHashesFileName);
+                        _primaryKeys.Keys.Select(h=>new DocHash(h)).Serialize(docHashesFileName);
 
                         Log.InfoFormat("serialized doc hashes in {0}", docHasTimer.Elapsed);
                     })
@@ -309,9 +276,44 @@ namespace Resin
             return new IxInfo
             {
                 VersionId = _indexVersionId,
-                DocumentCount = Pks.Count,
+                DocumentCount = _primaryKeys.Count,
                 Compression = _compression
             };
+        }
+
+        private IEnumerable<Document> ReadSourceAndAssignIdentifiers()
+        {
+            var count = 0;
+            foreach (var document in ReadSource())
+            {
+                string pkVal;
+
+                if (_autoGeneratePk)
+                {
+                    pkVal = Guid.NewGuid().ToString();
+                }
+                else
+                {
+                    pkVal = document.Fields[_primaryKey].Value;
+                }
+
+                var hash = pkVal.ToHash();
+
+                if (_primaryKeys.ContainsKey(hash))
+                {
+                    Log.WarnFormat("Found multiple occurrences of documents with pk value of {0} (id:{1}). First occurrence will be stored.",
+                        pkVal, document.Id);
+                }
+                else
+                {
+                    _primaryKeys.Add(hash, null);
+
+                    document.Hash = hash;
+                    document.Id = count++;
+
+                    yield return document;
+                }
+            }
         }
     }
 }
