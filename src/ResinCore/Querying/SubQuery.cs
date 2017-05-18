@@ -14,6 +14,9 @@ namespace Resin.Querying
         public bool Prefix { get; set; }
         public bool Fuzzy { get; set; }
 
+        public bool GreaterThan { get; set; }
+        public bool LessThan { get; set; }
+
         public int Edits
         {
             get
@@ -52,14 +55,19 @@ namespace Resin.Querying
 
         public override string ToString()
         {
-            return AsReadable();
+            return Serialize();
         }
 
-        public string AsReadable()
+        public string Serialize()
         {
+            var delimiter = ":";
+
+            if (GreaterThan) delimiter = ">";
+            else if (LessThan) delimiter = "<";
+
             var fldPrefix = And ? "+" : Not ? "-" : string.Empty;
             var tokenSuffix = Prefix ? "*" : Fuzzy ? "~" : string.Empty;
-            return string.Format("{0}{1}:{2}{3}", fldPrefix, Field, Value, tokenSuffix);
+            return string.Format("{0}{1}{2}{3}{4}", fldPrefix, Field, delimiter, Value, tokenSuffix);
         }
 
         public bool Equals(SubQuery other)

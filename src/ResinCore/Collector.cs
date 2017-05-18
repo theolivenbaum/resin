@@ -105,15 +105,17 @@ namespace Resin
                 {
                     var terms = new List<Term>();
                     Word word;
+
                     if (reader.HasWord(query.Value, out word))
                     {
                         terms.Add(new Term(query.Field, word));
                     }
+
                     query.Terms = terms;
                 }
             }
 
-            Log.DebugFormat("scanned {0} in {1}", query.AsReadable(), time.Elapsed);
+            Log.DebugFormat("scanned {0} in {1}", query.Serialize(), time.Elapsed);
 
             GetPostings(query);
         }
@@ -140,7 +142,7 @@ namespace Resin
 
             query.Postings = result;
 
-            Log.DebugFormat("read postings for {0} in {1}", query.AsReadable(), time.Elapsed);
+            Log.DebugFormat("read postings for {0} in {1}", query.Serialize(), time.Elapsed);
         }
         
         private IEnumerable<IList<DocumentPosting>> ReadPostings(IEnumerable<Term> terms)
