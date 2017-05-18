@@ -1,6 +1,5 @@
 using Resin.IO;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 namespace Resin.Analysis
@@ -13,15 +12,16 @@ namespace Resin.Analysis
         public Analyzer(char[] tokenSeparators = null, string[] stopwords = null)
         {
             _customTokenSeparators = tokenSeparators == null ? null : new HashSet<char>(tokenSeparators);
-            _stopwords =stopwords == null ? null : new HashSet<string>(stopwords);
+            _stopwords = stopwords == null ? null : new HashSet<string>(stopwords);
         }
 
         public AnalyzedDocument AnalyzeDocument(Document document)
         {
-            return new AnalyzedDocument(document.Id, AnalyzeDocumentInternal(document));
+            var terms = AnalyzeDocumentInternal(document);
+            return new AnalyzedDocument(document.Id, terms);
         }
 
-        public IEnumerable<AnalyzedTerm> AnalyzeDocumentInternal(Document document)
+        protected virtual IEnumerable<AnalyzedTerm> AnalyzeDocumentInternal(Document document)
         {
             foreach(var field in document.Fields.Values)
             {
@@ -59,7 +59,7 @@ namespace Resin.Analysis
             }
         }
         
-        public IEnumerable<string> Analyze(string value)
+        public virtual IEnumerable<string> Analyze(string value)
         {
             var normalized = value.ToLower();
 
@@ -86,7 +86,7 @@ namespace Resin.Analysis
             return result.Where(s => !_stopwords.Contains(s));
         }
 
-        protected virtual bool IsNoice(char c)
+        private bool IsNoice(char c)
         {
             if (_customTokenSeparators == null) return !char.IsLetterOrDigit(c);
 

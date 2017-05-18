@@ -99,7 +99,17 @@ namespace Resin
                 }
                 else if (query.Prefix)
                 {
-                    query.Terms = reader.StartsWith(query.Value).Select(word => new Term(query.Field, word)).ToList();
+                    query.Terms = reader.StartsWith(query.Value)
+                        .Select(word => new Term(query.Field, word))
+                        .ToList();
+                }
+                else if (query.GreaterThan)
+                {
+                    query.Terms = new List<Term>();
+                }
+                else if (query.LessThan)
+                {
+                    query.Terms = new List<Term>();
                 }
                 else
                 {
