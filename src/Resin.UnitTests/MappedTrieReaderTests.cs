@@ -28,7 +28,7 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                words = trie.GreaterThan("app").ToList();
+                words = trie.WithinRange("app", "xerox").ToList();
             }
 
             Assert.AreEqual(2, words.Count);

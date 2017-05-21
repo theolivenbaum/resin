@@ -17,7 +17,7 @@ namespace Tests
             trie.Add("banana");
             trie.Add("bananas");
 
-            var words = trie.GreaterThan("app").ToList();
+            var words = trie.WithinRange("app", "xerox").ToList();
 
             Assert.AreEqual(3, words.Count);
             Assert.AreEqual("apple", words[1]);

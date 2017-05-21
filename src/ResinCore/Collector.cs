@@ -102,15 +102,9 @@ namespace Resin
                         .Select(word => new Term(query.Field, word))
                         .ToList();
                 }
-                else if (query.GreaterThan)
+                else if (query.Range)
                 {
-                    query.Terms = reader.GreaterThan(query.Value)
-                        .Select(word => new Term(query.Field, word))
-                        .ToList();
-                }
-                else if (query.LessThan)
-                {
-                    query.Terms = reader.LessThan(query.Value)
+                    query.Terms = reader.WithinRange(query.Value, query.ValueUpperBound)
                         .Select(word => new Term(query.Field, word))
                         .ToList();
                 }
