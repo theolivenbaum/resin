@@ -232,19 +232,33 @@ namespace Resin.IO
             return false;
         }
 
+        public IEnumerable<Word> GreaterThan(string word)
+        {
+            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
+
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<Word> LessThan(string word)
+        {
+            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
+
+            throw new NotImplementedException();
+        }
+
         public IEnumerable<Word> StartsWith(string prefix)
         {
             if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
 
-            var compressed = new List<Word>();
+            var words = new List<Word>();
 
             LcrsTrie child;
-            if (TryFindPath(prefix, out child))
+            if (TryFindPath(prefix, out child) && child.LeftChild != null)
             {
-                child.LeftChild.DepthFirst(prefix, new List<char>(), compressed);
+                child.LeftChild.DepthFirst(prefix, new List<char>(), words);
             }
 
-            return compressed;
+            return words;
         }
         
         public IEnumerable<Word> Near(string word, int maxEdits, IDistanceResolver distanceResolver = null)
@@ -296,7 +310,7 @@ namespace Resin.IO
             }
         }
 
-        private void DepthFirst(string traveled, IList<char> state, IList<Word> compressed)
+        private void DepthFirst(string traveled, IList<char> state, IList<Word> words)
         {
             var copy = new List<char>(state);
 
@@ -309,39 +323,56 @@ namespace Resin.IO
             {
                 var value = traveled + new string(state.ToArray());
                 var word = new Word(value, WordCount, PostingsAddress, Postings);
-                compressed.Add(word);
+                words.Add(word);
             }
 
             if (LeftChild != null)
             {
-                LeftChild.DepthFirst(traveled, state, compressed);
+                LeftChild.DepthFirst(traveled, state, words);
             }
 
             if (RightSibling != null)
             {
-                RightSibling.DepthFirst(traveled, copy, compressed);
+                RightSibling.DepthFirst(traveled, copy, words);
             }
         }
 
         public bool TryFindPath(string path, out LcrsTrie leaf)
         {
-            var child = LeftChild;
-            while (child != null)
+            var node = LeftChild;
+            var c = path[0];
+            var index = 0;
+
+            // Find path[index] in a binary (left-right) tree.
+            // Stop when destination has been reached.
+
+            while (true)
             {
-                if (child.Value.Equals(path[0]))
+                if (node == null) break;
+
+                if (node.Value.Equals(path[index]))
                 {
-                    break;
+                    if (index + 1 == path.Length)
+                    {
+                        // destination has been reached
+
+                        leaf = node;
+                        return true;
+                    }
+                    else
+                    {
+                        // go deep when you've found c
+
+                        index++;
+                        node = node.LeftChild;
+                    }
                 }
-                child = child.RightSibling;
-            }
-            if (child != null)
-            {
-                if (path.Length == 1)
+                else
                 {
-                    leaf = child;
-                    return true;
+                    // go right when you are looking for c
+
+                    node = node.RightSibling;
                 }
-                return child.TryFindPath(path.Substring(1), out leaf);
             }
             leaf = null;
             return false;

@@ -60,6 +60,16 @@ namespace Resin.IO.Read
             return compressed;
         }
 
+        public IEnumerable<Word> GreaterThan(string word)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<Word> LessThan(string word)
+        {
+            throw new NotImplementedException();
+        }
+
         private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxErrors, IDistanceResolver distanceResolver, bool stop = false)
         {
             var reachedMin = maxErrors == 0 || depth >= word.Length - 1 - maxErrors;

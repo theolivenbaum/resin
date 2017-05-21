@@ -8,6 +8,25 @@ namespace Tests
     public class LcrsTrieTests
     {
         [TestMethod]
+        public void Can_find_greater_than()
+        {
+            var trie = new LcrsTrie();
+            trie.Add("ape");
+            trie.Add("app");
+            trie.Add("apple");
+            trie.Add("banana");
+            trie.Add("bananas");
+
+            var words = trie.GreaterThan("ape").ToList();
+
+            Assert.AreEqual(4, words.Count);
+            Assert.AreEqual("app", words[0]);
+            Assert.AreEqual("apple", words[1]);
+            Assert.AreEqual("banana", words[2]);
+            Assert.AreEqual("bananas", words[3]);
+        }
+
+        [TestMethod]
         public void Can_append_tries()
         {
             var one = new LcrsTrie('\0', false);

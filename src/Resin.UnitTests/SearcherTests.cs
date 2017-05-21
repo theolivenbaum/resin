@@ -19,7 +19,7 @@ namespace Tests
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
             var docs = new List<dynamic>
-{
+            {
                 new {_id = "0", title = "Rambo First Blood" },
                 new {_id = "1", title = "rambo 2" },
                 new {_id = "2", title = "rocky 2" },

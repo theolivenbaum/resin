@@ -105,11 +105,15 @@ namespace Resin
                 }
                 else if (query.GreaterThan)
                 {
-                    query.Terms = new List<Term>();
+                    query.Terms = reader.GreaterThan(query.Value)
+                        .Select(word => new Term(query.Field, word))
+                        .ToList();
                 }
                 else if (query.LessThan)
                 {
-                    query.Terms = new List<Term>();
+                    query.Terms = reader.LessThan(query.Value)
+                        .Select(word => new Term(query.Field, word))
+                        .ToList();
                 }
                 else
                 {
