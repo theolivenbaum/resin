@@ -340,7 +340,6 @@ namespace Resin.IO
         public bool TryFindPath(string path, out LcrsTrie leaf)
         {
             var node = LeftChild;
-            var c = path[0];
             var index = 0;
 
             // Find path[index] in a binary (left-right) tree.

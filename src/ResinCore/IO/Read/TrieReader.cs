@@ -25,7 +25,7 @@ namespace Resin.IO.Read
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 
             LcrsNode node;
-            if (TryFindDepthFirst(word, 0, out node))
+            if (TryFindDepthFirst(word, out node))
             {
                 found = new Word(word, 1, node.PostingsAddress);
                 return node.EndOfWord;
@@ -41,7 +41,7 @@ namespace Resin.IO.Read
             var compressed = new List<Word>();
             LcrsNode node;
 
-            if (TryFindDepthFirst(prefix, 0, out node))
+            if (TryFindDepthFirst(prefix, out node))
             {
                 DepthFirst(prefix, new List<char>(), compressed, prefix.Length - 1);
             }
@@ -181,19 +181,26 @@ namespace Resin.IO.Read
 
             return root.LeftChild;
         }
-
-        private bool TryFindDepthFirst(string path, int currentDepth, out LcrsNode node)
+        
+        private bool TryFindDepthFirst(string path, out LcrsNode node)
         {
+            var currentDepth = 0;
+
             node = Step();
 
-            if (node != LcrsNode.MinValue && node.Depth != currentDepth)
+            while (node != LcrsNode.MinValue)
             {
-                Skip(node.Weight-1);
-                node = Step();
-            }
+                if (node.Depth != currentDepth)
+                {
+                    Skip(node.Weight - 1);
+                    node = Step();
+                }
 
-            if (node != LcrsNode.MinValue)
-            {
+                if (node == LcrsNode.MinValue)
+                {
+                    return false;
+                }
+
                 if (node.Value == path[currentDepth])
                 {
                     if (currentDepth == path.Length - 1)
@@ -201,12 +208,12 @@ namespace Resin.IO.Read
                         return true;
                     }
                     // Go left (deep)
-                    return TryFindDepthFirst(path, currentDepth + 1, out node);
+                    currentDepth++;
                 }
-                // Go right (wide)
-                return TryFindDepthFirst(path, currentDepth, out node);
-            }
+                // Or go right (wide)
 
+                node = Step();
+            }
             return false;
         }
 
