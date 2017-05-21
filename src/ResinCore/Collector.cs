@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,7 +21,7 @@ namespace Resin
         private readonly IScoringScheme _scorerFactory;
         private readonly int _documentCount;
         private readonly IDistanceResolver _distanceResolver;
-        private readonly IDictionary<SubQuery, IList<DocumentScore>> _scoreCache;
+        private readonly IDictionary<Query, IList<DocumentScore>> _scoreCache;
 
         public IxInfo Ix { get { return _ix; } }
 
@@ -33,7 +32,7 @@ namespace Resin
             _scorerFactory = scorerFactory;
             _distanceResolver = distanceResolver ?? new Levenshtein();
             _documentCount = documentCount == -1 ? ix.DocumentCount : documentCount;
-            _scoreCache = new Dictionary<SubQuery, IList<DocumentScore>>();
+            _scoreCache = new Dictionary<Query, IList<DocumentScore>>();
         }
 
         public IList<DocumentScore> Collect(QueryContext query)

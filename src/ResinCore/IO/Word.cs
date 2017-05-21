@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Resin.IO
@@ -12,6 +13,11 @@ namespace Resin.IO
 
         public Word(string value, int count = 1, BlockInfo? postingsAddress = null, IList<DocumentPosting> postings = null)
         {
+            if (postingsAddress.HasValue && postingsAddress.Equals(BlockInfo.MinValue))
+            {
+                throw new ArgumentOutOfRangeException("postingsAddress");
+            }
+
             Value = value;
             Count = count;
             PostingsAddress = postingsAddress;

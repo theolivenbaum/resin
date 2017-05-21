@@ -3,12 +3,41 @@ using System.Linq;
 using Resin.IO;
 using Resin.IO.Read;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
 
 namespace Tests
 {
     [TestClass]
     public class MappedTrieReaderTests : Setup
     {
+        [TestMethod]
+        public void Can_find_within_range()
+        {
+            var fileName = Path.Combine(CreateDir(), "MappedTrieReaderTests.Can_find_within_range.tri");
+
+            var trie = new LcrsTrie();
+            trie.Add("ape");
+            trie.Add("app");
+            trie.Add("apple");
+            trie.Add("banana");
+            trie.Add("bananas");
+
+            trie.Serialize(fileName);
+
+            IList<Word> words;
+
+            using (var reader = new MappedTrieReader(fileName))
+            {
+                words = trie.GreaterThan("app").ToList();
+            }
+
+            Assert.AreEqual(2, words.Count);
+            Assert.AreEqual("apple", words[1]);
+            Assert.AreEqual("banana", words[2]);
+            Assert.AreEqual("bananas", words[3]);
+        }
+
+
         [TestMethod]
         public void Can_find_near()
         {

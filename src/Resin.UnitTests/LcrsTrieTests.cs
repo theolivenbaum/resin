@@ -8,7 +8,7 @@ namespace Tests
     public class LcrsTrieTests
     {
         [TestMethod]
-        public void Can_find_greater_than()
+        public void Can_find_within_range()
         {
             var trie = new LcrsTrie();
             trie.Add("ape");
@@ -17,10 +17,9 @@ namespace Tests
             trie.Add("banana");
             trie.Add("bananas");
 
-            var words = trie.GreaterThan("ape").ToList();
+            var words = trie.GreaterThan("app").ToList();
 
-            Assert.AreEqual(4, words.Count);
-            Assert.AreEqual("app", words[0]);
+            Assert.AreEqual(3, words.Count);
             Assert.AreEqual("apple", words[1]);
             Assert.AreEqual("banana", words[2]);
             Assert.AreEqual("bananas", words[3]);

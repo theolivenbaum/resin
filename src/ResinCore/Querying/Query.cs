@@ -2,12 +2,13 @@ using System;
 
 namespace Resin.Querying
 {
-    public class SubQuery : IEquatable<SubQuery>
+    public class Query : IEquatable<Query>
     {
         private int _edits;
 
         public string Field { get; protected set; }
         public string Value { get; protected set; }
+        public string ValueUpperBound { get; set; }
 
         public bool And { get; set; }
         public bool Not { get; set; }
@@ -16,6 +17,7 @@ namespace Resin.Querying
 
         public bool GreaterThan { get; set; }
         public bool LessThan { get; set; }
+        public bool Range { get; set; }
 
         public int Edits
         {
@@ -47,7 +49,7 @@ namespace Resin.Querying
             }
         }
 
-        public SubQuery(string field, string value)
+        public Query(string field, string value)
         {
             Field = field;
             Value = value;
@@ -60,17 +62,23 @@ namespace Resin.Querying
 
         public string Serialize()
         {
-            var delimiter = ":";
-
-            if (GreaterThan) delimiter = ">";
-            else if (LessThan) delimiter = "<";
-
             var fldPrefix = And ? "+" : Not ? "-" : string.Empty;
             var tokenSuffix = Prefix ? "*" : Fuzzy ? "~" : string.Empty;
-            return string.Format("{0}{1}{2}{3}{4}", fldPrefix, Field, delimiter, Value, tokenSuffix);
+
+            if (Range)
+            {
+                var s = string.Format("{0}{1}>{2}{3} {1}<{4}", 
+                    fldPrefix, Field, Value, tokenSuffix, ValueUpperBound);
+                return s;
+            }
+            else
+            {
+                return string.Format("{0}{1}:{2}{3}", 
+                    fldPrefix, Field, Value, tokenSuffix);
+            }
         }
 
-        public bool Equals(SubQuery other)
+        public bool Equals(Query other)
         {
             if (other == null) return false;
 
@@ -90,7 +98,7 @@ namespace Resin.Querying
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as SubQuery);
+            return Equals(obj as Query);
         }
     }
 }

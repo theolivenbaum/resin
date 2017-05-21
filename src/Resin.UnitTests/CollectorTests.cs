@@ -6,6 +6,7 @@ using Resin.Analysis;
 using Resin.IO;
 using Resin.Querying;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Resin.Sys;
 
 namespace Tests
 {

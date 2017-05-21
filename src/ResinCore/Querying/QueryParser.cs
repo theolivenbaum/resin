@@ -26,23 +26,12 @@ namespace Resin.Querying
             var trimmedQuery = query.Trim();
             var parts = Regex.Split(trimmedQuery, @"(?<=[ ])");
             var clauses = new List<string>();
-            var splitBy = ':';
 
             foreach (var part in parts)
             {
-                if (part.Contains(':'))
+                if (part.Contains(':') || part.Contains('<') || part.Contains('>'))
                 {
                     clauses.Add(part);
-                }
-                else if (part.Contains('<'))
-                {
-                    clauses.Add(part);
-                    splitBy = '<';
-                }
-                else if (part.Contains('>'))
-                {
-                    clauses.Add(part);
-                    splitBy = '>';
                 }
                 else
                 {
@@ -51,11 +40,24 @@ namespace Resin.Querying
             }
 
             QueryContext root = null;
-            bool greaterThan = splitBy.Equals('>');
-            bool lessThan = splitBy.Equals('<');
-
+            
             for (int i = 0; i < clauses.Count; i++)
             {
+                var splitBy = ':';
+                var greaterThan = false;
+                var lessThan = false;
+
+                if (clauses[i].Contains(">"))
+                {
+                    splitBy = '>';
+                    greaterThan = true;
+                }
+                else if (clauses[i].Contains("<"))
+                {
+                    splitBy = '<';
+                    lessThan = true;
+                }
+
                 var segs = clauses[i].Split(splitBy);
                 var field = segs[0];
                 var t = CreateTerm(field, segs[1], i);

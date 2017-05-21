@@ -2,10 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Resin.IO;
+using System;
 
 namespace Resin.Querying
 {
-    public class QueryContext : SubQuery
+    public class QueryContext : Query
     {
         public IEnumerable<Term> Terms { get; set; }
         public IEnumerable<DocumentPosting> Postings { get; set; }
@@ -66,7 +67,33 @@ namespace Resin.Querying
         {
             if (_queries == null) _queries = new List<QueryContext>();
 
-            _queries.Add(queryContext);
+            if (GreaterThan || LessThan)
+            {
+                if (!queryContext.Field.Equals(Field))
+                {
+                    throw new ArgumentException(
+                        "In a range query both clauses must target the same field.", 
+                        "queryContext");
+                }
+                Range = true;
+            }
+
+            if (GreaterThan)
+            {
+                ValueUpperBound = queryContext.Value;
+            }
+            else if (LessThan)
+            {
+                ValueUpperBound = Value;
+                Value = queryContext.Value;
+            }
+            else
+            {
+                _queries.Add(queryContext);
+            }
+
+            GreaterThan = false;
+            LessThan = false;
         }
 
         public override string ToString()
@@ -75,7 +102,7 @@ namespace Resin.Querying
 
             log.Append(base.ToString());
 
-            if (_queries != null)
+            if (_queries != null && _queries.Count > 0)
             {
                 log.Append(' ');
 
