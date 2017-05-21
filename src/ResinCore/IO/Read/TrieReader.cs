@@ -60,12 +60,7 @@ namespace Resin.IO.Read
             return compressed;
         }
 
-        public IEnumerable<Word> GreaterThan(string word)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<Word> LessThan(string word)
+        public IEnumerable<Word> WithinRange(string lowerBound, string upperBound)
         {
             throw new NotImplementedException();
         }

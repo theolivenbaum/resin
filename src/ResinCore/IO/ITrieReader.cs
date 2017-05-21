@@ -8,7 +8,6 @@ namespace Resin.IO
         bool HasWord(string word, out Word found);
         IEnumerable<Word> StartsWith(string prefix);
         IEnumerable<Word> Near(string word, int maxEdits, IDistanceResolver distanceResolver);
-        IEnumerable<Word> GreaterThan(string word);
-        IEnumerable<Word> LessThan(string word);
+        IEnumerable<Word> WithinRange(string lowerBound, string upperBound);
     }
 }

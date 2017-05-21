@@ -232,16 +232,10 @@ namespace Resin.IO
             return false;
         }
 
-        public IEnumerable<Word> GreaterThan(string word)
+        public IEnumerable<Word> WithinRange(string lowerBound, string upperBound)
         {
-            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
-
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<Word> LessThan(string word)
-        {
-            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
+            if (string.IsNullOrWhiteSpace(lowerBound)) throw new ArgumentException("lowerBound");
+            if (string.IsNullOrWhiteSpace(upperBound)) throw new ArgumentException("upperBound");
 
             throw new NotImplementedException();
         }
