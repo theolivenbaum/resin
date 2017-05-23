@@ -46,8 +46,7 @@ namespace Resin
 
                 if (!_scoreCache.TryGetValue(subQuery, out scores))
                 {
-                    GetTerms(subQuery);
-                    Score(subQuery);
+                    Map(subQuery);
 
                     _scoreCache.Add(subQuery, subQuery.Scored.ToList());
                 }
@@ -65,6 +64,12 @@ namespace Resin
             Log.DebugFormat("reduced query {0} producing {1} scores in {2}", query, reduced.Count, scoreTime.Elapsed);
 
             return reduced;
+        }
+
+        private void Map(QueryContext subQuery)
+        {
+            GetTerms(subQuery);
+            Score(subQuery);
         }
 
         private void Scan(IEnumerable<QueryContext> queries)
