@@ -234,21 +234,12 @@ namespace Resin.IO
 
         public IEnumerable<Word> WithinRange(string lowerBound, string upperBound)
         {
-            if (string.IsNullOrWhiteSpace(lowerBound) && 
+            if (string.IsNullOrWhiteSpace(lowerBound) &&
                 (string.IsNullOrWhiteSpace(upperBound))) throw new ArgumentException("Bounds are unspecified");
 
-            var words = new List<Word>();
+            throw new NotImplementedException();
 
-            LcrsTrie child;
-
-            if (TryFindPath(lowerBound, out child) && child.LeftChild != null)
-            {
-                child.LeftChild.DepthFirst(lowerBound, new List<char>(), words);
-            }
-
-            DepthFirst(string.Empty, new List<char>(), words);
-
-            return words;
+            //TODO: implement bounded DepthFirst
         }
 
         public IEnumerable<Word> StartsWith(string prefix)
