@@ -38,31 +38,46 @@ namespace Resin.IO.Read
         {
             if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
 
-            var compressed = new List<Word>();
+            var words = new List<Word>();
+
             LcrsNode node;
 
             if (TryFindDepthFirst(prefix, out node))
             {
-                DepthFirst(prefix, new List<char>(), compressed, prefix.Length - 1);
+                DepthFirst(prefix, new List<char>(), words, prefix.Length - 1);
             }
 
-            return compressed;
+            return words;
         }
 
         public IEnumerable<Word> Near(string word, int maxEdits, IDistanceResolver distanceResolver = null)
         {
             if (distanceResolver == null) distanceResolver = new Levenshtein();
 
-            var compressed = new List<Word>();
+            var words = new List<Word>();
 
-            WithinEditDistanceDepthFirst(word, string.Empty, compressed, 0, maxEdits, distanceResolver);
+            WithinEditDistanceDepthFirst(word, string.Empty, words, 0, maxEdits, distanceResolver);
 
-            return compressed;
+            return words;
         }
 
         public IEnumerable<Word> WithinRange(string lowerBound, string upperBound)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(lowerBound) &&
+                (string.IsNullOrWhiteSpace(upperBound))) throw new ArgumentException("Bounds are unspecified");
+
+            var words = new List<Word>();
+
+            LcrsNode node;
+
+            if (TryFindDepthFirst(lowerBound, out node, greaterThan:true))
+            {
+                DepthFirst(lowerBound, new List<char>(), words, lowerBound.Length - 1);
+            }
+
+            DepthFirst(string.Empty, new List<char>(), words, 0);
+
+            return words;
         }
 
         private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxErrors, IDistanceResolver distanceResolver, bool stop = false)
@@ -177,7 +192,7 @@ namespace Resin.IO.Read
             return root.LeftChild;
         }
         
-        private bool TryFindDepthFirst(string path, out LcrsNode node)
+        private bool TryFindDepthFirst(string path, out LcrsNode node, bool greaterThan = false, bool lessThan = false)
         {
             var currentDepth = 0;
 
@@ -196,12 +211,15 @@ namespace Resin.IO.Read
                     return false;
                 }
 
-                if (node.Value == path[currentDepth])
+                if ((greaterThan && node.Value >= path[currentDepth]) ||
+                    (lessThan && node.Value <= path[currentDepth]) ||
+                    (node.Value == path[currentDepth]))
                 {
                     if (currentDepth == path.Length - 1)
                     {
                         return true;
                     }
+
                     // Go left (deep)
                     currentDepth++;
                 }

@@ -28,10 +28,10 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                words = trie.WithinRange("app", "xerox").ToList();
+                words = reader.WithinRange("app", "xerox").ToList();
             }
 
-            Assert.AreEqual(2, words.Count);
+            Assert.AreEqual(3, words.Count);
             Assert.AreEqual("apple", words[1]);
             Assert.AreEqual("banana", words[2]);
             Assert.AreEqual("bananas", words[3]);

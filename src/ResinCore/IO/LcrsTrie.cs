@@ -234,12 +234,13 @@ namespace Resin.IO
 
         public IEnumerable<Word> WithinRange(string lowerBound, string upperBound)
         {
-            if (string.IsNullOrWhiteSpace(lowerBound)) throw new ArgumentException("lowerBound");
-            if (string.IsNullOrWhiteSpace(upperBound)) throw new ArgumentException("upperBound");
+            if (string.IsNullOrWhiteSpace(lowerBound) && 
+                (string.IsNullOrWhiteSpace(upperBound))) throw new ArgumentException("Bounds are unspecified");
 
             var words = new List<Word>();
 
             LcrsTrie child;
+
             if (TryFindPath(lowerBound, out child) && child.LeftChild != null)
             {
                 child.LeftChild.DepthFirst(lowerBound, new List<char>(), words);
@@ -248,7 +249,6 @@ namespace Resin.IO
             DepthFirst(string.Empty, new List<char>(), words);
 
             return words;
-
         }
 
         public IEnumerable<Word> StartsWith(string prefix)
