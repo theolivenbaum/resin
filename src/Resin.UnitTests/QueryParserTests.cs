@@ -8,6 +8,18 @@ namespace Tests
     public class QueryParserTests
     {
         [TestMethod]
+        public void Can_parse_first_statement_as_inclusive()
+        {
+            var q = new QueryParser(new Analyzer()).Parse("title:rambo");
+
+            Assert.AreEqual("+title:rambo", q.ToString());
+
+            q = new QueryParser(new Analyzer()).Parse("-title:rambo");
+
+            Assert.AreEqual("+title:rambo", q.ToString());
+        }
+
+        [TestMethod]
         public void Can_parse_greater_than()
         {
             var q = new QueryParser(new Analyzer()).Parse("+title>rambo");
