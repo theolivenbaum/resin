@@ -16,13 +16,16 @@ namespace Tests
             trie.Add("apple");
             trie.Add("banana");
             trie.Add("bananas");
+            trie.Add("xanax");
+            trie.Add("xxx");
 
             var words = trie.WithinRange("app", "xerox").ToList();
 
-            Assert.AreEqual(3, words.Count);
+            Assert.AreEqual(4, words.Count);
             Assert.AreEqual("apple", words[1]);
             Assert.AreEqual("banana", words[2]);
             Assert.AreEqual("bananas", words[3]);
+            Assert.AreEqual("xanax", words[4]);
         }
 
         [TestMethod]

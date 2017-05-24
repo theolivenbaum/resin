@@ -21,6 +21,8 @@ namespace Tests
             trie.Add("apple");
             trie.Add("banana");
             trie.Add("bananas");
+            trie.Add("xanax");
+            trie.Add("xxx");
 
             trie.Serialize(fileName);
 
@@ -31,10 +33,11 @@ namespace Tests
                 words = reader.WithinRange("app", "xerox").ToList();
             }
 
-            Assert.AreEqual(3, words.Count);
+            Assert.AreEqual(4, words.Count);
             Assert.AreEqual("apple", words[0].Value);
             Assert.AreEqual("banana", words[1].Value);
             Assert.AreEqual("bananas", words[2].Value);
+            Assert.AreEqual("xanax", words[3].Value);
         }
 
 

@@ -75,7 +75,7 @@ namespace Resin.IO.Read
                 DepthFirst(lowerBound, new List<char>(), words, lowerBound.Length - 1);
             }
 
-            DepthFirst(string.Empty, new List<char>(), words, -1);
+            DepthFirst(string.Empty, new List<char>(), words, -1, upperBound);
 
             return words;
         }
@@ -142,7 +142,7 @@ namespace Resin.IO.Read
             }
         }
 
-        private void DepthFirst(string prefix, IList<char> path, IList<Word> compressed, int depth)
+        private void DepthFirst(string prefix, IList<char> path, IList<Word> compressed, int depth, string upperBound = null)
         {
             var node = Step();
             var siblings = new Stack<Tuple<int, IList<char>>>();
@@ -156,7 +156,12 @@ namespace Resin.IO.Read
 
                 if (node.EndOfWord)
                 {
-                    compressed.Add(new Word(prefix + new string(path.ToArray()), 1, node.PostingsAddress));
+                    var word = prefix + new string(path.ToArray());
+                    if (upperBound == null || 
+                       (word.Length <= upperBound.Length && node.Value <= upperBound[depth+1]) ||
+                        word.Length > upperBound.Length)
+
+                    compressed.Add(new Word(word, 1, node.PostingsAddress));
                 }
 
                 if (node.HaveSibling)
@@ -173,7 +178,7 @@ namespace Resin.IO.Read
             // Go right (wide)
             foreach (var siblingState in siblings)
             {
-                DepthFirst(prefix, siblingState.Item2, compressed, siblingState.Item1);
+                DepthFirst(prefix, siblingState.Item2, compressed, siblingState.Item1, upperBound);
             }
         }
 
@@ -192,7 +197,7 @@ namespace Resin.IO.Read
             return root.LeftChild;
         }
         
-        private bool TryFindDepthFirst(string path, out LcrsNode node, bool greaterThan = false, bool lessThan = false)
+        private bool TryFindDepthFirst(string path, out LcrsNode node, bool greaterThan = false)
         {
             var currentDepth = 0;
 
@@ -212,7 +217,6 @@ namespace Resin.IO.Read
                 }
 
                 if ((greaterThan && node.Value >= path[currentDepth]) ||
-                    (lessThan && node.Value <= path[currentDepth]) ||
                     (node.Value == path[currentDepth]))
                 {
                     if (currentDepth == path.Length - 1)
