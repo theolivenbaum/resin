@@ -237,7 +237,18 @@ namespace Resin.IO
             if (string.IsNullOrWhiteSpace(lowerBound)) throw new ArgumentException("lowerBound");
             if (string.IsNullOrWhiteSpace(upperBound)) throw new ArgumentException("upperBound");
 
-            throw new NotImplementedException();
+            var words = new List<Word>();
+
+            LcrsTrie child;
+            if (TryFindPath(lowerBound, out child) && child.LeftChild != null)
+            {
+                child.LeftChild.DepthFirst(lowerBound, new List<char>(), words);
+            }
+
+            DepthFirst(string.Empty, new List<char>(), words);
+
+            return words;
+
         }
 
         public IEnumerable<Word> StartsWith(string prefix)
@@ -304,7 +315,7 @@ namespace Resin.IO
             }
         }
 
-        private void DepthFirst(string traveled, IList<char> state, IList<Word> words)
+        private void DepthFirst(string traveled, IList<char> state, IList<Word> words, bool surpassedLbound = false, string lbound = null, string ubound = null)
         {
             var copy = new List<char>(state);
 
@@ -315,9 +326,13 @@ namespace Resin.IO
 
             if (EndOfWord)
             {
-                var value = traveled + new string(state.ToArray());
-                var word = new Word(value, WordCount, PostingsAddress, Postings);
-                words.Add(word);
+                var word = traveled + new string(state.ToArray());
+
+                if ((surpassedLbound && word != lbound) || word != ubound)
+                {
+                    
+                    words.Add(new Word(word, WordCount, PostingsAddress, Postings));
+                }
             }
 
             if (LeftChild != null)

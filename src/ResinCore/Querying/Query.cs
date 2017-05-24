@@ -73,8 +73,13 @@ namespace Resin.Querying
             }
             else
             {
-                return string.Format("{0}{1}:{2}{3}", 
-                    fldPrefix, Field, Value, tokenSuffix);
+                var delimiter = ":";
+
+                if (GreaterThan) delimiter = ">";
+                else if (LessThan) delimiter = "<";
+
+                return string.Format("{0}{1}{2}{3}{4}", 
+                    fldPrefix, Field, delimiter, Value, tokenSuffix);
             }
         }
 

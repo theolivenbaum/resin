@@ -67,33 +67,31 @@ namespace Resin.Querying
         {
             if (_queries == null) _queries = new List<QueryContext>();
 
-            if (GreaterThan || LessThan)
+            if ((GreaterThan || LessThan) && (queryContext.GreaterThan || queryContext.LessThan))
             {
-                if (!queryContext.Field.Equals(Field))
+                // compress a GT or LS with another LS or GT to create a range query
+                if (queryContext.Field.Equals(Field))
                 {
-                    throw new ArgumentException(
-                        "In a range query both clauses must target the same field.", 
-                        "queryContext");
+                    Range = true;
                 }
-                Range = true;
-            }
 
-            if (GreaterThan)
-            {
-                ValueUpperBound = queryContext.Value;
-            }
-            else if (LessThan)
-            {
-                ValueUpperBound = Value;
-                Value = queryContext.Value;
+                if (GreaterThan)
+                {
+                    ValueUpperBound = queryContext.Value;
+                }
+                else
+                {
+                    ValueUpperBound = Value;
+                    Value = queryContext.Value;
+                }
+
+                GreaterThan = false;
+                LessThan = false;
             }
             else
             {
                 _queries.Add(queryContext);
             }
-
-            GreaterThan = false;
-            LessThan = false;
         }
 
         public override string ToString()

@@ -8,6 +8,22 @@ namespace Tests
     public class QueryParserTests
     {
         [TestMethod]
+        public void Can_parse_greater_than()
+        {
+            var q = new QueryParser(new Analyzer()).Parse("+title>rambo");
+
+            Assert.AreEqual("+title>rambo", q.ToString());
+        }
+
+        [TestMethod]
+        public void Can_parse_less_than()
+        {
+            var q = new QueryParser(new Analyzer()).Parse("+title<rambo");
+
+            Assert.AreEqual("+title<rambo", q.ToString());
+        }
+
+        [TestMethod]
         public void Can_parse_range_when_stating_greater_than_first()
         {
             var q = new QueryParser(new Analyzer()).Parse("+title>rambo title<rocky");
