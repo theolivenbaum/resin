@@ -75,7 +75,7 @@ namespace Resin.IO.Read
                 DepthFirst(lowerBound, new List<char>(), words, lowerBound.Length - 1);
             }
 
-            DepthFirst(string.Empty, new List<char>(), words, 0);
+            DepthFirst(string.Empty, new List<char>(), words, -1);
 
             return words;
         }

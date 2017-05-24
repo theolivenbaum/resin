@@ -32,9 +32,9 @@ namespace Tests
             }
 
             Assert.AreEqual(3, words.Count);
-            Assert.AreEqual("apple", words[1]);
-            Assert.AreEqual("banana", words[2]);
-            Assert.AreEqual("bananas", words[3]);
+            Assert.AreEqual("apple", words[0].Value);
+            Assert.AreEqual("banana", words[1].Value);
+            Assert.AreEqual("bananas", words[2].Value);
         }
 
 
