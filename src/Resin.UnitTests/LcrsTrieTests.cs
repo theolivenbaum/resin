@@ -8,27 +8,6 @@ namespace Tests
     public class LcrsTrieTests
     {
         [TestMethod]
-        public void Can_find_within_range()
-        {
-            var trie = new LcrsTrie();
-            trie.Add("ape");
-            trie.Add("app");
-            trie.Add("apple");
-            trie.Add("banana");
-            trie.Add("bananas");
-            trie.Add("xanax");
-            trie.Add("xxx");
-
-            var words = trie.WithinRange("app", "xerox").ToList();
-
-            Assert.AreEqual(4, words.Count);
-            Assert.AreEqual("apple", words[1]);
-            Assert.AreEqual("banana", words[2]);
-            Assert.AreEqual("bananas", words[3]);
-            Assert.AreEqual("xanax", words[4]);
-        }
-
-        [TestMethod]
         public void Can_append_tries()
         {
             var one = new LcrsTrie('\0', false);

@@ -52,29 +52,23 @@ namespace Resin.IO
             {
                 if (trie.LeftChild != null)
                 {
-                    trie.LeftChild.SerializeDepthFirst(stream, 0, 0);
+                    trie.LeftChild.SerializeDepthFirst(stream, 0);
                 }
             }
         }
 
-        private static void SerializeDepthFirst(this LcrsTrie trie, Stream stream, short depth, int count)
+        private static void SerializeDepthFirst(this LcrsTrie trie, Stream stream, short depth)
         {
-            if (count++ > 1000 * 100)
-            {
-                Log.Info("cut off trie at 1000 * 100");
-                return;
-            }
-
             new LcrsNode(trie, depth, trie.Weight, trie.PostingsAddress).Serialize(stream);
 
             if (trie.LeftChild != null)
             {
-                trie.LeftChild.SerializeDepthFirst(stream, (short)(depth + 1), count);
+                trie.LeftChild.SerializeDepthFirst(stream, (short)(depth + 1));
             }
 
             if (trie.RightSibling != null)
             {
-                trie.RightSibling.SerializeDepthFirst(stream, depth, count);
+                trie.RightSibling.SerializeDepthFirst(stream, depth);
             }
         }
 

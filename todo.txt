@@ -1,2 +1,0 @@
-range
-null node instead of EndOfWord flag
