@@ -6,7 +6,7 @@ Resin is a tree like most other indices. Resin indices are fast to write to and 
 
 More formally, Resin's a doubly chained character trie optimized for fast disk-based tree traversing.
 
-Apart from offering fast lookups Resin also scores documents based on their relevance. Relevance in turn is based on the distance from a document and a query in vector space.
+Apart from offering fast lookups Resin also scores documents based on their relevance. Relevance in turn is based on the distance from a document and a query in [vector space](https://en.wikipedia.org/wiki/Vector_space_model).
 
 ## Supports any scoring scheme
 To support the default tf-idf scoring scheme Resin stores term counts. Resin supports any scoring scheme and also gives you the ability to store additional document/sentence/token meta-data your model might need (up-coming feature in RC4). That data will be delivered to you neatly as a field on the document posting. In your custom IScoringScheme you then base your per-document posting calculations on that instead of just the term count.
