@@ -46,7 +46,7 @@ The command line tool, rn.exe, can be executed after you have built the source.
 Definitely start [here](https://github.com/kreeben/resin/issues).
 
 ## Documentation
-### A document.
+### A document (serialized).
 
 	{
 		"id": "Q1",
@@ -55,7 +55,7 @@ Definitely start [here](https://github.com/kreeben/resin/issues).
 		"aliases": "cosmos The Universe existence space outerspace"
 	}
 
-### Index many like that.
+### Batch many of those together and store them on disk.
 
 	var docs = GetWikipedia();
 	var dir = @"C:\Users\Yourname\Resin\wikipedia";
@@ -64,9 +64,9 @@ Definitely start [here](https://github.com/kreeben/resin/issues).
 		upsert.Commit();
 	}
 	
-### Documents as a stream
+### Store documents that are endoced in a stream source.
 
-	using(var docs = new FileStream(fileName))
+	using (var docs = new FileStream(fileName))
 	using (var upsert = new StreamUpsertOperation(dir, new Analyzer(), compression:true, primaryKey:"id", docs))
 	{
 		upsert.Commit();
@@ -79,9 +79,10 @@ Definitely start [here](https://github.com/kreeben/resin/issues).
 
 	varr result = new Searcher(dir).Search("label:good bad~ description:leone", page:0, size:15);
 	
-	// Document scores, i.e. the aggregated tf-idf weights a document recieve from a simple 
+	// Document fields and scores, i.e. the aggregated tf-idf weights a document recieve from a simple 
 	// or compound query, are included in the result:
 	
 	var scoreOfFirstDoc = result.Docs.First().Fields["__score"];
+	var label = result.Docs.First().Fields["label"];
 
 [More documentation here](https://github.com/kreeben/resin/wiki). 
