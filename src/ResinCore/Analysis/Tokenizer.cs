@@ -5,21 +5,19 @@ using System.Threading;
 
 namespace Resin.Analysis
 {
-    public class DefaultTokenizer : ITokenizer
+    public class Tokenizer : ITokenizer
     {
         private readonly HashSet<char> _customTokenSeparators;
         private readonly HashSet<string> _stopwords;
-        private static readonly Lazy<DefaultTokenizer> _lazy=new Lazy<DefaultTokenizer>(()=>new DefaultTokenizer(),LazyThreadSafetyMode.PublicationOnly);
+        private static readonly Lazy<Tokenizer> _lazy=new Lazy<Tokenizer>(()=>new Tokenizer(),LazyThreadSafetyMode.PublicationOnly);
         public static  ITokenizer Instance {get { return _lazy.Value; } }
-        public DefaultTokenizer(char[] tokenSeparators = null, string[] stopwords = null)
+
+        public Tokenizer(char[] tokenSeparators = null, string[] stopwords = null)
         {
-        
             _customTokenSeparators = tokenSeparators == null ? null : new HashSet<char>(tokenSeparators);
             _stopwords = stopwords == null ? null : new HashSet<string>(stopwords);
-        
-        
-            
         }
+
         public IEnumerable<string> Tokenize(string value)
         {
             var normalized = value.ToLower();

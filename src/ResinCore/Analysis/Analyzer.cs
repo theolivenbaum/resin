@@ -10,15 +10,11 @@ namespace Resin.Analysis
         private readonly HashSet<char> _customTokenSeparators;
         private readonly HashSet<string> _stopwords;
  
-        public Analyzer(ITokenizer tokenizer=null,char[] tokenSeparators = null, string[] stopwords = null)
+        public Analyzer(ITokenizer tokenizer = null, char[] tokenSeparators = null, string[] stopwords = null)
         {
-            
             _customTokenSeparators = tokenSeparators == null ? null : new HashSet<char>(tokenSeparators);
             _stopwords = stopwords == null ? null : new HashSet<string>(stopwords);
-            if (tokenizer == null)
-            {
-                _tokenizer = new DefaultTokenizer(tokenSeparators, stopwords);
-            }
+            _tokenizer = tokenizer == null ? new Tokenizer(tokenSeparators, stopwords) : tokenizer;
         }
 
         public AnalyzedDocument AnalyzeDocument(Document document)
