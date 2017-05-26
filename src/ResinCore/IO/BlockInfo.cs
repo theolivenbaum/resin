@@ -15,7 +15,7 @@ namespace Resin.IO
             Length = length;
         }
 
-        public static BlockInfo MinValue { get { return new BlockInfo(0, 0);} }
+        public static BlockInfo MinValue { get { return new BlockInfo(long.MinValue, int.MinValue);} }
 
         public bool Equals(BlockInfo other)
         {

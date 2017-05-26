@@ -11,13 +11,16 @@ namespace Resin.IO
         public readonly BlockInfo? PostingsAddress;
         public readonly IList<DocumentPosting> Postings;
 
+        public Word(string value)
+        {
+            Value = value;
+            Count = 1;
+            PostingsAddress = null;
+            Postings = null;
+        }
+
         public Word(string value, int count = 1, BlockInfo? postingsAddress = null, IList<DocumentPosting> postings = null)
         {
-            if (postingsAddress.HasValue && postingsAddress.Equals(BlockInfo.MinValue))
-            {
-                throw new ArgumentOutOfRangeException("postingsAddress");
-            }
-
             Value = value;
             Count = count;
             PostingsAddress = postingsAddress;
