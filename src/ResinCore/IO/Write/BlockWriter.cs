@@ -20,7 +20,7 @@ namespace Resin.IO.Write
         {
             var bytes = Serialize(block);
 
-            if (bytes.Length == 0) throw new InvalidTimeZoneException();
+            if (bytes.Length <= 1) throw new InvalidTimeZoneException();
 
             var info = new BlockInfo(_position, bytes.Length);
 

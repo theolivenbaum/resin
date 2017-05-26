@@ -27,7 +27,7 @@ namespace Resin.IO.Read
 
         private T Get(BlockInfo info)
         {
-            if (info.Length == 0) throw new ArgumentOutOfRangeException("info", "length is zero");
+            if (info.Length < 1) throw new ArgumentOutOfRangeException("info", string.Format("invalid length {0}", info.Length));
 
             var distance = info.Position - _position;
 
@@ -36,7 +36,7 @@ namespace Resin.IO.Read
                 _stream.Seek(distance, SeekOrigin.Current);
             }
 
-            var buffer = new byte[info.Length];
+            byte[] buffer = new byte[info.Length];
 
             _stream.Read(buffer, 0, buffer.Length);
 
