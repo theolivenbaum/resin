@@ -64,7 +64,7 @@ Definitely start [here](https://github.com/kreeben/resin/issues).
 		upsert.Commit();
 	}
 	
-### Store documents that are endoced in a stream source.
+### Store documents that are encoded in a stream source.
 
 	using (var docs = new FileStream(fileName))
 	using (var upsert = new StreamUpsertOperation(dir, new Analyzer(), compression:true, primaryKey:"id", docs))
