@@ -22,6 +22,7 @@ namespace Tests
             one.Merge(two);
 
             Word found;
+            
             Assert.IsTrue(one.HasWord("ape", out found));
             Assert.IsTrue(one.HasWord("app", out found));
             Assert.IsTrue(one.HasWord("apple", out found));

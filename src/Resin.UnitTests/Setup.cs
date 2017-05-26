@@ -20,6 +20,7 @@ namespace Tests
         [AssemblyInitialize()]
         public static void AssemblyInit(TestContext context)
         {
+            if(Directory.Exists(root))
             foreach(var dir in Directory.GetDirectories(root))
             {
                 Directory.Delete(dir, true);

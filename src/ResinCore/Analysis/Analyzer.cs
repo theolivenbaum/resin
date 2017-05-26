@@ -6,13 +6,19 @@ namespace Resin.Analysis
 {
     public class Analyzer : IAnalyzer
     {
+        private readonly ITokenizer _tokenizer;
         private readonly HashSet<char> _customTokenSeparators;
         private readonly HashSet<string> _stopwords;
  
-        public Analyzer(char[] tokenSeparators = null, string[] stopwords = null)
+        public Analyzer(ITokenizer tokenizer=null,char[] tokenSeparators = null, string[] stopwords = null)
         {
+            
             _customTokenSeparators = tokenSeparators == null ? null : new HashSet<char>(tokenSeparators);
             _stopwords = stopwords == null ? null : new HashSet<string>(stopwords);
+            if (tokenizer == null)
+            {
+                _tokenizer = new DefaultTokenizer(tokenSeparators, stopwords);
+            }
         }
 
         public AnalyzedDocument AnalyzeDocument(Document document)
@@ -61,6 +67,7 @@ namespace Resin.Analysis
         
         public virtual IEnumerable<string> Analyze(string value)
         {
+            return _tokenizer.Tokenize(value);
             var normalized = value.ToLower();
 
             var washed = new char[normalized.Length];
