@@ -28,7 +28,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments();
 
-            var writer = new DocumentsUpsertOperation(
+            var writer = new UpsertOperation(
                 dir, new Analyzer(), compression: Compression.GZip, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
@@ -74,7 +74,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments();
 
-            var writer = new DocumentsUpsertOperation(
+            var writer = new UpsertOperation(
                 dir, new Analyzer(), compression: Compression.NoCompression, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 

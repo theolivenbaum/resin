@@ -5,7 +5,12 @@ namespace Resin.Sys
 {
     public static class DocumentHelper
     {
-        public static IEnumerable<Document> ToDocuments(this IEnumerable<dynamic> dynamicDocuments)
+        public static DocumentSource ToDocuments(this IEnumerable<dynamic> dynamicDocuments)
+        {
+            return new InMemoryDocumentSource(dynamicDocuments.ToDocumentsInternal());
+        }
+
+        private static IEnumerable<Document> ToDocumentsInternal(this IEnumerable<dynamic> dynamicDocuments)
         {
             foreach (var dyn in dynamicDocuments)
             {

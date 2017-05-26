@@ -77,30 +77,28 @@ namespace Resin
 
             var tries = trieBuilder.GetTries();
 
+            var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", indexVersionId, "pos"));
+            using (var postingsWriter = new PostingsWriter(new FileStream(posFileName, FileMode.Create, FileAccess.Write, FileShare.None)))
+            {
+                foreach (var trie in tries)
+                {
+                    foreach (var node in trie.Value.EndOfWordNodes())
+                    {
+                        node.PostingsAddress = postingsWriter.Write(node.Postings);
+                    }
+
+                    if (Log.IsDebugEnabled)
+                    {
+                        foreach (var word in trie.Value.Words())
+                        {
+                            Log.Debug(word);
+                        }
+                    }
+                }
+            }
+
             var tasks = new List<Task>
                 {
-                    Task.Run(() =>
-                    {
-                        var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", indexVersionId, "pos"));
-                        using (var postingsWriter = new PostingsWriter(new FileStream(posFileName, FileMode.Create, FileAccess.Write, FileShare.None)))
-                        {
-                            foreach (var trie in tries)
-                            {
-                                foreach (var node in trie.Value.EndOfWordNodes())
-                                {
-                                    node.PostingsAddress = postingsWriter.Write(node.Postings);
-                                }
-
-                                if (Log.IsDebugEnabled)
-                                {
-                                    foreach(var word in trie.Value.Words())
-                                    {
-                                        Log.Debug(word);
-                                    }
-                                }
-                            }
-                        }
-                    }),
                     Task.Run(() =>
                     {
                         SerializeTries(tries, indexVersionId);

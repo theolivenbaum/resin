@@ -13,23 +13,21 @@ using System.Diagnostics;
 
 namespace Resin
 {
-    public abstract class UpsertOperation
+    public class UpsertOperation
     {
-        protected abstract IEnumerable<Document> ReadSource();
+        private static readonly ILog Log = LogManager.GetLogger(typeof(UpsertOperation));
 
-        protected static readonly ILog Log = LogManager.GetLogger(typeof(UpsertOperation));
-
-        protected readonly Dictionary<ulong, object> _primaryKeys;
-
+        private readonly Dictionary<ulong, object> _primaryKeys;
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private readonly Compression _compression;
         private readonly long _indexVersionId;
         private readonly bool _autoGeneratePk;
         private readonly string _primaryKey;
+        private readonly DocumentSource _documents;
 
-        protected UpsertOperation(
-            string directory, IAnalyzer analyzer, Compression compression, string primaryKey)
+        public UpsertOperation(
+            string directory, IAnalyzer analyzer, Compression compression, string primaryKey, DocumentSource documents)
         {
             _directory = directory;
             _analyzer = analyzer;
@@ -37,8 +35,8 @@ namespace Resin
             _indexVersionId = Util.GetChronologicalFileId();
             _autoGeneratePk = string.IsNullOrWhiteSpace(primaryKey);
             _primaryKey = primaryKey;
-
             _primaryKeys = new Dictionary<UInt64, object>();
+            _documents = documents;
         }
 
         public long Commit()
@@ -222,6 +220,11 @@ namespace Resin
                 DocumentCount = _primaryKeys.Count,
                 Compression = _compression
             };
+        }
+
+        private IEnumerable<Document> ReadSource()
+        {
+            return _documents.ReadSource();
         }
 
         private IEnumerable<Document> ReadSourceAndAssignIdentifiers()

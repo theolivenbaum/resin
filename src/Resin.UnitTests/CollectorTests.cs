@@ -28,7 +28,7 @@ namespace Tests
                 new {_id = "5five", title = "the good, the bad and the ugly" }
             }.ToDocuments();
 
-            var writer = new DocumentsUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
@@ -63,7 +63,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments();
 
-            var writer = new DocumentsUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rain man");
@@ -104,7 +104,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments();
 
-            var writer = new DocumentsUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
@@ -145,7 +145,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments();
 
-            var writer = new DocumentsUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rocky");
@@ -197,7 +197,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments();
 
-            var writer = new DocumentsUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
@@ -239,7 +239,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments();
 
-            var writer = new DocumentsUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
@@ -276,7 +276,7 @@ namespace Tests
                 new {_id = "4", title = "rain man" }
             }.ToDocuments();
 
-            var writer = new DocumentsUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
@@ -305,7 +305,7 @@ namespace Tests
                 new {_id = "4", title = "tomb raider" }
             }.ToDocuments();
 
-            var writer = new DocumentsUpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "_id", documents: docs);
             long indexName = writer.Commit();
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))

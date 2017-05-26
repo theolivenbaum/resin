@@ -180,9 +180,10 @@ namespace Resin.Cli
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            using (var writer = new CliLineDocUpsertOperation(dir, new Analyzer(), skip, take, compression, null, fileName))
+            using(var documents = new StreamDocumentSource(fileName, skip, take))
             {
-                writer.Commit();
+                new UpsertOperation(dir, new Analyzer(), compression, null, documents)
+                    .Commit();
             }
 
             Console.WriteLine("write operation took {0}", writeTimer.Elapsed);
