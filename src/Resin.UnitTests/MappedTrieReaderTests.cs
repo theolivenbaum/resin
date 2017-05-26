@@ -4,6 +4,7 @@ using Resin.IO;
 using Resin.IO.Read;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Tests
 {
@@ -28,6 +29,8 @@ namespace Tests
             {
                 node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
             }
+
+            File.WriteAllText("Can_find_within_range.log", tree.Visualize(), System.Text.Encoding.UTF8);
 
             tree.Serialize(fileName);
 
