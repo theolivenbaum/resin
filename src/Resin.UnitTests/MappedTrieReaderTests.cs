@@ -270,6 +270,7 @@ namespace Tests
             Assert.IsTrue(tree.HasWord("dance", out found));
 
             tree.Serialize(fileName);
+            File.WriteAllText("Can_deserialize_whole_file.log", tree.Visualize(), System.Text.Encoding.UTF8);
 
             var recreated = Serializer.DeserializeTrie(dir, new FileInfo(fileName).Name);
 

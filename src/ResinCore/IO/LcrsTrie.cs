@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using Resin.Analysis;
 using Resin.Sys;
+using System.Text;
 
 namespace Resin.IO
 {
@@ -375,6 +376,25 @@ namespace Resin.IO
             }
             leaf = null;
             return false;
+        }
+
+        public string Visualize()
+        {
+            StringBuilder output = new StringBuilder();
+            Visualize(output, 0);
+            return output.ToString();
+        }
+
+        private void Visualize(StringBuilder output, int depth)
+        {
+            if (RightSibling != null)
+                RightSibling.Visualize(output, depth);
+
+            output.Append('\t', depth);
+            output.AppendLine(Value.ToString());
+
+            if (LeftChild != null)
+                LeftChild.Visualize(output, depth + 1);
         }
     }
 }
