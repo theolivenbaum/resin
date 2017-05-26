@@ -75,9 +75,9 @@ namespace Resin.IO
         public static void Serialize(this LcrsNode node, Stream stream)
         {
             var valBytes = BitConverter.GetBytes(node.Value);
-            var byte0 = EncodedBoolean[node.HaveSibling];
-            var byte1 = EncodedBoolean[node.HaveChild];
-            var byte2 = EncodedBoolean[node.EndOfWord];
+            var haveSiblingByte = EncodedBoolean[node.HaveSibling];
+            var haveChildByte = EncodedBoolean[node.HaveChild];
+            var eowByte = EncodedBoolean[node.EndOfWord];
             var depthBytes = BitConverter.GetBytes(node.Depth);
             var weightBytes = BitConverter.GetBytes(node.Weight);
 
@@ -89,16 +89,19 @@ namespace Resin.IO
             }
 
             stream.Write(valBytes, 0, valBytes.Length);
-            stream.WriteByte(byte0);
-            stream.WriteByte(byte1);
-            stream.WriteByte(byte2);
+            stream.WriteByte(haveSiblingByte);
+            stream.WriteByte(haveChildByte);
+            stream.WriteByte(eowByte);
             stream.Write(depthBytes, 0, depthBytes.Length);
             stream.Write(weightBytes, 0, weightBytes.Length);
 
-            Serialize(node.PostingsAddress, stream);
+            if (!Serialize(node.PostingsAddress, stream) && node.EndOfWord)
+            {
+                throw new InvalidOperationException("cannot store word without posting address");
+            }
         }
 
-        public static void Serialize(this BlockInfo? block, Stream stream)
+        public static bool Serialize(this BlockInfo block, Stream stream)
         {
             if (block == null)
             {
@@ -113,12 +116,16 @@ namespace Resin.IO
 
                 stream.Write(pos, 0, pos.Length);
                 stream.Write(len, 0, len.Length);
+
+                return false;
             }
             else
             {
-                var blockBytes = block.Value.Serialize();
+                var blockBytes = block.Serialize();
 
                 stream.Write(blockBytes, 0, blockBytes.Length);
+
+                return true;
             }
         }
 
@@ -393,19 +400,21 @@ namespace Resin.IO
 
         public static LcrsNode DeserializeNode(Stream stream)
         {
-            if (!stream.CanRead) return LcrsNode.MinValue;
-
             var valBytes = new byte[sizeof(char)];
             var depthBytes = new byte[sizeof(short)];
             var weightBytes = new byte[sizeof(int)];
 
-            stream.Read(valBytes, 0, sizeof (char));
-            int byte0 = stream.ReadByte();
-            int byte1 = stream.ReadByte();
-            int byte2 = stream.ReadByte();
+            var read = stream.Read(valBytes, 0, sizeof (char));
+
+            if (read == 0) return LcrsNode.MinValue;
+
+            int haveSiblingByte = stream.ReadByte();
+            int haveChildByte = stream.ReadByte();
+            int eowByte = stream.ReadByte();
+
             stream.Read(depthBytes, 0, depthBytes.Length);
             stream.Read(weightBytes, 0, weightBytes.Length);
-            BlockInfo? block = DeserializeBlock(stream);
+            BlockInfo block = DeserializeBlock(stream);
             
             if (!BitConverter.IsLittleEndian)
             {
@@ -416,15 +425,15 @@ namespace Resin.IO
 
             return new LcrsNode(
                 BitConverter.ToChar(valBytes, 0),
-                byte0 == 1,
-                byte1 == 1,
-                byte2 == 1,
+                haveSiblingByte == 1,
+                haveChildByte == 1,
+                eowByte == 1,
                 BitConverter.ToInt16(depthBytes, 0),
                 BitConverter.ToInt32(weightBytes, 0),
                 block);
         }
 
-        public static BlockInfo? DeserializeBlock(byte[] bytes)
+        public static BlockInfo DeserializeBlock(byte[] bytes)
         {
             using (var stream = new MemoryStream(bytes))
             {

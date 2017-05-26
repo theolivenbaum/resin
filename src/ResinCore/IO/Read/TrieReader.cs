@@ -27,6 +27,10 @@ namespace Resin.IO.Read
             LcrsNode node;
             if (TryFindDepthFirst(word, out node))
             {
+                if (node.PostingsAddress == null)
+                    throw new InvalidOperationException(
+                        "cannot create word without postings address");
+
                 found = new Word(word, 1, node.PostingsAddress);
                 return node.EndOfWord;
             }
@@ -156,12 +160,18 @@ namespace Resin.IO.Read
 
                 if (node.EndOfWord)
                 {
-                    var word = prefix + new string(path.ToArray());
-                    if (upperBound == null || 
-                       (word.Length <= upperBound.Length && node.Value <= upperBound[depth+1]) ||
-                        word.Length > upperBound.Length)
+                    if (node.PostingsAddress == null)
+                        throw new InvalidOperationException(
+                            "cannot create word without postings address");
 
-                    compressed.Add(new Word(word, 1, node.PostingsAddress));
+                    var word = prefix + new string(path.ToArray());
+
+                    if (upperBound == null ||
+                       (word.Length <= upperBound.Length && node.Value <= upperBound[depth + 1]) ||
+                        word.Length > upperBound.Length)
+                    {
+                        compressed.Add(new Word(word, 1, node.PostingsAddress));
+                    }
                 }
 
                 if (node.HaveSibling)

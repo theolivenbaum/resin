@@ -10,7 +10,7 @@ namespace Resin.IO.Read
 
         protected override BlockInfo Deserialize(byte[] data)
         {
-            return Serializer.DeserializeBlock(data).Value;
+            return Serializer.DeserializeBlock(data);
         }
     }
 }

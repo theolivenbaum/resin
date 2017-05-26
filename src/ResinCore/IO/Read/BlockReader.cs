@@ -27,7 +27,9 @@ namespace Resin.IO.Read
 
         private T Get(BlockInfo info)
         {
-            if (info.Length < 1) throw new ArgumentOutOfRangeException("info", string.Format("invalid length {0}", info.Length));
+            if (info.Length < 1)
+                throw new ArgumentOutOfRangeException(
+                    "info", string.Format("invalid length {0}", info.Length));
 
             var distance = info.Position - _position;
 

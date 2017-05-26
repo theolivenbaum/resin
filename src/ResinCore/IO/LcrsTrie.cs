@@ -13,7 +13,7 @@ namespace Resin.IO
     {
         public LcrsTrie RightSibling { get; set; }
         public LcrsTrie LeftChild { get; set; }
-        public BlockInfo? PostingsAddress { get; set; }
+        public BlockInfo PostingsAddress { get; set; }
         public List<DocumentPosting> Postings { get; set; }
         public int WordCount { get; private set; }
         public char Value { get; private set; }

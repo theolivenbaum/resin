@@ -125,37 +125,35 @@ namespace Resin
 
             var tries = trieBuilder.GetTries();
 
+            var postingsTimer = new Stopwatch();
+            postingsTimer.Start();
+
+            Log.Info("serializing postings");
+
+            var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
+            using (var postingsWriter = new PostingsWriter(new FileStream(posFileName, FileMode.Create, FileAccess.Write, FileShare.None)))
+            {
+                foreach (var trie in tries)
+                {
+                    foreach (var node in trie.Value.EndOfWordNodes())
+                    {
+                        node.PostingsAddress = postingsWriter.Write(node.Postings);
+                    }
+
+                    if (Log.IsDebugEnabled)
+                    {
+                        foreach (var word in trie.Value.Words())
+                        {
+                            Log.Debug(word);
+                        }
+                    }
+                }
+            }
+
+            Log.InfoFormat("serialized postings in {0}", postingsTimer.Elapsed);
+
             var tasks = new List<Task>
                 {
-                    Task.Run(() =>
-                    {
-                        var postingsTimer = new Stopwatch();
-                        postingsTimer.Start();
-
-                        Log.Info("serializing postings");
-
-                        var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
-                        using (var postingsWriter = new PostingsWriter(new FileStream(posFileName, FileMode.Create, FileAccess.Write, FileShare.None)))
-                        {
-                            foreach (var trie in tries)
-                            {
-                                foreach (var node in trie.Value.EndOfWordNodes())
-                                {
-                                    node.PostingsAddress = postingsWriter.Write(node.Postings);
-                                }
-
-                                if (Log.IsDebugEnabled)
-                                {
-                                    foreach(var word in trie.Value.Words())
-                                    {
-                                        Log.Debug(word);
-                                    }
-                                }
-                            }
-                        }
-
-                        Log.InfoFormat("serialized postings in {0}", postingsTimer.Elapsed);
-                    }),
                     Task.Run(() =>
                     {
                         var trieTimer = new Stopwatch();
@@ -200,7 +198,11 @@ namespace Resin
 
         private void SerializeTries(IDictionary<string, LcrsTrie> tries)
         {
-            Parallel.ForEach(tries, t => DoSerializeTrie(new Tuple<string, LcrsTrie>(t.Key, t.Value)));
+            foreach(var t in tries)
+            {
+                DoSerializeTrie(new Tuple<string, LcrsTrie>(t.Key, t.Value));
+            }
+            //Parallel.ForEach(tries, t => DoSerializeTrie(new Tuple<string, LcrsTrie>(t.Key, t.Value)));
         }
 
         private void DoSerializeTrie(Tuple<string, LcrsTrie> trieEntry)

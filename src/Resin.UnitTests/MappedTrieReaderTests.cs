@@ -15,16 +15,21 @@ namespace Tests
         {
             var fileName = Path.Combine(CreateDir(), "MappedTrieReaderTests.Can_find_within_range.tri");
 
-            var trie = new LcrsTrie();
-            trie.Add("ape");
-            trie.Add("app");
-            trie.Add("apple");
-            trie.Add("banana");
-            trie.Add("bananas");
-            trie.Add("xanax");
-            trie.Add("xxx");
+            var tree = new LcrsTrie();
+            tree.Add("ape");
+            tree.Add("app");
+            tree.Add("apple");
+            tree.Add("banana");
+            tree.Add("bananas");
+            tree.Add("xanax");
+            tree.Add("xxx");
 
-            trie.Serialize(fileName);
+            foreach (var node in tree.EndOfWordNodes())
+            {
+                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
+            }
+
+            tree.Serialize(fileName);
 
             IList<Word> words;
 
@@ -39,7 +44,6 @@ namespace Tests
             Assert.AreEqual("bananas", words[2].Value);
             Assert.AreEqual("xanax", words[3].Value);
         }
-
 
         [TestMethod]
         public void Can_find_near()
@@ -57,6 +61,12 @@ namespace Tests
             }
 
             tree.Add("bad");
+
+            foreach (var node in tree.EndOfWordNodes())
+            {
+                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
+            }
+
             tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
@@ -68,6 +78,12 @@ namespace Tests
             }
 
             tree.Add("baby");
+
+            foreach (var node in tree.EndOfWordNodes())
+            {
+                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
+            }
+
             tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
@@ -79,6 +95,12 @@ namespace Tests
             }
 
             tree.Add("b");
+
+            foreach (var node in tree.EndOfWordNodes())
+            {
+                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
+            }
+
             tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
@@ -108,6 +130,12 @@ namespace Tests
             }
 
             tree.Add("bananas");
+
+            foreach (var node in tree.EndOfWordNodes())
+            {
+                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
+            }
+
             tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
@@ -130,6 +158,12 @@ namespace Tests
             }
 
             tree.Add("bank");
+
+            foreach (var node in tree.EndOfWordNodes())
+            {
+                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
+            }
+
             tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
@@ -171,6 +205,11 @@ namespace Tests
 
             tree.Add("man");
 
+            foreach (var node in tree.EndOfWordNodes())
+            {
+                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
+            }
+
             tree.Serialize(fileName);
 
             var prefixed = new MappedTrieReader(fileName).StartsWith("ra").Select(w => w.Value).ToList();
@@ -191,6 +230,12 @@ namespace Tests
             tree.Add("xxx");
             tree.Add("donkey");
             tree.Add("xavier");
+
+            foreach (var node in tree.EndOfWordNodes())
+            {
+                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
+            }
+
             tree.Serialize(fileName);
 
             Word word;
@@ -208,6 +253,12 @@ namespace Tests
             }
 
             tree.Add("baby");
+
+            foreach (var node in tree.EndOfWordNodes())
+            {
+                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
+            }
+
             tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
@@ -225,6 +276,12 @@ namespace Tests
 
             tree.Add("dad");
             tree.Add("daddy");
+
+            foreach (var node in tree.EndOfWordNodes())
+            {
+                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
+            }
+
             tree.Serialize(fileName);
 
             using (var reader = new MappedTrieReader(fileName))
@@ -259,6 +316,11 @@ namespace Tests
             tree.Add("box");
             tree.Add("dad");
             tree.Add("dance");
+
+            foreach(var node in tree.EndOfWordNodes())
+            {
+                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
+            }
 
             Word found;
 

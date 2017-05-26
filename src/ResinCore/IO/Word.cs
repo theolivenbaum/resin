@@ -8,7 +8,7 @@ namespace Resin.IO
     {
         public readonly string Value;
         public readonly int Count;
-        public readonly BlockInfo? PostingsAddress;
+        public readonly BlockInfo PostingsAddress;
         public readonly IList<DocumentPosting> Postings;
 
         public Word(string value)
@@ -19,7 +19,7 @@ namespace Resin.IO
             Postings = null;
         }
 
-        public Word(string value, int count = 1, BlockInfo? postingsAddress = null, IList<DocumentPosting> postings = null)
+        public Word(string value, int count, BlockInfo postingsAddress, IList<DocumentPosting> postings = null)
         {
             Value = value;
             Count = count;

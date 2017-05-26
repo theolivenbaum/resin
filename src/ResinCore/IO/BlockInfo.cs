@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace Resin.IO
 {
     [DebuggerDisplay("{Position} {Length}")]
-    public struct BlockInfo : IEquatable<BlockInfo>
+    public class BlockInfo : IEquatable<BlockInfo>
     {
         public long Position;
         public int Length;
@@ -14,8 +14,6 @@ namespace Resin.IO
             Position = position;
             Length = length;
         }
-
-        public static BlockInfo MinValue { get { return new BlockInfo(long.MinValue, int.MinValue);} }
 
         public bool Equals(BlockInfo other)
         {
