@@ -1,6 +1,9 @@
 # Resin
 Resin is a auto-indexing document-based search engine with querying support for term, fuzzy, prefix, phrase and range. Analyzers, tokenizers and scoring schemes are customizable. 
 
+## Auto-indexing
+Auto-indexing refers to storing and indexing a document being one and the same operation.
+
 ## A smarter index
 Resin is a tree like most other indices. Resin indices are fast to write to and read from and support near (as in "almost match") and prefix which is out-of-scope for most database index types.
 
