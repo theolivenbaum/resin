@@ -5,6 +5,7 @@ using Resin.IO;
 using Resin.IO.Read;
 using Resin.IO.Write;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Resin;
 
 namespace Tests
 {

@@ -6,12 +6,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using log4net;
 using Resin.Analysis;
-using Resin.IO;
 using Resin.IO.Read;
 using Resin.Querying;
 using Resin.Sys;
 
-namespace Resin
+namespace Resin.IO
 {
     public class Collector : IDisposable
     {

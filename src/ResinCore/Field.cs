@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Resin.IO
+namespace Resin
 {
     public struct Field
     {

@@ -180,7 +180,7 @@ namespace Resin.Cli
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            using(var documents = new StreamDocumentSource(fileName, skip, take))
+            using(var documents = new TabSeparatedStream(fileName, skip, take))
             {
                 new UpsertOperation(dir, new Analyzer(), compression, null, documents)
                     .Commit();

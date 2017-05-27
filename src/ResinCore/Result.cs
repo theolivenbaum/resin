@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Resin.Querying
+namespace Resin
 {
     public class Result
     {

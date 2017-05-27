@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Resin.IO
+namespace Resin
 {
     public class Document
     {

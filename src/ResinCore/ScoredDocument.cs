@@ -1,6 +1,4 @@
-﻿using Resin.IO;
-
-namespace Resin
+﻿namespace Resin
 {
     public class ScoredDocument
     {
