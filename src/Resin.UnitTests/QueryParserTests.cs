@@ -57,7 +57,15 @@ namespace Tests
         {
             var q = new QueryParser(new Analyzer()).Parse("+title:rambo first blood");
 
-            Assert.AreEqual("+title:rambo +title:first +title:blood", q.ToString());
+            Assert.AreEqual("+title:rambo title:first title:blood", q.ToString());
+        }
+
+        [TestMethod]
+        public void Can_parse_phrases_and_will_not_reset_negative_field_operator()
+        {
+            var q = new QueryParser(new Analyzer()).Parse("+title:rambo first blood -body:john rambo");
+
+            Assert.AreEqual("+title:rambo title:first title:blood -body:john -body:rambo", q.ToString());
         }
 
         [TestMethod]

@@ -94,6 +94,7 @@ namespace Resin.Querying
                 }
 
                 var analyzed = _analyzer.Analyze(analyzable).ToArray();
+                var operatorLessField = field.Replace("+", "");
 
                 foreach (string token in analyzed)
                 {
@@ -105,7 +106,7 @@ namespace Resin.Querying
                     }
                     else
                     {
-                        var t = Parse(field, token, tokenOperator, positionInQuery + 1);
+                        var t = Parse(operatorLessField, token, tokenOperator, positionInQuery + 1);
 
                         root.Add(t);
                     }
