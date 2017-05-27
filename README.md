@@ -58,6 +58,8 @@ Definitely start [here](https://github.com/kreeben/resin/issues).
 		"aliases": "cosmos The Universe existence space outerspace"
 	}
 
+_Documents like these can be downloaded [here](https://dumps.wikimedia.org/wikidatawiki/entities/). They look very much like entries in a labeled training data set and chould be used to teach a machine a thing or to about our world._
+
 ### Batch many of those together and store them on disk (compression is optional).
 
 	var docs = GetWikipedia();
