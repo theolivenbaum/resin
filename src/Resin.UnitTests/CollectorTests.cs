@@ -82,7 +82,8 @@ namespace Tests
             {
                 var scores = collector.Collect(query).ToList();
 
-                Assert.AreEqual(1, scores.Count);
+                Assert.AreEqual(2, scores.Count);
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
             }
         }

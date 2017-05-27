@@ -6,5 +6,6 @@ namespace Resin
     {
         public IList<ScoredDocument> Docs { get; set; }
         public int Total { get; set; }
+        public string[] QueryTerms { get; set; }
     }
 }
