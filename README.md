@@ -64,6 +64,7 @@ _Documents like these can be downloaded [here](https://dumps.wikimedia.org/wikid
 
 	var docs = GetWikipedia();
 	var dir = @"C:\Users\Yourname\Resin\wikipedia";
+	
 	using (var documents = new InMemoryDocumentSource(docs))
 	{
 		new UpsertOperation(dir, new Analyzer(), Compression.Lz, "id", documents)
@@ -85,6 +86,8 @@ _Documents like these can be downloaded [here](https://dumps.wikimedia.org/wikid
 	}
 
 	// Implement the base class DocumentSource to use whatever source you need.
+
+It's perfectly fine to mix compressed and non-compressed batches inside a directory.
 	
 ### Query the index.
 <a name="inproc" id="inproc"></a>
