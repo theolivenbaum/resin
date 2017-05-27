@@ -65,35 +65,35 @@ _Documents like these can be downloaded [here](https://dumps.wikimedia.org/wikid
 	var docs = GetWikipedia();
 	var dir = @"C:\Users\Yourname\Resin\wikipedia";
 	using (var documents = new InMemoryDocumentSource(docs))
-    	{
+	{
 		new UpsertOperation(dir, new Analyzer(), Compression.Lz, "id", documents)
-                    .Commit();
-    	}
+		    .Commit();
+	}
 	
 ### Store documents that are encoded in a stream source.
 
 	using (var documents = new TabSeparatedStream(fileName, skip, take))
-    	{
+	{
 		new UpsertOperation(dir, new Analyzer(), Compression.GZip, "id", documents)
-                    .Commit();
-    	}
-	
+		    .Commit();
+	}
+
 	using (var documents = new JsonStream(fileName, skip, take))
-    	{
+	{
 		new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, "id", documents)
-                    .Commit();
-    	}
-	
+		    .Commit();
+	}
+
 	// Implement the base class DocumentSource to use whatever source you need.
 	
 ### Query the index.
 <a name="inproc" id="inproc"></a>
 
-	varr result = new Searcher(dir).Search("label:good bad~ description:leone", page:0, size:15);
-	
+	var result = new Searcher(dir).Search("label:good bad~ description:leone", page:0, size:15);
+
 	// Document fields and scores, i.e. the aggregated tf-idf weights a document recieve from a simple 
 	// or compound query, are included in the result:
-	
+
 	var scoreOfFirstDoc = result.Docs[0].Fields["__score"];
 	var label = result.Docs[0].Fields["label"];
 
