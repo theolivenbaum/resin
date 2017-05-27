@@ -23,12 +23,12 @@ In many scenarios Resin is already faster than the [market "leader"](https://luc
 If you have a scenario where you feel Resin should do better, this is important information for me. Please let me know. I'm both curious about those special cases and I'd love to optimize for them.
 
 ## Not based on Lucene
-[Half a decade](https://blogs.apache.org/lucenenet/entry/lucene_net_3_0_3) has passed since what we in the .net community consider to be state-of-the-art search tech was built.
+The .net version of Lucene was built [half a decade ago](https://blogs.apache.org/lucenenet/entry/lucene_net_3_0_3).
 
-Who could use a modern and powerful search engine based on sound mathematics that's open source, extensible and built on Core, though?
+Who could use a modern and powerful search engine based on sound mathematics, open source, that's extensible and built on Core, though?
 
 ## Stable (API and file format) in RC4
-Resin's API and file format should be considered unstable until release candidate 4.
+Resin's API and file format should be considered unstable until release candidate 4. Old-school semantic versioning shall be used from 1.0.0 and on.
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
@@ -37,10 +37,13 @@ Resin is built for dotnet Core 1.1.
 Latest release is [here](https://github.com/kreeben/resin/releases/latest) but I suggest you clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run. 
 
 ## Start with the CLI
-The command line tool, rn.exe, can be executed after you have built the source.
+The command line tool, rn.exe, can be executed after you have built the source. A rn.bat script is waiting for you at the root of the Resin repository that directs your commands to the release version of the Resin CLI. Build in release mode and you're good to go.
+
 1. Find the folder where you have the Resin source code. 
 2. Right-click on that folder while pressing Shift on your keyboard to open a command prompt. 
 3. Use it like I do in this [benchmark test](https://github.com/kreeben/resin/wiki/Lucene-vs-Resin-1.0-RC1).
+
+A thoughrough description of the CLI is in the works.
 
 ## Help out?
 Definitely start [here](https://github.com/kreeben/resin/issues).
