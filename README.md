@@ -58,24 +58,31 @@ Definitely start [here](https://github.com/kreeben/resin/issues).
 		"aliases": "cosmos The Universe existence space outerspace"
 	}
 
-### Batch many of those together and store them on disk.
+### Batch many of those together and store them on disk (compression is optional).
 
 	var docs = GetWikipedia();
 	var dir = @"C:\Users\Yourname\Resin\wikipedia";
-	using (var upsert = new DocumentUpsertOperation(dir, new Analyzer(), compression:true, primaryKey:"id", docs))
-	{
-		upsert.Commit();
-	}
+	using (var documents = new InMemoryDocumentSource(docs))
+    	{
+		new UpsertOperation(dir, new Analyzer(), Compression.Lz, "id", documents)
+                    .Commit();
+    	}
 	
 ### Store documents that are encoded in a stream source.
 
-	using (var docs = new FileStream(fileName))
-	using (var upsert = new StreamUpsertOperation(dir, new Analyzer(), compression:true, primaryKey:"id", docs))
-	{
-		upsert.Commit();
-	}
+	using (var documents = new TabSeparatedStream(fileName, skip, take))
+    	{
+		new UpsertOperation(dir, new Analyzer(), Compression.GZip, "id", documents)
+                    .Commit();
+    	}
 	
-	// Implement the base class UpsertOperation to use whatever document source you need.
+	using (var documents = new JsonStream(fileName, skip, take))
+    	{
+		new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, "id", documents)
+                    .Commit();
+    	}
+	
+	// Implement the base class DocumentSource to use whatever source you need.
 	
 ### Query the index.
 <a name="inproc" id="inproc"></a>
@@ -85,7 +92,7 @@ Definitely start [here](https://github.com/kreeben/resin/issues).
 	// Document fields and scores, i.e. the aggregated tf-idf weights a document recieve from a simple 
 	// or compound query, are included in the result:
 	
-	var scoreOfFirstDoc = result.Docs.First().Fields["__score"];
-	var label = result.Docs.First().Fields["label"];
+	var scoreOfFirstDoc = result.Docs[0].Fields["__score"];
+	var label = result.Docs[0].Fields["label"];
 
 [More documentation here](https://github.com/kreeben/resin/wiki). 
