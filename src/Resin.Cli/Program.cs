@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Resin.Analysis;
-using Resin.Querying;
 using System.Linq;
 using System.Reflection;
 using log4net.Config;
@@ -76,7 +75,6 @@ namespace Resin.Cli
 
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
 
-
             var q = args[Array.IndexOf(args, "-q") + 1];
             var page = 0;
             var size = 10;
@@ -99,14 +97,12 @@ namespace Resin.Cli
 
                 PrintHeaders(docs[0].Document.Fields.Select(f=>f.Key).ToArray());
 
-                var highlight = new QueryParser(new Analyzer()).Parse(q).ToList().GroupBy(y => y.Field).ToDictionary(g => g.Key, g => g.First().Value);
-
                 foreach (var doc in docs)
                 {
-                    Print(doc, highlight);
+                    Print(doc, result.QueryTerms[0]);
                 }
 
-                Console.WriteLine("\r\n{0}-{1} results of {2} in {3}", page * size, docs.Count + (page * size), result.Total, timer.Elapsed);
+                Console.WriteLine("\r\n{0}-{1} results of {2} in {3}", (page * size)+1, docs.Count + (page * size), result.Total, timer.Elapsed);
             }
 
         }
@@ -122,32 +118,30 @@ namespace Resin.Cli
             Console.WriteLine();
         }
 
-        private static void Print(ScoredDocument doc, IDictionary<string, string> highlight)
+        private static void Print(ScoredDocument doc, string highlight)
         {
             Console.Write(doc.Score.ToString("#.##") + "\t");
 
             foreach(var field in doc.Document.Fields.Values)
             {
-                Print(field.Value, highlight.ContainsKey(field.Key) ? highlight[field.Key] : null);
+                Print(field.Value, highlight);
             }
             Console.WriteLine();
         }
 
         private static void Print(string value, string highlight)
         {
-            var body = value;
+            var str = Highlight(value, highlight, 40);
+            Console.Write(str + "\t");
+        }
 
-            if (highlight != null)
-            {
-                var ix = body.IndexOf(highlight, StringComparison.CurrentCultureIgnoreCase);
+        public static string Highlight(string text, string highlight, int len)
+        {
+            var index = text.IndexOf(highlight, StringComparison.OrdinalIgnoreCase);
 
-                if (ix > 0)
-                {
-                    body = body.Substring(ix, body.Length - ix);
-                }
-            }
+            if (index < 0) index = 0;
 
-            Console.Write(body.Substring(0, Math.Min(80, body.Length)) + "\t");
+            return text.Substring(index, Math.Min(len, text.Length - index));
         }
 
         static void Write(string[] args)
@@ -156,11 +150,13 @@ namespace Resin.Cli
             var skip = 0;
             bool gzip = false;
             bool lz = false;
+            string pk = string.Empty;
 
             if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
             if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
             if (Array.IndexOf(args, "--gzip") > 0) gzip = true;
             if (Array.IndexOf(args, "--lz") > 0) lz = true;
+            if (Array.IndexOf(args, "--pk") > 0) pk = args[Array.IndexOf(args, "--pk") + 1];
 
             var compression = gzip ? Compression.GZip : lz ? Compression.Lz : Compression.NoCompression;
 
@@ -180,9 +176,9 @@ namespace Resin.Cli
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            using(var documents = new TabSeparatedStream(fileName, skip, take))
+            using(var documents = new JsonStream(fileName, skip, take))
             {
-                new UpsertOperation(dir, new Analyzer(), compression, null, documents)
+                new UpsertOperation(dir, new Analyzer(), compression, pk, documents)
                     .Commit();
             }
 

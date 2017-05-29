@@ -74,7 +74,10 @@ namespace Resin
             }
 
             result.Docs = docs.OrderByDescending(d => d.Score).ToList();
-            result.QueryTerms = queryContext.ToList().SelectMany(q => q.Terms.Select(t => t.Word.Value)).ToArray();
+            result.QueryTerms = queryContext.ToList()
+                .Where(q => q.Terms != null)
+                .SelectMany(q => q.Terms.Select(t => t.Word.Value))
+                .ToArray();
 
             Log.DebugFormat("fetched {0} docs for query {1} in {2}", docs.Count, queryContext, docTime.Elapsed);
             Log.DebugFormat("searched {0} in {1}", queryContext, searchTime.Elapsed);

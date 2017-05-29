@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Resin
 {
+    [DebuggerDisplay("{Value}")]
     public struct Field
     {
         private readonly string _value;
@@ -14,7 +16,7 @@ namespace Resin
 
         public Field(string key, object value, bool store = true, bool analyze = true)
         {
-            if (key == null) throw new ArgumentNullException("key");
+            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("key");
             if (value == null) throw new ArgumentNullException("value");
 
             Key = key;

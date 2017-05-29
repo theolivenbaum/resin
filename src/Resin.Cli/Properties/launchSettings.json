@@ -2,7 +2,7 @@
   "profiles": {
     "Resin.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "query --dir d:\\resin\\wikipedia -q \"body:the right foot is placed against the left hack\" -p 0 -s 15"
+      "commandLineArgs": "write --file c:\\temp\\pg\\pguten0.csv --dir d:\\resin\\gutenberg --pk url"
     }
   }
 }

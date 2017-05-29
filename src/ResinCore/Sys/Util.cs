@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Resin.IO;
-using System.Threading;
 
 namespace Resin.Sys
 {
@@ -13,10 +12,7 @@ namespace Resin.Sys
 
         private static Int64 GetTicks()
         {
-            //lock (Sync)
-            //{
-                return DateTime.Now.Ticks;
-            //}
+            return DateTime.Now.Ticks;
         }
 
         public static IEnumerable<char> ReplaceOrAppend(this string input, int index, char newChar)

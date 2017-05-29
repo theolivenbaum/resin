@@ -3,21 +3,22 @@ using System.IO;
 using System.Text;
 using System.Linq;
 using System;
+using Newtonsoft.Json;
 
 namespace Resin
 {
-    public class TabSeparatedStream : DocumentSource, IDisposable
+    public class JsonStream : DocumentSource, IDisposable
     {
         private readonly StreamReader Reader;
         private readonly int _take;
         private readonly int _skip;
 
-        public TabSeparatedStream(string fileName, int skip, int take) 
+        public JsonStream(string fileName, int skip, int take) 
             : this(File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None), skip, take)
         {
         }
 
-        public TabSeparatedStream(Stream stream, int skip, int take)
+        public JsonStream(Stream stream, int skip, int take)
         {
             _skip = skip;
             _take = take;
@@ -27,7 +28,7 @@ namespace Resin
 
         public override IEnumerable<Document> ReadSource()
         {
-            var fieldNames = Reader.ReadLine().Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            Reader.ReadLine();
 
             if (_skip > 0)
             {
@@ -39,27 +40,17 @@ namespace Resin
                 }
             }
 
-            return ReadInternal(fieldNames).Take(_take);
+            return ReadInternal().Take(_take);
         }
 
-        private IEnumerable<Document> ReadInternal(string[] fieldNames)
+        private IEnumerable<Document> ReadInternal()
         {
-            while (true)
+            string line;
+            while ((line=Reader.ReadLine()) != "]")
             {
-                var fields = new List<Field>();
+                var dict = JsonConvert.DeserializeObject<IDictionary<string, string>>(line);
 
-                foreach(var fieldName in fieldNames)
-                {
-                    var fieldValue = ReadUntilTab().ToArray();
-
-                    fields.Add(new Field(fieldName, new string(fieldValue)));
-                }
-
-                if (fields.Count == 0) break;
-
-                yield return new Document(fields);
-
-                Reader.ReadLine();
+                yield return new Document(dict.Select(p=>new Field(p.Key, p.Value)).ToList());
             }
         }
 
