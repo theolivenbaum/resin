@@ -77,6 +77,7 @@ namespace Resin
             result.QueryTerms = queryContext.ToList()
                 .Where(q => q.Terms != null)
                 .SelectMany(q => q.Terms.Select(t => t.Word.Value))
+                .Distinct()
                 .ToArray();
 
             Log.DebugFormat("fetched {0} docs for query {1} in {2}", docs.Count, queryContext, docTime.Elapsed);
