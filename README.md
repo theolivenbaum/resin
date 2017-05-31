@@ -1,5 +1,7 @@
 # Resin
-Resin is a auto-indexing document-based search engine with querying support for term, fuzzy, prefix, phrase and range. Analyzers, tokenizers and scoring schemes are customizable. 
+Resin is a auto-indexing document-based search engine with querying support for term, fuzzy, prefix, phrase and range. Analyzers, tokenizers and scoring schemes are customizable.
+
+Resin is the core component of [ansear.ch](http://ansear.ch), a free, open and anonymous web search engine.
 
 ## Auto-indexing
 Auto-indexing refers to storing and indexing a document being one and the same operation.
