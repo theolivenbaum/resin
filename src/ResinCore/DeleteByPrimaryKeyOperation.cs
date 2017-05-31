@@ -10,21 +10,21 @@ namespace Resin
     public class DeleteByPrimaryKeyOperation
     {
         private readonly string _directory;
-        private readonly IEnumerable<string> _values;
+        private readonly IEnumerable<string> _pks;
         private readonly List<IxInfo> _ixs;
 
-        public DeleteByPrimaryKeyOperation(string directory, IEnumerable<string> values)
+        public DeleteByPrimaryKeyOperation(string directory, IEnumerable<string> primaryKeys)
         {
             _directory = directory;
             _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
-            _values = values;
+            _pks = primaryKeys;
         }
 
         public void Commit()
         {
             var deleteSet = new LcrsTrie();
 
-            foreach (var value in _values)
+            foreach (var value in _pks)
             {
                 var hashString = value.ToHash().ToString(CultureInfo.InvariantCulture);
 
