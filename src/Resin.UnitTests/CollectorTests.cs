@@ -264,6 +264,45 @@ namespace Tests
         }
 
         [TestMethod]
+        public void Can_delete()
+        {
+            var dir = CreateDir();
+
+            var docs = new List<dynamic>
+            {
+                new {id = "0", title = "rambo first blood" },
+                new {id = "1", title = "rambo 2" },
+                new {id = "2", title = "rocky 2" },
+                new {id = "3", title = "raiders of the lost ark" },
+                new {id = "4", title = "the rain man" },
+                new {id = "5", title = "the good, the bad and the ugly" }
+            }.ToDocuments();
+
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKey: "id", documents: docs);
+            long indexName = writer.Commit();
+
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            {
+                var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
+
+                Assert.AreEqual(2, scores.Count);
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 0));
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
+            }
+
+            var operation = new DeleteByPrimaryKeyOperation(dir, new[] { "0" });
+            operation.Commit();
+
+            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            {
+                var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
+
+                Assert.AreEqual(1, scores.Count);
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
+            }
+        }
+
+        [TestMethod]
         public void Can_collect_prefixed()
         {
             var dir = CreateDir();

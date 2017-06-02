@@ -501,7 +501,7 @@ namespace Resin.IO
         {
             var isObsoleteByte = stream.ReadByte();
 
-            if (isObsoleteByte == 1) return null;
+            if (isObsoleteByte == -1) return null;
 
             var hashBytes = new byte[sizeof(UInt64)];
 
