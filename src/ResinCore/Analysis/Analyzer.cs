@@ -64,29 +64,6 @@ namespace Resin.Analysis
         public virtual IEnumerable<string> Analyze(string value)
         {
             return _tokenizer.Tokenize(value);
-            var normalized = value.ToLower();
-
-            var washed = new char[normalized.Length];
-
-            for (int index = 0; index < normalized.Length; index++)
-            {
-                var c = normalized[index];
-
-                if (IsNoice(c))
-                {
-                    washed[index] = ' ';
-                }
-                else
-                {
-                    washed[index] = c;
-                }
-            }
-            var text = new string(washed);
-            var result = text.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
-
-            if (_stopwords == null) return result;
-
-            return result.Where(s => !_stopwords.Contains(s));
         }
 
         private bool IsNoice(char c)
