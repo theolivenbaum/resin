@@ -9,8 +9,8 @@ Resin's index is a disk-based left-child-right-sibling character trie. Resin ind
 
 Apart from offering fast lookups Resin also scores documents based on their relevance. Relevance in turn is based on the distance from a document and a query in [vector space](https://en.wikipedia.org/wiki/Vector_space_model).
 
-## Upcoming feature to supports any scoring scheme
-To support the default tf-idf scoring scheme Resin stores term counts. Resin is built to support any vector-based scoring scheme and with the introduction of a generic verion of DocumentPosting where T is "type of data" (any object) testing and implementing new scoring formulas will be straightformard.
+## Upcoming feature to support any scoring scheme
+To support the default tf-idf scoring scheme Resin stores term counts. Resin is built to support any vector-based scoring scheme and with the introduction of a generic verion of DocumentPosting where the type of data can be anything (any object), testing and implementing new scoring formulas will be straightformard.
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
