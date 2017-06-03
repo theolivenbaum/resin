@@ -1,6 +1,5 @@
 using Resin.IO;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Resin.Analysis
 {

@@ -7,18 +7,18 @@ using Newtonsoft.Json;
 
 namespace Resin
 {
-    public class JsonStream : DocumentSource, IDisposable
+    public class JsonDocumentStream : DocumentSource, IDisposable
     {
         private readonly StreamReader Reader;
         private readonly int _take;
         private readonly int _skip;
 
-        public JsonStream(string fileName, int skip, int take) 
+        public JsonDocumentStream(string fileName, int skip, int take) 
             : this(File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None), skip, take)
         {
         }
 
-        public JsonStream(Stream stream, int skip, int take)
+        public JsonDocumentStream(Stream stream, int skip, int take)
         {
             _skip = skip;
             _take = take;
@@ -51,27 +51,6 @@ namespace Resin
                 var dict = JsonConvert.DeserializeObject<IDictionary<string, string>>(line);
 
                 yield return new Document(dict.Select(p=>new Field(p.Key, p.Value)).ToList());
-            }
-        }
-
-        private IEnumerable<char> ReadUntilTab()
-        {
-            int c;
-            while ((c = Reader.Read()) != -1)
-            {
-                var ch = (char)c;
-                if (ch == '\t') break;
-                yield return ch;
-            }
-        }
-
-        private IEnumerable<Field> Parse(string document, string[] fieldNames)
-        {
-            var fields = document.Split(new[] { '\t' }, System.StringSplitOptions.RemoveEmptyEntries);
-
-            for (int index = 0; index < fields.Length; index++)
-            {
-                yield return new Field(fieldNames[index], fields[index]);
             }
         }
 

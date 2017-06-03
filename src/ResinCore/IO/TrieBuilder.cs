@@ -45,7 +45,7 @@ namespace Resin.IO
                 {
                     try
                     {
-                        Log.InfoFormat("building trie for field {0}", fieldName);
+                        Log.InfoFormat("building in-memory tree for field {0}", fieldName);
 
                         var trie = _tries[key];
 
@@ -94,7 +94,7 @@ namespace Resin.IO
                 queue.Dispose();
             }
 
-            Log.InfoFormat("Built tries in {0}", _timer.Elapsed);
+            Log.InfoFormat("Built in-memory trees in {0}", _timer.Elapsed);
 
             return _tries;
         }

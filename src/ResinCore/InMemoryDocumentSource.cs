@@ -1,5 +1,4 @@
-﻿using Resin.IO;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Resin
 {

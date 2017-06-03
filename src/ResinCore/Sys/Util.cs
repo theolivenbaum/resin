@@ -28,7 +28,7 @@ namespace Resin.Sys
             return new string(input.ReplaceOrAppend(index, newChar).ToArray());
         }
 
-        public static long GetChronologicalFileId()
+        public static long GetNextChronologicalFileId()
         {
             return GetTicks();
         }
@@ -59,7 +59,7 @@ namespace Resin.Sys
         }
 
         /// <summary>
-        /// Divides a list into batches.
+        /// Divides one big workload into many smaller workloads.
         /// </summary>
         public static IEnumerable<IEnumerable<T>> IntoBatches<T>(this IEnumerable<T> list, int size)
         {

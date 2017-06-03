@@ -350,17 +350,6 @@ namespace Resin.IO
             }
         }
 
-        public static void Serialize(this IEnumerable<DocHash> docHashes, string fileName)
-        {
-            using (var stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                foreach (var docHash in docHashes)
-                {
-                    docHash.Serialize(stream);
-                }
-            }
-        }
-
         public static void Serialize(this DocHash docHash, Stream stream)
         {
             byte[] hashBytes = BitConverter.GetBytes(docHash.Hash);
