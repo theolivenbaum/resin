@@ -50,8 +50,8 @@ namespace Resin
             var docTimer = new Stopwatch();
             docTimer.Start();
 
-            using (var docAddressWriter = new DocumentAddressWriter(new FileStream(docAddressFn, FileMode.Create, FileAccess.Write)))
-            using (var docWriter = new DocumentWriter(new FileStream(docFileName, FileMode.Create, FileAccess.Write), _compression))
+            using (var docAddressWriter = new DocumentAddressWriter(new FileStream(docAddressFn, FileMode.Create, FileAccess.Write, FileShare.None)))
+            using (var docWriter = new DocumentWriter(new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None), _compression))
             using (var docHashesStream = new FileStream(docHashesFileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 foreach (var doc in ReadSourceAndAssignIdentifiers())
@@ -70,7 +70,7 @@ namespace Resin
                 trieBuilder.CompleteAdding();
             }
 
-            Log.InfoFormat("stored {0} documents in {1}", docTimer.Elapsed);
+            Log.InfoFormat("stored {0} documents in {1}", count, docTimer.Elapsed);
 
             var posTimer = new Stopwatch();
             posTimer.Start();
