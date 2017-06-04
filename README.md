@@ -16,7 +16,11 @@ To support the default tf-idf scoring scheme Resin stores term counts. Resin is 
 Resin is built for dotnet Core 1.1.
 
 ## Download
-Clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run the CLI or look at the code in the CLI Program.cs to see how querying and writing was implemented.. 
+Clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run the CLI or look at the code in the CLI Program.cs to see how querying and writing was implemented.
+
+## Demo
+
+[searchpanels.com](http://searchpanels.com)  
 
 ## Help out?
 Definitely start [here](https://github.com/kreeben/resin/issues).
