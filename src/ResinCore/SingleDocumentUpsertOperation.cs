@@ -1,6 +1,5 @@
 using System.IO;
 using System.Linq;
-using log4net;
 using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Write;
