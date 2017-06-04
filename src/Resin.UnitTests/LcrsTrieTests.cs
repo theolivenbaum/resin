@@ -8,16 +8,17 @@ namespace Tests
     public class LcrsTrieTests
     {
         [TestMethod]
-        public void Can_append_tries()
+        public void Can_merge_tries()
         {
             var one = new LcrsTrie('\0', false);
             one.Add("ape");
             one.Add("app");
-            one.Add("banana");
+            one.Add("bananas");
 
             var two = new LcrsTrie('\0', false);
             two.Add("apple");
             two.Add("banana");
+            two.Add("citron");
 
             one.Merge(two);
 
@@ -27,6 +28,8 @@ namespace Tests
             Assert.IsTrue(one.HasWord("app", out found));
             Assert.IsTrue(one.HasWord("apple", out found));
             Assert.IsTrue(one.HasWord("banana", out found));
+            Assert.IsTrue(one.HasWord("bananas", out found));
+            Assert.IsTrue(one.HasWord("citron", out found));
         }
 
         [TestMethod]
