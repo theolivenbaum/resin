@@ -1,5 +1,5 @@
 # Resin
-Resin is a in-process document database with full-text disk-based index, vector-space/tf-idf-driven scoring and Levenshtein automata-powered distance resolving and with querying support for term, fuzzy, prefix, phrase and range. Analyzers, tokenizers and scoring schemes are customizable.
+Resin is a in-process document database with full-text disk-based index, vector-space/tf-idf-driven scoring, Levenshtein-powered tree-traversing and with querying support for term, fuzzy, prefix, phrase and range. Analyzers, tokenizers and scoring schemes are customizable.
 
 Resin offers the option of compressing your data before storing it on disk with either LZ or GZip.
 
