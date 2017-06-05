@@ -1,10 +1,9 @@
 # Resin
-Resin is a document database and a search engine with querying support for term, fuzzy, prefix, phrase and range. Analyzers, tokenizers and scoring schemes are customizable.
+Resin is a document database and search engine with querying support for term, fuzzy, prefix, phrase and range. Analyzers, tokenizers and scoring schemes are customizable.
 
-## A smarter index
-Resin's index is a disk-based left-child-right-sibling character trie. Resin indices are fast to write to and read from and support near (as in "almost match") and prefix.
+Resin's index is a disk-based left-child-right-sibling character trie. Indices are fast to write to and read from.
 
-Apart from offering fast lookups Resin also scores documents based on their relevance. Relevance in turn is based on the distance from a document and a query in [vector space](https://en.wikipedia.org/wiki/Vector_space_model).
+Apart from offering just fast lookups Resin also scores documents based on their relevance. Relevance in turn is based on the distance from a document and a query in [vector space](https://en.wikipedia.org/wiki/Vector_space_model).
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
@@ -30,7 +29,7 @@ Awesome! Start [here](https://github.com/kreeben/resin/issues).
 
 _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/entities/)._
 
-### Store many of those on disk (compression is optional).
+### Store documents residing in memory (compression is optional).
 
 	var docs = GetWikipedia();
 	var dir = @"C:\wikipedia";
@@ -41,7 +40,7 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 		    .Write();
 	}
 	
-### Store JSON documents encoded in a stream
+### Store JSON documents encoded in a stream.
 
 	using (var documents = new JsonDocumentStream(fileName, skip, take))
 	{
