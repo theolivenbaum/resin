@@ -4,9 +4,9 @@ namespace Resin.Sys
 {
     public static class DocumentHelper
     {
-        public static DocumentSource ToDocuments(this IEnumerable<dynamic> dynamicDocuments)
+        public static DocumentStream ToDocuments(this IEnumerable<dynamic> dynamicDocuments)
         {
-            return new InMemoryDocumentSource(dynamicDocuments.ToDocumentsInternal());
+            return new InMemoryDocumentStream(dynamicDocuments.ToDocumentsInternal());
         }
 
         private static IEnumerable<Document> ToDocumentsInternal(this IEnumerable<dynamic> dynamicDocuments)

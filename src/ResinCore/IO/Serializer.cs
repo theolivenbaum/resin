@@ -175,17 +175,23 @@ namespace Resin.IO
                 byte[] versionBytes = BitConverter.GetBytes(ix.VersionId);
                 byte[] docCountBytes = BitConverter.GetBytes(ix.DocumentCount);
                 byte[] compressionEnumBytes = BitConverter.GetBytes((int)ix.Compression);
+                byte[] pkFieldNameBytes = Encoding.GetBytes(ix.PrimaryKeyFieldName);
+                byte[] pkFnLenBytes = BitConverter.GetBytes(pkFieldNameBytes.Length);
 
                 if (!BitConverter.IsLittleEndian)
                 {
                     Array.Reverse(versionBytes);
                     Array.Reverse(docCountBytes);
                     Array.Reverse(compressionEnumBytes);
+                    Array.Reverse(pkFieldNameBytes);
+                    Array.Reverse(pkFnLenBytes);
                 }
 
                 stream.Write(versionBytes, 0, sizeof(long));
                 stream.Write(docCountBytes, 0, sizeof(int));
                 stream.Write(compressionEnumBytes, 0, sizeof(int));
+                stream.Write(pkFieldNameBytes, 0, pkFieldNameBytes.Length);
+                stream.Write(pkFnLenBytes, 0, sizeof(int));
 
                 return stream.ToArray();
             }
@@ -205,18 +211,35 @@ namespace Resin.IO
 
             stream.Read(compression, 0, sizeof(int));
 
+            var pkFnLenBytes = new byte[sizeof(int)];
+
+            stream.Read(pkFnLenBytes, 0, sizeof(int));
+
+            if(!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(pkFnLenBytes);
+            }
+
+            var pkFnLen = BitConverter.ToInt32(pkFnLenBytes, 0);
+
+            var pkFieldNameBytes = new byte[pkFnLen];
+
+            stream.Read(pkFieldNameBytes, 0, pkFieldNameBytes.Length);
+
             if (!BitConverter.IsLittleEndian)
             {
                 Array.Reverse(versionBytes);
                 Array.Reverse(docCountBytes);
                 Array.Reverse(compression);
+                Array.Reverse(pkFieldNameBytes);
             }
 
             return new IxInfo
             {
-                VersionId= BitConverter.ToInt64(versionBytes, 0),
+                VersionId = BitConverter.ToInt64(versionBytes, 0),
                 DocumentCount = BitConverter.ToInt32(docCountBytes, 0),
                 Compression = (Compression)BitConverter.ToInt32(compression, 0),
+                PrimaryKeyFieldName = Encoding.GetString(pkFieldNameBytes)
             };
         }
 

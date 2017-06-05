@@ -29,7 +29,7 @@ namespace Tests
             }.ToDocuments();
 
             var writer = new UpsertOperation(
-                dir, new Analyzer(), compression: Compression.GZip, primaryKey: "_id", documents: docs);
+                dir, new Analyzer(), compression: Compression.GZip, primaryKeyFieldName: "_id", documents: docs);
             long indexName = writer.Write();
 
             using (var searcher = new Searcher(dir))
@@ -75,7 +75,7 @@ namespace Tests
             }.ToDocuments();
 
             var writer = new UpsertOperation(
-                dir, new Analyzer(), compression: Compression.NoCompression, primaryKey: "_id", documents: docs);
+                dir, new Analyzer(), compression: Compression.NoCompression, primaryKeyFieldName: "_id", documents: docs);
             long indexName = writer.Write();
 
             using (var searcher = new Searcher(dir))
@@ -121,7 +121,7 @@ namespace Tests
             }.ToDocuments();
 
             var writer = new UpsertOperation(
-                dir, new Analyzer(), compression: Compression.NoCompression, primaryKey: "_id", documents: docs);
+                dir, new Analyzer(), compression: Compression.NoCompression, primaryKeyFieldName: "_id", documents: docs);
             long indexName = writer.Write();
 
             using (var searcher = new Searcher(dir))

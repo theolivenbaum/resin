@@ -21,18 +21,18 @@ namespace Resin
         private readonly Compression _compression;
         private readonly long _indexVersionId;
         private readonly bool _autoGeneratePk;
-        private readonly string _primaryKey;
-        private readonly DocumentSource _documents;
+        private readonly string _primaryKeyFieldName;
+        private readonly DocumentStream _documents;
 
         public UpsertOperation(
-            string directory, IAnalyzer analyzer, Compression compression, string primaryKey, DocumentSource documents)
+            string directory, IAnalyzer analyzer, Compression compression, string primaryKeyFieldName, DocumentStream documents)
         {
             _indexVersionId = Util.GetNextChronologicalFileId();
             _directory = directory;
             _analyzer = analyzer;
             _compression = compression;
-            _autoGeneratePk = string.IsNullOrWhiteSpace(primaryKey);
-            _primaryKey = primaryKey;
+            _autoGeneratePk = string.IsNullOrWhiteSpace(primaryKeyFieldName);
+            _primaryKeyFieldName = primaryKeyFieldName;
             _primaryKeys = new Dictionary<UInt64, object>();
             _documents = documents;
         }
@@ -110,7 +110,8 @@ namespace Resin
             {
                 VersionId = _indexVersionId,
                 DocumentCount = count,
-                Compression = _compression
+                Compression = _compression,
+                PrimaryKeyFieldName = _primaryKeyFieldName
             }.Serialize(Path.Combine(_directory, _indexVersionId + ".ix"));
 
             return _indexVersionId;
@@ -145,7 +146,7 @@ namespace Resin
                 }
                 else
                 {
-                    pkVal = document.Fields[_primaryKey].Value;
+                    pkVal = document.Fields[_primaryKeyFieldName].Value;
                 }
 
                 var hash = pkVal.ToHash();

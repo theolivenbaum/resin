@@ -15,6 +15,8 @@ namespace Resin.IO
 
         public Compression Compression { get; set; }
 
+        public string PrimaryKeyFieldName { get; set; }
+
         public static IxInfo Load(string fileName)
         {
             var time = new Stopwatch();

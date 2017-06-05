@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace Resin
 {
-    public class JsonDocumentStream : DocumentSource, IDisposable
+    public class JsonDocumentStream : DocumentStream, IDisposable
     {
         private readonly StreamReader Reader;
         private readonly int _take;

@@ -127,7 +127,7 @@ namespace Resin
                     .OrderBy(b => b.Position)
                     .ToList();
 
-                docAdrs = docAddressReader.Get(adrs).ToList();
+                docAdrs = docAddressReader.Read(adrs).ToList();
             }
 
             var docFileName = Path.Combine(_directory, ix.VersionId + ".rdoc");
@@ -138,7 +138,7 @@ namespace Resin
             {
                 var dic = scores.ToDictionary(x => x.DocumentId, y => y.Score);
 
-                foreach (var doc in docReader.Get(docAdrs))
+                foreach (var doc in docReader.Read(docAdrs))
                 {
                     var score = dic[doc.Id];
 

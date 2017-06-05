@@ -49,7 +49,7 @@ namespace Tests
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             using (var reader = new DocumentReader(fs, Compression.GZip))
             {
-                var doc = reader.Get(new[] { blocks[2] });
+                var doc = reader.Read(new[] { blocks[2] });
 
                 Assert.AreEqual(2, doc.First().Id);
             }
@@ -57,7 +57,7 @@ namespace Tests
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             using (var reader = new DocumentReader(fs, Compression.GZip))
             {
-                var doc = reader.Get(new[] { blocks[1] });
+                var doc = reader.Read(new[] { blocks[1] });
 
                 Assert.AreEqual(1, doc.First().Id);
             }
@@ -65,7 +65,7 @@ namespace Tests
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             using (var reader = new DocumentReader(fs, Compression.GZip))
             {
-                var doc = reader.Get(new[] { blocks[0] });
+                var doc = reader.Read(new[] { blocks[0] });
 
                 Assert.AreEqual(0, doc.First().Id);
             }
@@ -73,7 +73,7 @@ namespace Tests
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             using (var reader = new DocumentReader(fs, Compression.GZip))
             {
-                var ds = reader.Get(blocks.Values.OrderBy(b => b.Position).ToList()).ToList();
+                var ds = reader.Read(blocks.Values.OrderBy(b => b.Position).ToList()).ToList();
 
                 Assert.AreEqual(3, docs.Count);
 

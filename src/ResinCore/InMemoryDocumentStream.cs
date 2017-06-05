@@ -2,11 +2,11 @@
 
 namespace Resin
 {
-    public class InMemoryDocumentSource : DocumentSource
+    public class InMemoryDocumentStream : DocumentStream
     {
         private readonly IEnumerable<Document> _documents;
 
-        public InMemoryDocumentSource(IEnumerable<Document> documents) 
+        public InMemoryDocumentStream(IEnumerable<Document> documents) 
         {
             _documents = documents;
         }

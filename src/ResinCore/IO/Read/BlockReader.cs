@@ -20,12 +20,12 @@ namespace Resin.IO.Read
             _position = 0;
         }
 
-        public IEnumerable<T> Get(IList<BlockInfo> blocks)
+        public IEnumerable<T> Read(IList<BlockInfo> blocks)
         {
-            return blocks.Select(Get);
+            return blocks.Select(ReadInternal);
         }
 
-        private T Get(BlockInfo info)
+        private T ReadInternal(BlockInfo info)
         {
             if (info.Length < 1)
                 throw new ArgumentOutOfRangeException(
