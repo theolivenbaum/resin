@@ -1,16 +1,10 @@
 # Resin
 Resin is a document database and a search engine with querying support for term, fuzzy, prefix, phrase and range. Analyzers, tokenizers and scoring schemes are customizable.
 
-## Auto-indexing
-Auto-indexing refers to storing and indexing a document being one and the same operation.
-
 ## A smarter index
 Resin's index is a disk-based left-child-right-sibling character trie. Resin indices are fast to write to and read from and support near (as in "almost match") and prefix.
 
 Apart from offering fast lookups Resin also scores documents based on their relevance. Relevance in turn is based on the distance from a document and a query in [vector space](https://en.wikipedia.org/wiki/Vector_space_model).
-
-## Upcoming feature to support any scoring scheme
-To support the default tf-idf scoring scheme Resin stores term counts. Resin is built to support any vector-based scoring scheme and with the introduction of a generic verion of DocumentPosting where the type of data can be anything (any object), testing and implementing new scoring formulas will be straightformard.
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
@@ -19,11 +13,10 @@ Resin is built for dotnet Core 1.1.
 Clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run the CLI or look at the code in the CLI Program.cs to see how querying and writing was implemented.
 
 ## Demo
-
 [searchpanels.com](http://searchpanels.com)  
 
 ## Help out?
-Definitely start [here](https://github.com/kreeben/resin/issues).
+Awesome! Start [here](https://github.com/kreeben/resin/issues).
 
 ## Documentation
 ### A document (serialized).
