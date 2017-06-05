@@ -36,7 +36,7 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 	var docs = GetWikipedia();
 	var dir = @"C:\wikipedia";
 	
-	using (var documents = new InMemoryDocumentSource(docs))
+	using (var documents = new InMemoryDocumentStream(docs))
 	{
 		new UpsertOperation(dir, new Analyzer(), Compression.Lz, "id", documents)
 		    .Write();
@@ -50,7 +50,7 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 		    .Write();
 	}
 
-	// Implement the base class DocumentSource to use whatever source you need.
+	// Implement the base class DocumentStream to use whatever source you need.
 
 It's perfectly fine to mix compressed and non-compressed batches inside a document store (directory).
 	
