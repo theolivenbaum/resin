@@ -7,7 +7,7 @@ Resin's index is a disk-based left-child-right-sibling character trie. Indices a
 
 Resin's document storage engine is pluggable. Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
 
-Database builders in need of Resin's indexing capabilities can either integrate as a store pluggin or implement a null store.
+Database builders in need of Resin's indexing capabilities specifically and nothing but, can either integrate as a store pluggin or implement a null store and query towards the index to resolve documents by e.g. primary key.
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
