@@ -35,17 +35,17 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 	var dir = @"C:\wikipedia";
 	
 	using (var documents = new InMemoryDocumentStream(docs))
+	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.Lz, "id", documents))
 	{
-		new UpsertOperation(dir, new Analyzer(), Compression.Lz, "id", documents)
-		    .Write();
+		long versionId = writer.Write();
 	}
 	
 ### Store JSON documents encoded in a stream.
 
 	using (var documents = new JsonDocumentStream(fileName, skip, take))
+	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, "id", documents))
 	{
-		new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, "id", documents)
-		    .Write();
+		long versionId = writer.Write();
 	}
 
 	// Implement the base class DocumentStream to use whatever source you need.
