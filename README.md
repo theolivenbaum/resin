@@ -1,6 +1,6 @@
 # Resin
 ## In a nutshell
-Resin is a in-process document database with full-text search.
+Resin is a in-process document database with pluggable storage engine and full-text search.
 
 ## Word2vec
 Scoring is word vector space and tfidf-driven.
@@ -15,7 +15,7 @@ The index is a disk-based left-child-right-sibling character trie. Indices and d
 With Resin's default storage engine you have the option of compressing your data with either QuickLZ or GZip. For unstructured data compression leaves a smaller footprint on disk and enables faster writes.
 
 ## Pluggable storage engine
-The document storage engine is pluggable. Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
+Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
 
 The contracts for a custom storage engine does not dictate its write model. Resin achieves read and write consistency through the use of timestamps and snapshots, its native document storage likewise. A custom engine can follow this principle but may also choose other read/write models.
 
