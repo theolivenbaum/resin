@@ -44,7 +44,7 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 	var dir = @"C:\wikipedia";
 	
 	using (var documents = new InMemoryDocumentStream(docs))
-	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.Lz, "id", documents))
+	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.Lz, primaryKey:"id", documents))
 	{
 		long versionId = writer.Write();
 	}
@@ -52,7 +52,7 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 ### Store JSON documents encoded in a stream.
 
 	using (var documents = new JsonDocumentStream(fileName, skip, take))
-	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, "id", documents))
+	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", documents))
 	{
 		long versionId = writer.Write();
 	}
