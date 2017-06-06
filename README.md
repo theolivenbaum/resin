@@ -1,6 +1,6 @@
 # Resin
 ## In a nutshell
-Resin is a in-process document database and word2vec implementation with full-text disk-based index, word vector space and tf-idf-driven scoring, Levenshtein-powered automaton (-ish) tree traversing and with querying support for term, fuzzy, prefix, phrase and range. Analyzers, tokenizers and scoring schemes are customizable.
+Resin is a in-process document database and word2vec implementation with full-text disk-based index. Its features include word vector space and tf-idf-driven scoring, Levenshtein-powered automaton (-ish) tree traversing and querying support for term, fuzzy, prefix, phrase and range. Analyzers, tokenizers and scoring schemes are customizable.
 
 ## Disk-based index
 The index is a disk-based left-child-right-sibling character trie. Indices and document stores are very fast to write to and read from.
