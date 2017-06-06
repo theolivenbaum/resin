@@ -3,7 +3,7 @@ Resin is a in-process document database and word2vec implementation with full-te
 
 With Resin's default storage engine you have the option of compressing your data with either QuickLZ or GZip. For unstructured data compression leaves a smaller footprint on disk and enables faster writes.
 
-The index is a disk-based left-child-right-sibling character trie. Indices and document store are very fast to write to and read from.
+The index is a disk-based left-child-right-sibling character trie. Indices and document stores are very fast to write to and read from.
 
 The document storage engine is pluggable. Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
 
