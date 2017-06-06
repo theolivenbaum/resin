@@ -1,11 +1,13 @@
 # Resin
 Resin is a in-process document database and word2vec implementation with full-text disk-based index, word vector space and tf-idf-driven scoring, Levenshtein-powered automaton (-ish) tree traversing and with querying support for term, fuzzy, prefix, phrase and range. Analyzers, tokenizers and scoring schemes are customizable.
 
-Resin offers the option of compressing your data before storing it on disk with either QuickLZ or GZip.
+With Resin's default storage engine you have the option of compressing your data with either QuickLZ or GZip. For unstructured data compression leaves a smaller footprint on disk and enables faster writes.
 
 The index is a disk-based left-child-right-sibling character trie. Indices and document store are very fast to write to and read from.
 
 The document storage engine is pluggable. Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
+
+The contracts for a custom storage engine does not dictate its write model. Resin achieves read and write consistency through the use of timestamps and snapshots, its native document storage likewise. A custom engine can follow this principle but may also choose other read/write models.
 
 Database builders in need of Resin's indexing capabilities specifically and nothing but, can either integrate as a store pluggin or implement a null store and query towards the index to resolve documents by e.g. primary key.
 
