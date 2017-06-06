@@ -37,9 +37,10 @@ Awesome! Start [here](https://github.com/kreeben/resin/issues).
 
 _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/entities/)._
 
-### Store documents residing in memory (compression is optional).
+### Store and index documents from memory.
 
 	var docs = GetWikipedia();
+	
 	var dir = @"C:\wikipedia";
 	
 	using (var documents = new InMemoryDocumentStream(docs))
@@ -48,7 +49,7 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 		long versionId = writer.Write();
 	}
 	
-### Store JSON documents encoded in a stream.
+### Store and index JSON documents from a stream.
 
 	using (var documents = new JsonDocumentStream(fileName, skip, take))
 	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", documents))
@@ -58,7 +59,7 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 
 	// Implement the base class DocumentStream to use whatever source you need.
 
-It's perfectly fine to mix compressed and non-compressed batches inside a document store (directory).
+It's perfectly fine to mix compressed and non-compressed batches inside a document store (directory). It's also fine to mix  different DocumentStream implementations for different batches inside a directory since they will be encoded the same way.
 	
 ### Query the index.
 <a name="inproc" id="inproc"></a>
