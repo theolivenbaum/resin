@@ -11,8 +11,7 @@ The contracts for a custom storage engine does not dictate its write model. Resi
 
 Database builders in need of Resin's indexing capabilities specifically and nothing but, can either 
 - integrate as a store pluggin
-- implement a null (or lesser) store and query the index (like you normally would) to resolve documents by e.g. primary key
-- send documents to the default storage engine with only PK as stored field (and then query the index to resolve it)
+- send documents to the default storage engine with only PK as stored field (and then query the index like you normally would to resolve it)
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
