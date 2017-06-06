@@ -11,7 +11,7 @@ using System.Diagnostics;
 
 namespace Resin
 {
-    public class UpsertOperation
+    public class UpsertOperation : IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(UpsertOperation));
 
@@ -23,9 +23,15 @@ namespace Resin
         private readonly bool _autoGeneratePk;
         private readonly string _primaryKeyFieldName;
         private readonly DocumentStream _documents;
+        private readonly IDocumentStoreWriter _storeWriter;
 
         public UpsertOperation(
-            string directory, IAnalyzer analyzer, Compression compression, string primaryKeyFieldName, DocumentStream documents)
+            string directory, 
+            IAnalyzer analyzer, 
+            Compression compression, 
+            string primaryKeyFieldName, 
+            DocumentStream documents, 
+            IDocumentStoreWriter storeWriter = null)
         {
             _indexVersionId = Util.GetNextChronologicalFileId();
             _directory = directory;
@@ -35,6 +41,15 @@ namespace Resin
             _primaryKeyFieldName = primaryKeyFieldName;
             _primaryKeys = new Dictionary<UInt64, object>();
             _documents = documents;
+
+            var docFileName = Path.Combine(_directory, _indexVersionId + ".rdoc");
+            var docAddressFn = Path.Combine(_directory, _indexVersionId + ".da");
+            var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pk"));
+
+            _storeWriter = storeWriter ?? new DocumentStoreWriter(
+                new DocumentAddressWriter(new FileStream(docAddressFn, FileMode.Create, FileAccess.Write, FileShare.None)), 
+                new DocumentWriter(new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None), _compression), 
+                new FileStream(docHashesFileName, FileMode.Create, FileAccess.Write, FileShare.None));
         }
 
         public long Write()
@@ -42,33 +57,23 @@ namespace Resin
             var ts = new List<Task>();
             var trieBuilder = new TrieBuilder();
             var count = 0;
-            var docFileName = Path.Combine(_directory, _indexVersionId + ".rdoc");
-            var docAddressFn = Path.Combine(_directory, _indexVersionId + ".da");
             var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
-            var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pk"));
 
             var docTimer = new Stopwatch();
             docTimer.Start();
 
-            using (var docAddressWriter = new DocumentAddressWriter(new FileStream(docAddressFn, FileMode.Create, FileAccess.Write, FileShare.None)))
-            using (var docWriter = new DocumentWriter(new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None), _compression))
-            using (var docHashesStream = new FileStream(docHashesFileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            foreach (var doc in ReadSourceAndAssignIdentifiers())
             {
-                foreach (var doc in ReadSourceAndAssignIdentifiers())
-                {
-                    new SingleDocumentUpsertOperation().Write(
-                        doc, 
-                        docAddressWriter, 
-                        docWriter, 
-                        docHashesStream, 
-                        _analyzer,
-                        trieBuilder);
+                new SingleDocumentUpsertOperation().Write(
+                    doc,
+                    _storeWriter,
+                    _analyzer,
+                    trieBuilder);
 
-                    count++;
-                }
-
-                trieBuilder.CompleteAdding();
+                count++;
             }
+
+            trieBuilder.CompleteAdding();
 
             Log.InfoFormat("stored {0} documents in {1}", count, docTimer.Elapsed);
 
@@ -166,6 +171,11 @@ namespace Resin
                     yield return document;
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            _storeWriter.Dispose();
         }
     }
 }

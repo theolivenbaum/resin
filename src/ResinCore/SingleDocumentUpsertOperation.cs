@@ -1,4 +1,3 @@
-using System.IO;
 using System.Linq;
 using Resin.Analysis;
 using Resin.IO;
@@ -9,10 +8,8 @@ namespace Resin
     public class SingleDocumentUpsertOperation
     {
         public void Write(
-            Document document, 
-            DocumentAddressWriter docAddressWriter, 
-            DocumentWriter docWriter, 
-            Stream docHashesStream,
+            Document document,
+            IDocumentStoreWriter storeWriter,
             IAnalyzer analyzer,
             TrieBuilder trieBuilder)
         {
@@ -29,11 +26,7 @@ namespace Resin
                 }).ToList());
             }
 
-            BlockInfo adr = docWriter.Write(document);                
-
-            docAddressWriter.Write(adr);
-
-            new DocHash(document.Hash).Serialize(docHashesStream);
+            storeWriter.Write(document);
         }
     }
 }

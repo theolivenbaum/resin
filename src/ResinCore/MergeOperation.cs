@@ -32,7 +32,10 @@ namespace Resin
                 primaryKeyFieldName, 
                 documentStream);
 
-            return upsert.Write();
+            using (upsert)
+            {
+                return upsert.Write();
+            }
         }
 
         private IEnumerable<Document> StreamDocuments(string ixFileName)

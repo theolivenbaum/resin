@@ -36,21 +36,30 @@ namespace Resin.UnitTests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments();
 
-            long index1 = new UpsertOperation(
-                dir1, 
-                new Analyzer(), 
-                compression: Compression.NoCompression, 
-                primaryKeyFieldName: 
-                "_id", 
-                documents: docs1).Write();
+            long index1;
+            long index2;
 
-            long index2 = new UpsertOperation(
+            using (var writer = new UpsertOperation(
+                dir1,
+                new Analyzer(),
+                compression: Compression.NoCompression,
+                primaryKeyFieldName:
+                "_id",
+                documents: docs1))
+            {
+                index1 = writer.Write();
+            }
+
+            using (var writer = new UpsertOperation(
                 dir2,
                 new Analyzer(),
                 compression: Compression.NoCompression,
                 primaryKeyFieldName:
                 "_id",
-                documents: docs2).Write();
+                documents: docs2))
+            {
+                index2 = writer.Write();
+            }
 
             var ix1 = Path.Combine(dir1, index1 + ".ix");
             var ix2 = Path.Combine(dir2, index2 + ".ix");

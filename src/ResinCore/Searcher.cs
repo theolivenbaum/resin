@@ -24,14 +24,15 @@ namespace Resin
         private readonly IList<IxInfo> _ixs;
         private readonly int _blockSize;
         private readonly int _documentCount;
-        private IDistanceResolver _distanceResolver;
+        private readonly IDistanceResolver _distanceResolver;
+        private readonly IDocumentStoreReadSessionFactory _sessionFactory;
 
         public Searcher(string directory)
             :this(directory, new QueryParser(new Analyzer()), new Tfidf(), new Levenshtein())
         {
         }
 
-        public Searcher(string directory, QueryParser parser, IScoringScheme scorerFactory, IDistanceResolver distanceResolver)
+        public Searcher(string directory, QueryParser parser, IScoringScheme scorerFactory, IDistanceResolver distanceResolver, IDocumentStoreReadSessionFactory sessionFactory = null)
         {
             _directory = directory;
             _parser = parser;
@@ -44,6 +45,8 @@ namespace Resin
             _blockSize = Serializer.SizeOfBlock();
 
             _distanceResolver = distanceResolver;
+
+            _sessionFactory = sessionFactory ?? new DocumentStoreReadSessionFactory();
         }
 
         public Result Search(string query, int page = 0, int size = 10000)
@@ -115,34 +118,19 @@ namespace Resin
 
         private IEnumerable<ScoredDocument> GetDocs(IList<DocumentScore> scores, IxInfo ix)
         {
+            var documentIds = scores.Select(s => s.DocumentId);
             var docAddressFileName = Path.Combine(_directory, ix.VersionId + ".da");
-
-            IList<BlockInfo> docAdrs;
-
-            using (var docAddressReader = new DocumentAddressReader(
-                new FileStream(docAddressFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan)))
-            {
-                var adrs = scores
-                    .Select(s => new BlockInfo(s.DocumentId * _blockSize, _blockSize))
-                    .OrderBy(b => b.Position)
-                    .ToList();
-
-                docAdrs = docAddressReader.Read(adrs).ToList();
-            }
-
             var docFileName = Path.Combine(_directory, ix.VersionId + ".rdoc");
 
-            using (var docReader = new DocumentReader(
-                new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096*4, FileOptions.SequentialScan),
-                (Compression)ix.Compression))
+            using (var session = _sessionFactory.Create(docAddressFileName, docFileName, ix.Compression))
             {
                 var dic = scores.ToDictionary(x => x.DocumentId, y => y.Score);
 
-                foreach (var doc in docReader.Read(docAdrs))
+                foreach (var doc in session.Read(documentIds))
                 {
                     var score = dic[doc.Id];
 
-                    yield return new ScoredDocument{Document = doc, Score = score};
+                    yield return new ScoredDocument { Document = doc, Score = score };
                 }
             }
         }

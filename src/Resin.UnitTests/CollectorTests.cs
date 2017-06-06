@@ -28,9 +28,11 @@ namespace Tests
                 new {_id = "5five", title = "the good, the bad and the ugly" }
             }.ToDocuments();
 
-            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
-            long indexName = writer.Write();
-
+            long indexName;
+            using (var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs))
+            {
+                indexName = writer.Write();
+            }
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("_id", "3")).ToList();
@@ -65,6 +67,7 @@ namespace Tests
 
             var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
             long indexName = writer.Write();
+            writer.Dispose();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rain man");
 
@@ -107,6 +110,7 @@ namespace Tests
 
             var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
             long indexName = writer.Write();
+            writer.Dispose();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
 
@@ -148,6 +152,7 @@ namespace Tests
 
             var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
             long indexName = writer.Write();
+            writer.Dispose();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rocky");
 
@@ -200,6 +205,7 @@ namespace Tests
 
             var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
             long indexName = writer.Write();
+            writer.Dispose();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
 
@@ -242,6 +248,7 @@ namespace Tests
 
             var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
             long indexName = writer.Write();
+            writer.Dispose();
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
@@ -280,6 +287,7 @@ namespace Tests
 
             var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "id", documents: docs);
             long indexName = writer.Write();
+            writer.Dispose();
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
@@ -318,6 +326,7 @@ namespace Tests
 
             var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
             long indexName = writer.Write();
+            writer.Dispose();
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
@@ -347,6 +356,7 @@ namespace Tests
 
             var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
             long indexName = writer.Write();
+            writer.Dispose();
 
             using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {

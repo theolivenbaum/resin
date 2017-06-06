@@ -176,10 +176,10 @@ namespace Resin.Cli
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            using(var documents = new JsonDocumentStream(fileName, skip, take))
+            using (var documents = new JsonDocumentStream(fileName, skip, take))
+            using (var upsert = new UpsertOperation(dir, new Analyzer(), compression, pk, documents))
             {
-                new UpsertOperation(dir, new Analyzer(), compression, pk, documents)
-                    .Write();
+                upsert.Write();
             }
 
             Console.WriteLine("write operation took {0}", writeTimer.Elapsed);

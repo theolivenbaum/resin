@@ -4,20 +4,21 @@ using System.IO;
 using System.Linq;
 using Resin.IO;
 using Resin.Sys;
+using Resin.IO.Write;
 
 namespace Resin
 {
-    public class DeleteByPrimaryKeyOperation
+    public class DeleteByPrimaryKeyOperation : IDocumentStoreDeleteOperation
     {
         private readonly string _directory;
         private readonly IEnumerable<string> _pks;
         private readonly List<IxInfo> _ixs;
 
-        public DeleteByPrimaryKeyOperation(string directory, IEnumerable<string> primaryKeys)
+        public DeleteByPrimaryKeyOperation(string directory, IEnumerable<string> primaryKeyValues)
         {
             _directory = directory;
             _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
-            _pks = primaryKeys;
+            _pks = primaryKeyValues;
         }
 
         public void Commit()

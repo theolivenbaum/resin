@@ -31,6 +31,7 @@ namespace Tests
             var writer = new UpsertOperation(
                 dir, new Analyzer(), compression: Compression.GZip, primaryKeyFieldName: "_id", documents: docs);
             long indexName = writer.Write();
+            writer.Dispose();
 
             using (var searcher = new Searcher(dir))
             {
@@ -77,6 +78,7 @@ namespace Tests
             var writer = new UpsertOperation(
                 dir, new Analyzer(), compression: Compression.NoCompression, primaryKeyFieldName: "_id", documents: docs);
             long indexName = writer.Write();
+            writer.Dispose();
 
             using (var searcher = new Searcher(dir))
             {
@@ -123,6 +125,7 @@ namespace Tests
             var writer = new UpsertOperation(
                 dir, new Analyzer(), compression: Compression.NoCompression, primaryKeyFieldName: "_id", documents: docs);
             long indexName = writer.Write();
+            writer.Dispose();
 
             using (var searcher = new Searcher(dir))
             {
