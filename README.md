@@ -1,11 +1,9 @@
 # Resin
 Resin is a in-process document database and word2vec implementation with full-text disk-based index, word vector space/tf-idf-driven scoring, Levenshtein-powered tree traversing and with querying support for term, fuzzy, prefix, phrase and range. Analyzers, tokenizers and scoring schemes are customizable.
 
-Resin offers the option of compressing your data before storing it on disk with either LZ or GZip.
+Resin offers the option of compressing your data before storing it on disk with either QuickLZ or GZip.
 
-Resin's index is a disk-based left-child-right-sibling character trie. Indices are very fast to write to and read from.
-
-Apart from simply offering fast lookups Resin also scores documents based on their relevance. Relevance in turn is based on the distance from a document and a query in a word vector space.
+Resin's index is a disk-based left-child-right-sibling character trie. Indices and document store are very fast to write to and read from.
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
