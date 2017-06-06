@@ -5,6 +5,8 @@ Resin offers the option of compressing your data before storing it on disk with 
 
 Resin's index is a disk-based left-child-right-sibling character trie. Indices and document store are very fast to write to and read from.
 
+Resin's document storage engine is pluggable. Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
+
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
 
