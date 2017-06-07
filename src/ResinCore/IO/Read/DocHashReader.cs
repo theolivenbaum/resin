@@ -18,18 +18,24 @@ namespace Resin.IO.Read
         {
             var distance = (docId*Serializer.SizeOfDocHash()) - _position;
 
-            if (distance < 0) throw new ArgumentOutOfRangeException("docId");
+            if (distance < 0)
+            {
+                _position = 0;
 
-            if (distance > 0)
+                distance = (docId * Serializer.SizeOfDocHash()) - _position;
+
+                _stream.Seek(distance, SeekOrigin.Begin);
+            }
+            else
             {
                 _stream.Seek(distance, SeekOrigin.Current);
             }
 
-            var doc = Serializer.DeserializeDocHash(_stream);
+            var hash = Serializer.DeserializeDocHash(_stream);
 
             _position += distance+Serializer.SizeOfDocHash();
 
-            return doc;
+            return hash;
         }
 
         public void Dispose()

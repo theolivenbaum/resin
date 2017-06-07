@@ -37,13 +37,13 @@ namespace Resin.Querying
 
         public IEnumerable<DocumentScore> Reduce()
         {
-            var first = Scored.ToList();
+            var first = Scored;
 
             if (_queries != null)
             {
                 foreach (var child in _queries)
                 {
-                    var other = child.Reduce().ToList();
+                    var other = child.Reduce();
 
                     if (child.And)
                     {

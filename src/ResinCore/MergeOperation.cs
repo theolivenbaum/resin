@@ -1,16 +1,45 @@
-﻿using Resin.Analysis;
+﻿using log4net;
+using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Read;
+using Resin.Sys;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
 namespace Resin
 {
-    public class MergeOperation
+    public class MergeOperation : IDisposable
     {
-        public MergeOperation()
+        private static readonly ILog Log = LogManager.GetLogger(typeof(MergeOperation));
+        private DocHashReader _hashReader;
+        private DocumentAddressReader _addressReader;
+        private DocumentReader _documentReader;
+        private readonly string _directory;
+
+        public MergeOperation(string directory)
         {
+            _directory = directory;
+        }
+
+        public void Dispose()
+        {
+            _hashReader.Dispose();
+            _addressReader.Dispose();
+            _documentReader.Dispose();
+        }
+
+        public long Merge(
+            Compression compression,
+            string primaryKeyFieldName)
+        {
+            var ixs = Util.GetIndexFileNamesInChronologicalOrder(_directory).Take(2).ToList();
+
+            if (ixs.Count == 1) return IxInfo.Load(ixs[0]).VersionId;
+
+            return Merge(ixs[0], ixs[1], _directory, compression, primaryKeyFieldName);
         }
 
         public long Merge(
@@ -20,22 +49,33 @@ namespace Resin
             Compression compression, 
             string primaryKeyFieldName)
         {
+            Log.Info("merging");
+
             var documents = StreamDocuments(secondIndexFileName)
                 .Concat(StreamDocuments(firstIndexFileName));
 
             var documentStream = new InMemoryDocumentStream(documents);
+            long versionId;
 
-            var upsert = new UpsertOperation
-                (outputDirectory, 
-                new Analyzer(), 
-                compression, 
-                primaryKeyFieldName, 
-                documentStream);
-
-            using (upsert)
+            using (var upsert = new UpsertOperation
+                (outputDirectory,
+                new Analyzer(),
+                compression,
+                primaryKeyFieldName,
+                documentStream))
             {
-                return upsert.Write();
+                versionId = upsert.Write();
+
+                Remove(firstIndexFileName);
+                Remove(secondIndexFileName);
             }
+
+            return versionId;
+        }
+
+        private void Remove(string ixFileName)
+        {
+            //TODO: rename all files, then delete
         }
 
         private IEnumerable<Document> StreamDocuments(string ixFileName)
@@ -57,12 +97,11 @@ namespace Resin
             int numOfDocs,
             Compression compression)
         {
-            using (var hashReader = new DocHashReader(docHashesFileName))
-            using (var addressReader = new DocumentAddressReader(new FileStream(docAddressFn, FileMode.Open, FileAccess.Read)))
-            using (var documentReader = new DocumentReader(new FileStream(docFileName, FileMode.Open, FileAccess.Read), compression))
-            {
-                return StreamDocuments(hashReader, addressReader, documentReader, numOfDocs).ToList();
-            }
+            _hashReader = new DocHashReader(docHashesFileName);
+            _addressReader = new DocumentAddressReader(new FileStream(docAddressFn, FileMode.Open, FileAccess.Read));
+            _documentReader = new DocumentReader(new FileStream(docFileName, FileMode.Open, FileAccess.Read), compression);
+
+            return StreamDocuments(_hashReader, _addressReader, _documentReader, numOfDocs);
         }
 
         private IEnumerable<Document> StreamDocuments(

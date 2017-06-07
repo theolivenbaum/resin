@@ -21,6 +21,8 @@ namespace Resin.IO
         private readonly int _documentCount;
         private readonly IDistanceResolver _distanceResolver;
         private readonly IDictionary<Query, IList<DocumentScore>> _scoreCache;
+        private readonly DocHashReader _docHashReader;
+        private readonly PostingsReader _postingsReader;
 
         public IxInfo Ix { get { return _ix; } }
 
@@ -32,6 +34,12 @@ namespace Resin.IO
             _distanceResolver = distanceResolver ?? new Levenshtein();
             _documentCount = documentCount == -1 ? ix.DocumentCount : documentCount;
             _scoreCache = new Dictionary<Query, IList<DocumentScore>>();
+
+            var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "pk"));
+            var posFileName = Path.Combine(directory, string.Format("{0}.{1}", ix.VersionId, "pos"));
+
+            _docHashReader = new DocHashReader(docHashesFileName);
+            _postingsReader = new PostingsReader(new FileStream(posFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan));
         }
 
         public IList<DocumentScore> Collect(QueryContext query)
@@ -41,18 +49,19 @@ namespace Resin.IO
 
             foreach (var subQuery in query.ToList())
             {
-                IList<DocumentScore> scores;
+                //IEnumerable<DocumentScore> scores;
 
-                if (!_scoreCache.TryGetValue(subQuery, out scores))
-                {
-                    Map(subQuery);
+                Map(subQuery);
+                //if (!_scoreCache.TryGetValue(subQuery, out scores))
+                //{
+                //    Map(subQuery);
 
-                    _scoreCache.Add(subQuery, subQuery.Scored.ToList());
-                }
-                else
-                {
-                    subQuery.Scored = _scoreCache[subQuery];
-                }
+                //    _scoreCache.Add(subQuery, subQuery.Scored.ToList());
+                //}
+                //else
+                //{
+                //    subQuery.Scored = _scoreCache[subQuery];
+                //}
             }
 
             var reduceTime = new Stopwatch();
@@ -158,7 +167,12 @@ namespace Resin.IO
         
         private IEnumerable<IList<DocumentPosting>> ReadPostings(IEnumerable<Term> terms)
         {
-            return PostingsReader.ReadPostings(_directory, _ix, terms);
+            var addresses = terms.Select(term => term.Word.PostingsAddress)
+                .OrderBy(adr => adr.Position).ToList();
+
+            var postings = _postingsReader.Read(addresses).SelectMany(x => x).ToList();
+
+            yield return postings;
         }
 
         private void Score(IEnumerable<QueryContext> queries)
@@ -180,40 +194,35 @@ namespace Resin.IO
 
         private IEnumerable<DocumentScore> DoScore(IList<DocumentPosting> postings)
         {
-            var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "pk"));
-
-            using (var docHashReader = new DocHashReader(docHashesFileName))
+            if (_scorerFactory == null)
             {
-                if (_scorerFactory == null)
+                foreach (var posting in postings.OrderBy(p => p.DocumentId))
                 {
-                    foreach (var posting in postings)
+                    var docHash = _docHashReader.Read(posting.DocumentId);
+
+                    if (!docHash.IsObsolete)
                     {
-                        var docHash = docHashReader.Read(posting.DocumentId);
+                        yield return new DocumentScore(posting.DocumentId, docHash.Hash, 0, _ix);
+                    }
+                }
+            }
+            else
+            {
+                if (postings.Any())
+                {
+                    var docsWithTerm = postings.Count;
+
+                    var scorer = _scorerFactory.CreateScorer(_documentCount, docsWithTerm);
+
+                    foreach (var posting in postings.OrderBy(p => p.DocumentId))
+                    {
+                        var docHash = _docHashReader.Read(posting.DocumentId);
 
                         if (!docHash.IsObsolete)
                         {
-                            yield return new DocumentScore(posting.DocumentId, docHash.Hash, 0, _ix);
-                        }
-                    }
-                }
-                else
-                {
-                    if (postings.Any())
-                    {
-                        var docsWithTerm = postings.Count;
+                            var score = scorer.Score(posting);
 
-                        var scorer = _scorerFactory.CreateScorer(_documentCount, docsWithTerm);
-
-                        foreach (var posting in postings)
-                        {
-                            var docHash = docHashReader.Read(posting.DocumentId);
-
-                            if (!docHash.IsObsolete)
-                            {
-                                var score = scorer.Score(posting);
-
-                                yield return new DocumentScore(posting.DocumentId, docHash.Hash, score, _ix);
-                            }
+                            yield return new DocumentScore(posting.DocumentId, docHash.Hash, score, _ix);
                         }
                     }
                 }
@@ -232,6 +241,8 @@ namespace Resin.IO
 
         public void Dispose()
         {
+            _docHashReader.Dispose();
+            _postingsReader.Dispose();
         }
     }
 }

@@ -17,6 +17,7 @@ namespace Resin.Cli
         // query --dir D:\resin\wikipedia -q "label:porn~" -p 0 -s 10
         // write --file c:\temp\0wikipedia.json --dir d:\resin\wikipedia --skip 0 --take 10000
         // delete --ids "Q1476435" --dir d:\resin\wikipedia
+        // merge --dir D:\resin\wikipedia
         static void Main(string[] args)
         {
             var assembly = Assembly.GetEntryAssembly();
@@ -42,6 +43,10 @@ namespace Resin.Cli
                 }
                 Query(args);
             }
+            else if (args[0].ToLower() == "merge")
+            {
+                Merge(args);
+            }
             else if (args[0].ToLower() == "delete")
             {
                 Delete(args);
@@ -52,6 +57,18 @@ namespace Resin.Cli
                 Console.WriteLine("rn.exe write --file source.json --dir c:\\target_dir");
                 Console.WriteLine("rn.exe query --dir c:\\my_index -q field:value");
             }
+        }
+
+        static void Merge(string[] args)
+        {
+            //string dir = null;
+
+            //if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
+
+            //if (dir != null)
+            //{
+            //    new MergeOperation().Merge(dir, Compression.NoCompression, "url");
+            //}
         }
 
         static void Delete(string[] args)

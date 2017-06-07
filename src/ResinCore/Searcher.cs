@@ -9,6 +9,7 @@ using Resin.IO;
 using Resin.IO.Read;
 using Resin.Querying;
 using Resin.Sys;
+using System.Collections;
 
 namespace Resin
 {
@@ -65,7 +66,7 @@ namespace Resin
             var scored = Collect(queryContext);
             var paged = scored.OrderByDescending(s=>s.Score).Skip(skip).Take(size).ToList();
             var docs = new List<ScoredDocument>();
-            var result = new Result { Total = scored.Count};
+            var result = new Result { Total = ((IList)scored).Count};
             var groupedByIx = paged.GroupBy(s => s.Ix);
 
             var docTime = new Stopwatch();
@@ -106,12 +107,14 @@ namespace Resin
 
             if (results.Count == 1)
             {
-                return results[0];
+                Log.DebugFormat("reduced collection results for term query {0} in {1}", query, timer.Elapsed);
+
+                return results.First();
             }
             
             var agg = results.CombineTakingLatestVersion().ToList();
 
-            Log.DebugFormat("reduced multi-index collections for query {0} in {1}", query, timer.Elapsed);
+            Log.DebugFormat("reduced collection results for phrase query {0} in {1}", query, timer.Elapsed);
 
             return agg;
         }

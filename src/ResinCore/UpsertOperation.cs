@@ -24,6 +24,7 @@ namespace Resin
         private readonly string _primaryKeyFieldName;
         private readonly DocumentStream _documents;
         private readonly IDocumentStoreWriter _storeWriter;
+        private int _count;
 
         public UpsertOperation(
             string directory, 
@@ -56,7 +57,6 @@ namespace Resin
         {
             var ts = new List<Task>();
             var trieBuilder = new TrieBuilder();
-            var count = 0;
             var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
 
             var docTimer = new Stopwatch();
@@ -70,12 +70,12 @@ namespace Resin
                     _analyzer,
                     trieBuilder);
 
-                count++;
+                _count++;
             }
 
             trieBuilder.CompleteAdding();
 
-            Log.InfoFormat("stored {0} documents in {1}", count, docTimer.Elapsed);
+            Log.InfoFormat("stored {0} documents in {1}", _count, docTimer.Elapsed);
 
             var posTimer = new Stopwatch();
             posTimer.Start();
@@ -110,14 +110,6 @@ namespace Resin
             SerializeTries(tries);
 
             Log.InfoFormat("serialized trees in {0}", treeTimer.Elapsed);
-
-            new IxInfo
-            {
-                VersionId = _indexVersionId,
-                DocumentCount = count,
-                Compression = _compression,
-                PrimaryKeyFieldName = _primaryKeyFieldName
-            }.Serialize(Path.Combine(_directory, _indexVersionId + ".ix"));
 
             return _indexVersionId;
         }
@@ -176,6 +168,15 @@ namespace Resin
         public void Dispose()
         {
             _storeWriter.Dispose();
+
+            new IxInfo
+            {
+                VersionId = _indexVersionId,
+                DocumentCount = _count,
+                Compression = _compression,
+                PrimaryKeyFieldName = _primaryKeyFieldName
+            }.Serialize(Path.Combine(_directory, _indexVersionId + ".ix"));
+
         }
     }
 }
