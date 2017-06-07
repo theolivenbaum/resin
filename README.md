@@ -70,8 +70,6 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 
 	// Implement the base class DocumentStream to use whatever source you need.
 
-It's perfectly fine to mix compressed and non-compressed batches inside a document store (directory). It's also fine to mix  different DocumentStream implementations for different batches inside a directory since they will be encoded the same way.
-	
 ### Query the index.
 <a name="inproc" id="inproc"></a>
 
