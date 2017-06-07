@@ -22,7 +22,7 @@ Resin achieves read and write consistency through the use of timestamps and snap
 ## Flexible, pluggable, extensible
 Are you looking for something other than a document database or a search engine? Database builders or architects looking for Resin's indexing capabilities specifically and nothing but, can either 
 - integrate as a store plug-in
-- send documents to the default storage engine with only PK as stored field (and then query the index like you normally would to resolve it)
+- send documents to the default storage engine storing a single unique key per document but analyzing everything (and then querying the index like you normally would to resolve the primary key)
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
