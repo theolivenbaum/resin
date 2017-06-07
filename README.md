@@ -2,7 +2,7 @@
 ## In a nutshell
 Resin is a in-process document database with pluggable storage engine and full-text search.
 
-## Word2vec
+## Vector space bag-of-words model
 Scores are calculated using a vector space/tf-idf bag-of-words model.
 
 ## Full-text search index
