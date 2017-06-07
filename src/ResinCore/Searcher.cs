@@ -10,6 +10,7 @@ using Resin.IO.Read;
 using Resin.Querying;
 using Resin.Sys;
 using System.Collections;
+using System.Threading.Tasks;
 
 namespace Resin
 {
@@ -70,12 +71,12 @@ namespace Resin
             var groupedByIx = paged.GroupBy(s => s.Ix);
 
             var docTime = new Stopwatch();
-            docTime.Start(); 
-            
-            foreach (var group in groupedByIx)
+            docTime.Start();
+
+            Parallel.ForEach(groupedByIx, group =>
             {
                 docs.AddRange(GetDocs(group.ToList(), group.Key));
-            }
+            });
 
             result.Docs = docs.OrderByDescending(d => d.Score).ToList();
             result.QueryTerms = queryContext.ToList()
