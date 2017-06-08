@@ -61,14 +61,14 @@ namespace Resin.Cli
 
         static void Merge(string[] args)
         {
-            //string dir = null;
+            string dir = null;
 
-            //if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
+            if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
 
-            //if (dir != null)
-            //{
-            //    new MergeOperation().Merge(dir, Compression.NoCompression, "url");
-            //}
+            if (dir != null)
+            {
+                new MergeOperation(dir).Merge(Compression.NoCompression, "url");
+            }
         }
 
         static void Delete(string[] args)
@@ -112,12 +112,16 @@ namespace Resin.Cli
 
                 var docs = result.Docs;
 
-                PrintHeaders(docs[0].Document.Fields.Select(f=>f.Key).ToArray());
-
-                foreach (var doc in docs)
+                if (docs.Any())
                 {
-                    Print(doc, result.QueryTerms[0]);
+                    PrintHeaders(docs[0].Document.Fields.Select(f => f.Key).ToArray());
+
+                    foreach (var doc in docs)
+                    {
+                        Print(doc, result.QueryTerms[0]);
+                    }
                 }
+                
 
                 Console.WriteLine("\r\n{0}-{1} results of {2} in {3}", (page * size)+1, docs.Count + (page * size), result.Total, timer.Elapsed);
             }
@@ -193,8 +197,8 @@ namespace Resin.Cli
 
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            using (var documents = new JsonDocumentStream(fileName, skip, take))
-            using (var upsert = new UpsertOperation(dir, new Analyzer(), compression, pk, documents))
+            using (var documents = new JsonDocumentStream(fileName, skip, take, pk))
+            using (var upsert = new UpsertOperation(dir, new Analyzer(), compression, documents))
             {
                 upsert.Write();
             }

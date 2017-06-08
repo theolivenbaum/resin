@@ -4,12 +4,16 @@ namespace Resin.Sys
 {
     public static class DocumentHelper
     {
-        public static DocumentStream ToDocuments(this IEnumerable<dynamic> dynamicDocuments)
+        public static DocumentStream ToDocuments(
+            this IEnumerable<dynamic> dynamicDocuments, string primaryKeyFieldName = null)
         {
-            return new InMemoryDocumentStream(dynamicDocuments.ToDocumentsInternal());
+            return new InMemoryDocumentStream(
+                dynamicDocuments.ToDocumentsInternal(), 
+                primaryKeyFieldName);
         }
 
-        private static IEnumerable<Document> ToDocumentsInternal(this IEnumerable<dynamic> dynamicDocuments)
+        private static IEnumerable<Document> ToDocumentsInternal(
+            this IEnumerable<dynamic> dynamicDocuments, string primaryKeyFieldName = null)
         {
             foreach (var dyn in dynamicDocuments)
             {
@@ -19,7 +23,6 @@ namespace Resin.Sys
                 {
                     fields.Add(new Field(field.Key, field.Value));
                 }
-
                 yield return new Document(fields);
             }
         }

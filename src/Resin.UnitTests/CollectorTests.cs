@@ -26,10 +26,10 @@ namespace Tests
                 new {_id = "3", title = "the raiders of the lost ark" },
                 new {_id = "four", title = "the rain man" },
                 new {_id = "5five", title = "the good, the bad and the ugly" }
-            }.ToDocuments();
+            }.ToDocuments(primaryKeyFieldName: "_id");
 
             long indexName;
-            using (var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs))
+            using (var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, documents: docs))
             {
                 indexName = writer.Write();
             }
@@ -63,9 +63,9 @@ namespace Tests
                 new {_id = "3", title = "the raid" },
                 new {_id = "4", title = "the rain man" },
                 new {_id = "5", title = "the good, the bad and the ugly" }
-            }.ToDocuments();
+            }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
 
@@ -106,9 +106,9 @@ namespace Tests
                 new {_id = "3", title = "raiders of the lost ark" },
                 new {_id = "4", title = "the rain man" },
                 new {_id = "5", title = "the good, the bad and the ugly" }
-            }.ToDocuments();
+            }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
 
@@ -148,9 +148,9 @@ namespace Tests
                 new {_id = "3", title = "raiders of the lost ark" },
                 new {_id = "4", title = "the rain man" },
                 new {_id = "5", title = "the good, the bad and the ugly" }
-            }.ToDocuments();
+            }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
 
@@ -201,9 +201,9 @@ namespace Tests
                 new {_id = "3", title = "raiders of the lost ark" },
                 new {_id = "4", title = "the rain man" },
                 new {_id = "5", title = "the good, the bad and the ugly" }
-            }.ToDocuments();
+            }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
 
@@ -244,9 +244,9 @@ namespace Tests
                 new {_id = "3", title = "raiders of the lost ark" },
                 new {_id = "4", title = "the rain man" },
                 new {_id = "5", title = "the good, the bad and the ugly" }
-            }.ToDocuments();
+            }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
 
@@ -277,15 +277,15 @@ namespace Tests
 
             var docs = new List<dynamic>
             {
-                new {id = "0", title = "rambo first blood" },
-                new {id = "1", title = "rambo 2" },
-                new {id = "2", title = "rocky 2" },
-                new {id = "3", title = "raiders of the lost ark" },
-                new {id = "4", title = "the rain man" },
-                new {id = "5", title = "the good, the bad and the ugly" }
-            }.ToDocuments();
+                new {_id = "0", title = "rambo first blood" },
+                new {_id = "1", title = "rambo 2" },
+                new {_id = "2", title = "rocky 2" },
+                new {_id = "3", title = "raiders of the lost ark" },
+                new {_id = "4", title = "the rain man" },
+                new {_id = "5", title = "the good, the bad and the ugly" }
+            }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
 
@@ -322,9 +322,9 @@ namespace Tests
                 new {_id = "2", title = "rocky 2" },
                 new {_id = "3", title = "raiders of the lost ark" },
                 new {_id = "4", title = "rain man" }
-            }.ToDocuments();
+            }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
 
@@ -352,9 +352,9 @@ namespace Tests
                 new {_id = "2", title = "rocky 2" },
                 new {_id = "3", title = "raiders of the lost ark" },
                 new {_id = "4", title = "tomb raider" }
-            }.ToDocuments();
+            }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, primaryKeyFieldName: "_id", documents: docs);
+            var writer = new UpsertOperation(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
 

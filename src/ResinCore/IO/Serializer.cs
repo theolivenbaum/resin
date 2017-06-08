@@ -38,7 +38,7 @@ namespace Resin.IO
 
         public static void Serialize(this IxInfo ix, string fileName)
         {
-            using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough))
+            using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 var bytes = ix.Serialize();
 
@@ -175,7 +175,9 @@ namespace Resin.IO
                 byte[] versionBytes = BitConverter.GetBytes(ix.VersionId);
                 byte[] docCountBytes = BitConverter.GetBytes(ix.DocumentCount);
                 byte[] compressionEnumBytes = BitConverter.GetBytes((int)ix.Compression);
-                byte[] pkFieldNameBytes = Encoding.GetBytes(ix.PrimaryKeyFieldName);
+                byte[] pkFieldNameBytes = ix.PrimaryKeyFieldName == null
+                    ? new byte[0]
+                    : Encoding.GetBytes(ix.PrimaryKeyFieldName);
                 byte[] pkFnLenBytes = BitConverter.GetBytes(pkFieldNameBytes.Length);
 
                 if (!BitConverter.IsLittleEndian)
@@ -190,8 +192,8 @@ namespace Resin.IO
                 stream.Write(versionBytes, 0, sizeof(long));
                 stream.Write(docCountBytes, 0, sizeof(int));
                 stream.Write(compressionEnumBytes, 0, sizeof(int));
-                stream.Write(pkFieldNameBytes, 0, pkFieldNameBytes.Length);
                 stream.Write(pkFnLenBytes, 0, sizeof(int));
+                if (pkFnLenBytes.Length > 0) stream.Write(pkFieldNameBytes, 0, pkFieldNameBytes.Length);
 
                 return stream.ToArray();
             }
@@ -224,7 +226,8 @@ namespace Resin.IO
 
             var pkFieldNameBytes = new byte[pkFnLen];
 
-            stream.Read(pkFieldNameBytes, 0, pkFieldNameBytes.Length);
+            if (pkFnLen > 0)
+                stream.Read(pkFieldNameBytes, 0, pkFieldNameBytes.Length);
 
             if (!BitConverter.IsLittleEndian)
             {

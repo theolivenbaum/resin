@@ -13,12 +13,13 @@ namespace Resin
         private readonly int _take;
         private readonly int _skip;
 
-        public JsonDocumentStream(string fileName, int skip, int take) 
+        public JsonDocumentStream(string fileName, int skip, int take, string primaryKeyFieldName = null) 
             : this(File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None), skip, take)
         {
         }
 
-        public JsonDocumentStream(Stream stream, int skip, int take)
+        public JsonDocumentStream(Stream stream, int skip, int take, string primaryKeyFieldName = null)
+            : base(primaryKeyFieldName)
         {
             _skip = skip;
             _take = take;
@@ -40,7 +41,7 @@ namespace Resin
                 }
             }
 
-            return ReadInternal().Take(_take);
+            return ReadSourceAndAssignIdentifiers( ReadInternal().Take(_take));
         }
 
         private IEnumerable<Document> ReadInternal()

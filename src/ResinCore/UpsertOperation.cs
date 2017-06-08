@@ -15,13 +15,10 @@ namespace Resin
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(UpsertOperation));
 
-        private readonly Dictionary<ulong, object> _primaryKeys;
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private readonly Compression _compression;
         private readonly long _indexVersionId;
-        private readonly bool _autoGeneratePk;
-        private readonly string _primaryKeyFieldName;
         private readonly DocumentStream _documents;
         private readonly IDocumentStoreWriter _storeWriter;
         private int _count;
@@ -30,7 +27,6 @@ namespace Resin
             string directory, 
             IAnalyzer analyzer, 
             Compression compression, 
-            string primaryKeyFieldName, 
             DocumentStream documents, 
             IDocumentStoreWriter storeWriter = null)
         {
@@ -38,9 +34,6 @@ namespace Resin
             _directory = directory;
             _analyzer = analyzer;
             _compression = compression;
-            _autoGeneratePk = string.IsNullOrWhiteSpace(primaryKeyFieldName);
-            _primaryKeyFieldName = primaryKeyFieldName;
-            _primaryKeys = new Dictionary<UInt64, object>();
             _documents = documents;
 
             var docFileName = Path.Combine(_directory, _indexVersionId + ".rdoc");
@@ -62,7 +55,7 @@ namespace Resin
             var docTimer = new Stopwatch();
             docTimer.Start();
 
-            foreach (var doc in ReadSourceAndAssignIdentifiers())
+            foreach (var doc in _documents.ReadSource())
             {
                 new SingleDocumentUpsertOperation().Write(
                     doc,
@@ -96,7 +89,7 @@ namespace Resin
                     {
                         foreach (var word in trie.Value.Words())
                         {
-                            Log.Debug(word);
+                            Log.DebugFormat("{0}\t{1}", word.Value, word.Count);
                         }
                     }
                 }
@@ -130,41 +123,6 @@ namespace Resin
             return _documents.ReadSource();
         }
 
-        private IEnumerable<Document> ReadSourceAndAssignIdentifiers()
-        {
-            var count = 0;
-            foreach (var document in ReadSource())
-            {
-                string pkVal;
-
-                if (_autoGeneratePk)
-                {
-                    pkVal = Guid.NewGuid().ToString();
-                }
-                else
-                {
-                    pkVal = document.Fields[_primaryKeyFieldName].Value;
-                }
-
-                var hash = pkVal.ToHash();
-
-                if (_primaryKeys.ContainsKey(hash))
-                {
-                    Log.WarnFormat("Found multiple occurrences of documents with pk value of {0} (id:{1}). First occurrence will be stored.",
-                        pkVal, document.Id);
-                }
-                else
-                {
-                    _primaryKeys.Add(hash, null);
-
-                    document.Hash = hash;
-                    document.Id = count++;
-
-                    yield return document;
-                }
-            }
-        }
-
         public void Dispose()
         {
             _storeWriter.Dispose();
@@ -174,7 +132,7 @@ namespace Resin
                 VersionId = _indexVersionId,
                 DocumentCount = _count,
                 Compression = _compression,
-                PrimaryKeyFieldName = _primaryKeyFieldName
+                PrimaryKeyFieldName = _documents.PrimaryKeyFieldName
             }.Serialize(Path.Combine(_directory, _indexVersionId + ".ix"));
 
         }

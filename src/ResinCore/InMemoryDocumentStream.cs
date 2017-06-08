@@ -6,13 +6,14 @@ namespace Resin
     {
         private readonly IEnumerable<Document> _documents;
 
-        public InMemoryDocumentStream(IEnumerable<Document> documents) 
+        public InMemoryDocumentStream(IEnumerable<Document> documents, string primaryKeyFieldName = null) 
+            : base(primaryKeyFieldName)
         {
             _documents = documents;
         }
         public override IEnumerable<Document> ReadSource()
         {
-            return _documents;
+            return ReadSourceAndAssignIdentifiers(_documents);
         }
     }
 }

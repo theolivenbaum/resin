@@ -5,7 +5,6 @@ using Resin.IO.Read;
 using Resin.Sys;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -61,7 +60,6 @@ namespace Resin
                 (outputDirectory,
                 new Analyzer(),
                 compression,
-                primaryKeyFieldName,
                 documentStream))
             {
                 versionId = upsert.Write();

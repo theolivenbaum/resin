@@ -9,8 +9,8 @@ using Resin.IO;
 using Resin.IO.Read;
 using Resin.Querying;
 using Resin.Sys;
-using System.Collections;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace Resin
 {
@@ -66,16 +66,17 @@ namespace Resin
             var skip = page * size;
             var scored = Collect(queryContext);
             var paged = scored.OrderByDescending(s=>s.Score).Skip(skip).Take(size).ToList();
-            var docs = new List<ScoredDocument>();
-            var result = new Result { Total = ((IList)scored).Count};
+            var docs = new ConcurrentBag<ScoredDocument>();
+            var result = new Result { Total = scored.Count};
             var groupedByIx = paged.GroupBy(s => s.Ix);
 
             var docTime = new Stopwatch();
             docTime.Start();
 
             Parallel.ForEach(groupedByIx, group =>
+            //foreach(var group in groupedByIx)
             {
-                docs.AddRange(GetDocs(group.ToList(), group.Key));
+                GetDocs(group.ToList(), group.Key, docs);
             });
 
             result.Docs = docs.OrderByDescending(d => d.Score).ToList();
@@ -120,7 +121,7 @@ namespace Resin
             return agg;
         }
 
-        private IEnumerable<ScoredDocument> GetDocs(IList<DocumentScore> scores, IxInfo ix)
+        private void GetDocs(IList<DocumentScore> scores, IxInfo ix, ConcurrentBag<ScoredDocument> result)
         {
             var documentIds = scores.Select(s => s.DocumentId);
             var docAddressFileName = Path.Combine(_directory, ix.VersionId + ".da");
@@ -134,7 +135,7 @@ namespace Resin
                 {
                     var score = dic[doc.Id];
 
-                    yield return new ScoredDocument { Document = doc, Score = score };
+                    result.Add(new ScoredDocument(doc, score));
                 }
             }
         }
