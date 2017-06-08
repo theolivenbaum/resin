@@ -51,22 +51,21 @@ Awesome! Start [here](https://github.com/kreeben/resin/issues).
 
 _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/entities/)._
 
-### Store and index documents from memory.
+### Store and index documents
 
-	var docs = GetWikipedia();
+	var docs = GetDocumentsTypedAsDictionaries();
+	var dir = @"C:\MyStore";
 	
-	var dir = @"C:\wikipedia";
-	
-	using (var documents = new InMemoryDocumentStream(docs))
-	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.Lz, primaryKey:"id", documents))
+	// From memory
+	using (var firstBatchBocuments = new InMemoryDocumentStream(docs))
+	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.Lz, primaryKey:"id", firstBatchBocuments))
 	{
 		long versionId = writer.Write();
 	}
 	
-### Store and index JSON documents from a stream.
-
-	using (var documents = new JsonDocumentStream(fileName, skip, take))
-	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", documents))
+	// From stream
+	using (var secondBatchDocuments = new JsonDocumentStream(fileName))
+	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", secondBatchDocuments))
 	{
 		long versionId = writer.Write();
 	}
@@ -81,7 +80,8 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 	// Document fields and scores, i.e. the aggregated tf-idf weights a document recieve from a simple 
 	// or compound query, are included in the result:
 
-	var scoreOfFirstDoc = result.Docs[0].Fields["__score"];
+	var scoreOfFirstDoc = result.Docs[0].Score;
 	var label = result.Docs[0].Fields["label"];
+	var primaryKey = result.Docs[0].Fields["id"];
 
 [More documentation here](https://github.com/kreeben/resin/wiki). 
