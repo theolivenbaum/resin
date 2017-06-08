@@ -1,4 +1,4 @@
-# Resin
+# Resin DB
 In-process document database with pluggable storage engine and full-text search.
 
 ## No schema
