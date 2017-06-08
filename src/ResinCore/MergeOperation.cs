@@ -63,17 +63,26 @@ namespace Resin
                 documentStream))
             {
                 versionId = upsert.Write();
-
-                Remove(firstIndexFileName);
-                Remove(secondIndexFileName);
             }
+
+            Remove(firstIndexFileName);
+            Remove(secondIndexFileName);
 
             return versionId;
         }
 
         private void Remove(string ixFileName)
         {
-            //TODO: rename all files, then delete
+            //TODO: create lock file
+            File.Delete(ixFileName);
+
+            var dir = Path.GetDirectoryName(ixFileName);
+            var name = Path.GetFileNameWithoutExtension(ixFileName);
+
+            foreach(var file in Directory.GetFiles(dir, name + ".*"))
+            {
+                File.Delete(file);
+            }
         }
 
         private IEnumerable<Document> StreamDocuments(string ixFileName)

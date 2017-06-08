@@ -35,6 +35,7 @@ namespace Resin.Sys
 
         private static IEnumerable<string> GetIndexFileNames(string directory)
         {
+            //TODO: check for a lock file
             return Directory.GetFiles(directory, "*.ix");
         }
 

@@ -12,6 +12,7 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(DocumentStream));
         private readonly Dictionary<ulong, object> _primaryKeys;
         private string _primaryKeyFieldName;
+        private int _count;
 
         public string PrimaryKeyFieldName { get { return _primaryKeyFieldName; } }
 
@@ -24,7 +25,6 @@ namespace Resin
         protected IEnumerable<Document> ReadSourceAndAssignIdentifiers(
             IEnumerable<Document> documents)
         {
-            var count = 0;
             var autoGeneratePk = _primaryKeyFieldName == null;
 
             foreach (var document in documents)
@@ -44,15 +44,15 @@ namespace Resin
 
                 if (_primaryKeys.ContainsKey(hash))
                 {
-                    Log.WarnFormat("Found multiple occurrences of documents with pk value of {0} (id:{1}). First occurrence will be stored.",
-                        pkVal, document.Id);
+                    Log.WarnFormat("Found multiple occurrences of documents with pk value of {0}. First occurrence will be stored.",
+                        pkVal);
                 }
                 else
                 {
                     _primaryKeys.Add(hash, null);
 
                     document.Hash = hash;
-                    document.Id = count++;
+                    document.Id = _count++;
 
                     yield return document;
                 }

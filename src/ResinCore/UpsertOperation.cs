@@ -55,6 +55,7 @@ namespace Resin
             var docTimer = new Stopwatch();
             docTimer.Start();
 
+            //Parallel.ForEach(_documents.ReadSource(), doc =>
             foreach (var doc in _documents.ReadSource())
             {
                 new SingleDocumentUpsertOperation().Write(
@@ -64,9 +65,7 @@ namespace Resin
                     trieBuilder);
 
                 _count++;
-            }
-
-            trieBuilder.CompleteAdding();
+            }//);
 
             Log.InfoFormat("stored {0} documents in {1}", _count, docTimer.Elapsed);
 
