@@ -48,7 +48,8 @@ namespace Resin.IO
 
         public static void Serialize(this LcrsTrie trie, string fileName)
         {
-            using (var stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (var stream = new FileStream(
+                fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 if (trie.LeftChild != null)
                 {

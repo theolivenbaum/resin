@@ -52,10 +52,8 @@ namespace Resin
             var trieBuilder = new TrieBuilder();
             var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
 
-            var docTimer = new Stopwatch();
-            docTimer.Start();
+            var docTimer = Stopwatch.StartNew();
 
-            //Parallel.ForEach(_documents.ReadSource(), doc =>
             foreach (var doc in _documents.ReadSource())
             {
                 new SingleDocumentUpsertOperation().Write(
@@ -65,12 +63,11 @@ namespace Resin
                     trieBuilder);
 
                 _count++;
-            }//);
+            }
 
             Log.InfoFormat("stored {0} documents in {1}", _count, docTimer.Elapsed);
 
-            var posTimer = new Stopwatch();
-            posTimer.Start();
+            var posTimer = Stopwatch.StartNew();
 
             var tries = trieBuilder.GetTries();
 
@@ -94,7 +91,9 @@ namespace Resin
                 }
             }
 
-            Log.InfoFormat("stored postings refs in trees and wrote postings file in {0}", posTimer.Elapsed);
+            Log.InfoFormat(
+                "stored postings refs in trees and wrote postings file in {0}", 
+                posTimer.Elapsed);
 
             var treeTimer = new Stopwatch();
             treeTimer.Start();

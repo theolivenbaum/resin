@@ -14,7 +14,7 @@ namespace Resin
         private readonly int _skip;
 
         public JsonDocumentStream(string fileName, int skip, int take, string primaryKeyFieldName = null) 
-            : this(File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None), skip, take)
+            : this(File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.None), skip, take, primaryKeyFieldName)
         {
         }
 
