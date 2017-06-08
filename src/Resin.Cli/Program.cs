@@ -67,7 +67,8 @@ namespace Resin.Cli
 
             if (dir != null)
             {
-                new MergeOperation(dir).Merge(Compression.NoCompression, "url");
+                using(var merge = new MergeOperation(dir))
+                    merge.Merge(Compression.NoCompression, "url");
             }
         }
 

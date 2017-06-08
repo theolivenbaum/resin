@@ -10,13 +10,11 @@ namespace Resin.IO.Read
         protected abstract T Deserialize(byte[] data);
 
         private readonly Stream _stream;
-        private readonly bool _leaveOpen;
         private long _position;
 
-        protected BlockReader(Stream stream, bool leaveOpen = false)
+        protected BlockReader(Stream stream)
         {
             _stream = stream;
-            _leaveOpen = leaveOpen;
             _position = 0;
         }
 
@@ -49,7 +47,7 @@ namespace Resin.IO.Read
 
         public void Dispose()
         {
-            if(!_leaveOpen) _stream.Dispose();
+            _stream.Dispose();
         }
     }
 }

@@ -2,7 +2,7 @@
   "profiles": {
     "Resin.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "query --dir c:\\temp\\resin\\pg -q \"body:slavery\""
+      "commandLineArgs": "write --file c:\\temp\\pg\\docs0.json --dir c:\\temp\\resin\\pg --pk url --take 10"
     }
   }
 }

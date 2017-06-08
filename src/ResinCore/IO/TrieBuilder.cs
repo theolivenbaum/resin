@@ -77,7 +77,7 @@ namespace Resin.IO
             }
         }
 
-        public void CompleteAdding()
+        private void CompleteAdding()
         {
             foreach (var queue in _queues.Values)
             {
@@ -87,6 +87,8 @@ namespace Resin.IO
 
         public IDictionary<string, LcrsTrie> GetTries()
         {
+            CompleteAdding();
+
             Task.WaitAll(_consumers.ToArray());
 
             foreach (var queue in _queues.Values)

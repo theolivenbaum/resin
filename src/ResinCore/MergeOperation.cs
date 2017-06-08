@@ -17,10 +17,13 @@ namespace Resin
         private DocumentAddressReader _addressReader;
         private DocumentReader _documentReader;
         private readonly string _directory;
+        private readonly string[] _ixFilesToDelete;
 
         public MergeOperation(string directory)
         {
             _directory = directory;
+            var ixs = Util.GetIndexFileNamesInChronologicalOrder(_directory).Take(2).ToList();
+            _ixFilesToDelete = ixs.ToArray();
         }
 
         public void Dispose()
@@ -28,17 +31,23 @@ namespace Resin
             _hashReader.Dispose();
             _addressReader.Dispose();
             _documentReader.Dispose();
+
+            foreach(var file in _ixFilesToDelete)
+            {
+                Remove(file);
+            }
         }
 
-        public long Merge(
-            Compression compression,
-            string primaryKeyFieldName)
+        public long Merge (Compression compression, string primaryKeyFieldName)
         {
-            var ixs = Util.GetIndexFileNamesInChronologicalOrder(_directory).Take(2).ToList();
+            if (_ixFilesToDelete.Length == 1) return IxInfo.Load(_ixFilesToDelete[0]).VersionId;
 
-            if (ixs.Count == 1) return IxInfo.Load(ixs[0]).VersionId;
-
-            return Merge(ixs[0], ixs[1], _directory, compression, primaryKeyFieldName);
+            return Merge(
+                _ixFilesToDelete[0], 
+                _ixFilesToDelete[1], 
+                _directory, 
+                compression, 
+                primaryKeyFieldName);
         }
 
         public long Merge(
@@ -64,9 +73,6 @@ namespace Resin
             {
                 versionId = upsert.Write();
             }
-
-            Remove(firstIndexFileName);
-            Remove(secondIndexFileName);
 
             return versionId;
         }
