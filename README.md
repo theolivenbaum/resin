@@ -1,6 +1,5 @@
 # Resin
-## In a nutshell
-Resin is a in-process document database with pluggable storage engine and full-text search.
+In-process document database with pluggable storage engine and full-text search.
 
 ## No schema
 Your document store can contain documents with variable columns/fields. 
@@ -11,10 +10,10 @@ Scores are calculated using a vector space/tf-idf bag-of-words model.
 ## Auto-index
 By default Resin indexes all fields on all documents. You can opt out of indexing and storing of fields.
 
-## Full-text search index
+## Full-text search
 Resin can traverse its index as a Levenshtein-powered automaton. Querying support includes term, fuzzy, prefix, phrase and range. Analyzers, tokenizers and scoring schemes are customizable.
 
-## Disk-based index
+## Disk-based tree traversal
 The index is a disk-based left-child-right-sibling character trie. Indices and document stores are very fast to write to and read from.
 
 ## Compression
