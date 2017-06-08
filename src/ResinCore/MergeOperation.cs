@@ -13,9 +13,9 @@ namespace Resin
     public class MergeOperation : IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(MergeOperation));
-        private DocHashReader _hashReader;
-        private DocumentAddressReader _addressReader;
-        private DocumentReader _documentReader;
+        private IList<DocHashReader> _hashReader;
+        private IList<DocumentAddressReader> _addressReader;
+        private IList<DocumentReader> _documentReader;
         private readonly string _directory;
         private readonly string[] _ixFilesToDelete;
 
@@ -24,13 +24,17 @@ namespace Resin
             _directory = directory;
             var ixs = Util.GetIndexFileNamesInChronologicalOrder(_directory).Take(2).ToList();
             _ixFilesToDelete = ixs.ToArray();
+
+            _hashReader = new List<DocHashReader>();
+            _addressReader = new List<DocumentAddressReader>();
+            _documentReader = new List<DocumentReader>();
         }
 
         public void Dispose()
         {
-            _hashReader.Dispose();
-            _addressReader.Dispose();
-            _documentReader.Dispose();
+            foreach (var r in _hashReader) r.Dispose();
+            foreach (var r in _addressReader) r.Dispose();
+            foreach (var r in _documentReader) r.Dispose();
 
             foreach(var file in _ixFilesToDelete)
             {
@@ -40,13 +44,14 @@ namespace Resin
 
         public long Merge (Compression compression, string primaryKeyFieldName)
         {
-            if (_ixFilesToDelete.Length == 1) return IxInfo.Load(_ixFilesToDelete[0]).VersionId;
+            if (_ixFilesToDelete.Length == 1)
+                return IxInfo.Load(_ixFilesToDelete[0]).VersionId;
 
             return Merge(
-                _ixFilesToDelete[0], 
-                _ixFilesToDelete[1], 
-                _directory, 
-                compression, 
+                _ixFilesToDelete[0],
+                _ixFilesToDelete[1],
+                _directory,
+                compression,
                 primaryKeyFieldName);
         }
 
@@ -110,11 +115,15 @@ namespace Resin
             int numOfDocs,
             Compression compression)
         {
-            _hashReader = new DocHashReader(docHashesFileName);
-            _addressReader = new DocumentAddressReader(new FileStream(docAddressFn, FileMode.Open, FileAccess.Read));
-            _documentReader = new DocumentReader(new FileStream(docFileName, FileMode.Open, FileAccess.Read), compression);
+            var hashReader = new DocHashReader(docHashesFileName);
+            var addressReader = new DocumentAddressReader(new FileStream(docAddressFn, FileMode.Open, FileAccess.Read));
+            var documentReader = new DocumentReader(new FileStream(docFileName, FileMode.Open, FileAccess.Read), compression);
 
-            return StreamDocuments(_hashReader, _addressReader, _documentReader, numOfDocs);
+            _hashReader.Add(hashReader);
+            _addressReader.Add(addressReader);
+            _documentReader.Add(documentReader);
+
+            return StreamDocuments(hashReader, addressReader, documentReader, numOfDocs);
         }
 
         private IEnumerable<Document> StreamDocuments(
