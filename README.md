@@ -38,6 +38,9 @@ Are you looking for something other than a document database or a search engine?
 ## Deleting
 ![query](/docs/delete.png)
 
+## Optimize (coming soon)
+Performing a optimization operation on a directory leads to file segments becoming merged, old data pruned. This leads to increased querying performance.
+
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
 
