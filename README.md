@@ -29,6 +29,15 @@ Are you looking for something other than a document database or a search engine?
 - integrate as a store plug-in
 - send documents to the default storage engine storing a single unique key per document but analyzing everything (and then querying the index like you normally would to resolve the primary key)
 
+## Query execution plan
+![query](/docs/query.png)
+
+## Writing
+![query](/docs/write.png)
+
+## Deleting
+![query](/docs/delete.png)
+
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
 
