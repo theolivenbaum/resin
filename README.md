@@ -69,7 +69,7 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 	
 	// From memory
 	using (var firstBatchBocuments = new InMemoryDocumentStream(docs))
-	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.Lz, primaryKey:"id", firstBatchBocuments))
+	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", firstBatchBocuments))
 	{
 		long versionId = writer.Write();
 	}
