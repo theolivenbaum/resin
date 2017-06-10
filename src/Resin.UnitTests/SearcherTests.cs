@@ -191,7 +191,7 @@ namespace Tests
         }
 
         [TestMethod]
-        public void Can_merge()
+        public void Can_truncate()
         {
             var dir = CreateDir();
 
@@ -240,5 +240,9 @@ namespace Tests
             }
         }
 
+        public void Can_merge()
+        {
+            //TODO: test merging two branches.
+        }
     }
 }

@@ -2,6 +2,7 @@
 using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Read;
+using Resin.IO.Write;
 using Resin.Sys;
 using System;
 using System.Collections.Generic;
@@ -20,11 +21,12 @@ namespace Resin
         private IList<DocumentReader> _documentReader;
         private readonly string _directory;
         private readonly string[] _ixFilesToProcess;
+        private readonly IAnalyzer _analyzer;
 
-        public MergeOperation(string directory)
+        public MergeOperation(string directory, IAnalyzer analyzer = null)
         {
             _directory = directory;
-
+            _analyzer = analyzer ?? new Analyzer();
             var ixs = Util.GetIndexFileNamesInChronologicalOrder(_directory).Take(2).ToList();
             _ixFilesToProcess = ixs.ToArray();
 
@@ -82,7 +84,24 @@ namespace Resin
         public long Merge (Compression compression, string primaryKeyFieldName)
         {
             if (_ixFilesToProcess.Length == 1)
-                return IxInfo.Load(_ixFilesToProcess[0]).VersionId;
+            {
+                // truncate
+
+                var documents = StreamDocuments(_ixFilesToProcess[0]);
+
+                var documentStream = new InMemoryDocumentStream(documents);
+
+                using (var upsert = new UpsertOperation(
+                    _directory,
+                    _analyzer,
+                    compression,
+                    documentStream))
+                {
+                    return upsert.Write();
+                }
+            }
+
+            // merge
 
             return Merge(
                 _ixFilesToProcess[0],
