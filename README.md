@@ -67,7 +67,7 @@ Attempting to merge a unisegmented index does nothing.
 ### Rewrite to compress/deflate
 If you changed your mind regarding your compression strategy, issue a merge operation on a segmented or unisegmented index specifying the preferred compression rate to rewrite the store.
 
-Note: rewriting a branched store leads to the main trunk being truncated and rewritten but the branches left untouched. Branches may be merged afterwards. Also note that branches may have different compression rates. 
+Note: rewriting a branched store leads to the main trunk being truncated and rewritten but the branches left untouched. Branches may be merged afterwards. Also note that it's ok for branches to have compression rates that differ. 
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
