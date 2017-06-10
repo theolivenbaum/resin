@@ -31,6 +31,11 @@ namespace Resin
             DocumentStream documents, 
             IDocumentStoreWriter storeWriter = null)
         {
+            _directory = directory;
+            _analyzer = analyzer;
+            _compression = compression;
+            _documents = documents;
+
             var lastVersion = Directory.GetFiles(directory, "*.ix").OrderBy(fn => fn)
                 .LastOrDefault();
 
@@ -40,27 +45,57 @@ namespace Resin
             }
             else
             {
-                _indexVersionId = long.Parse(Path.GetFileNameWithoutExtension(lastVersion));
+                if (WriteLockExists() || !TryAquireWriteLock())
+                {
+                    _indexVersionId = Util.GetNextChronologicalFileId();
+                }
+                else
+                {
+                    _indexVersionId = long.Parse(Path.GetFileNameWithoutExtension(lastVersion));
 
-                var ix = IxInfo.Load(lastVersion);
+                    var ix = IxInfo.Load(lastVersion);
 
-                _count = ix.DocumentCount;
+                    _count = ix.DocumentCount;
+                }
             }
 
-            _directory = directory;
-            _analyzer = analyzer;
-            _compression = compression;
-            _documents = documents;
-
-            _storeWriter = storeWriter ?? 
+            _storeWriter = storeWriter ??
                 new DocumentStoreWriter(directory, _indexVersionId, _compression);
+        }
+
+        private bool TryAquireWriteLock()
+        {
+            var tmp = Path.Combine(_directory, "write._lock");
+            var lockFile = Path.Combine(_directory, "write.lock");
+            
+            File.Create(Path.Combine(_directory, tmp));
+            try
+            {
+                File.Copy(tmp, lockFile);
+                return true;
+            }
+            catch (IOException)
+            {
+                return false;
+            }
+        }
+
+        private void ReleaseFileLock()
+        {
+            File.Delete(Path.Combine(_directory, "write.lock"));
+        }
+
+        private bool WriteLockExists()
+        {
+            return File.Exists(Path.Combine(_directory, "write.lock"));
         }
 
         public long Write()
         {
             var ts = new List<Task>();
             var trieBuilder = new TrieBuilder();
-            var posFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
+            var posFileName = Path.Combine(
+                _directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
 
             var docTimer = Stopwatch.StartNew();
 
@@ -148,6 +183,8 @@ namespace Resin
 
             File.Copy(tmpFileName, fileName, overwrite:true);
             File.Delete(tmpFileName);
+
+            ReleaseFileLock();
         }
     }
 }

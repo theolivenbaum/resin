@@ -138,7 +138,7 @@ namespace Tests
         }
 
         [TestMethod]
-        public void Can_search_two_index_versions()
+        public void Can_search_two_index_segments()
         {
             var dir = CreateDir();
 
