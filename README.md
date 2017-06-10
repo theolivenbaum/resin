@@ -2,7 +2,9 @@
 In-process document database with full-text search and pluggable storage engine.
 
 ## No schema
-Your document store can contain documents with variable number columns/fields. 
+You can store documents with variable number columns/fields. 
+
+You can group similar documents into separate stores or have them all in a big store.
 
 ## Auto-index
 By default Resin indexes all fields on all documents. You can opt out of indexing (analyzing) and storing of fields.
