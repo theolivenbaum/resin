@@ -8,8 +8,6 @@ namespace Resin.Sys
 {
     public static class Util
     {
-        private static object Sync = new object();
-
         private static Int64 GetTicks()
         {
             return DateTime.Now.Ticks;
@@ -93,6 +91,38 @@ namespace Resin.Sys
                 if (propertyInfo.CanRead && propertyInfo.GetIndexParameters().Length == 0)
                     dictionary[propertyInfo.Name] = propertyInfo.GetValue(obj, null);
             return dictionary;
+        }
+
+        public static bool TryAquireWriteLock(string directory)
+        {
+            var tmp = Path.Combine(directory, "write._lock");
+            var lockFile = Path.Combine(directory, "write.lock");
+
+            File.Create(Path.Combine(directory, tmp)).Dispose();
+
+            try
+            {
+                File.Copy(tmp, lockFile);
+                return true;
+            }
+            catch (IOException)
+            {
+                return false;
+            }
+            finally
+            {
+                File.Delete(tmp);
+            }
+        }
+
+        public static void ReleaseFileLock(string directory)
+        {
+            File.Delete(Path.Combine(directory, "write.lock"));
+        }
+
+        public static bool WriteLockExists(string directory)
+        {
+            return File.Exists(Path.Combine(directory, "write.lock"));
         }
     }
 }

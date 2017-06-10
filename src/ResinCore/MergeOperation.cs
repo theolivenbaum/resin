@@ -7,23 +7,26 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace Resin
 {
     public class MergeOperation : IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(MergeOperation));
+
         private IList<DocHashReader> _hashReader;
         private IList<DocumentAddressReader> _addressReader;
         private IList<DocumentReader> _documentReader;
         private readonly string _directory;
-        private readonly string[] _ixFilesToDelete;
+        private readonly string[] _ixFilesToProcess;
 
         public MergeOperation(string directory)
         {
             _directory = directory;
+
             var ixs = Util.GetIndexFileNamesInChronologicalOrder(_directory).Take(2).ToList();
-            _ixFilesToDelete = ixs.ToArray();
+            _ixFilesToProcess = ixs.ToArray();
 
             _hashReader = new List<DocHashReader>();
             _addressReader = new List<DocumentAddressReader>();
@@ -36,21 +39,54 @@ namespace Resin
             foreach (var r in _addressReader) r.Dispose();
             foreach (var r in _documentReader) r.Dispose();
 
-            foreach(var file in _ixFilesToDelete)
+            OrchestrateRemove();
+        }
+
+        private void OrchestrateRemove(int count = 0)
+        {
+            if (count > 3) return;
+
+            if (_ixFilesToProcess.Length == 2)
             {
-                Remove(file);
+                if (!TryRemove(_ixFilesToProcess[1]))
+                {
+                    Thread.Sleep(100);
+
+                    OrchestrateRemove(count++);
+                }
+            }
+        }
+
+        private bool TryRemove(string ixFileName)
+        {
+            try
+            {
+                File.Delete(ixFileName);
+
+                var dir = Path.GetDirectoryName(ixFileName);
+                var name = Path.GetFileNameWithoutExtension(ixFileName);
+
+                foreach (var file in Directory.GetFiles(dir, name + ".*"))
+                {
+                    File.Delete(file);
+                }
+
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
         public long Merge (Compression compression, string primaryKeyFieldName)
         {
-            if (_ixFilesToDelete.Length == 1)
-                return IxInfo.Load(_ixFilesToDelete[0]).VersionId;
+            if (_ixFilesToProcess.Length == 1)
+                return IxInfo.Load(_ixFilesToProcess[0]).VersionId;
 
             return Merge(
-                _ixFilesToDelete[0],
-                _ixFilesToDelete[1],
-                _directory,
+                _ixFilesToProcess[0],
+                _ixFilesToProcess[1],
                 compression,
                 primaryKeyFieldName);
         }
@@ -58,20 +94,18 @@ namespace Resin
         public long Merge(
             string firstIndexFileName, 
             string secondIndexFileName, 
-            string outputDirectory, 
             Compression compression, 
             string primaryKeyFieldName)
         {
             Log.Info("merging");
 
-            var documents = StreamDocuments(secondIndexFileName)
-                .Concat(StreamDocuments(firstIndexFileName));
+            var documents = StreamDocuments(secondIndexFileName);
 
             var documentStream = new InMemoryDocumentStream(documents);
             long versionId;
 
-            using (var upsert = new UpsertOperation
-                (outputDirectory,
+            using (var upsert = new UpsertOperation(
+                _directory,
                 new Analyzer(),
                 compression,
                 documentStream))
@@ -80,20 +114,6 @@ namespace Resin
             }
 
             return versionId;
-        }
-
-        private void Remove(string ixFileName)
-        {
-            //TODO: create lock file
-            File.Delete(ixFileName);
-
-            var dir = Path.GetDirectoryName(ixFileName);
-            var name = Path.GetFileNameWithoutExtension(ixFileName);
-
-            foreach(var file in Directory.GetFiles(dir, name + ".*"))
-            {
-                File.Delete(file);
-            }
         }
 
         private IEnumerable<Document> StreamDocuments(string ixFileName)
