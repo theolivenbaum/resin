@@ -22,8 +22,6 @@ With Resin's default storage engine you have the option of compressing your data
 ## Pluggable storage engine
 Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
 
-Resin achieves read and write consistency through the use of timestamps and snapshots, its native document storage likewise. A custom engine can follow this principle but may also choose other consistency models.
-
 ## Flexible and extensible
 Are you looking for something other than a document database or a search engine? Database builders or architects looking for Resin's indexing capabilities specifically and nothing but, can either 
 - integrate as a store plug-in
@@ -33,16 +31,18 @@ Are you looking for something other than a document database or a search engine?
   
 ![query](/docs/query.png)
 
-## Writing
+## Log-structured writing
+
+### Write
   
 ![query](/docs/write.png)
 
-## Deleting
+### Delete
   
 ![query](/docs/delete.png)
 
-## Optimize (coming soon)
-Performing a optimization operation on a directory leads to file segments becoming merged, old data pruned. This leads to increased querying performance.
+### Optimize (coming soon)
+Performing a optimization operation on a directory leads to file segments becoming merged and old data pruned leading to increased querying performance and a smaller disk footprint.
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
