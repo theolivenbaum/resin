@@ -4,14 +4,16 @@ In-process document database with full-text search and pluggable storage engine.
 ## No schema
 Your document store can contain documents with variable number columns/fields. 
 
-## Vector space bag-of-words model
-Scores are calculated using a vector space/tf-idf bag-of-words model.
-
 ## Auto-index
-By default Resin indexes all fields on all documents. You can opt out of indexing and storing of fields.
+By default Resin indexes all fields on all documents. You can opt out of indexing (analyzing) and storing of fields.
+
+When retrieving a document with nothing but unstored but analyzed fields, you will get a blank document back but its contents will have participated in calculating tf-idf scores.
 
 ## Full-text search
 Resin can traverse its index as a Levenshtein-powered automaton. Querying support includes term, fuzzy, prefix, phrase and range. 
+
+## Vector space bag-of-words model
+Scores are calculated using a vector space/tf-idf bag-of-words model.
 
 ## Disk-based tree traversal
 The index is a fast disk-based left-child-right-sibling character trie.
