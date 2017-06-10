@@ -1,8 +1,8 @@
 # ResinDB
-In-process document database with pluggable storage engine and full-text search.
+In-process document database with full-text search and pluggable storage engine.
 
 ## No schema
-Your document store can contain documents with variable columns/fields. 
+Your document store can contain documents with variable number columns/fields. 
 
 ## Vector space bag-of-words model
 Scores are calculated using a vector space/tf-idf bag-of-words model.
@@ -11,10 +11,10 @@ Scores are calculated using a vector space/tf-idf bag-of-words model.
 By default Resin indexes all fields on all documents. You can opt out of indexing and storing of fields.
 
 ## Full-text search
-Resin can traverse its index as a Levenshtein-powered automaton. Querying support includes term, fuzzy, prefix, phrase and range. Analyzers, tokenizers and scoring schemes are customizable.
+Resin can traverse its index as a Levenshtein-powered automaton. Querying support includes term, fuzzy, prefix, phrase and range. 
 
 ## Disk-based tree traversal
-The index is a disk-based left-child-right-sibling character trie. Indices and document stores are very fast to write to and read from.
+The index is a fast disk-based left-child-right-sibling character trie.
 
 ## Compression
 With Resin's default storage engine you have the option of compressing your data with either QuickLZ or GZip. For unstructured data compression leaves a smaller footprint on disk and enables faster writes.
@@ -23,6 +23,8 @@ With Resin's default storage engine you have the option of compressing your data
 Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
 
 ## Flexible and extensible
+Analyzers, tokenizers and scoring schemes are customizable.
+
 Are you looking for something other than a document database or a search engine? Database builders or architects looking for Resin's indexing capabilities specifically and nothing but, can either 
 - integrate as a store plug-in
 - send documents to the default storage engine storing a single unique key per document but analyzing everything (and then querying the index like you normally would to resolve the primary key)
