@@ -85,19 +85,24 @@ namespace Resin
         {
             if (_ixFilesToProcess.Length == 1)
             {
-                // truncate
+                // truncate only if segmented or new compression is to be applied
 
-                var documents = StreamDocuments(_ixFilesToProcess[0]);
+                var ix = IxInfo.Load(_ixFilesToProcess[0]);
 
-                var documentStream = new InMemoryDocumentStream(documents);
-
-                using (var upsert = new UpsertOperation(
-                    _directory,
-                    _analyzer,
-                    compression,
-                    documentStream))
+                if (Util.IsSegmented(_ixFilesToProcess[0]) || compression != ix.Compression)
                 {
-                    return upsert.Write();
+                    var documents = StreamDocuments(_ixFilesToProcess[0]);
+
+                    var documentStream = new InMemoryDocumentStream(documents);
+
+                    using (var upsert = new UpsertOperation(
+                        _directory,
+                        _analyzer,
+                        compression,
+                        documentStream))
+                    {
+                        return upsert.Write();
+                    }
                 }
             }
 

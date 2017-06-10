@@ -124,5 +124,13 @@ namespace Resin.Sys
         {
             return File.Exists(Path.Combine(directory, "write.lock"));
         }
+
+        public static bool IsSegmented(string ixFileName)
+        {
+            var dir = Path.GetDirectoryName(ixFileName);
+            var searchPattern = Path.GetFileNameWithoutExtension(ixFileName) + "*";
+            var files = Directory.GetFiles(dir, searchPattern);
+            return files.Any(f => Path.GetExtension(f) == ".six");
+        }
     }
 }
