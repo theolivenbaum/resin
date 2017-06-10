@@ -2,7 +2,7 @@
   "profiles": {
     "Resin.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "write --file c:\\temp\\pg\\docs0.json --dir c:\\temp\\resin\\pg --pk url --take 10"
+      "commandLineArgs": "write --file c:\\temp\\pg\\docs0.json --dir c:\\temp\\resin\\pg --take 10"
     }
   }
 }

@@ -172,7 +172,7 @@ namespace Resin.Cli
             var skip = 0;
             bool gzip = false;
             bool lz = false;
-            string pk = string.Empty;
+            string pk = null;
 
             if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
             if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);

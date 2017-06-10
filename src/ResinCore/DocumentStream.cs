@@ -24,7 +24,7 @@ namespace Resin
         protected IEnumerable<Document> ReadSourceAndAssignPk(
             IEnumerable<Document> documents)
         {
-            var autoGeneratePk = _primaryKeyFieldName == null;
+            var autoGeneratePk = string.IsNullOrWhiteSpace(_primaryKeyFieldName);
 
             foreach (var document in documents)
             {
