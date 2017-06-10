@@ -41,8 +41,23 @@ Are you looking for something other than a document database or a search engine?
   
 ![query](/docs/delete.png)
 
-### Truncate (coming soon)
-Performing a truncate operation on a directory leads to file segments becoming merged and old data pruned leading to increased querying performance and a smaller disk foot-print.
+### Merge and truncate
+Multiple simultaneous writes are allowed. When they happen the index forks into two or more branches. 
+
+Querying is performed over multiple branches but takes a hit performance wise when there are many.
+
+Issuing multiple merge operatons on a directory will lead to forks becoming merged (in order according to their wall-clock timestamp) and then segments becoming truncated. A truncate operation wipes away unusable data leading to increased querying performance and a smaller disk foot-print.
+
+Merging two forks or writing to an existing index leads to a defragmented but still segmented index.
+
+Merging a single segmented index results in a unisegmented index.
+
+Attempting to merge a unisegmented index does not generate a result.
+
+### Rewrite to compress/deflate
+If you changed your mind regarding your compression strategy, issue a merge operation on a segmented or unisegmented index specifying the preferred compression rate to rewrite the store.
+
+Note: rewriting a branched store leads to the main trunk being truncated and rewritten but the branches left untouched. Branches may be merged afterwards. Also note that branches may have different compression rates. 
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
