@@ -78,7 +78,7 @@ Clone the source or [download the latest source as a zip file](https://github.co
 ## Help out?
 Awesome! Start [here](https://github.com/kreeben/resin/issues).
 
-## Documentation
+## Usage
 ### A document (serialized).
 
 	{
