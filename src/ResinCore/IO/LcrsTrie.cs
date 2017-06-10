@@ -215,7 +215,7 @@ namespace Resin.IO
             }
         }
 
-        public bool HasWord(string word, out Word found)
+        public IEnumerable<Word> IsWord(string word)
         {
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 
@@ -226,11 +226,10 @@ namespace Resin.IO
                 {
                     throw new InvalidOperationException("WordCount");
                 }
-                found = new Word(word, node.WordCount, node.PostingsAddress, node.Postings);
-                return node.EndOfWord;
+                if (node.EndOfWord)
+                    yield return new Word(
+                        word, node.WordCount, node.PostingsAddress, node.Postings);
             }
-            found = Word.MinValue;
-            return false;
         }
 
         public IEnumerable<Word> WithinRange(string lowerBound, string upperBound)
@@ -395,6 +394,15 @@ namespace Resin.IO
 
             if (LeftChild != null)
                 LeftChild.Visualize(output, depth + 1);
+        }
+
+        public bool HasMoreSegments()
+        {
+            return false;
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

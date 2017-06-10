@@ -12,9 +12,9 @@ namespace Resin.IO
     public static class Serializer
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Serializer));
-
         public static readonly Encoding Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
         private static readonly Dictionary<bool, byte> EncodedBoolean = new Dictionary<bool, byte> { { true, 1 }, { false, 0 } };
+        public static char SegmentDelimiter = (char)23;
 
         public static int SizeOfNode()
         {
@@ -48,12 +48,44 @@ namespace Resin.IO
 
         public static void Serialize(this LcrsTrie trie, string fileName)
         {
-            using (var stream = new FileStream(
-                fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            var dir = Path.GetDirectoryName(fileName);
+            var sixFileName = Path.Combine(dir,
+                Path.GetFileNameWithoutExtension(fileName) + ".six");
+
+            using (var sixStream = new FileStream(sixFileName, FileMode.Append, FileAccess.Write, FileShare.Read))
             {
-                if (trie.LeftChild != null)
+                FileStream treeStream;
+
+                if (File.Exists(fileName))
                 {
-                    trie.LeftChild.SerializeDepthFirst(stream, 0);
+                    treeStream = new FileStream(
+                        fileName, FileMode.Append, FileAccess.Write, FileShare.Read);
+
+                    var segmentDelimiter = new LcrsNode(SegmentDelimiter, false, false, false, 0, 1, null);
+
+                    segmentDelimiter.Serialize(treeStream);
+                }
+                else
+                {
+                    treeStream = new FileStream(
+                        fileName, FileMode.Append, FileAccess.Write, FileShare.None);
+                }
+
+                var position = treeStream.Position;
+                var posBytes = BitConverter.GetBytes(position);
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(posBytes);
+                }
+                sixStream.Write(posBytes, 0, sizeof(long));
+
+                using (treeStream)
+                {
+                    if (trie.LeftChild != null)
+                    {
+                        trie.LeftChild.SerializeDepthFirst(treeStream, 0);
+                    }
                 }
             }
         }
@@ -377,6 +409,25 @@ namespace Resin.IO
             }
         }
 
+        public static byte[] Serialize(this IEnumerable<long> entries)
+        {
+            using (var stream = new MemoryStream())
+            {
+                foreach (var entry in entries)
+                {
+                    byte[] valBytes = BitConverter.GetBytes(entry);
+
+                    if (!BitConverter.IsLittleEndian)
+                    {
+                        Array.Reverse(valBytes);
+                    }
+
+                    stream.Write(valBytes, 0, sizeof(long));
+                }
+                return stream.ToArray();
+            }
+        }
+
         public static void Serialize(this DocHash docHash, Stream stream)
         {
             byte[] hashBytes = BitConverter.GetBytes(docHash.Hash);
@@ -510,6 +561,25 @@ namespace Resin.IO
                 yield return val;
 
                 pos = pos + sizeof(int);
+            }
+        }
+
+        public static IEnumerable<long> DeserializeLongList(byte[] data)
+        {
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(data);
+            }
+
+            int pos = 0;
+
+            while (pos < data.Length)
+            {
+                var val = BitConverter.ToInt64(data, pos);
+
+                yield return val;
+
+                pos = pos + sizeof(long);
             }
         }
 

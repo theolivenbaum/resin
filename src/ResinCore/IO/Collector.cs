@@ -103,35 +103,32 @@ namespace Resin.IO
             }
             else
             {
-                if (query.Fuzzy)
+                using (reader)
                 {
-                    query.Terms = reader.Near(query.Value, query.Edits, _distanceResolver)
-                        .Select(word => new Term(query.Field, word))
-                        .ToList();
-                }
-                else if (query.Prefix)
-                {
-                    query.Terms = reader.StartsWith(query.Value)
-                        .Select(word => new Term(query.Field, word))
-                        .ToList();
-                }
-                else if (query.Range)
-                {
-                    query.Terms = reader.WithinRange(query.Value, query.ValueUpperBound)
-                        .Select(word => new Term(query.Field, word))
-                        .ToList();
-                }
-                else
-                {
-                    var terms = new List<Term>();
-                    Word word;
-
-                    if (reader.HasWord(query.Value, out word))
+                    if (query.Fuzzy)
                     {
-                        terms.Add(new Term(query.Field, word));
+                        query.Terms = reader.Near(query.Value, query.Edits, _distanceResolver)
+                            .Select(word => new Term(query.Field, word))
+                            .ToList();
                     }
-
-                    query.Terms = terms;
+                    else if (query.Prefix)
+                    {
+                        query.Terms = reader.StartsWith(query.Value)
+                            .Select(word => new Term(query.Field, word))
+                            .ToList();
+                    }
+                    else if (query.Range)
+                    {
+                        query.Terms = reader.WithinRange(query.Value, query.ValueUpperBound)
+                            .Select(word => new Term(query.Field, word))
+                            .ToList();
+                    }
+                    else
+                    {
+                        query.Terms = reader.IsWord(query.Value)
+                            .Select(word => new Term(query.Field, word))
+                            .ToList();
+                    }
                 }
             }
 

@@ -12,7 +12,7 @@ namespace Resin.IO.Write
 
         public BlockWriter(Stream stream)
         {
-            _position = 0;
+            _position = stream.Position;
             _stream = stream;
         }
 

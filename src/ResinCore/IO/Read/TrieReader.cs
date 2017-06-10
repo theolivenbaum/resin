@@ -10,6 +10,9 @@ namespace Resin.IO.Read
     {
         protected abstract LcrsNode Step();
         protected abstract void Skip(int count);
+        public abstract void Dispose();
+        public abstract bool HasMoreSegments();
+        public abstract void GoToNextSegment();
 
         protected LcrsNode LastRead;
         protected LcrsNode Replay;
@@ -20,22 +23,32 @@ namespace Resin.IO.Read
             Replay = LcrsNode.MinValue;
         }
 
-        public bool HasWord(string word, out Word found)
+        public IEnumerable<Word> IsWord(string word)
         {
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 
-            LcrsNode node;
-            if (TryFindDepthFirst(word, out node))
+            while (true)
             {
-                if (node.PostingsAddress == null)
-                    throw new InvalidOperationException(
-                        "cannot create word without postings address");
+                LcrsNode node;
+                if (TryFindDepthFirst(word, out node))
+                {
+                    if (node.PostingsAddress == null)
+                        throw new InvalidOperationException(
+                            "cannot create word without postings address");
 
-                found = new Word(word, 1, node.PostingsAddress);
-                return node.EndOfWord;
+                    if (node.EndOfWord)
+                        yield return new Word(word, 1, node.PostingsAddress);
+                }
+
+                if (HasMoreSegments())
+                {
+                    GoToNextSegment();
+                }
+                else
+                {
+                    break;
+                }
             }
-            found = Word.MinValue;
-            return false;
         }
 
         public IEnumerable<Word> StartsWith(string prefix)
@@ -44,11 +57,23 @@ namespace Resin.IO.Read
 
             var words = new List<Word>();
 
-            LcrsNode node;
-
-            if (TryFindDepthFirst(prefix, out node))
+            while (true)
             {
-                DepthFirst(prefix, new List<char>(), words, prefix.Length - 1);
+                LcrsNode node;
+
+                if (TryFindDepthFirst(prefix, out node))
+                {
+                    DepthFirst(prefix, new List<char>(), words, prefix.Length - 1);
+                }
+
+                if (HasMoreSegments())
+                {
+                    GoToNextSegment();
+                }
+                else
+                {
+                    break;
+                }
             }
 
             return words;
@@ -60,7 +85,19 @@ namespace Resin.IO.Read
 
             var words = new List<Word>();
 
-            WithinEditDistanceDepthFirst(word, string.Empty, words, 0, maxEdits, distanceResolver);
+            while (true)
+            {
+                WithinEditDistanceDepthFirst(word, string.Empty, words, 0, maxEdits, distanceResolver);
+
+                if (HasMoreSegments())
+                {
+                    GoToNextSegment();
+                }
+                else
+                {
+                    break;
+                }
+            }
 
             return words;
         }
@@ -84,7 +121,7 @@ namespace Resin.IO.Read
             return words;
         }
 
-        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> compressed, int depth, int maxErrors, IDistanceResolver distanceResolver, bool stop = false)
+        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> words, int depth, int maxErrors, IDistanceResolver distanceResolver, bool stop = false)
         {
             var reachedMin = maxErrors == 0 || depth >= word.Length - 1 - maxErrors;
             var reachedDepth = depth >= word.Length - 1;
@@ -92,7 +129,14 @@ namespace Resin.IO.Read
 
             var node = Step();
 
-            if (node == LcrsNode.MinValue) return;
+            if (node == LcrsNode.MinValue)
+            {
+                return;
+            }
+            else if (node.Value == Serializer.SegmentDelimiter)
+            {
+                return;
+            }
 
             if (reachedMax || stop)
             {
@@ -119,7 +163,7 @@ namespace Resin.IO.Read
                     {
                         if (node.EndOfWord)
                         {
-                            compressed.Add(new Word(test, 1, node.PostingsAddress));
+                            words.Add(new Word(test, 1, node.PostingsAddress));
                         }
                     }
                     else if (edits > maxErrors && reachedDepth)
@@ -135,18 +179,18 @@ namespace Resin.IO.Read
                 // Go left (deep)
                 if (node.HaveChild)
                 {
-                    WithinEditDistanceDepthFirst(word, test, compressed, depth + 1, maxErrors, distanceResolver, stop);
+                    WithinEditDistanceDepthFirst(word, test, words, depth + 1, maxErrors, distanceResolver, stop);
                 }
 
                 // Go right (wide)
                 if (node.HaveSibling)
                 {
-                    WithinEditDistanceDepthFirst(word, state, compressed, depth, maxErrors, distanceResolver);
+                    WithinEditDistanceDepthFirst(word, state, words, depth, maxErrors, distanceResolver);
                 }
             }
         }
 
-        private void DepthFirst(string prefix, IList<char> path, IList<Word> compressed, int depth, string upperBound = null)
+        private void DepthFirst(string prefix, IList<char> path, IList<Word> words, int depth, string upperBound = null)
         {
             var node = Step();
             var siblings = new Stack<Tuple<int, IList<char>>>();
@@ -170,7 +214,7 @@ namespace Resin.IO.Read
                        (word.Length <= upperBound.Length && node.Value <= upperBound[depth + 1]) ||
                         word.Length > upperBound.Length)
                     {
-                        compressed.Add(new Word(word, 1, node.PostingsAddress));
+                        words.Add(new Word(word, 1, node.PostingsAddress));
                     }
                 }
 
@@ -188,7 +232,7 @@ namespace Resin.IO.Read
             // Go right (wide)
             foreach (var siblingState in siblings)
             {
-                DepthFirst(prefix, siblingState.Item2, compressed, siblingState.Item1, upperBound);
+                DepthFirst(prefix, siblingState.Item2, words, siblingState.Item1, upperBound);
             }
         }
 
@@ -215,6 +259,11 @@ namespace Resin.IO.Read
 
             while (node != LcrsNode.MinValue)
             {
+                if (node.Value == Serializer.SegmentDelimiter)
+                {
+                    break;
+                }
+
                 if (node.Depth != currentDepth)
                 {
                     Skip(node.Weight - 1);
@@ -224,6 +273,10 @@ namespace Resin.IO.Read
                 if (node == LcrsNode.MinValue)
                 {
                     return false;
+                }
+                else if (node.Value == Serializer.SegmentDelimiter)
+                {
+                    break;
                 }
 
                 if ((greaterThan && node.Value >= path[currentDepth]) ||

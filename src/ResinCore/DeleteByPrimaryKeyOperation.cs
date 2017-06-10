@@ -46,11 +46,11 @@ namespace Resin
                 {
                     foreach (var document in Serializer.DeserializeDocHashes(docHashFileName))
                     {
-                        Word found;
-
                         var hash = document.Hash.ToString(CultureInfo.InvariantCulture);
 
-                        if (deleteSet.HasWord(hash, out found))
+                        IList<Word> found = deleteSet.IsWord(hash).ToList();
+
+                        if (found.Any())
                         {
                             if (!document.IsObsolete)
                             {

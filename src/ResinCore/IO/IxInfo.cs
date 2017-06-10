@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using log4net;
+using System.Collections.Generic;
 
 namespace Resin.IO
 {

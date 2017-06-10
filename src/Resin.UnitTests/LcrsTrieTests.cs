@@ -21,15 +21,13 @@ namespace Tests
             two.Add("citron");
 
             one.Merge(two);
-
-            Word found;
             
-            Assert.IsTrue(one.HasWord("ape", out found));
-            Assert.IsTrue(one.HasWord("app", out found));
-            Assert.IsTrue(one.HasWord("apple", out found));
-            Assert.IsTrue(one.HasWord("banana", out found));
-            Assert.IsTrue(one.HasWord("bananas", out found));
-            Assert.IsTrue(one.HasWord("citron", out found));
+            Assert.IsTrue(one.IsWord("ape").Any());
+            Assert.IsTrue(one.IsWord("app").Any());
+            Assert.IsTrue(one.IsWord("apple").Any());
+            Assert.IsTrue(one.IsWord("banana").Any());
+            Assert.IsTrue(one.IsWord("bananas").Any());
+            Assert.IsTrue(one.IsWord("citron").Any());
         }
 
         [TestMethod]
@@ -148,25 +146,25 @@ namespace Tests
         {
             var tree = new LcrsTrie('\0', false);
             Word word;
-            Assert.IsFalse(tree.HasWord("xxx", out word));
+            Assert.IsFalse(tree.IsWord("xxx").Any());
 
             tree.Add("xxx");
 
-            Assert.IsTrue(tree.HasWord("xxx", out word));
-            Assert.IsFalse(tree.HasWord("baby", out word));
-            Assert.IsFalse(tree.HasWord("dad", out word));
+            Assert.IsTrue(tree.IsWord("xxx").Any());
+            Assert.IsFalse(tree.IsWord("baby").Any());
+            Assert.IsFalse(tree.IsWord("dad").Any());
 
             tree.Add("baby");
 
-            Assert.IsTrue(tree.HasWord("xxx", out word));
-            Assert.IsTrue(tree.HasWord("baby", out word));
-            Assert.IsFalse(tree.HasWord("dad", out word));
+            Assert.IsTrue(tree.IsWord("xxx").Any());
+            Assert.IsTrue(tree.IsWord("baby").Any());
+            Assert.IsFalse(tree.IsWord("dad").Any());
 
             tree.Add("dad");
 
-            Assert.IsTrue(tree.HasWord("xxx", out word));
-            Assert.IsTrue(tree.HasWord("baby", out word));
-            Assert.IsTrue(tree.HasWord("dad", out word));
+            Assert.IsTrue(tree.IsWord("xxx").Any());
+            Assert.IsTrue(tree.IsWord("baby").Any());
+            Assert.IsTrue(tree.IsWord("dad").Any());
         }
 
         [TestMethod]
@@ -181,7 +179,7 @@ namespace Tests
             Assert.AreEqual('b', tree.LeftChild.LeftChild.LeftChild.Value);
             Assert.AreEqual('y', tree.LeftChild.LeftChild.LeftChild.LeftChild.Value);
 
-            Assert.IsTrue(tree.HasWord("baby", out word));
+            Assert.IsTrue(tree.IsWord("baby").Any());
         }
 
         [TestMethod]
@@ -200,8 +198,8 @@ namespace Tests
             Assert.AreEqual('b', root.LeftChild.LeftChild.LeftChild.Value);
             Assert.AreEqual('y', root.LeftChild.LeftChild.LeftChild.LeftChild.Value);
 
-            Assert.IsTrue(root.HasWord("baby", out word));
-            Assert.IsTrue(root.HasWord("dad", out word));
+            Assert.IsTrue(root.IsWord("baby").Any());
+            Assert.IsTrue(root.IsWord("dad").Any());
         }
 
         [TestMethod]
@@ -220,8 +218,8 @@ namespace Tests
             Assert.AreEqual('b', root.LeftChild.LeftChild.LeftChild.Value);
             Assert.AreEqual('y', root.LeftChild.LeftChild.LeftChild.LeftChild.Value);
 
-            Assert.IsTrue(root.HasWord("baby", out word));
-            Assert.IsTrue(root.HasWord("bad", out word));
+            Assert.IsTrue(root.IsWord("baby").Any());
+            Assert.IsTrue(root.IsWord("bad").Any());
         }
     }
 }

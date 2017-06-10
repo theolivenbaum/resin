@@ -8,6 +8,7 @@ using Resin.IO;
 using Resin.IO.Write;
 using Resin.Sys;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Resin
 {
@@ -30,20 +31,29 @@ namespace Resin
             DocumentStream documents, 
             IDocumentStoreWriter storeWriter = null)
         {
-            _indexVersionId = Util.GetNextChronologicalFileId();
+            var lastVersion = Directory.GetFiles(directory, "*.ix").OrderBy(fn => fn)
+                .LastOrDefault();
+
+            if (lastVersion == null)
+            {
+                _indexVersionId = Util.GetNextChronologicalFileId();
+            }
+            else
+            {
+                _indexVersionId = long.Parse(Path.GetFileNameWithoutExtension(lastVersion));
+
+                var ix = IxInfo.Load(lastVersion);
+
+                _count = ix.DocumentCount;
+            }
+
             _directory = directory;
             _analyzer = analyzer;
             _compression = compression;
             _documents = documents;
 
-            var docFileName = Path.Combine(_directory, _indexVersionId + ".rdoc");
-            var docAddressFn = Path.Combine(_directory, _indexVersionId + ".da");
-            var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _indexVersionId, "pk"));
-
-            _storeWriter = storeWriter ?? new DocumentStoreWriter(
-                new DocumentAddressWriter(new FileStream(docAddressFn, FileMode.Create, FileAccess.Write, FileShare.None)), 
-                new DocumentWriter(new FileStream(docFileName, FileMode.Create, FileAccess.Write, FileShare.None), _compression), 
-                new FileStream(docHashesFileName, FileMode.Create, FileAccess.Write, FileShare.None));
+            _storeWriter = storeWriter ?? 
+                new DocumentStoreWriter(directory, _indexVersionId, _compression);
         }
 
         public long Write()
@@ -72,7 +82,7 @@ namespace Resin
             var tries = trieBuilder.GetTries();
 
             using (var postingsWriter = new PostingsWriter(
-                new FileStream(posFileName, FileMode.Create, FileAccess.Write, FileShare.None)))
+                new FileStream(posFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite)))
             {
                 foreach (var trie in tries)
                 {
@@ -125,14 +135,19 @@ namespace Resin
         {
             _storeWriter.Dispose();
 
+            var tmpFileName = Path.Combine(_directory, _indexVersionId + "._ix");
+            var fileName = Path.Combine(_directory, _indexVersionId + ".ix");
+            
             new IxInfo
             {
                 VersionId = _indexVersionId,
                 DocumentCount = _count,
                 Compression = _compression,
                 PrimaryKeyFieldName = _documents.PrimaryKeyFieldName
-            }.Serialize(Path.Combine(_directory, _indexVersionId + ".ix"));
+            }.Serialize(tmpFileName);
 
+            File.Copy(tmpFileName, fileName, overwrite:true);
+            File.Delete(tmpFileName);
         }
     }
 }
