@@ -85,7 +85,8 @@ namespace Resin
         {
             if (_ixFilesToProcess.Length == 1)
             {
-                // truncate only if segmented or new compression is to be applied
+                // truncate 
+                // (if segmented or new compression is to be applied)
 
                 var ix = IxInfo.Load(_ixFilesToProcess[0]);
 
