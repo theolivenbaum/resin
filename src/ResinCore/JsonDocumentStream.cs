@@ -41,7 +41,7 @@ namespace Resin
                 }
             }
 
-            return ReadSourceAndAssignIdentifiers( ReadInternal().Take(_take));
+            return ReadSourceAndAssignPk( ReadInternal().Take(_take));
         }
 
         private IEnumerable<Document> ReadInternal()

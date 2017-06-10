@@ -12,7 +12,6 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(DocumentStream));
         private readonly Dictionary<ulong, object> _primaryKeys;
         private string _primaryKeyFieldName;
-        private int _count;
 
         public string PrimaryKeyFieldName { get { return _primaryKeyFieldName; } }
 
@@ -22,7 +21,7 @@ namespace Resin
             _primaryKeyFieldName = primaryKeyFieldName;
         }
 
-        protected IEnumerable<Document> ReadSourceAndAssignIdentifiers(
+        protected IEnumerable<Document> ReadSourceAndAssignPk(
             IEnumerable<Document> documents)
         {
             var autoGeneratePk = _primaryKeyFieldName == null;
@@ -52,7 +51,6 @@ namespace Resin
                     _primaryKeys.Add(hash, null);
 
                     document.Hash = hash;
-                    document.Id = _count++;
 
                     yield return document;
                 }

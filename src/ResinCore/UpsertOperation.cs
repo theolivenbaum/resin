@@ -56,16 +56,16 @@ namespace Resin
 
             foreach (var doc in _documents.ReadSource())
             {
+                doc.Id = _count++;
+
                 new SingleDocumentUpsertOperation().Write(
                     doc,
                     _storeWriter,
                     _analyzer,
                     trieBuilder);
-
-                _count++;
             }
 
-            Log.InfoFormat("stored {0} documents in {1}", _count, docTimer.Elapsed);
+            Log.InfoFormat("stored {0} documents in {1}", _count+1, docTimer.Elapsed);
 
             var posTimer = Stopwatch.StartNew();
 

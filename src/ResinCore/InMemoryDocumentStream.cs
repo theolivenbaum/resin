@@ -13,7 +13,7 @@ namespace Resin
         }
         public override IEnumerable<Document> ReadSource()
         {
-            return ReadSourceAndAssignIdentifiers(_documents);
+            return ReadSourceAndAssignPk(_documents);
         }
     }
 }
