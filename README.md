@@ -41,8 +41,8 @@ Are you looking for something other than a document database or a search engine?
   
 ![query](/docs/delete.png)
 
-### Optimize (coming soon)
-Performing a optimization operation on a directory leads to file segments becoming merged and old data pruned leading to increased querying performance and a smaller disk footprint.
+### Truncate (coming soon)
+Performing a truncate operation on a directory leads to file segments becoming merged and old data pruned leading to increased querying performance and a smaller disk foot-print.
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
