@@ -9,7 +9,7 @@ You can group similar documents into separate stores or have them all in a big s
 ## Auto-index
 By default Resin indexes all fields on all documents. You can opt out of indexing (analyzing) and storing of fields.
 
-When retrieving a document with nothing but unstored but analyzed fields, you will get a blank document back but its contents will have participated in calculating tf-idf scores.
+If you try to retrieve a document that was upserted with nothing but unstored analyzed fields you will get a blank document back but its contents will have participated in calculating tf-idf scores.
 
 ## Full-text search
 Resin can traverse its index as a Levenshtein-powered automaton. Querying support includes term, fuzzy, prefix, phrase and range. 
