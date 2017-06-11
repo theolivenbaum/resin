@@ -48,26 +48,19 @@ Are you looking for something other than a document database or a search engine?
 ![query](/docs/delete.png)
 
 ### Merge and truncate
-Multiple simultaneous writes are allowed. When they happen instead of appending to the main log the index forks into two or more branches. 
+Multiple simultaneous writes are allowed. When they happen instead of appending to the main log the index forks into two or more branches and the document file fragments into two or more files. 
 
 Querying is performed over multiple branches but takes a hit performance wise when there are many.
 
 A new segment is a minor or no performance hit.
 
-Issuing multiple merge operations on a directory will lead to forks becoming merged (in order according to their wall-clock timestamp) and then segments becoming truncated. A truncate operation wipes away unusable data leading to increased querying performance and a smaller disk foot-print.
+Issuing multiple merge operations on a directory will lead to forks becoming merged (in order according to their wall-clock timestamp) and then segments becoming truncated. Merge and truncate truncate operation wipe away unusable data and lead to increased querying performance and a smaller disk foot-print.
 
 Merging two forks leads to a defragmented but segmented index.
 
 Writing to a store uncompeted yields a segmented index.
 
-Merging a single segmented index results in a unisegmented index.
-
-Attempting to merge a unisegmented index does nothing.
-
-### Rewrite to compress/deflate
-If you changed your mind regarding your compression strategy, issue a merge operation on a segmented or unisegmented index specifying the preferred compression rate to rewrite the store.
-
-Note: rewriting a branched store leads to the main trunk being truncated and rewritten but the branches left untouched. Branches may be merged afterwards. Also note that it's ok for branches to have compression rates that differ. 
+Issuing a merge operation on a single segmented index results in a unisegmented index.
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
