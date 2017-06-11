@@ -1,10 +1,23 @@
-call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --take 100000
-call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 100000 --take 100000
-call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 200000 --take 100000 
-call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 300000 --take 100000
-call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 400000 --take 100000 
-call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 500000 --take 100000 
-call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 600000 --take 100000
-call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 700000 --take 100000
-call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 800000 --take 100000 
-call rn write --file "C:\Users\Marcus\Downloads\enwiki-20120502-lines-1k.txt" --dir D:\resin\wikipedia --skip 900000 --take 100000
+call rn write --file "c:\temp\pg\docs0.json" --dir c:\temp\resin\pg --pk url --skip 0 --take 2000
+call rn write --file "c:\temp\pg\docs0.json" --dir c:\temp\resin\pg --pk url --skip 2000 --take 2000
+call rn write --file "c:\temp\pg\docs0.json" --dir c:\temp\resin\pg --pk url --skip 4000 --take 2000
+call rn write --file "c:\temp\pg\docs0.json" --dir c:\temp\resin\pg --pk url --skip 6000 --take 2000
+call rn write --file "c:\temp\pg\docs0.json" --dir c:\temp\resin\pg --pk url --skip 8000 --take 2000
+
+call rn write --file "c:\temp\pg\docs1.json" --dir c:\temp\resin\pg --pk url --skip 0 --take 2000
+call rn write --file "c:\temp\pg\docs1.json" --dir c:\temp\resin\pg --pk url --skip 2000 --take 2000
+call rn write --file "c:\temp\pg\docs1.json" --dir c:\temp\resin\pg --pk url --skip 4000 --take 2000
+call rn write --file "c:\temp\pg\docs1.json" --dir c:\temp\resin\pg --pk url --skip 6000 --take 2000
+call rn write --file "c:\temp\pg\docs1.json" --dir c:\temp\resin\pg --pk url --skip 8000 --take 2000
+
+call rn write --file "c:\temp\pg\docs2.json" --dir c:\temp\resin\pg --pk url --skip 0 --take 2000
+call rn write --file "c:\temp\pg\docs2.json" --dir c:\temp\resin\pg --pk url --skip 2000 --take 2000
+call rn write --file "c:\temp\pg\docs2.json" --dir c:\temp\resin\pg --pk url --skip 4000 --take 2000
+call rn write --file "c:\temp\pg\docs2.json" --dir c:\temp\resin\pg --pk url --skip 6000 --take 2000
+call rn write --file "c:\temp\pg\docs2.json" --dir c:\temp\resin\pg --pk url --skip 8000 --take 2000
+
+call rn write --file "c:\temp\pg\docs3.json" --dir c:\temp\resin\pg --pk url --skip 0 --take 2000
+call rn write --file "c:\temp\pg\docs3.json" --dir c:\temp\resin\pg --pk url --skip 2000 --take 2000
+call rn write --file "c:\temp\pg\docs3.json" --dir c:\temp\resin\pg --pk url --skip 4000 --take 2000
+call rn write --file "c:\temp\pg\docs3.json" --dir c:\temp\resin\pg --pk url --skip 6000 --take 2000
+call rn write --file "c:\temp\pg\docs3.json" --dir c:\temp\resin\pg --pk url --skip 8000 --take 2000

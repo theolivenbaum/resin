@@ -49,6 +49,8 @@ namespace Resin
             string line;
             while ((line=Reader.ReadLine()) != "]")
             {
+                if (line == null) break;
+
                 var dict = JsonConvert.DeserializeObject<IDictionary<string, string>>(line);
 
                 yield return new Document(dict.Select(p=>new Field(p.Key, p.Value)).ToList());

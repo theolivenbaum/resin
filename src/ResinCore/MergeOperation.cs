@@ -181,9 +181,13 @@ namespace Resin
             var docAddressFn = Path.Combine(dir, ix.VersionId + ".da");
             var docHashesFileName = Path.Combine(dir, string.Format("{0}.{1}", ix.VersionId, "pk"));
 
-            var tmpDoc = Path.GetRandomFileName();
-            var tmpAdr = Path.GetRandomFileName();
-            var tmpHas = Path.GetRandomFileName();
+            var tmpDoc = Path.Combine(dir, Path.GetRandomFileName());
+            var tmpAdr = Path.Combine(dir, Path.GetRandomFileName());
+            var tmpHas = Path.Combine(dir, Path.GetRandomFileName());
+
+            _tmpFiles.Add(tmpDoc);
+            _tmpFiles.Add(tmpAdr);
+            _tmpFiles.Add(tmpHas);
 
             File.Copy(docFileName, tmpDoc);
             File.Copy(docAddressFn, tmpAdr);
