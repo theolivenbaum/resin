@@ -33,21 +33,7 @@ Are you looking for something other than a document database or a search engine?
 - integrate as a store plug-in
 - send documents to the default storage engine storing a single unique key per document but analyzing everything (and then querying the index like you normally would to resolve the primary key)
 
-## Query execution
-  
-![query](/docs/query.png)
-
-## Log-structured writing
-
-### Write
-  
-![query](/docs/write.png)
-
-### Delete
-  
-![query](/docs/delete.png)
-
-### Merge and truncate
+## Merge and truncate
 Multiple simultaneous writes are allowed. When they happen instead of appending to the main log the index forks into two or more branches and the document file fragments into two or more files. 
 
 Querying is performed over multiple branches but takes a hit performance wise when there are many.
@@ -117,3 +103,15 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 	var primaryKey = result.Docs[0].Fields["id"];
 
 [More documentation here](https://github.com/kreeben/resin/wiki). 
+
+## Query execution
+  
+![query](/docs/query.png)
+
+## Write
+  
+![query](/docs/write.png)
+
+## Delete
+  
+![query](/docs/delete.png)
