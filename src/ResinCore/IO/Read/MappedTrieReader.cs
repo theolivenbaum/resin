@@ -22,14 +22,7 @@ namespace Resin.IO.Read
 
             _stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan);
 
-            using (var sixStream = new FileStream(
-                sixFileName, FileMode.Open, FileAccess.Read,
-                FileShare.Read, 4096, FileOptions.SequentialScan))
-            {
-                var ms = new MemoryStream();
-                sixStream.CopyTo(ms);
-                _segs = Serializer.DeserializeLongList(ms.ToArray()).ToArray();
-            }
+            _segs = Serializer.DeserializeLongList(sixFileName).ToArray();
 
             _blockSize = Serializer.SizeOfNode();
 

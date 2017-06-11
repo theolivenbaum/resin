@@ -224,8 +224,8 @@ namespace Tests
                 }
             }
 
-            using (var merge = new MergeOperation(dir))
-                merge.Merge(Compression.NoCompression, "_id");
+            using (var merge1 = new MergeOperation(dir))
+                merge1.Merge();
 
             using (var searcher = new Searcher(dir))
             {
@@ -236,7 +236,38 @@ namespace Tests
 
                 Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "0"));
                 Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
+            }
 
+            using (var merge2 = new MergeOperation(dir))
+                merge2.Merge();
+
+            using (var searcher = new Searcher(dir))
+            {
+                var result = searcher.Search("title:rambo");
+
+                Assert.AreEqual(2, result.Total);
+                Assert.AreEqual(2, result.Docs.Count);
+
+                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "0"));
+                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
+            }
+
+            using (var merge3 = new MergeOperation(dir))
+            {
+                var result = merge3.Merge();
+
+                Assert.AreEqual(-1, result);
+            }
+
+            using (var searcher = new Searcher(dir))
+            {
+                var result = searcher.Search("title:rambo");
+
+                Assert.AreEqual(2, result.Total);
+                Assert.AreEqual(2, result.Docs.Count);
+
+                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "0"));
+                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
             }
         }
 

@@ -564,6 +564,18 @@ namespace Resin.IO
             }
         }
 
+        public static IEnumerable<long> DeserializeLongList(string fileName)
+        {
+            using (var sixStream = new FileStream(
+               fileName, FileMode.Open, FileAccess.Read,
+               FileShare.Read, 4096, FileOptions.SequentialScan))
+            {
+                var ms = new MemoryStream();
+                sixStream.CopyTo(ms);
+                return DeserializeLongList(ms.ToArray()).ToArray();
+            }
+        }
+
         public static IEnumerable<long> DeserializeLongList(byte[] data)
         {
             if (!BitConverter.IsLittleEndian)

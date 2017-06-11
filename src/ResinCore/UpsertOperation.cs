@@ -23,6 +23,7 @@ namespace Resin
         private readonly DocumentStream _documents;
         private readonly IDocumentStoreWriter _storeWriter;
         private int _count;
+        private bool _committed;
 
         public UpsertOperation(
             string directory, 
@@ -65,6 +66,8 @@ namespace Resin
 
         public long Write()
         {
+            if (_committed) return _indexVersionId;
+
             var ts = new List<Task>();
             var trieBuilder = new TrieBuilder();
             var posFileName = Path.Combine(
@@ -139,13 +142,13 @@ namespace Resin
             return _documents.ReadSource();
         }
 
-        public void Dispose()
+        public void Commit()
         {
             _storeWriter.Dispose();
 
             var tmpFileName = Path.Combine(_directory, _indexVersionId + "._ix");
             var fileName = Path.Combine(_directory, _indexVersionId + ".ix");
-            
+
             new IxInfo
             {
                 VersionId = _indexVersionId,
@@ -154,8 +157,15 @@ namespace Resin
                 PrimaryKeyFieldName = _documents.PrimaryKeyFieldName
             }.Serialize(tmpFileName);
 
-            File.Copy(tmpFileName, fileName, overwrite:true);
+            File.Copy(tmpFileName, fileName, overwrite: true);
             File.Delete(tmpFileName);
+
+            _committed = true;
+        }
+
+        public void Dispose()
+        {
+            if (!_committed) Commit();
 
             Util.ReleaseFileLock(_directory);
         }

@@ -2,7 +2,6 @@
 using Resin.Analysis;
 using Resin.IO;
 using Resin.IO.Read;
-using Resin.IO.Write;
 using Resin.Sys;
 using System;
 using System.Collections.Generic;
@@ -22,6 +21,7 @@ namespace Resin
         private readonly string _directory;
         private readonly string[] _ixFilesToProcess;
         private readonly IAnalyzer _analyzer;
+        private IList<string> _tmpFiles;
 
         public MergeOperation(string directory, IAnalyzer analyzer = null)
         {
@@ -33,13 +33,19 @@ namespace Resin
             _hashReader = new List<DocHashReader>();
             _addressReader = new List<DocumentAddressReader>();
             _documentReader = new List<DocumentReader>();
+            _tmpFiles = new List<string>();
         }
 
-        public void Dispose()
+        private void CloseReaders()
         {
             foreach (var r in _hashReader) r.Dispose();
             foreach (var r in _addressReader) r.Dispose();
             foreach (var r in _documentReader) r.Dispose();
+        }
+
+        public void Dispose()
+        {
+            CloseReaders();
 
             OrchestrateRemove();
         }
@@ -48,14 +54,20 @@ namespace Resin
         {
             if (count > 3) return;
 
-            if (_ixFilesToProcess.Length == 2)
+            try
             {
-                if (!TryRemove(_ixFilesToProcess[1]))
+                foreach (var file in _tmpFiles)
                 {
-                    Thread.Sleep(100);
-
-                    OrchestrateRemove(count++);
+                    File.Delete(file);
                 }
+            }
+            catch
+            {
+                Log.Warn("unable to clean up temp files after merge");
+
+                Thread.Sleep(100);
+
+                OrchestrateRemove(count++);
             }
         }
 
@@ -81,103 +93,120 @@ namespace Resin
             }
         }
 
-        public long Merge (Compression compression, string primaryKeyFieldName)
+        public long Merge()
         {
             if (_ixFilesToProcess.Length == 1)
             {
-                // truncate 
-                // (if segmented or new compression is to be applied)
+                // rewrite index to truncate segments
 
                 var ix = IxInfo.Load(_ixFilesToProcess[0]);
 
-                if (Util.IsSegmented(_ixFilesToProcess[0]) || compression != ix.Compression)
+                if (Util.IsSegmented(_ixFilesToProcess[0]))
                 {
-                    var documents = StreamDocuments(_ixFilesToProcess[0]);
-
-                    var documentStream = new InMemoryDocumentStream(documents);
-
-                    using (var upsert = new UpsertOperation(
-                        _directory,
-                        _analyzer,
-                        compression,
-                        documentStream))
-                    {
-                        return upsert.Write();
-                    }
+                    return Truncate(ix);
+                }
+                else
+                {
+                    return -1;
                 }
             }
 
-            // merge
+            // merge branches by creating new segment in base index
 
-            return Merge(
-                _ixFilesToProcess[0],
-                _ixFilesToProcess[1],
-                compression,
-                primaryKeyFieldName);
+            return Merge(_ixFilesToProcess[1]);
         }
 
-        public long Merge(
-            string firstIndexFileName, 
-            string secondIndexFileName, 
-            Compression compression, 
-            string primaryKeyFieldName)
+        private long Truncate(IxInfo ix)
         {
-            Log.Info("merging");
+            Log.InfoFormat("truncating {0}", ix.VersionId);
 
-            var documents = StreamDocuments(secondIndexFileName);
+            var documents = StreamDocuments(_ixFilesToProcess[0]);
+            var documentStream = new InMemoryDocumentStream(documents, ix.PrimaryKeyFieldName);
+            long version;
+            var directory = Path.GetDirectoryName(_ixFilesToProcess[0]);
 
-            var documentStream = new InMemoryDocumentStream(documents);
-            long versionId;
+            Util.TryAquireWriteLock(directory);
 
             using (var upsert = new UpsertOperation(
                 _directory,
-                new Analyzer(),
-                compression,
+                _analyzer,
+                ix.Compression,
                 documentStream))
             {
-                versionId = upsert.Write();
+                version = upsert.Write();
+                upsert.Commit();
+
+                Util.RemoveAll(_ixFilesToProcess[0]);
             }
 
-            return versionId;
+            Util.ReleaseFileLock(directory);
+
+            Log.InfoFormat("ix {0} fully truncated", _ixFilesToProcess[0]);
+
+            return version;
+        }
+
+        private long Merge(string indexFileName)
+        {
+            Log.InfoFormat("merging {0} with [1}", _ixFilesToProcess[1], _ixFilesToProcess[0]);
+
+            var documents = StreamDocuments(indexFileName);
+            var documentStream = new InMemoryDocumentStream(documents);
+            var ix = IxInfo.Load(indexFileName);
+            long version;
+
+            using (var upsert = new UpsertOperation(
+                _directory,
+                _analyzer,
+                ix.Compression,
+                documentStream))
+            {
+                version = upsert.Write();
+                upsert.Commit();
+
+                Util.RemoveAll(indexFileName);
+            }
+
+            Log.InfoFormat("{0} merged with {1} creating a segmented index", indexFileName, _ixFilesToProcess[0]);
+
+            return version;
         }
 
         private IEnumerable<Document> StreamDocuments(string ixFileName)
         {
             var dir = Path.GetDirectoryName(ixFileName);
             var ix = IxInfo.Load(ixFileName);
+
             var docFileName = Path.Combine(dir, ix.VersionId + ".rdoc");
             var docAddressFn = Path.Combine(dir, ix.VersionId + ".da");
             var docHashesFileName = Path.Combine(dir, string.Format("{0}.{1}", ix.VersionId, "pk"));
 
-            return StreamDocuments(
-                docFileName, docAddressFn, docHashesFileName, ix.DocumentCount, ix.Compression);
-        }
+            var tmpDoc = Path.GetRandomFileName();
+            var tmpAdr = Path.GetRandomFileName();
+            var tmpHas = Path.GetRandomFileName();
 
-        private IEnumerable<Document> StreamDocuments(
-            string docFileName, 
-            string docAddressFn, 
-            string docHashesFileName, 
-            int numOfDocs,
-            Compression compression)
-        {
-            var hashReader = new DocHashReader(docHashesFileName);
-            var addressReader = new DocumentAddressReader(new FileStream(docAddressFn, FileMode.Open, FileAccess.Read));
-            var documentReader = new DocumentReader(new FileStream(docFileName, FileMode.Open, FileAccess.Read), compression);
+            File.Copy(docFileName, tmpDoc);
+            File.Copy(docAddressFn, tmpAdr);
+            File.Copy(docHashesFileName, tmpHas);
+
+            var hashReader = new DocHashReader(tmpHas);
+            var addressReader = new DocumentAddressReader(new FileStream(tmpAdr, FileMode.Open, FileAccess.Read));
+            var documentReader = new DocumentReader(new FileStream(tmpDoc, FileMode.Open, FileAccess.Read), ix.Compression);
 
             _hashReader.Add(hashReader);
             _addressReader.Add(addressReader);
             _documentReader.Add(documentReader);
 
-            return StreamDocuments(hashReader, addressReader, documentReader, numOfDocs);
+            return StreamDocuments(hashReader, addressReader, documentReader, ix);
         }
-
+        
         private IEnumerable<Document> StreamDocuments(
             DocHashReader hashReader, 
             DocumentAddressReader addressReader, 
             DocumentReader documentReader,
-            int numOfDocs)
+            IxInfo ix)
         {
-            for (int docId = 0; docId < numOfDocs; docId++)
+            for (int docId = 0; docId < ix.DocumentCount; docId++)
             {
                 var hash = hashReader.Read(docId);
 

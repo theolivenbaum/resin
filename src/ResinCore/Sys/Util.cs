@@ -130,7 +130,31 @@ namespace Resin.Sys
             var dir = Path.GetDirectoryName(ixFileName);
             var searchPattern = Path.GetFileNameWithoutExtension(ixFileName) + "*";
             var files = Directory.GetFiles(dir, searchPattern);
-            return files.Any(f => Path.GetExtension(f) == ".six");
+
+            foreach (var file in files.Where(f => Path.GetExtension(f) == ".six"))
+            {
+                var segs = Serializer.DeserializeLongList(file).ToList();
+                if (segs.Count > 1)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static void RemoveAll(string ixFileName)
+        {
+            File.Delete(ixFileName);
+
+            var dir = Path.GetDirectoryName(ixFileName);
+            var searchPattern = Path.GetFileNameWithoutExtension(ixFileName) + "*";
+            var files = Directory.GetFiles(dir, searchPattern);
+
+            foreach (var file in files)
+            {
+                File.Delete(file);
+            }
         }
     }
 }
