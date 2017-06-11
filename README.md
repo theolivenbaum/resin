@@ -1,5 +1,5 @@
 # ResinDB
-ResinDB is a in-process document database with full-text search and loosely coupled storage engine. ResinDB may be used as a database, or as an index to your data store.
+ResinDB is a in-process document database with full-text search and loosely coupled storage engine. ResinDB may be used as a database, or as an index to your database or key/value store.
 
 ## No schema
 You can store documents with variable number columns/fields. 
