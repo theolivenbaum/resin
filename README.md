@@ -6,10 +6,17 @@ You can store documents with variable number columns/fields.
 
 You can group similar documents into separate stores or have them all in a big store.
 
-## Auto-index
-By default Resin indexes all fields on all documents. You can opt out of indexing (analyzing) and storing of fields.
+## Column-oriented indexing
+By default Resin creates and maintains an index per document field. 
+
+You can opt out of indexing (analyzing) and storing of fields.
 
 If you try to retrieve a document that was upserted with nothing but unstored analyzed fields you will get a blank document back but its contents will have participated in calculating tf-idf scores.
+
+## Row-based compression
+With Resin's default storage engine you have the option of compressing your data with either QuickLZ or GZip. For unstructured data compression leaves a smaller footprint on disk and enables faster writes.
+
+Compression is row-based.
 
 ## Full-text search
 Querying support includes term, fuzzy, prefix, phrase and range. 
@@ -19,9 +26,6 @@ Scores are calculated using a vector space/tf-idf bag-of-words model.
 
 ## Disk-based tree traversal
 The index is a fast disk-based left-child-right-sibling character trie.
-
-## Compression
-With Resin's default storage engine you have the option of compressing your data with either QuickLZ or GZip. For unstructured data compression leaves a smaller footprint on disk and enables faster writes.
 
 ## Pluggable storage engine
 Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
@@ -36,17 +40,17 @@ Are you looking for something other than a document database or a search engine?
 ## Merge and truncate
 Multiple simultaneous writes are allowed. When they happen instead of appending to the main log the index forks into two or more branches and the document file fragments into two or more files. 
 
-Querying is performed over multiple branches but takes a hit performance wise when there are many.
+Querying is performed over multiple branches but takes a hit performance-wise when there are many.
 
-A new segment is a minor or no performance hit.
+A new segment is a minor performance hit.
 
-Issuing multiple merge operations on a directory will lead to forks becoming merged (in order according to their wall-clock timestamp) and then segments becoming truncated. Merge and truncate truncate operation wipe away unusable data and lead to increased querying performance and a smaller disk foot-print.
+Issuing multiple merge operations on a directory will lead to forks becoming merged (in order according to their wall-clock timestamp) and segments becoming truncated. Merge and truncate truncate operation wipe away unusable data and lead to increased querying performance and a smaller disk foot-print.
 
 Merging two forks leads to a defragmented but segmented index.
 
 Writing to a store uncompeted yields a segmented index.
 
-Issuing a merge operation on a single segmented index results in a unisegmented index.
+Issuing a merge operation on a single segmented index results in a unisegmented index. If the merge operation was uncompeted the store will now have a single branch/single segment index.
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
