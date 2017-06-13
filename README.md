@@ -14,13 +14,13 @@ You can opt out of indexing (analyzing) and storing of fields.
 ## Row-based compression
 With Resin's default storage engine you have the option of compressing your data with either QuickLZ or GZip. For unstructured data this leaves a smaller footprint on disk and enables faster writes.
 
-Compression is row-based.
+Compression is row-based. Querying performance affected very little. It is the contents of the document storage file that is compressed and that file is touched after the index lookup and the scoring. 
 
 ## Full-text search
 Querying support includes term, fuzzy, prefix, phrase and range. 
 
 ## Vector space bag-of-words model
-Scores are calculated using a vector space/tf-idf bag-of-words model. 
+Scores are calculated using the default scoring scheme which is a vector space/tf-idf bag-of-words model.
 
 Scoring is column-oriented. Analyzed fields participate in the scoring.
 
