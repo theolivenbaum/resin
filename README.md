@@ -12,7 +12,7 @@ By default Resin creates and maintains an index per document field.
 You can opt out of indexing (analyzing) and storing of fields.
 
 ## Row-based compression
-With Resin's default storage engine you have the option of compressing your data with either QuickLZ or GZip. For unstructured data compression leaves a smaller footprint on disk and enables faster writes.
+With Resin's default storage engine you have the option of compressing your data with either QuickLZ or GZip. For unstructured data this leaves a smaller footprint on disk and enables faster writes.
 
 Compression is row-based.
 
