@@ -109,15 +109,3 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 	var primaryKey = result.Docs[0].Fields["id"];
 
 [More documentation here](https://github.com/kreeben/resin/wiki). 
-
-## Query execution
-  
-![query](/docs/query.png)
-
-## Write
-  
-![query](/docs/write.png)
-
-## Delete
-  
-![query](/docs/delete.png)
