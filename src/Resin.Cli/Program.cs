@@ -126,7 +126,7 @@ namespace Resin.Cli
 
                     foreach (var doc in docs)
                     {
-                        Print(doc, result.QueryTerms[0]);
+                        Print(doc);
                     }
                 }
                 
@@ -147,30 +147,20 @@ namespace Resin.Cli
             Console.WriteLine();
         }
 
-        private static void Print(ScoredDocument doc, string highlight)
+        private static void Print(ScoredDocument doc)
         {
             Console.Write(doc.Score.ToString("#.##") + "\t");
 
             foreach(var field in doc.Document.Fields.Values)
             {
-                Print(field.Value, highlight);
+                Print(field.Value);
             }
             Console.WriteLine();
         }
 
-        private static void Print(string value, string highlight)
+        private static void Print(string value)
         {
-            var str = Highlight(value, highlight, 40);
-            Console.Write(str + "\t");
-        }
-
-        public static string Highlight(string text, string highlight, int len)
-        {
-            var index = text.IndexOf(highlight, StringComparison.OrdinalIgnoreCase);
-
-            if (index < 0) index = 0;
-
-            return text.Substring(index, Math.Min(len, text.Length - index));
+            Console.Write(value.Substring(0, Math.Min(40, value.Length)) + "\t");
         }
 
         static void Write(string[] args)
