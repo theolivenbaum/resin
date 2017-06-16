@@ -122,8 +122,6 @@ namespace Resin.Cli
 
                 if (docs.Any())
                 {
-                    PrintHeaders(docs[0].Document.Fields.Select(f => f.Key).ToArray());
-
                     foreach (var doc in docs)
                     {
                         Print(doc);
@@ -151,10 +149,7 @@ namespace Resin.Cli
         {
             Console.Write(doc.Score.ToString("#.##") + "\t");
 
-            foreach(var field in doc.Document.Fields.Values)
-            {
-                Print(field.Value);
-            }
+            Console.WriteLine(doc.Document.Fields["title"].Value);
             Console.WriteLine();
         }
 
