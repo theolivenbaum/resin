@@ -3,6 +3,11 @@ ResinDB is a in-process document database with full-text search and loosely coup
 
 [Resin system architecture documentation](https://github.com/kreeben/resin/blob/master/docs/Resin%20overview.pdf)
 
+## Reads are purely disk-based
+When compared to "standard" DBMS, e.g. SQL Server, a ResinDB instance is "always-off" as opposed to a SQL Server instance being "always-on". There is no state or in-memory datastructure that needs to be rebuilt in-memory before Resin DB can respond to a query.
+
+The default index type is a fast disk-based and bitmapped left-child-right-sibling character trie.
+
 ## No schema
 Store documents with variable number columns/fields. 
 
@@ -25,9 +30,6 @@ Querying support includes term, fuzzy, prefix, phrase and range.
 Scores are calculated using the default scoring scheme which is a vector space/tf-idf bag-of-words model.
 
 Scoring is column-oriented. Analyzed fields participate in the scoring.
-
-## Disk-based tree traversal
-The index is a fast disk-based left-child-right-sibling character trie.
 
 ## Pluggable storage engine
 Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
