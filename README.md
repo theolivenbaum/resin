@@ -60,7 +60,12 @@ Issuing a merge operation on a single segmented index results in a unisegmented 
 Resin is built for dotnet Core 1.1.
 
 ## Download
-Clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run the CLI or look at the code in the CLI Program.cs to see how querying and writing was implemented.
+Clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run the CLI (rn.bat) with the following arguments:
+
+	rn query --dir c:\resin\data\wikipedia -q "label:the good the bad the ugly" -p 0 -s 10
+	rn write --file c:\temp\0wikipedia.json --dir c:\resin\data\wikipedia --skip 0 --take 1000000
+	rn delete --ids "Q1476435" --dir c:\resin\data\wikipedia
+	rn merge --dir c:\resin\data\wikipedia
 
 ## Help out?
 Awesome! Start [here](https://github.com/kreeben/resin/issues).
