@@ -112,7 +112,5 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 	var label = result.Docs[0].Fields["label"];
 	var primaryKey = result.Docs[0].Fields["id"];
 
-[More documentation here](https://github.com/kreeben/resin/wiki). 
-
 ## Help out?
 Awesome! Start [here](https://github.com/kreeben/resin/issues).
