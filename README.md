@@ -59,19 +59,16 @@ Issuing a merge operation on a single segmented index results in a unisegmented 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
 
-## Download
+## Usage
+### CLI
 Clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run the CLI (rn.bat) with the following arguments:
 
 	rn query --dir c:\resin\data\wikipedia -q "label:the good the bad the ugly" -p 0 -s 10
 	rn write --file c:\temp\0wikipedia.json --dir c:\resin\data\wikipedia --skip 0 --take 1000000
 	rn delete --ids "Q1476435" --dir c:\resin\data\wikipedia
 	rn merge --dir c:\resin\data\wikipedia
-
-## Help out?
-Awesome! Start [here](https://github.com/kreeben/resin/issues).
-
-## Usage
-### A document (serialized).
+### API
+#### A document (serialized).
 
 	{
 		"id": "Q1",
@@ -82,7 +79,7 @@ Awesome! Start [here](https://github.com/kreeben/resin/issues).
 
 _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/entities/)._
 
-### Store and index documents
+#### Store and index documents
 
 	var docs = GetDocumentsTypedAsDictionaries();
 	var dir = @"C:\MyStore";
@@ -103,7 +100,7 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 
 	// Implement the base class DocumentStream to use whatever source you need.
 
-### Query the index.
+#### Query the index.
 <a name="inproc" id="inproc"></a>
 
 	var result = new Searcher(dir).Search("label:good bad~ description:leone", page:0, size:15);
@@ -116,3 +113,6 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 	var primaryKey = result.Docs[0].Fields["id"];
 
 [More documentation here](https://github.com/kreeben/resin/wiki). 
+
+## Help out?
+Awesome! Start [here](https://github.com/kreeben/resin/issues).
