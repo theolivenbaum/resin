@@ -32,7 +32,7 @@ Scores are calculated using the default scoring scheme which is a vector space/t
 Scoring is column-oriented. Analyzed fields participate in the scoring.
 
 ## Map/reduce
-__Query__: "What is a cat?"
+__Question__: "What is a cat?"
 
 __Parse into document__: [what,is,a,cat]
 
@@ -57,6 +57,8 @@ __Give each word a weight (tf-idf)__:
 [0.2, null, 0.1, 3]   
 
 Map the query and the documents in vector space, sort by the documents' (Euclidean) distance from the query document, paginate and as a final step, fetch documents from the filesystem. 
+
+__Answer__: Something you can have or possibly be.
 
 ## Pluggable storage engine
 Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
