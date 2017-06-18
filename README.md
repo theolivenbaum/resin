@@ -64,7 +64,7 @@ __Answer__: Something you can have or possibly be.
 Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
 
 ## Merge and truncate
-Multiple simultaneous writes are allowed. When they happen the index forks into two or more branches and the document file fragments into two or more files. 
+Writing to a store uncontended yields a new index segment. Multiple simultaneous writes are allowed. When they happen the index forks into two or more branches and the document file fragments into two or more files. 
 
 Querying is performed over multiple branches but takes a hit performance-wise when there are many.
 
@@ -73,8 +73,6 @@ A new segment is a minor performance hit.
 Issuing multiple merge operations on a directory will lead to forks becoming merged (in order according to their wall-clock timestamp) and segments becoming truncated. Merge and truncate truncate operation wipe away unusable data and lead to increased querying performance and a smaller disk foot-print.
 
 Merging two forks leads to a single multi-segmented index.
-
-Writing to a store uncontended yields a single multi-segmented index.
 
 Issuing a merge operation on a single multi-segmented index results in a unisegmented index. If the merge operation was uncontended the store will now have a single branch/single segment index.
 
