@@ -1,5 +1,5 @@
 # ResinDB
-ResinDB is a in-process document database with full-text search and loosely coupled storage engine. ResinDB may be used as a database, or as an index to your database or key/value store.
+ResinDB, a full-text search, in-process document database, is designed to be used as a fast data store, a cache-replacement or as an index to your database/store.
 
 [Resin system architecture documentation](https://github.com/kreeben/resin/blob/master/docs/Resin%20overview.pdf)
 
@@ -26,10 +26,10 @@ Compression is row-based. Querying performance affected very little. It is the c
 ## Full-text search
 Querying support includes term, fuzzy, prefix, phrase and range. 
 
-## Vector space bag-of-words model
+## Word vector space model
 Scores are calculated using the default scoring scheme which is a vector space/tf-idf bag-of-words model.
 
-Scoring is column-oriented. Analyzed fields participate in the scoring.
+Analyzed fields participate in the scoring.
 
 ## Map/reduce
 __Question__: "What is a cat?"
@@ -56,7 +56,7 @@ __Give each word a weight (tf-idf)__:
 [null, null, 0.1, 3],   
 [0.2, null, 0.1, 3]   
 
-Map the query and the documents in vector space, sort by the documents' (Euclidean) distance from the query document, paginate and as a final step, fetch documents from the filesystem. 
+Map the query and the documents in vector space, sort by the documents' (Euclidean) distance from the query, paginate and as a final step, fetch documents from the filesystem. 
 
 __Answer__: Something you can have or possibly be.
 
@@ -68,10 +68,10 @@ Analyzers, tokenizers and scoring schemes are customizable.
 
 Are you looking for something other than a document database or a search engine? Database builders or architects looking for Resin's indexing capabilities specifically and nothing but, can either 
 - integrate as a store plug-in
-- send documents to the default storage engine storing a single unique key per document but analyzing everything (and then querying the index like you normally would to resolve the primary key)
+- let Resin maintain a full-text index but store nothing but identifyers from your store (data is in your storem indx and querying is done towards Resin)
 
 ## Merge and truncate
-Multiple simultaneous writes are allowed. When they happen instead of appending to the main log the index forks into two or more branches and the document file fragments into two or more files. 
+Multiple simultaneous writes are allowed. When they happen the index forks into two or more branches and the document file fragments into two or more files. 
 
 Querying is performed over multiple branches but takes a hit performance-wise when there are many.
 
@@ -79,11 +79,11 @@ A new segment is a minor performance hit.
 
 Issuing multiple merge operations on a directory will lead to forks becoming merged (in order according to their wall-clock timestamp) and segments becoming truncated. Merge and truncate truncate operation wipe away unusable data and lead to increased querying performance and a smaller disk foot-print.
 
-Merging two forks leads to a defragmented but segmented index.
+Merging two forks leads to a single multi-segmented index.
 
-Writing to a store uncompeted yields a segmented index.
+Writing to a store uncontended yields a single multi-segmented index.
 
-Issuing a merge operation on a single segmented index results in a unisegmented index. If the merge operation was uncompeted the store will now have a single branch/single segment index.
+Issuing a merge operation on a single multi-segmented index results in a unisegmented index. If the merge operation was uncontended the store will now have a single branch/single segment index.
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
@@ -92,8 +92,8 @@ Resin is built for dotnet Core 1.1.
 ### CLI
 Clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run the CLI (rn.bat) with the following arguments:
 
+	rn write --file c:\temp\wikipedia.json --dir c:\resin\data\wikipedia --pk "id" --skip 0 --take 1000000
 	rn query --dir c:\resin\data\wikipedia -q "label:the good the bad the ugly" -p 0 -s 10
-	rn write --file c:\temp\0wikipedia.json --dir c:\resin\data\wikipedia --skip 0 --take 1000000
 	rn delete --ids "Q1476435" --dir c:\resin\data\wikipedia
 	rn merge --dir c:\resin\data\wikipedia
 ### API
@@ -110,12 +110,12 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 
 #### Store and index documents
 
-	var docs = GetDocumentsTypedAsDictionaries();
-	var dir = @"C:\MyStore";
+	var docs = GetDocuments();
+	var dir = @"c:\resin\data\mystore";
 	
 	// From memory
-	using (var firstBatchBocuments = new InMemoryDocumentStream(docs))
-	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", firstBatchBocuments))
+	using (var firstBatchDocuments = new InMemoryDocumentStream(docs))
+	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", firstBatchDocuments))
 	{
 		long versionId = writer.Write();
 	}
@@ -127,10 +127,9 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 		long versionId = writer.Write();
 	}
 
-	// Implement the base class DocumentStream to use whatever source you need.
+	// Implement the base class DocumentStream to use any type of data in any format you need as your data source.
 
 #### Query the index.
-<a name="inproc" id="inproc"></a>
 
 	var result = new Searcher(dir).Search("label:good bad~ description:leone", page:0, size:15);
 
