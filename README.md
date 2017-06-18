@@ -31,6 +31,33 @@ Scores are calculated using the default scoring scheme which is a vector space/t
 
 Scoring is column-oriented. Analyzed fields participate in the scoring.
 
+## Map/reduce
+Query: "What is a cat?"
+
+Parse into document: [what,is,a,cat]
+
+Scan index: what  
+Scan index: is  
+Scan index: a  
+Scan index: cat  
+
+Found documents: 
+
+[(i), (have), a, cat],   
+[what, (if), (i), (am), a, cat]  
+
+Normalize to fit into 4-dimensional space:  
+[what,is,a,cat]  
+[null, null, a, cat],  
+[what, null, a, cat]  
+
+Give each word a weight (tf-idf):  
+[0.2, 0.1, 0.1, 3],  
+[0,        0, 0.1, 3],   
+[0.2,     0, 0.1, 3]   
+
+Map the query and the documents in vector space, sort by the documents' (Euclidean) distance from the query document, paginate and as a final step, fetch documents from the filesystem. 
+
 ## Pluggable storage engine
 Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
 
