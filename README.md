@@ -32,26 +32,26 @@ Scores are calculated using the default scoring scheme which is a vector space/t
 Scoring is column-oriented. Analyzed fields participate in the scoring.
 
 ## Map/reduce
-Query: "What is a cat?"
+__Query__: "What is a cat?"
 
-Parse into document: [what,is,a,cat]
+__Parse into document__: [what,is,a,cat]
 
-Scan index: what  
-Scan index: is  
-Scan index: a  
-Scan index: cat  
+__Scan index__: what  
+__Scan index__: is  
+__Scan index__: a  
+__Scan index__: cat  
 
-Found documents: 
+__Found documents__: 
 
 [(i), (have), a, cat],   
 [what, (if), (i), (am), a, cat]  
 
-Normalize to fit into 4-dimensional space:  
+__Normalize to fit into 4-dimensional space__:  
 [what,is,a,cat]  
 [null, null, a, cat],  
 [what, null, a, cat]  
 
-Give each word a weight (tf-idf):  
+__Give each word a weight (tf-idf)__:  
 [0.2, 0.1, 0.1, 3],  
 [0,        0, 0.1, 3],   
 [0.2,     0, 0.1, 3]   
