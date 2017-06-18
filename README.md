@@ -63,13 +63,6 @@ __Answer__: Something you can have or possibly be.
 ## Pluggable storage engine
 Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
 
-## Flexible and extensible
-Analyzers, tokenizers and scoring schemes are customizable.
-
-Are you looking for something other than a document database or a search engine? Database builders or architects looking for Resin's indexing capabilities specifically and nothing but, can either 
-- integrate as a store plug-in
-- let Resin maintain a full-text index but store nothing but identifyers from your store (data is in your storem indx and querying is done towards Resin)
-
 ## Merge and truncate
 Multiple simultaneous writes are allowed. When they happen the index forks into two or more branches and the document file fragments into two or more files. 
 
@@ -84,6 +77,13 @@ Merging two forks leads to a single multi-segmented index.
 Writing to a store uncontended yields a single multi-segmented index.
 
 Issuing a merge operation on a single multi-segmented index results in a unisegmented index. If the merge operation was uncontended the store will now have a single branch/single segment index.
+
+## Flexible and extensible
+Analyzers, tokenizers and scoring schemes are customizable.
+
+Are you looking for something other than a document database or a search engine? Database builders or architects looking for Resin's indexing capabilities specifically and nothing but, can either 
+- integrate as a store plug-in
+- let Resin maintain a full-text index storing nothing but identifyers from your store (i.e. the master data is in your store and querying is done towards a Resin index)
 
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
