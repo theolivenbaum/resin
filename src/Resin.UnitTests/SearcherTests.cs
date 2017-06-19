@@ -271,9 +271,50 @@ namespace Tests
             }
         }
 
-        public void Can_merge()
+        [TestMethod]
+        public void Can_search_split_tree()
         {
-            //TODO: test merging two branches.
+            var dir = CreateDir();
+
+            var docs = new List<dynamic>
+            {
+                new {_id = "0", title = "Rambo First Blood" },
+                new {_id = "1", title = "rambo 2" },
+                new {_id = "2", title = "rocky 2" },
+                new {_id = "3", title = "the raiders of the lost ark" },
+                new {_id = "4", title = "the rain man" },
+                new {_id = "5", title = "the good, the bad and the ugly" }
+            }.ToDocuments(primaryKeyFieldName: "_id");
+
+            var writer = new UpsertOperation(
+                dir, new Analyzer(), compression: Compression.GZip, documents: docs);
+            long indexName = writer.Write();
+            writer.Dispose();
+
+            using (var searcher = new Searcher(dir))
+            {
+                var result = searcher.Search("title:bad");
+
+                Assert.AreEqual(1, result.Total);
+                Assert.AreEqual(1, result.Docs.Count);
+
+                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 5));
+
+                Assert.AreEqual(
+                    "the good, the bad and the ugly",
+                    result.Docs.First(d => d.Document.Id == 5).Document.Fields["title"].Value);
+            }
+
+            using (var searcher = new Searcher(dir))
+            {
+                var result = searcher.Search("title:the");
+
+                Assert.AreEqual(3, result.Total);
+                Assert.AreEqual(3, result.Docs.Count);
+                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 3));
+                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 4));
+                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 5));
+            }
         }
     }
 }
