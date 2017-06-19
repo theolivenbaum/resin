@@ -290,8 +290,12 @@ namespace Resin.IO.Read
                     // Go left (deep)
                     currentDepth++;
                 }
-                // Or go right (wide)
+                else if (path[currentDepth] < node.Value)
+                {
+                    break;
+                }
 
+                // Or go right (wide)
                 node = Step();
             }
             return false;

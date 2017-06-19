@@ -56,12 +56,12 @@ namespace Resin.IO
             {
                 FileStream treeStream;
 
+                var segmentDelimiter = new LcrsNode(SegmentDelimiter, false, false, false, 0, 1, null);
+
                 if (File.Exists(fileName))
                 {
                     treeStream = new FileStream(
                         fileName, FileMode.Append, FileAccess.Write, FileShare.Read);
-
-                    var segmentDelimiter = new LcrsNode(SegmentDelimiter, false, false, false, 0, 1, null);
 
                     segmentDelimiter.Serialize(treeStream);
                 }
@@ -84,7 +84,25 @@ namespace Resin.IO
                 {
                     if (trie.LeftChild != null)
                     {
-                        trie.LeftChild.SerializeDepthFirst(treeStream, 0);
+                        var branches = trie.GetAllSiblings().ToList();
+
+                        if (branches.Count == 0)
+                        {
+                            trie.LeftChild.SerializeDepthFirst(treeStream, 0);
+                        }
+                        else
+                        {
+                            var startNodeIndex = (int)Math.Ceiling(branches.Count / (decimal)2);
+                            var startNode = branches[startNodeIndex];
+
+                            branches[startNodeIndex - 1].RightSibling = null;
+
+                            startNode.LeftChild.SerializeDepthFirst(treeStream, 0);
+
+                            segmentDelimiter.Serialize(treeStream);
+
+                            trie.LeftChild.SerializeDepthFirst(treeStream, 0);
+                        }
                     }
                 }
             }
