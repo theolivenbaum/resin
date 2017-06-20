@@ -8,10 +8,16 @@ When compared to a DBMS, e.g. SQL Server, a ResinDB instance is "always-off" as 
 
 The default index type is a fast disk-based and bitmapped left-child-right-sibling character trie.
 
-## No schema
+## No (input/output) schema
 Store documents with variable number columns/fields. 
 
 Group similar documents into separate stores or have them all in a big store.
+
+Either serialize your business entities into complex, nested and higly structured JSON documents or use simple, flat document layout.
+
+Partition and structure your documents freely. 
+
+In queries, reference document fields by a simple key or complex path.
 
 ## Column-oriented indexing
 By default Resin creates and maintains an index per document field. 
