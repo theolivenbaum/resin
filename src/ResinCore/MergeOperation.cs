@@ -47,10 +47,10 @@ namespace Resin
         {
             CloseReaders();
 
-            OrchestrateRemove();
+            OrchestrateRemoveTmpFiles();
         }
 
-        private void OrchestrateRemove(int count = 0)
+        private void OrchestrateRemoveTmpFiles(int count = 0)
         {
             if (count > 3) return;
 
@@ -67,31 +67,31 @@ namespace Resin
 
                 Thread.Sleep(100);
 
-                OrchestrateRemove(count++);
+                OrchestrateRemoveTmpFiles(count++);
             }
         }
 
-        private bool TryRemove(string ixFileName)
-        {
-            try
-            {
-                File.Delete(ixFileName);
+        //private bool TryRemove(string ixFileName)
+        //{
+        //    try
+        //    {
+        //        File.Delete(ixFileName);
 
-                var dir = Path.GetDirectoryName(ixFileName);
-                var name = Path.GetFileNameWithoutExtension(ixFileName);
+        //        var dir = Path.GetDirectoryName(ixFileName);
+        //        var name = Path.GetFileNameWithoutExtension(ixFileName);
 
-                foreach (var file in Directory.GetFiles(dir, name + ".*"))
-                {
-                    File.Delete(file);
-                }
+        //        foreach (var file in Directory.GetFiles(dir, name + ".*"))
+        //        {
+        //            File.Delete(file);
+        //        }
 
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
+        //        return true;
+        //    }
+        //    catch
+        //    {
+        //        return false;
+        //    }
+        //}
 
         public long Merge()
         {
@@ -120,111 +120,71 @@ namespace Resin
         {
             Log.InfoFormat("truncating {0}", ix.VersionId);
 
-            var documents = StreamDocuments(_ixFilesToProcess[0]);
-            var documentStream = new InMemoryDocumentStream(documents, ix.PrimaryKeyFieldName);
-            long version;
-            var directory = Path.GetDirectoryName(_ixFilesToProcess[0]);
+            var tmpDoc = Path.Combine(_directory, Path.GetRandomFileName());
+            var tmpAdr = Path.Combine(_directory, Path.GetRandomFileName());
+            var tmpHas = Path.Combine(_directory, Path.GetRandomFileName());
 
-            Util.TryAquireWriteLock(directory);
+            var documentFileName = Path.Combine(_directory, ix.VersionId + ".rdoc");
+            var docAddressFn = Path.Combine(_directory, ix.VersionId + ".da");
+            var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", ix.VersionId, "pk"));
 
-            using (var upsert = new UpsertOperation(
-                _directory,
-                _analyzer,
-                ix.Compression,
-                documentStream))
+            File.Copy(documentFileName, tmpDoc);
+            File.Copy(docAddressFn, tmpAdr);
+            File.Copy(docHashesFileName, tmpHas);
+
+            var sourceIx = IxInfo.Load(_ixFilesToProcess[0]);
+            using (var documentStream = new ResinDocumentStream(documentFileName, sourceIx.PrimaryKeyFieldName))
             {
-                version = upsert.Write();
-                upsert.Commit();
+                long version;
+                var directory = Path.GetDirectoryName(_ixFilesToProcess[0]);
 
-                Util.RemoveAll(_ixFilesToProcess[0]);
+                Util.TryAquireWriteLock(directory);
+
+                using (var upsert = new UpsertOperation(
+                    _directory,
+                    _analyzer,
+                    ix.Compression,
+                    documentStream))
+                {
+                    version = upsert.Write();
+                    upsert.Commit();
+
+                    Util.RemoveAll(_ixFilesToProcess[0]);
+                }
+
+                Util.ReleaseFileLock(directory);
+
+                Log.InfoFormat("ix {0} fully truncated", _ixFilesToProcess[0]);
+
+                return version;
             }
-
-            Util.ReleaseFileLock(directory);
-
-            Log.InfoFormat("ix {0} fully truncated", _ixFilesToProcess[0]);
-
-            return version;
         }
 
         private long Merge(string indexFileName)
         {
             Log.InfoFormat("merging {0} with [1}", _ixFilesToProcess[1], _ixFilesToProcess[0]);
 
-            var documents = StreamDocuments(indexFileName);
-            var documentStream = new InMemoryDocumentStream(documents);
             var ix = IxInfo.Load(indexFileName);
-            long version;
-
-            using (var upsert = new UpsertOperation(
-                _directory,
-                _analyzer,
-                ix.Compression,
-                documentStream))
+            var documentFileName = Path.Combine(_directory, ix.VersionId + ".rdoc");
+            using (var documentStream = new ResinDocumentStream(documentFileName, ix.PrimaryKeyFieldName))
             {
-                version = upsert.Write();
-                upsert.Commit();
+                long version;
 
-                Util.RemoveAll(indexFileName);
-            }
-
-            Log.InfoFormat("{0} merged with {1} creating a segmented index", indexFileName, _ixFilesToProcess[0]);
-
-            return version;
-        }
-
-        private IEnumerable<Document> StreamDocuments(string ixFileName)
-        {
-            var dir = Path.GetDirectoryName(ixFileName);
-            var ix = IxInfo.Load(ixFileName);
-
-            var docFileName = Path.Combine(dir, ix.VersionId + ".rdoc");
-            var docAddressFn = Path.Combine(dir, ix.VersionId + ".da");
-            var docHashesFileName = Path.Combine(dir, string.Format("{0}.{1}", ix.VersionId, "pk"));
-
-            var tmpDoc = Path.Combine(dir, Path.GetRandomFileName());
-            var tmpAdr = Path.Combine(dir, Path.GetRandomFileName());
-            var tmpHas = Path.Combine(dir, Path.GetRandomFileName());
-
-            _tmpFiles.Add(tmpDoc);
-            _tmpFiles.Add(tmpAdr);
-            _tmpFiles.Add(tmpHas);
-
-            File.Copy(docFileName, tmpDoc);
-            File.Copy(docAddressFn, tmpAdr);
-            File.Copy(docHashesFileName, tmpHas);
-
-            var hashReader = new DocHashReader(tmpHas);
-            var addressReader = new DocumentAddressReader(new FileStream(tmpAdr, FileMode.Open, FileAccess.Read));
-            var documentReader = new DocumentReader(new FileStream(tmpDoc, FileMode.Open, FileAccess.Read), ix.Compression);
-
-            _hashReader.Add(hashReader);
-            _addressReader.Add(addressReader);
-            _documentReader.Add(documentReader);
-
-            return StreamDocuments(hashReader, addressReader, documentReader, ix);
-        }
-        
-        private IEnumerable<Document> StreamDocuments(
-            DocHashReader hashReader, 
-            DocumentAddressReader addressReader, 
-            DocumentReader documentReader,
-            IxInfo ix)
-        {
-            for (int docId = 0; docId < ix.DocumentCount; docId++)
-            {
-                var hash = hashReader.Read(docId);
-
-                var address = addressReader.Read(new[] 
+                using (var upsert = new UpsertOperation(
+                    _directory,
+                    _analyzer,
+                    ix.Compression,
+                    documentStream))
                 {
-                    new BlockInfo(docId * Serializer.SizeOfBlock(), Serializer.SizeOfBlock())
-                }).First();
+                    version = upsert.Write();
+                    upsert.Commit();
 
-                var document = documentReader.Read(new List<BlockInfo> { address }).First();
-
-                if (!hash.IsObsolete)
-                {
-                    yield return document;
+                    Util.RemoveAll(indexFileName);
                 }
+
+                Log.InfoFormat("{0} merged with {1} creating a segmented index", indexFileName, _ixFilesToProcess[0]);
+
+                return version;
             }
         }
     }

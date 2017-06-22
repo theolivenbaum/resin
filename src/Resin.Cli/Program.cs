@@ -13,11 +13,11 @@ namespace Resin.Cli
 {
     class Program
     {
-        //inproc:
-        // query --dir D:\resin\wikipedia -q "label:porn~" -p 0 -s 10
-        // write --file c:\temp\0wikipedia.json --dir d:\resin\wikipedia --skip 0 --take 10000
-        // delete --ids "Q1476435" --dir d:\resin\wikipedia
-        // merge --dir D:\resin\wikipedia
+        // query --dir c:\temp\resin_data\mystore -q "label:the" -p 0 -s 10
+        // write --file c:\temp\0wikipedia.json --dir c:\temp\resin_data\mystore --pk "label" --skip 0 --take 10000 --lz --gzip
+        // delete --ids "Q1476435" --dir c:\temp\resin_data\mystore
+        // merge --dir c:\temp\resin_data\mystore
+        // rewrite --file c:\temp\resin_data\mystore\636326999602241674.rdoc --pk "label"
         static void Main(string[] args)
         {
             var assembly = Assembly.GetEntryAssembly();
@@ -51,11 +51,25 @@ namespace Resin.Cli
             {
                 Delete(args);
             }
+            else if (args[0].ToLower() == "rewrite")
+            {
+                if (Array.IndexOf(args, "--file") == -1)
+                {
+                    Console.WriteLine("I need a file.");
+                    return;
+                }
+                Rewrite(args);
+            }
             else
             {
                 Console.WriteLine("usage:");
-                Console.WriteLine("rn.exe write --file source.json --dir c:\\target_dir");
-                Console.WriteLine("rn.exe query --dir c:\\my_index -q field:value");
+                Console.WriteLine(@"
+                query --dir ""c:\temp\resin_data\mystore"" -q ""label: the"" -p 0 -s 10
+                write --file ""c:\temp\0wikipedia.json"" --dir ""c:\temp\resin_data\mystore"" --pk ""label"" --skip 0 --take 10000 --lz --gzip
+                delete --ids ""Q1476435"" --dir c:\temp\resin_data\mystore
+                merge --dir ""c:\temp\resin_data\mystore""
+                rewrite --file ""c:\temp\resin_data\mystore\636326999602241674.rdoc"" --pk ""label"" --lz --gzip
+");
             }
         }
 
@@ -191,6 +205,34 @@ namespace Resin.Cli
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
             using (var documents = new JsonDocumentStream(fileName, skip, take, pk))
+            using (var upsert = new UpsertOperation(dir, new Analyzer(), compression, documents))
+            {
+                upsert.Write();
+            }
+
+            Console.WriteLine("write operation took {0}", writeTimer.Elapsed);
+        }
+
+        static void Rewrite(string[] args)
+        {
+            string pk = null;
+            bool gzip = false;
+            bool lz = false;
+
+            if (Array.IndexOf(args, "--pk") > 0) pk = args[Array.IndexOf(args, "--pk") + 1];
+            if (Array.IndexOf(args, "--gzip") > 0) gzip = true;
+            if (Array.IndexOf(args, "--lz") > 0) lz = true;
+
+            var compression = gzip ? Compression.GZip : lz ? Compression.Lz : Compression.NoCompression;
+            var fileName = args[Array.IndexOf(args, "--file") + 1];
+            var dir = Path.GetDirectoryName(fileName);
+
+            Console.WriteLine("rewriting...");
+
+            var writeTimer = new Stopwatch();
+            writeTimer.Start();
+
+            using (var documents = new ResinDocumentStream(fileName, pk))
             using (var upsert = new UpsertOperation(dir, new Analyzer(), compression, documents))
             {
                 upsert.Write();
