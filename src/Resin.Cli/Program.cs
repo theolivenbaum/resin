@@ -17,7 +17,7 @@ namespace Resin.Cli
         // write --file c:\temp\0wikipedia.json --dir c:\temp\resin_data\mystore --pk "label" --skip 0 --take 10000 --lz --gzip
         // delete --ids "Q1476435" --dir c:\temp\resin_data\mystore
         // merge --dir c:\temp\resin_data\mystore
-        // rewrite --file c:\temp\resin_data\mystore\636326999602241674.rdoc --pk "label"
+        // rewrite --file c:\temp\resin_data\636326999602241674.rdoc --dir c:\temp\resin_data\pg --pk "url"
         static void Main(string[] args)
         {
             var assembly = Assembly.GetEntryAssembly();
@@ -64,11 +64,11 @@ namespace Resin.Cli
             {
                 Console.WriteLine("usage:");
                 Console.WriteLine(@"
-                query --dir ""c:\temp\resin_data\mystore"" -q ""label: the"" -p 0 -s 10
-                write --file ""c:\temp\0wikipedia.json"" --dir ""c:\temp\resin_data\mystore"" --pk ""label"" --skip 0 --take 10000 --lz --gzip
-                delete --ids ""Q1476435"" --dir c:\temp\resin_data\mystore
-                merge --dir ""c:\temp\resin_data\mystore""
-                rewrite --file ""c:\temp\resin_data\mystore\636326999602241674.rdoc"" --pk ""label"" --lz --gzip
+                query --dir -q -p -s
+                write --file --dir --pk --skip --take --lz --gzip
+                delete --ids --dir
+                merge --dir
+                rewrite --file --dir --pk --lz --gzip
 ");
             }
         }
@@ -220,16 +220,17 @@ namespace Resin.Cli
             string pk = null;
             bool gzip = false;
             bool lz = false;
+            string dir = null;
 
             if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
             if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
             if (Array.IndexOf(args, "--pk") > 0) pk = args[Array.IndexOf(args, "--pk") + 1];
             if (Array.IndexOf(args, "--gzip") > 0) gzip = true;
             if (Array.IndexOf(args, "--lz") > 0) lz = true;
+            if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
 
             var compression = gzip ? Compression.GZip : lz ? Compression.Lz : Compression.NoCompression;
             var fileName = args[Array.IndexOf(args, "--file") + 1];
-            var dir = Path.GetDirectoryName(fileName);
 
             Console.WriteLine("rewriting...");
 
