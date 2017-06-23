@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Resin
 {
-    public class ResinDocumentStream : DocumentStream, IDisposable
+    public class RDocStream : DocumentStream, IDisposable
     {
         private readonly IEnumerable<Document> _documents;
         private readonly DocHashReader _hashReader;
@@ -15,8 +15,10 @@ namespace Resin
         private readonly DocumentReader _documentReader;
         private readonly IxInfo _ix;
         private IList<string> _tmpFiles;
+        private readonly int _take;
+        private readonly int _skip;
 
-        public ResinDocumentStream(string fileName, string primaryKeyFieldName = null) 
+        public RDocStream(string fileName, string primaryKeyFieldName = null, int skip = 0, int take = int.MaxValue) 
             : base(primaryKeyFieldName)
         {
             var versionId = Path.GetFileNameWithoutExtension(fileName);
@@ -42,6 +44,8 @@ namespace Resin
             _hashReader = new DocHashReader(tmpHas);
             _addressReader = new DocumentAddressReader(new FileStream(tmpAdr, FileMode.Open, FileAccess.Read));
             _documentReader = new DocumentReader(new FileStream(tmpDoc, FileMode.Open, FileAccess.Read), _ix.Compression);
+            _skip = skip;
+            _take = take;
         }
 
         public void Dispose()
@@ -63,6 +67,9 @@ namespace Resin
 
         private IEnumerable<Document> StreamDocuments()
         {
+            var skipped = 0;
+            var took = 0;
+
             for (int docId = 0; docId < _ix.DocumentCount; docId++)
             {
                 var hash = _hashReader.Read(docId);
@@ -76,7 +83,19 @@ namespace Resin
 
                 if (!hash.IsObsolete)
                 {
-                    yield return document;
+                    if (skipped == _skip && took < _take)
+                    {
+                        yield return document;
+                        took++;
+                    }
+                    else if (skipped < _skip)
+                    {
+                        skipped++;
+                    }
+                    else if (took == _take)
+                    {
+                        break;
+                    }
                 }
             }
         }

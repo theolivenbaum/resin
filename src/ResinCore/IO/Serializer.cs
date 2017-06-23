@@ -84,7 +84,25 @@ namespace Resin.IO
                 {
                     if (trie.LeftChild != null)
                     {
-                        trie.LeftChild.SerializeDepthFirst(treeStream, 0);
+                        var branches = trie.GetAllSiblings().ToList();
+
+                        if (branches.Count == 0)
+                        {
+                            trie.LeftChild.SerializeDepthFirst(treeStream, 0);
+                        }
+                        else
+                        {
+                            var startNodeIndex = (int)Math.Ceiling(branches.Count / (decimal)2);
+                            var startNode = branches[startNodeIndex];
+
+                            branches[startNodeIndex - 1].RightSibling = null;
+
+                            startNode.LeftChild.SerializeDepthFirst(treeStream, 0);
+
+                            segmentDelimiter.Serialize(treeStream);
+
+                            trie.LeftChild.SerializeDepthFirst(treeStream, 0);
+                        }
                     }
                 }
             }

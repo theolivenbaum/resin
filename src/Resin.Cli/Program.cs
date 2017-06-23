@@ -215,10 +215,14 @@ namespace Resin.Cli
 
         static void Rewrite(string[] args)
         {
+            var take = int.MaxValue;
+            var skip = 0;
             string pk = null;
             bool gzip = false;
             bool lz = false;
 
+            if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
+            if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
             if (Array.IndexOf(args, "--pk") > 0) pk = args[Array.IndexOf(args, "--pk") + 1];
             if (Array.IndexOf(args, "--gzip") > 0) gzip = true;
             if (Array.IndexOf(args, "--lz") > 0) lz = true;
@@ -232,7 +236,7 @@ namespace Resin.Cli
             var writeTimer = new Stopwatch();
             writeTimer.Start();
 
-            using (var documents = new ResinDocumentStream(fileName, pk))
+            using (var documents = new RDocStream(fileName, pk, skip, take))
             using (var upsert = new UpsertOperation(dir, new Analyzer(), compression, documents))
             {
                 upsert.Write();

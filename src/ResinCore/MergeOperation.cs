@@ -133,7 +133,7 @@ namespace Resin
             File.Copy(docHashesFileName, tmpHas);
 
             var sourceIx = IxInfo.Load(_ixFilesToProcess[0]);
-            using (var documentStream = new ResinDocumentStream(documentFileName, sourceIx.PrimaryKeyFieldName))
+            using (var documentStream = new RDocStream(documentFileName, sourceIx.PrimaryKeyFieldName))
             {
                 long version;
                 var directory = Path.GetDirectoryName(_ixFilesToProcess[0]);
@@ -166,7 +166,7 @@ namespace Resin
 
             var ix = IxInfo.Load(indexFileName);
             var documentFileName = Path.Combine(_directory, ix.VersionId + ".rdoc");
-            using (var documentStream = new ResinDocumentStream(documentFileName, ix.PrimaryKeyFieldName))
+            using (var documentStream = new RDocStream(documentFileName, ix.PrimaryKeyFieldName))
             {
                 long version;
 
