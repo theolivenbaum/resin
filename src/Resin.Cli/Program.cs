@@ -81,9 +81,9 @@ namespace Resin.Cli
 
             if (dir != null)
             {
-                using (var merge = new MergeOperation(dir))
+                using (var merge = new OptimizeOperation(dir))
                 {
-                    var result = merge.Merge();
+                    var result = merge.Optimize();
                     
                     if (result == -1)
                     {

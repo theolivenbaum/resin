@@ -224,8 +224,8 @@ namespace Tests
                 }
             }
 
-            using (var merge1 = new MergeOperation(dir))
-                merge1.Merge();
+            using (var merge1 = new OptimizeOperation(dir))
+                merge1.Optimize();
 
             using (var searcher = new Searcher(dir))
             {
@@ -238,8 +238,8 @@ namespace Tests
                 Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
             }
 
-            using (var merge2 = new MergeOperation(dir))
-                merge2.Merge();
+            using (var merge2 = new OptimizeOperation(dir))
+                merge2.Optimize();
 
             using (var searcher = new Searcher(dir))
             {
@@ -252,9 +252,9 @@ namespace Tests
                 Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
             }
 
-            using (var merge3 = new MergeOperation(dir))
+            using (var merge3 = new OptimizeOperation(dir))
             {
-                var result = merge3.Merge();
+                var result = merge3.Optimize();
 
                 Assert.AreEqual(-1, result);
             }

@@ -11,9 +11,9 @@ using System.Threading;
 
 namespace Resin
 {
-    public class MergeOperation : IDisposable
+    public class OptimizeOperation : IDisposable
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(MergeOperation));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(OptimizeOperation));
 
         private IList<DocHashReader> _hashReader;
         private IList<DocumentAddressReader> _addressReader;
@@ -23,7 +23,7 @@ namespace Resin
         private readonly IAnalyzer _analyzer;
         private IList<string> _tmpFiles;
 
-        public MergeOperation(string directory, IAnalyzer analyzer = null)
+        public OptimizeOperation(string directory, IAnalyzer analyzer = null)
         {
             _directory = directory;
             _analyzer = analyzer ?? new Analyzer();
@@ -93,17 +93,17 @@ namespace Resin
         //    }
         //}
 
-        public long Merge()
+        public long Optimize()
         {
             if (_ixFilesToProcess.Length == 1)
             {
-                // rewrite index to truncate segments
+                // truncate segments
 
                 var ix = IxInfo.Load(_ixFilesToProcess[0]);
 
                 if (Util.IsSegmented(_ixFilesToProcess[0]))
                 {
-                    return Truncate(ix);
+                    return Truncate(_ixFilesToProcess[0]);
                 }
                 else
                 {
@@ -111,65 +111,54 @@ namespace Resin
                 }
             }
 
-            // merge branches by creating new segment in base index
+            // merge branches
 
             return Merge(_ixFilesToProcess[1]);
         }
 
-        private long Truncate(IxInfo ix)
+        private long Truncate(string srcIxFileName)
         {
-            Log.InfoFormat("truncating {0}", ix.VersionId);
+            Log.InfoFormat("truncating {0}", srcIxFileName);
 
-            var tmpDoc = Path.Combine(_directory, Path.GetRandomFileName());
-            var tmpAdr = Path.Combine(_directory, Path.GetRandomFileName());
-            var tmpHas = Path.Combine(_directory, Path.GetRandomFileName());
+            var srcIx = IxInfo.Load(srcIxFileName);
+            var documentFileName = Path.Combine(_directory, srcIx.VersionId + ".rdoc");
+            var docAddressFn = Path.Combine(_directory, srcIx.VersionId + ".da");
+            var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", srcIx.VersionId, "pk"));
+            long version;
 
-            var documentFileName = Path.Combine(_directory, ix.VersionId + ".rdoc");
-            var docAddressFn = Path.Combine(_directory, ix.VersionId + ".da");
-            var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", ix.VersionId, "pk"));
-
-            File.Copy(documentFileName, tmpDoc);
-            File.Copy(docAddressFn, tmpAdr);
-            File.Copy(docHashesFileName, tmpHas);
-
-            var sourceIx = IxInfo.Load(_ixFilesToProcess[0]);
-            using (var documentStream = new RDocStream(documentFileName, sourceIx.PrimaryKeyFieldName))
+            using (var documentStream = new RDocStream(documentFileName, srcIx.PrimaryKeyFieldName))
             {
-                long version;
-                var directory = Path.GetDirectoryName(_ixFilesToProcess[0]);
 
-                Util.TryAquireWriteLock(directory);
+                Util.TryAquireWriteLock(_directory);
 
                 using (var upsert = new UpsertOperation(
                     _directory,
                     _analyzer,
-                    ix.Compression,
+                    srcIx.Compression,
                     documentStream))
                 {
                     version = upsert.Write();
                     upsert.Commit();
 
-                    Util.RemoveAll(_ixFilesToProcess[0]);
                 }
 
-                Util.ReleaseFileLock(directory);
+                Util.ReleaseFileLock(_directory);
 
                 Log.InfoFormat("ix {0} fully truncated", _ixFilesToProcess[0]);
-
-                return version;
             }
+            Util.RemoveAll(srcIxFileName);
+            return version;
         }
 
-        private long Merge(string indexFileName)
+        private long Merge(string srcIxFileName)
         {
-            Log.InfoFormat("merging {0} with [1}", _ixFilesToProcess[1], _ixFilesToProcess[0]);
+            Log.InfoFormat("merging branch {0} with trunk {1}", _ixFilesToProcess[1], _ixFilesToProcess[0]);
 
-            var ix = IxInfo.Load(indexFileName);
+            var ix = IxInfo.Load(srcIxFileName);
             var documentFileName = Path.Combine(_directory, ix.VersionId + ".rdoc");
+            long version;
             using (var documentStream = new RDocStream(documentFileName, ix.PrimaryKeyFieldName))
             {
-                long version;
-
                 using (var upsert = new UpsertOperation(
                     _directory,
                     _analyzer,
@@ -179,13 +168,13 @@ namespace Resin
                     version = upsert.Write();
                     upsert.Commit();
 
-                    Util.RemoveAll(indexFileName);
                 }
 
-                Log.InfoFormat("{0} merged with {1} creating a segmented index", indexFileName, _ixFilesToProcess[0]);
+                Log.InfoFormat("{0} merged with {1} creating a segmented index", srcIxFileName, _ixFilesToProcess[0]);
 
-                return version;
             }
+            Util.RemoveAll(srcIxFileName);
+            return version;
         }
     }
 }

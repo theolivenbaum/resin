@@ -1,5 +1,6 @@
 ﻿using Resin.IO;
 using Resin.IO.Read;
+using Resin.Sys;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,14 +10,14 @@ namespace Resin
 {
     public class RDocStream : DocumentStream, IDisposable
     {
-        private readonly IEnumerable<Document> _documents;
         private readonly DocHashReader _hashReader;
         private readonly DocumentAddressReader _addressReader;
         private readonly DocumentReader _documentReader;
         private readonly IxInfo _ix;
-        private IList<string> _tmpFiles;
         private readonly int _take;
         private readonly int _skip;
+        private readonly string _directory;
+        private readonly bool _forceBranching;
 
         public RDocStream(string fileName, string primaryKeyFieldName = null, int skip = 0, int take = int.MaxValue) 
             : base(primaryKeyFieldName)
@@ -27,25 +28,13 @@ namespace Resin
             var docAddressFn = Path.Combine(directory, versionId + ".da");
             var docHashesFileName = Path.Combine(directory, string.Format("{0}.{1}", versionId, "pk"));
 
-            var tmpDoc = Path.Combine(directory, Path.GetRandomFileName());
-            var tmpAdr = Path.Combine(directory, Path.GetRandomFileName());
-            var tmpHas = Path.Combine(directory, Path.GetRandomFileName());
-
-            File.Copy(docFileName, tmpDoc);
-            File.Copy(docAddressFn, tmpAdr);
-            File.Copy(docHashesFileName, tmpHas);
-
-            _tmpFiles = new List<string>();
-            _tmpFiles.Add(tmpDoc);
-            _tmpFiles.Add(tmpAdr);
-            _tmpFiles.Add(tmpHas);
-
             _ix = IxInfo.Load(Path.Combine(directory, versionId + ".ix"));
-            _hashReader = new DocHashReader(tmpHas);
-            _addressReader = new DocumentAddressReader(new FileStream(tmpAdr, FileMode.Open, FileAccess.Read));
-            _documentReader = new DocumentReader(new FileStream(tmpDoc, FileMode.Open, FileAccess.Read), _ix.Compression);
+            _hashReader = new DocHashReader(docHashesFileName);
+            _addressReader = new DocumentAddressReader(new FileStream(docAddressFn, FileMode.Open, FileAccess.Read));
+            _documentReader = new DocumentReader(new FileStream(docFileName, FileMode.Open, FileAccess.Read), _ix.Compression);
             _skip = skip;
             _take = take;
+            _directory = directory;
         }
 
         public void Dispose()
@@ -53,11 +42,6 @@ namespace Resin
             _hashReader.Dispose();
             _addressReader.Dispose();
             _documentReader.Dispose();
-
-            foreach(var file in _tmpFiles)
-            {
-                File.Delete(file);
-            }
         }
 
         public override IEnumerable<Document> ReadSource()
