@@ -10,16 +10,14 @@ The default index type is a fast disk-based and bitmapped left-child-right-sibli
 
 ResinDB's consistency plan allow for multi-threaded read access to the data files and multi-threaded write access as well. Writing is log-structured. Reading is snapshot-based. Consistency is achieved eventually.
 
-## No (input/output) schema
+## No input/output schema
 Store documents with variable number columns/fields. 
 
 Group similar documents into separate stores or have them all in a big store.
 
-Either serialize your business entities into complex, nested and higly structured JSON documents or use simple, flat document layout.
+The document model supports flat or graph-like business entities.
 
-Partition and structure your documents freely. 
-
-In queries, reference document fields by a simple key or complex path.
+In queries, reference document fields by a simple or complex key/path.
 
 ## Column-oriented indexing
 By default Resin creates and maintains an index per document field. 
