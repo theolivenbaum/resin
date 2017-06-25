@@ -8,7 +8,7 @@ Resin is a library, not a service. It runs inside of your application domain. Re
 
 The default index type is a fast disk-based and bitmapped left-child-right-sibling character trie.
 
-ResinDB's consistency plan allow for multi-threaded read access to the data files and multi-threaded write access as well. Writing is log-structured. Reading is snapshot-based. Consistency is achieved eventually.
+ResinDB's consistency plan allow for multi-threaded read and write access to the data files. Writing is log-structured. Reading is snapshot-based. Consistency is achieved eventually.
 
 ## No input/output schema
 Store documents with variable number columns/fields. 
