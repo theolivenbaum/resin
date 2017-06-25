@@ -1,6 +1,5 @@
 ﻿using Resin.IO;
 using Resin.IO.Read;
-using Resin.Sys;
 using System;
 using System.Collections.Generic;
 using System.IO;

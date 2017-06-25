@@ -64,11 +64,11 @@ namespace Resin.Cli
             {
                 Console.WriteLine("usage:");
                 Console.WriteLine(@"
-                query --dir -q -p -s
-                write --file --dir --pk --skip --take --lz --gzip
-                delete --ids --dir
-                merge --dir
-                rewrite --file --dir --pk --lz --gzip
+	rn write --file source_filename --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take] [--gzip] [--lz]
+	rn query --dir store_directory -q query_statement [-p page_number] [-s page_size]
+	rn delete --ids comma_separated_list_of_ids --dir store_directory
+	rn merge --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take]
+    rn rewrite --file rdoc_filename --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take] [--gzip] [--lz]
 ");
             }
         }
