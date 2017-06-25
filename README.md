@@ -3,6 +3,58 @@ ResinDB, a full-text search engine/document database, is designed to be used as 
 
 ResinDB's architecture can be compared to that of LevelDB or SQL Server LocalDB in that they all run in-process.
 
+## Usage
+### CLI
+Clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run the CLI (rn.bat) with the following arguments:
+
+	rn write --file c:\temp\wikipedia.json --dir c:\resin\data\wikipedia --pk "id" --skip 0 --take 1000000
+	rn query --dir c:\resin\data\wikipedia -q "label:the good the bad the ugly" -p 0 -s 10
+	rn delete --ids "Q1476435" --dir c:\resin\data\wikipedia
+	rn merge --dir c:\resin\data\wikipedia
+### API
+#### A document (serialized).
+
+	{
+		"id": "Q1",
+		"label":  "universe",
+		"description": "totality of planets, stars, galaxies, intergalactic space, or all matter or all energy",
+		"aliases": "cosmos The Universe existence space outerspace"
+	}
+
+_Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/entities/)._
+
+#### Store and index documents
+
+	var docs = GetDocuments();
+	var dir = @"c:\resin\data\mystore";
+	
+	// From memory
+	using (var firstBatchDocuments = new InMemoryDocumentStream(docs))
+	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", firstBatchDocuments))
+	{
+		long versionId = writer.Write();
+	}
+	
+	// From stream
+	using (var secondBatchDocuments = new JsonDocumentStream(fileName))
+	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", secondBatchDocuments))
+	{
+		long versionId = writer.Write();
+	}
+
+	// Implement the base class DocumentStream to use any type of data in any format you need as your data source.
+
+#### Query the index.
+
+	var result = new Searcher(dir).Search("label:good bad~ description:leone", page:0, size:15);
+
+	// Document fields and scores, i.e. the aggregated tf-idf weights a document recieve from a simple 
+	// or compound query, are included in the result:
+
+	var scoreOfFirstDoc = result.Docs[0].Score;
+	var label = result.Docs[0].Fields["label"];
+	var primaryKey = result.Docs[0].Fields["id"];
+
 ## Reads are purely disk-based
 Resin is a library, not a service. It runs inside of your application domain. ResinDB has therefore been optimized to immediately be able to respond to queries without having to rebuild data structures in-memory. 
 
@@ -92,57 +144,5 @@ Are you looking for something other than a document database or a search engine?
 ## Supported .net version
 Resin is built for dotnet Core 1.1.
 
-## Usage
-### CLI
-Clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run the CLI (rn.bat) with the following arguments:
-
-	rn write --file c:\temp\wikipedia.json --dir c:\resin\data\wikipedia --pk "id" --skip 0 --take 1000000
-	rn query --dir c:\resin\data\wikipedia -q "label:the good the bad the ugly" -p 0 -s 10
-	rn delete --ids "Q1476435" --dir c:\resin\data\wikipedia
-	rn merge --dir c:\resin\data\wikipedia
-### API
-#### A document (serialized).
-
-	{
-		"id": "Q1",
-		"label":  "universe",
-		"description": "totality of planets, stars, galaxies, intergalactic space, or all matter or all energy",
-		"aliases": "cosmos The Universe existence space outerspace"
-	}
-
-_Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/entities/)._
-
-#### Store and index documents
-
-	var docs = GetDocuments();
-	var dir = @"c:\resin\data\mystore";
-	
-	// From memory
-	using (var firstBatchDocuments = new InMemoryDocumentStream(docs))
-	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", firstBatchDocuments))
-	{
-		long versionId = writer.Write();
-	}
-	
-	// From stream
-	using (var secondBatchDocuments = new JsonDocumentStream(fileName))
-	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", secondBatchDocuments))
-	{
-		long versionId = writer.Write();
-	}
-
-	// Implement the base class DocumentStream to use any type of data in any format you need as your data source.
-
-#### Query the index.
-
-	var result = new Searcher(dir).Search("label:good bad~ description:leone", page:0, size:15);
-
-	// Document fields and scores, i.e. the aggregated tf-idf weights a document recieve from a simple 
-	// or compound query, are included in the result:
-
-	var scoreOfFirstDoc = result.Docs[0].Score;
-	var label = result.Docs[0].Fields["label"];
-	var primaryKey = result.Docs[0].Fields["id"];
-
-## Help out?
-Awesome! Start [here](https://github.com/kreeben/resin/issues).
+## Help out
+Start [here](https://github.com/kreeben/resin/issues).
