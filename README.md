@@ -1,7 +1,7 @@
 # ResinDB
 ResinDB, a full-text search, in-process document database, is designed to be used as a fast data store, a cache-replacement or as an index to your database/store.
 
-[Resin system architecture documentation](https://github.com/kreeben/resin/blob/master/docs/Resin%20overview.pdf)
+ResinDB's architecture can be compared to that of LevelDB or SQL Server LocalDB in that they all run in-process.
 
 ## Reads are purely disk-based
 Resin is a library, not a service. It runs inside of your application domain. ResinDB has therefore been optimized to immediately be able to respond to queries without having to rebuild data structures in-memory. 
