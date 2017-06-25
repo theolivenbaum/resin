@@ -65,7 +65,9 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 	var primaryKey = result.Docs[0].Fields["id"];
 
 ## Reads are purely disk-based
-Resin is a library, not a service. It runs inside of your application domain. ResinDB has therefore been optimized to immediately be able to respond to queries without having to rebuild data structures in-memory. 
+Resin is a library, not a service. It runs inside of your application domain. 
+
+ResinDB has been optimized to be able to immediately respond to queries without having to first rebuild data structures in-memory. 
 
 The default index type is a fast disk-based and bitmapped left-child-right-sibling character trie.
 
