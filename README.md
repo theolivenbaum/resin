@@ -7,10 +7,19 @@ ResinDB's architecture can be compared to that of LevelDB or SQL Server LocalDB 
 ### CLI
 Clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run the CLI (rn.bat) with the following arguments:
 
+	rn write --file source_filename --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take] [--gzip] [--lz]  
+	rn query --dir store_directory -q query_statement [-p page_number] [-s page_size]  
+	rn delete --ids comma_separated_list_of_ids --dir store_directory  
+	rn merge --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take]  
+	rn rewrite --file rdoc_filename --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take] [--gzip] [--lz]
+  
+E.g.:
+
 	rn write --file c:\temp\wikipedia.json --dir c:\resin\data\wikipedia --pk "id" --skip 0 --take 1000000
 	rn query --dir c:\resin\data\wikipedia -q "label:the good the bad the ugly" -p 0 -s 10
 	rn delete --ids "Q1476435" --dir c:\resin\data\wikipedia
-	rn merge --dir c:\resin\data\wikipedia
+	rn merge --dir c:\resin\data\wikipedia --pk "id" --skip 0 --take 1000000
+	
 ### API
 #### A document (serialized).
 
