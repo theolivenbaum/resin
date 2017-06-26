@@ -74,7 +74,7 @@ ResinDB has been optimized to be able to immediately respond to queries without 
 
 The default index type is a fast disk-based and bitmapped left-child-right-sibling character trie.
 
-ResinDB's consistency plan allow for multi-threaded read and write access to the data files. Writing is log-structured. Reading is snapshot-based. Consistency is achieved eventually.
+ResinDB's read/write model allow for multi-threaded read and write access to the data files. Writing is append-only. Reading is snapshot-based.
 
 ## No input/output schema
 Store documents with variable number columns/fields. 
