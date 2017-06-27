@@ -5,9 +5,13 @@ Feature | ResinDB | Lucene | SQL Server LocalDB | LevelDB | RocksDB
 Is open source software | &#9989; | &#9989; |   | &#9989; | &#9989;
 Is very fast | &#9989; | &#9989; | &#9989; | &#9989; | &#9989;
 Runs in-process | &#9989; | &#9989; | &#9989; | &#9989; | &#9989;
-Can be distributed | &#9989; | &#9989; |   | &#9989; | &#9989;
+Can be distributed | &#9989; | &#9989; | &#9989; | &#9989; | &#9989;
+Is schema-less | &#9989; | &#9989; |   | &#9989; | &#9989;
+Can compress data | &#9989; | &#9989; |  | &#9989; | &#9989;
+Runs on Windows and Linux | &#9989; | &#9989; |   |   | &#9989;
 Is full-text search engine | &#9989; | &#9989; |   |   |   |  
 Has latch-free writing | &#9989; |   |   |   |  
+Has pluggable storage engine | &#9989; |   |   |   |  
 
 ResinDB, a full-text search engine/document database, is designed to be used as a fast data store, a cache-replacement, an index to your database/store and a component of a distributed database.
 
