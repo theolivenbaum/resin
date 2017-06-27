@@ -2,7 +2,7 @@
 
 ![ResinDB](/docs/resindb.png)
 
-ResinDB, a full-text search engine/document database, is designed to be used as a fast data store, a cache-replacement or as an index to your database/store.
+ResinDB, a full-text search engine/document database, is designed to be used as a fast data store, a cache-replacement, an index to your database/store and a component of a distributed database.
 
 ResinDB's architecture can be compared to that of LevelDB or SQL Server LocalDB in that they all run in-process. What sets ResinDB apart is its full-text search index.
 
