@@ -12,7 +12,7 @@ Runs on Windows and Linux | &#9989; | &#9989; |   |   | &#9989;
 Is full-text search engine | &#9989; | &#9989; |   |   |   |  
 Has latch-free writing | &#9989; |   |   |   |  
 Has pluggable storage engine | &#9989; |   |   |   |  
-Is just some code written by some guy | :) |   |   |   |  
+Is just some code written by some guy | &#9989; |   |   |   |  
 
 ResinDB, a full-text search engine/document database, is designed to be used as a fast data store, a cache-replacement, an index to your database/store and a component of a distributed database.
 
@@ -29,14 +29,15 @@ Clone the source or [download the latest source as a zip file](https://github.co
 	rn delete --ids comma_separated_list_of_ids --dir store_directory  
 	rn merge --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take]  
 	rn rewrite --file rdoc_filename --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take] [--gzip] [--lz]
-  
+  	rn export --source-file rdoc_filename --target-file csv_filename
 E.g.:
 
 	rn write --file c:\temp\wikipedia.json --dir c:\resin\data\wikipedia --pk "id" --skip 0 --take 1000000
 	rn query --dir c:\resin\data\wikipedia -q "label:the good the bad the ugly" -p 0 -s 10
 	rn delete --ids "Q1476435" --dir c:\resin\data\wikipedia
 	rn merge --dir c:\resin\data\wikipedia --pk "id" --skip 0 --take 1000000
-	
+	rn rewrite --file c:\temp\resin_data\636326999602241674.rdoc --dir c:\temp\resin_data\pg --pk "url"
+	rn export --source-file c:\temp\resin_data\636326999602241674.rdoc --target-file c:\temp\636326999602241674.rdoc.csv
 ### API
 #### A document (serialized).
 
