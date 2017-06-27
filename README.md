@@ -1,4 +1,4 @@
-# ResinDB
+# ResinDB (beta)
 
 Feature | ResinDB | Lucene | SQL Server LocalDB | LevelDB | RocksDB
 --- | --- | --- | --- | --- | ---
@@ -174,8 +174,5 @@ Are you looking for something other than a document database or a search engine?
 - integrate as a store plug-in
 - let Resin maintain a full-text index storing nothing but identifyers from your store (i.e. the master data is in your store and querying is done towards a Resin index)
 
-## Supported .net version
-Resin is built for dotnet Core 1.1.
-
-## Help out
-Start [here](https://github.com/kreeben/resin/issues).
+## Runtime environment
+ResinDB is built for dotnet Core 1.1.
