@@ -96,7 +96,7 @@ With Resin's default storage engine you have the option of compressing your data
 Compression is row-based. Querying performance affected very little. It is the contents of the document storage file that is compressed and that file is touched after the index lookup and the scoring. 
 
 ## Full-text search
-Querying support includes term, fuzzy, prefix, phrase and range. 
+ResinDB's main index data structure is a disk-based doubly-linked character trie. Querying support includes term, fuzzy, prefix, phrase and range. 
 
 ## Word vector space model
 Scores are calculated using the default scoring scheme which is a vector space/tf-idf bag-of-words model.
