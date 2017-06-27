@@ -6,6 +6,17 @@ ResinDB, a full-text search engine/document database, is designed to be used as 
 
 ResinDB's architecture can be compared to that of LevelDB or SQL Server LocalDB in that they all run in-process. What sets ResinDB apart is its full-text search index.
 
+## The world
+
+Feature | ResinDB | Lucene | SQL Server LocalDB | LevelDB | RocksDB
+--- | --- | --- | --- | --- | ---
+Is very fast | &#9989; | &#9989; | &#9989; | &#9989; | &#9989;
+Is a database | &#9989;|   | &#9989; | &#9989; | &#9989;
+Runs in-process | &#9989; | &#9989; | &#9989; | &#9989; | &#9989;
+Can be distributed | &#9989; | &#9989; |   | &#9989; | &#9989;
+Is full-text search engine | &#9989; | &#9989; |   |   |  
+Allow multiple concurrent writers | &#9989; |   |   |   |  
+
 ## Usage
 ### CLI
 Clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run the CLI (rn.bat) with the following arguments:
