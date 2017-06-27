@@ -10,12 +10,12 @@ ResinDB's architecture can be compared to that of LevelDB or SQL Server LocalDB 
 
 Feature | ResinDB | Lucene | SQL Server LocalDB | LevelDB | RocksDB
 --- | --- | --- | --- | --- | ---
+Is open source software | &#9989; | &#9989; |   | &#9989; | &#9989;
 Is very fast | &#9989; | &#9989; | &#9989; | &#9989; | &#9989;
-Is a database | &#9989;|   | &#9989; | &#9989; | &#9989;
 Runs in-process | &#9989; | &#9989; | &#9989; | &#9989; | &#9989;
 Can be distributed | &#9989; | &#9989; |   | &#9989; | &#9989;
-Is full-text search engine | &#9989; | &#9989; |   |   |  
-Allow multiple concurrent writers | &#9989; |   |   |   |  
+Is full-text search engine | &#9989; | &#9989; |   |   |   |  
+Has latch-free writing | &#9989; |   |   |   |  
 
 ## Usage
 ### CLI
