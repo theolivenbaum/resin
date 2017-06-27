@@ -16,7 +16,6 @@ namespace Resin
         private readonly int _take;
         private readonly int _skip;
         private readonly string _directory;
-        private readonly bool _forceBranching;
 
         public RDocStream(string fileName, string primaryKeyFieldName = null, int skip = 0, int take = int.MaxValue) 
             : base(primaryKeyFieldName)

@@ -8,6 +8,7 @@ using System.Reflection;
 using log4net.Config;
 using log4net;
 using Resin.IO;
+using System.Text;
 
 namespace Resin.Cli
 {
@@ -18,6 +19,8 @@ namespace Resin.Cli
         // delete --ids "Q1476435" --dir c:\temp\resin_data\mystore
         // merge --dir c:\temp\resin_data\mystore
         // rewrite --file c:\temp\resin_data\636326999602241674.rdoc --dir c:\temp\resin_data\pg --pk "url"
+        // export --source-file c:\temp\resin_data\636326999602241674.rdoc --target-file c:\temp\636326999602241674.rdoc.csv ""
+
         static void Main(string[] args)
         {
             var assembly = Assembly.GetEntryAssembly();
@@ -59,6 +62,15 @@ namespace Resin.Cli
                     return;
                 }
                 Rewrite(args);
+            }
+            else if (args[0].ToLower() == "export")
+            {
+                if (Array.IndexOf(args, "--source-file") == -1)
+                {
+                    Console.WriteLine("I need a file.");
+                    return;
+                }
+                Export(args);
             }
             else
             {
@@ -245,5 +257,48 @@ namespace Resin.Cli
 
             Console.WriteLine("write operation took {0}", writeTimer.Elapsed);
         }
+
+        static void Export(string[] args)
+        {
+            var take = int.MaxValue;
+            var skip = 0;
+
+            if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
+            if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
+
+            var  sourceFileName= args[Array.IndexOf(args, "--source-file") + 1];
+            var targetFileName = args[Array.IndexOf(args, "--target-file") + 1];
+
+            var dir = Path.GetDirectoryName(sourceFileName);
+            var version = Path.GetFileNameWithoutExtension(sourceFileName);
+            var ix = IxInfo.Load(Path.Combine(dir, version + ".ix"));
+
+            Console.WriteLine("migrating...");
+
+            var writeTimer = new Stopwatch();
+            writeTimer.Start();
+
+            using (var outStream = new FileStream(targetFileName, FileMode.Create))
+            using (var csv = new StreamWriter(outStream, Encoding.UTF8))
+            using (var documents = new RDocStream(sourceFileName, ix.PrimaryKeyFieldName, skip, take))
+            {
+                foreach (var document in documents.ReadSource())
+                {
+                    foreach (var field in document.Fields)
+                    {
+                        csv.Write(field.Value.Value);
+                        csv.Write("||");
+                    }
+                    csv.Write("@@");
+                }
+            }
+
+            Console.WriteLine("write operation took {0}", writeTimer.Elapsed);
+        }
+    }
+
+    public class SqlServerMigrateOperation
+    {
+
     }
 }

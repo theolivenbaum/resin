@@ -520,30 +520,15 @@ namespace Resin.IO
 
         public static BlockInfo DeserializeBlock(byte[] bytes)
         {
-            using (var stream = new MemoryStream(bytes))
-            {
-                return DeserializeBlock(stream);
-            }
-        }
-
-        public static Document DeserializeDocument(byte[] data, Compression compression)
-        {
-            var idBytes = new byte[sizeof(int)];
-            Array.Copy(data, 0, idBytes, 0, sizeof(int));
-
-            var dicBytes = new byte[data.Length - sizeof(int)];
-            Array.Copy(data, sizeof(int), dicBytes, 0, dicBytes.Length);
-            
             if (!BitConverter.IsLittleEndian)
             {
-                Array.Reverse(idBytes);
-                Array.Reverse(dicBytes);
+                Array.Reverse(bytes);
             }
 
-            var id = BitConverter.ToInt32(idBytes, 0);
-            var doc = DeserializeFields(dicBytes, compression).ToList();
+            var pos = BitConverter.ToInt64(bytes, 0);
+            var len = BitConverter.ToInt32(bytes, sizeof(long));
 
-            return new Document(doc) { Id = id };
+            return new BlockInfo(pos, len);
         }
 
         public static BlockInfo DeserializeBlock(Stream stream)
@@ -561,6 +546,25 @@ namespace Resin.IO
             }
 
             return new BlockInfo(BitConverter.ToInt64(posBytes, 0), BitConverter.ToInt32(lenBytes, 0));
+        }
+
+        public static Document DeserializeDocument(byte[] data, Compression compression)
+        {
+            var idBytes = new byte[sizeof(int)];
+            Array.Copy(data, 0, idBytes, 0, sizeof(int));
+
+            var dicBytes = new byte[data.Length - sizeof(int)];
+            Array.Copy(data, sizeof(int), dicBytes, 0, dicBytes.Length);
+            
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(idBytes);
+            }
+
+            var id = BitConverter.ToInt32(idBytes, 0);
+            var doc = DeserializeFields(dicBytes, compression).ToList();
+
+            return new Document(doc) { Id = id };
         }
 
         public static IEnumerable<int> DeserializeIntList(byte[] data)
@@ -729,7 +733,6 @@ namespace Resin.IO
                 {
                     Array.Reverse(valBytes);
                 }
-
 
                 string value;
 
