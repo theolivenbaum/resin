@@ -1,3 +1,3 @@
+trie file format
+word2vec
 sort by
-relevance
-wikipedia
