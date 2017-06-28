@@ -10,7 +10,6 @@ Runs on Windows and Linux | &#9989; | &#9989; |   |   | &#9989;
 Is full-text search engine | &#9989; | &#9989; |   |   |   |  
 Has latch-free writing | &#9989; |   |   |   |  
 Has pluggable storage engine | &#9989; |   |   |   |  
-Is just some code written by some guy | &#9989; |   |   |   |  
 
 ResinDB, a full-text search engine/document database, is designed to be used as a fast data store, a cache-replacement, an index to your database/store and a component of a distributed database.
 
