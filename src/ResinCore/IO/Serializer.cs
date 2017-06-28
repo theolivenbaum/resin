@@ -46,11 +46,35 @@ namespace Resin.IO
             }
         }
 
+        private static byte[][] DeserializeUnicodeIndexOrCreateNew(string fileName)
+        {
+            if (!File.Exists(fileName))
+            {
+                return new byte[1112064][];
+            }
+            
+            var unicodeIndex = new byte[1112064][];
+
+            using (var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                for (int index = 0; index < 1112064; index++)
+                {
+                    var buffer = new byte[sizeof(long)];
+                    stream.Read(buffer, 0, sizeof(long));
+
+                    if (BitConverter.ToInt64(buffer, 0) > -1)
+                        unicodeIndex[index] = buffer;
+                }
+            }
+
+            return unicodeIndex;
+        }
+
         public static void Serialize(this LcrsTrie trie, string fileName)
         {
             var dir = Path.GetDirectoryName(fileName);
-            var sixFileName = Path.Combine(dir,
-                Path.GetFileNameWithoutExtension(fileName) + ".six");
+            var version = Path.GetFileNameWithoutExtension(fileName);
+            var sixFileName = Path.Combine(dir, version + ".six");
 
             using (var sixStream = new FileStream(sixFileName, FileMode.Append, FileAccess.Write, FileShare.Read))
             {
@@ -78,48 +102,32 @@ namespace Resin.IO
                 {
                     Array.Reverse(posBytes);
                 }
+
                 sixStream.Write(posBytes, 0, sizeof(long));
 
                 using (treeStream)
                 {
                     if (trie.LeftChild != null)
                     {
-                        var branches = trie.GetAllSiblings().ToList();
-
-                        if (branches.Count == 0)
-                        {
-                            trie.LeftChild.SerializeDepthFirst(treeStream, 0);
-                        }
-                        else
-                        {
-                            var startNodeIndex = (int)Math.Ceiling(branches.Count / (decimal)2);
-                            var startNode = branches[startNodeIndex];
-
-                            branches[startNodeIndex - 1].RightSibling = null;
-
-                            startNode.LeftChild.SerializeDepthFirst(treeStream, 0);
-
-                            segmentDelimiter.Serialize(treeStream);
-
-                            trie.LeftChild.SerializeDepthFirst(treeStream, 0);
-                        }
+                        trie.LeftChild.SerializeDepthFirst(treeStream, 0);
                     }
                 }
             }
         }
 
-        private static void SerializeDepthFirst(this LcrsTrie trie, Stream stream, short depth)
+        private static void SerializeDepthFirst(
+            this LcrsTrie trie, Stream treeStream, short depth)
         {
-            new LcrsNode(trie, depth, trie.Weight, trie.PostingsAddress).Serialize(stream);
+            new LcrsNode(trie, depth, trie.Weight, trie.PostingsAddress).Serialize(treeStream);
 
             if (trie.LeftChild != null)
             {
-                trie.LeftChild.SerializeDepthFirst(stream, (short)(depth + 1));
+                trie.LeftChild.SerializeDepthFirst(treeStream, (short)(depth + 1));
             }
 
             if (trie.RightSibling != null)
             {
-                trie.RightSibling.SerializeDepthFirst(stream, depth);
+                trie.RightSibling.SerializeDepthFirst(treeStream, depth);
             }
         }
 

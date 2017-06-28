@@ -386,14 +386,20 @@ namespace Resin.IO
 
         private void Visualize(StringBuilder output, int depth)
         {
-            if (RightSibling != null)
-                RightSibling.Visualize(output, depth);
-
             output.Append('\t', depth);
             output.AppendLine(Value.ToString());
 
-            if (LeftChild != null)
-                LeftChild.Visualize(output, depth + 1);
+            if (LeftChild == null)
+            {
+                output.Append("\r\n");
+            }
+            else
+            {
+                LeftChild.Visualize(output, depth);
+            }
+
+            if (RightSibling != null)
+                RightSibling.Visualize(output, depth + 1);
         }
 
         public bool HasMoreSegments()

@@ -5,7 +5,7 @@ using Resin.IO.Write;
 
 namespace Resin
 {
-    public class SingleDocumentUpsertOperation
+    public class DocumentUpsertOperation
     {
         public void Write(
             Document document,

@@ -12,9 +12,9 @@ using System.Linq;
 
 namespace Resin
 {
-    public class UpsertOperation : IDisposable
+    public class UpsertTransaction : IDisposable
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(UpsertOperation));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(UpsertTransaction));
 
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
@@ -25,7 +25,7 @@ namespace Resin
         private int _count;
         private bool _committed;
 
-        public UpsertOperation(
+        public UpsertTransaction(
             string directory, 
             IAnalyzer analyzer, 
             Compression compression, 
@@ -79,7 +79,7 @@ namespace Resin
             {
                 doc.Id = _count++;
 
-                new SingleDocumentUpsertOperation().Write(
+                new DocumentUpsertOperation().Write(
                     doc,
                     _storeWriter,
                     _analyzer,

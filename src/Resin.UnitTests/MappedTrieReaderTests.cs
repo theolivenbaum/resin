@@ -5,6 +5,8 @@ using Resin.IO.Read;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System;
+using System.Text;
 
 namespace Tests
 {
@@ -306,6 +308,20 @@ namespace Tests
         }
 
         [TestMethod]
+        public void Can_create_unicode_index()
+        {
+            var offset = BitConverter.GetBytes(long.MaxValue);
+            var size = BitConverter.GetBytes(int.MaxValue);
+
+            using (var fs = new FileStream("Can_create_unicode_index.bin", FileMode.Create))
+            for (int index = 0; index < 1112064; index++)
+            {
+                    fs.Write(offset, 0, offset.Length);
+                    fs.Write(size, 0, size.Length);
+            }
+        }
+
+        [TestMethod]
         public void Can_deserialize_whole_file()
         {
             var dir = CreateDir();
@@ -315,22 +331,32 @@ namespace Tests
             var tree = new LcrsTrie('\0', false);
             tree.Add("baby");
             tree.Add("bad");
+            tree.Add("badness");
             tree.Add("bank");
             tree.Add("box");
             tree.Add("dad");
             tree.Add("dance");
+            tree.Add("flower");
+            tree.Add("flowers");
+            tree.Add("globe");
+            tree.Add("global");
 
-            foreach(var node in tree.EndOfWordNodes())
+            foreach (var node in tree.EndOfWordNodes())
             {
                 node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
             }
 
             Assert.IsTrue(tree.IsWord("baby").Any());
             Assert.IsTrue(tree.IsWord("bad").Any());
+            Assert.IsTrue(tree.IsWord("badness").Any());
             Assert.IsTrue(tree.IsWord("bank").Any());
             Assert.IsTrue(tree.IsWord("box").Any());
             Assert.IsTrue(tree.IsWord("dad").Any());
             Assert.IsTrue(tree.IsWord("dance").Any());
+            Assert.IsTrue(tree.IsWord("flower").Any());
+            Assert.IsTrue(tree.IsWord("flowers").Any());
+            Assert.IsTrue(tree.IsWord("globe").Any());
+            Assert.IsTrue(tree.IsWord("global").Any());
 
             tree.Serialize(fileName);
             File.WriteAllText("Can_deserialize_whole_file.log", tree.Visualize(), System.Text.Encoding.UTF8);
@@ -339,10 +365,15 @@ namespace Tests
 
             Assert.IsTrue(recreated.IsWord("baby").Any());
             Assert.IsTrue(recreated.IsWord("bad").Any());
+            Assert.IsTrue(recreated.IsWord("badness").Any());
             Assert.IsTrue(recreated.IsWord("bank").Any());
             Assert.IsTrue(recreated.IsWord("box").Any());
             Assert.IsTrue(recreated.IsWord("dad").Any());
             Assert.IsTrue(recreated.IsWord("dance").Any());
+            Assert.IsTrue(recreated.IsWord("flower").Any());
+            Assert.IsTrue(recreated.IsWord("flowers").Any());
+            Assert.IsTrue(recreated.IsWord("globe").Any());
+            Assert.IsTrue(recreated.IsWord("global").Any());
         }
     }
 }

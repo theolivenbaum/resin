@@ -8,13 +8,13 @@ using Resin.IO.Write;
 
 namespace Resin
 {
-    public class DeleteByPrimaryKeyOperation : IDocumentStoreDeleteOperation
+    public class DeleteByPrimaryKeyTransaction : IDocumentStoreDeleteTransaction
     {
         private readonly string _directory;
         private readonly IEnumerable<string> _pks;
         private readonly List<IxInfo> _ixs;
 
-        public DeleteByPrimaryKeyOperation(string directory, IEnumerable<string> primaryKeyValues)
+        public DeleteByPrimaryKeyTransaction(string directory, IEnumerable<string> primaryKeyValues)
         {
             _directory = directory;
             _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();

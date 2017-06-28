@@ -11,9 +11,9 @@ using System.Threading;
 
 namespace Resin
 {
-    public class OptimizeOperation : IDisposable
+    public class MergeTransaction : IDisposable
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(OptimizeOperation));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(MergeTransaction));
 
         private IList<DocHashReader> _hashReader;
         private IList<DocumentAddressReader> _addressReader;
@@ -23,7 +23,7 @@ namespace Resin
         private readonly IAnalyzer _analyzer;
         private IList<string> _tmpFiles;
 
-        public OptimizeOperation(string directory, IAnalyzer analyzer = null)
+        public MergeTransaction(string directory, IAnalyzer analyzer = null)
         {
             _directory = directory;
             _analyzer = analyzer ?? new Analyzer();
@@ -97,7 +97,7 @@ namespace Resin
         {
             if (_ixFilesToProcess.Length == 1)
             {
-                // truncate segments
+                // merge segments
 
                 var ix = IxInfo.Load(_ixFilesToProcess[0]);
 
@@ -131,7 +131,7 @@ namespace Resin
 
                 Util.TryAquireWriteLock(_directory);
 
-                using (var upsert = new UpsertOperation(
+                using (var upsert = new UpsertTransaction(
                     _directory,
                     _analyzer,
                     srcIx.Compression,
@@ -159,7 +159,7 @@ namespace Resin
             long version;
             using (var documentStream = new RDocStream(documentFileName, ix.PrimaryKeyFieldName))
             {
-                using (var upsert = new UpsertOperation(
+                using (var upsert = new UpsertTransaction(
                     _directory,
                     _analyzer,
                     ix.Compression,

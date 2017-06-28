@@ -26,7 +26,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertOperation(
+            var writer = new UpsertTransaction(
                 dir, new Analyzer(), compression: Compression.GZip, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
@@ -73,7 +73,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertOperation(
+            var writer = new UpsertTransaction(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
@@ -120,7 +120,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertOperation(
+            var writer = new UpsertTransaction(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
@@ -149,7 +149,7 @@ namespace Tests
                 new {_id = "2", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertOperation(
+            var writer = new UpsertTransaction(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
@@ -162,7 +162,6 @@ namespace Tests
                 Assert.AreEqual(1, result.Docs.Count);
 
                 Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "0"));
-
             }
 
             var moreDocs = new List<dynamic>
@@ -172,7 +171,7 @@ namespace Tests
                 new {_id = "5", title = "the raiders of the lost ark" },
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer2 = new UpsertOperation(
+            var writer2 = new UpsertTransaction(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: moreDocs);
             long indexName2 = writer2.Write();
             writer2.Dispose();
@@ -212,19 +211,19 @@ namespace Tests
             long indexName;
             long indexName2;
 
-            using (var writer = new UpsertOperation(
+            using (var writer = new UpsertTransaction(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: docs))
             {
                 indexName = writer.Write();
 
-                using(var writer2 = new UpsertOperation(
+                using(var writer2 = new UpsertTransaction(
                     dir, new Analyzer(), compression: Compression.NoCompression, documents: moreDocs))
                 {
                     indexName2 = writer2.Write();
                 }
             }
 
-            using (var merge1 = new OptimizeOperation(dir))
+            using (var merge1 = new MergeTransaction(dir))
                 merge1.Optimize();
 
             using (var searcher = new Searcher(dir))
@@ -238,7 +237,7 @@ namespace Tests
                 Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
             }
 
-            using (var merge2 = new OptimizeOperation(dir))
+            using (var merge2 = new MergeTransaction(dir))
                 merge2.Optimize();
 
             using (var searcher = new Searcher(dir))
@@ -252,7 +251,7 @@ namespace Tests
                 Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
             }
 
-            using (var merge3 = new OptimizeOperation(dir))
+            using (var merge3 = new MergeTransaction(dir))
             {
                 var result = merge3.Optimize();
 
@@ -286,7 +285,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertOperation(
+            var writer = new UpsertTransaction(
                 dir, new Analyzer(), compression: Compression.GZip, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();

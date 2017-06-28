@@ -12,13 +12,14 @@ namespace Resin.IO.Read
         private readonly Stream _stream;
         private readonly int _blockSize;
         private readonly long[] _segs;
+
         private int _segmentIndex;
 
         public MappedTrieReader(string fileName)
         {
             var dir = Path.GetDirectoryName(fileName);
-            var sixFileName = Path.Combine(dir, 
-                Path.GetFileNameWithoutExtension(fileName) + ".six");
+            var version = Path.GetFileNameWithoutExtension(fileName);
+            var sixFileName = Path.Combine(dir, version + ".six");
 
             _stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan);
 
