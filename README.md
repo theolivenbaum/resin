@@ -88,30 +88,30 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 ## Reads are purely disk-based
 Resin is a library, not a service. It runs inside of your application domain. 
 
-ResinDB has been optimized to be able to immediately respond to queries without having to first rebuild data structures in-memory. 
+Because of that ResinDB has been optimized to be able to immediately respond to queries without having to first rebuild data structures in-memory. 
 
-The default index type is a fast disk-based and bitmapped left-child-right-sibling character trie.
+The default index type is a disk-based and bitmapped doubly chained character trie.
 
 ResinDB's read/write model allow for multi-threaded read and write access to the data files. Writing is append-only. Reading is snapshot-based.
 
-## No input/output schema
-Store documents with variable number columns/fields. 
+## No schema
+You may store documents with variable number columns/fields. 
 
-Group similar documents into separate stores or have them all in a big store.
+If you have graph-like business entities you would like full queryability into, then flatten them out and use paths as field names. 
 
-The document model supports flat or graph-like business entities.
+In queries you reference document fields by key (or path).
 
-In queries, reference document fields by a simple or complex key/path.
+## Column-oriented indexing options
+Resin creates and maintains an index per document field. 
 
-## Column-oriented indexing
-By default Resin creates and maintains an index per document field. 
+You can opt out of indexing (analyzing) of fields, or you may choose to analyze a field but not store it in its original state, only in its analyzed state.
 
-You can opt out of indexing (analyzing) and storing of fields.
+## Compression
+Analyzed data is compressed in a trie.
 
-## Row-based compression
-With Resin's default storage engine you have the option of compressing your data with either QuickLZ or GZip. For unstructured data this leaves a smaller footprint on disk and enables faster writes.
+Stored data can be compressed with either QuickLZ or GZip. For unstructured data this leaves a smaller footprint on disk and enables faster writes.
 
-Compression is row-based. Querying performance affected very little. It is the contents of the document storage file that is compressed and that file is touched after the index lookup and the scoring. 
+Compressing stored data affects querying very little. In some scenarios it also speeds up writing. 
 
 ## Full-text search
 ResinDB's main index data structure is a disk-based doubly-linked character trie. Querying support includes term, fuzzy, prefix, phrase and range. 
