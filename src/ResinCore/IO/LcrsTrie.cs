@@ -380,26 +380,20 @@ namespace Resin.IO
         public string Visualize()
         {
             StringBuilder output = new StringBuilder();
-            Visualize(output, 0);
+            Visualize(LeftChild, output, 0);
             return output.ToString();
         }
 
-        private void Visualize(StringBuilder output, int depth)
+        private void Visualize(LcrsTrie node, StringBuilder output, int depth)
         {
+            if (node == null) return;
+
             output.Append('\t', depth);
-            output.AppendLine(Value.ToString());
+            output.Append(node.Value.ToString() + " ");
+            output.AppendLine();
 
-            if (LeftChild == null)
-            {
-                output.Append("\r\n");
-            }
-            else
-            {
-                LeftChild.Visualize(output, depth);
-            }
-
-            if (RightSibling != null)
-                RightSibling.Visualize(output, depth + 1);
+            Visualize(node.LeftChild, output, depth + 1);
+            Visualize(node.RightSibling, output, depth);
         }
 
         public bool HasMoreSegments()
