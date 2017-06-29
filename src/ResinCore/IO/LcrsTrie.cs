@@ -88,6 +88,27 @@ namespace Resin.IO
             }
         }
 
+        public IEnumerable<LcrsTrie> NodesPreOrder()
+        {
+            yield return this;
+
+            if (LeftChild != null)
+            {
+                foreach (var node in LeftChild.NodesPreOrder())
+                {
+                    yield return node;
+                }
+            }
+
+            if (RightSibling != null)
+            {
+                foreach (var node in RightSibling.NodesPreOrder())
+                {
+                    yield return node;
+                }
+            }
+        }
+
         public void Add(string word)
         {
             Add(word,new DocumentPosting(-1, 1));
@@ -382,6 +403,31 @@ namespace Resin.IO
             StringBuilder output = new StringBuilder();
             Visualize(LeftChild, output, 0);
             return output.ToString();
+        }
+
+        public LcrsTrie Balance()
+        {
+            var nodes = NodesPreOrder().ToArray();
+
+            return Balance(nodes, 0, nodes.Length - 1);
+        }
+
+        private LcrsTrie Balance(LcrsTrie[] arr, int start, int end)
+        {
+            if (start > end)
+            {
+                return null;
+            }
+
+            int mid = (start + end) / 2;
+
+            LcrsTrie node = arr[mid];
+
+            node.LeftChild = Balance(arr, start, mid - 1);
+
+            node.RightSibling = Balance(arr, mid + 1, end);
+
+            return node;
         }
 
         private void Visualize(LcrsTrie node, StringBuilder output, int depth)
