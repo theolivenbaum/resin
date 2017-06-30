@@ -49,19 +49,7 @@ namespace Resin.IO
 
             foreach (var subQuery in query.ToList())
             {
-                //IEnumerable<DocumentScore> scores;
-
                 Map(subQuery);
-                //if (!_scoreCache.TryGetValue(subQuery, out scores))
-                //{
-                //    Map(subQuery);
-
-                //    _scoreCache.Add(subQuery, subQuery.Scored.ToList());
-                //}
-                //else
-                //{
-                //    subQuery.Scored = _scoreCache[subQuery];
-                //}
             }
 
             var reduceTime = new Stopwatch();
@@ -105,30 +93,38 @@ namespace Resin.IO
             {
                 using (reader)
                 {
+                    IList<Term> terms;
                     if (query.Fuzzy)
                     {
-                        query.Terms = reader.Near(query.Value, query.Edits, _distanceResolver)
+                        terms = reader.Near(query.Value, query.Edits, _distanceResolver)
                             .Select(word => new Term(query.Field, word))
                             .ToList();
                     }
                     else if (query.Prefix)
                     {
-                        query.Terms = reader.StartsWith(query.Value)
+                        terms = reader.StartsWith(query.Value)
                             .Select(word => new Term(query.Field, word))
                             .ToList();
                     }
                     else if (query.Range)
                     {
-                        query.Terms = reader.WithinRange(query.Value, query.ValueUpperBound)
+                        terms = reader.WithinRange(query.Value, query.ValueUpperBound)
                             .Select(word => new Term(query.Field, word))
                             .ToList();
                     }
                     else
                     {
-                        query.Terms = reader.IsWord(query.Value)
+                        terms = reader.IsWord(query.Value)
                             .Select(word => new Term(query.Field, word))
                             .ToList();
                     }
+
+                    if (Log.IsDebugEnabled && terms.Count > 1)
+                    {
+                        Log.DebugFormat("expanded {0}: {1}", 
+                            query.Value, string.Join(" ", terms.Select(t => t.Word.Value)));
+                    }
+                    query.Terms = terms;
                 }
             }
 

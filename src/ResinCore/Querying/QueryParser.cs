@@ -11,7 +11,7 @@ namespace Resin.Querying
         private readonly IAnalyzer _analyzer;
         private readonly float _fuzzySimilarity;
 
-        public QueryParser(IAnalyzer analyzer, float fuzzySimilarity = 0.75f)
+        public QueryParser(IAnalyzer analyzer, float fuzzySimilarity = 0.85f)
         {
             _analyzer = analyzer;
             _fuzzySimilarity = fuzzySimilarity;

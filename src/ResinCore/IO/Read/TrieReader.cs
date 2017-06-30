@@ -87,7 +87,20 @@ namespace Resin.IO.Read
 
             while (true)
             {
-                WithinEditDistanceDepthFirst(word, string.Empty, words, 0, maxEdits, distanceResolver);
+                LcrsNode node;
+
+                var prefix = word[0].ToString();
+
+                if (TryFindDepthFirst(prefix, out node))
+                {
+                    if (node.EndOfWord && distanceResolver.Distance(word, prefix) <= maxEdits)
+                    {
+                        words.Add(new Word(word[0].ToString()));
+                    }
+
+                    WithinEditDistanceDepthFirst(
+                        word, word[0].ToString(), words, 1, maxEdits, distanceResolver);
+                }
 
                 if (HasMoreSegments())
                 {
