@@ -165,7 +165,7 @@ namespace Resin.IO.Read
                 }
                 else
                 {
-                    test = new string(state.ReplaceOrAppend(depth, node.Value).ToArray());
+                    test = state.ReplaceOrAppend(depth, node.Value);
                 }
 
                 if (reachedMin)

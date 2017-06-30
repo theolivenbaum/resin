@@ -111,7 +111,8 @@ namespace Tests
         [TestMethod]
         public void Can_parse()
         {
-            var q = new QueryParser(new Analyzer()).Parse("title:first* -title:blood~ genre:action*");
+            var q = new QueryParser(new Analyzer(), fuzzySimilarity:075f)
+                .Parse("title:first* -title:blood~ genre:action*");
 
             Assert.AreEqual("+title:first* -title:blood~ genre:action*", q.ToString());
         }
@@ -127,7 +128,7 @@ namespace Tests
         [TestMethod]
         public void Can_parse_fuzzy_term()
         {
-            var q = new QueryParser(new Analyzer()).Parse("title:raymbo~");
+            var q = new QueryParser(new Analyzer(), fuzzySimilarity: 075f).Parse("title:raymbo~");
 
             Assert.AreEqual("+title:raymbo~", q.ToString());
         }

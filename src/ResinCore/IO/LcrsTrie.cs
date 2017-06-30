@@ -300,7 +300,7 @@ namespace Resin.IO
             }
             else
             {
-                test = new string(state.ReplaceOrAppend(depth, Value).ToArray());
+                test = state.ReplaceOrAppend(depth, Value);
             }
 
             var edits = distanceResolver.Distance(word, test);

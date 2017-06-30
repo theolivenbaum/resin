@@ -13,17 +13,12 @@ namespace Resin.Sys
             return DateTime.Now.Ticks;
         }
 
-        public static IEnumerable<char> ReplaceOrAppend(this string input, int index, char newChar)
+        public static string ReplaceOrAppend(this string input, int index, char newChar)
         {
             var chars = input.ToCharArray();
             if (index == input.Length) return input + newChar;
             chars[index] = newChar;
-            return chars;
-        }
-
-        public static string ReplaceOrAppendToString(this string input, int index, char newChar)
-        {
-            return new string(input.ReplaceOrAppend(index, newChar).ToArray());
+            return new string(chars);
         }
 
         public static long GetNextChronologicalFileId()
