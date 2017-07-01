@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using log4net;
 using Resin.Analysis;
 using Resin.IO.Read;
@@ -19,7 +18,6 @@ namespace Resin.IO
         private readonly IxInfo _ix;
         private readonly IScoringScheme _scorerFactory;
         private readonly int _documentCount;
-        private readonly IDistanceResolver _distanceResolver;
         private readonly IDictionary<Query, IList<DocumentScore>> _scoreCache;
         private readonly DocHashReader _docHashReader;
         private readonly PostingsReader _postingsReader;
@@ -48,8 +46,12 @@ namespace Resin.IO
 
             foreach (var subQuery in query.ToList())
             {
-                Map(subQuery);
+                Read(subQuery);
+                GetPostings(subQuery);
+                Score(subQuery);
             }
+
+            Log.DebugFormat("scored query {0} in {1}", query, scoreTime.Elapsed);
 
             var reduceTime = new Stopwatch();
             reduceTime.Start();
@@ -61,83 +63,65 @@ namespace Resin.IO
             return reduced;
         }
 
-        private void Map(QueryContext subQuery)
-        {
-            GetTerms(subQuery);
-            Score(subQuery);
-        }
-
-        private void Scan(IEnumerable<QueryContext> queries)
-        {
-            //Parallel.ForEach(queries, GetTerms);
-
-            foreach (var q in queries)
-            {
-                GetTerms(q);
-            }
-        }
-
-        private void GetTerms(QueryContext query)
+        private void Read(QueryContext subQuery)
         {
             var time = new Stopwatch();
             time.Start();
 
-            var reader = GetTreeReader(query.Field);
+            var reader = GetTreeReader(subQuery.Field);
 
             if (reader == null)
             {
-                query.Terms = Enumerable.Empty<Term>();
+                subQuery.Terms = Enumerable.Empty<Term>();
             }
             else
             {
                 using (reader)
                 {
                     IList<Term> terms;
-                    if (query.Fuzzy)
+                    if (subQuery.Fuzzy)
                     {
-                        terms = reader.Near(query.Value, query.Edits)
-                            .Select(word => new Term(query.Field, word))
+                        terms = reader.Near(subQuery.Value, subQuery.Edits)
+                            .Select(word => new Term(subQuery.Field, word))
                             .ToList();
                     }
-                    else if (query.Prefix)
+                    else if (subQuery.Prefix)
                     {
-                        terms = reader.StartsWith(query.Value)
-                            .Select(word => new Term(query.Field, word))
+                        terms = reader.StartsWith(subQuery.Value)
+                            .Select(word => new Term(subQuery.Field, word))
                             .ToList();
                     }
-                    else if (query.Range)
+                    else if (subQuery.Range)
                     {
-                        terms = reader.WithinRange(query.Value, query.ValueUpperBound)
-                            .Select(word => new Term(query.Field, word))
+                        terms = reader.WithinRange(subQuery.Value, subQuery.ValueUpperBound)
+                            .Select(word => new Term(subQuery.Field, word))
                             .ToList();
                     }
                     else
                     {
-                        terms = reader.IsWord(query.Value)
-                            .Select(word => new Term(query.Field, word))
+                        terms = reader.IsWord(subQuery.Value)
+                            .Select(word => new Term(subQuery.Field, word))
                             .ToList();
                     }
 
                     if (Log.IsDebugEnabled && terms.Count > 1)
                     {
                         Log.DebugFormat("expanded {0}: {1}", 
-                            query.Value, string.Join(" ", terms.Select(t => t.Word.Value)));
+                            subQuery.Value, string.Join(" ", terms.Select(t => t.Word.Value)));
                     }
-                    query.Terms = terms;
+                    subQuery.Terms = terms;
                 }
             }
 
-            Log.DebugFormat("scanned {0} in {1}", query.Serialize(), time.Elapsed);
-
-            GetPostings(query);
+            Log.DebugFormat("scanned {0} in {1}", subQuery.Serialize(), time.Elapsed);
         }
 
-        private void GetPostings(QueryContext query)
+        private void GetPostings(QueryContext subQuery)
         {
             var time = new Stopwatch();
             time.Start();
 
-            var terms = query.Terms.ToList();
+            var terms = subQuery.Terms.ToList();
             var postings = terms.Count > 0 ? ReadPostings(terms).ToList() : null;
 
             IEnumerable<DocumentPosting> result;
@@ -152,9 +136,9 @@ namespace Resin.IO
                 result = postings.Sum();
             }
 
-            query.Postings = result;
+            subQuery.Postings = result;
 
-            Log.DebugFormat("read postings for {0} in {1}", query.Serialize(), time.Elapsed);
+            Log.DebugFormat("read postings for {0} in {1}", subQuery.Serialize(), time.Elapsed);
         }
         
         private IEnumerable<IList<DocumentPosting>> ReadPostings(IEnumerable<Term> terms)
@@ -165,11 +149,6 @@ namespace Resin.IO
             var postings = _postingsReader.Read(addresses).SelectMany(x => x).ToList();
 
             yield return postings;
-        }
-
-        private void Score(IEnumerable<QueryContext> queries)
-        {
-            Parallel.ForEach(queries, Score);
         }
 
         private void Score(QueryContext query)
