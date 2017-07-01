@@ -3,7 +3,6 @@
 Feature | ResinDB | Lucene | SQL Server LocalDB | LevelDB | RocksDB
 --- | --- | --- | --- | --- | ---
 Runs in-process | &#9989; | &#9989; | &#9989; | &#9989; | &#9989;
-Can be distributed | &#9989; | &#9989; | &#9989; | &#9989; | &#9989;
 Has a query language | &#9989; | &#9989; | &#9989; |   |  
 Is schema-less | &#9989; | &#9989; |   | &#9989; | &#9989;
 Can compress data | &#9989; | &#9989; |  | &#9989; | &#9989;
