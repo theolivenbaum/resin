@@ -118,10 +118,8 @@ ResinDB's main index data structure is a disk-based doubly-linked character trie
 ## Word vector space model
 Scores are calculated using the default scoring scheme which is a vector space/tf-idf bag-of-words model.
 
-Analyzed fields participate in the scoring.
-
-## Map/reduce
-You define your set of items (documents) by formulating a query composed of one or more term-based questions. Then you specify an aggregating function (in our case, a scoring mechanism). Then you run that function over your set. As a final step you reduce your term-based answers into one answer, paginate and fetch your items from your store.
+## Mapping and reducing
+Here's how the scoring mechanism works. You define your set of items (documents) by formulating a query composed of one or more term-based questions. Then you specify an aggregating function (in our case, a scoring mechanism). Then you run that function over your set of items (in our case, document postings). As a final step you reduce your term-based answers into one answer, paginate and fetch your data from your store.
 
 E.g.:
 
