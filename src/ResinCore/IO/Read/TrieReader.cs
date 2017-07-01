@@ -79,9 +79,9 @@ namespace Resin.IO.Read
             return words;
         }
 
-        public IEnumerable<Word> Near(string word, int maxEdits, IDistanceAutomaton distanceResolver = null)
+        public IEnumerable<Word> Near(string word, int maxEdits, IDistanceResolver distanceResolver = null)
         {
-            if (distanceResolver == null) distanceResolver = new LevenshteinAutomaton(word, maxEdits);
+            if (distanceResolver == null) distanceResolver = new LevenshteinDistanceResolver(word, maxEdits);
 
             var words = new List<Word>();
 
@@ -95,7 +95,7 @@ namespace Resin.IO.Read
                 {
                     if (node.EndOfWord && 
                         distanceResolver.IsValid(node.Value, 0) && 
-                        new Levenshtein().Distance(word, prefix) <= maxEdits)
+                        distanceResolver.GetDistance(word, prefix) <= maxEdits)
                     {
                         words.Add(new Word(word[0].ToString()));
                     }
@@ -137,10 +137,9 @@ namespace Resin.IO.Read
         }
 
         private void WithinEditDistanceDepthFirst(
-            string word, string state, IList<Word> words, int depth, int maxEdits, IDistanceAutomaton distanceResolver, bool stop = false)
+            string word, string state, IList<Word> words, int depth, int maxEdits, IDistanceResolver distanceResolver, bool stop = false)
         {
             var reachedMin = maxEdits == 0 || depth >= word.Length - 1 - maxEdits;
-            var reachedDepth = depth >= word.Length - 1;
             var reachedMax = depth >= word.Length + maxEdits;
 
             var node = Step();
@@ -177,7 +176,7 @@ namespace Resin.IO.Read
                     {
                         if (node.EndOfWord)
                         {
-                            if (new Levenshtein().Distance(word, test) <= maxEdits)
+                            if (distanceResolver.GetDistance(word, test) <= maxEdits)
                             {
                                 words.Add(new Word(test, 1, node.PostingsAddress));
                             }

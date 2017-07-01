@@ -8,7 +8,7 @@ namespace Resin.IO
     {
         IEnumerable<Word> IsWord(string word);
         IEnumerable<Word> StartsWith(string prefix);
-        IEnumerable<Word> Near(string word, int maxEdits, IDistanceAutomaton distanceResolver = null);
+        IEnumerable<Word> Near(string word, int maxEdits, IDistanceResolver distanceResolver = null);
         IEnumerable<Word> WithinRange(string lowerBound, string upperBound);
         bool HasMoreSegments();
     }

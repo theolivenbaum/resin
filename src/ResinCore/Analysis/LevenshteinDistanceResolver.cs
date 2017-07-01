@@ -1,10 +1,49 @@
 using System;
+using System.Linq;
 
 namespace Resin.Analysis
 {
-    public class Levenshtein : IDistanceResolver
+    public class LevenshteinDistanceResolver : IDistanceResolver
     {
-        public int Distance(string a, string b)
+        private readonly char[] _query;
+        private readonly int[] _score;
+        private readonly int _maxDistance;
+
+        public LevenshteinDistanceResolver(string query, int maxDistance)
+        {
+            _query = query.ToCharArray();
+            _maxDistance = maxDistance;
+            _score = new int[_query.Length];
+        }
+
+        public void Put(char c, int depth)
+        {
+            _score[depth] = _query[depth] == c ? 0 : 1;
+        }
+
+        public bool IsValid(char c, int depth)
+        {
+            var lenDiff = _query.Length - (depth + 1);
+
+            if (depth >= _query.Length)
+            {
+                return _score.Sum() + (depth + 1 - _query.Length) <= _maxDistance;
+            }
+            else if (_query[depth] == c)
+            {
+                _score[depth] = 0;
+            }
+            else
+            {
+                _score[depth] = 1;
+            }
+
+            var sum = _score.Sum();
+
+            return sum <= _maxDistance;
+        }
+
+        public int GetDistance(string a, string b)
         {
             if (string.IsNullOrEmpty(a))
             {

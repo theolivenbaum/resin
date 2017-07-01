@@ -278,9 +278,9 @@ namespace Resin.IO
             return words;
         }
         
-        public IEnumerable<Word> Near(string word, int maxEdits, IDistanceAutomaton distanceResolver = null)
+        public IEnumerable<Word> Near(string word, int maxEdits, IDistanceResolver distanceResolver = null)
         {
-            if (distanceResolver == null) distanceResolver = new LevenshteinAutomaton(word, maxEdits);
+            if (distanceResolver == null) distanceResolver = new LevenshteinDistanceResolver(word, maxEdits);
 
              var compressed = new List<Word>();
             if (LeftChild != null)
@@ -291,7 +291,7 @@ namespace Resin.IO
         }
 
         private void WithinEditDistanceDepthFirst(
-            string word, string state, List<Word> words, int depth, int maxEdits, IDistanceAutomaton distanceResolver, bool stop = false)
+            string word, string state, List<Word> words, int depth, int maxEdits, IDistanceResolver distanceResolver, bool stop = false)
         {
             var reachedMin = maxEdits == 0 || depth >= word.Length - 1 - maxEdits;
             var reachedDepth = depth >= word.Length - 1;
@@ -316,7 +316,7 @@ namespace Resin.IO
                     {
                         if (EndOfWord)
                         {
-                            if(new Levenshtein().Distance(word, test) <= maxEdits)
+                            if(distanceResolver.GetDistance(word, test) <= maxEdits)
                             {
                                 words.Add(new Word(test, 1, PostingsAddress));
                             }

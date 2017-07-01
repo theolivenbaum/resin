@@ -2,6 +2,8 @@
 {
     public interface IDistanceResolver
     {
-        int Distance(string a, string b);
+        bool IsValid(char c, int depth);
+        void Put(char c, int depth);
+        int GetDistance(string a, string b);
     }
 }
