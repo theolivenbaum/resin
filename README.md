@@ -88,7 +88,7 @@ Resin is a library, not a service. It runs inside of your application domain.
 
 Because of that ResinDB has been optimized to be able to immediately respond to queries without having to first rebuild data structures in-memory. 
 
-The default index type is a disk-based and bitmapped doubly chained character trie.
+The default index type is a dense, bucket-less, doubly chained Unicode character trie. On disk it's represented as a bitmap.
 
 ResinDB's read/write model allow for multi-threaded read and write access to the data files. Writing is append-only. Reading is snapshot-based.
 
