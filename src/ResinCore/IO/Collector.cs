@@ -20,7 +20,7 @@ namespace Resin.IO
         private readonly int _documentCount;
         private readonly IDictionary<Query, IList<DocumentScore>> _scoreCache;
         private readonly DocHashReader _docHashReader;
-        private readonly PostingsReader _postingsReader;
+        private readonly string _posFileName;
 
         public IxInfo Ix { get { return _ix; } }
 
@@ -33,10 +33,9 @@ namespace Resin.IO
             _scoreCache = new Dictionary<Query, IList<DocumentScore>>();
 
             var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "pk"));
-            var posFileName = Path.Combine(directory, string.Format("{0}.{1}", ix.VersionId, "pos"));
+            _posFileName = Path.Combine(directory, string.Format("{0}.{1}", ix.VersionId, "pos"));
 
             _docHashReader = new DocHashReader(docHashesFileName);
-            _postingsReader = new PostingsReader(new FileStream(posFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan));
         }
 
         public IList<DocumentScore> Collect(QueryContext query)
@@ -44,9 +43,10 @@ namespace Resin.IO
             var scoreTime = new Stopwatch();
             scoreTime.Start();
 
-            foreach (var subQuery in query.ToList())
+            var queries = query.ToList();
+            foreach (var subQuery in queries)
             {
-                Read(subQuery);
+                Scan(subQuery);
                 GetPostings(subQuery);
                 Score(subQuery);
             }
@@ -63,7 +63,7 @@ namespace Resin.IO
             return reduced;
         }
 
-        private void Read(QueryContext subQuery)
+        private void Scan(QueryContext subQuery)
         {
             var time = new Stopwatch();
             time.Start();
@@ -146,9 +146,13 @@ namespace Resin.IO
             var addresses = terms.Select(term => term.Word.PostingsAddress)
                 .OrderBy(adr => adr.Position).ToList();
 
-            var postings = _postingsReader.Read(addresses).SelectMany(x => x).ToList();
+            using (var postingsReader = new PostingsReader(
+                new FileStream(_posFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan)))
+            {
+                var postings = postingsReader.Read(addresses).SelectMany(x => x).ToList();
 
-            yield return postings;
+                yield return postings;
+            }
         }
 
         private void Score(QueryContext query)
@@ -213,7 +217,6 @@ namespace Resin.IO
         public void Dispose()
         {
             _docHashReader.Dispose();
-            _postingsReader.Dispose();
         }
     }
 }

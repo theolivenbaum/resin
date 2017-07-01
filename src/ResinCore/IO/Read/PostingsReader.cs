@@ -4,10 +4,10 @@ using System.Linq;
 
 namespace Resin.IO.Read
 {
-    public class PostingsReader : AutoResettingBlockReader<IEnumerable<DocumentPosting>>
+    public class PostingsReader : BlockReader<IEnumerable<DocumentPosting>>
     {
-        public PostingsReader(Stream stream, bool leaveOpen = false)
-            : base(stream, leaveOpen)
+        public PostingsReader(Stream stream)
+            : base(stream)
         {
         }
         protected override IEnumerable<DocumentPosting> Deserialize(byte[] data)
