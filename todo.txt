@@ -1,5 +1,3 @@
-trie file format
-trie of int instead of trie of char
 word2vec
 sort by
 don't store key on every row of rdoc
