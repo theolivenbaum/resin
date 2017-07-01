@@ -4,12 +4,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using log4net;
-using Resin.Analysis;
 using Resin.IO.Read;
 using Resin.Querying;
 using Resin.Sys;
+using Resin.IO;
 
-namespace Resin.IO
+namespace Resin
 {
     public class Collector : IDisposable
     {

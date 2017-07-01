@@ -1,7 +1,6 @@
 using System.Linq;
 using Resin.Analysis;
 using Resin.IO;
-using Resin.IO.Write;
 
 namespace Resin
 {

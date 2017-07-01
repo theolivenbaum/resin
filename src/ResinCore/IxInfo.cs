@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using log4net;
-using System.Collections.Generic;
+using Resin.IO;
 
-namespace Resin.IO
+namespace Resin
 {
     [DebuggerDisplay("{VersionId}")]
     public class IxInfo

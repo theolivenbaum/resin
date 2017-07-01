@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Resin.IO;
 
-namespace Resin.Querying
+namespace Resin
 {
     /// <summary>
     /// Scored posting. To combine inside a index, use doc ID. To combine between indices, use doc hash.

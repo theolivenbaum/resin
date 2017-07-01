@@ -1,4 +1,4 @@
-﻿namespace Resin.IO.Write
+﻿namespace Resin
 {
     public interface IDocumentStoreDeleteTransaction
     {

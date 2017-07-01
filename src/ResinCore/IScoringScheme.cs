@@ -1,6 +1,4 @@
-﻿using Resin.IO;
-
-namespace Resin.Analysis
+﻿namespace Resin
 {
     public interface IScoringScheme
     {

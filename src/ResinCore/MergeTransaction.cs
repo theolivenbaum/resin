@@ -1,6 +1,5 @@
 ﻿using log4net;
 using Resin.Analysis;
-using Resin.IO;
 using Resin.IO.Read;
 using Resin.Sys;
 using System;

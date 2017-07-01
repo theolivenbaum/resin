@@ -93,13 +93,14 @@ namespace Resin
         {
             var results = new List<IList<DocumentScore>>();
 
+            //Parallel.ForEach(_ixs, ix =>
             foreach (var ix in _ixs)
             {
                 using (var collector = new Collector(_directory, ix, _scorerFactory, _documentCount))
                 {
                     results.Add(collector.Collect(query).ToList());
                 }
-            }
+            }//);
 
             var timer = new Stopwatch();
             timer.Start();

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace Resin.IO
+namespace Resin
 {
     [DebuggerDisplay("{DocumentId}:{Count}")]
     public struct DocumentPosting
