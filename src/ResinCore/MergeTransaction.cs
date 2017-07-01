@@ -71,29 +71,7 @@ namespace Resin
             }
         }
 
-        //private bool TryRemove(string ixFileName)
-        //{
-        //    try
-        //    {
-        //        File.Delete(ixFileName);
-
-        //        var dir = Path.GetDirectoryName(ixFileName);
-        //        var name = Path.GetFileNameWithoutExtension(ixFileName);
-
-        //        foreach (var file in Directory.GetFiles(dir, name + ".*"))
-        //        {
-        //            File.Delete(file);
-        //        }
-
-        //        return true;
-        //    }
-        //    catch
-        //    {
-        //        return false;
-        //    }
-        //}
-
-        public long Optimize()
+        public long Commit()
         {
             if (_ixFilesToProcess.Length == 1)
             {

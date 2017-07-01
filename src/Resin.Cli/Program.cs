@@ -96,7 +96,7 @@ namespace Resin.Cli
             {
                 using (var merge = new MergeTransaction(dir))
                 {
-                    var result = merge.Optimize();
+                    var result = merge.Commit();
                     
                     if (result == -1)
                     {

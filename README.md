@@ -58,14 +58,14 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 	
 	// From memory
 	using (var firstBatchDocuments = new InMemoryDocumentStream(docs))
-	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", firstBatchDocuments))
+	using (var writer = new UpsertTransaction(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", firstBatchDocuments))
 	{
 		long versionId = writer.Write();
 	}
 	
 	// From stream
 	using (var secondBatchDocuments = new JsonDocumentStream(fileName))
-	using (var writer = new UpsertOperation(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", secondBatchDocuments))
+	using (var writer = new UpsertTransaction(dir, new Analyzer(), Compression.NoCompression, primaryKey:"id", secondBatchDocuments))
 	{
 		long versionId = writer.Write();
 	}

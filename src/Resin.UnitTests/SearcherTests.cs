@@ -224,7 +224,7 @@ namespace Tests
             }
 
             using (var merge1 = new MergeTransaction(dir))
-                merge1.Optimize();
+                merge1.Commit();
 
             using (var searcher = new Searcher(dir))
             {
@@ -238,7 +238,7 @@ namespace Tests
             }
 
             using (var merge2 = new MergeTransaction(dir))
-                merge2.Optimize();
+                merge2.Commit();
 
             using (var searcher = new Searcher(dir))
             {
@@ -253,7 +253,7 @@ namespace Tests
 
             using (var merge3 = new MergeTransaction(dir))
             {
-                var result = merge3.Optimize();
+                var result = merge3.Commit();
 
                 Assert.AreEqual(-1, result);
             }
