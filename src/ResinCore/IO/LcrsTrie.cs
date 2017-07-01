@@ -278,9 +278,9 @@ namespace Resin.IO
             return words;
         }
         
-        public IEnumerable<Word> Near(string word, int maxEdits, IDistanceResolver distanceResolver = null)
+        public IEnumerable<Word> Near(string word, int maxEdits, IDistanceAutomaton distanceResolver = null)
         {
-            if (distanceResolver == null) distanceResolver = new Levenshtein();
+            if (distanceResolver == null) distanceResolver = new LevenshteinAutomaton(word, maxEdits);
 
              var compressed = new List<Word>();
             if (LeftChild != null)
@@ -290,41 +290,60 @@ namespace Resin.IO
             return compressed;
         }
 
-        private void WithinEditDistanceDepthFirst(string word, string state, List<Word> compressed, int depth, int maxEdits, IDistanceResolver distanceResolver)
+        private void WithinEditDistanceDepthFirst(
+            string word, string state, List<Word> words, int depth, int maxEdits, IDistanceAutomaton distanceResolver, bool stop = false)
         {
-            string test;
+            var reachedMin = maxEdits == 0 || depth >= word.Length - 1 - maxEdits;
+            var reachedDepth = depth >= word.Length - 1;
+            var reachedMax = depth >= word.Length + maxEdits;
 
-            if (depth == state.Length)
+            if (!reachedMax && !stop)
             {
-                test = state + Value;
-            }
-            else
-            {
-                test = state.ReplaceOrAppend(depth, Value);
-            }
+                string test;
 
-            var edits = distanceResolver.Distance(word, test);
-
-            if (edits <= maxEdits)
-            {
-                if (EndOfWord)
+                if (depth == state.Length)
                 {
-                    compressed.Add(new Word(test, WordCount, PostingsAddress, Postings));
+                    test = state + Value;
                 }
-            }
+                else
+                {
+                    test = state.ReplaceOrAppend(depth, Value);
+                }
 
-            if (edits <= maxEdits || test.Length < word.Length)
-            {
+                if (reachedMin)
+                {
+                    if (distanceResolver.IsValid(Value, depth))
+                    {
+                        if (EndOfWord)
+                        {
+                            if(new Levenshtein().Distance(word, test) <= maxEdits)
+                            {
+                                words.Add(new Word(test, 1, PostingsAddress));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        stop = true;
+                    }
+                }
+                else
+                {
+                    distanceResolver.Put(Value, depth);
+                }
+
+                // Go left (deep)
                 if (LeftChild != null)
                 {
-                    LeftChild.WithinEditDistanceDepthFirst(word, test, compressed, depth+1, maxEdits, distanceResolver);
+                    LeftChild.WithinEditDistanceDepthFirst(word, test, words, depth + 1, maxEdits, distanceResolver, stop);
                 }
 
+                // Go right (wide)
                 if (RightSibling != null)
                 {
-                    RightSibling.WithinEditDistanceDepthFirst(word, test, compressed, depth, maxEdits, distanceResolver);
+                    RightSibling.WithinEditDistanceDepthFirst(word, state, words, depth, maxEdits, distanceResolver);
                 }
-            }
+            }  
         }
 
         private void DepthFirst(string traveled, IList<char> state, IList<Word> words, bool surpassedLbound = false, string lbound = null, string ubound = null)

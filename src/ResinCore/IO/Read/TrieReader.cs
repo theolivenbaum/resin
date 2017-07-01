@@ -79,9 +79,9 @@ namespace Resin.IO.Read
             return words;
         }
 
-        public IEnumerable<Word> Near(string word, int maxEdits, IDistanceResolver distanceResolver = null)
+        public IEnumerable<Word> Near(string word, int maxEdits, IDistanceAutomaton distanceResolver = null)
         {
-            if (distanceResolver == null) distanceResolver = new Levenshtein();
+            if (distanceResolver == null) distanceResolver = new LevenshteinAutomaton(word, maxEdits);
 
             var words = new List<Word>();
 
@@ -93,7 +93,9 @@ namespace Resin.IO.Read
 
                 if (TryFindDepthFirst(prefix, out node))
                 {
-                    if (node.EndOfWord && distanceResolver.Distance(word, prefix) <= maxEdits)
+                    if (node.EndOfWord && 
+                        distanceResolver.IsValid(node.Value, 0) && 
+                        new Levenshtein().Distance(word, prefix) <= maxEdits)
                     {
                         words.Add(new Word(word[0].ToString()));
                     }
@@ -134,11 +136,12 @@ namespace Resin.IO.Read
             return words;
         }
 
-        private void WithinEditDistanceDepthFirst(string word, string state, IList<Word> words, int depth, int maxErrors, IDistanceResolver distanceResolver, bool stop = false)
+        private void WithinEditDistanceDepthFirst(
+            string word, string state, IList<Word> words, int depth, int maxEdits, IDistanceAutomaton distanceResolver, bool stop = false)
         {
-            var reachedMin = maxErrors == 0 || depth >= word.Length - 1 - maxErrors;
+            var reachedMin = maxEdits == 0 || depth >= word.Length - 1 - maxEdits;
             var reachedDepth = depth >= word.Length - 1;
-            var reachedMax = depth >= word.Length + maxErrors;
+            var reachedMax = depth >= word.Length + maxEdits;
 
             var node = Step();
 
@@ -170,20 +173,17 @@ namespace Resin.IO.Read
 
                 if (reachedMin)
                 {
-                    var edits = distanceResolver.Distance(word, test);
-
-                    if (edits <= maxErrors)
+                    if (distanceResolver.IsValid(node.Value, depth))
                     {
                         if (node.EndOfWord)
                         {
-                            words.Add(new Word(test, 1, node.PostingsAddress));
+                            if (new Levenshtein().Distance(word, test) <= maxEdits)
+                            {
+                                words.Add(new Word(test, 1, node.PostingsAddress));
+                            }
                         }
                     }
-                    else if (edits > maxErrors && reachedDepth)
-                    {
-                        stop = true;
-                    }
-                    else if (reachedDepth)
+                    else
                     {
                         stop = true;
                     }
@@ -192,13 +192,13 @@ namespace Resin.IO.Read
                 // Go left (deep)
                 if (node.HaveChild)
                 {
-                    WithinEditDistanceDepthFirst(word, test, words, depth + 1, maxErrors, distanceResolver, stop);
+                    WithinEditDistanceDepthFirst(word, test, words, depth + 1, maxEdits, distanceResolver, stop);
                 }
 
                 // Go right (wide)
                 if (node.HaveSibling)
                 {
-                    WithinEditDistanceDepthFirst(word, state, words, depth, maxErrors, distanceResolver);
+                    WithinEditDistanceDepthFirst(word, state, words, depth, maxEdits, distanceResolver);
                 }
             }
         }

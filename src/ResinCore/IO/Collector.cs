@@ -26,12 +26,11 @@ namespace Resin.IO
 
         public IxInfo Ix { get { return _ix; } }
 
-        public Collector(string directory, IxInfo ix, IScoringScheme scorerFactory = null, IDistanceResolver distanceResolver = null, int documentCount = -1)
+        public Collector(string directory, IxInfo ix, IScoringScheme scorerFactory = null, int documentCount = -1)
         {
             _directory = directory;
             _ix = ix;
             _scorerFactory = scorerFactory;
-            _distanceResolver = distanceResolver ?? new Levenshtein();
             _documentCount = documentCount == -1 ? ix.DocumentCount : documentCount;
             _scoreCache = new Dictionary<Query, IList<DocumentScore>>();
 
@@ -96,7 +95,7 @@ namespace Resin.IO
                     IList<Term> terms;
                     if (query.Fuzzy)
                     {
-                        terms = reader.Near(query.Value, query.Edits, _distanceResolver)
+                        terms = reader.Near(query.Value, query.Edits)
                             .Select(word => new Term(query.Field, word))
                             .ToList();
                     }

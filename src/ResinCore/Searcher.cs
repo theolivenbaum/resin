@@ -26,15 +26,14 @@ namespace Resin
         private readonly IList<IxInfo> _ixs;
         private readonly int _blockSize;
         private readonly int _documentCount;
-        private readonly IDistanceResolver _distanceResolver;
         private readonly IDocumentStoreReadSessionFactory _sessionFactory;
 
         public Searcher(string directory)
-            :this(directory, new QueryParser(new Analyzer()), new Tfidf(), new Levenshtein())
+            :this(directory, new QueryParser(new Analyzer()), new Tfidf())
         {
         }
 
-        public Searcher(string directory, QueryParser parser, IScoringScheme scorerFactory, IDistanceResolver distanceResolver, IDocumentStoreReadSessionFactory sessionFactory = null)
+        public Searcher(string directory, QueryParser parser, IScoringScheme scorerFactory, IDocumentStoreReadSessionFactory sessionFactory = null)
         {
             _directory = directory;
             _parser = parser;
@@ -45,8 +44,6 @@ namespace Resin
             _documentCount = Util.GetDocumentCount(_ixs);
 
             _blockSize = Serializer.SizeOfBlock();
-
-            _distanceResolver = distanceResolver;
 
             _sessionFactory = sessionFactory ?? new DocumentStoreReadSessionFactory();
         }
@@ -98,7 +95,7 @@ namespace Resin
 
             foreach (var ix in _ixs)
             {
-                using (var collector = new Collector(_directory, ix, _scorerFactory, _distanceResolver, _documentCount))
+                using (var collector = new Collector(_directory, ix, _scorerFactory, _documentCount))
                 {
                     results.Add(collector.Collect(query).ToList());
                 }
