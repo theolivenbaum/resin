@@ -93,13 +93,13 @@ The default index type is a dense, bucket-less, doubly chained Unicode character
 ResinDB's read/write model allow for multi-threaded read and write access to the data files. Writing is append-only. Reading is snapshot-based.
 
 ## No schema
-You may store documents with variable number columns/fields. 
+You may store documents with variable number columns ("fields"). 
 
 If you have graph-like business entities you would like full queryability into, then flatten them out and use paths as field names. 
 
 In queries you reference document fields by key (or path).
 
-## Column-oriented indexing options
+## Field-oriented indexing options
 Resin creates and maintains an index per document field. 
 
 You can opt out of indexing entirely. You can index verbatim (unanalyzed) data. You can choose to store data both is its original and its analyzed state, or you can choose to store either one of those.
@@ -107,9 +107,9 @@ You can opt out of indexing entirely. You can index verbatim (unanalyzed) data. 
 Indexed fields (both analyzed and unanalyzed) can participate in queries. Primary keys or paths used as identifiers should not be analyzed but certanly indexed and if they're significant enough, also stored.
 
 ## Compression
-Analyzed data is compressed in a trie.
+Analyzed data is compressed in a corpus-wide trie.
 
-Stored data can be compressed with either QuickLZ or GZip. For unstructured data this leaves a smaller footprint on disk and enables faster writes.
+Stored document fields can be compressed individually with either QuickLZ or GZip. For unstructured data this leaves a smaller footprint on disk and enables faster writes.
 
 Compressing stored data affects querying very little. In some scenarios it also speeds up writing. 
 
