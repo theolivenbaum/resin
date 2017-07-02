@@ -104,7 +104,7 @@ Resin creates and maintains an index per document field.
 
 You can opt out of indexing entirely. You can index verbatim (unanalyzed) data. You can choose to store data both is its original and its analyzed state, or you can choose to store either one of those.
 
-Indexed fields can participate in queries.
+Indexed fields (both analyzed and unanalyzed) can participate in queries. Primary keys or paths used as identifiers should not be analyzed but certanly indexed and if they're significant enough, also stored.
 
 ## Compression
 Analyzed data is compressed in a trie.
