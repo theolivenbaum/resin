@@ -126,7 +126,7 @@ namespace Resin.IO.Read
 
             LcrsNode node;
 
-            if (TryFindDepthFirst(lowerBound, out node, greaterThan:true))
+            if (TryFindDepthFirst(lowerBound.Substring(0, lowerBound.Length - 1), out node, greaterThan:true))
             {
                 DepthFirst(lowerBound, new List<char>(), words, lowerBound.Length - 1);
             }

@@ -32,7 +32,7 @@ namespace Tests
                 node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
             }
 
-            File.WriteAllText("Can_find_within_range.log", tree.Visualize(), System.Text.Encoding.UTF8);
+            File.WriteAllText("Can_find_within_range.log", tree.Visualize(), Encoding.UTF8);
 
             tree.Serialize(fileName);
 
@@ -40,14 +40,51 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                words = reader.WithinRange("app", "xerox").ToList();
+                words = reader.WithinRange("azz", "xerox").ToList();
             }
 
-            Assert.AreEqual(4, words.Count);
-            Assert.AreEqual("apple", words[0].Value);
-            Assert.AreEqual("banana", words[1].Value);
-            Assert.AreEqual("bananas", words[2].Value);
-            Assert.AreEqual("xanax", words[3].Value);
+            Assert.AreEqual(3, words.Count);
+            Assert.AreEqual("banana", words[0].Value);
+            Assert.AreEqual("bananas", words[1].Value);
+            Assert.AreEqual("xanax", words[2].Value);
+        }
+
+        [TestMethod]
+        public void Can_find_within_numeric_range()
+        {
+            var fileName = Path.Combine(CreateDir(), "MappedTrieReaderTests.Can_find_within_numeric_range.tri");
+
+            var tree = new LcrsTrie();
+            tree.Add("123");
+            tree.Add("333");
+            tree.Add("12345");
+            tree.Add("100006");
+            tree.Add("1000989");
+            tree.Add("77777");
+            tree.Add("666");
+
+            foreach (var node in tree.EndOfWordNodes())
+            {
+                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
+            }
+
+            File.WriteAllText("Can_find_within_numeric_range.log", tree.Visualize(), Encoding.UTF8);
+
+            tree.Serialize(fileName);
+
+            IList<Word> words;
+
+            using (var reader = new MappedTrieReader(fileName))
+            {
+                words = reader.WithinRange("0000333", "0100006").ToList();
+            }
+
+            Assert.AreEqual(5, words.Count);
+            Assert.AreEqual("333", words[0].Value);
+            Assert.AreEqual("666", words[1].Value);
+            Assert.AreEqual("12345", words[2].Value);
+            Assert.AreEqual("77777", words[3].Value);
+            Assert.AreEqual("100006", words[4].Value);
         }
 
         [TestMethod]
