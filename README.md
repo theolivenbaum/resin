@@ -102,7 +102,9 @@ In queries you reference document fields by key (or path).
 ## Column-oriented indexing options
 Resin creates and maintains an index per document field. 
 
-You can opt out of indexing (analyzing) of fields, or you may choose to analyze a field but not store it in its original state, only in its analyzed state.
+You can opt out of indexing entirely. You can index verbatim (unanalyzed) data. You can choose to store data both is its original and its analyzed state, or you can choose to store either one of those.
+
+Indexed fields can participate in queries.
 
 ## Compression
 Analyzed data is compressed in a trie.

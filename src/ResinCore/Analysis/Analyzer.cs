@@ -26,7 +26,7 @@ namespace Resin.Analysis
         {
             foreach(var field in document.Fields.Values)
             {
-                if (field.Analyze)
+                if (field.Analyze && field.Index)
                 {
                     var tokenDic = new Dictionary<string, int>();
                     foreach (var token in Analyze(field.Value))
@@ -50,7 +50,7 @@ namespace Resin.Analysis
                         yield return new AnalyzedTerm(term, posting);
                     }
                 }
-                else
+                else if (field.Index)
                 {
                     var term = new Term(field.Key, new Word(field.Value));
                     var posting = new DocumentPosting(document.Id, 1);
