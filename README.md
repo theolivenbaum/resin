@@ -114,19 +114,19 @@ Stored document fields can be compressed individually with either QuickLZ or GZi
 Compressing stored data affects querying very little. In some scenarios it also speeds up writing. 
 
 ## Full-text search
-ResinDB's main index data structure is a disk-based doubly-linked character trie. Querying support includes term, fuzzy, prefix, phrase and range. 
+ResinDB's main index data structure is a disk-based doubly-linked character trie. Querying operations support includes term, fuzzy, prefix, phrase and range. 
 
 ## Word vector space model
-Scores are calculated using the default scoring scheme which is a vector space/tf-idf bag-of-words model.
+Scores are calculated using a vector space tf-idf bag-of-words model.
 
 ## Mapping and reducing
-Here's how the scoring mechanism works. You define a set of documents by formulating a query composed of one or more term-based questions. Then you specify an aggregating function (in our case, a scoring mechanism). Then you run that function over your set of items (in our case, document postings). As a final step you reduce your term-based answers into one answer, paginate and fetch your data from the store.
+Here's how the scoring mechanism works. User defines a set of documents by formulating a query composed of one or more term-based questions. A scoring function is run over the set. The result is a tree of scores, one branch per sub-query ("query clause"). The tree is flattened by applying boolean logic between the branches, paginated and finally a list of documents are fetched from the store.
 
 E.g.:
 
 __Question__: "What is a cat?"
 
-__Parse into document__: [what,is,a,cat]
+__Parse into document__: [what, is, a, cat]
 
 __Scan index__: what  
 __Scan index__: is  
@@ -139,7 +139,7 @@ __Found documents__:
 [what, (if), (i), (am), a, cat]  
 
 __Normalize to fit into 4-dimensional space__:  
-[what,is,a,cat]  
+[what, is, a, cat]  
 [null, null, a, cat],  
 [what, null, a, cat]  
 
@@ -148,7 +148,7 @@ __Give each word a weight (tf-idf)__:
 [null, null, 0.1, 3],   
 [0.2, null, 0.1, 3]   
 
-Map the query and the documents in vector space, sort by the documents' (Euclidean) distance from the query, paginate and as a final step, fetch documents from the filesystem. 
+Documents are mapped in vector space, sorted by their distance from the query, paginated and as a final step, fetched  from the file system. 
 
 __Answer__: Something you can have or possibly be.
 
