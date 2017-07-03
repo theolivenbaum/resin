@@ -1,3 +1,2 @@
 fix word2vec math
 implement sort by
-don't store key on every row of rdoc
