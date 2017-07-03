@@ -1,5 +1,6 @@
 ﻿using Resin.IO;
 using Resin.IO.Read;
+using Resin.Sys;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,11 +26,17 @@ namespace Resin
             var docFileName = Path.Combine(directory, versionId + ".rdoc");
             var docAddressFn = Path.Combine(directory, versionId + ".da");
             var docHashesFileName = Path.Combine(directory, string.Format("{0}.{1}", versionId, "pk"));
+            var keyIndexFileName = Path.Combine(directory, versionId + ".kix");
+            var keyIndex = Util.GetKeyIndex(keyIndexFileName);
 
             _ix = IxInfo.Load(Path.Combine(directory, versionId + ".ix"));
             _hashReader = new DocHashReader(docHashesFileName);
             _addressReader = new DocumentAddressReader(new FileStream(docAddressFn, FileMode.Open, FileAccess.Read));
-            _documentReader = new DocumentReader(new FileStream(docFileName, FileMode.Open, FileAccess.Read), _ix.Compression);
+            _documentReader = new DocumentReader(
+                new FileStream(docFileName, FileMode.Open, FileAccess.Read), 
+                _ix.Compression,
+                keyIndex);
+
             _skip = skip;
             _take = take;
             _directory = directory;

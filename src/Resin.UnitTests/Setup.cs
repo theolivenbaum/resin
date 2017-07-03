@@ -1,5 +1,4 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Resin.IO;
 using System;
 using System.IO;
 

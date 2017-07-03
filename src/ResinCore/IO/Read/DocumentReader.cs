@@ -1,19 +1,23 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 namespace Resin.IO.Read
 {
     public class DocumentReader : BlockReader<Document>
     {
         private readonly Compression _compression;
+        private readonly IDictionary<short, string> _keyIndex;
 
-        public DocumentReader(Stream stream, Compression compression) : base(stream)
+        public DocumentReader(
+            Stream stream, Compression compression, IDictionary<short, string> keyIndex) : base(stream)
         {
             _compression = compression;
+            _keyIndex = keyIndex;
         }
 
         protected override Document Deserialize(byte[] data)
         {
-            return Serializer.DeserializeDocument(data, _compression);
+            return Serializer.DeserializeDocument(data, _compression, _keyIndex);
         }
     }
 }

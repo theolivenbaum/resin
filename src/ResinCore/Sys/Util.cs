@@ -151,5 +151,36 @@ namespace Resin.Sys
                 File.Delete(file);
             }
         }
+
+        public static IDictionary<short, string> GetKeyIndex(string kixFileName)
+        {
+            var keys = ReadKeys(kixFileName);
+            var keyIndex = new Dictionary<short, string>();
+
+            for (short i = 0; i < keys.Count; i++)
+            {
+                keyIndex.Add(i, keys[i]);
+            }
+
+            return keyIndex;
+        }
+
+        public static IList<string> ReadKeys(string kixFileName)
+        {
+            using (var fs = File.OpenRead(kixFileName))
+            using (var reader = new StreamReader(fs, Serializer.Encoding))
+            {
+                return ReadKeys(reader).ToList();
+            }
+        }
+
+        public static IEnumerable<string> ReadKeys(StreamReader reader)
+        {
+            string key;
+            while ((key = reader.ReadLine()) != null)
+            {
+                yield return key;
+            }
+        }
     }
 }

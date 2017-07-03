@@ -188,11 +188,11 @@ namespace Resin.IO
             }
         }
 
-        public static byte[] Serialize(this Document document, Compression compression)
+        public static byte[] Serialize(this DocumentTableRow document, Compression compression)
         {
             using (var stream = new MemoryStream())
             {
-                document.Fields.Values.Serialize(compression, stream);
+                document.Fields.Serialize(compression, stream);
 
                 return stream.ToArray();
             }
@@ -343,6 +343,42 @@ namespace Resin.IO
                     stream.Write(valBytes, 0, valBytes.Length);
                 }
                 return stream.ToArray();
+            }
+        }
+
+        public static void Serialize(this IDictionary<short, Field> fields, Compression compression, Stream stream)
+        {
+            foreach (var field in fields)
+            {
+                byte[] keyBytes = BitConverter.GetBytes(field.Key);
+                byte[] valBytes;
+                string toStore = field.Value.Store ? field.Value.Value : string.Empty;
+
+                if (compression == Compression.GZip)
+                {
+                    valBytes = Deflator.Compress(Encoding.GetBytes(toStore));
+                }
+                else if (compression == Compression.Lz)
+                {
+                    valBytes = QuickLZ.compress(Encoding.GetBytes(toStore), 1);
+                }
+                else
+                {
+                    valBytes = Encoding.GetBytes(toStore);
+                }
+
+                byte[] valLengthBytes = BitConverter.GetBytes(valBytes.Length);
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(keyBytes);
+                    Array.Reverse(valBytes);
+                    Array.Reverse(valLengthBytes);
+                }
+
+                stream.Write(keyBytes, 0, sizeof(short));
+                stream.Write(valLengthBytes, 0, sizeof(int));
+                stream.Write(valBytes, 0, valBytes.Length);
             }
         }
 
@@ -547,9 +583,9 @@ namespace Resin.IO
             return new BlockInfo(BitConverter.ToInt64(posBytes, 0), BitConverter.ToInt32(lenBytes, 0));
         }
 
-        public static Document DeserializeDocument(byte[] data, Compression compression)
+        public static Document DeserializeDocument(byte[] data, Compression compression, IDictionary<short, string> keyIndex)
         {
-            var doc = DeserializeFields(data, compression).ToList();
+            var doc = DeserializeFields(data, compression, keyIndex).ToList();
 
             return new Document(doc);
         }
@@ -665,41 +701,32 @@ namespace Resin.IO
             }
         }
 
-        public static IEnumerable<Field> DeserializeFields(byte[] data, Compression compression)
+        public static IEnumerable<Field> DeserializeFields(byte[] data, Compression compression, IDictionary<short, string> keyIndex)
         {
             using (var stream = new MemoryStream(data))
             {
-                return DeserializeFields(stream, compression).ToList();
+                return DeserializeFields(stream, compression, keyIndex).ToList();
             }
         }
 
-        public static IEnumerable<Field> DeserializeFields(Stream stream, Compression compression)
+        public static IEnumerable<Field> DeserializeFields(Stream stream, Compression compression, IDictionary<short, string> keyIndex)
         {
             while (true)
             {
-                var keyLengthBytes = new byte[sizeof(short)];
-
-                var read = stream.Read(keyLengthBytes, 0, sizeof(short));
+                var keyIdBytes = new byte[sizeof(short)];
+                
+                var read = stream.Read(keyIdBytes, 0, sizeof(short));
 
                 if (read == 0) break;
 
-                short keyLength = BitConverter.ToInt16(keyLengthBytes, 0);
-
                 if (!BitConverter.IsLittleEndian)
                 {
-                    Array.Reverse(keyLengthBytes);
+                    Array.Reverse(keyIdBytes);
                 }
 
-                byte[] keyBytes = new byte[keyLength];
+                var keyId = BitConverter.ToInt16(keyIdBytes, 0);
 
-                stream.Read(keyBytes, 0, keyLength);
-
-                if (!BitConverter.IsLittleEndian)
-                {
-                    Array.Reverse(keyBytes);
-                }
-
-                string key = Encoding.GetString(keyBytes);
+                string key = keyIndex[keyId];
 
                 var valLengthBytes = new byte[sizeof(int)];
 

@@ -1,9 +1,24 @@
-﻿using System.Collections.Generic;
+﻿using Resin.Sys;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace Resin.Sys
+namespace Resin
 {
-    public static class DocumentHelper
+    public static class Helper
     {
+        public static IDictionary<string, short> ToKeyIndex(this Document document)
+        {
+            var keys = document.Fields.Keys.ToList();
+            var keyIndex = new Dictionary<string, short>();
+
+            for (int i = 0; i < keys.Count; i++)
+            {
+                keyIndex.Add(keys[i], (short)i);
+            }
+
+            return keyIndex;
+        }
+
         public static DocumentStream ToDocuments(
             this IEnumerable<dynamic> dynamicDocuments, string primaryKeyFieldName = null)
         {
