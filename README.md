@@ -36,7 +36,7 @@ On disk a document table can be represented as a file with a header and a body w
 
 The name (key) of each column is a variable length byte array with a max size of sizeof(int).
 
-#### Example (a document table with three rows and two distinctivley unique keys):  
+#### Example of a document table with three rows and two distinctivley unique keys:  
   
 	key0 key1  
 	keyId0 value keyId1 value  
@@ -54,7 +54,7 @@ To fetch a row from the table you need to know the starting byte position of the
 
 ### BlockInfo
 
-A block info is a tuple containing the starting byte position (long) of a block of data and its size (int). A block info is thus fixed in size. A block info file containing block info tuples that have been serialized into a bitmap, each block ordered by the index of the document table row it points to, will act as an index into the document table.
+A block info is a tuple containing the starting byte position (long) of a block of data and its size (int). A block info is thus fixed in size. A block info file containing block info tuples that have been serialized into a bitmap, each block ordered by the index of the document table row it points to, can act as an index into the document table.
 
 ### Compression
 
@@ -62,7 +62,7 @@ You may choose to compress the value byte arrays of the document table. Compress
 
 Batches (of rows) have unique (incrementaly and uniformly) increasing version IDs (timestamps). Each batch can be compressed (encoded) differently. 
 
-#### Example: A file containing batch info data (given that there are threee compression flags: no-compression, gzip, lz)
+#### Example of a file containing batch info data (given that there are threee compression flags: no-compression, gzip, lz):
 
 	start_row_index end_row_index compression_flag
 
