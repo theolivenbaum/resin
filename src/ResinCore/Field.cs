@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace Resin
 {
@@ -29,7 +30,7 @@ namespace Resin
 
             if (value is DateTime)
             {
-                obj = ((DateTime)value).ToUniversalTime().Ticks.ToString();
+                obj = ((DateTime)value).ToUniversalTime().Ticks.ToString(CultureInfo.CurrentCulture);
             }
 
             if (obj is string)
@@ -42,7 +43,7 @@ namespace Resin
 
                 // TODO: implement native number indexes
 
-                var len = long.MaxValue.ToString().Length;
+                var len = long.MaxValue.ToString(CultureInfo.CurrentCulture).Length;
                 _value = obj.ToString().PadLeft(len, '0');
             }
         }
