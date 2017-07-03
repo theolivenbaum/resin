@@ -41,45 +41,7 @@ The name (key) of each column is a variable length byte array with a max size of
 
 A document table can contain a maximum of 32767 distinctly named columns (sizeof(short)).
 
-#### Example of a document table with three rows and two distinctivley unique keys:  
-  
-	key0 key1  
-	keyId0 value keyId1 value  
-	keyId1 value  
-	keyId0 value keyId1 value  
-
-#### Byte representation:  
-  
-	int variable_len_byte_arr int variable_len_byte_arr  
-	short int variable_len_byte_arr short int variable_len_byte_arr  
-	short int variable_len_byte_arr  
-	short int variable_len_byte_arr short int variable_len_byte_arr  
-  
-To fetch a row from the table you need to know the starting byte position of the row as well as its size.
-
-### BlockInfo
-
-A block info is a tuple containing the starting byte position (long) of a block of data and its size (int). A block info is thus fixed in size. A block info file containing block info tuples that have been serialized into a bitmap, each block ordered by the index of the document table row it points to, can act as an index into the document table.
-
-### Compression/encoding
-
-You may choose to compress the value byte arrays of the document table. Compression flags, i.e. data describing how to decode a stored value byte array into its original state, are stored in a batch info file.
-
-Batches (of rows) have unique (incrementaly and uniformly) increasing version IDs (timestamps). Each batch can be compressed (encoded) differently. 
-
-#### Example of a file containing batch info data (given that there are threee compression flags: no-compression, gzip, lz):
-
-	start_row_index end_row_index compression_flag
-
-#### Byte representation:
-
-	long long short
-
-When using the same compression or encoding uniformly over all rows a batch info file is not needed.
-
-### Row versions
-
-If you insert a document with a primary key into ResinDB and then perform an update on that document, it will occur twice in the document table but with different row IDs. Those two occurrances also differ because they belong to different batches. Batches are timestamped. When reading from a document table only the last version, chronologically speaking, will be fetched.
+[DocumentTable specification](https://github.com/kreeben/resin/blob/master/DocumentTable.md)  
 
 ## Usage
 ### CLI

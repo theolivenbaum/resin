@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+VisualStudioVersion = 15.0.26430.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.Cli", "Resin.Cli\Resin.Cli.csproj", "{1440DE2D-BD2B-4E68-9021-3A26955CF0C7}"
 EndProject
@@ -9,6 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResinCore", "ResinCore\Resi
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Resources", "Resources", "{170DE0FC-3DF8-49E7-A084-CF4D1E2F7DAF}"
 	ProjectSection(SolutionItems) = preProject
+		..\DocumentTable.md = ..\DocumentTable.md
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
 		..\rn-write.bat = ..\rn-write.bat
@@ -16,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Resources", "Resources", "{
 		..\todo.txt = ..\todo.txt
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resin.UnitTests", "Resin.UnitTests\Resin.UnitTests.csproj", "{B9CEA923-07C2-4ADE-8DD5-E2CDAC3EA9A7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.UnitTests", "Resin.UnitTests\Resin.UnitTests.csproj", "{B9CEA923-07C2-4ADE-8DD5-E2CDAC3EA9A7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{47C9EBB6-39BE-4B19-BA51-401EC9777BA6}"
 EndProject
