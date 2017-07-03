@@ -35,9 +35,11 @@ A document table is a table where
 
 A normal table, such as one from a RDBM system, does not allow storing of data in this fashion. A document table is a specialized table made for document database use cases.
 
-On disk a document table can be represented as a file with a header and a body where the header is a column name index and where each row contains alternating keyID and value blocks, one pair for each of its columns. A value block is a byte array prepended with a size byte array. The max size of a value byte array is sizeof(long).
+On disk a document table can be represented as a file with a header and a body where the header is a column name index and where each row contains alternating keyID and value blocks, one pair for each of its columns. A value block is a byte array prepended with a size byte array. The max size of a value byte array is sizeof(int).
 
 The name (key) of each column is a variable length byte array with a max size of sizeof(int).
+
+A document table can contain a maximum of 32767 distinctly named columns (sizeof(short)).
 
 #### Example of a document table with three rows and two distinctivley unique keys:  
   
@@ -49,9 +51,9 @@ The name (key) of each column is a variable length byte array with a max size of
 #### Byte representation:  
   
 	int variable_len_byte_arr int variable_len_byte_arr  
-	int int variable_len_byte_arr int int variable_len_byte_arr  
-	int int variable_len_byte_arr  
-	int int variable_len_byte_arr int int variable_len_byte_arr  
+	short int variable_len_byte_arr short int variable_len_byte_arr  
+	short int variable_len_byte_arr  
+	short int variable_len_byte_arr short int variable_len_byte_arr  
   
 To fetch a row from the table you need to know the starting byte position of the row as well as its size.
 
