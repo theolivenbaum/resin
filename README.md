@@ -23,6 +23,59 @@ ResinDB is a full-text search engine/document database designed to be used as
 
 ResinDB's architecture can be compared to that of LevelDB or SQL Server LocalDB in that they all run in-process. What sets ResinDB apart is its full-text search index, its scoring mechanisms and its latch-free writing.
 
+## DocumentTable
+
+### A description of ResinDB's document store
+
+A document table is a table where  
+
+- each row has a variable amount of named columns
+- each column is a variable length byte array
+
+On disk a document table can be represented as a file with a header and a body where the header is a column name index and where each row contains alternating keyID and value blocks, one pair for each of its columns. A value block is a byte array prepended with a size byte array. The max size of a value byte array is sizeof(long).
+
+The name (key) of each column is a variable length byte array with a max size of sizeof(int).
+
+#### Example (a document table with three rows and two distinctivley unique keys):  
+  
+	key0 key1  
+	keyId0 value keyId1 value  
+	keyId2 value  
+	keyId0 value keyId1 value  
+
+#### Byte representation:  
+  
+	int variable_len_byte_arr int variable_len_byte_arr  
+	int variable_len_byte_arr int variable_len_byte_arr  
+	int variable_len_byte_arr  
+	int variable_len_byte_arr int variable_len_byte_arr  
+  
+To fetch a row from the table you need to know the starting byte position of the row as well as its size.
+
+### BlockInfo
+
+A block info is a tuple containing the starting byte position (long) of a block of data and its size (int). A block info is thus fixed in size. A block info file containing block info tuples that have been serialized into a bitmap, each block ordered by the index of the document table row it points to, will act as an index into the document table.
+
+### Compression
+
+You may choose to compress the value byte arrays of the document table. Compression flags, i.e. data describing how to decode a stored value byte array into its original state, are stored in a batch info file.
+
+Batches (of rows) have unique (incrementaly and uniformly) increasing version IDs (timestamps). Each batch can be compressed (encoded) differently. 
+
+#### Example: A file containing batch info data (given that there are threee compression flags: no-compression, gzip, lz)
+
+	start_row_index end_row_index compression_flag
+
+#### Byte representation:
+
+	long long short
+
+When using compression uniformly over all rows a batch info file is not needed.
+
+### DocumentTable roadmap
+
+Implement log-structured writing.
+
 ## Usage
 ### CLI
 Clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run the CLI (rn.bat) with the following arguments:
