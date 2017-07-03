@@ -25,22 +25,25 @@ namespace Resin
             Analyze = analyze;
             Index = index;
 
+            object obj = value;
+
             if (value is DateTime)
             {
-                _value = ((DateTime)value).Ticks.ToString();
+                obj = ((DateTime)value).ToUniversalTime().Ticks.ToString();
             }
-            else if (value is string)
+
+            if (obj is string)
             {
-                _value = value.ToString();
+                _value = obj.ToString();
             }
             else 
             {
-                // Assumes all values that are not DateTime or string must be Int32.
+                // Assumes all values that are not DateTime or string must be Int64.
 
                 // TODO: implement native number indexes
 
-                var len = int.MaxValue.ToString().Length;
-                _value = value.ToString().PadLeft(len, '0');
+                var len = long.MaxValue.ToString().Length;
+                _value = obj.ToString().PadLeft(len, '0');
             }
         }
     }
