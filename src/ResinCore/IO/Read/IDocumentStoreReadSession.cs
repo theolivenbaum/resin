@@ -5,6 +5,6 @@ namespace Resin.IO.Read
 {
     public interface IDocumentStoreReadSession : IDisposable
     {
-        IEnumerable<Document> Read(IEnumerable<int> documentIds);
+        IEnumerable<Document> Read(IList<int> documentIds);
     }
 }

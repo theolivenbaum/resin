@@ -121,7 +121,7 @@ namespace Resin
 
         private void GetDocs(IList<DocumentScore> scores, IxInfo ix, ConcurrentBag<ScoredDocument> result)
         {
-            var documentIds = scores.Select(s => s.DocumentId);
+            var documentIds = scores.Select(s => s.DocumentId).ToList();
             var docAddressFileName = Path.Combine(_directory, ix.VersionId + ".da");
             var docFileName = Path.Combine(_directory, ix.VersionId + ".rdoc");
 

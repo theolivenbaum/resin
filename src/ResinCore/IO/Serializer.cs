@@ -192,15 +192,6 @@ namespace Resin.IO
         {
             using (var stream = new MemoryStream())
             {
-                var idBytes = BitConverter.GetBytes(document.Id);
-
-                if (!BitConverter.IsLittleEndian)
-                {
-                    Array.Reverse(idBytes);
-                }
-
-                stream.Write(idBytes, 0, idBytes.Length);
-
                 document.Fields.Values.Serialize(compression, stream);
 
                 return stream.ToArray();
@@ -558,21 +549,9 @@ namespace Resin.IO
 
         public static Document DeserializeDocument(byte[] data, Compression compression)
         {
-            var idBytes = new byte[sizeof(int)];
-            Array.Copy(data, 0, idBytes, 0, sizeof(int));
+            var doc = DeserializeFields(data, compression).ToList();
 
-            var dicBytes = new byte[data.Length - sizeof(int)];
-            Array.Copy(data, sizeof(int), dicBytes, 0, dicBytes.Length);
-            
-            if (!BitConverter.IsLittleEndian)
-            {
-                Array.Reverse(idBytes);
-            }
-
-            var id = BitConverter.ToInt32(idBytes, 0);
-            var doc = DeserializeFields(dicBytes, compression).ToList();
-
-            return new Document(doc) { Id = id };
+            return new Document(doc);
         }
 
         public static IEnumerable<int> DeserializeIntList(byte[] data)

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 namespace Resin.IO.Write
 {
@@ -7,6 +8,7 @@ namespace Resin.IO.Write
         private readonly DocumentAddressWriter _addressWriter;
         private readonly DocumentWriter _docWriter;
         private readonly Stream _docHashesStream;
+        private readonly HashSet<string> _fieldNames; 
 
         public DocumentStoreWriter(string directory, long indexVersionId, Compression compression)
         {
@@ -23,6 +25,8 @@ namespace Resin.IO.Write
 
             _docHashesStream = new FileStream(
                 docHashesFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+
+            _fieldNames = new HashSet<string>();
         }
         
         public void Write(Document document)

@@ -16,7 +16,7 @@ namespace Resin.IO.Read
             _blockSize = Serializer.SizeOfBlock();
         }
 
-        public IEnumerable<Document> Read(IEnumerable<int> documentIds)
+        public IEnumerable<Document> Read(IList<int> documentIds)
         {
             var addresses = documentIds
                     .Select(id => new BlockInfo(id * _blockSize, _blockSize))
@@ -24,8 +24,13 @@ namespace Resin.IO.Read
                     .ToList();
 
             var docAddresses = _addressReader.Read(addresses).ToList();
+            var index = 0;
 
-            return _documentReader.Read(docAddresses);
+            foreach (var document in _documentReader.Read(docAddresses))
+            {
+                document.Id = documentIds[index++];
+                yield return document;
+            }
         }
 
         public void Dispose()

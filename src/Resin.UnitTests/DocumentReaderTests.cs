@@ -51,7 +51,7 @@ namespace Tests
             {
                 var doc = reader.Read(new[] { blocks[2] });
 
-                Assert.AreEqual(2, doc.First().Id);
+                Assert.AreEqual("rocky 2", doc.First().Fields["title"].Value);
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
@@ -59,7 +59,7 @@ namespace Tests
             {
                 var doc = reader.Read(new[] { blocks[1] });
 
-                Assert.AreEqual(1, doc.First().Id);
+                Assert.AreEqual("rocky", doc.First().Fields["title"].Value);
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
@@ -67,7 +67,7 @@ namespace Tests
             {
                 var doc = reader.Read(new[] { blocks[0] });
 
-                Assert.AreEqual(0, doc.First().Id);
+                Assert.AreEqual("rambo", doc.First().Fields["title"].Value);
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
@@ -77,9 +77,9 @@ namespace Tests
 
                 Assert.AreEqual(3, docs.Count);
 
-                Assert.IsTrue(ds.Any(d => d.Id == 0));
-                Assert.IsTrue(ds.Any(d => d.Id == 1));
-                Assert.IsTrue(ds.Any(d => d.Id == 2));
+                Assert.IsTrue(ds.Any(d => d.Fields["title"].Value == "rambo"));
+                Assert.IsTrue(ds.Any(d => d.Fields["title"].Value == "rocky"));
+                Assert.IsTrue(ds.Any(d => d.Fields["title"].Value == "rocky 2"));
             }
         }
     }
