@@ -29,9 +29,18 @@ namespace Resin
             {
                 _value = ((DateTime)value).Ticks.ToString();
             }
-            else
+            else if (value is string)
             {
-                _value = value.ToString(); 
+                _value = value.ToString();
+            }
+            else 
+            {
+                // Assumes all values that are not DateTime or string must be Int32.
+
+                // TODO: implement native number indexes
+
+                var len = int.MaxValue.ToString().Length;
+                _value = value.ToString().PadLeft(len, '0');
             }
         }
     }

@@ -79,7 +79,7 @@ namespace Resin.IO.Read
             return words;
         }
 
-        public IEnumerable<Word> Near(string word, int maxEdits, IDistanceResolver distanceResolver = null)
+        public IEnumerable<Word> SemanticallyNear(string word, int maxEdits, IDistanceResolver distanceResolver = null)
         {
             if (distanceResolver == null) distanceResolver = new LevenshteinDistanceResolver(word, maxEdits);
 
@@ -117,21 +117,14 @@ namespace Resin.IO.Read
             return words;
         }
 
-        public IEnumerable<Word> WithinRange(string lowerBound, string upperBound)
+        public IEnumerable<Word> Range(string lowerBound, string upperBound)
         {
             if (string.IsNullOrWhiteSpace(lowerBound) &&
                 (string.IsNullOrWhiteSpace(upperBound))) throw new ArgumentException("Bounds are unspecified");
 
             var words = new List<Word>();
 
-            LcrsNode node;
-
-            if (TryFindDepthFirst(lowerBound.Substring(0, lowerBound.Length - 1), out node, greaterThan:true))
-            {
-                DepthFirst(lowerBound, new List<char>(), words, lowerBound.Length - 1);
-            }
-
-            DepthFirst(string.Empty, new List<char>(), words, -1, upperBound);
+            DepthFirst(lowerBound, upperBound, new List<char>(), words);
 
             return words;
         }
@@ -202,12 +195,95 @@ namespace Resin.IO.Read
             }
         }
 
-        private void DepthFirst(string prefix, IList<char> path, IList<Word> words, int depth, string upperBound = null)
+        private void DepthFirst(string lowerBound, string upperBound, IList<char> path, IList<Word> words)
         {
+            var siblingState = new Stack<IList<char>>();
+            var lastDepth = -1;
+
+            while (true)
+            {
+                var node = Step();
+
+                if (node == LcrsNode.MinValue) return;
+
+                if (node.Depth <= lastDepth)
+                {
+                    Rewind();
+
+                    break;
+                }
+
+                lastDepth = node.Depth;
+
+                var copyOfPath = new List<char>(path);
+                path.Add(node.Value);
+
+                if (node.HaveSibling)
+                {
+                    siblingState.Push(new List<char>(copyOfPath));
+                }
+
+                var test = new string(path.ToArray());
+                var comparedToLowerBound = test.CompareTo(lowerBound.Substring(0, Math.Min(lowerBound.Length, node.Depth + 1)));
+                var largeEnough = comparedToLowerBound > -1;
+
+                if (!largeEnough)
+                {
+                    path = copyOfPath;
+                    SkipToSibling(node);
+                    break;
+                }
+                else
+                {
+                    var comparedToUpperBound = test.CompareTo(upperBound);
+                    var tooLarge = comparedToUpperBound > 0;
+
+                    if (tooLarge)
+                    {
+                        return;
+                    }
+
+                    if (node.EndOfWord)
+                    {
+                        if (node.PostingsAddress == null)
+                            throw new InvalidOperationException(
+                                "cannot create word without postings address");
+
+
+                        var word = new string(path.ToArray());
+
+                        words.Add(new Word(word, 1, node.PostingsAddress));
+                    }
+                }
+            }
+
+            // Go right (wide)
+            foreach (var state in siblingState)
+            {
+                DepthFirst(lowerBound, upperBound, state, words);
+            }
+        }
+
+        private void SkipToSibling(LcrsNode node)
+        {
+            while (true)
+            {
+                var test = Step();
+                if (test.Depth <= node.Depth)
+                {
+                    Rewind();
+                    break;
+                }
+            }
+        }
+
+        private void DepthFirst(string prefix, IList<char> path, IList<Word> words, int depth)
+        {
+            // Go left (deep)
             var node = Step();
+
             var siblings = new Stack<Tuple<int, IList<char>>>();
 
-            // Go left (deep)
             while (node != LcrsNode.MinValue && node.Depth > depth)
             {
                 var copyOfPath = new List<char>(path);
@@ -222,12 +298,7 @@ namespace Resin.IO.Read
 
                     var word = prefix + new string(path.ToArray());
 
-                    if (upperBound == null ||
-                       (word.Length <= upperBound.Length && node.Value <= upperBound[depth + 1]) ||
-                        word.Length > upperBound.Length)
-                    {
-                        words.Add(new Word(word, 1, node.PostingsAddress));
-                    }
+                    words.Add(new Word(word, 1, node.PostingsAddress));
                 }
 
                 if (node.HaveSibling)
@@ -244,7 +315,7 @@ namespace Resin.IO.Read
             // Go right (wide)
             foreach (var siblingState in siblings)
             {
-                DepthFirst(prefix, siblingState.Item2, words, siblingState.Item1, upperBound);
+                DepthFirst(prefix, siblingState.Item2, words, siblingState.Item1);
             }
         }
 

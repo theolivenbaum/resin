@@ -4,7 +4,6 @@ using Resin.IO;
 using Resin.IO.Read;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System;
 using System.Text;
 
@@ -40,7 +39,7 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                words = reader.WithinRange("azz", "xerox").ToList();
+                 words = reader.Range("azz", "xerox").ToList();
             }
 
             Assert.AreEqual(3, words.Count);
@@ -55,13 +54,13 @@ namespace Tests
             var fileName = Path.Combine(CreateDir(), "MappedTrieReaderTests.Can_find_within_numeric_range.tri");
 
             var tree = new LcrsTrie();
-            tree.Add("123");
-            tree.Add("333");
-            tree.Add("12345");
-            tree.Add("100006");
+            tree.Add("0000123");
+            tree.Add("0000333");
+            tree.Add("0012345");
+            tree.Add("0100006");
             tree.Add("1000989");
-            tree.Add("77777");
-            tree.Add("666");
+            tree.Add("0077777");
+            tree.Add("0000666");
 
             foreach (var node in tree.EndOfWordNodes())
             {
@@ -76,15 +75,15 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                words = reader.WithinRange("0000333", "0100006").ToList();
+                words = reader.Range("0000333", "0100006").ToList();
             }
 
             Assert.AreEqual(5, words.Count);
-            Assert.AreEqual("333", words[0].Value);
-            Assert.AreEqual("666", words[1].Value);
-            Assert.AreEqual("12345", words[2].Value);
-            Assert.AreEqual("77777", words[3].Value);
-            Assert.AreEqual("100006", words[4].Value);
+            Assert.AreEqual("0000333", words[0].Value);
+            Assert.AreEqual("0000666", words[1].Value);
+            Assert.AreEqual("0012345", words[2].Value);
+            Assert.AreEqual("0077777", words[3].Value);
+            Assert.AreEqual("0100006", words[4].Value);
         }
 
         [TestMethod]
@@ -105,7 +104,7 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                var near = reader.Near("ba", 1).Select(w => w.Value).ToList();
+                var near = reader.SemanticallyNear("ba", 1).Select(w => w.Value).ToList();
 
                 Assert.AreEqual(1, near.Count);
                 Assert.IsTrue(near.Contains("bad"));
@@ -125,7 +124,7 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                var near = reader.Near("ba", 1).Select(w => w.Value).ToList();
+                var near = reader.SemanticallyNear("ba", 1).Select(w => w.Value).ToList();
 
                 Assert.AreEqual(1, near.Count);
                 Assert.IsTrue(near.Contains("bad"));
@@ -144,7 +143,7 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                var near = reader.Near("ba", 1).Select(w => w.Value).ToList();
+                var near = reader.SemanticallyNear("ba", 1).Select(w => w.Value).ToList();
 
                 Assert.AreEqual(2, near.Count);
                 Assert.IsTrue(near.Contains("bad"));
@@ -153,7 +152,7 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                var near = reader.Near("ba", 2).Select(w => w.Value).ToList();
+                var near = reader.SemanticallyNear("ba", 2).Select(w => w.Value).ToList();
 
                 Assert.AreEqual(3, near.Count);
                 Assert.IsTrue(near.Contains("b"));
@@ -163,7 +162,7 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                var near = reader.Near("ba", 0).Select(w => w.Value).ToList();
+                var near = reader.SemanticallyNear("ba", 0).Select(w => w.Value).ToList();
 
                 Assert.AreEqual(0, near.Count);
             }
@@ -180,7 +179,7 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                var near = reader.Near("ba", 6).Select(w => w.Value).ToList();
+                var near = reader.SemanticallyNear("ba", 6).Select(w => w.Value).ToList();
 
                 Assert.AreEqual(4, near.Count);
                 Assert.IsTrue(near.Contains("b"));
@@ -191,7 +190,7 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                var near = reader.Near("bazy", 1).Select(w => w.Value).ToList();
+                var near = reader.SemanticallyNear("bazy", 1).Select(w => w.Value).ToList();
 
                 Assert.AreEqual(1, near.Count);
                 Assert.IsTrue(near.Contains("baby"));
@@ -209,7 +208,7 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                var near = reader.Near("bazy", 3).Select(w => w.Value).ToList();
+                var near = reader.SemanticallyNear("bazy", 3).Select(w => w.Value).ToList();
 
                 Assert.AreEqual(4, near.Count);
                 Assert.IsTrue(near.Contains("baby"));

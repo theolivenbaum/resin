@@ -253,7 +253,7 @@ namespace Resin.IO
             }
         }
 
-        public IEnumerable<Word> WithinRange(string lowerBound, string upperBound)
+        public IEnumerable<Word> Range(string lowerBound, string upperBound)
         {
             if (string.IsNullOrWhiteSpace(lowerBound) &&
                 (string.IsNullOrWhiteSpace(upperBound))) throw new ArgumentException("Bounds are unspecified");
@@ -278,7 +278,7 @@ namespace Resin.IO
             return words;
         }
         
-        public IEnumerable<Word> Near(string word, int maxEdits, IDistanceResolver distanceResolver = null)
+        public IEnumerable<Word> SemanticallyNear(string word, int maxEdits, IDistanceResolver distanceResolver = null)
         {
             if (distanceResolver == null) distanceResolver = new LevenshteinDistanceResolver(word, maxEdits);
 

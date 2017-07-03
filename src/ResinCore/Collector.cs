@@ -81,7 +81,7 @@ namespace Resin
                     IList<Term> terms;
                     if (subQuery.Fuzzy)
                     {
-                        terms = reader.Near(subQuery.Value, subQuery.Edits)
+                        terms = reader.SemanticallyNear(subQuery.Value, subQuery.Edits)
                             .Select(word => new Term(subQuery.Field, word))
                             .ToList();
                     }
@@ -93,7 +93,7 @@ namespace Resin
                     }
                     else if (subQuery.Range)
                     {
-                        terms = reader.WithinRange(subQuery.Value, subQuery.ValueUpperBound)
+                        terms = reader.Range(subQuery.Value, subQuery.ValueUpperBound)
                             .Select(word => new Term(subQuery.Field, word))
                             .ToList();
                     }
