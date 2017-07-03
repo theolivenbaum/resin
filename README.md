@@ -2,6 +2,8 @@
 
 [![NuGet Version](https://img.shields.io/badge/nuget-v0.9.0.0-orange.svg)](https://www.nuget.org/packages/ResinDB/)
 
+ResinDB is a cross-platform document database and search engine with query language, API and CLI. It is unique with regards to its read/write performance and its feature set:  
+
 Feature | ResinDB | Lucene | SQL Server LocalDB | LevelDB | RocksDB
 --- | --- | --- | --- | --- | ---
 Runs in-process | &#9989; | &#9989; | &#9989; | &#9989; | &#9989;
