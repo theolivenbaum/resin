@@ -1,4 +1,4 @@
-# ResinDB (beta)
+# ResinDB
 
 Feature | ResinDB | Lucene | SQL Server LocalDB | LevelDB | RocksDB
 --- | --- | --- | --- | --- | ---
@@ -83,10 +83,8 @@ _Download Wikipedia as JSON [here](https://dumps.wikimedia.org/wikidatawiki/enti
 	var label = result.Docs[0].Fields["label"];
 	var primaryKey = result.Docs[0].Fields["id"];
 
-## Reads are purely disk-based
-Resin is a library, not a service. It runs inside of your application domain. 
-
-Because of that ResinDB has been optimized to be able to immediately respond to queries without having to first rebuild data structures in-memory. 
+## Disk-based concurrent read/write
+Resin is a library, not a service. It runs inside of your application's memory space. Because of that ResinDB has been optimized to be able to immediately respond to queries without having to first rebuild data structures in-memory. 
 
 The default index type is a dense, bucket-less, doubly chained Unicode character trie. On disk it's represented as a bitmap.
 
