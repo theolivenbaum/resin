@@ -20,7 +20,7 @@ ResinDB is a full-text search engine/document database designed to be used as
 - a data store
 - a cache-replacement
 - an index to your database/store
-- a component of a distributed database
+- a component of a distributed database/search engine
 - a framework for experimenting with scoring models 
 
 ResinDB's architecture can be compared to that of LevelDB or SQL Server LocalDB in that they all run in-process. What sets ResinDB apart is its full-text search index, its scoring mechanisms and its latch-free writing.
