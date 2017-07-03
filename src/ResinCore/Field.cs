@@ -30,7 +30,7 @@ namespace Resin
 
             if (value is DateTime)
             {
-                obj = ((DateTime)value).ToUniversalTime().Ticks.ToString(CultureInfo.CurrentCulture);
+                obj = ((DateTime)value).ToUniversalTime().Ticks.ToString(CultureInfo.InvariantCulture);
             }
 
             if (obj is string)
@@ -43,7 +43,7 @@ namespace Resin
 
                 // TODO: implement native number indexes
 
-                var len = long.MaxValue.ToString(CultureInfo.CurrentCulture).Length;
+                var len = long.MaxValue.ToString(CultureInfo.InvariantCulture).Length;
                 _value = obj.ToString().PadLeft(len, '0');
             }
         }
