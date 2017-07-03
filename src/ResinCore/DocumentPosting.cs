@@ -33,7 +33,7 @@ namespace Resin
         {
             if (source.Count == 0) return new List<DocumentPosting>();
 
-            if (source.Count == 1) return source[0];
+            if (source.Count == 1) return Sum(source[0]);
 
             var first = source[0];
 
@@ -48,6 +48,21 @@ namespace Resin
         public static IEnumerable<DocumentPosting> Sum(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
         {
             return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>
+            {
+                var list = group.ToList();
+                var tip = list.First();
+
+                foreach (DocumentPosting posting in list.Skip(1))
+                {
+                    tip.Add(posting);
+                }
+                return tip;
+            });
+        }
+
+        public static IEnumerable<DocumentPosting> Sum(IEnumerable<DocumentPosting> postings)
+        {
+            return postings.GroupBy(x => x.DocumentId).Select(group =>
             {
                 var list = group.ToList();
                 var tip = list.First();

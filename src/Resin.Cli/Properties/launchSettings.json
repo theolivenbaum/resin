@@ -2,7 +2,7 @@
   "profiles": {
     "Resin.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "query --dir c:\\temp\\resin_data\\pg -q \"title:Testimony for the Whole of our Covenanted Reformation\""
+      "commandLineArgs": "query --dir c:\\temp\\resin_data\\pg -q \"body>xerox body<z\""
     }
   }
 }

@@ -56,7 +56,7 @@ namespace Resin
             var reduceTime = new Stopwatch();
             reduceTime.Start();
 
-            var reduced = query.Reduce().ToList();
+            var reduced = query.Reduce().OrderByDescending(s => s.Score).ToList();
 
             Log.DebugFormat("reduced query {0} producing {1} scores in {2}", query, reduced.Count, scoreTime.Elapsed);
 

@@ -62,7 +62,7 @@ namespace Resin
 
             var skip = page * size;
             var scored = Collect(queryContext);
-            var paged = scored.OrderByDescending(s=>s.Score).Skip(skip).Take(size).ToList();
+            var paged = scored.Skip(skip).Take(size).ToList();
             var docs = new ConcurrentBag<ScoredDocument>();
             var result = new Result { Total = scored.Count};
             var groupedByIx = paged.GroupBy(s => s.Ix);
