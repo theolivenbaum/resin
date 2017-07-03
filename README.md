@@ -40,7 +40,7 @@ The name (key) of each column is a variable length byte array with a max size of
   
 	key0 key1  
 	keyId0 value keyId1 value  
-	keyId2 value  
+	keyId1 value  
 	keyId0 value keyId1 value  
 
 #### Byte representation:  
