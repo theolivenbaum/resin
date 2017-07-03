@@ -7,10 +7,10 @@ ResinDB is a cross-platform document database and search engine with query langu
 Feature | ResinDB | Lucene | SQL Server LocalDB | LevelDB | RocksDB
 --- | --- | --- | --- | --- | ---
 Runs in-process | &#9989; | &#9989; | &#9989; | &#9989; | &#9989;
-Has a query language | &#9989; | &#9989; | &#9989; |   |  
 Is schema-less | &#9989; | &#9989; |   | &#9989; | &#9989;
 Can compress data | &#9989; | &#9989; |  | &#9989; | &#9989;
 Runs on Windows and Linux | &#9989; | &#9989; |   |   | &#9989;
+Has a query language | &#9989; | &#9989; | &#9989; |   |  
 Is full-text search engine | &#9989; | &#9989; |   |   |   |  
 Has latch-free writing | &#9989; |   |   |   |  
 Has pluggable storage engine | &#9989; |   |   |   |  
