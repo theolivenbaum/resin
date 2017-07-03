@@ -85,12 +85,12 @@ If you insert a document with a primary key into ResinDB and then perform an upd
 ### CLI
 Clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run the CLI (rn.bat) with the following arguments:
 
-	rn write --file source_filename --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take] [--gzip] [--lz]  
+	rn write --file source_json_filename --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take] [--gzip] [--lz]  
 	rn query --dir store_directory -q query_statement [-p page_number] [-s page_size]  
 	rn delete --ids comma_separated_list_of_ids --dir store_directory  
 	rn merge --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take]  
 	rn rewrite --file rdoc_filename --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take] [--gzip] [--lz]
-  	rn export --source-file rdoc_filename --target-file csv_filename
+  	rn export --source-file rdoc_filename --target-file json_filename
 E.g.:
 
 	rn write --file c:\temp\wikipedia.json --dir c:\resin\data\wikipedia --pk "id" --skip 0 --take 1000000
@@ -98,7 +98,7 @@ E.g.:
 	rn delete --ids "Q1476435" --dir c:\resin\data\wikipedia
 	rn merge --dir c:\resin\data\wikipedia --pk "id" --skip 0 --take 1000000
 	rn rewrite --file c:\temp\resin_data\636326999602241674.rdoc --dir c:\temp\resin_data\pg --pk "url"
-	rn export --source-file c:\temp\resin_data\636326999602241674.rdoc --target-file c:\temp\636326999602241674.rdoc.csv
+	rn export --source-file c:\temp\resin_data\636326999602241674.rdoc --target-file c:\temp\636326999602241674.rdoc.json
 ### API
 #### A document (serialized).
 
