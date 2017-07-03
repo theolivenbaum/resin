@@ -1,5 +1,7 @@
 # ResinDB
 
+[![NuGet Version](https://img.shields.io/badge/nuget-v0.9.0.0-orange.svg)](https://www.nuget.org/packages/ResinDB/)
+
 Feature | ResinDB | Lucene | SQL Server LocalDB | LevelDB | RocksDB
 --- | --- | --- | --- | --- | ---
 Runs in-process | &#9989; | &#9989; | &#9989; | &#9989; | &#9989;
