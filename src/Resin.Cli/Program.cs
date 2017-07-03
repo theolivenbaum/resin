@@ -9,6 +9,7 @@ using log4net.Config;
 using log4net;
 using Resin.IO;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace Resin.Cli
 {
@@ -19,7 +20,7 @@ namespace Resin.Cli
         // delete --ids "Q1476435" --dir c:\temp\resin_data\mystore
         // merge --dir c:\temp\resin_data\mystore
         // rewrite --file c:\temp\resin_data\636326999602241674.rdoc --dir c:\temp\resin_data\pg --pk "url"
-        // export --source-file c:\temp\resin_data\636326999602241674.rdoc --target-file c:\temp\636326999602241674.rdoc.csv
+        // export --source-file c:\temp\resin_data\636326999602241674.rdoc --target-file c:\temp\636326999602241674.rdoc.json
 
         static void Main(string[] args)
         {
@@ -81,7 +82,7 @@ namespace Resin.Cli
 	rn delete --ids comma_separated_list_of_ids --dir store_directory
 	rn merge --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take]
     rn rewrite --file rdoc_filename --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take] [--gzip] [--lz]
-    rn export --source-file rdoc_filename --target-file csv_filename
+    rn export --source-file rdoc_filename --target-file json_filename
 ");
             }
         }
@@ -280,26 +281,22 @@ namespace Resin.Cli
             writeTimer.Start();
 
             using (var outStream = new FileStream(targetFileName, FileMode.Create))
-            using (var csv = new StreamWriter(outStream, Encoding.UTF8))
+            using (var jsonWriter = new StreamWriter(outStream, Encoding.UTF8))
             using (var documents = new RDocStream(sourceFileName, ix.PrimaryKeyFieldName, skip, take))
             {
+                jsonWriter.WriteLine("[");
+
                 foreach (var document in documents.ReadSource())
                 {
-                    foreach (var field in document.Fields)
-                    {
-                        csv.Write(field.Value.Value);
-                        csv.Write("||");
-                    }
-                    csv.Write("@@");
+                    var dic = document.Fields.ToDictionary(x => x.Key, y => y.Value.Value);
+                    var json = JsonConvert.SerializeObject(dic, Formatting.None);
+                    jsonWriter.WriteLine(json);
                 }
+
+                jsonWriter.Write("]");
             }
 
             Console.WriteLine("write operation took {0}", writeTimer.Elapsed);
         }
-    }
-
-    public class SqlServerMigrateOperation
-    {
-
     }
 }
