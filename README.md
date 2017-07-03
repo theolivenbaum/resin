@@ -28,8 +28,6 @@ ResinDB's architecture can be compared to that of LevelDB or SQL Server LocalDB 
 
 ## DocumentTable
 
-### A description of ResinDB's document store
-
 A document table is a table where  
 
 - each row has a variable amount of named columns
