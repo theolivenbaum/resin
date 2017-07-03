@@ -41,7 +41,7 @@ The name (key) of each column is a variable length byte array with a max size of
 
 A document table can contain a maximum of 32767 distinctly named columns (sizeof(short)).
 
-[DocumentTable specification](https://github.com/kreeben/resin/blob/master/DocumentTable.md)  
+[DocumentTable specification](DocumentTable.md)  
 
 ## Usage
 ### CLI
