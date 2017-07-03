@@ -16,7 +16,7 @@ Is full-text search engine | &#9989; | &#9989; |   |   |   |
 Has latch-free writing | &#9989; |   |   |   |  
 Has pluggable storage engine | &#9989; |   |   |   |  
 
-ResinDB is a full-text search engine/document database designed to be used as  
+ResinDB is designed to be used as  
 
 - a data store
 - a cache-replacement
