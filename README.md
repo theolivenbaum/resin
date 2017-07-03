@@ -56,7 +56,7 @@ To fetch a row from the table you need to know the starting byte position of the
 
 A block info is a tuple containing the starting byte position (long) of a block of data and its size (int). A block info is thus fixed in size. A block info file containing block info tuples that have been serialized into a bitmap, each block ordered by the index of the document table row it points to, can act as an index into the document table.
 
-### Compression
+### Compression/encoding
 
 You may choose to compress the value byte arrays of the document table. Compression flags, i.e. data describing how to decode a stored value byte array into its original state, are stored in a batch info file.
 
@@ -70,11 +70,11 @@ Batches (of rows) have unique (incrementaly and uniformly) increasing version ID
 
 	long long short
 
-When using compression uniformly over all rows a batch info file is not needed.
+When using the same compression or encoding uniformly over all rows a batch info file is not needed.
 
-### DocumentTable roadmap
+### Row versions
 
-Implement log-structured writing.
+If you insert a document with a primary key into ResinDB and then perform an update on that document, it will occur twice in the DocumentTable but with different row IDs. Those two occurrances also differ because they belong to different batches. Batches are timestamped. When reading from a DocumentTable only the last version, chronologically speaking, will be fetched.
 
 ## Usage
 ### CLI
