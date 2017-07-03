@@ -33,7 +33,7 @@ A document table is a table where
 - each row has a variable amount of named columns
 - each column is a variable length byte array
 
-A normal table, such as one from a RDBM system, does not allow storing of data in this fashion. DocumentTable is a specialized table made for document database use cases.
+A normal table, such as one from a RDBM system, does not allow storing of data in this fashion. A document table is a specialized table made for document database use cases.
 
 On disk a document table can be represented as a file with a header and a body where the header is a column name index and where each row contains alternating keyID and value blocks, one pair for each of its columns. A value block is a byte array prepended with a size byte array. The max size of a value byte array is sizeof(long).
 
@@ -77,7 +77,7 @@ When using the same compression or encoding uniformly over all rows a batch info
 
 ### Row versions
 
-If you insert a document with a primary key into ResinDB and then perform an update on that document, it will occur twice in the DocumentTable but with different row IDs. Those two occurrances also differ because they belong to different batches. Batches are timestamped. When reading from a DocumentTable only the last version, chronologically speaking, will be fetched.
+If you insert a document with a primary key into ResinDB and then perform an update on that document, it will occur twice in the document table but with different row IDs. Those two occurrances also differ because they belong to different batches. Batches are timestamped. When reading from a document table only the last version, chronologically speaking, will be fetched.
 
 ## Usage
 ### CLI
