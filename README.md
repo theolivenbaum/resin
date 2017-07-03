@@ -46,9 +46,9 @@ The name (key) of each column is a variable length byte array with a max size of
 #### Byte representation:  
   
 	int variable_len_byte_arr int variable_len_byte_arr  
-	int variable_len_byte_arr int variable_len_byte_arr  
-	int variable_len_byte_arr  
-	int variable_len_byte_arr int variable_len_byte_arr  
+	int int variable_len_byte_arr int int variable_len_byte_arr  
+	int int variable_len_byte_arr  
+	int int variable_len_byte_arr int int variable_len_byte_arr  
   
 To fetch a row from the table you need to know the starting byte position of the row as well as its size.
 
