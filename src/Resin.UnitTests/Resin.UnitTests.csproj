@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ResinCore\ResinCore.csproj" />
+    <ProjectReference Include="..\StreamIndex\StreamIndex.csproj" />
   </ItemGroup>
 
   <ItemGroup>

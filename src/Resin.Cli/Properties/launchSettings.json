@@ -2,7 +2,7 @@
   "profiles": {
     "Resin.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "rewrite --file "
+      "commandLineArgs": "query --dir c:\\temp\\resin_data\\pg -q \"body:Every person who enters rightly into covenant with God\""
     }
   }
 }

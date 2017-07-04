@@ -35,6 +35,10 @@ namespace Resin.Querying
                 }
                 else
                 {
+                    if (clauses.Count == 0)
+                    {
+                        throw new ArgumentException("Query must be a term, i.e. reference a key (field) followed by a colon and then a value.");
+                    }
                     clauses[clauses.Count - 1] += part;
                 }
             }

@@ -21,6 +21,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.UnitTests", "Resin.Un
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{47C9EBB6-39BE-4B19-BA51-401EC9777BA6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentTable", "DocumentTable\DocumentTable.csproj", "{2FD09C0D-881D-468C-8F99-346718FAED5E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StreamIndex", "StreamIndex\StreamIndex.csproj", "{5BED9FA1-6BED-4AC1-859A-A85C06C93096}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{B9CEA923-07C2-4ADE-8DD5-E2CDAC3EA9A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B9CEA923-07C2-4ADE-8DD5-E2CDAC3EA9A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B9CEA923-07C2-4ADE-8DD5-E2CDAC3EA9A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FD09C0D-881D-468C-8F99-346718FAED5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FD09C0D-881D-468C-8F99-346718FAED5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FD09C0D-881D-468C-8F99-346718FAED5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FD09C0D-881D-468C-8F99-346718FAED5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BED9FA1-6BED-4AC1-859A-A85C06C93096}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BED9FA1-6BED-4AC1-859A-A85C06C93096}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BED9FA1-6BED-4AC1-859A-A85C06C93096}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BED9FA1-6BED-4AC1-859A-A85C06C93096}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
