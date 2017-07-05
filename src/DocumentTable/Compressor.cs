@@ -1,8 +1,7 @@
-using DocumentTable;
 using System.IO;
 using System.IO.Compression;
 
-namespace Resin.IO
+namespace DocumentTable
 {
     public static class Deflator
     {

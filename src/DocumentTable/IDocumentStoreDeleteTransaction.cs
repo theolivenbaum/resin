@@ -1,4 +1,4 @@
-﻿namespace Resin
+﻿namespace DocumentTable
 {
     public interface IDocumentStoreDeleteTransaction
     {

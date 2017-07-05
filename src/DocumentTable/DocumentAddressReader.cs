@@ -1,7 +1,7 @@
 ﻿using StreamIndex;
 using System.IO;
 
-namespace Resin.IO.Read
+namespace DocumentTable
 {
     public class DocumentAddressReader : BlockReader<BlockInfo>
     {

@@ -1,6 +1,7 @@
 using System.Linq;
 using Resin.Analysis;
 using Resin.IO;
+using DocumentTable;
 
 namespace Resin
 {

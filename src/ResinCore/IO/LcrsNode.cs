@@ -1,3 +1,4 @@
+using StreamIndex;
 using System;
 using System.Diagnostics;
 

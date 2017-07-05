@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace Resin.Sys
+namespace DocumentTable
 {
     public static class HashExtensions
     {

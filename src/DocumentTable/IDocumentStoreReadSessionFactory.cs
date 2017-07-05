@@ -1,4 +1,4 @@
-﻿namespace Resin.IO.Read
+﻿namespace DocumentTable
 {
     public interface IDocumentStoreReadSessionFactory
     {

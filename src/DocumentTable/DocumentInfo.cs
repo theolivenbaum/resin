@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Resin.IO
+namespace DocumentTable
 {
     public struct DocumentInfo : IEquatable<DocumentInfo>
     {

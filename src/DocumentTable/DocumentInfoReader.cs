@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 
-namespace Resin.IO.Read
+namespace DocumentTable
 {
     public class DocumentInfoReader : IDisposable
     {

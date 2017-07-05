@@ -1,13 +1,10 @@
-﻿using DocumentTable;
-using Resin.IO;
-using Resin.IO.Read;
-using StreamIndex;
+﻿using StreamIndex;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Resin
+namespace DocumentTable
 {
     public class DtblStream : DocumentStream, IDisposable
     {

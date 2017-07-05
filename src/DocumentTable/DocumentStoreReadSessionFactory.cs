@@ -1,10 +1,6 @@
-﻿using DocumentTable;
-using Resin.Sys;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 
-namespace Resin.IO.Read
+namespace DocumentTable
 {
     public class DocumentStoreReadSessionFactory : IDocumentStoreReadSessionFactory
     {

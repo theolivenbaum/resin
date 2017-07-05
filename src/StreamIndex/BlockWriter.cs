@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Resin.IO.Write
+namespace StreamIndex
 {
     public abstract class BlockWriter<T> : IDisposable
     {

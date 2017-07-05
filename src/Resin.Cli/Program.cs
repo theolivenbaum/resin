@@ -10,6 +10,7 @@ using log4net;
 using Resin.IO;
 using System.Text;
 using Newtonsoft.Json;
+using DocumentTable;
 
 namespace Resin.Cli
 {

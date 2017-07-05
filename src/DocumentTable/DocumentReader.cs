@@ -1,8 +1,8 @@
-﻿using DocumentTable;
+﻿using StreamIndex;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Resin.IO.Read
+namespace DocumentTable
 {
     public class DocumentReader : BlockReader<Document>
     {

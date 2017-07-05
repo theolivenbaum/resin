@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Resin
+namespace DocumentTable
 {
     public interface IDocumentStoreWriter : IDisposable
     {

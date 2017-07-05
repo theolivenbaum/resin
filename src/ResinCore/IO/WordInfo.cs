@@ -1,4 +1,4 @@
-﻿using Resin.IO;
+﻿using DocumentTable;
 using System;
 
 namespace Resin.IO

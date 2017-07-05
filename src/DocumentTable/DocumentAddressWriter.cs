@@ -1,7 +1,7 @@
 ﻿using StreamIndex;
 using System.IO;
 
-namespace Resin.IO.Write
+namespace DocumentTable
 {
     public class DocumentAddressWriter : BlockWriter<BlockInfo>
     {

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using DocumentTable;
+using System.Collections.Generic;
 
 namespace Resin
 {

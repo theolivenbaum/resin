@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Resin.IO.Read
+namespace StreamIndex
 {
     public abstract class BlockReader<T> : IDisposable
     {

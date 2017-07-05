@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Resin.IO.Read
+namespace DocumentTable
 {
     public interface IDocumentStoreReadSession : IDisposable
     {

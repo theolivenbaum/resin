@@ -1,10 +1,8 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using log4net;
-using Resin.IO;
-using DocumentTable;
 
-namespace Resin
+namespace DocumentTable
 {
     [DebuggerDisplay("{VersionId}")]
     public class BatchInfo

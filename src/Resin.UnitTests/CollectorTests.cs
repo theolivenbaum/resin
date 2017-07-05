@@ -7,6 +7,7 @@ using Resin.IO;
 using Resin.Querying;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Resin.Sys;
+using DocumentTable;
 
 namespace Tests
 {

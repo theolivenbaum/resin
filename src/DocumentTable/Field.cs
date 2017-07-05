@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Globalization;
 
-namespace Resin
+namespace DocumentTable
 {
     [DebuggerDisplay("{Value}")]
     public struct Field

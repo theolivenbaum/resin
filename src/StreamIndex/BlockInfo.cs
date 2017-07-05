@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Resin.IO
+namespace StreamIndex
 {
     [DebuggerDisplay("{Position} {Length}")]
     public class BlockInfo : IEquatable<BlockInfo>

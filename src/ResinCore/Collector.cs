@@ -6,8 +6,8 @@ using System.Linq;
 using log4net;
 using Resin.IO.Read;
 using Resin.Querying;
-using Resin.Sys;
 using Resin.IO;
+using DocumentTable;
 
 namespace Resin
 {

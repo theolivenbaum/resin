@@ -12,6 +12,7 @@ using Resin.Sys;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using StreamIndex;
+using DocumentTable;
 
 namespace Resin
 {

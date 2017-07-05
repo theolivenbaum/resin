@@ -1,4 +1,4 @@
-﻿namespace Resin.IO
+﻿namespace DocumentTable
 {
     public enum Compression
     {

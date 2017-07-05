@@ -1,9 +1,8 @@
 ﻿using log4net;
-using Resin.Sys;
 using System;
 using System.Collections.Generic;
 
-namespace Resin
+namespace DocumentTable
 {
     public abstract class DocumentStream
     {

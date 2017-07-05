@@ -5,6 +5,8 @@ using System.Linq;
 using Resin.Analysis;
 using Resin.Sys;
 using System.Text;
+using StreamIndex;
+using DocumentTable;
 
 namespace Resin.IO
 {

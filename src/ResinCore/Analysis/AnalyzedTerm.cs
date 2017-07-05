@@ -1,4 +1,5 @@
-﻿using Resin.IO;
+﻿using DocumentTable;
+using Resin.IO;
 
 namespace Resin.Analysis
 {

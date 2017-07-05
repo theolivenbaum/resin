@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Resin.IO;
+using DocumentTable;
 
 namespace Resin.Analysis
 {

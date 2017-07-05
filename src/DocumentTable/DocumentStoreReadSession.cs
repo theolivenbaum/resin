@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Resin.IO.Read
+namespace DocumentTable
 {
     public class DocumentStoreReadSession : IDocumentStoreReadSession
     {

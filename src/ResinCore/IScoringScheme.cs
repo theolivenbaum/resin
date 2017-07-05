@@ -1,4 +1,6 @@
-﻿namespace Resin
+﻿using DocumentTable;
+
+namespace Resin
 {
     public interface IScoringScheme
     {

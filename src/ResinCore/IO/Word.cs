@@ -1,4 +1,5 @@
-using System;
+using DocumentTable;
+using StreamIndex;
 using System.Collections.Generic;
 
 namespace Resin.IO

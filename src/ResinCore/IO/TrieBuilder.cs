@@ -1,4 +1,5 @@
-﻿using log4net;
+﻿using DocumentTable;
+using log4net;
 using Resin.Sys;
 using System;
 using System.Collections.Concurrent;

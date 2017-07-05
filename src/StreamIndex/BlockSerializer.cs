@@ -1,5 +1,4 @@
-﻿using Resin.IO;
-using System;
+﻿using System;
 using System.IO;
 
 namespace StreamIndex
