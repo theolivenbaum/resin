@@ -307,7 +307,7 @@ namespace DocumentTable
 
         public static void Serialize(this BatchInfo ix, string fileName)
         {
-            using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4, FileOptions.WriteThrough))
             {
                 var bytes = ix.Serialize();
 
