@@ -20,7 +20,6 @@ namespace Resin
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
         private readonly Compression _compression;
-        private readonly long _indexVersionId;
         private readonly DocumentStream _documents;
         private readonly IWriteSession _writeSession;
         private int _count;
@@ -40,50 +39,39 @@ namespace Resin
             _compression = compression;
             _documents = documents;
 
-            var mainIndexVersion = Util.GetIndexFileNamesInChronologicalOrder(_directory)
+            var firstCommit = Util.GetIndexFileNamesInChronologicalOrder(_directory)
                 .FirstOrDefault();
 
-            if (mainIndexVersion == null)
+            if (firstCommit != null)
             {
-                _indexVersionId = Util.GetNextChronologicalFileId();
+                var ix = BatchInfo.Load(firstCommit);
+
+                _count = ix.DocumentCount;
             }
-            else
+
+            _ix = new BatchInfo
             {
-                if (Util.WriteLockExists(_directory) || !Util.TryAquireWriteLock(_directory))
-                {
-                    _indexVersionId = Util.GetNextChronologicalFileId();
-                }
-                else
-                {
-                    _indexVersionId = long.Parse(Path.GetFileNameWithoutExtension(mainIndexVersion));
-
-                    var ix = BatchInfo.Load(mainIndexVersion);
-
-                    _count = ix.DocumentCount;
-                }
-            }
+                VersionId = Util.GetNextChronologicalFileId(),
+                Compression = _compression,
+                PrimaryKeyFieldName = documents.PrimaryKeyFieldName
+            };
 
             var posFileName = Path.Combine(
-                _directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
+                _directory, string.Format("{0}.{1}", _ix.VersionId, "pos"));
 
-            var factory = storeWriterFactory ?? new WriteSessionFactory(directory, _indexVersionId, _compression);
+            var factory = storeWriterFactory ?? new WriteSessionFactory(directory, _ix.VersionId, _compression);
 
             _writeSession = factory.OpenWriteSession();
 
             _postingsWriter = new PostingsWriter(
                 new FileStream(posFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
 
-            _ix = new BatchInfo
-            {
-                VersionId = _indexVersionId,
-                Compression = _compression,
-                PrimaryKeyFieldName = documents.PrimaryKeyFieldName
-            };
+
         }
 
         public long Write()
         {
-            if (_committed) return _indexVersionId;
+            if (_committed) return _ix.VersionId;
 
             var ts = new List<Task>();
             var trieBuilder = new TrieBuilder();
@@ -133,7 +121,7 @@ namespace Resin
 
             Log.InfoFormat("serialized trees in {0}", treeTimer.Elapsed);
 
-            return _indexVersionId;
+            return _ix.VersionId;
         }
 
         private void SerializeTries(IDictionary<string, LcrsTrie> tries)
@@ -141,7 +129,7 @@ namespace Resin
             foreach(var t in tries)
             {
                 var fileName = Path.Combine(
-                    _directory, string.Format("{0}-{1}.tri", _indexVersionId, t.Key));
+                    _directory, string.Format("{0}-{1}.tri", _ix.VersionId, t.Key));
 
                 t.Value.Serialize(fileName);
             }
@@ -159,7 +147,7 @@ namespace Resin
             _postingsWriter.Dispose();
             _writeSession.Dispose();
 
-            var fileName = Path.Combine(_directory, _indexVersionId + ".ix");
+            var fileName = Path.Combine(_directory, _ix.VersionId + ".ix");
 
             _ix.DocumentCount = _count;
             _ix.Serialize(fileName);

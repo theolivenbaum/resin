@@ -12,6 +12,7 @@ namespace DocumentTable
         private readonly IDictionary<string, short> _keyIndex;
         private readonly List<string> _fieldNames;
         private readonly string _keyIndexFileName;
+        private readonly Stream _compoundFile;
 
         public WriteSession(string directory, long indexVersionId, Compression compression)
         {
@@ -22,17 +23,19 @@ namespace DocumentTable
             _keyIndexFileName = Path.Combine(directory, indexVersionId + ".kix");
 
             _addressWriter = new DocumentAddressWriter(
-                    new FileStream(docAddressFn, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
+                    new FileStream(docAddressFn, FileMode.CreateNew, FileAccess.Write));
 
             _docWriter = new DocumentWriter(
-                new FileStream(docFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite),
+                new FileStream(docFileName, FileMode.CreateNew, FileAccess.Write),
                 compression);
 
             _docHashesStream = new FileStream(
-                docHashesFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+                docHashesFileName, FileMode.CreateNew, FileAccess.Write);
 
             _keyIndex = new Dictionary<string, short>();
             _fieldNames = new List<string>();
+
+            //_compoundFile = compoundFile;
         }
         
         public void Write(Document document)
@@ -60,8 +63,16 @@ namespace DocumentTable
         public void Dispose()
         {
             _docWriter.Dispose();
-            _addressWriter.Dispose();
+
+            //_docHashesStream.Flush();
+            //_docHashesStream.Position = 0;
+            //_docHashesStream.CopyTo(_compoundFile);
             _docHashesStream.Dispose();
+
+            //_addressWriter.Stream.Flush();
+            //_addressWriter.Stream.Position = 0;
+            //_addressWriter.Stream.CopyTo(_compoundFile);
+            _addressWriter.Dispose();
 
             using (var fs = new FileStream(_keyIndexFileName, FileMode.Create, FileAccess.Write))
             using (var writer = new StreamWriter(fs, TableSerializer.Encoding))

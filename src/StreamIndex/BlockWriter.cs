@@ -10,6 +10,8 @@ namespace StreamIndex
         private long _position;
         private readonly Stream _stream;
 
+        public Stream Stream { get { return _stream; } }
+
         public BlockWriter(Stream stream)
         {
             _position = stream.Position;
