@@ -124,7 +124,7 @@ namespace Resin
             time.Start();
 
             var terms = subQuery.Terms.ToList();
-            var postings = terms.Count > 0 ? ReadPostings(terms).ToList() : null;
+            var postings = terms.Count > 0 ? ReadPostings(terms): null;
 
             IEnumerable<DocumentPosting> result;
 
@@ -143,14 +143,12 @@ namespace Resin
             Log.DebugFormat("read postings for {0} in {1}", subQuery.Serialize(), time.Elapsed);
         }
         
-        private IEnumerable<IList<DocumentPosting>> ReadPostings(IEnumerable<Term> terms)
+        private IList<IList<DocumentPosting>> ReadPostings(IEnumerable<Term> terms)
         {
             var addresses = terms.Select(term => term.Word.PostingsAddress.Value)
                 .OrderBy(adr => adr.Position).ToList();
 
-            var postings = _postingsReader.Read(addresses).SelectMany(x => x).ToList();
-
-            yield return postings;
+            return _postingsReader.Read(addresses);
         }
 
         private void Score(QueryContext query)

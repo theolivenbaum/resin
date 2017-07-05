@@ -24,7 +24,7 @@ namespace DocumentTable
                     .OrderBy(b => b.Position)
                     .ToList();
 
-            var docAddresses = _addressReader.Read(addresses).ToList();
+            var docAddresses = _addressReader.Read(addresses);
             var index = 0;
 
             foreach (var document in _documentReader.Read(docAddresses))

@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Resin.IO.Read
 {
-    public class PostingsReader : BlockReader<IEnumerable<DocumentPosting>>
+    public class PostingsReader : BlockReader<IList<DocumentPosting>>
     {
         public PostingsReader(Stream stream)
             : base(stream)
@@ -18,7 +18,7 @@ namespace Resin.IO.Read
         {
         }
 
-        protected override IEnumerable<DocumentPosting> Deserialize(byte[] data)
+        protected override IList<DocumentPosting> Deserialize(byte[] data)
         {
             return Serializer.DeserializePostings(data).ToList();
         }

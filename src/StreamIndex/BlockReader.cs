@@ -23,9 +23,14 @@ namespace StreamIndex
             _offset = offset;
         }
 
-        public IEnumerable<T> Read(IList<BlockInfo> blocks)
+        public IList<T> Read(IList<BlockInfo> blocks)
         {
-            return blocks.Select(ReadInternal);
+            var result = new List<T>(blocks.Count);
+            foreach (var block in blocks)
+            {
+                result.Add(ReadInternal(block));
+            }
+            return result;
         }
 
         private T ReadInternal(BlockInfo info)
