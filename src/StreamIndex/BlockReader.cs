@@ -10,12 +10,10 @@ namespace StreamIndex
         protected abstract T Deserialize(byte[] data);
 
         private readonly Stream _stream;
-        private long _position;
 
         protected BlockReader(Stream stream)
         {
             _stream = stream;
-            _position = 0;
         }
 
         public IEnumerable<T> Read(IList<BlockInfo> blocks)
@@ -29,7 +27,7 @@ namespace StreamIndex
                 throw new ArgumentOutOfRangeException(
                     "info", string.Format("invalid length {0}", info.Length));
 
-            var distance = info.Position - _position;
+            var distance = info.Position - _stream.Position;
 
             if (distance > 0)
             {
@@ -39,8 +37,6 @@ namespace StreamIndex
             byte[] buffer = new byte[info.Length];
 
             _stream.Read(buffer, 0, buffer.Length);
-
-            _position = info.Position + info.Length;
 
             return Deserialize(buffer);
         }
