@@ -22,7 +22,7 @@ namespace Resin
         private readonly Compression _compression;
         private readonly long _indexVersionId;
         private readonly DocumentStream _documents;
-        private readonly IWriteSession _storeWriter;
+        private readonly IWriteSession _writeSession;
         private int _count;
         private bool _committed;
         private readonly PostingsWriter _postingsWriter;
@@ -32,7 +32,7 @@ namespace Resin
             IAnalyzer analyzer, 
             Compression compression, 
             DocumentStream documents, 
-            IWriteSession storeWriter = null)
+            IWriteSessionFactory storeWriterFactory = null)
         {
             _directory = directory;
             _analyzer = analyzer;
@@ -65,8 +65,9 @@ namespace Resin
             var posFileName = Path.Combine(
                 _directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
 
-            _storeWriter = storeWriter ??
-                new WriteSession(directory, _indexVersionId, _compression);
+            var factory = storeWriterFactory ?? new WriteSessionFactory(directory, _indexVersionId, _compression);
+
+            _writeSession = factory.OpenWriteSession();
 
             _postingsWriter = new PostingsWriter(
                 new FileStream(posFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
@@ -78,8 +79,6 @@ namespace Resin
 
             var ts = new List<Task>();
             var trieBuilder = new TrieBuilder();
-
-
             var docTimer = Stopwatch.StartNew();
 
             foreach (var doc in _documents.ReadSource())
@@ -88,7 +87,7 @@ namespace Resin
 
                 new DocumentUpsertOperation().Write(
                     doc,
-                    _storeWriter,
+                    _writeSession,
                     _analyzer,
                     trieBuilder);
             }
@@ -150,7 +149,7 @@ namespace Resin
             if (_committed) return;
 
             _postingsWriter.Dispose();
-            _storeWriter.Dispose();
+            _writeSession.Dispose();
 
             var fileName = Path.Combine(_directory, _indexVersionId + ".ix");
 

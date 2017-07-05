@@ -9,7 +9,7 @@ namespace Resin
     {
         public void Write(
             Document document,
-            IWriteSession storeWriter,
+            IWriteSession writeSession,
             IAnalyzer analyzer,
             TrieBuilder trieBuilder)
         {
@@ -24,7 +24,7 @@ namespace Resin
                 trieBuilder.Add(new WordInfo(field, token, posting));
             }
 
-            storeWriter.Write(document);
+            writeSession.Write(document);
         }
     }
 }
