@@ -9,7 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResinCore", "ResinCore\Resi
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Resources", "Resources", "{170DE0FC-3DF8-49E7-A084-CF4D1E2F7DAF}"
 	ProjectSection(SolutionItems) = preProject
-		..\DocumentTable.md = ..\DocumentTable.md
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
 		..\rn-write.bat = ..\rn-write.bat
@@ -21,9 +20,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.UnitTests", "Resin.Un
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{47C9EBB6-39BE-4B19-BA51-401EC9777BA6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentTable", "DocumentTable\DocumentTable.csproj", "{2FD09C0D-881D-468C-8F99-346718FAED5E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocumentTable", "DocumentTable\DocumentTable.csproj", "{2FD09C0D-881D-468C-8F99-346718FAED5E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StreamIndex", "StreamIndex\StreamIndex.csproj", "{5BED9FA1-6BED-4AC1-859A-A85C06C93096}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StreamIndex", "StreamIndex\StreamIndex.csproj", "{5BED9FA1-6BED-4AC1-859A-A85C06C93096}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
