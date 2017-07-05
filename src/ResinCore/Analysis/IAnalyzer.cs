@@ -6,6 +6,6 @@ namespace Resin.Analysis
     public interface IAnalyzer
     {
         AnalyzedDocument AnalyzeDocument(Document document);
-        IEnumerable<string> Analyze(string value);
+        IList<string> Analyze(string value);
     }
 }

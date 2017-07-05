@@ -1,6 +1,7 @@
 using DocumentTable;
 using Resin.IO;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Resin.Analysis
 {
@@ -23,14 +24,18 @@ namespace Resin.Analysis
             return new AnalyzedDocument(document.Id, terms);
         }
 
-        protected virtual IEnumerable<AnalyzedTerm> AnalyzeDocumentInternal(Document document)
+        private IList<AnalyzedTerm> AnalyzeDocumentInternal(Document document)
         {
+            var analyzedTerms = new List<AnalyzedTerm>();
+
             foreach(var field in document.Fields.Values)
             {
                 if (field.Analyze && field.Index)
                 {
+                    var tokens = Analyze(field.Value);
                     var tokenDic = new Dictionary<string, int>();
-                    foreach (var token in Analyze(field.Value))
+
+                    foreach (var token in tokens)
                     {
                         if (tokenDic.ContainsKey(token))
                         {
@@ -48,7 +53,7 @@ namespace Resin.Analysis
                         var term = new Term(field.Key, word);
                         var posting = new DocumentPosting(document.Id, tokenGroup.Value);
 
-                        yield return new AnalyzedTerm(term, posting);
+                        analyzedTerms.Add(new AnalyzedTerm(term, posting));
                     }
                 }
                 else if (field.Index)
@@ -56,14 +61,15 @@ namespace Resin.Analysis
                     var term = new Term(field.Key, new Word(field.Value));
                     var posting = new DocumentPosting(document.Id, 1);
 
-                    yield return new AnalyzedTerm(term, posting);
+                    analyzedTerms.Add(new AnalyzedTerm(term, posting));
                 }
             }
+            return analyzedTerms;
         }
-        
-        public virtual IEnumerable<string> Analyze(string value)
+
+        public virtual IList<string> Analyze(string value)
         {
-            return _tokenizer.Tokenize(value);
+            return _tokenizer.Tokenize(value).ToList();
         }
 
         private bool IsNoice(char c)
