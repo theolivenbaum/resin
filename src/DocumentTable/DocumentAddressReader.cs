@@ -9,6 +9,10 @@ namespace DocumentTable
         {
         }
 
+        public DocumentAddressReader(Stream stream, long offset) : base(stream, offset)
+        {
+        }
+
         protected override BlockInfo Deserialize(byte[] data)
         {
             return BlockSerializer.DeserializeBlock(data);

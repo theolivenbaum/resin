@@ -2,6 +2,6 @@
 {
     public interface IReadSessionFactory
     {
-        IReadSession Create(string docAddressFileName, string docFileName, Compression compression);
+        IReadSession OpenReadSession(string docAddressFileName, string docFileName, BatchInfo ix);
     }
 }

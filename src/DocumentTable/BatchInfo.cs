@@ -17,6 +17,12 @@ namespace DocumentTable
 
         public string PrimaryKeyFieldName { get; set; }
 
+        public long PostingsOffset { get; set; }
+
+        public long DocHashOffset { get; set; }
+
+        public long DocAddressesOffset { get; set; }
+
         public static BatchInfo Load(string fileName)
         {
             var time = new Stopwatch();
@@ -26,7 +32,7 @@ namespace DocumentTable
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                ix = TableSerializer.DeserializeIxInfo(fs);
+                ix = TableSerializer.DeserializeBatchInfo(fs);
             }
 
             Log.DebugFormat("loaded ix in {0}", time.Elapsed);

@@ -159,7 +159,7 @@ namespace DocumentTable
             }
         }
 
-        public static BatchInfo DeserializeIxInfo(Stream stream)
+        public static BatchInfo DeserializeBatchInfo(Stream stream)
         {
             var versionBytes = new byte[sizeof(long)];
 
@@ -172,6 +172,18 @@ namespace DocumentTable
             var compression = new byte[sizeof(int)];
 
             stream.Read(compression, 0, sizeof(int));
+
+            var postingsOffsetBytes = new byte[sizeof(long)];
+
+            stream.Read(postingsOffsetBytes, 0, sizeof(long));
+
+            var docHashOffsetBytes = new byte[sizeof(long)];
+
+            stream.Read(docHashOffsetBytes, 0, sizeof(long));
+
+            var docAddressesOffsetBytes = new byte[sizeof(long)];
+
+            stream.Read(docAddressesOffsetBytes, 0, sizeof(long));
 
             var pkFnLenBytes = new byte[sizeof(int)];
 
@@ -194,15 +206,25 @@ namespace DocumentTable
                 Array.Reverse(versionBytes);
                 Array.Reverse(docCountBytes);
                 Array.Reverse(compression);
+                Array.Reverse(postingsOffsetBytes);
+                Array.Reverse(docHashOffsetBytes);
+                Array.Reverse(docAddressesOffsetBytes);
                 Array.Reverse(pkFieldNameBytes);
             }
+
+            var postingsOffset = BitConverter.ToInt64(postingsOffsetBytes, 0);
+            var docHashOffset = BitConverter.ToInt64(docHashOffsetBytes, 0);
+            var docAddressesOffset = BitConverter.ToInt64(docAddressesOffsetBytes, 0);
 
             return new BatchInfo
             {
                 VersionId = BitConverter.ToInt64(versionBytes, 0),
                 DocumentCount = BitConverter.ToInt32(docCountBytes, 0),
                 Compression = (Compression)BitConverter.ToInt32(compression, 0),
-                PrimaryKeyFieldName = Encoding.GetString(pkFieldNameBytes)
+                PrimaryKeyFieldName = Encoding.GetString(pkFieldNameBytes),
+                PostingsOffset = postingsOffset,
+                DocHashOffset = docHashOffset,
+                DocAddressesOffset = docAddressesOffset
             };
         }
 
@@ -326,6 +348,9 @@ namespace DocumentTable
                     ? new byte[0]
                     : Encoding.GetBytes(ix.PrimaryKeyFieldName);
                 byte[] pkFnLenBytes = BitConverter.GetBytes(pkFieldNameBytes.Length);
+                byte[] postingsOffsetBytes = BitConverter.GetBytes(ix.PostingsOffset);
+                byte[] docHashOffsetBytes = BitConverter.GetBytes(ix.DocHashOffset);
+                byte[] docAddressesOffsetBytes = BitConverter.GetBytes(ix.DocAddressesOffset);
 
                 if (!BitConverter.IsLittleEndian)
                 {
@@ -334,12 +359,19 @@ namespace DocumentTable
                     Array.Reverse(compressionEnumBytes);
                     Array.Reverse(pkFieldNameBytes);
                     Array.Reverse(pkFnLenBytes);
+                    Array.Reverse(postingsOffsetBytes);
+                    Array.Reverse(docHashOffsetBytes);
+                    Array.Reverse(docAddressesOffsetBytes);
                 }
 
                 stream.Write(versionBytes, 0, sizeof(long));
                 stream.Write(docCountBytes, 0, sizeof(int));
                 stream.Write(compressionEnumBytes, 0, sizeof(int));
+                stream.Write(postingsOffsetBytes, 0, sizeof(long));
+                stream.Write(docHashOffsetBytes, 0, sizeof(long));
+                stream.Write(docAddressesOffsetBytes, 0, sizeof(long));
                 stream.Write(pkFnLenBytes, 0, sizeof(int));
+
                 if (pkFnLenBytes.Length > 0) stream.Write(pkFieldNameBytes, 0, pkFieldNameBytes.Length);
 
                 return stream.ToArray();

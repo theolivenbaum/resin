@@ -6,26 +6,23 @@ namespace DocumentTable
     public class DocumentInfoReader : IDisposable
     {
         private readonly Stream _stream;
+        private readonly long _offset;
 
-        public DocumentInfoReader(string fileName)
+        public DocumentInfoReader(string fileName):this(new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read), 0)
         {
-            _stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+        }
+
+        public DocumentInfoReader(Stream stream, long offset)
+        {
+            _stream = stream;
+            _offset = offset;
         }
 
         public DocumentInfo Read(int docId)
         {
-            var distance = (docId*TableSerializer.SizeOfDocHash()) - _stream.Position;
+            var distance = docId*TableSerializer.SizeOfDocHash() + _offset;
 
-            if (distance < 0)
-            {
-                distance = (docId * TableSerializer.SizeOfDocHash());
-
-                _stream.Seek(distance, SeekOrigin.Begin);
-            }
-            else
-            {
-                _stream.Seek(distance, SeekOrigin.Current);
-            }
+            _stream.Seek(distance, SeekOrigin.Begin);
 
             var hash = TableSerializer.DeserializeDocHash(_stream).Value;
 

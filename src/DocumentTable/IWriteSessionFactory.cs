@@ -1,7 +1,9 @@
-﻿namespace DocumentTable
+﻿using System.IO;
+
+namespace DocumentTable
 {
     public interface IWriteSessionFactory
     {
-        IWriteSession OpenWriteSession();
+        IWriteSession OpenWriteSession(Stream compoundFile);
     }
 }

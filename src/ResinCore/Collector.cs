@@ -20,7 +20,8 @@ namespace Resin
         private readonly int _documentCount;
         private readonly IDictionary<Query, IList<DocumentScore>> _scoreCache;
         private readonly DocumentInfoReader _docHashReader;
-        private readonly string _posFileName;
+        private readonly FileStream _compoundFile;
+        private readonly PostingsReader _postingsReader;
 
         public BatchInfo Ix { get { return _ix; } }
 
@@ -32,10 +33,11 @@ namespace Resin
             _documentCount = documentCount == -1 ? ix.DocumentCount : documentCount;
             _scoreCache = new Dictionary<Query, IList<DocumentScore>>();
 
-            var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "pk"));
-            _posFileName = Path.Combine(directory, string.Format("{0}.{1}", ix.VersionId, "pos"));
+            var compoundFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "rdb"));
+            _compoundFile = new FileStream(compoundFileName, FileMode.Open, FileAccess.Read);
 
-            _docHashReader = new DocumentInfoReader(docHashesFileName);
+            _docHashReader = new DocumentInfoReader(_compoundFile, ix.DocHashOffset);
+            _postingsReader = new PostingsReader(_compoundFile, ix.PostingsOffset);
         }
 
         public IList<DocumentScore> Collect(QueryContext query)
@@ -146,13 +148,9 @@ namespace Resin
             var addresses = terms.Select(term => term.Word.PostingsAddress.Value)
                 .OrderBy(adr => adr.Position).ToList();
 
-            using (var postingsReader = new PostingsReader(
-                new FileStream(_posFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.SequentialScan)))
-            {
-                var postings = postingsReader.Read(addresses).SelectMany(x => x).ToList();
+            var postings = _postingsReader.Read(addresses).SelectMany(x => x).ToList();
 
-                yield return postings;
-            }
+            yield return postings;
         }
 
         private void Score(QueryContext query)

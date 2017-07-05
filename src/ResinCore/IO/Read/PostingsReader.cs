@@ -12,6 +12,12 @@ namespace Resin.IO.Read
             : base(stream)
         {
         }
+
+        public PostingsReader(Stream stream, long offset)
+            : base(stream, offset)
+        {
+        }
+
         protected override IEnumerable<DocumentPosting> Deserialize(byte[] data)
         {
             return Serializer.DeserializePostings(data).ToList();

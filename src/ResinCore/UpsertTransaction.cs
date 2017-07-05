@@ -26,6 +26,7 @@ namespace Resin
         private bool _committed;
         private readonly PostingsWriter _postingsWriter;
         private readonly BatchInfo _ix;
+        private readonly Stream _compoundFile;
 
         public UpsertTransaction(
             string directory, 
@@ -59,14 +60,15 @@ namespace Resin
             var posFileName = Path.Combine(
                 _directory, string.Format("{0}.{1}", _ix.VersionId, "pos"));
 
-            var factory = storeWriterFactory ?? new WriteSessionFactory(directory, _ix.VersionId, _compression);
+            var compoundFileName = Path.Combine(_directory, _ix.VersionId + ".rdb");
+            _compoundFile = new FileStream(compoundFileName, FileMode.CreateNew);
 
-            _writeSession = factory.OpenWriteSession();
+            var factory = storeWriterFactory ?? new WriteSessionFactory(directory, _ix, _compression);
+
+            _writeSession = factory.OpenWriteSession(_compoundFile);
 
             _postingsWriter = new PostingsWriter(
-                new FileStream(posFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
-
-
+                new FileStream(posFileName, FileMode.CreateNew, FileAccess.ReadWrite));
         }
 
         public long Write()
@@ -119,6 +121,11 @@ namespace Resin
 
             SerializeTries(tries);
 
+            _ix.PostingsOffset = _compoundFile.Position;
+            _postingsWriter.Stream.Flush();
+            _postingsWriter.Stream.Position = 0;
+            _postingsWriter.Stream.CopyTo(_compoundFile);
+
             Log.InfoFormat("serialized trees in {0}", treeTimer.Elapsed);
 
             return _ix.VersionId;
@@ -144,13 +151,17 @@ namespace Resin
         {
             if (_committed) return;
 
+            _writeSession.Flush();
+
             _postingsWriter.Dispose();
+            _compoundFile.Dispose();
             _writeSession.Dispose();
 
             var fileName = Path.Combine(_directory, _ix.VersionId + ".ix");
 
             _ix.DocumentCount = _count;
             _ix.Serialize(fileName);
+
             _committed = true;
         }
 

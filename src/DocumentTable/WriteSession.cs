@@ -13,29 +13,31 @@ namespace DocumentTable
         private readonly List<string> _fieldNames;
         private readonly string _keyIndexFileName;
         private readonly Stream _compoundFile;
+        private bool _flushed;
+        private readonly BatchInfo _ix;
 
-        public WriteSession(string directory, long indexVersionId, Compression compression)
+        public WriteSession(string directory, BatchInfo ix, Compression compression, Stream compoundFile)
         {
-            var docFileName = Path.Combine(directory, indexVersionId + ".dtbl");
-            var docAddressFn = Path.Combine(directory, indexVersionId + ".da");
-            var docHashesFileName = Path.Combine(directory, string.Format("{0}.{1}", indexVersionId, "pk"));
+            var docFileName = Path.Combine(directory, ix.VersionId + ".dtbl");
+            var docAddressFn = Path.Combine(directory, ix.VersionId + ".da");
+            var docHashesFileName = Path.Combine(directory, string.Format("{0}.{1}", ix.VersionId, "pk"));
 
-            _keyIndexFileName = Path.Combine(directory, indexVersionId + ".kix");
-
+            _keyIndexFileName = Path.Combine(directory, ix.VersionId + ".kix");
+            _ix = ix;
             _addressWriter = new DocumentAddressWriter(
-                    new FileStream(docAddressFn, FileMode.CreateNew, FileAccess.Write));
+                    new FileStream(docAddressFn, FileMode.CreateNew, FileAccess.ReadWrite));
 
             _docWriter = new DocumentWriter(
                 new FileStream(docFileName, FileMode.CreateNew, FileAccess.Write),
                 compression);
 
             _docHashesStream = new FileStream(
-                docHashesFileName, FileMode.CreateNew, FileAccess.Write);
+                docHashesFileName, FileMode.CreateNew, FileAccess.ReadWrite);
 
             _keyIndex = new Dictionary<string, short>();
             _fieldNames = new List<string>();
 
-            //_compoundFile = compoundFile;
+            _compoundFile = compoundFile;
         }
         
         public void Write(Document document)
@@ -60,26 +62,37 @@ namespace DocumentTable
             new DocumentInfo(document.Hash).Serialize(_docHashesStream);
         }
 
-        public void Dispose()
+        public void Flush()
         {
-            _docWriter.Dispose();
+            if (_flushed) return;
 
-            //_docHashesStream.Flush();
-            //_docHashesStream.Position = 0;
-            //_docHashesStream.CopyTo(_compoundFile);
-            _docHashesStream.Dispose();
+            _ix.DocHashOffset = _compoundFile.Position;
+            _docHashesStream.Flush();
+            _docHashesStream.Position = 0;
+            _docHashesStream.CopyTo(_compoundFile);
 
-            //_addressWriter.Stream.Flush();
-            //_addressWriter.Stream.Position = 0;
-            //_addressWriter.Stream.CopyTo(_compoundFile);
-            _addressWriter.Dispose();
+            _ix.DocAddressesOffset = _compoundFile.Position;
+            _addressWriter.Stream.Flush();
+            _addressWriter.Stream.Position = 0;
+            _addressWriter.Stream.CopyTo(_compoundFile);
 
             using (var fs = new FileStream(_keyIndexFileName, FileMode.Create, FileAccess.Write))
             using (var writer = new StreamWriter(fs, TableSerializer.Encoding))
             foreach (var key in _fieldNames)
             {
-                    writer.WriteLine(key);
+                writer.WriteLine(key);
             }
+
+            _flushed = true;
+        }
+
+        public void Dispose()
+        {
+            if (!_flushed) Flush();
+
+            _docWriter.Dispose();
+            _docHashesStream.Dispose();
+            _addressWriter.Dispose();
         }
     }
 
