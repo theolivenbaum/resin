@@ -143,7 +143,7 @@ namespace Resin
         
         private IEnumerable<IList<DocumentPosting>> ReadPostings(IEnumerable<Term> terms)
         {
-            var addresses = terms.Select(term => term.Word.PostingsAddress)
+            var addresses = terms.Select(term => term.Word.PostingsAddress.Value)
                 .OrderBy(adr => adr.Position).ToList();
 
             using (var postingsReader = new PostingsReader(

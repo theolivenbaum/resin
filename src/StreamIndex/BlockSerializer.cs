@@ -40,7 +40,7 @@ namespace StreamIndex
             return new BlockInfo(pos, len);
         }
 
-        public static bool Serialize(this BlockInfo block, Stream stream)
+        public static bool Serialize(this BlockInfo? block, Stream stream)
         {
             if (block == null)
             {
@@ -60,7 +60,7 @@ namespace StreamIndex
             }
             else
             {
-                var blockBytes = block.Serialize();
+                var blockBytes = block.Value.Serialize();
 
                 stream.Write(blockBytes, 0, blockBytes.Length);
 

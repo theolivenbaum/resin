@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace StreamIndex
 {
     [DebuggerDisplay("{Position} {Length}")]
-    public class BlockInfo : IEquatable<BlockInfo>
+    public struct BlockInfo : IEquatable<BlockInfo>
     {
         public long Position;
         public int Length;
