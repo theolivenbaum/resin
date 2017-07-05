@@ -24,18 +24,18 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
         private readonly string _directory;
         private readonly QueryParser _parser;
-        private readonly IScoringScheme _scorerFactory;
+        private readonly IScoringSchemeFactory _scorerFactory;
         private readonly IList<BatchInfo> _ixs;
         private readonly int _blockSize;
         private readonly int _documentCount;
         private readonly IReadSessionFactory _sessionFactory;
 
         public Searcher(string directory)
-            :this(directory, new QueryParser(new Analyzer()), new Tfidf())
+            :this(directory, new QueryParser(new Analyzer()), new TfIdfFactory())
         {
         }
 
-        public Searcher(string directory, QueryParser parser, IScoringScheme scorerFactory, IReadSessionFactory sessionFactory = null)
+        public Searcher(string directory, QueryParser parser, IScoringSchemeFactory scorerFactory, IReadSessionFactory sessionFactory = null)
         {
             _directory = directory;
             _parser = parser;

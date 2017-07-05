@@ -16,7 +16,7 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly string _directory;
         private readonly BatchInfo _ix;
-        private readonly IScoringScheme _scorerFactory;
+        private readonly IScoringSchemeFactory _scorerFactory;
         private readonly int _documentCount;
         private readonly IDictionary<Query, IList<DocumentScore>> _scoreCache;
         private readonly DocumentInfoReader _docHashReader;
@@ -24,7 +24,7 @@ namespace Resin
 
         public BatchInfo Ix { get { return _ix; } }
 
-        public Collector(string directory, BatchInfo ix, IScoringScheme scorerFactory = null, int documentCount = -1)
+        public Collector(string directory, BatchInfo ix, IScoringSchemeFactory scorerFactory = null, int documentCount = -1)
         {
             _directory = directory;
             _ix = ix;
