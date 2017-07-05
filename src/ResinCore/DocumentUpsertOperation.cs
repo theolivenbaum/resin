@@ -15,15 +15,13 @@ namespace Resin
         {
             var analyzed = analyzer.AnalyzeDocument(document);
 
-            foreach (var term in analyzed.Words.GroupBy(t => t.Term.Field))
+            foreach (var word in analyzed.Words)
             {
-                trieBuilder.Add(term.Key, term.Select(t =>
-                {
-                    var field = t.Term.Field;
-                    var token = t.Term.Word.Value;
-                    var posting = t.Posting;
-                    return new WordInfo(field, token, posting);
-                }).ToList());
+                var field = word.Term.Field;
+                var token = word.Term.Word.Value;
+                var posting = word.Posting;
+
+                trieBuilder.Add(new WordInfo(field, token, posting));
             }
 
             storeWriter.Write(document);
