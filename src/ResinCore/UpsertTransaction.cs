@@ -26,6 +26,7 @@ namespace Resin
         private int _count;
         private bool _committed;
         private readonly PostingsWriter _postingsWriter;
+        private readonly BatchInfo _ix;
 
         public UpsertTransaction(
             string directory, 
@@ -71,6 +72,13 @@ namespace Resin
 
             _postingsWriter = new PostingsWriter(
                 new FileStream(posFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
+
+            _ix = new BatchInfo
+            {
+                VersionId = _indexVersionId,
+                Compression = _compression,
+                PrimaryKeyFieldName = documents.PrimaryKeyFieldName
+            };
         }
 
         public long Write()
@@ -153,14 +161,8 @@ namespace Resin
 
             var fileName = Path.Combine(_directory, _indexVersionId + ".ix");
 
-            new BatchInfo
-            {
-                VersionId = _indexVersionId,
-                DocumentCount = _count,
-                Compression = _compression,
-                PrimaryKeyFieldName = _documents.PrimaryKeyFieldName
-            }.Serialize(fileName);
-
+            _ix.DocumentCount = _count;
+            _ix.Serialize(fileName);
             _committed = true;
         }
 
