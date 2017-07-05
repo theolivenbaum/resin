@@ -1,6 +1,7 @@
-﻿using Resin.IO;
+﻿using DocumentTable;
+using Resin.IO;
 using Resin.IO.Read;
-using Resin.Sys;
+using StreamIndex;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +14,7 @@ namespace Resin
         private readonly DocHashReader _hashReader;
         private readonly DocumentAddressReader _addressReader;
         private readonly DocumentReader _documentReader;
-        private readonly IxInfo _ix;
+        private readonly BatchInfo _ix;
         private readonly int _take;
         private readonly int _skip;
         private readonly string _directory;
@@ -27,9 +28,9 @@ namespace Resin
             var docAddressFn = Path.Combine(directory, versionId + ".da");
             var docHashesFileName = Path.Combine(directory, string.Format("{0}.{1}", versionId, "pk"));
             var keyIndexFileName = Path.Combine(directory, versionId + ".kix");
-            var keyIndex = Util.GetKeyIndex(keyIndexFileName);
+            var keyIndex = TableSerializer.GetKeyIndex(keyIndexFileName);
 
-            _ix = IxInfo.Load(Path.Combine(directory, versionId + ".ix"));
+            _ix = BatchInfo.Load(Path.Combine(directory, versionId + ".ix"));
             _hashReader = new DocHashReader(docHashesFileName);
             _addressReader = new DocumentAddressReader(new FileStream(docAddressFn, FileMode.Open, FileAccess.Read));
             _documentReader = new DocumentReader(
@@ -65,7 +66,7 @@ namespace Resin
 
                 var address = _addressReader.Read(new[]
                 {
-                    new BlockInfo(docId * Serializer.SizeOfBlock(), Serializer.SizeOfBlock())
+                    new BlockInfo(docId * BlockSerializer.SizeOfBlock(), BlockSerializer.SizeOfBlock())
                 }).First();
 
                 var document = _documentReader.Read(new List<BlockInfo> { address }).First();

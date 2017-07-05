@@ -1,3 +1,4 @@
+using DocumentTable;
 using System.IO;
 using System.IO.Compression;
 
@@ -9,7 +10,7 @@ namespace Resin.IO
         {
             if (string.IsNullOrWhiteSpace(text)) return new byte[0];
 
-            var bytes = Serializer.Encoding.GetBytes(text);
+            var bytes = TableSerializer.Encoding.GetBytes(text);
 
             return Compress(bytes);
         }

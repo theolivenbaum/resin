@@ -11,6 +11,7 @@ using Resin.Querying;
 using Resin.Sys;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using StreamIndex;
 
 namespace Resin
 {
@@ -23,7 +24,7 @@ namespace Resin
         private readonly string _directory;
         private readonly QueryParser _parser;
         private readonly IScoringScheme _scorerFactory;
-        private readonly IList<IxInfo> _ixs;
+        private readonly IList<BatchInfo> _ixs;
         private readonly int _blockSize;
         private readonly int _documentCount;
         private readonly IDocumentStoreReadSessionFactory _sessionFactory;
@@ -39,11 +40,11 @@ namespace Resin
             _parser = parser;
             _scorerFactory = scorerFactory;
 
-            _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
+            _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(BatchInfo.Load).ToList();
 
             _documentCount = Util.GetDocumentCount(_ixs);
 
-            _blockSize = Serializer.SizeOfBlock();
+            _blockSize = BlockSerializer.SizeOfBlock();
 
             _sessionFactory = sessionFactory ?? new DocumentStoreReadSessionFactory();
         }
@@ -119,7 +120,7 @@ namespace Resin
             return agg;
         }
 
-        private void GetDocs(IList<DocumentScore> scores, IxInfo ix, ConcurrentBag<ScoredDocument> result)
+        private void GetDocs(IList<DocumentScore> scores, BatchInfo ix, ConcurrentBag<ScoredDocument> result)
         {
             var documentIds = scores.Select(s => s.DocumentId).ToList();
             var docAddressFileName = Path.Combine(_directory, ix.VersionId + ".da");

@@ -5,6 +5,7 @@ using System.Linq;
 using Resin.IO;
 using Resin.Sys;
 using Resin.IO.Write;
+using DocumentTable;
 
 namespace Resin
 {
@@ -12,12 +13,12 @@ namespace Resin
     {
         private readonly string _directory;
         private readonly IEnumerable<string> _pks;
-        private readonly List<IxInfo> _ixs;
+        private readonly List<BatchInfo> _ixs;
 
         public DeleteByPrimaryKeyTransaction(string directory, IEnumerable<string> primaryKeyValues)
         {
             _directory = directory;
-            _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(IxInfo.Load).ToList();
+            _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(BatchInfo.Load).ToList();
             _pks = primaryKeyValues;
         }
 
@@ -44,7 +45,7 @@ namespace Resin
 
                 using (var stream = new FileStream(tmpDocHashFileName, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
-                    foreach (var document in Serializer.DeserializeDocHashes(docHashFileName))
+                    foreach (var document in TableSerializer.DeserializeDocHashes(docHashFileName))
                     {
                         var hash = document.Hash.ToString(CultureInfo.InvariantCulture);
 

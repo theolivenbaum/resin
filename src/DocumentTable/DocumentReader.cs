@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using DocumentTable;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Resin.IO.Read
@@ -17,7 +18,7 @@ namespace Resin.IO.Read
 
         protected override Document Deserialize(byte[] data)
         {
-            return Serializer.DeserializeDocument(data, _compression, _keyIndex);
+            return TableSerializer.DeserializeDocument(data, _compression, _keyIndex);
         }
     }
 }

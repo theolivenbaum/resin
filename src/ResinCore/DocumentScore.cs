@@ -11,10 +11,10 @@ namespace Resin
     {
         public int DocumentId { get; private set; }
         public double Score { get; private set; }
-        public IxInfo Ix { get; private set; }
+        public BatchInfo Ix { get; private set; }
         public UInt64 DocHash { get; private set; }
 
-        public DocumentScore(int documentId, UInt64 docHash, double score, IxInfo ix)
+        public DocumentScore(int documentId, UInt64 docHash, double score, BatchInfo ix)
         {
             DocumentId = documentId;
             Score = score;

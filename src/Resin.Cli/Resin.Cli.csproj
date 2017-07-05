@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DocumentTable\DocumentTable.csproj" />
     <ProjectReference Include="..\ResinCore\ResinCore.csproj" />
   </ItemGroup>
 

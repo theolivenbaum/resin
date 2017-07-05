@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using StreamIndex;
+using System.IO;
 
 namespace Resin.IO.Write
 {

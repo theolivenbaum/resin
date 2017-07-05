@@ -9,6 +9,7 @@ using Resin.IO.Write;
 using Resin.Sys;
 using System.Diagnostics;
 using System.Linq;
+using DocumentTable;
 
 namespace Resin
 {
@@ -54,7 +55,7 @@ namespace Resin
                 {
                     _indexVersionId = long.Parse(Path.GetFileNameWithoutExtension(mainIndexVersion));
 
-                    var ix = IxInfo.Load(mainIndexVersion);
+                    var ix = BatchInfo.Load(mainIndexVersion);
 
                     _count = ix.DocumentCount;
                 }
@@ -149,7 +150,7 @@ namespace Resin
             var tmpFileName = Path.Combine(_directory, _indexVersionId + "._ix");
             var fileName = Path.Combine(_directory, _indexVersionId + ".ix");
 
-            new IxInfo
+            new BatchInfo
             {
                 VersionId = _indexVersionId,
                 DocumentCount = _count,

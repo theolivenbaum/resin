@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using StreamIndex;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Resin.IO.Read
@@ -13,7 +14,7 @@ namespace Resin.IO.Read
         {
             _addressReader = addressReader;
             _documentReader = documentReader;
-            _blockSize = Serializer.SizeOfBlock();
+            _blockSize = BlockSerializer.SizeOfBlock();
         }
 
         public IEnumerable<Document> Read(IList<int> documentIds)

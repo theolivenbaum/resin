@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using DocumentTable;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Resin.IO.Write
@@ -63,7 +64,7 @@ namespace Resin.IO.Write
             _docHashesStream.Dispose();
 
             using (var fs = new FileStream(_keyIndexFileName, FileMode.Create, FileAccess.Write))
-            using (var writer = new StreamWriter(fs, Serializer.Encoding))
+            using (var writer = new StreamWriter(fs, TableSerializer.Encoding))
             foreach (var key in _fieldNames)
             {
                     writer.WriteLine(key);

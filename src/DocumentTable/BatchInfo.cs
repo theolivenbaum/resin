@@ -2,13 +2,14 @@
 using System.IO;
 using log4net;
 using Resin.IO;
+using DocumentTable;
 
 namespace Resin
 {
     [DebuggerDisplay("{VersionId}")]
-    public class IxInfo
+    public class BatchInfo
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof (IxInfo));
+        private static readonly ILog Log = LogManager.GetLogger(typeof (BatchInfo));
 
         public long VersionId { get; set; }
 
@@ -18,16 +19,16 @@ namespace Resin
 
         public string PrimaryKeyFieldName { get; set; }
 
-        public static IxInfo Load(string fileName)
+        public static BatchInfo Load(string fileName)
         {
             var time = new Stopwatch();
             time.Start();
 
-            IxInfo ix;
+            BatchInfo ix;
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                ix = Serializer.DeserializeIxInfo(fs);
+                ix = TableSerializer.DeserializeIxInfo(fs);
             }
 
             Log.DebugFormat("loaded ix in {0}", time.Elapsed);

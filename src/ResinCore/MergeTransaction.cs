@@ -76,7 +76,7 @@ namespace Resin
             {
                 // merge segments
 
-                var ix = IxInfo.Load(_ixFilesToProcess[0]);
+                var ix = BatchInfo.Load(_ixFilesToProcess[0]);
 
                 if (Util.IsSegmented(_ixFilesToProcess[0]))
                 {
@@ -97,7 +97,7 @@ namespace Resin
         {
             Log.InfoFormat("truncating {0}", srcIxFileName);
 
-            var srcIx = IxInfo.Load(srcIxFileName);
+            var srcIx = BatchInfo.Load(srcIxFileName);
             var documentFileName = Path.Combine(_directory, srcIx.VersionId + ".rdoc");
             var docAddressFn = Path.Combine(_directory, srcIx.VersionId + ".da");
             var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", srcIx.VersionId, "pk"));
@@ -131,7 +131,7 @@ namespace Resin
         {
             Log.InfoFormat("merging branch {0} with trunk {1}", _ixFilesToProcess[1], _ixFilesToProcess[0]);
 
-            var ix = IxInfo.Load(srcIxFileName);
+            var ix = BatchInfo.Load(srcIxFileName);
             var documentFileName = Path.Combine(_directory, ix.VersionId + ".rdoc");
             long version;
             using (var documentStream = new RDocStream(documentFileName, ix.PrimaryKeyFieldName))

@@ -273,7 +273,7 @@ namespace Resin.Cli
 
             var dir = Path.GetDirectoryName(sourceFileName);
             var version = Path.GetFileNameWithoutExtension(sourceFileName);
-            var ix = IxInfo.Load(Path.Combine(dir, version + ".ix"));
+            var ix = BatchInfo.Load(Path.Combine(dir, version + ".ix"));
 
             Console.WriteLine("migrating...");
 

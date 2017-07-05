@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using DocumentTable;
+using System.IO;
 
 namespace Resin.IO.Write
 {

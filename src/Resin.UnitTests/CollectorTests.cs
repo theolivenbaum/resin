@@ -33,7 +33,7 @@ namespace Tests
             {
                 indexName = writer.Write();
             }
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("_id", "3")).ToList();
 
@@ -41,7 +41,7 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
             }
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("_id", "5five")).ToList();
 
@@ -71,7 +71,7 @@ namespace Tests
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rain man");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -81,7 +81,7 @@ namespace Tests
 
             query = new QueryParser(new Analyzer(), 0.75f).Parse("+title:rain man~");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -114,7 +114,7 @@ namespace Tests
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -126,7 +126,7 @@ namespace Tests
 
             query = new QueryParser(new Analyzer()).Parse("+title:the +title:ugly");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -156,7 +156,7 @@ namespace Tests
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rocky");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -166,7 +166,7 @@ namespace Tests
 
             query = new QueryParser(new Analyzer()).Parse("+title:rambo");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -177,7 +177,7 @@ namespace Tests
 
             query = new QueryParser(new Analyzer()).Parse("+title:rocky title:rambo");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -209,7 +209,7 @@ namespace Tests
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -221,7 +221,7 @@ namespace Tests
 
             query = new QueryParser(new Analyzer()).Parse("+title:the -title:ugly");
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -250,7 +250,7 @@ namespace Tests
             long indexName = writer.Write();
             writer.Dispose();
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
 
@@ -259,7 +259,7 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
             }
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("title", "the")).ToList();
 
@@ -289,7 +289,7 @@ namespace Tests
             long indexName = writer.Write();
             writer.Dispose();
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
 
@@ -301,7 +301,7 @@ namespace Tests
             var operation = new DeleteByPrimaryKeyTransaction(dir, new[] { "0" });
             operation.Commit();
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
 
@@ -328,7 +328,7 @@ namespace Tests
             long indexName = writer.Write();
             writer.Dispose();
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("title", "ra") { Prefix = true }).ToList();
 
@@ -358,7 +358,7 @@ namespace Tests
             long indexName = writer.Write();
             writer.Dispose();
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("title", "raider") { Fuzzy = false, Edits = 1 }).ToList();
 
@@ -366,7 +366,7 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
             }
 
-            using (var collector = new Collector(dir, IxInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
+            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new Tfidf()))
             {
                 var scores = collector.Collect(new QueryContext("title", "raider") { Fuzzy = true, Edits = 1 }).ToList();
 

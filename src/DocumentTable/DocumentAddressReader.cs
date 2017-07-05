@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using StreamIndex;
+using System.IO;
 
 namespace Resin.IO.Read
 {
@@ -10,7 +11,7 @@ namespace Resin.IO.Read
 
         protected override BlockInfo Deserialize(byte[] data)
         {
-            return Serializer.DeserializeBlock(data);
+            return BlockSerializer.DeserializeBlock(data);
         }
     }
 }

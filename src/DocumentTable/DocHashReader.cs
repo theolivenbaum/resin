@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocumentTable;
+using System;
 using System.IO;
 
 namespace Resin.IO.Read
@@ -16,13 +17,13 @@ namespace Resin.IO.Read
 
         public DocHash Read(int docId)
         {
-            var distance = (docId*Serializer.SizeOfDocHash()) - _position;
+            var distance = (docId*TableSerializer.SizeOfDocHash()) - _position;
 
             if (distance < 0)
             {
                 _position = 0;
 
-                distance = (docId * Serializer.SizeOfDocHash()) - _position;
+                distance = (docId * TableSerializer.SizeOfDocHash()) - _position;
 
                 _stream.Seek(distance, SeekOrigin.Begin);
             }
@@ -31,9 +32,9 @@ namespace Resin.IO.Read
                 _stream.Seek(distance, SeekOrigin.Current);
             }
 
-            var hash = Serializer.DeserializeDocHash(_stream);
+            var hash = TableSerializer.DeserializeDocHash(_stream);
 
-            _position += distance+Serializer.SizeOfDocHash();
+            _position += distance+ TableSerializer.SizeOfDocHash();
 
             return hash;
         }

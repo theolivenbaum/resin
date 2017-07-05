@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DocumentTable\DocumentTable.csproj" />
     <ProjectReference Include="..\StreamIndex\StreamIndex.csproj" />
   </ItemGroup>
 
