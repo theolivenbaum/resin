@@ -15,8 +15,8 @@ namespace StreamIndex
             var posBytes = new byte[sizeof(long)];
             var lenBytes = new byte[sizeof(int)];
 
-            stream.Read(posBytes, 0, posBytes.Length);
-            stream.Read(lenBytes, 0, lenBytes.Length);
+            stream.Read(posBytes, 0, sizeof(long));
+            stream.Read(lenBytes, 0, sizeof(int));
 
             if (!BitConverter.IsLittleEndian)
             {
