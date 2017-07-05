@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Resin.IO.Read;
-using Resin.Sys;
 using log4net;
 using StreamIndex;
 using DocumentTable;
@@ -27,31 +26,7 @@ namespace Resin.IO
         {
             return 2 * sizeof(int);
         }
-
-        private static byte[][] DeserializeUnicodeIndexOrCreateNew(string fileName)
-        {
-            if (!File.Exists(fileName))
-            {
-                return new byte[1112064][];
-            }
-            
-            var unicodeIndex = new byte[1112064][];
-
-            using (var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                for (int index = 0; index < 1112064; index++)
-                {
-                    var buffer = new byte[sizeof(long)];
-                    stream.Read(buffer, 0, sizeof(long));
-
-                    if (BitConverter.ToInt64(buffer, 0) > -1)
-                        unicodeIndex[index] = buffer;
-                }
-            }
-
-            return unicodeIndex;
-        }
-
+        
         public static void Serialize(this LcrsTrie trie, string fileName)
         {
             var dir = Path.GetDirectoryName(fileName);
@@ -289,8 +264,8 @@ namespace Resin.IO
             int haveChildByte = stream.ReadByte();
             int eowByte = stream.ReadByte();
 
-            stream.Read(depthBytes, 0, depthBytes.Length);
-            stream.Read(weightBytes, 0, weightBytes.Length);
+            stream.Read(depthBytes, 0, sizeof(short));
+            stream.Read(weightBytes, 0, sizeof(int));
             BlockInfo block = BlockSerializer.DeserializeBlock(stream);
             
             if (!BitConverter.IsLittleEndian)
