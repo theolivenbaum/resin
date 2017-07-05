@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using log4net;
 using System.Linq;
+using StreamIndex;
 
 namespace Resin.IO.Read
 {
@@ -25,7 +26,7 @@ namespace Resin.IO.Read
 
             _segs = Serializer.DeserializeLongList(sixFileName).ToArray();
 
-            _blockSize = Serializer.SizeOfNode();
+            _blockSize = Serializer.SizeOfNode() + BlockSerializer.SizeOfBlock();
 
             Log.DebugFormat("opened {0}", fileName);
         }

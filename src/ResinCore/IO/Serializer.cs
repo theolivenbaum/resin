@@ -19,7 +19,7 @@ namespace Resin.IO
 
         public static int SizeOfNode()
         {
-            return sizeof(char) + 3 * sizeof(byte) + 1 * sizeof(int) + 1 * sizeof(short) + BlockSerializer.SizeOfBlock();
+            return sizeof(char) + 3 * sizeof(byte) + 1 * sizeof(int) + 1 * sizeof(short);
         }
 
         public static int SizeOfPosting()
@@ -252,36 +252,32 @@ namespace Resin.IO
 
         public static LcrsNode DeserializeNode(Stream stream)
         {
-            var valBytes = new byte[sizeof(char)];
-            var depthBytes = new byte[sizeof(short)];
-            var weightBytes = new byte[sizeof(int)];
+            var blockArr = new byte[SizeOfNode()];
 
-            var read = stream.Read(valBytes, 0, sizeof (char));
+            stream.Read(blockArr, 0, blockArr.Length);
 
-            if (read == 0) return LcrsNode.MinValue;
-
-            int haveSiblingByte = stream.ReadByte();
-            int haveChildByte = stream.ReadByte();
-            int eowByte = stream.ReadByte();
-
-            stream.Read(depthBytes, 0, sizeof(short));
-            stream.Read(weightBytes, 0, sizeof(int));
-            BlockInfo block = BlockSerializer.DeserializeBlock(stream);
-            
             if (!BitConverter.IsLittleEndian)
             {
-                Array.Reverse(valBytes);
-                Array.Reverse(depthBytes);
-                Array.Reverse(weightBytes);
+                Array.Reverse(blockArr, 0, sizeof(char));
+                Array.Reverse(blockArr, sizeof(char), sizeof(short));
+                Array.Reverse(blockArr, sizeof(char) + sizeof(short), sizeof(int));
             }
 
+            var val = BitConverter.ToChar(blockArr, 0);
+            var haveSibling = BitConverter.ToBoolean(blockArr, sizeof(char));
+            var haveChild = BitConverter.ToBoolean(blockArr, sizeof(char) + sizeof(byte));
+            var eow = BitConverter.ToBoolean(blockArr, sizeof(char) + 2 * sizeof(byte));
+            var depth = BitConverter.ToInt16(blockArr, sizeof(char) + 3 * sizeof(byte));
+            var weight = BitConverter.ToInt32(blockArr, sizeof(char) + 3 * sizeof(byte) + sizeof(short));
+            var block = BlockSerializer.DeserializeBlock(stream);
+
             return new LcrsNode(
-                BitConverter.ToChar(valBytes, 0),
-                haveSiblingByte == 1,
-                haveChildByte == 1,
-                eowByte == 1,
-                BitConverter.ToInt16(depthBytes, 0),
-                BitConverter.ToInt32(weightBytes, 0),
+                val,
+                haveSibling,
+                haveChild,
+                eow,
+                depth,
+                weight,
                 block);
         }
 
