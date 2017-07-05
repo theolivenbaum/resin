@@ -14,7 +14,7 @@ namespace Resin
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(MergeTransaction));
 
-        private IList<DocHashReader> _hashReader;
+        private IList<DocumentInfoReader> _hashReader;
         private IList<DocumentAddressReader> _addressReader;
         private IList<DocumentReader> _documentReader;
         private readonly string _directory;
@@ -29,7 +29,7 @@ namespace Resin
             var ixs = Util.GetIndexFileNamesInChronologicalOrder(_directory).Take(2).ToList();
             _ixFilesToProcess = ixs.ToArray();
 
-            _hashReader = new List<DocHashReader>();
+            _hashReader = new List<DocumentInfoReader>();
             _addressReader = new List<DocumentAddressReader>();
             _documentReader = new List<DocumentReader>();
             _tmpFiles = new List<string>();
@@ -98,12 +98,12 @@ namespace Resin
             Log.InfoFormat("truncating {0}", srcIxFileName);
 
             var srcIx = BatchInfo.Load(srcIxFileName);
-            var documentFileName = Path.Combine(_directory, srcIx.VersionId + ".rdoc");
+            var documentFileName = Path.Combine(_directory, srcIx.VersionId + ".dtbl");
             var docAddressFn = Path.Combine(_directory, srcIx.VersionId + ".da");
             var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", srcIx.VersionId, "pk"));
             long version;
 
-            using (var documentStream = new RDocStream(documentFileName, srcIx.PrimaryKeyFieldName))
+            using (var documentStream = new DtblStream(documentFileName, srcIx.PrimaryKeyFieldName))
             {
 
                 Util.TryAquireWriteLock(_directory);
@@ -132,9 +132,9 @@ namespace Resin
             Log.InfoFormat("merging branch {0} with trunk {1}", _ixFilesToProcess[1], _ixFilesToProcess[0]);
 
             var ix = BatchInfo.Load(srcIxFileName);
-            var documentFileName = Path.Combine(_directory, ix.VersionId + ".rdoc");
+            var documentFileName = Path.Combine(_directory, ix.VersionId + ".dtbl");
             long version;
-            using (var documentStream = new RDocStream(documentFileName, ix.PrimaryKeyFieldName))
+            using (var documentStream = new DtblStream(documentFileName, ix.PrimaryKeyFieldName))
             {
                 using (var upsert = new UpsertTransaction(
                     _directory,

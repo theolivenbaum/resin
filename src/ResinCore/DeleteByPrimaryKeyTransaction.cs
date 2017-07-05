@@ -45,22 +45,25 @@ namespace Resin
 
                 using (var stream = new FileStream(tmpDocHashFileName, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
-                    foreach (var document in TableSerializer.DeserializeDocHashes(docHashFileName))
+                    foreach (var documentConfiguration in TableSerializer.DeserializeDocHashes(docHashFileName))
                     {
-                        var hash = document.Hash.ToString(CultureInfo.InvariantCulture);
+                        var hash = documentConfiguration.Hash.ToString(CultureInfo.InvariantCulture);
 
                         IList<Word> found = deleteSet.IsWord(hash).ToList();
 
+                        var block = documentConfiguration;
+
                         if (found.Any())
                         {
-                            if (!document.IsObsolete)
+                            if (!documentConfiguration.IsObsolete)
                             {
-                                document.IsObsolete = true;
+                                block = new DocumentInfo(
+                                    documentConfiguration.Hash, true);
                                 deleted++;    
                             }
                         }
 
-                        document.Serialize(stream);
+                        block.Serialize(stream);
                     }
                 }               
 

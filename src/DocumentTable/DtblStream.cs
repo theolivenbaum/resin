@@ -9,9 +9,9 @@ using System.Linq;
 
 namespace Resin
 {
-    public class RDocStream : DocumentStream, IDisposable
+    public class DtblStream : DocumentStream, IDisposable
     {
-        private readonly DocHashReader _hashReader;
+        private readonly DocumentInfoReader _hashReader;
         private readonly DocumentAddressReader _addressReader;
         private readonly DocumentReader _documentReader;
         private readonly BatchInfo _ix;
@@ -19,19 +19,19 @@ namespace Resin
         private readonly int _skip;
         private readonly string _directory;
 
-        public RDocStream(string fileName, string primaryKeyFieldName = null, int skip = 0, int take = int.MaxValue) 
+        public DtblStream(string fileName, string primaryKeyFieldName = null, int skip = 0, int take = int.MaxValue) 
             : base(primaryKeyFieldName)
         {
             var versionId = Path.GetFileNameWithoutExtension(fileName);
             var directory = Path.GetDirectoryName(fileName);
-            var docFileName = Path.Combine(directory, versionId + ".rdoc");
+            var docFileName = Path.Combine(directory, versionId + ".dtbl");
             var docAddressFn = Path.Combine(directory, versionId + ".da");
             var docHashesFileName = Path.Combine(directory, string.Format("{0}.{1}", versionId, "pk"));
             var keyIndexFileName = Path.Combine(directory, versionId + ".kix");
             var keyIndex = TableSerializer.GetKeyIndex(keyIndexFileName);
 
             _ix = BatchInfo.Load(Path.Combine(directory, versionId + ".ix"));
-            _hashReader = new DocHashReader(docHashesFileName);
+            _hashReader = new DocumentInfoReader(docHashesFileName);
             _addressReader = new DocumentAddressReader(new FileStream(docAddressFn, FileMode.Open, FileAccess.Read));
             _documentReader = new DocumentReader(
                 new FileStream(docFileName, FileMode.Open, FileAccess.Read), 

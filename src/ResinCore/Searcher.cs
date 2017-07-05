@@ -124,7 +124,7 @@ namespace Resin
         {
             var documentIds = scores.Select(s => s.DocumentId).ToList();
             var docAddressFileName = Path.Combine(_directory, ix.VersionId + ".da");
-            var docFileName = Path.Combine(_directory, ix.VersionId + ".rdoc");
+            var docFileName = Path.Combine(_directory, ix.VersionId + ".dtbl");
 
             using (var session = _sessionFactory.Create(docAddressFileName, docFileName, ix.Compression))
             {

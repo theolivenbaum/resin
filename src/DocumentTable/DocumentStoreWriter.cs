@@ -15,7 +15,7 @@ namespace Resin.IO.Write
 
         public DocumentStoreWriter(string directory, long indexVersionId, Compression compression)
         {
-            var docFileName = Path.Combine(directory, indexVersionId + ".rdoc");
+            var docFileName = Path.Combine(directory, indexVersionId + ".dtbl");
             var docAddressFn = Path.Combine(directory, indexVersionId + ".da");
             var docHashesFileName = Path.Combine(directory, string.Format("{0}.{1}", indexVersionId, "pk"));
 
@@ -54,7 +54,7 @@ namespace Resin.IO.Write
 
             _addressWriter.Write(adr);
 
-            new DocHash(document.Hash).Serialize(_docHashesStream);
+            new DocumentInfo(document.Hash).Serialize(_docHashesStream);
         }
 
         public void Dispose()

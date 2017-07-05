@@ -4,18 +4,18 @@ using System.IO;
 
 namespace Resin.IO.Read
 {
-    public class DocHashReader : IDisposable
+    public class DocumentInfoReader : IDisposable
     {
         private readonly Stream _stream;
         private long _position;
 
-        public DocHashReader(string fileName)
+        public DocumentInfoReader(string fileName)
         {
             _stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             _position = 0;
         }
 
-        public DocHash Read(int docId)
+        public DocumentInfo Read(int docId)
         {
             var distance = (docId*TableSerializer.SizeOfDocHash()) - _position;
 
@@ -32,7 +32,7 @@ namespace Resin.IO.Read
                 _stream.Seek(distance, SeekOrigin.Current);
             }
 
-            var hash = TableSerializer.DeserializeDocHash(_stream);
+            var hash = TableSerializer.DeserializeDocHash(_stream).Value;
 
             _position += distance+ TableSerializer.SizeOfDocHash();
 

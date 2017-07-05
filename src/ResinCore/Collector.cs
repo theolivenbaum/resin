@@ -19,7 +19,7 @@ namespace Resin
         private readonly IScoringScheme _scorerFactory;
         private readonly int _documentCount;
         private readonly IDictionary<Query, IList<DocumentScore>> _scoreCache;
-        private readonly DocHashReader _docHashReader;
+        private readonly DocumentInfoReader _docHashReader;
         private readonly string _posFileName;
 
         public BatchInfo Ix { get { return _ix; } }
@@ -35,7 +35,7 @@ namespace Resin
             var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "pk"));
             _posFileName = Path.Combine(directory, string.Format("{0}.{1}", ix.VersionId, "pos"));
 
-            _docHashReader = new DocHashReader(docHashesFileName);
+            _docHashReader = new DocumentInfoReader(docHashesFileName);
         }
 
         public IList<DocumentScore> Collect(QueryContext query)
