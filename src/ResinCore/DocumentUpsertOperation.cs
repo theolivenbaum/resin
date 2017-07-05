@@ -9,7 +9,7 @@ namespace Resin
     {
         public void Write(
             Document document,
-            IDocumentStoreWriter storeWriter,
+            IWriteSession storeWriter,
             IAnalyzer analyzer,
             TrieBuilder trieBuilder)
         {

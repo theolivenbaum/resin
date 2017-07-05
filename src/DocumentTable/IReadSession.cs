@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DocumentTable
 {
-    public interface IDocumentStoreReadSession : IDisposable
+    public interface IReadSession : IDisposable
     {
         IEnumerable<Document> Read(IList<int> documentIds);
     }

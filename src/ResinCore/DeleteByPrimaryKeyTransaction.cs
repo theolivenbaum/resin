@@ -9,7 +9,7 @@ using DocumentTable;
 
 namespace Resin
 {
-    public class DeleteByPrimaryKeyTransaction : IDocumentStoreDeleteTransaction
+    public class DeleteByPrimaryKeyTransaction : IDeleteTransaction
     {
         private readonly string _directory;
         private readonly IEnumerable<string> _pks;

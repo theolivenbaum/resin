@@ -1,6 +1,6 @@
 ﻿namespace DocumentTable
 {
-    public interface IDocumentStoreDeleteTransaction
+    public interface IDeleteTransaction
     {
         void Commit();
     }

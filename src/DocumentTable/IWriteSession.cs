@@ -2,7 +2,7 @@
 
 namespace DocumentTable
 {
-    public interface IDocumentStoreWriter : IDisposable
+    public interface IWriteSession : IDisposable
     {
         void Write(Document document);
     }

@@ -4,13 +4,13 @@ using System.Linq;
 
 namespace DocumentTable
 {
-    public class DocumentStoreReadSession : IDocumentStoreReadSession
+    public class ReadSession : IReadSession
     {
         private readonly DocumentAddressReader _addressReader;
         private readonly DocumentReader _documentReader;
         private readonly int _blockSize;
 
-        public DocumentStoreReadSession(DocumentAddressReader addressReader, DocumentReader documentReader)
+        public ReadSession(DocumentAddressReader addressReader, DocumentReader documentReader)
         {
             _addressReader = addressReader;
             _documentReader = documentReader;

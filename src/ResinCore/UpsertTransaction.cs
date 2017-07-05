@@ -22,7 +22,7 @@ namespace Resin
         private readonly Compression _compression;
         private readonly long _indexVersionId;
         private readonly DocumentStream _documents;
-        private readonly IDocumentStoreWriter _storeWriter;
+        private readonly IWriteSession _storeWriter;
         private int _count;
         private bool _committed;
         private readonly PostingsWriter _postingsWriter;
@@ -32,7 +32,7 @@ namespace Resin
             IAnalyzer analyzer, 
             Compression compression, 
             DocumentStream documents, 
-            IDocumentStoreWriter storeWriter = null)
+            IWriteSession storeWriter = null)
         {
             _directory = directory;
             _analyzer = analyzer;
@@ -66,7 +66,7 @@ namespace Resin
                 _directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
 
             _storeWriter = storeWriter ??
-                new DocumentStoreWriter(directory, _indexVersionId, _compression);
+                new WriteSession(directory, _indexVersionId, _compression);
 
             _postingsWriter = new PostingsWriter(
                 new FileStream(posFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));

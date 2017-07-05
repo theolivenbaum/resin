@@ -4,7 +4,7 @@ using System.IO;
 
 namespace DocumentTable
 {
-    public class DocumentStoreWriter : IDocumentStoreWriter
+    public class WriteSession : IWriteSession
     {
         private readonly DocumentAddressWriter _addressWriter;
         private readonly DocumentWriter _docWriter;
@@ -13,7 +13,7 @@ namespace DocumentTable
         private readonly List<string> _fieldNames;
         private readonly string _keyIndexFileName;
 
-        public DocumentStoreWriter(string directory, long indexVersionId, Compression compression)
+        public WriteSession(string directory, long indexVersionId, Compression compression)
         {
             var docFileName = Path.Combine(directory, indexVersionId + ".dtbl");
             var docAddressFn = Path.Combine(directory, indexVersionId + ".da");

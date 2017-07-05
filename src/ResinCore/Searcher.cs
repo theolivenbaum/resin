@@ -28,14 +28,14 @@ namespace Resin
         private readonly IList<BatchInfo> _ixs;
         private readonly int _blockSize;
         private readonly int _documentCount;
-        private readonly IDocumentStoreReadSessionFactory _sessionFactory;
+        private readonly IReadSessionFactory _sessionFactory;
 
         public Searcher(string directory)
             :this(directory, new QueryParser(new Analyzer()), new Tfidf())
         {
         }
 
-        public Searcher(string directory, QueryParser parser, IScoringScheme scorerFactory, IDocumentStoreReadSessionFactory sessionFactory = null)
+        public Searcher(string directory, QueryParser parser, IScoringScheme scorerFactory, IReadSessionFactory sessionFactory = null)
         {
             _directory = directory;
             _parser = parser;
@@ -47,7 +47,7 @@ namespace Resin
 
             _blockSize = BlockSerializer.SizeOfBlock();
 
-            _sessionFactory = sessionFactory ?? new DocumentStoreReadSessionFactory();
+            _sessionFactory = sessionFactory ?? new ReadSessionFactory();
         }
 
         public Result Search(string query, int page = 0, int size = 10000)
