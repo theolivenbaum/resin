@@ -25,6 +25,7 @@ namespace Resin
         private readonly IDocumentStoreWriter _storeWriter;
         private int _count;
         private bool _committed;
+        private readonly PostingsWriter _postingsWriter;
 
         public UpsertTransaction(
             string directory, 
@@ -61,8 +62,14 @@ namespace Resin
                 }
             }
 
+            var posFileName = Path.Combine(
+                _directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
+
             _storeWriter = storeWriter ??
                 new DocumentStoreWriter(directory, _indexVersionId, _compression);
+
+            _postingsWriter = new PostingsWriter(
+                new FileStream(posFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
         }
 
         public long Write()
@@ -71,8 +78,7 @@ namespace Resin
 
             var ts = new List<Task>();
             var trieBuilder = new TrieBuilder();
-            var posFileName = Path.Combine(
-                _directory, string.Format("{0}.{1}", _indexVersionId, "pos"));
+
 
             var docTimer = Stopwatch.StartNew();
 
@@ -93,22 +99,18 @@ namespace Resin
 
             var tries = trieBuilder.GetTries();
 
-            using (var postingsWriter = new PostingsWriter(
-                new FileStream(posFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite)))
+            foreach (var trie in tries)
             {
-                foreach (var trie in tries)
+                foreach (var node in trie.Value.EndOfWordNodes())
                 {
-                    foreach (var node in trie.Value.EndOfWordNodes())
-                    {
-                        node.PostingsAddress = postingsWriter.Write(node.Postings);
-                    }
+                    node.PostingsAddress = _postingsWriter.Write(node.Postings);
+                }
 
-                    if (Log.IsDebugEnabled)
+                if (Log.IsDebugEnabled)
+                {
+                    foreach (var word in trie.Value.Words())
                     {
-                        foreach (var word in trie.Value.Words())
-                        {
-                            Log.DebugFormat("{0}\t{1}", word.Value, word.Count);
-                        }
+                        Log.DebugFormat("{0}\t{1}", word.Value, word.Count);
                     }
                 }
             }
@@ -145,9 +147,11 @@ namespace Resin
 
         public void Commit()
         {
+            if (_committed) return;
+
+            _postingsWriter.Dispose();
             _storeWriter.Dispose();
 
-            var tmpFileName = Path.Combine(_directory, _indexVersionId + "._ix");
             var fileName = Path.Combine(_directory, _indexVersionId + ".ix");
 
             new BatchInfo
@@ -156,10 +160,7 @@ namespace Resin
                 DocumentCount = _count,
                 Compression = _compression,
                 PrimaryKeyFieldName = _documents.PrimaryKeyFieldName
-            }.Serialize(tmpFileName);
-
-            File.Copy(tmpFileName, fileName, overwrite: true);
-            File.Delete(tmpFileName);
+            }.Serialize(fileName);
 
             _committed = true;
         }
