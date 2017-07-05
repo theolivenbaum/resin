@@ -91,23 +91,17 @@ namespace Resin.Sys
 
         public static bool TryAquireWriteLock(string directory)
         {
-            var tmp = Path.Combine(directory, "write._lock");
             var lockFile = Path.Combine(directory, "write.lock");
-
-            File.Create(Path.Combine(directory, tmp)).Dispose();
 
             try
             {
-                File.Copy(tmp, lockFile);
+                new FileStream(lockFile, FileMode.CreateNew).Dispose();
+
                 return true;
             }
             catch (IOException)
             {
                 return false;
-            }
-            finally
-            {
-                File.Delete(tmp);
             }
         }
 
