@@ -156,21 +156,23 @@ namespace Resin
             }
             else
             {
-                query.Scored = DoScore(query.Postings.OrderBy(p => p.DocumentId).ToList());
+                query.Scored = DoScore(query.Postings);
             }
         }
 
-        private IEnumerable<DocumentScore> DoScore(IList<DocumentPosting> postings)
+        private IList<DocumentScore> DoScore(IList<DocumentPosting> postings)
         {
+            var scores = new List<DocumentScore>(postings.Count);
+
             if (_scorerFactory == null)
             {
-                foreach (var posting in postings.OrderBy(p => p.DocumentId))
+                foreach (var posting in postings)
                 {
                     var docHash = _docHashReader.Read(posting.DocumentId);
 
                     if (!docHash.IsObsolete)
                     {
-                        yield return new DocumentScore(posting.DocumentId, docHash.Hash, 0, _ix);
+                        scores.Add(new DocumentScore(posting.DocumentId, docHash.Hash, 0, _ix));
                     }
                 }
             }
@@ -190,11 +192,13 @@ namespace Resin
                         {
                             var score = scorer.Score(posting);
 
-                            yield return new DocumentScore(posting.DocumentId, docHash.Hash, score, _ix);
+                            scores.Add(new DocumentScore(posting.DocumentId, docHash.Hash, score, _ix));
                         }
                     }
                 }
             }
+
+            return scores;
         }
 
         private ITrieReader GetTreeReader(string field)
