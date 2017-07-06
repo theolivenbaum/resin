@@ -8,8 +8,8 @@ namespace Resin.Querying
 {
     public class QueryContext : Query
     {
-        public IEnumerable<Term> Terms { get; set; }
-        public IEnumerable<DocumentPosting> Postings { get; set; }
+        public IList<Term> Terms { get; set; }
+        public IList<DocumentPosting> Postings { get; set; }
         public IEnumerable<DocumentScore> Scored { get; set; }
 
         private IList<QueryContext> _queries;

@@ -17,21 +17,26 @@ namespace DocumentTable
             _blockSize = BlockSerializer.SizeOfBlock();
         }
 
-        public IEnumerable<Document> Read(IList<int> documentIds)
+        public IList<Document> Read(IList<int> documentIds)
         {
-            var addresses = documentIds
-                    .Select(id => new BlockInfo(id * _blockSize, _blockSize))
-                    .OrderBy(b => b.Position)
-                    .ToList();
+            var addresses = new List<BlockInfo>(documentIds.Count);
+
+            foreach (var id in documentIds)
+            {
+                addresses.Add(new BlockInfo(id * _blockSize, _blockSize));
+            }
 
             var docAddresses = _addressReader.Read(addresses);
             var index = 0;
+            var documents = new List<Document>(documentIds.Count);
 
             foreach (var document in _documentReader.Read(docAddresses))
             {
                 document.Id = documentIds[index++];
-                yield return document;
+                documents.Add(document);
             }
+
+            return documents;
         }
 
         public void Dispose()

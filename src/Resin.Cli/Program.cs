@@ -177,9 +177,7 @@ namespace Resin.Cli
         private static void Print(ScoredDocument doc)
         {
             Console.Write(doc.Score.ToString("#.##") + "\t");
-
             Console.WriteLine(doc.Document.Fields["title"].Value);
-            Console.WriteLine();
         }
 
         private static void Print(string value)

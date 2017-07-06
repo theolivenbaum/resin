@@ -8,6 +8,7 @@ using Resin.IO.Read;
 using Resin.Querying;
 using Resin.IO;
 using DocumentTable;
+using StreamIndex;
 
 namespace Resin
 {
@@ -74,7 +75,7 @@ namespace Resin
 
             if (reader == null)
             {
-                subQuery.Terms = Enumerable.Empty<Term>();
+                subQuery.Terms = new List<Term>();
             }
             else
             {
@@ -116,30 +117,33 @@ namespace Resin
             var time = new Stopwatch();
             time.Start();
 
-            var terms = subQuery.Terms.ToList();
-            var postings = terms.Count > 0 ? ReadPostings(terms): null;
+            var postings = subQuery.Terms.Count > 0 ? ReadPostings(subQuery.Terms) : null;
 
-            IEnumerable<DocumentPosting> result;
+            IList<DocumentPosting> reduced;
 
             if (postings == null)
             {
-                result = null;
+                reduced = null;
                 
             }
             else
             {
-                result = postings.Sum();
+                reduced = postings.Sum();
             }
 
-            subQuery.Postings = result;
+            subQuery.Postings = reduced;
 
             Log.DebugFormat("read postings for {0} in {1}", subQuery.Serialize(), time.Elapsed);
         }
         
-        private IList<IList<DocumentPosting>> ReadPostings(IEnumerable<Term> terms)
+        private IList<IList<DocumentPosting>> ReadPostings(IList<Term> terms)
         {
-            var addresses = terms.Select(term => term.Word.PostingsAddress.Value)
-                .OrderBy(adr => adr.Position).ToList();
+            var addresses = new List<BlockInfo>(terms.Count);
+
+            foreach (var term in terms)
+            {
+                addresses.Add(term.Word.PostingsAddress.Value);
+            }
 
             return _postingsReader.Read(addresses);
         }

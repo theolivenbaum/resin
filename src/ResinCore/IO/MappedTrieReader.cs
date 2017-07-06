@@ -22,7 +22,7 @@ namespace Resin.IO.Read
             var version = Path.GetFileNameWithoutExtension(fileName);
             var sixFileName = Path.Combine(dir, version + ".six");
 
-            _stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan);
+            _stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.RandomAccess);
 
             _segs = Serializer.DeserializeLongList(sixFileName).ToArray();
 

@@ -29,7 +29,7 @@ namespace DocumentTable
 
     public static class DocumentPostingExtensions
     {
-        public static IEnumerable<DocumentPosting> Sum(this IList<IList<DocumentPosting>> source)
+        public static IList<DocumentPosting> Sum(this IList<IList<DocumentPosting>> source)
         {
             if (source.Count == 0) return new List<DocumentPosting>();
 
@@ -60,7 +60,7 @@ namespace DocumentTable
             });
         }
 
-        public static IEnumerable<DocumentPosting> Sum(IEnumerable<DocumentPosting> postings)
+        public static IList<DocumentPosting> Sum(IList<DocumentPosting> postings)
         {
             return postings.GroupBy(x => x.DocumentId).Select(group =>
             {
@@ -72,7 +72,7 @@ namespace DocumentTable
                     tip.Add(posting);
                 }
                 return tip;
-            });
+            }).ToList();
         }
     }
 }

@@ -93,14 +93,14 @@ namespace Resin
 
         private IList<DocumentScore> Collect(QueryContext query)
         {
-            var results = new List<IList<DocumentScore>>();
+            var results = new List<IList<DocumentScore>>(_ixs.Count);
 
             //Parallel.ForEach(_ixs, ix =>
             foreach (var ix in _ixs)
             {
                 using (var collector = new Collector(_directory, ix, _scorerFactory, _documentCount))
                 {
-                    results.Add(collector.Collect(query).ToList());
+                    results.Add(collector.Collect(query));
                 }
             }//);
 
@@ -111,7 +111,7 @@ namespace Resin
             {
                 Log.DebugFormat("reduced collection results for term query {0} in {1}", query, timer.Elapsed);
 
-                return results.First();
+                return results[0];
             }
             
             var agg = results.CombineTakingLatestVersion().ToList();
