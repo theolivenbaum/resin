@@ -17,7 +17,7 @@ namespace DocumentTable
             _blockSize = BlockSerializer.SizeOfBlock();
         }
 
-        public IList<Document> Read(IList<int> documentIds)
+        public IList<Document> Read(IList<int> documentIds, BatchInfo ix)
         {
             var addresses = new List<BlockInfo>(documentIds.Count);
 

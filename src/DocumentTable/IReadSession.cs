@@ -5,6 +5,6 @@ namespace DocumentTable
 {
     public interface IReadSession : IDisposable
     {
-        IList<Document> Read(IList<int> documentIds);
+        IList<Document> Read(IList<int> documentIds, BatchInfo ix);
     }
 }

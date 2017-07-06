@@ -5,8 +5,6 @@ using System.IO;
 using System.Linq;
 using log4net;
 using Resin.Analysis;
-using Resin.IO;
-using Resin.IO.Read;
 using Resin.Querying;
 using Resin.Sys;
 using System.Threading.Tasks;
@@ -95,14 +93,13 @@ namespace Resin
         {
             var results = new List<IList<DocumentScore>>(_ixs.Count);
 
-            //Parallel.ForEach(_ixs, ix =>
             foreach (var ix in _ixs)
             {
                 using (var collector = new Collector(_directory, ix, _scorerFactory, _documentCount))
                 {
                     results.Add(collector.Collect(query));
                 }
-            }//);
+            }
 
             var timer = new Stopwatch();
             timer.Start();
@@ -124,14 +121,14 @@ namespace Resin
         private void GetDocs(IList<DocumentScore> scores, BatchInfo ix, ConcurrentBag<ScoredDocument> result)
         {
             var documentIds = scores.Select(s => s.DocumentId).ToList();
-            var docAddressFileName = Path.Combine(_directory, ix.VersionId + ".da");
+
             var docFileName = Path.Combine(_directory, ix.VersionId + ".dtbl");
 
-            using (var session = _sessionFactory.OpenReadSession(docAddressFileName, docFileName, ix))
+            using (var session = _sessionFactory.OpenReadSession(docFileName, ix))
             {
                 var dic = scores.ToDictionary(x => x.DocumentId, y => y.Score);
 
-                foreach (var doc in session.Read(documentIds))
+                foreach (var doc in session.Read(documentIds, ix))
                 {
                     var score = dic[doc.Id];
 

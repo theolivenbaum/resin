@@ -4,7 +4,7 @@ namespace DocumentTable
 {
     public class ReadSessionFactory : IReadSessionFactory
     {
-        public IReadSession OpenReadSession(string docAddressFileName, string docFileName, BatchInfo ix)
+        public IReadSession OpenReadSession(string docFileName, BatchInfo ix)
         {
             var dir = Path.GetDirectoryName(docFileName);
             var keyIndexFileName = Path.Combine(dir, ix.VersionId + ".kix");
