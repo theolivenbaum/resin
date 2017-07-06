@@ -81,29 +81,22 @@ namespace Resin
                 using (reader)
                 {
                     IList<Term> terms;
+
                     if (subQuery.Fuzzy)
                     {
-                        terms = reader.SemanticallyNear(subQuery.Value, subQuery.Edits)
-                            .Select(word => new Term(subQuery.Field, word))
-                            .ToList();
+                        terms = reader.SemanticallyNear(subQuery.Value, subQuery.Edits).ToTerms(subQuery.Field);
                     }
                     else if (subQuery.Prefix)
                     {
-                        terms = reader.StartsWith(subQuery.Value)
-                            .Select(word => new Term(subQuery.Field, word))
-                            .ToList();
+                        terms = reader.StartsWith(subQuery.Value).ToTerms(subQuery.Field);
                     }
                     else if (subQuery.Range)
                     {
-                        terms = reader.Range(subQuery.Value, subQuery.ValueUpperBound)
-                            .Select(word => new Term(subQuery.Field, word))
-                            .ToList();
+                        terms = reader.Range(subQuery.Value, subQuery.ValueUpperBound).ToTerms(subQuery.Field);
                     }
                     else
                     {
-                        terms = reader.IsWord(subQuery.Value)
-                            .Select(word => new Term(subQuery.Field, word))
-                            .ToList();
+                        terms = reader.IsWord(subQuery.Value).ToTerms(subQuery.Field);
                     }
 
                     if (Log.IsDebugEnabled && terms.Count > 1)

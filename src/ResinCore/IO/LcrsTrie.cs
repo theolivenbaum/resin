@@ -238,9 +238,11 @@ namespace Resin.IO
             }
         }
 
-        public IEnumerable<Word> IsWord(string word)
+        public IList<Word> IsWord(string word)
         {
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
+
+            var words = new List<Word>();
 
             LcrsTrie node;
             if (TryFindPath(word, out node))
@@ -250,12 +252,16 @@ namespace Resin.IO
                     throw new InvalidOperationException("WordCount");
                 }
                 if (node.EndOfWord)
-                    yield return new Word(
-                        word, node.WordCount, node.PostingsAddress, node.Postings);
+                {
+                    words.Add(new Word(
+                        word, node.WordCount, node.PostingsAddress, node.Postings));
+                }
             }
+
+            return words;
         }
 
-        public IEnumerable<Word> Range(string lowerBound, string upperBound)
+        public IList<Word> Range(string lowerBound, string upperBound)
         {
             if (string.IsNullOrWhiteSpace(lowerBound) &&
                 (string.IsNullOrWhiteSpace(upperBound))) throw new ArgumentException("Bounds are unspecified");
@@ -265,7 +271,7 @@ namespace Resin.IO
             //TODO: implement bounded DepthFirst
         }
 
-        public IEnumerable<Word> StartsWith(string prefix)
+        public IList<Word> StartsWith(string prefix)
         {
             if (string.IsNullOrWhiteSpace(prefix)) throw new ArgumentException("prefix");
 
@@ -280,7 +286,7 @@ namespace Resin.IO
             return words;
         }
         
-        public IEnumerable<Word> SemanticallyNear(string word, int maxEdits, IDistanceResolver distanceResolver = null)
+        public IList<Word> SemanticallyNear(string word, int maxEdits, IDistanceResolver distanceResolver = null)
         {
             if (distanceResolver == null) distanceResolver = new LevenshteinDistanceResolver(word, maxEdits);
 

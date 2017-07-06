@@ -40,4 +40,17 @@ namespace Resin.IO
             return Value.GetHashCode();
         }
     }
+
+    public static class WordExtensions
+    {
+        public static IList<Term> ToTerms(this IList<Word> words, string field)
+        {
+            var terms = new List<Term>(words.Count);
+            foreach (var word in words)
+            {
+                terms.Add(new Term(field, word));
+            }
+            return terms;
+        }
+    }
 }

@@ -6,10 +6,10 @@ namespace Resin.IO
 {
     public interface ITrieReader : IDisposable
     {
-        IEnumerable<Word> IsWord(string word);
-        IEnumerable<Word> StartsWith(string prefix);
-        IEnumerable<Word> SemanticallyNear(string word, int maxEdits, IDistanceResolver distanceResolver = null);
-        IEnumerable<Word> Range(string lowerBound, string upperBound);
+        IList<Word> IsWord(string word);
+        IList<Word> StartsWith(string prefix);
+        IList<Word> SemanticallyNear(string word, int maxEdits, IDistanceResolver distanceResolver = null);
+        IList<Word> Range(string lowerBound, string upperBound);
         bool HasMoreSegments();
     }
 }
