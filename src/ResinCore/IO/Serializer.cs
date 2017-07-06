@@ -21,11 +21,6 @@ namespace Resin.IO
         {
             return sizeof(char) + 3 * sizeof(byte) + 1 * sizeof(int) + 1 * sizeof(short);
         }
-
-        public static int SizeOfPosting()
-        {
-            return 2 * sizeof(int);
-        }
         
         public static void Serialize(this LcrsTrie trie, string fileName)
         {
@@ -167,27 +162,7 @@ namespace Resin.IO
             }
         }
 
-        public static byte[] Serialize(this IEnumerable<DocumentPosting> postings)
-        {
-            using (var stream = new MemoryStream())
-            {
-                foreach (var posting in postings)
-                {
-                    byte[] idBytes = BitConverter.GetBytes(posting.DocumentId);
-                    byte[] countBytes = BitConverter.GetBytes(posting.Count);
-
-                    if (!BitConverter.IsLittleEndian)
-                    {
-                        Array.Reverse(idBytes);
-                        Array.Reverse(countBytes);
-                    }
-
-                    stream.Write(idBytes, 0, sizeof(int));
-                    stream.Write(countBytes, 0, sizeof(int));
-                }
-                return stream.ToArray();
-            }
-        }
+        
 
         public static byte[] Serialize(this IEnumerable<int> entries)
         {
@@ -328,29 +303,6 @@ namespace Resin.IO
                 yield return val;
 
                 pos = pos + sizeof(long);
-            }
-        }
-
-        public static IEnumerable<DocumentPosting> DeserializePostings(byte[] data)
-        {
-            var chunk = new byte[SizeOfPosting()];
-            int pos = 0;
-
-            while (pos<data.Length)
-            {
-                Array.Copy(data, pos, chunk, 0, chunk.Length);
-
-                if (!BitConverter.IsLittleEndian)
-                {
-                    Array.Reverse(chunk);//ain't gonna work. TODO: reverse individual byte streams, not entire chunk (this is a bug).
-                }
-
-                yield return new DocumentPosting(
-                    BitConverter.ToInt32(chunk, 0),
-                    BitConverter.ToInt32(chunk, sizeof(int))
-                    );
-
-                pos = pos + chunk.Length; 
             }
         }
 

@@ -1,9 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Resin.IO;
-using Resin.IO.Read;
-using Resin.IO.Write;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Resin;
 using DocumentTable;

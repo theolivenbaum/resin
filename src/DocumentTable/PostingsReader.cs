@@ -1,10 +1,9 @@
-﻿using DocumentTable;
-using StreamIndex;
+﻿using StreamIndex;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Resin.IO.Read
+namespace DocumentTable
 {
     public class PostingsReader : BlockReader<IList<DocumentPosting>>
     {
@@ -20,7 +19,7 @@ namespace Resin.IO.Read
 
         protected override IList<DocumentPosting> Deserialize(byte[] data)
         {
-            return Serializer.DeserializePostings(data).ToList();
+            return TableSerializer.DeserializePostings(data).ToList();
         }
     }
 }

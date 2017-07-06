@@ -17,6 +17,11 @@ namespace DocumentTable
             return sizeof(UInt64) + sizeof(byte);
         }
 
+        public static int SizeOfPosting()
+        {
+            return 2 * sizeof(int);
+        }
+
         public static IDictionary<short, string> GetKeyIndex(string kixFileName)
         {
             var keys = ReadKeys(kixFileName);
@@ -45,6 +50,29 @@ namespace DocumentTable
             while ((key = reader.ReadLine()) != null)
             {
                 yield return key;
+            }
+        }
+
+        public static IEnumerable<DocumentPosting> DeserializePostings(byte[] data)
+        {
+            var chunk = new byte[SizeOfPosting()];
+            int pos = 0;
+
+            while (pos < data.Length)
+            {
+                Array.Copy(data, pos, chunk, 0, chunk.Length);
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(chunk);//ain't gonna work. TODO: reverse individual byte streams, not entire chunk (this is a bug).
+                }
+
+                yield return new DocumentPosting(
+                    BitConverter.ToInt32(chunk, 0),
+                    BitConverter.ToInt32(chunk, sizeof(int))
+                    );
+
+                pos = pos + chunk.Length;
             }
         }
 
@@ -374,6 +402,28 @@ namespace DocumentTable
 
                 if (pkFnLenBytes.Length > 0) stream.Write(pkFieldNameBytes, 0, pkFieldNameBytes.Length);
 
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] Serialize(this IEnumerable<DocumentPosting> postings)
+        {
+            using (var stream = new MemoryStream())
+            {
+                foreach (var posting in postings)
+                {
+                    byte[] idBytes = BitConverter.GetBytes(posting.DocumentId);
+                    byte[] countBytes = BitConverter.GetBytes(posting.Count);
+
+                    if (!BitConverter.IsLittleEndian)
+                    {
+                        Array.Reverse(idBytes);
+                        Array.Reverse(countBytes);
+                    }
+
+                    stream.Write(idBytes, 0, sizeof(int));
+                    stream.Write(countBytes, 0, sizeof(int));
+                }
                 return stream.ToArray();
             }
         }
