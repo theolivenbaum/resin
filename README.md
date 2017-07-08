@@ -16,6 +16,8 @@ Is full-text search engine | &#9989; | &#9989; |   |   |   |
 Has latch-free writing | &#9989; |   |   |   |  
 Has pluggable storage engine | &#9989; |   |   |   |  
 
+## Use cases
+
 ResinDB is designed to be used as  
 
 - a disk-based replacement for your in-memory business entity cache
