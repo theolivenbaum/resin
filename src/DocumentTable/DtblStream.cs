@@ -8,7 +8,7 @@ namespace DocumentTable
 {
     public class DtblStream : DocumentStream, IDisposable
     {
-        private readonly DocumentInfoReader _hashReader;
+        private readonly DocHashReader _hashReader;
         private readonly DocumentAddressReader _addressReader;
         private readonly DocumentReader _documentReader;
         private readonly BatchInfo _ix;
@@ -28,7 +28,7 @@ namespace DocumentTable
             var keyIndex = TableSerializer.GetKeyIndex(keyIndexFileName);
 
             _ix = BatchInfo.Load(Path.Combine(directory, versionId + ".ix"));
-            _hashReader = new DocumentInfoReader(docHashesFileName);
+            _hashReader = new DocHashReader(docHashesFileName);
             _addressReader = new DocumentAddressReader(new FileStream(docAddressFn, FileMode.Open, FileAccess.Read));
             _documentReader = new DocumentReader(
                 new FileStream(docFileName, FileMode.Open, FileAccess.Read), 

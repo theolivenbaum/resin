@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System;
 using System.Text;
 using StreamIndex;
+using DocumentTable;
 
 namespace Tests
 {

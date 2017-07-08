@@ -8,7 +8,6 @@ using Resin.IO.Read;
 using Resin.Querying;
 using Resin.IO;
 using DocumentTable;
-using StreamIndex;
 
 namespace Resin
 {
@@ -16,29 +15,16 @@ namespace Resin
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly string _directory;
-        private readonly BatchInfo _ix;
         private readonly IScoringSchemeFactory _scorerFactory;
-        private readonly int _documentCount;
         private readonly IDictionary<Query, IList<DocumentScore>> _scoreCache;
-        private readonly DocumentInfoReader _docHashReader;
-        private readonly FileStream _compoundFile;
-        private readonly PostingsReader _postingsReader;
+        private readonly IReadSession _readSession;
 
-        public BatchInfo Ix { get { return _ix; } }
-
-        public Collector(string directory, BatchInfo ix, IScoringSchemeFactory scorerFactory = null, int documentCount = -1)
+        public Collector(string directory, IReadSession readSession, IScoringSchemeFactory scorerFactory = null)
         {
+            _readSession = readSession;
             _directory = directory;
-            _ix = ix;
             _scorerFactory = scorerFactory;
-            _documentCount = documentCount == -1 ? ix.DocumentCount : documentCount;
             _scoreCache = new Dictionary<Query, IList<DocumentScore>>();
-
-            var compoundFileName = Path.Combine(_directory, string.Format("{0}.{1}", _ix.VersionId, "rdb"));
-            _compoundFile = new FileStream(compoundFileName, FileMode.Open, FileAccess.Read);
-
-            _docHashReader = new DocumentInfoReader(_compoundFile, ix.DocHashOffset);
-            _postingsReader = new PostingsReader(_compoundFile, ix.PostingsOffset);
         }
 
         public IList<DocumentScore> Collect(QueryContext query)
@@ -117,7 +103,7 @@ namespace Resin
             var time = new Stopwatch();
             time.Start();
 
-            var postings = subQuery.Terms.Count > 0 ? ReadPostings(subQuery.Terms) : null;
+            var postings = subQuery.Terms.Count > 0 ? _readSession.ReadPostings(subQuery.Terms) : null;
 
             IList<DocumentPosting> reduced;
 
@@ -134,18 +120,6 @@ namespace Resin
             subQuery.Postings = reduced;
 
             Log.DebugFormat("read postings for {0} in {1}", subQuery.Serialize(), time.Elapsed);
-        }
-        
-        private IList<IList<DocumentPosting>> ReadPostings(IList<Term> terms)
-        {
-            var addresses = new List<BlockInfo>(terms.Count);
-
-            foreach (var term in terms)
-            {
-                addresses.Add(term.Word.PostingsAddress.Value);
-            }
-
-            return _postingsReader.Read(addresses);
         }
 
         private void Score(QueryContext query)
@@ -168,11 +142,11 @@ namespace Resin
             {
                 foreach (var posting in postings)
                 {
-                    var docHash = _docHashReader.Read(posting.DocumentId);
+                    var docHash = _readSession.ReadDocHash(posting.DocumentId);
 
                     if (!docHash.IsObsolete)
                     {
-                        scores.Add(new DocumentScore(posting.DocumentId, docHash.Hash, 0, _ix));
+                        scores.Add(new DocumentScore(posting.DocumentId, docHash.Hash, 0, _readSession.Version));
                     }
                 }
             }
@@ -182,17 +156,17 @@ namespace Resin
                 {
                     var docsWithTerm = postings.Count;
 
-                    var scorer = _scorerFactory.CreateScorer(_documentCount, docsWithTerm);
+                    var scorer = _scorerFactory.CreateScorer(_readSession.Version.DocumentCount, docsWithTerm);
 
                     foreach (var posting in postings.OrderBy(p => p.DocumentId))
                     {
-                        var docHash = _docHashReader.Read(posting.DocumentId);
+                        var docHash = _readSession.ReadDocHash(posting.DocumentId);
 
                         if (!docHash.IsObsolete)
                         {
                             var score = scorer.Score(posting);
 
-                            scores.Add(new DocumentScore(posting.DocumentId, docHash.Hash, score, _ix));
+                            scores.Add(new DocumentScore(posting.DocumentId, docHash.Hash, score, _readSession.Version));
                         }
                     }
                 }
@@ -203,8 +177,8 @@ namespace Resin
 
         private ITrieReader GetTreeReader(string field)
         {
-            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri", 
-                _ix.VersionId, field.ToHash()));
+            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri",
+                _readSession.Version.VersionId, field.ToHash()));
 
             if (!File.Exists(fileName)) return null;
 
@@ -213,7 +187,6 @@ namespace Resin
 
         public void Dispose()
         {
-            _docHashReader.Dispose();
         }
     }
 }

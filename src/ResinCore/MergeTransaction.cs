@@ -15,7 +15,7 @@ namespace Resin
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(MergeTransaction));
 
-        private IList<DocumentInfoReader> _hashReader;
+        private IList<DocHashReader> _hashReader;
         private IList<DocumentAddressReader> _addressReader;
         private IList<DocumentReader> _documentReader;
         private readonly string _directory;
@@ -30,7 +30,7 @@ namespace Resin
             var ixs = Util.GetIndexFileNamesInChronologicalOrder(_directory).Take(2).ToList();
             _ixFilesToProcess = ixs.ToArray();
 
-            _hashReader = new List<DocumentInfoReader>();
+            _hashReader = new List<DocHashReader>();
             _addressReader = new List<DocumentAddressReader>();
             _documentReader = new List<DocumentReader>();
             _tmpFiles = new List<string>();

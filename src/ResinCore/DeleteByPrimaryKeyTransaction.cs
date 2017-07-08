@@ -56,7 +56,7 @@ namespace Resin
                         {
                             if (!documentConfiguration.IsObsolete)
                             {
-                                block = new DocumentInfo(
+                                block = new DocHash(
                                     documentConfiguration.Hash, true);
                                 deleted++;    
                             }

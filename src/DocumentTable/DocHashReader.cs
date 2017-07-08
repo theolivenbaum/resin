@@ -3,22 +3,22 @@ using System.IO;
 
 namespace DocumentTable
 {
-    public class DocumentInfoReader : IDisposable
+    public class DocHashReader : IDisposable
     {
         private readonly Stream _stream;
         private readonly long _offset;
 
-        public DocumentInfoReader(string fileName):this(new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read), 0)
+        public DocHashReader(string fileName):this(new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read), 0)
         {
         }
 
-        public DocumentInfoReader(Stream stream, long offset)
+        public DocHashReader(Stream stream, long offset)
         {
             _stream = stream;
             _offset = offset;
         }
 
-        public DocumentInfo Read(int docId)
+        public DocHash Read(int docId)
         {
             var distance = docId*TableSerializer.SizeOfDocHash() + _offset;
 

@@ -59,7 +59,7 @@ namespace DocumentTable
 
             _addressWriter.Write(adr);
 
-            new DocumentInfo(document.Hash).Serialize(_docHashesStream);
+            new DocHash(document.Hash).Serialize(_docHashesStream);
         }
 
         public void Flush()

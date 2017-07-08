@@ -76,7 +76,7 @@ namespace DocumentTable
             }
         }
 
-        public static IEnumerable<DocumentInfo> DeserializeDocHashes(Stream stream)
+        public static IEnumerable<DocHash> DeserializeDocHashes(Stream stream)
         {
             while (true)
             {
@@ -88,7 +88,7 @@ namespace DocumentTable
             }
         }
 
-        public static IList<DocumentInfo> DeserializeDocHashes(string fileName)
+        public static IList<DocHash> DeserializeDocHashes(string fileName)
         {
             using (var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -96,7 +96,7 @@ namespace DocumentTable
             }
         }
 
-        public static DocumentInfo? DeserializeDocHash(Stream stream)
+        public static DocHash? DeserializeDocHash(Stream stream)
         {
             var isObsoleteByte = stream.ReadByte();
 
@@ -111,7 +111,7 @@ namespace DocumentTable
                 Array.Reverse(hashBytes);
             }
 
-            return new DocumentInfo(BitConverter.ToUInt64(hashBytes, 0), isObsoleteByte == 1);
+            return new DocHash(BitConverter.ToUInt64(hashBytes, 0), isObsoleteByte == 1);
         }
 
         public static Document DeserializeDocument(byte[] data, Compression compression, IDictionary<short, string> keyIndex)
@@ -256,7 +256,7 @@ namespace DocumentTable
             };
         }
 
-        public static void Serialize(this DocumentInfo docHash, Stream stream)
+        public static void Serialize(this DocHash docHash, Stream stream)
         {
             byte[] hashBytes = BitConverter.GetBytes(docHash.Hash);
             byte isObsoleteByte = EncodedBoolean[docHash.IsObsolete];

@@ -7,15 +7,13 @@ using log4net;
 using Resin.Analysis;
 using Resin.Querying;
 using Resin.Sys;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
 using StreamIndex;
 using DocumentTable;
 
 namespace Resin
 {
     /// <summary>
-    /// Query indices in a directory.
+    /// Query a index.
     /// </summary>
     public class Searcher : IDisposable
     {
@@ -23,13 +21,12 @@ namespace Resin
         private readonly string _directory;
         private readonly QueryParser _parser;
         private readonly IScoringSchemeFactory _scorerFactory;
-        private readonly IList<BatchInfo> _ixs;
+        private readonly long _version;
         private readonly int _blockSize;
-        private readonly int _documentCount;
         private readonly IReadSessionFactory _sessionFactory;
 
         public Searcher(string directory)
-            :this(directory, new QueryParser(new Analyzer()), new TfIdfFactory())
+            :this(directory, new QueryParser(new Analyzer()), new TfIdfFactory(), new ReadSessionFactory(directory))
         {
         }
 
@@ -38,14 +35,10 @@ namespace Resin
             _directory = directory;
             _parser = parser;
             _scorerFactory = scorerFactory;
-
-            _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(BatchInfo.Load).ToList();
-
-            _documentCount = Util.GetDocumentCount(_ixs);
-
+            _version = long.Parse(Path.GetFileNameWithoutExtension(
+                Util.GetIndexFileNamesInChronologicalOrder(directory).First()));
             _blockSize = BlockSerializer.SizeOfBlock();
-
-            _sessionFactory = sessionFactory ?? new ReadSessionFactory();
+            _sessionFactory = sessionFactory ?? new ReadSessionFactory(directory);
         }
 
         public Result Search(string query, int page = 0, int size = 10000)
@@ -61,74 +54,49 @@ namespace Resin
             }
 
             var skip = page * size;
-            var scored = Collect(queryContext);
-            var paged = scored.Skip(skip).Take(size).ToList();
-            var docs = new ConcurrentBag<ScoredDocument>();
-            var result = new Result { Total = scored.Count};
-            var groupedByIx = paged.GroupBy(s => s.Ix);
-
+            var scores = Collect(queryContext, _version);
+            var paged = scores.Skip(skip).Take(size).ToList();
+            var docs = new List<ScoredDocument>(size);
             var docTime = new Stopwatch();
             docTime.Start();
 
-            Parallel.ForEach(groupedByIx, group =>
-            //foreach(var group in groupedByIx)
-            {
-                GetDocs(group.ToList(), group.Key, docs);
-            });
-
-            result.Docs = docs.OrderByDescending(d => d.Score).ToList();
-            result.QueryTerms = queryContext.ToList()
-                .Where(q => q.Terms != null)
-                .SelectMany(q => q.Terms.Select(t => t.Word.Value))
-                .Distinct()
-                .ToArray();
+            GetDocs(paged, _version, docs);
 
             Log.DebugFormat("fetched {0} docs for query {1} in {2}", docs.Count, queryContext, docTime.Elapsed);
+
+            var result = new Result
+            {
+                Total = scores.Count,
+                Docs = docs.OrderByDescending(d => d.Score).ToList()
+            };
+
             Log.DebugFormat("searched {0} in {1}", queryContext, searchTime.Elapsed);
 
             return result;
         }
 
-        private IList<DocumentScore> Collect(QueryContext query)
+        private IList<DocumentScore> Collect(QueryContext query, long version)
         {
-            var results = new List<IList<DocumentScore>>(_ixs.Count);
-
-            foreach (var ix in _ixs)
+            using (var readSession = _sessionFactory.OpenReadSession(version))
             {
-                using (var collector = new Collector(_directory, ix, _scorerFactory, _documentCount))
+                using (var collector = new Collector(_directory, readSession, _scorerFactory))
                 {
-                    results.Add(collector.Collect(query));
+                    return collector.Collect(query);
                 }
             }
-
-            var timer = new Stopwatch();
-            timer.Start();
-
-            if (results.Count == 1)
-            {
-                Log.DebugFormat("reduced collection results for term query {0} in {1}", query, timer.Elapsed);
-
-                return results[0];
-            }
-            
-            var agg = results.CombineTakingLatestVersion().ToList();
-
-            Log.DebugFormat("reduced collection results for phrase query {0} in {1}", query, timer.Elapsed);
-
-            return agg;
         }
 
-        private void GetDocs(IList<DocumentScore> scores, BatchInfo ix, ConcurrentBag<ScoredDocument> result)
+        private void GetDocs(IList<DocumentScore> scores, long version, IList<ScoredDocument> result)
         {
             var documentIds = scores.Select(s => s.DocumentId).ToList();
 
-            var docFileName = Path.Combine(_directory, ix.VersionId + ".dtbl");
+            var docFileName = Path.Combine(_directory, version + ".dtbl");
 
-            using (var session = _sessionFactory.OpenReadSession(docFileName, ix))
+            using (var readSession = _sessionFactory.OpenReadSession(version))
             {
                 var dic = scores.ToDictionary(x => x.DocumentId, y => y.Score);
 
-                foreach (var doc in session.Read(documentIds, ix))
+                foreach (var doc in readSession.ReadDocuments(documentIds))
                 {
                     var score = dic[doc.Id];
 

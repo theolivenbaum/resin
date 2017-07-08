@@ -3,10 +3,8 @@ using System.IO;
 using System.Linq;
 using Resin;
 using Resin.Analysis;
-using Resin.IO;
 using Resin.Querying;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Resin.Sys;
 using DocumentTable;
 
 namespace Tests
@@ -29,12 +27,13 @@ namespace Tests
                 new {_id = "5five", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            long indexName;
+            long version;
             using (var writer = new UpsertTransaction(dir, new Analyzer(), compression: Compression.Lz, documents: docs))
             {
-                indexName = writer.Write();
+                version = writer.Write();
             }
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using(var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(new QueryContext("_id", "3")).ToList();
 
@@ -42,7 +41,8 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
             }
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(new QueryContext("_id", "5five")).ToList();
 
@@ -67,12 +67,13 @@ namespace Tests
             }.ToDocuments(primaryKeyFieldName: "_id");
 
             var writer = new UpsertTransaction(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
-            long indexName = writer.Write();
+            long version = writer.Write();
             writer.Dispose();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rain man");
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -82,7 +83,8 @@ namespace Tests
 
             query = new QueryParser(new Analyzer(), 0.75f).Parse("+title:rain man~");
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -110,12 +112,13 @@ namespace Tests
             }.ToDocuments(primaryKeyFieldName: "_id");
 
             var writer = new UpsertTransaction(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
-            long indexName = writer.Write();
+            long version = writer.Write();
             writer.Dispose();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -127,7 +130,8 @@ namespace Tests
 
             query = new QueryParser(new Analyzer()).Parse("+title:the +title:ugly");
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -152,12 +156,13 @@ namespace Tests
             }.ToDocuments(primaryKeyFieldName: "_id");
 
             var writer = new UpsertTransaction(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
-            long indexName = writer.Write();
+            long version = writer.Write();
             writer.Dispose();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:rocky");
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -167,7 +172,8 @@ namespace Tests
 
             query = new QueryParser(new Analyzer()).Parse("+title:rambo");
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -178,7 +184,8 @@ namespace Tests
 
             query = new QueryParser(new Analyzer()).Parse("+title:rocky title:rambo");
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -205,12 +212,13 @@ namespace Tests
             }.ToDocuments(primaryKeyFieldName: "_id");
 
             var writer = new UpsertTransaction(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
-            long indexName = writer.Write();
+            long version = writer.Write();
             writer.Dispose();
 
             var query = new QueryParser(new Analyzer()).Parse("+title:the");
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -222,7 +230,8 @@ namespace Tests
 
             query = new QueryParser(new Analyzer()).Parse("+title:the -title:ugly");
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -248,10 +257,11 @@ namespace Tests
             }.ToDocuments(primaryKeyFieldName: "_id");
 
             var writer = new UpsertTransaction(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
-            long indexName = writer.Write();
+            long version = writer.Write();
             writer.Dispose();
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
 
@@ -260,7 +270,8 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
             }
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(new QueryContext("title", "the")).ToList();
 
@@ -287,10 +298,11 @@ namespace Tests
             }.ToDocuments(primaryKeyFieldName: "_id");
 
             var writer = new UpsertTransaction(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
-            long indexName = writer.Write();
+            long version = writer.Write();
             writer.Dispose();
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
 
@@ -302,7 +314,8 @@ namespace Tests
             var operation = new DeleteByPrimaryKeyTransaction(dir, new[] { "0" });
             operation.Commit();
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
 
@@ -326,10 +339,11 @@ namespace Tests
             }.ToDocuments(primaryKeyFieldName: "_id");
 
             var writer = new UpsertTransaction(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
-            long indexName = writer.Write();
+            long version = writer.Write();
             writer.Dispose();
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(new QueryContext("title", "ra") { Prefix = true }).ToList();
 
@@ -356,10 +370,11 @@ namespace Tests
             }.ToDocuments(primaryKeyFieldName: "_id");
 
             var writer = new UpsertTransaction(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
-            long indexName = writer.Write();
+            long version = writer.Write();
             writer.Dispose();
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(new QueryContext("title", "raider") { Fuzzy = false, Edits = 1 }).ToList();
 
@@ -367,7 +382,8 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
             }
 
-            using (var collector = new Collector(dir, BatchInfo.Load(Path.Combine(dir, indexName + ".ix")), new TfIdfFactory()))
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(new QueryContext("title", "raider") { Fuzzy = true, Edits = 1 }).ToList();
 

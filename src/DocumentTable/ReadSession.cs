@@ -1,23 +1,47 @@
 ﻿using StreamIndex;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace DocumentTable
 {
     public class ReadSession : IReadSession
     {
+        private readonly PostingsReader _postingsReader;
+        private readonly DocHashReader _docHashReader;
         private readonly DocumentAddressReader _addressReader;
         private readonly DocumentReader _documentReader;
         private readonly int _blockSize;
 
-        public ReadSession(DocumentAddressReader addressReader, DocumentReader documentReader)
+        public BatchInfo Version { get; set; }
+
+        public ReadSession(BatchInfo version, PostingsReader postingsReader, DocHashReader docHashReader, DocumentAddressReader addressReader, DocumentReader documentReader)
         {
+            Version = version;
+
+            _docHashReader = docHashReader;
+            _postingsReader = postingsReader;
             _addressReader = addressReader;
             _documentReader = documentReader;
             _blockSize = BlockSerializer.SizeOfBlock();
         }
 
-        public IList<Document> Read(IList<int> documentIds, BatchInfo ix)
+        public DocHash ReadDocHash(int docId)
+        {
+            return _docHashReader.Read(docId);
+        }
+
+        public IList<IList<DocumentPosting>> ReadPostings(IList<Term> terms)
+        {
+            var addresses = new List<BlockInfo>(terms.Count);
+
+            foreach (var term in terms)
+            {
+                addresses.Add(term.Word.PostingsAddress.Value);
+            }
+
+            return _postingsReader.Read(addresses);
+        }
+
+        public IList<Document> ReadDocuments(IList<int> documentIds)
         {
             var addresses = new List<BlockInfo>(documentIds.Count);
 
@@ -43,6 +67,8 @@ namespace DocumentTable
         {
             _addressReader.Dispose();
             _documentReader.Dispose();
+            _docHashReader.Dispose();
+            _postingsReader.Dispose();
         }
     }
 }

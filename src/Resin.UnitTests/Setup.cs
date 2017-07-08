@@ -1,3 +1,4 @@
+using DocumentTable;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
@@ -14,6 +15,11 @@ namespace Tests
             var dir = root + Guid.NewGuid().ToString();
             Directory.CreateDirectory(dir);
             return dir;
+        }
+
+        protected static IReadSession CreateReadSession(string directory, long version)
+        {
+            return new ReadSessionFactory(directory).OpenReadSession(version);
         }
 
         [AssemblyInitialize()]

@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Resin.IO
+namespace DocumentTable
 {
     [DebuggerDisplay("{Field}:{Word}")]
     public struct Term : IEquatable<Term>, IComparable<Term>

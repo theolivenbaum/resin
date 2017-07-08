@@ -1,3 +1,4 @@
+using DocumentTable;
 using Resin.Analysis;
 using System;
 using System.Collections.Generic;

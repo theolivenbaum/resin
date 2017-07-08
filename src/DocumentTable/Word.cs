@@ -1,8 +1,7 @@
-using DocumentTable;
 using StreamIndex;
 using System.Collections.Generic;
 
-namespace Resin.IO
+namespace DocumentTable
 {
     [System.Diagnostics.DebuggerDisplay("{Value} {Count}")]
     public struct Word

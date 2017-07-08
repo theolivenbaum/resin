@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using Resin.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using DocumentTable;
 
 namespace Tests
 {
