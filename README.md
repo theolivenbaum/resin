@@ -18,13 +18,14 @@ Has pluggable storage engine | &#9989; |   |   |   |
 
 ResinDB is designed to be used as  
 
-- a data store
-- a cache-replacement
-- an index to your database/store
-- a component of a distributed database/search engine
+- a disk-based replacement for your in-memory business entity cache
+- a training data vector store
+- a index of your data
+- a component of a distributed database
 - a framework for experimenting with scoring models 
+- a search engine
 
-ResinDB's architecture can be compared to that of LevelDB or SQL Server LocalDB in that they all run in-process. What sets ResinDB apart is its full-text search index, its scoring mechanisms and its latch-free writing.
+ResinDB's architecture can be compared to that of Lucene, LevelDB or SQL Server LocalDB in that it runs in-process. What sets ResinDB apart is its full-text search index, its scoring mechanisms and its latch-free writing.
 
 ## DocumentTable
 
