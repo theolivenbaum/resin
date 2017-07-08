@@ -12,35 +12,17 @@ namespace Resin.IO.Read
 
         private readonly Stream _stream;
         private readonly int _blockSize;
-        private readonly long[] _segs;
-
-        private int _segmentIndex;
 
         public MappedTrieReader(string fileName)
         {
             var dir = Path.GetDirectoryName(fileName);
             var version = Path.GetFileNameWithoutExtension(fileName);
-            var sixFileName = Path.Combine(dir, version + ".six");
 
             _stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096*1, FileOptions.SequentialScan);
-
-            _segs = Serializer.DeserializeLongList(sixFileName).ToArray();
 
             _blockSize = Serializer.SizeOfNode() + BlockSerializer.SizeOfBlock();
 
             Log.DebugFormat("opened {0}", fileName);
-        }
-
-        public override void GoToNextSegment()
-        {
-            var distance = _segs[_segmentIndex] - _stream.Position;
-
-            if (distance > 0) _stream.Seek(distance, SeekOrigin.Current);
-        }
-
-        public override bool HasMoreSegments()
-        {
-            return _segs.Length > ++_segmentIndex;
         }
 
         protected override void Skip(int count)

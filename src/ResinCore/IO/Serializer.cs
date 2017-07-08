@@ -26,43 +26,23 @@ namespace Resin.IO
         {
             var dir = Path.GetDirectoryName(fileName);
             var version = Path.GetFileNameWithoutExtension(fileName);
-            var sixFileName = Path.Combine(dir, version + ".six");
 
-            using (var sixStream = new FileStream(sixFileName, FileMode.Append, FileAccess.Write, FileShare.Read))
+            FileStream treeStream = new FileStream(
+                    fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+
+            var position = treeStream.Position;
+            var posBytes = BitConverter.GetBytes(position);
+
+            if (!BitConverter.IsLittleEndian)
             {
-                FileStream treeStream;
+                Array.Reverse(posBytes);
+            }
 
-                var segmentDelimiter = new LcrsNode(SegmentDelimiter, false, false, false, 0, 1, null);
-
-                if (File.Exists(fileName))
+            using (treeStream)
+            {
+                if (trie.LeftChild != null)
                 {
-                    treeStream = new FileStream(
-                        fileName, FileMode.Append, FileAccess.Write, FileShare.Read);
-
-                    segmentDelimiter.Serialize(treeStream);
-                }
-                else
-                {
-                    treeStream = new FileStream(
-                        fileName, FileMode.Append, FileAccess.Write, FileShare.None);
-                }
-
-                var position = treeStream.Position;
-                var posBytes = BitConverter.GetBytes(position);
-
-                if (!BitConverter.IsLittleEndian)
-                {
-                    Array.Reverse(posBytes);
-                }
-
-                sixStream.Write(posBytes, 0, sizeof(long));
-
-                using (treeStream)
-                {
-                    if (trie.LeftChild != null)
-                    {
-                        trie.LeftChild.SerializeDepthFirst(treeStream, 0);
-                    }
+                    trie.LeftChild.SerializeDepthFirst(treeStream, 0);
                 }
             }
         }

@@ -11,6 +11,5 @@ namespace Resin.IO
         IList<Word> StartsWith(string prefix);
         IList<Word> SemanticallyNear(string word, int maxEdits, IDistanceResolver distanceResolver = null);
         IList<Word> Range(string lowerBound, string upperBound);
-        bool HasMoreSegments();
     }
 }

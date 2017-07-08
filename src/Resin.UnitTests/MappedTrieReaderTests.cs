@@ -122,7 +122,7 @@ namespace Tests
 
             tree.Serialize(fileName);
 
-            File.WriteAllText("Can_find_near.log", tree.Visualize(), System.Text.Encoding.UTF8);
+            File.WriteAllText("Can_find_near.log", tree.Visualize(), Encoding.UTF8);
 
             using (var reader = new MappedTrieReader(fileName))
             {
