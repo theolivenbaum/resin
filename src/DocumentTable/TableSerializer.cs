@@ -189,6 +189,14 @@ namespace DocumentTable
 
         public static BatchInfo DeserializeBatchInfo(Stream stream)
         {
+            var fieldCountBytes = new byte[sizeof(int)];
+
+            stream.Read(fieldCountBytes, 0, sizeof(int));
+
+            var fieldCount = BitConverter.ToInt32(fieldCountBytes, 0);
+
+            var fieldOffsets = DeserializeUlongLongDic(stream, fieldCount).ToDictionary(x=>x.Key, y=>y.Value);
+
             var versionBytes = new byte[sizeof(long)];
 
             stream.Read(versionBytes, 0, sizeof(long));
@@ -252,8 +260,61 @@ namespace DocumentTable
                 PrimaryKeyFieldName = Encoding.GetString(pkFieldNameBytes),
                 PostingsOffset = postingsOffset,
                 DocHashOffset = docHashOffset,
-                DocAddressesOffset = docAddressesOffset
+                DocAddressesOffset = docAddressesOffset,
+                FieldOffsets = fieldOffsets
             };
+        }
+
+        public static IEnumerable<KeyValuePair<ulong, long>> DeserializeUlongLongDic(Stream stream, int listCount)
+        {
+            var maxPos = stream.Position + listCount * (sizeof(ulong) + sizeof(long));
+
+            while (stream.Position < maxPos)
+            {
+                var keyBytes = new byte[sizeof(ulong)];
+
+                var read = stream.Read(keyBytes, 0, sizeof(ulong));
+
+                if (read == 0) break;
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(keyBytes);
+                }
+
+                var key = BitConverter.ToUInt64(keyBytes, 0);
+
+                byte[] valBytes = new byte[sizeof(long)];
+
+                stream.Read(valBytes, 0, sizeof(long));
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(valBytes);
+                }
+
+                var value = BitConverter.ToInt64(valBytes, 0);
+
+                yield return new KeyValuePair<ulong, long>(key, value);
+            }
+        }
+
+        public static void Serialize(this IEnumerable<KeyValuePair<ulong, long>> entries, Stream stream)
+        {
+            foreach (var entry in entries)
+            {
+                byte[] keyBytes = BitConverter.GetBytes(entry.Key);
+                byte[] valBytes = BitConverter.GetBytes(entry.Value);
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(keyBytes);
+                    Array.Reverse(valBytes);
+                }
+
+                stream.Write(keyBytes, 0, sizeof(ulong));
+                stream.Write(valBytes, 0, sizeof(long));
+            }
         }
 
         public static void Serialize(this DocHash docHash, Stream stream)
@@ -359,10 +420,15 @@ namespace DocumentTable
         {
             using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4, FileOptions.WriteThrough))
             {
-                var bytes = ix.Serialize();
-
-                fs.Write(bytes, 0, bytes.Length);
+                ix.Serialize(fs);
             }
+        }
+
+        public static void Serialize(this BatchInfo ix, Stream stream)
+        {
+            var bytes = ix.Serialize();
+
+            stream.Write(bytes, 0, bytes.Length);
         }
 
         public static byte[] Serialize(this BatchInfo ix)
@@ -391,6 +457,12 @@ namespace DocumentTable
                     Array.Reverse(docHashOffsetBytes);
                     Array.Reverse(docAddressesOffsetBytes);
                 }
+
+                var fieldCountBytes = BitConverter.GetBytes(ix.FieldOffsets.Count);
+
+                stream.Write(fieldCountBytes, 0, sizeof(int));
+
+                ix.FieldOffsets.Serialize(stream);
 
                 stream.Write(versionBytes, 0, sizeof(long));
                 stream.Write(docCountBytes, 0, sizeof(int));

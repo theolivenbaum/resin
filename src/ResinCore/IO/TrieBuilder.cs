@@ -9,13 +9,13 @@ namespace Resin.IO
     {
         readonly ILog Log = LogManager.GetLogger(typeof(TrieBuilder));
 
-        private readonly IDictionary<string, LcrsTrie> _tries;
+        private readonly IDictionary<ulong, LcrsTrie> _tries;
         
         private readonly Stopwatch _timer = new Stopwatch();
 
         public TrieBuilder()
         {
-            _tries = new Dictionary<string, LcrsTrie>();
+            _tries = new Dictionary<ulong, LcrsTrie>();
         }
 
         public void Add(WordInfo word)
@@ -24,7 +24,7 @@ namespace Resin.IO
 
             LcrsTrie trie;
 
-            var key = word.Field.ToHash().ToString();
+            var key = word.Field.ToHash();
 
             if (!_tries.TryGetValue(key, out trie))
             {
@@ -35,7 +35,7 @@ namespace Resin.IO
             trie.Add(word.Token, word.Posting);
         }
 
-        public IDictionary<string, LcrsTrie> GetTries()
+        public IDictionary<ulong, LcrsTrie> GetTries()
         {
             Log.InfoFormat("Built in-memory trees in {0}",
 

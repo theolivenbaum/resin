@@ -96,44 +96,10 @@ namespace Tests
             var tree = new LcrsTrie();
 
             tree.Add("bad");
-
-            foreach (var node in tree.EndOfWordNodes())
-            {
-                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
-            }
-
-            tree.Serialize(fileName);
-
-            using (var reader = new MappedTrieReader(fileName))
-            {
-                var near = reader.SemanticallyNear("ba", 1).Select(w => w.Value).ToList();
-
-                Assert.AreEqual(1, near.Count);
-                Assert.IsTrue(near.Contains("bad"));
-            }
-
-            tree = new LcrsTrie();
             tree.Add("baby");
-
-            foreach (var node in tree.EndOfWordNodes())
-            {
-                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
-            }
-
-            tree.Serialize(fileName);
-
-            File.WriteAllText("Can_find_near.log", tree.Visualize(), Encoding.UTF8);
-
-            using (var reader = new MappedTrieReader(fileName))
-            {
-                var near = reader.SemanticallyNear("ba", 1).Select(w => w.Value).ToList();
-
-                Assert.AreEqual(1, near.Count);
-                Assert.IsTrue(near.Contains("bad"));
-            }
-
-            tree = new LcrsTrie();
             tree.Add("b");
+            tree.Add("bananas");
+            tree.Add("bank");
 
             foreach (var node in tree.EndOfWordNodes())
             {
@@ -141,7 +107,7 @@ namespace Tests
             }
 
             tree.Serialize(fileName);
-            File.WriteAllText("Can_find_near.log", tree.Visualize(), System.Text.Encoding.UTF8);
+            File.WriteAllText("Can_find_near.log", tree.Visualize(), Encoding.UTF8);
 
             using (var reader = new MappedTrieReader(fileName))
             {
@@ -156,10 +122,11 @@ namespace Tests
             {
                 var near = reader.SemanticallyNear("ba", 2).Select(w => w.Value).ToList();
 
-                Assert.AreEqual(3, near.Count);
+                Assert.AreEqual(4, near.Count);
                 Assert.IsTrue(near.Contains("b"));
                 Assert.IsTrue(near.Contains("bad"));
                 Assert.IsTrue(near.Contains("baby"));
+                Assert.IsTrue(near.Contains("bank"));
             }
 
             using (var reader = new MappedTrieReader(fileName))
@@ -168,25 +135,16 @@ namespace Tests
 
                 Assert.AreEqual(0, near.Count);
             }
-
-            tree = new LcrsTrie();
-            tree.Add("bananas");
-
-            foreach (var node in tree.EndOfWordNodes())
-            {
-                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
-            }
-
-            tree.Serialize(fileName);
-
+            
             using (var reader = new MappedTrieReader(fileName))
             {
                 var near = reader.SemanticallyNear("ba", 6).Select(w => w.Value).ToList();
 
-                Assert.AreEqual(4, near.Count);
+                Assert.AreEqual(5, near.Count);
                 Assert.IsTrue(near.Contains("b"));
                 Assert.IsTrue(near.Contains("bad"));
                 Assert.IsTrue(near.Contains("baby"));
+                Assert.IsTrue(near.Contains("bank"));
                 Assert.IsTrue(near.Contains("bananas"));
             }
 
@@ -197,17 +155,7 @@ namespace Tests
                 Assert.AreEqual(1, near.Count);
                 Assert.IsTrue(near.Contains("baby"));
             }
-
-            tree = new LcrsTrie();
-            tree.Add("bank");
-
-            foreach (var node in tree.EndOfWordNodes())
-            {
-                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
-            }
-
-            tree.Serialize(fileName);
-
+            
             using (var reader = new MappedTrieReader(fileName))
             {
                 var near = reader.SemanticallyNear("bazy", 3).Select(w => w.Value).ToList();
@@ -272,51 +220,7 @@ namespace Tests
             tree.Add("xxx");
             tree.Add("donkey");
             tree.Add("xavier");
-
-            foreach (var node in tree.EndOfWordNodes())
-            {
-                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
-            }
-
-            tree.Serialize(fileName);
-
-            using (var reader = new MappedTrieReader(fileName))
-            {
-                Assert.IsTrue(reader.IsWord("xxx").Any());
-            }
-            using (var reader = new MappedTrieReader(fileName))
-            {
-                Assert.IsFalse(reader.IsWord("baby").Any());
-            }
-            using (var reader = new MappedTrieReader(fileName))
-            {
-                Assert.IsFalse(reader.IsWord("dad").Any());
-            }
-
-            tree = new LcrsTrie();
             tree.Add("baby");
-
-            foreach (var node in tree.EndOfWordNodes())
-            {
-                node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
-            }
-
-            tree.Serialize(fileName);
-
-            using (var reader = new MappedTrieReader(fileName))
-            {
-                Assert.IsTrue(reader.IsWord("xxx").Any());
-            }
-            using (var reader = new MappedTrieReader(fileName))
-            {
-                Assert.IsTrue(reader.IsWord("baby").Any());
-            }
-            using (var reader = new MappedTrieReader(fileName))
-            {
-                Assert.IsFalse(reader.IsWord("dad").Any());
-            }
-
-            tree = new LcrsTrie();
             tree.Add("dad");
             tree.Add("daddy");
 
@@ -327,6 +231,18 @@ namespace Tests
 
             tree.Serialize(fileName);
 
+            using (var reader = new MappedTrieReader(fileName))
+            {
+                Assert.IsTrue(reader.IsWord("xxx").Any());
+            }
+            using (var reader = new MappedTrieReader(fileName))
+            {
+                Assert.IsTrue(reader.IsWord("xxx").Any());
+            }
+            using (var reader = new MappedTrieReader(fileName))
+            {
+                Assert.IsTrue(reader.IsWord("baby").Any());
+            }
             using (var reader = new MappedTrieReader(fileName))
             {
                 Assert.IsTrue(reader.IsWord("xxx").Any());

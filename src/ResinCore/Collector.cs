@@ -61,7 +61,7 @@ namespace Resin
 
             if (reader == null)
             {
-                subQuery.Terms = new List<Term>();
+                subQuery.Terms = new List<Term>(0);
             }
             else
             {
@@ -177,12 +177,16 @@ namespace Resin
 
         private ITrieReader GetTreeReader(string field)
         {
-            var fileName = Path.Combine(_directory, string.Format("{0}-{1}.tri",
-                _readSession.Version.VersionId, field.ToHash()));
+            var key = field.ToHash();
+            long offset;
 
-            if (!File.Exists(fileName)) return null;
+            if (_readSession.Version.FieldOffsets.TryGetValue(key, out offset))
+            {
+                _readSession.Stream.Seek(offset, SeekOrigin.Begin);
+                return new MappedTrieReader(_readSession.Stream);
+            }
 
-            return new MappedTrieReader(fileName);
+            return null;
         }
 
         public void Dispose()

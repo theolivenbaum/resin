@@ -21,29 +21,21 @@ namespace Resin.IO
         {
             return sizeof(char) + 3 * sizeof(byte) + 1 * sizeof(int) + 1 * sizeof(short);
         }
-        
+
         public static void Serialize(this LcrsTrie trie, string fileName)
         {
-            var dir = Path.GetDirectoryName(fileName);
-            var version = Path.GetFileNameWithoutExtension(fileName);
-
-            FileStream treeStream = new FileStream(
-                    fileName, FileMode.Create, FileAccess.Write, FileShare.None);
-
-            var position = treeStream.Position;
-            var posBytes = BitConverter.GetBytes(position);
-
-            if (!BitConverter.IsLittleEndian)
+            using (var stream = new FileStream(
+                    fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                Array.Reverse(posBytes);
+                trie.Serialize(stream);
             }
+        }
 
-            using (treeStream)
+        public static void Serialize(this LcrsTrie trie, Stream treeStream)
+        {
+            if (trie.LeftChild != null)
             {
-                if (trie.LeftChild != null)
-                {
-                    trie.LeftChild.SerializeDepthFirst(treeStream, 0);
-                }
+                trie.LeftChild.SerializeDepthFirst(treeStream, 0);
             }
         }
 

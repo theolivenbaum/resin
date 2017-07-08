@@ -1,5 +1,6 @@
 ﻿using StreamIndex;
 using System.Collections.Generic;
+using System.IO;
 
 namespace DocumentTable
 {
@@ -10,13 +11,22 @@ namespace DocumentTable
         private readonly DocumentAddressReader _addressReader;
         private readonly DocumentReader _documentReader;
         private readonly int _blockSize;
+        private readonly Stream _stream;
 
         public BatchInfo Version { get; set; }
+        public Stream Stream { get { return _stream; } }
 
-        public ReadSession(BatchInfo version, PostingsReader postingsReader, DocHashReader docHashReader, DocumentAddressReader addressReader, DocumentReader documentReader)
+        public ReadSession(
+            BatchInfo version, 
+            PostingsReader postingsReader, 
+            DocHashReader docHashReader, 
+            DocumentAddressReader addressReader, 
+            DocumentReader documentReader,
+            Stream stream)
         {
             Version = version;
 
+            _stream = stream;
             _docHashReader = docHashReader;
             _postingsReader = postingsReader;
             _addressReader = addressReader;

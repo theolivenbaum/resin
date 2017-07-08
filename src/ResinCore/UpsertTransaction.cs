@@ -115,30 +115,38 @@ namespace Resin
                 "stored postings refs in trees and wrote postings file in {0}", 
                 posTimer.Elapsed);
 
-            var treeTimer = new Stopwatch();
-            treeTimer.Start();
+            var treeTimer = Stopwatch.StartNew();
 
-            SerializeTries(tries);
+            _ix.FieldOffsets = SerializeTries(tries, _compoundFile);
+
+            Log.InfoFormat("serialized trees in {0}", treeTimer.Elapsed);
 
             _ix.PostingsOffset = _compoundFile.Position;
             _postingsWriter.Stream.Flush();
             _postingsWriter.Stream.Position = 0;
             _postingsWriter.Stream.CopyTo(_compoundFile);
 
-            Log.InfoFormat("serialized trees in {0}", treeTimer.Elapsed);
+            _ix.DocumentCount = _count;
+            _ix.Serialize(_compoundFile);
 
             return _ix.VersionId;
         }
 
-        private void SerializeTries(IDictionary<string, LcrsTrie> tries)
+        private IDictionary<ulong, long> SerializeTries(IDictionary<ulong, LcrsTrie> tries, Stream stream)
         {
-            foreach(var t in tries)
+            var offsets = new Dictionary<ulong, long>();
+
+            foreach (var t in tries)
             {
+                offsets.Add(t.Key, stream.Position);
+
                 var fileName = Path.Combine(
                     _directory, string.Format("{0}-{1}.tri", _ix.VersionId, t.Key));
 
-                t.Value.Serialize(fileName);
+                t.Value.Serialize(stream);
             }
+
+            return offsets;
         }
 
         private IEnumerable<Document> ReadSource()

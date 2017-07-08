@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace DocumentTable
 {
@@ -9,5 +10,6 @@ namespace DocumentTable
         IList<Document> ReadDocuments(IList<int> documentIds);
         IList<IList<DocumentPosting>> ReadPostings(IList<Term> terms);
         DocHash ReadDocHash(int docId);
+        Stream Stream { get; }
     }
 }

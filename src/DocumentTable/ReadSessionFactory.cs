@@ -35,7 +35,8 @@ namespace DocumentTable
                 new DocumentReader(
                     new FileStream(docFileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096 * 1, FileOptions.RandomAccess), 
                     ix.Compression, 
-                    keyIndex));
+                    keyIndex),
+                compoundFile);
         }
     }
 }

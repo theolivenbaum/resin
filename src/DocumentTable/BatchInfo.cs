@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using log4net;
+using System.Collections.Generic;
 
 namespace DocumentTable
 {
@@ -22,6 +23,8 @@ namespace DocumentTable
         public long DocHashOffset { get; set; }
 
         public long DocAddressesOffset { get; set; }
+
+        public IDictionary<ulong, long> FieldOffsets { get; set; }
 
         public static BatchInfo Load(string fileName)
         {
