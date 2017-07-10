@@ -90,13 +90,13 @@ namespace Resin.IO
             }
         }
 
-        public IEnumerable<LcrsTrie> NodesPreOrder()
+        public IEnumerable<LcrsTrie> NodesDepthFirst()
         {
             yield return this;
 
             if (LeftChild != null)
             {
-                foreach (var node in LeftChild.NodesPreOrder())
+                foreach (var node in LeftChild.NodesDepthFirst())
                 {
                     yield return node;
                 }
@@ -104,7 +104,7 @@ namespace Resin.IO
 
             if (RightSibling != null)
             {
-                foreach (var node in RightSibling.NodesPreOrder())
+                foreach (var node in RightSibling.NodesDepthFirst())
                 {
                     yield return node;
                 }
@@ -494,7 +494,7 @@ namespace Resin.IO
 
         public LcrsTrie Balance()
         {
-            var nodes = NodesPreOrder().ToArray();
+            var nodes = NodesDepthFirst().ToArray();
 
             return Balance(nodes, 0, nodes.Length - 1);
         }
