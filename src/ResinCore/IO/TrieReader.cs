@@ -36,7 +36,7 @@ namespace Resin.IO.Read
                         "cannot create word without postings address");
 
                 if (node.EndOfWord)
-                    words.Add(new Word(word, 1, node.PostingsAddress));
+                    words.Add(new Word(word, node.PostingsAddress));
             }
 
             return words;
@@ -138,7 +138,7 @@ namespace Resin.IO.Read
                         {
                             if (distanceResolver.GetDistance(word, test) <= maxEdits)
                             {
-                                words.Add(new Word(test, 1, node.PostingsAddress));
+                                words.Add(new Word(test, node.PostingsAddress));
                             }
                         }
                     }
@@ -219,7 +219,7 @@ namespace Resin.IO.Read
 
                         var word = new string(path.ToArray());
 
-                        words.Add(new Word(word, 1, node.PostingsAddress));
+                        words.Add(new Word(word, node.PostingsAddress));
                     }
                 }
             }
@@ -265,7 +265,7 @@ namespace Resin.IO.Read
 
                     var word = prefix + new string(path.ToArray());
 
-                    words.Add(new Word(word, 1, node.PostingsAddress));
+                    words.Add(new Word(word, node.PostingsAddress));
                 }
 
                 if (node.HaveSibling)

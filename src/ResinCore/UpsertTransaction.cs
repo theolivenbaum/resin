@@ -106,7 +106,7 @@ namespace Resin
                 {
                     foreach (var word in trie.Value.Words())
                     {
-                        Log.DebugFormat("{0}\t{1}", word.Value, word.Count);
+                        Log.DebugFormat("{0}\t{1}", word.Value, word.Postings.Count);
                     }
                 }
             }

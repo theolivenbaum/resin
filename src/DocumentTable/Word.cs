@@ -7,22 +7,19 @@ namespace DocumentTable
     public struct Word
     {
         public readonly string Value;
-        public readonly int Count;
         public readonly BlockInfo? PostingsAddress;
         public readonly IList<DocumentPosting> Postings;
 
         public Word(string value)
         {
             Value = value;
-            Count = 1;
             PostingsAddress = null;
             Postings = null;
         }
 
-        public Word(string value, int count, BlockInfo? postingsAddress, IList<DocumentPosting> postings = null)
+        public Word(string value, BlockInfo? postingsAddress, IList<DocumentPosting> postings = null)
         {
             Value = value;
-            Count = count;
             PostingsAddress = postingsAddress;
             Postings = postings;
         }

@@ -17,7 +17,6 @@ namespace Resin.IO
         public LcrsTrie LeftChild { get; set; }
         public BlockInfo PostingsAddress { get; set; }
         public List<DocumentPosting> Postings { get; set; }
-        public int WordCount { get; private set; }
         public char Value { get; private set; }
         public bool EndOfWord { get; private set; }
 
@@ -39,8 +38,6 @@ namespace Resin.IO
         {
             Value = value;
             EndOfWord = endOfWord;
-
-            if (EndOfWord) WordCount++;
         }
 
         public void Merge(LcrsTrie other)
@@ -161,14 +158,10 @@ namespace Resin.IO
                     }
                 }
             }
-            else if (eow)
-            {
-                node.EndOfWord = true;
-                node.WordCount++;
-            }
 
             if (eow)
             {
+                node.EndOfWord = true;
                 if (node.Postings == null)
                 {
                     node.Postings = new List<DocumentPosting>();
@@ -247,14 +240,10 @@ namespace Resin.IO
             LcrsTrie node;
             if (TryFindPath(word, out node))
             {
-                if (node.WordCount == 0)
-                {
-                    throw new InvalidOperationException("WordCount");
-                }
                 if (node.EndOfWord)
                 {
                     words.Add(new Word(
-                        word, node.WordCount, node.PostingsAddress, node.Postings));
+                        word, node.PostingsAddress, node.Postings));
                 }
             }
 
@@ -268,10 +257,6 @@ namespace Resin.IO
             LcrsTrie node;
             if (TryFindPath(word, out node))
             {
-                if (node.WordCount == 0)
-                {
-                    throw new InvalidOperationException("WordCount");
-                }
                 if (node.EndOfWord)
                 {
                     return true;
@@ -346,7 +331,7 @@ namespace Resin.IO
                         {
                             if(distanceResolver.GetDistance(word, test) <= maxEdits)
                             {
-                                words.Add(new Word(test, 1, PostingsAddress));
+                                words.Add(new Word(test, PostingsAddress));
                             }
                         }
                     }
@@ -390,7 +375,7 @@ namespace Resin.IO
                 if ((surpassedLbound && word != lbound) || word != ubound)
                 {
                     
-                    words.Add(new Word(word, WordCount, PostingsAddress, Postings));
+                    words.Add(new Word(word, PostingsAddress, Postings));
                 }
             }
 
