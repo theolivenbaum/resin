@@ -47,9 +47,9 @@ namespace Tests
         [TestMethod]
         public void Can_parse_range_when_stating_less_than_first()
         {
-            var q = new QueryParser(new Analyzer()).Parse("+title<rocky +title>rambo");
+            var q = new QueryParser(new Analyzer()).Parse("+title<rocky title>rambo");
 
-            Assert.AreEqual("+title>rambo +title<rocky", q.ToString());
+            Assert.AreEqual("+title>rambo title<rocky", q.ToString());
         }
 
         [TestMethod]

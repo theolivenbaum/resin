@@ -6,6 +6,7 @@ using Resin.Analysis;
 using Resin.Querying;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using DocumentTable;
+using System;
 
 namespace Tests
 {
@@ -436,6 +437,65 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 5));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 2));
+            }
+        }
+
+        [TestMethod]
+        public void Can_collect_dates()
+        {
+            var dir = CreateDir();
+
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            var lowerBound = DateTime.Now;
+            var upperBound = DateTime.Now.AddDays(1);
+
+            var docs = new List<dynamic>
+            {
+                new {_id = "0", created = DateTime.Now.AddDays(-1) },
+                new {_id = "1", created = lowerBound  },
+                new {_id = "2", created = upperBound  },
+                new {_id = "3", created = upperBound.AddDays(1)  },
+                new {_id = "4", created = upperBound.AddDays(2)  },
+                new {_id = "5", created = upperBound.AddDays(3)  }
+            }.ToDocuments(primaryKeyFieldName: "_id");
+
+            var writer = new UpsertTransaction(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
+            long version = writer.Write();
+            writer.Dispose();
+
+            var query = new QueryContext("created", upperBound);
+
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
+            {
+                var scores = collector.Collect(query).ToList();
+
+                Assert.AreEqual(1, scores.Count);
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 2));
+            }
+
+            query = new QueryContext("created", lowerBound);
+
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
+            {
+                var scores = collector.Collect(query).ToList();
+
+                Assert.AreEqual(1, scores.Count);
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
+            }
+
+            query = new QueryContext("created", lowerBound, upperBound);
+
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
+            {
+                var scores = collector.Collect(query).ToList();
+
+                Assert.AreEqual(2, scores.Count);
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 2));
             }
         }
