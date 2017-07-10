@@ -71,27 +71,32 @@ namespace Resin
 
                     if (subQuery.Fuzzy)
                     {
-                        terms = reader.SemanticallyNear(subQuery.Value, subQuery.Edits).ToTerms(subQuery.Field);
+                        terms = reader.SemanticallyNear(subQuery.Value, subQuery.Edits)
+                            .ToTerms(subQuery.Field);
                     }
                     else if (subQuery.Prefix)
                     {
-                        terms = reader.StartsWith(subQuery.Value).ToTerms(subQuery.Field);
+                        terms = reader.StartsWith(subQuery.Value)
+                            .ToTerms(subQuery.Field);
                     }
                     else if (subQuery.Range)
                     {
-                        terms = reader.Range(subQuery.Value, subQuery.ValueUpperBound).ToTerms(subQuery.Field);
+                        terms = reader.Range(subQuery.Value, subQuery.ValueUpperBound)
+                            .ToTerms(subQuery.Field);
                     }
                     else
                     {
-                        terms = reader.IsWord(subQuery.Value).ToTerms(subQuery.Field);
+                        terms = reader.IsWord(subQuery.Value)
+                            .ToTerms(subQuery.Field);
                     }
+
+                    subQuery.Terms = terms;
 
                     if (Log.IsDebugEnabled && terms.Count > 1)
                     {
                         Log.DebugFormat("expanded {0}: {1}", 
                             subQuery.Value, string.Join(" ", terms.Select(t => t.Word.Value)));
                     }
-                    subQuery.Terms = terms;
                 }
             }
 
@@ -158,7 +163,7 @@ namespace Resin
 
                     var scorer = _scorerFactory.CreateScorer(_readSession.Version.DocumentCount, docsWithTerm);
 
-                    foreach (var posting in postings.OrderBy(p => p.DocumentId))
+                    foreach (var posting in postings)
                     {
                         var docHash = _readSession.ReadDocHash(posting.DocumentId);
 
