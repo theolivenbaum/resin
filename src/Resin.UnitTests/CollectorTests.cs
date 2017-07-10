@@ -392,5 +392,52 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
             }
         }
+
+        [TestMethod]
+        public void Can_collect_numbers()
+        {
+            var dir = CreateDir();
+
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            var docs = new List<dynamic>
+            {
+                new {_id = "0", title = 5 },
+                new {_id = "1", title = 4 },
+                new {_id = "2", title = 3 },
+                new {_id = "3", title = 2 },
+                new {_id = "4", title = 1 },
+                new {_id = "5", title = 0 }
+            }.ToDocuments(primaryKeyFieldName: "_id");
+
+            var writer = new UpsertTransaction(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
+            long version = writer.Write();
+            writer.Dispose();
+
+            var query = new QueryContext("title", 3);
+
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
+            {
+                var scores = collector.Collect(query).ToList();
+
+                Assert.AreEqual(1, scores.Count);
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 2));
+            }
+
+            query = new QueryContext("title", 0, 3);
+
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
+            {
+                var scores = collector.Collect(query).ToList();
+
+                Assert.AreEqual(4, scores.Count);
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 5));
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 2));
+            }
+        }
     }
 }

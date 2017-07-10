@@ -53,6 +53,36 @@ namespace Resin.Querying
         {
             Field = field;
             Value = value;
+            And = true;
+        }
+
+        public Query(string field, string value, string valueUpperBound)
+        {
+            Field = field;
+            Value = value;
+            ValueUpperBound = valueUpperBound;
+            And = true;
+            Range = true;
+        }
+
+        public Query(string field, long value)
+            : this(field, value.ToString().PadLeft(19, '0'))
+        {
+        }
+
+        public Query(string field, long value, long valueUpperBound)
+            : this(field, value.ToString().PadLeft(19, '0'), valueUpperBound.ToString().PadLeft(19, '0'))
+        {
+        }
+
+        public Query(string field, DateTime value)
+            : this(field, value.ToUniversalTime().Ticks)
+        {
+        }
+
+        public Query(string field, DateTime value, DateTime valueUpperBound)
+            : this(field, value.ToUniversalTime().Ticks, valueUpperBound.ToUniversalTime().Ticks)
+        {
         }
 
         public override string ToString()

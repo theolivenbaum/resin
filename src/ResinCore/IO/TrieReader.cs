@@ -191,7 +191,8 @@ namespace Resin.IO.Read
                 }
 
                 var test = new string(path.ToArray());
-                var comparedToLowerBound = test.CompareTo(lowerBound.Substring(0, Math.Min(lowerBound.Length, node.Depth + 1)));
+                var testAgainstLo = lowerBound.Substring(0, Math.Min(lowerBound.Length, node.Depth + 1));
+                var comparedToLowerBound = test.CompareTo(testAgainstLo);
                 var largeEnough = comparedToLowerBound > -1;
 
                 if (!largeEnough)
@@ -202,7 +203,8 @@ namespace Resin.IO.Read
                 }
                 else
                 {
-                    var comparedToUpperBound = test.CompareTo(upperBound);
+                    var testAgainstHi = upperBound.Substring(0, Math.Min(upperBound.Length, node.Depth + 1));
+                    var comparedToUpperBound = test.CompareTo(testAgainstHi);
                     var tooLarge = comparedToUpperBound > 0;
 
                     if (tooLarge)

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Resin.IO;
 using DocumentTable;
+using System;
 
 namespace Resin.Querying
 {
@@ -12,9 +12,32 @@ namespace Resin.Querying
         public IList<DocumentPosting> Postings { get; set; }
         public IEnumerable<DocumentScore> Scored { get; set; }
 
-        private IList<QueryContext> _queries;
+        private IList<QueryContext> _queries = new List<QueryContext>();
  
         public QueryContext(string field, string value) : base(field, value)
+        {
+        }
+
+        public QueryContext(string field, long value) : base(field, value)
+        {
+        }
+
+        public QueryContext(string field, DateTime value) : base(field, value)
+        {
+        }
+
+        public QueryContext(string field, string value, string upperBound)
+            : base(field, value, upperBound)
+        {
+        }
+
+        public QueryContext(string field, long value, long upperBound)
+            : base(field, value, upperBound)
+        {
+        }
+
+        public QueryContext(string field, DateTime value, DateTime upperBound)
+            : base(field, value, upperBound)
         {
         }
 
@@ -26,8 +49,6 @@ namespace Resin.Querying
         private IEnumerable<QueryContext> YieldAll()
         {
             yield return this;
-
-            if (_queries == null) yield break;
 
             foreach (var q in _queries)
             {

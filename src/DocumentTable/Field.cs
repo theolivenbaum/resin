@@ -30,12 +30,12 @@ namespace DocumentTable
 
             if (value is DateTime)
             {
-                obj = ((DateTime)value).ToUniversalTime().Ticks.ToString(CultureInfo.InvariantCulture);
+                obj = ((DateTime)value).ToUniversalTime().Ticks;
             }
 
             if (obj is string)
             {
-                _value = obj.ToString();
+                _value = (string)obj;
             }
             else 
             {
@@ -43,8 +43,7 @@ namespace DocumentTable
 
                 // TODO: implement native number indexes
 
-                var len = long.MaxValue.ToString(CultureInfo.InvariantCulture).Length;
-                _value = obj.ToString().PadLeft(len, '0');
+                _value = obj.ToString().PadLeft(19, '0');
             }
         }
     }
