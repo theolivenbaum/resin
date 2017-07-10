@@ -32,7 +32,7 @@ namespace Resin.IO
                 _tries.Add(key, trie);
             }
 
-            trie.Add(word.Token, word.Posting);
+            trie.Add(word.Token, 0, word.Posting);
         }
 
         public IDictionary<ulong, LcrsTrie> GetTries()

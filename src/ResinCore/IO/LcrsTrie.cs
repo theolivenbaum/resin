@@ -50,7 +50,7 @@ namespace Resin.IO
 
             for (int index = 0;index < nodes.Length; index++)
             {
-                Add(words[index].Value, nodes[index].Postings.ToArray());
+                Add(words[index].Value, 0, nodes[index].Postings.ToArray());
             }
         }
 
@@ -110,15 +110,17 @@ namespace Resin.IO
 
         public void Add(string word)
         {
-            Add(word,new DocumentPosting(-1, 1));
+            Add(word, 0, new DocumentPosting(-1, 1));
         }
 
-        public void Add(string word, params DocumentPosting[] postings)
+        public void Add(string word, int index, params DocumentPosting[] postings)
         {
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 
-            var key = word[0];
-            var eow = word.Length == 1;
+            if (index == word.Length) return;
+
+            var key = word[index];
+            var eow = word.Length == index + 1;
 
             LcrsTrie node;
             if (!TryGetChild(key, out node))
@@ -146,7 +148,8 @@ namespace Resin.IO
 
                         while (true)
                         {
-                            if (sibling.Value < node.Value && (sibling.RightSibling == null || sibling.RightSibling.Value > node.Value))
+                            if (sibling.Value < node.Value && (sibling.RightSibling == null || 
+                                sibling.RightSibling.Value > node.Value))
                             {
                                 break;
                             }
@@ -162,6 +165,7 @@ namespace Resin.IO
             if (eow)
             {
                 node.EndOfWord = true;
+
                 if (node.Postings == null)
                 {
                     node.Postings = new List<DocumentPosting>();
@@ -173,7 +177,7 @@ namespace Resin.IO
             }
             else
             {
-                node.Add(word.Substring(1), postings);
+                node.Add(word, index + 1, postings);
             }
         }
 
