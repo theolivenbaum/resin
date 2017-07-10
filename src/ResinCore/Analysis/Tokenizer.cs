@@ -33,7 +33,6 @@ namespace Resin.Analysis
                     continue;
                 }
 
-                var w = value.Substring(start, length);
                 tokens.Add((start, length));
                 start += length + 1;
                 length = 0;
