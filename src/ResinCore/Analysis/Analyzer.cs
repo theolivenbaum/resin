@@ -1,5 +1,4 @@
 using DocumentTable;
-using Resin.IO;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -67,7 +66,7 @@ namespace Resin.Analysis
             return analyzedTerms;
         }
 
-        public virtual IList<string> Analyze(string value)
+        public IList<string> Analyze(string value)
         {
             return _tokenizer.Tokenize(value).ToList();
         }
