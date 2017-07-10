@@ -261,6 +261,26 @@ namespace Resin.IO
             return words;
         }
 
+        public bool IsWord(char[] word)
+        {
+            if (word.Length == 0) throw new ArgumentException("word");
+
+            LcrsTrie node;
+            if (TryFindPath(word, out node))
+            {
+                if (node.WordCount == 0)
+                {
+                    throw new InvalidOperationException("WordCount");
+                }
+                if (node.EndOfWord)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public IList<Word> Range(string lowerBound, string upperBound)
         {
             if (string.IsNullOrWhiteSpace(lowerBound) &&
@@ -386,6 +406,46 @@ namespace Resin.IO
         }
 
         public bool TryFindPath(string path, out LcrsTrie leaf)
+        {
+            var node = LeftChild;
+            var index = 0;
+
+            // Find path[index] in a binary (left-right) tree.
+            // Stop when destination has been reached.
+
+            while (true)
+            {
+                if (node == null) break;
+
+                if (node.Value.Equals(path[index]))
+                {
+                    if (index + 1 == path.Length)
+                    {
+                        // destination has been reached
+
+                        leaf = node;
+                        return true;
+                    }
+                    else
+                    {
+                        // go deep when you've found c
+
+                        index++;
+                        node = node.LeftChild;
+                    }
+                }
+                else
+                {
+                    // go right when you are looking for c
+
+                    node = node.RightSibling;
+                }
+            }
+            leaf = null;
+            return false;
+        }
+
+        public bool TryFindPath(char[] path, out LcrsTrie leaf)
         {
             var node = LeftChild;
             var index = 0;

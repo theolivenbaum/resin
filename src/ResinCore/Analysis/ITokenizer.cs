@@ -4,6 +4,6 @@ namespace Resin.Analysis
 {
     public interface ITokenizer
     {
-        IEnumerable<string> Tokenize(string value);
+        void Tokenize(string value, List<(int Start, int Length)> tokens);
     }
 }

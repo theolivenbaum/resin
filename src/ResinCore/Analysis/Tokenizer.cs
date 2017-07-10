@@ -1,57 +1,55 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 
 namespace Resin.Analysis
 {
     public class Tokenizer : ITokenizer
     {
-        private readonly HashSet<char> _customTokenSeparators;
-        private readonly HashSet<string> _stopwords;
+        private readonly HashSet<int> _customTokenDelimiters;
         private static readonly Lazy<Tokenizer> _lazy=new Lazy<Tokenizer>(()=>new Tokenizer(),LazyThreadSafetyMode.PublicationOnly);
         public static  ITokenizer Instance {get { return _lazy.Value; } }
 
-        public Tokenizer(char[] tokenSeparators = null, string[] stopwords = null)
+        public Tokenizer(int[] tokenDelimiters = null)
         {
-            _customTokenSeparators = tokenSeparators == null ? null : new HashSet<char>(tokenSeparators);
-            _stopwords = stopwords == null ? null : new HashSet<string>(stopwords);
+            _customTokenDelimiters = tokenDelimiters == null ? null : new HashSet<int>(tokenDelimiters);
         }
 
-        public IEnumerable<string> Tokenize(string value)
+        public void Tokenize(string value, List<(int Start, int Length)> tokens)
         {
-            var normalized = value.ToLower();
+            int length = 0, start = 0;
 
-            var washed = new char[normalized.Length];
-
-            for (int index = 0; index < normalized.Length; index++)
+            for (int i = 0; i < value.Length; i++)
             {
-                var c = normalized[index];
+                if (IsData(value[i]))
+                {
+                    length++;
+                    continue;
+                }
 
-                if (IsNoice(c))
+                if (length == 0)
                 {
-                    washed[index] = ' ';
+                    start++;
+                    continue;
                 }
-                else
-                {
-                    washed[index] = c;
-                }
+
+                var w = value.Substring(start, length);
+                tokens.Add((start, length));
+                start += length + 1;
+                length = 0;
             }
-            var text = new string(washed);
-            var result = text.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
 
-            if (_stopwords == null) return result;
-
-            return result.Where(s => !_stopwords.Contains(s));
+            if (length > 0)
+            {
+                tokens.Add((start, length));
+            }
         }
-      
-        private bool IsNoice(char c)
+
+        private bool IsData(char c)
         {
-            if (_customTokenSeparators == null) return !char.IsLetterOrDigit(c);
+            if (_customTokenDelimiters == null) return char.IsLetterOrDigit(c);
 
-            if (char.IsLetterOrDigit(c)) return _customTokenSeparators.Contains(c);
-
-            return true;
+            return char.IsLetterOrDigit(c) && !_customTokenDelimiters.Contains(c);
         }
     }
 }

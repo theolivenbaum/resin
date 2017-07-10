@@ -8,21 +8,9 @@ namespace Tests
     public class AnalyzerTests : Setup
     {
         [TestMethod]
-        public void Stopwords()
+        public void Can_split_by_custom_delimiters()
         {
-            var terms = new Analyzer(stopwords:new[]{"the", "a"}).Analyze("The americans sent us a new movie.").ToList();
-            Assert.AreEqual(5, terms.Count);
-            Assert.AreEqual("americans", terms[0]);
-            Assert.AreEqual("sent", terms[1]);
-            Assert.AreEqual("us", terms[2]);
-            Assert.AreEqual("new", terms[3]);
-            Assert.AreEqual("movie", terms[4]);
-        }
-
-        [TestMethod]
-        public void Separators()
-        {
-            var terms = new Analyzer(tokenSeparators:new []{'o'}).Analyze("hello world").ToList();
+            var terms = new Analyzer(tokenSeparators:new []{111}).Analyze("hello world").ToList();
             Assert.AreEqual(3, terms.Count);
             Assert.AreEqual("hell", terms[0]);
             Assert.AreEqual("w", terms[1]);
@@ -32,20 +20,10 @@ namespace Tests
         [TestMethod]
         public void Can_analyze()
         {
-            var terms = new Analyzer().Analyze("Hello!World?").ToList();
+            var terms = new Analyzer().Analyze("Hello (World)!").ToList();
             Assert.AreEqual(2, terms.Count);
             Assert.AreEqual("hello", terms[0]);
             Assert.AreEqual("world", terms[1]);
-        }
-
-        [TestMethod]
-        public void Can_analyze_common()
-        {
-            var terms = new Analyzer().Analyze("German politician (CDU)").ToList();
-            Assert.AreEqual(3, terms.Count);
-            Assert.AreEqual("german", terms[0]);
-            Assert.AreEqual("politician", terms[1]);
-            Assert.AreEqual("cdu", terms[2]);
         }
 
         [TestMethod]

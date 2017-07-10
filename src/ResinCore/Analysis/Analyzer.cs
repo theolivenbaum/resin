@@ -1,20 +1,15 @@
 using DocumentTable;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Resin.Analysis
 {
     public class Analyzer : IAnalyzer
     {
         private readonly ITokenizer _tokenizer;
-        private readonly HashSet<char> _customTokenSeparators;
-        private readonly HashSet<string> _stopwords;
  
-        public Analyzer(ITokenizer tokenizer = null, char[] tokenSeparators = null, string[] stopwords = null)
+        public Analyzer(ITokenizer tokenizer = null, int[] tokenSeparators = null)
         {
-            _customTokenSeparators = tokenSeparators == null ? null : new HashSet<char>(tokenSeparators);
-            _stopwords = stopwords == null ? null : new HashSet<string>(stopwords);
-            _tokenizer = tokenizer == null ? new Tokenizer(tokenSeparators, stopwords) : tokenizer;
+            _tokenizer = tokenizer ?? new Tokenizer(tokenSeparators);
         }
 
         public AnalyzedDocument AnalyzeDocument(Document document)
@@ -68,16 +63,18 @@ namespace Resin.Analysis
 
         public IList<string> Analyze(string value)
         {
-            return _tokenizer.Tokenize(value).ToList();
-        }
+            var tokens = new List<(int Start, int Length)>();
 
-        private bool IsNoice(char c)
-        {
-            if (_customTokenSeparators == null) return !char.IsLetterOrDigit(c);
+            _tokenizer.Tokenize(value, tokens);
 
-            if (char.IsLetterOrDigit(c)) return _customTokenSeparators.Contains(c);
+            var result = new List<string>();
 
-            return true;
+            foreach (var token in tokens)
+            {
+                result.Add(value.Substring(token.Start, token.Length).ToLowerInvariant());
+            }
+
+            return result;
         }
     }
 }
