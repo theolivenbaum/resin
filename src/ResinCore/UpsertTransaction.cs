@@ -77,16 +77,13 @@ namespace Resin
             var ts = new List<Task>();
             var trieBuilder = new TrieBuilder();
             var docTimer = Stopwatch.StartNew();
+            var upsert = new DocumentUpsertOperation(_writeSession, _analyzer, trieBuilder);
 
             foreach (var doc in _documents.ReadSource())
             {
                 doc.Id = _count++;
 
-                new DocumentUpsertOperation().Write(
-                    doc,
-                    _writeSession,
-                    _analyzer,
-                    trieBuilder);
+                upsert.Write(doc);
             }
 
             Log.InfoFormat("stored {0} documents in {1}", _count+1, docTimer.Elapsed);

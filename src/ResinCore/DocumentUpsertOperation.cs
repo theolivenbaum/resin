@@ -7,13 +7,20 @@ namespace Resin
 {
     public class DocumentUpsertOperation
     {
-        public void Write(
-            Document document,
-            IWriteSession writeSession,
-            IAnalyzer analyzer,
-            TrieBuilder trieBuilder)
+        private readonly IWriteSession _writeSession;
+        private readonly IAnalyzer _analyzer;
+        private readonly TrieBuilder _treeBuilder;
+
+        public DocumentUpsertOperation(IWriteSession writeSession, IAnalyzer analyzer, TrieBuilder treeBuilder)
         {
-            var analyzed = analyzer.AnalyzeDocument(document);
+            _writeSession = writeSession;
+            _analyzer = analyzer;
+            _treeBuilder = treeBuilder;
+        }
+
+        public void Write(Document document)
+        {
+            var analyzed = _analyzer.AnalyzeDocument(document);
 
             foreach (var word in analyzed.Words)
             {
@@ -21,10 +28,10 @@ namespace Resin
                 var token = word.Term.Word.Value;
                 var posting = word.Posting;
 
-                trieBuilder.Add(new WordInfo(field, token, posting));
+                _treeBuilder.Add(new WordInfo(field, token, posting));
             }
 
-            writeSession.Write(document);
+            _writeSession.Write(document);
         }
     }
 }
