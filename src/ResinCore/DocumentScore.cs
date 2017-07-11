@@ -30,23 +30,25 @@ namespace Resin
             Score = (Score + score.Score);
         }
 
-        public static IEnumerable<DocumentScore> Not(IEnumerable<DocumentScore> source, IEnumerable<DocumentScore> exclude)
+        public static IList<DocumentScore> Not(IEnumerable<DocumentScore> source, IEnumerable<DocumentScore> exclude)
         {
             var dic = exclude.ToDictionary(x => x.DocumentId);
+            var result = new List<DocumentScore>();
 
             foreach (var score in source)
             {
                 DocumentScore exists;
                 if (!dic.TryGetValue(score.DocumentId, out exists))
                 {
-                    yield return score;
+                    result.Add(score);
                 }
             }
+            return result;
         }
 
-        public static IEnumerable<DocumentScore> CombineOr(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
+        public static IList<DocumentScore> CombineOr(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
         {
-            if (first == null) return other;
+            if (first == null) return other.ToList();
 
             return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>
             {
@@ -58,12 +60,13 @@ namespace Resin
                     top.Add(score);
                 }
                 return top;
-            });
+            }).ToList();
         }
 
-        public static IEnumerable<DocumentScore> CombineAnd(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
+        public static IList<DocumentScore> CombineAnd(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
         {
             var dic = other.ToDictionary(x => x.DocumentId);
+            var result = new List<DocumentScore>(dic.Count);
 
             foreach (var score in first)
             {
@@ -71,9 +74,10 @@ namespace Resin
                 if (dic.TryGetValue(score.DocumentId, out exists))
                 {
                     score.Add(exists);
-                    yield return score;
+                    result.Add(score);
                 }
             }
+            return result;
         }
 
         public override string ToString()

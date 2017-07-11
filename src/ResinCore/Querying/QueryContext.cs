@@ -68,15 +68,15 @@ namespace Resin.Querying
 
                     if (child.And)
                     {
-                        first = DocumentScore.CombineAnd(first, other).ToList();
+                        first = DocumentScore.CombineAnd(first, other);
                     }
                     else if (child.Not)
                     {
-                        first = DocumentScore.Not(first, other).ToList();
+                        first = DocumentScore.Not(first, other);
                     }
                     else // Or
                     {
-                        first = DocumentScore.CombineOr(first, other).ToList();
+                        first = DocumentScore.CombineOr(first, other);
                     }
                 } 
             }
