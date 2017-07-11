@@ -9,9 +9,9 @@ namespace DocumentTable
         public PostingsWriter(Stream stream) : base(stream)
         {
         }
-        protected override byte[] Serialize(List<DocumentPosting> block)
+        protected override int Serialize(List<DocumentPosting> block, Stream stream)
         {
-            return block.Serialize();
+            return block.Serialize(stream);
         }
     }
 }

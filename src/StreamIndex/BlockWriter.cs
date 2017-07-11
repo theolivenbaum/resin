@@ -5,7 +5,7 @@ namespace StreamIndex
 {
     public abstract class BlockWriter<T> : IDisposable
     {
-        protected abstract byte[] Serialize(T block);
+        protected abstract int Serialize(T block, Stream stream);
 
         private readonly Stream _stream;
 
@@ -18,17 +18,13 @@ namespace StreamIndex
 
         public BlockInfo Write(T block)
         {
-            var pos = _stream.Position;
-
-            var bytes = Serialize(block);
-
-            var info = new BlockInfo(pos, bytes.Length);
+            var offset = _stream.Position;
+            var size = Serialize(block, _stream);
+            var info = new BlockInfo(offset, size);
 
             if (info.Length < 1)
                 throw new InvalidOperationException(
                     string.Format("invalid length {0}", info.Length));
-
-            _stream.Write(bytes, 0, bytes.Length);
 
             return info;
         }

@@ -331,18 +331,14 @@ namespace DocumentTable
             stream.Write(hashBytes, 0, sizeof(UInt64));
         }
 
-        public static byte[] Serialize(this DocumentTableRow document, Compression compression)
+        public static int Serialize(this DocumentTableRow document, Stream stream, Compression compression)
         {
-            using (var stream = new MemoryStream())
-            {
-                document.Fields.Serialize(compression, stream);
-
-                return stream.ToArray();
-            }
+            return document.Fields.Serialize(compression, stream);
         }
 
-        public static void Serialize(this IDictionary<short, Field> fields, Compression compression, Stream stream)
+        public static int Serialize(this IDictionary<short, Field> fields, Compression compression, Stream stream)
         {
+            var size = 0;
             foreach (var field in fields)
             {
                 byte[] keyBytes = BitConverter.GetBytes(field.Key);
@@ -374,7 +370,10 @@ namespace DocumentTable
                 stream.Write(keyBytes, 0, sizeof(short));
                 stream.Write(valLengthBytes, 0, sizeof(int));
                 stream.Write(valBytes, 0, valBytes.Length);
+
+                size += (keyBytes.Length + valLengthBytes.Length + valBytes.Length);
             }
+            return size;
         }
 
         public static void Serialize(this IEnumerable<Field> fields, Compression compression, Stream stream)
@@ -478,26 +477,26 @@ namespace DocumentTable
             }
         }
 
-        public static byte[] Serialize(this IEnumerable<DocumentPosting> postings)
+        public static int Serialize(this IEnumerable<DocumentPosting> postings, Stream stream)
         {
-            using (var stream = new MemoryStream())
+            var size = 0;
+            foreach (var posting in postings)
             {
-                foreach (var posting in postings)
+                byte[] idBytes = BitConverter.GetBytes(posting.DocumentId);
+                byte[] countBytes = BitConverter.GetBytes(posting.Count);
+
+                if (!BitConverter.IsLittleEndian)
                 {
-                    byte[] idBytes = BitConverter.GetBytes(posting.DocumentId);
-                    byte[] countBytes = BitConverter.GetBytes(posting.Count);
-
-                    if (!BitConverter.IsLittleEndian)
-                    {
-                        Array.Reverse(idBytes);
-                        Array.Reverse(countBytes);
-                    }
-
-                    stream.Write(idBytes, 0, sizeof(int));
-                    stream.Write(countBytes, 0, sizeof(int));
+                    Array.Reverse(idBytes);
+                    Array.Reverse(countBytes);
                 }
-                return stream.ToArray();
+
+                stream.Write(idBytes, 0, sizeof(int));
+                stream.Write(countBytes, 0, sizeof(int));
+
+                size += (idBytes.Length + countBytes.Length);
             }
+            return size;
         }
     }
 }

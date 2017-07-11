@@ -9,9 +9,9 @@ namespace DocumentTable
         {
         }
 
-        protected override byte[] Serialize(BlockInfo block)
+        protected override int Serialize(BlockInfo block, Stream stream)
         {
-            return block.Serialize();
+            return block.Serialize(stream);
         }
     }
 }

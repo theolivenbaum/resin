@@ -60,32 +60,27 @@ namespace StreamIndex
             }
             else
             {
-                var blockBytes = block.Value.Serialize();
-
-                stream.Write(blockBytes, 0, blockBytes.Length);
+                block.Value.Serialize(stream);
 
                 return true;
             }
         }
 
-        public static byte[] Serialize(this BlockInfo block)
+        public static int Serialize(this BlockInfo block, Stream stream)
         {
-            using (var stream = new MemoryStream())
+            byte[] posBytes = BitConverter.GetBytes(block.Position);
+            byte[] lenBytes = BitConverter.GetBytes(block.Length);
+
+            if (!BitConverter.IsLittleEndian)
             {
-                byte[] posBytes = BitConverter.GetBytes(block.Position);
-                byte[] lenBytes = BitConverter.GetBytes(block.Length);
-
-                if (!BitConverter.IsLittleEndian)
-                {
-                    Array.Reverse(posBytes);
-                    Array.Reverse(lenBytes);
-                }
-
-                stream.Write(posBytes, 0, posBytes.Length);
-                stream.Write(lenBytes, 0, lenBytes.Length);
-
-                return stream.ToArray();
+                Array.Reverse(posBytes);
+                Array.Reverse(lenBytes);
             }
+
+            stream.Write(posBytes, 0, posBytes.Length);
+            stream.Write(lenBytes, 0, lenBytes.Length);
+
+            return posBytes.Length + lenBytes.Length;
         }
     }
 }

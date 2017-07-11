@@ -12,9 +12,9 @@ namespace DocumentTable
             _compression = compression;
         }
 
-        protected override byte[] Serialize(DocumentTableRow document)
+        protected override int Serialize(DocumentTableRow document, Stream stream)
         {
-            return document.Serialize(_compression);
+            return document.Serialize(stream, _compression);
         }
     }
 }
