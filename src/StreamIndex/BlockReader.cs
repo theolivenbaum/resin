@@ -38,12 +38,6 @@ namespace StreamIndex
                 throw new ArgumentOutOfRangeException(
                     "info", string.Format("invalid length {0}", info.Length));
 
-            //_stream.Seek(_offset + info.Position, SeekOrigin.Begin);
-
-            //byte[] buffer = new byte[info.Length];
-
-            //_stream.Read(buffer, 0, buffer.Length);
-
             return Deserialize(_offset + info.Position, info.Length, _stream);
         }
 
