@@ -16,9 +16,10 @@ namespace DocumentTable
             _keyIndex = keyIndex;
         }
 
-        protected override Document Deserialize(byte[] data)
+        protected override Document Deserialize(long offset, int size, Stream stream)
         {
-            return TableSerializer.DeserializeDocument(data, _compression, _keyIndex);
+            stream.Seek(offset, SeekOrigin.Begin);
+            return TableSerializer.DeserializeDocument(stream, size, _compression, _keyIndex);
         }
     }
 }

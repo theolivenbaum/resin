@@ -13,9 +13,10 @@ namespace DocumentTable
         {
         }
 
-        protected override BlockInfo Deserialize(byte[] data)
+        protected override BlockInfo Deserialize(long offset, int size, Stream stream)
         {
-            return BlockSerializer.DeserializeBlock(data);
+            stream.Seek(offset, SeekOrigin.Begin);
+            return BlockSerializer.DeserializeBlock(stream);
         }
     }
 }

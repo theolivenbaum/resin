@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace StreamIndex
 {
     public abstract class BlockReader<T> : IDisposable
     {
-        protected abstract T Deserialize(byte[] data);
+        protected abstract T Deserialize(long offset, int size, Stream stream);
 
         private readonly long _offset;
 
@@ -39,13 +38,13 @@ namespace StreamIndex
                 throw new ArgumentOutOfRangeException(
                     "info", string.Format("invalid length {0}", info.Length));
 
-            _stream.Seek(_offset + info.Position, SeekOrigin.Begin);
+            //_stream.Seek(_offset + info.Position, SeekOrigin.Begin);
 
-            byte[] buffer = new byte[info.Length];
+            //byte[] buffer = new byte[info.Length];
 
-            _stream.Read(buffer, 0, buffer.Length);
+            //_stream.Read(buffer, 0, buffer.Length);
 
-            return Deserialize(buffer);
+            return Deserialize(_offset + info.Position, info.Length, _stream);
         }
 
         public void Dispose()

@@ -55,24 +55,22 @@ namespace DocumentTable
 
         public static IEnumerable<DocumentPosting> DeserializePostings(byte[] data)
         {
-            var chunk = new byte[SizeOfPosting()];
             int pos = 0;
 
             while (pos < data.Length)
             {
-                Array.Copy(data, pos, chunk, 0, chunk.Length);
-
                 if (!BitConverter.IsLittleEndian)
                 {
-                    Array.Reverse(chunk);//ain't gonna work. TODO: reverse individual byte streams, not entire chunk (this is a bug).
+                    Array.Reverse(data, pos, sizeof(int));
+                    Array.Reverse(data, pos + sizeof(int), sizeof(int));
                 }
 
                 yield return new DocumentPosting(
-                    BitConverter.ToInt32(chunk, 0),
-                    BitConverter.ToInt32(chunk, sizeof(int))
+                    BitConverter.ToInt32(data, pos),
+                    BitConverter.ToInt32(data, pos + sizeof(int))
                     );
 
-                pos = pos + chunk.Length;
+                pos += 2* sizeof(int);
             }
         }
 
@@ -114,30 +112,22 @@ namespace DocumentTable
             return new DocHash(BitConverter.ToUInt64(hashBytes, 0), isObsoleteByte == 1);
         }
 
-        public static Document DeserializeDocument(byte[] data, Compression compression, IDictionary<short, string> keyIndex)
+        public static Document DeserializeDocument(Stream stream, int sizeOfDoc, Compression compression, IDictionary<short, string> keyIndex)
         {
-            var doc = DeserializeFields(data, compression, keyIndex).ToList();
+            var doc = DeserializeFields(stream, sizeOfDoc, compression, keyIndex).ToList();
 
             return new Document(doc);
         }
 
-        public static IEnumerable<Field> DeserializeFields(byte[] data, Compression compression, IDictionary<short, string> keyIndex)
+        public static IEnumerable<Field> DeserializeFields(Stream stream, int size, Compression compression, IDictionary<short, string> keyIndex)
         {
-            using (var stream = new MemoryStream(data))
-            {
-                return DeserializeFields(stream, compression, keyIndex).ToList();
-            }
-        }
+            var read = 0;
 
-        public static IEnumerable<Field> DeserializeFields(Stream stream, Compression compression, IDictionary<short, string> keyIndex)
-        {
-            while (true)
+            while (read < size)
             {
                 var keyIdBytes = new byte[sizeof(short)];
 
-                var read = stream.Read(keyIdBytes, 0, sizeof(short));
-
-                if (read == 0) break;
+                stream.Read(keyIdBytes, 0, sizeof(short));
 
                 if (!BitConverter.IsLittleEndian)
                 {
@@ -182,6 +172,8 @@ namespace DocumentTable
                 {
                     value = Encoding.GetString(valBytes);
                 }
+
+                read += sizeof(short) + sizeof(int) + valBytes.Length;
 
                 yield return new Field(key, value);
             }
