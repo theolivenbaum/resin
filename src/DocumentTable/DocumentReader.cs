@@ -19,6 +19,7 @@ namespace DocumentTable
         protected override Document Deserialize(long offset, int size, Stream stream)
         {
             stream.Seek(offset, SeekOrigin.Begin);
+
             return TableSerializer.DeserializeDocument(stream, size, _compression, _keyIndex);
         }
     }

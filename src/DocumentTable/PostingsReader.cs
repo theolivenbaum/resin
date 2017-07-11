@@ -1,7 +1,6 @@
 ﻿using StreamIndex;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace DocumentTable
 {
@@ -19,11 +18,9 @@ namespace DocumentTable
 
         protected override IList<DocumentPosting> Deserialize(long offset, int size, Stream stream)
         {
-            var data = new byte[size];
             stream.Seek(offset, SeekOrigin.Begin);
-            stream.Read(data, 0, size);
 
-            return TableSerializer.DeserializePostings(data).ToList();
+            return TableSerializer.DeserializePostings(stream, size);
         }
     }
 }

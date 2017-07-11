@@ -16,6 +16,7 @@ namespace DocumentTable
         protected override BlockInfo Deserialize(long offset, int size, Stream stream)
         {
             stream.Seek(offset, SeekOrigin.Begin);
+
             return BlockSerializer.DeserializeBlock(stream);
         }
     }

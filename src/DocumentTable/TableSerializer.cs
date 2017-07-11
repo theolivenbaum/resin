@@ -53,25 +53,32 @@ namespace DocumentTable
             }
         }
 
-        public static IEnumerable<DocumentPosting> DeserializePostings(byte[] data)
+        public static IList<DocumentPosting> DeserializePostings(Stream stream, int size)
         {
-            int pos = 0;
+            var count = size / (2 * sizeof(int));
+            var postings = new List<DocumentPosting>(count);
+            var buffer = new byte[2 * sizeof(int)];
+            var read = 0;
 
-            while (pos < data.Length)
+            while (read < count)
             {
+                stream.Read(buffer, 0, buffer.Length);
+
                 if (!BitConverter.IsLittleEndian)
                 {
-                    Array.Reverse(data, pos, sizeof(int));
-                    Array.Reverse(data, pos + sizeof(int), sizeof(int));
+                    Array.Reverse(buffer, 0, sizeof(int));
+                    Array.Reverse(buffer, sizeof(int), sizeof(int));
                 }
 
-                yield return new DocumentPosting(
-                    BitConverter.ToInt32(data, pos),
-                    BitConverter.ToInt32(data, pos + sizeof(int))
-                    );
+                postings.Add(new DocumentPosting(
+                    BitConverter.ToInt32(buffer, 0),
+                    BitConverter.ToInt32(buffer, sizeof(int))
+                    ));
 
-                pos += 2* sizeof(int);
+                read++;
             }
+
+            return postings;
         }
 
         public static IEnumerable<DocHash> DeserializeDocHashes(Stream stream)
