@@ -60,7 +60,13 @@ namespace Resin
                 _directory, string.Format("{0}.{1}", _ix.VersionId, "pos"));
 
             var compoundFileName = Path.Combine(_directory, _ix.VersionId + ".rdb");
-            _compoundFile = new FileStream(compoundFileName, FileMode.CreateNew);
+            _compoundFile = new FileStream(
+                compoundFileName, 
+                FileMode.CreateNew, 
+                FileAccess.ReadWrite, 
+                FileShare.ReadWrite, 
+                4096
+                );
 
             var factory = storeWriterFactory ?? new WriteSessionFactory(directory, _ix, _compression);
 
