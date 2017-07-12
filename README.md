@@ -56,7 +56,7 @@ The disk representation of a LcrsTrie is a LcrsNode.
 
 A sorted string table is a file with key/value pairs sorted by key.
 
-A LcrsNode file is a file with key/value pairs sorted by key where the value is a list of postings and where each node is encoded with the weight of their sub tree such that skipping over sub trees is efficiently done by seeking a distance in the file equal to the weight of a sub tree root node * the size of a node (which is fixed in size).
+A LcrsNode file is a file with key/value pairs sorted by key where the value is an address to a list of postings and where each node is encoded with the weight of their sub tree such that skipping over sub trees is efficiently done by seeking a distance in the file equal to the weight of a sub tree root node * the size of a node (which is fixed in size).
 
 From a sorted list of strings you can create a binary search tree. In a LcrsNode file the nodes are already laid out as a tree in such a way that depth-first search is a forward-only read. Breadth-first search could be done but would require lots of seeking back and forth as the file layout is currently. 
 
