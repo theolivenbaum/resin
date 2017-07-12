@@ -130,7 +130,6 @@ namespace Resin
             _postingsWriter.Stream.CopyTo(_compoundFile);
 
             _ix.DocumentCount = _count;
-            _ix.Serialize(_compoundFile);
 
             return _ix.VersionId;
         }
