@@ -5,7 +5,7 @@ namespace Resin.Analysis
 {
     public interface IAnalyzer
     {
-        AnalyzedDocument AnalyzeDocument(Document document);
+        IList<AnalyzedTerm> AnalyzeDocument(Document document);
         IList<string> Analyze(string value);
     }
 }

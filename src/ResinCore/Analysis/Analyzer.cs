@@ -12,17 +12,11 @@ namespace Resin.Analysis
             _tokenizer = tokenizer ?? new Tokenizer(tokenSeparators);
         }
 
-        public AnalyzedDocument AnalyzeDocument(Document document)
-        {
-            var terms = AnalyzeDocumentInternal(document);
-            return new AnalyzedDocument(document.Id, terms);
-        }
-
-        private IList<AnalyzedTerm> AnalyzeDocumentInternal(Document document)
+        public IList<AnalyzedTerm> AnalyzeDocument(Document document)
         {
             var analyzedTerms = new List<AnalyzedTerm>();
 
-            foreach(var field in document.Fields.Values)
+            foreach (var field in document.Fields.Values)
             {
                 if (field.Analyze && field.Index)
                 {

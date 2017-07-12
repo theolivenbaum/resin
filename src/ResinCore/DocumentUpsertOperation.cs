@@ -20,9 +20,9 @@ namespace Resin
 
         public void Write(Document document)
         {
-            var analyzed = _analyzer.AnalyzeDocument(document);
+            var analyzedTerms = _analyzer.AnalyzeDocument(document);
 
-            foreach (var word in analyzed.Words)
+            foreach (var word in analyzedTerms)
             {
                 var field = word.Term.Field;
                 var token = word.Term.Word.Value;
