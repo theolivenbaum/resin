@@ -43,20 +43,16 @@ namespace Resin
             _readSession = _sessionFactory.OpenReadSession(_version);
         }
 
-        public Result Search(string query, int page = 0, int size = 10000)
+        public Result Search(QueryContext query, int page = 0, int size = 10000)
         {
-            var searchTime = new Stopwatch();
-            searchTime.Start();
-
-            var queryContext = _parser.Parse(query);
-
-            if (queryContext == null)
+            if (query == null)
             {
                 return new Result { Docs = new List<ScoredDocument>() };
             }
 
+            var searchTime = Stopwatch.StartNew();
             var skip = page * size;
-            var scores = Collect(queryContext, _version);
+            var scores = Collect(query, _version);
             var paged = scores.Skip(skip).Take(size).ToList();
             var docs = new List<ScoredDocument>(size);
             var docTime = new Stopwatch();
@@ -64,7 +60,7 @@ namespace Resin
 
             GetDocs(paged, _version, docs);
 
-            Log.DebugFormat("fetched {0} docs for query {1} in {2}", docs.Count, queryContext, docTime.Elapsed);
+            Log.DebugFormat("fetched {0} docs for query {1} in {2}", docs.Count, query, docTime.Elapsed);
 
             var result = new Result
             {
@@ -72,9 +68,16 @@ namespace Resin
                 Docs = docs.OrderByDescending(d => d.Score).ToList()
             };
 
-            Log.DebugFormat("searched {0} in {1}", queryContext, searchTime.Elapsed);
+            Log.DebugFormat("searched {0} in {1}", query, searchTime.Elapsed);
 
             return result;
+        }
+
+        public Result Search(string query, int page = 0, int size = 10000)
+        {
+            var queryContext = _parser.Parse(query);
+
+            return Search(queryContext, page, size);
         }
 
         private IList<DocumentScore> Collect(QueryContext query, long version)
