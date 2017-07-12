@@ -2,7 +2,7 @@
 
 namespace Resin.Analysis
 {
-    public struct AnalyzedTerm
+    public class AnalyzedTerm
     {
         public Term Term { get; private set; }
         public DocumentPosting Posting { get; private set; }

@@ -25,7 +25,7 @@ namespace DocumentTable
 
             _stream.Seek(pos, SeekOrigin.Begin);
 
-            var hash = TableSerializer.DeserializeDocHash(_stream).Value;
+            var hash = TableSerializer.DeserializeDocHash(_stream);
 
             return hash;
         }

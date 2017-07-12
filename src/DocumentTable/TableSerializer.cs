@@ -108,7 +108,7 @@ namespace DocumentTable
 
                 if (hash == null) break;
 
-                yield return hash.Value;
+                yield return hash;
             }
         }
 
@@ -120,7 +120,7 @@ namespace DocumentTable
             }
         }
 
-        public static DocHash? DeserializeDocHash(Stream stream)
+        public static DocHash DeserializeDocHash(Stream stream)
         {
             var isObsoleteByte = stream.ReadByte();
 

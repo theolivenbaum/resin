@@ -5,7 +5,7 @@ using System.Diagnostics;
 namespace Resin.IO
 {
     [DebuggerDisplay("{Value} {EndOfWord}")]
-    public struct LcrsNode : IEquatable<LcrsNode>
+    public class LcrsNode : IEquatable<LcrsNode>
     {
         public readonly char Value;
         public readonly bool HaveSibling;

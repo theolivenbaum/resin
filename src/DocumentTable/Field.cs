@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace DocumentTable
 {
     [DebuggerDisplay("{Value}")]
-    public struct Field
+    public class Field
     {
         private readonly string _value;
 

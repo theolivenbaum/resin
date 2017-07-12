@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace DocumentTable
 {
     [System.Diagnostics.DebuggerDisplay("{Value} {Count}")]
-    public struct Word
+    public class Word
     {
         public readonly string Value;
         public readonly BlockInfo? PostingsAddress;

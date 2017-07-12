@@ -2,7 +2,7 @@
 
 namespace DocumentTable
 {
-    public struct DocHash : IEquatable<DocHash>
+    public class DocHash : IEquatable<DocHash>
     {
         public UInt64 Hash { get; private set; }
         public bool IsObsolete { get; set; }

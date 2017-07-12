@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace DocumentTable
 {
     [DebuggerDisplay("{Field}:{Word}")]
-    public struct Term : IEquatable<Term>, IComparable<Term>
+    public class Term : IEquatable<Term>, IComparable<Term>
     {
         public string Field { get; private set; }
         public Word Word { get; private set; }

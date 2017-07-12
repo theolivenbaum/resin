@@ -6,7 +6,7 @@ using System.Linq;
 namespace DocumentTable
 {
     [DebuggerDisplay("{DocumentId}:{Count}")]
-    public struct DocumentPosting
+    public class DocumentPosting
     {
         public int DocumentId { get; private set; }
         public int Count { get; set; }
