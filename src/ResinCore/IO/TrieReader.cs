@@ -291,6 +291,7 @@ namespace Resin.IO.Read
 
             var root = new LcrsTrie();
 
+            // TODO: assemble trie node by node
             foreach (var word in words)
             {
                 root.Add(word.Value);
