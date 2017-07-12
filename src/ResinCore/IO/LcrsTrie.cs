@@ -87,13 +87,13 @@ namespace Resin.IO
             }
         }
 
-        public IEnumerable<LcrsTrie> NodesDepthFirst()
+        public IEnumerable<LcrsTrie> AllNodesDepthFirst()
         {
             yield return this;
 
             if (LeftChild != null)
             {
-                foreach (var node in LeftChild.NodesDepthFirst())
+                foreach (var node in LeftChild.AllNodesDepthFirst())
                 {
                     yield return node;
                 }
@@ -101,7 +101,7 @@ namespace Resin.IO
 
             if (RightSibling != null)
             {
-                foreach (var node in RightSibling.NodesDepthFirst())
+                foreach (var node in RightSibling.AllNodesDepthFirst())
                 {
                     yield return node;
                 }
@@ -483,13 +483,16 @@ namespace Resin.IO
 
         public LcrsTrie Balance()
         {
-            var nodes = NodesDepthFirst().ToArray();
+            var nodes = AllNodesDepthFirst().ToArray();
 
             return Balance(nodes, 0, nodes.Length - 1);
         }
 
         private LcrsTrie Balance(LcrsTrie[] arr, int start, int end)
         {
+            // this will distort the tree
+            // TODO: balance a sorted list of strings instead of a list of nodes
+
             if (start > end)
             {
                 return null;
