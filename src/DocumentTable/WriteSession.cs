@@ -28,7 +28,7 @@ namespace DocumentTable
                     new FileStream(docAddressFn, FileMode.CreateNew, FileAccess.ReadWrite));
 
             _docWriter = new DocumentWriter(
-                new FileStream(docFileName, FileMode.CreateNew, FileAccess.Write),
+                new FileStream(docFileName, FileMode.CreateNew, FileAccess.ReadWrite),
                 compression);
 
             _docHashesStream = new FileStream(
@@ -76,12 +76,12 @@ namespace DocumentTable
             _addressWriter.Stream.Position = 0;
             _addressWriter.Stream.CopyTo(_compoundFile);
 
-            using (var fs = new FileStream(_keyIndexFileName, FileMode.Create, FileAccess.Write))
-            using (var writer = new StreamWriter(fs, TableSerializer.Encoding))
-            foreach (var key in _fieldNames)
-            {
-                writer.WriteLine(key);
-            }
+            _ix.KeyIndexOffset = _compoundFile.Position;
+            _ix.KeyIndexSize = _fieldNames.Serialize(_compoundFile);
+
+            _docWriter.Stream.Flush();
+            _docWriter.Stream.Position = 0;
+            _docWriter.Stream.CopyTo(_compoundFile);
 
             _flushed = true;
         }

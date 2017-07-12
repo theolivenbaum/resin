@@ -9,7 +9,6 @@ namespace DocumentTable
         private readonly PostingsReader _postingsReader;
         private readonly DocHashReader _docHashReader;
         private readonly DocumentAddressReader _addressReader;
-        private readonly DocumentReader _documentReader;
         private readonly int _blockSize;
         private readonly Stream _stream;
 
@@ -21,7 +20,6 @@ namespace DocumentTable
             PostingsReader postingsReader, 
             DocHashReader docHashReader, 
             DocumentAddressReader addressReader, 
-            DocumentReader documentReader,
             Stream stream)
         {
             Version = version;
@@ -30,7 +28,6 @@ namespace DocumentTable
             _docHashReader = docHashReader;
             _postingsReader = postingsReader;
             _addressReader = addressReader;
-            _documentReader = documentReader;
             _blockSize = BlockSerializer.SizeOfBlock();
         }
 
@@ -64,7 +61,11 @@ namespace DocumentTable
             var index = 0;
             var documents = new List<Document>(documentIds.Count);
 
-            foreach (var document in _documentReader.Read(docAddresses))
+            _stream.Seek(Version.KeyIndexOffset, SeekOrigin.Begin);
+            var keyIndex = TableSerializer.ReadKeyIndex(_stream, Version.KeyIndexSize);
+
+            using (var documentReader = new DocumentReader(_stream, Version.Compression, keyIndex))
+            foreach (var document in documentReader.Read(docAddresses))
             {
                 document.Id = documentIds[index++];
                 documents.Add(document);
@@ -76,9 +77,9 @@ namespace DocumentTable
         public void Dispose()
         {
             _addressReader.Dispose();
-            _documentReader.Dispose();
             _docHashReader.Dispose();
             _postingsReader.Dispose();
+            _stream.Dispose();
         }
     }
 }

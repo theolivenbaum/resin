@@ -5,6 +5,7 @@ using System.Linq;
 using Resin.IO;
 using Resin.Sys;
 using DocumentTable;
+using System;
 
 namespace Resin
 {
@@ -16,6 +17,8 @@ namespace Resin
 
         public DeleteByPrimaryKeyTransaction(string directory, IEnumerable<string> primaryKeyValues)
         {
+            throw new DivideByZeroException();
+
             _directory = directory;
             _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(BatchInfo.Load).ToList();
             _pks = primaryKeyValues;

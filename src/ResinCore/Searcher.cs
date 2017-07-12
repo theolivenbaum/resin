@@ -24,6 +24,7 @@ namespace Resin
         private readonly long _version;
         private readonly int _blockSize;
         private readonly IReadSessionFactory _sessionFactory;
+        private readonly IReadSession _readSession;
 
         public Searcher(string directory)
             :this(directory, new QueryParser(new Analyzer()), new TfIdfFactory(), new ReadSessionFactory(directory))
@@ -39,6 +40,7 @@ namespace Resin
                 Util.GetIndexFileNamesInChronologicalOrder(directory).First()));
             _blockSize = BlockSerializer.SizeOfBlock();
             _sessionFactory = sessionFactory ?? new ReadSessionFactory(directory);
+            _readSession = _sessionFactory.OpenReadSession(_version);
         }
 
         public Result Search(string query, int page = 0, int size = 10000)
@@ -77,12 +79,9 @@ namespace Resin
 
         private IList<DocumentScore> Collect(QueryContext query, long version)
         {
-            using (var readSession = _sessionFactory.OpenReadSession(version))
+            using (var collector = new Collector(_directory, _readSession, _scorerFactory))
             {
-                using (var collector = new Collector(_directory, readSession, _scorerFactory))
-                {
-                    return collector.Collect(query);
-                }
+                return collector.Collect(query);
             }
         }
 
@@ -92,21 +91,19 @@ namespace Resin
 
             var docFileName = Path.Combine(_directory, version + ".dtbl");
 
-            using (var readSession = _sessionFactory.OpenReadSession(version))
+            var dic = scores.ToDictionary(x => x.DocumentId, y => y.Score);
+
+            foreach (var doc in _readSession.ReadDocuments(documentIds))
             {
-                var dic = scores.ToDictionary(x => x.DocumentId, y => y.Score);
+                var score = dic[doc.Id];
 
-                foreach (var doc in readSession.ReadDocuments(documentIds))
-                {
-                    var score = dic[doc.Id];
-
-                    result.Add(new ScoredDocument(doc, score));
-                }
+                result.Add(new ScoredDocument(doc, score));
             }
         }
 
         public void Dispose()
         {
+            _readSession.Dispose();
         }
     }
 }

@@ -8,17 +8,19 @@ namespace DocumentTable
     {
         private readonly Compression _compression;
         private readonly IDictionary<short, string> _keyIndex;
+        private readonly long _offset;
 
         public DocumentReader(
             Stream stream, Compression compression, IDictionary<short, string> keyIndex) : base(stream)
         {
             _compression = compression;
             _keyIndex = keyIndex;
+            _offset = stream.Position;
         }
 
         protected override Document Deserialize(long offset, int size, Stream stream)
         {
-            stream.Seek(offset, SeekOrigin.Begin);
+            stream.Seek(_offset + offset, SeekOrigin.Begin);
 
             return TableSerializer.DeserializeDocument(stream, size, _compression, _keyIndex);
         }

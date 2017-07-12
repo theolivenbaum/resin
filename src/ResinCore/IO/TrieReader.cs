@@ -311,11 +311,6 @@ namespace Resin.IO.Read
 
             while (node != LcrsNode.MinValue)
             {
-                if (node.Value == Serializer.SegmentDelimiter)
-                {
-                    break;
-                }
-
                 if (node.Depth != currentDepth)
                 {
                     Skip(node.Weight - 1);

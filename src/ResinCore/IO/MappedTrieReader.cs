@@ -33,7 +33,14 @@ namespace Resin.IO.Read
         {
             if (count > 0)
             {
-                _stream.Seek(_blockSize * count, SeekOrigin.Current);
+                var distance = _blockSize * count;
+
+                _stream.Seek(distance, SeekOrigin.Current);
+
+                if (Log.IsDebugEnabled)
+                {
+                    Log.DebugFormat("s {0}", count);
+                }
             }
         }
 
@@ -47,6 +54,11 @@ namespace Resin.IO.Read
             }
 
             var node = Serializer.DeserializeNode(_stream);
+
+            if (Log.IsDebugEnabled)
+            {
+                Log.DebugFormat("r {0} {1} {2}", node.Depth, node.Value, _stream.Position);
+            }
 
             LastRead = node;
 

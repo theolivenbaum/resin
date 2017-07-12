@@ -22,9 +22,9 @@ namespace DocumentTable
             return 2 * sizeof(int);
         }
 
-        public static IDictionary<short, string> GetKeyIndex(string kixFileName)
+        public static IDictionary<short, string> ReadKeyIndex(Stream stream, int size)
         {
-            var keys = ReadKeys(kixFileName);
+            var keys = DeserializeStringList(stream, size);
             var keyIndex = new Dictionary<short, string>();
 
             for (short i = 0; i < keys.Count; i++)
@@ -35,22 +35,41 @@ namespace DocumentTable
             return keyIndex;
         }
 
-        public static IList<string> ReadKeys(string kixFileName)
+        public static IList<string> DeserializeStringList(Stream stream, int size)
         {
-            using (var fs = File.OpenRead(kixFileName))
-            using (var reader = new StreamReader(fs, TableSerializer.Encoding))
-            {
-                return ReadKeys(reader).ToList();
-            }
-        }
+            var read = 0;
+            var strings = new List<string>();
 
-        public static IEnumerable<string> ReadKeys(StreamReader reader)
-        {
-            string key;
-            while ((key = reader.ReadLine()) != null)
+            while (read < size)
             {
-                yield return key;
+                var valLenBytes = new byte[sizeof(short)];
+
+                stream.Read(valLenBytes, 0, sizeof(short));
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(valLenBytes);
+                }
+
+                short valLen = BitConverter.ToInt16(valLenBytes, 0);
+
+                byte[] valBytes = new byte[valLen];
+
+                stream.Read(valBytes, 0, valLen);
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(valBytes);
+                }
+
+                string value = Encoding.GetString(valBytes);
+
+                strings.Add(value);
+
+                read += sizeof(short) + valLen;
             }
+
+            return strings;
         }
 
         public static IList<DocumentPosting> DeserializePostings(Stream stream, int size)
@@ -220,6 +239,14 @@ namespace DocumentTable
 
             stream.Read(docAddressesOffsetBytes, 0, sizeof(long));
 
+            var keyIndexOffsetBytes = new byte[sizeof(long)];
+
+            stream.Read(keyIndexOffsetBytes, 0, sizeof(long));
+
+            var keyIndexSizeBytes = new byte[sizeof(int)];
+
+            stream.Read(keyIndexSizeBytes, 0, sizeof(int));
+
             var pkFnLenBytes = new byte[sizeof(int)];
 
             stream.Read(pkFnLenBytes, 0, sizeof(int));
@@ -245,11 +272,15 @@ namespace DocumentTable
                 Array.Reverse(docHashOffsetBytes);
                 Array.Reverse(docAddressesOffsetBytes);
                 Array.Reverse(pkFieldNameBytes);
+                Array.Reverse(keyIndexOffsetBytes);
+                Array.Reverse(keyIndexSizeBytes);
             }
 
             var postingsOffset = BitConverter.ToInt64(postingsOffsetBytes, 0);
             var docHashOffset = BitConverter.ToInt64(docHashOffsetBytes, 0);
             var docAddressesOffset = BitConverter.ToInt64(docAddressesOffsetBytes, 0);
+            var keyIndexOffset = BitConverter.ToInt64(keyIndexOffsetBytes, 0);
+            var keyIndexSize = BitConverter.ToInt32(keyIndexSizeBytes, 0);
 
             return new BatchInfo
             {
@@ -260,7 +291,9 @@ namespace DocumentTable
                 PostingsOffset = postingsOffset,
                 DocHashOffset = docHashOffset,
                 DocAddressesOffset = docAddressesOffset,
-                FieldOffsets = fieldOffsets
+                FieldOffsets = fieldOffsets,
+                KeyIndexOffset = keyIndexOffset,
+                KeyIndexSize = keyIndexSize
             };
         }
 
@@ -314,6 +347,28 @@ namespace DocumentTable
                 stream.Write(keyBytes, 0, sizeof(ulong));
                 stream.Write(valBytes, 0, sizeof(long));
             }
+        }
+
+        public static int Serialize(this IEnumerable<string> entries, Stream stream)
+        {
+            var size = 0;
+            foreach (var entry in entries)
+            {
+                byte[] keyBytes = Encoding.GetBytes(entry);
+                byte[] lengthBytes = BitConverter.GetBytes((short)keyBytes.Length);
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(lengthBytes);
+                    Array.Reverse(keyBytes);
+                }
+
+                stream.Write(lengthBytes, 0, sizeof(short));
+                stream.Write(keyBytes, 0, keyBytes.Length);
+
+                size += keyBytes.Length + sizeof(short);
+            }
+            return size;
         }
 
         public static void Serialize(this DocHash docHash, Stream stream)
@@ -443,6 +498,8 @@ namespace DocumentTable
                 byte[] postingsOffsetBytes = BitConverter.GetBytes(ix.PostingsOffset);
                 byte[] docHashOffsetBytes = BitConverter.GetBytes(ix.DocHashOffset);
                 byte[] docAddressesOffsetBytes = BitConverter.GetBytes(ix.DocAddressesOffset);
+                byte[] keyIndexOffsetBytes = BitConverter.GetBytes(ix.KeyIndexOffset);
+                byte[] keyIndexSizeBytes = BitConverter.GetBytes(ix.KeyIndexSize);
 
                 if (!BitConverter.IsLittleEndian)
                 {
@@ -454,6 +511,8 @@ namespace DocumentTable
                     Array.Reverse(postingsOffsetBytes);
                     Array.Reverse(docHashOffsetBytes);
                     Array.Reverse(docAddressesOffsetBytes);
+                    Array.Reverse(keyIndexOffsetBytes);
+                    Array.Reverse(keyIndexSizeBytes);
                 }
 
                 var fieldCountBytes = BitConverter.GetBytes(ix.FieldOffsets.Count);
@@ -468,6 +527,8 @@ namespace DocumentTable
                 stream.Write(postingsOffsetBytes, 0, sizeof(long));
                 stream.Write(docHashOffsetBytes, 0, sizeof(long));
                 stream.Write(docAddressesOffsetBytes, 0, sizeof(long));
+                stream.Write(keyIndexOffsetBytes, 0, sizeof(long));
+                stream.Write(keyIndexSizeBytes, 0, sizeof(int));
                 stream.Write(pkFnLenBytes, 0, sizeof(int));
 
                 if (pkFnLenBytes.Length > 0) stream.Write(pkFieldNameBytes, 0, pkFieldNameBytes.Length);

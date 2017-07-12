@@ -36,6 +36,7 @@ namespace Resin.IO
             if (trie.LeftChild != null)
             {
                 trie.LeftChild.SerializeDepthFirst(treeStream, 0);
+                LcrsNode.MinValue.Serialize(treeStream);
             }
         }
 

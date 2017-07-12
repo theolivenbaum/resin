@@ -26,6 +26,10 @@ namespace DocumentTable
 
         public IDictionary<ulong, long> FieldOffsets { get; set; }
 
+        public long KeyIndexOffset { get; set; }
+
+        public int KeyIndexSize { get; set; }
+
         public static BatchInfo Load(string fileName)
         {
             var time = new Stopwatch();
