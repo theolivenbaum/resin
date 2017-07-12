@@ -48,7 +48,7 @@ ResinDB's read/write model allow for multi-threaded read and write access to the
 
 ## Dense Unicode trie
 
-A dense trie is a trie where nodes that do not carry data have been left out. This is in contrast to a normal, sparse trie where each node has as many children as there are letters in the alphabet. Further more, in a dense trie a word is marked by a flag directly on the node, instead of following the standard trie regime of marking the end of a word with a node carrying a null value.
+A dense trie is a trie where nodes that do not carry data have been left out. This is in contrast to a sparse trie where each node has as many children as there are letters in the alphabet. Further more, in a dense trie a word is marked by a flag directly on the node, instead of following the more common trie regime of marking the end of a word with a node carrying a null value.
 
 ## No schema
 
