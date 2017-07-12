@@ -26,12 +26,9 @@ namespace DocumentTable
             _fields = fields.ToDictionary(x=>x.Key);
         }
 
-        public DocumentTableRow ToTableRow(IDictionary<string, short> keyIndex)
+        public IDictionary<short, Field> ToTableRow(IDictionary<string, short> keyIndex)
         {
-            var fields = Fields.Values.ToDictionary(
-                field=> keyIndex[field.Key], y => y);
-
-            return new DocumentTableRow(fields);
+            return Fields.Values.ToDictionary(field=> keyIndex[field.Key], y => y);
         }
     }
 }

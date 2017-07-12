@@ -1,9 +1,10 @@
 ﻿using StreamIndex;
+using System.Collections.Generic;
 using System.IO;
 
 namespace DocumentTable
 {
-    public class DocumentWriter : BlockWriter<DocumentTableRow>
+    public class DocumentWriter : BlockWriter<IDictionary<short, Field>>
     {
         private readonly Compression _compression;
 
@@ -12,9 +13,9 @@ namespace DocumentTable
             _compression = compression;
         }
 
-        protected override int Serialize(DocumentTableRow document, Stream stream)
+        protected override int Serialize(IDictionary<short, Field> document, Stream stream)
         {
-            return document.Serialize(stream, _compression);
+            return document.Serialize(_compression, stream);
         }
     }
 }

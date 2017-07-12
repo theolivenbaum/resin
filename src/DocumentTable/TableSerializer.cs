@@ -385,11 +385,6 @@ namespace DocumentTable
             stream.Write(hashBytes, 0, sizeof(UInt64));
         }
 
-        public static int Serialize(this DocumentTableRow document, Stream stream, Compression compression)
-        {
-            return document.Fields.Serialize(compression, stream);
-        }
-
         public static int Serialize(this IDictionary<short, Field> fields, Compression compression, Stream stream)
         {
             var size = 0;
