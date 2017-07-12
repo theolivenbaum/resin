@@ -81,7 +81,6 @@ namespace Resin
         {
             if (_committed) return _ix.VersionId;
 
-            var ts = new List<Task>();
             var trieBuilder = new TrieBuilder();
             var docTimer = Stopwatch.StartNew();
             var upsert = new DocumentUpsertOperation(_writeSession, _analyzer, trieBuilder);
