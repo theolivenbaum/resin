@@ -108,10 +108,6 @@ namespace Resin.IO.Read
             {
                 return;
             }
-            else if (node.Value == Serializer.SegmentDelimiter)
-            {
-                return;
-            }
 
             if (reachedMax || stop)
             {
@@ -300,7 +296,7 @@ namespace Resin.IO.Read
                 root.Add(word.Value);
             }
 
-            return root.LeftChild;
+            return root;
         }
         
         private bool TryFindDepthFirst(string path, out LcrsNode node, bool greaterThan = false)
@@ -321,10 +317,6 @@ namespace Resin.IO.Read
                 {
                     return false;
                 }
-                else if (node.Value == Serializer.SegmentDelimiter)
-                {
-                    break;
-                }
 
                 if ((greaterThan && node.Value >= path[currentDepth]) ||
                     (node.Value == path[currentDepth]))
@@ -342,6 +334,15 @@ namespace Resin.IO.Read
                 node = Step();
             }
             return false;
+        }
+
+        public IEnumerable<Word> Words()
+        {
+            var words = new List<Word>();
+
+            DepthFirst(string.Empty, new List<char>(), words, -1);
+
+            return words;
         }
 
         private void Rewind()

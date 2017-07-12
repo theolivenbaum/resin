@@ -360,37 +360,20 @@ namespace Resin.IO
             }
         }
 
-        public static LcrsTrie DeserializeTrie(string directory, long indexVersionId, string field)
+        public static LcrsTrie DeserializeTrie(string fileName)
         {
-            var searchPattern = string.Format("{0}-{1}-*", indexVersionId, field.ToHash());
-
-            return DeserializeTrie(directory, searchPattern);
+            using (var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            {
+                return DeserializeTrie(stream);
+            }
         }
 
-        public static LcrsTrie DeserializeTrie(string directory, string searchPattern)
+        public static LcrsTrie DeserializeTrie(Stream stream)
         {
-            var root = new LcrsTrie();
-            LcrsTrie next = null;
-
-            foreach (var fileName in Directory.GetFiles(directory, searchPattern).OrderBy(f => f))
+            using (var reader = new MappedTrieReader(stream))
             {
-                using (var reader = new MappedTrieReader(fileName))
-                {
-                    var trie = reader.ReadWholeFile();
-
-                    if (next == null)
-                    {
-                        root.LeftChild = trie;
-                    }
-                    else
-                    {
-                        next.RightSibling = trie;
-                    }
-                    next = trie;
-                }
+                return reader.ReadWholeFile();
             }
-
-            return root;
         }
     }
 }

@@ -295,6 +295,8 @@ namespace Tests
             tree.Add("globe");
             tree.Add("global");
 
+            File.WriteAllText("Can_deserialize_whole_file_orig.log", tree.Visualize(), Encoding.UTF8);
+
             foreach (var node in tree.EndOfWordNodes())
             {
                 node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
@@ -313,11 +315,14 @@ namespace Tests
             Assert.IsTrue(tree.IsWord("global").Any());
 
             tree.Serialize(fileName);
-            File.WriteAllText("Can_deserialize_whole_file.log", tree.Visualize(), System.Text.Encoding.UTF8);
 
-            var recreated = Serializer.DeserializeTrie(dir, new FileInfo(fileName).Name);
+            var recreated = Serializer.DeserializeTrie(fileName);
 
-            Assert.IsTrue(recreated.IsWord("baby").Any());
+            File.WriteAllText("Can_deserialize_whole_file_recreated.log", recreated.Visualize(), Encoding.UTF8);
+
+            var result = recreated.IsWord("baby");
+
+            Assert.IsTrue(result.Any());
             Assert.IsTrue(recreated.IsWord("bad").Any());
             Assert.IsTrue(recreated.IsWord("badness").Any());
             Assert.IsTrue(recreated.IsWord("bank").Any());
