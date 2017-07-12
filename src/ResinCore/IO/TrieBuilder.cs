@@ -18,21 +18,21 @@ namespace Resin.IO
             _tries = new Dictionary<ulong, LcrsTrie>();
         }
 
-        public void Add(WordInfo word)
+        public void Add(string key, string value, DocumentPosting posting)
         {
             _timer.Start();
 
             LcrsTrie trie;
 
-            var key = word.Field.ToHash();
+            var hashedKey = key.ToHash();
 
-            if (!_tries.TryGetValue(key, out trie))
+            if (!_tries.TryGetValue(hashedKey, out trie))
             {
                 trie = new LcrsTrie();
-                _tries.Add(key, trie);
+                _tries.Add(hashedKey, trie);
             }
 
-            trie.Add(word.Token, 0, word.Posting);
+            trie.Add(value, 0, posting);
         }
 
         public IDictionary<ulong, LcrsTrie> GetTries()
