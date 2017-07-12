@@ -58,9 +58,9 @@ A sorted string table is a file with key/value pairs sorted by key.
 
 A LcrsNode file is a file with key/value pairs sorted by key where the value is an address to a list of postings and where each node is encoded with the weight of their sub tree such that skipping over sub trees is efficiently done by seeking a distance in the file equal to the weight of a sub tree root node * the size of a node (which is fixed in size).
 
-From a sorted list of strings you can create a binary search tree. In a LcrsNode file the nodes are already laid out as a tree in such a way that depth-first search is a forward-only read. Breadth-first search could be done but would require lots of seeking back and forth as the file layout is currently. 
+From a sorted list of strings you can create a binary search tree. In a LcrsNode file the nodes are already laid out as a tree in such a way that depth-first search is a forward-only read. Breadth-first search could be done but would require lots of seeking back and forth as the file is currently laid out. 
 
-The effects had serializing been done depth-first is that layout the file would be breadth-first. This would allow for a forward-only breadth-first search. 
+The effects had serializing been done depth-first is that layout of the file would be breadth-first. This would allow for breadth-first search using forward-only read. 
 
 ## No schema
 
