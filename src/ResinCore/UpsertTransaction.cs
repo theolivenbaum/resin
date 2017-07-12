@@ -67,7 +67,14 @@ namespace Resin
             _writeSession = factory.OpenWriteSession(_compoundFile);
 
             _postingsWriter = new PostingsWriter(
-                new FileStream(posFileName, FileMode.CreateNew, FileAccess.ReadWrite));
+                new FileStream(
+                    posFileName, 
+                    FileMode.CreateNew, 
+                    FileAccess.ReadWrite, 
+                    FileShare.None, 
+                    4096, 
+                    FileOptions.DeleteOnClose
+                    ));
         }
 
         public long Write()

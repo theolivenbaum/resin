@@ -39,7 +39,7 @@ namespace Resin.IO.Read
 
                 if (Log.IsDebugEnabled)
                 {
-                    Log.DebugFormat("s {0}", count);
+                    Log.DebugFormat("skip {0}", count);
                 }
             }
         }
@@ -57,7 +57,7 @@ namespace Resin.IO.Read
 
             if (Log.IsDebugEnabled)
             {
-                Log.DebugFormat("r {0} {1} {2}", node.Depth, node.Value, _stream.Position);
+                Log.DebugFormat("read {0} {1} {2}", node.Depth, node.Value, _stream.Position);
             }
 
             LastRead = node;

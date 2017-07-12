@@ -25,14 +25,16 @@ namespace DocumentTable
             _keyIndexFileName = Path.Combine(directory, ix.VersionId + ".kix");
             _ix = ix;
             _addressWriter = new DocumentAddressWriter(
-                    new FileStream(docAddressFn, FileMode.CreateNew, FileAccess.ReadWrite));
+                    new FileStream(docAddressFn, FileMode.CreateNew, FileAccess.ReadWrite,
+                    FileShare.None, 4096, FileOptions.DeleteOnClose));
 
             _docWriter = new DocumentWriter(
-                new FileStream(docFileName, FileMode.CreateNew, FileAccess.ReadWrite),
-                compression);
+                new FileStream(docFileName, FileMode.CreateNew, FileAccess.ReadWrite,
+                    FileShare.None, 4096, FileOptions.DeleteOnClose), compression);
 
             _docHashesStream = new FileStream(
-                docHashesFileName, FileMode.CreateNew, FileAccess.ReadWrite);
+                docHashesFileName, FileMode.CreateNew, FileAccess.ReadWrite,
+                FileShare.None, 4096, FileOptions.DeleteOnClose);
 
             _keyIndex = new Dictionary<string, short>();
             _fieldNames = new List<string>();
