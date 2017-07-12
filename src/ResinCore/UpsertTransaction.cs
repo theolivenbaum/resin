@@ -94,12 +94,13 @@ namespace Resin
 
             Log.InfoFormat("stored {0} documents in {1}", _count+1, docTimer.Elapsed);
 
-            var posTimer = Stopwatch.StartNew();
-
+            var posTimer = Stopwatch.StartNew(); 
+            
             var tries = trieBuilder.GetTries();
 
             foreach (var trie in tries)
             {
+                // decode into a list of words and set postings address
                 foreach (var node in trie.Value.EndOfWordNodes())
                 {
                     node.PostingsAddress = _postingsWriter.Write(node.Postings);
@@ -115,7 +116,7 @@ namespace Resin
             }
 
             Log.InfoFormat(
-                "stored postings refs in trees and wrote postings file in {0}", 
+                "stored postings refs in trees in {0}", 
                 posTimer.Elapsed);
 
             var treeTimer = Stopwatch.StartNew();
