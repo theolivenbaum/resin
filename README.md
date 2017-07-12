@@ -160,6 +160,8 @@ ResinDB is built for dotnet Core 1.1.
 
 ### CLI
 
+[Some test data](https://drive.google.com/file/d/0BzlUqjJAklk9bWZqbVZTRnlnblE/view?usp=sharing) (~20K novels from The Gutenberg Project, zipped, in JSON format).
+
 Clone the source or [download the latest source as a zip file](https://github.com/kreeben/resin/archive/master.zip), build and run the CLI (rn.bat) with the following arguments:
 
 	rn write --file source_json_filename --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take] [--gzip] [--lz]  
