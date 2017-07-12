@@ -50,6 +50,18 @@ ResinDB's read/write model allow for multi-threaded read and write access to the
 
 A dense trie is a trie where nodes that do not carry data have been left out. This is in contrast to a sparse trie where each node has as many children as there are letters in the alphabet. Further more, in a dense trie a word is marked by a flag directly on the node, instead of following the more common trie regime of marking the end of a word with a node carrying a null value.
 
+The disk representation of a LcrsTrie is a LcrsNode.
+
+## LcrsNode compared to a SSTable
+
+A sorted string table is a file with key/value pairs sorted by key.
+
+A LcrsNode file is a file with key/value pairs sorted by key where the value is a list of postings and where each node is encoded with the weight of their sub tree such that skipping over sub trees is efficiently done by seeking a distance in the file equal to the weight of a sub tree root node * the size of a node (which is fixed in size).
+
+From a sorted list of strings you can create a binary search tree. In a LcrsNode file the nodes are already laid out as a tree in such a way that depth-first search is a forward-only read. Breadth-first search could be done but would require lots of seeking back and forth as the file layout is currently. 
+
+The effects had serializing been done depth-first is that layout the file would be breadth-first. This would allow for a forward-only breadth-first search. 
+
 ## No schema
 
 You may store documents with variable number columns ("fields"). 
