@@ -60,7 +60,7 @@ A node table is a file with key/value pairs sorted by key where the key is sprea
 
 From a sorted list of strings you can create a binary search tree. In a node table the nodes are already laid out as a tree in such a way that depth-first search is a forward-only read. Breadth-first search could be done but would require lots of seeking back and forth as the file is currently laid out. 
 
-The effects had serializing been done depth-first is that layout of the file would be breadth-first. This would allow for breadth-first search using forward-only read. 
+The effects had serializing been done depth-first is the layout of the file would be breadth-first. This would allow for breadth-first search using forward-only read. 
 
 ## No schema
 
@@ -78,13 +78,13 @@ You can opt out of indexing entirely. You can index verbatim (unanalyzed) data. 
 
 Indexed fields (both analyzed and unanalyzed) can participate in queries. Primary keys or paths used as identifiers should not be analyzed but certanly indexed and if they're significant enough, also stored.
 
-## Compression
+Indxed data is encoded as nodes in a corpus-wide trie.
 
-Analyzed data is compressed in a corpus-wide trie.
+## Compression
 
 Stored document fields can be compressed individually with either QuickLZ or GZip. For unstructured data this leaves a smaller footprint on disk and enables faster writes.
 
-Compressing stored data affects querying very little. In some scenarios it also speeds up writing. 
+Compressing documents affect querying very little. In some scenarios it speeds up writing. 
 
 ## Full-text search
 
