@@ -39,37 +39,38 @@ namespace DocumentTable
 
             foreach(var list in source.Skip(1))
             {
-                first = Sum(first, list).ToList();
+                first = Sum(first, list);
             }
 
             return first;
         }
 
-        public static IEnumerable<DocumentPosting> Sum(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
+        public static IList<DocumentPosting> Sum(IEnumerable<DocumentPosting> first, IEnumerable<DocumentPosting> other)
         {
             return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>
             {
-                var list = group.ToList();
-                var tip = list.First();
+                var list = group.ToArray();
+                var tip = list[0];
 
-                foreach (DocumentPosting posting in list.Skip(1))
+                for (int index = 1; index < list.Length; index++)
                 {
-                    tip.Add(posting);
+                    tip.Add(list[index]);
                 }
+
                 return tip;
-            });
+            }).ToList();
         }
 
         public static IList<DocumentPosting> Sum(IList<DocumentPosting> postings)
         {
             return postings.GroupBy(x => x.DocumentId).Select(group =>
             {
-                var list = group.ToList();
-                var tip = list.First();
+                var list = group.ToArray();
+                var tip = list[0];
 
-                foreach (DocumentPosting posting in list.Skip(1))
+                for (int index = 1; index < list.Length; index++)
                 {
-                    tip.Add(posting);
+                    tip.Add(list[index]);
                 }
                 return tip;
             }).ToList();
