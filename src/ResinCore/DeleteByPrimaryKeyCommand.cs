@@ -1,11 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using Resin.IO;
 using Resin.Sys;
 using DocumentTable;
-using System;
 
 namespace Resin
 {
@@ -17,8 +14,6 @@ namespace Resin
 
         public DeleteByPrimaryKeyCommand(string directory, IEnumerable<string> primaryKeyValues)
         {
-            throw new DivideByZeroException();
-
             _directory = directory;
             _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(BatchInfo.Load).ToList();
             _pks = primaryKeyValues;
@@ -26,59 +21,34 @@ namespace Resin
 
         public void Commit()
         {
-            var deleteSet = new LcrsTrie();
-
-            foreach (var value in _pks)
-            {
-                var hashString = value.ToHash().ToString(CultureInfo.InvariantCulture);
-
-                deleteSet.Add(hashString);
-            }
+            var deleteSet = new HashSet<ulong>(
+                _pks.Select(x => x.ToHash()).ToList());
 
             foreach (var ix in _ixs)
             {
-                var docHashFileName = Path.Combine(_directory, string.Format("{0}.{1}", ix.VersionId, "pk"));
-                var tmpDocHashFileName = Path.Combine(_directory, string.Format("{0}.{1}", ix.VersionId, "pk.tmp"));
+                var dataFile = Path.Combine(_directory, ix.VersionId + ".rdb");
 
-                var tmpIxFileName = Path.Combine(_directory, ix.VersionId + ".ix.tmp");
-                var ixFileName = Path.Combine(_directory, ix.VersionId + ".ix");
-
-                var deleted = 0;
-
-                using (var stream = new FileStream(tmpDocHashFileName, FileMode.Create, FileAccess.Write, FileShare.None))
+                using (var stream = new FileStream(dataFile, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
-                    foreach (var documentConfiguration in TableSerializer.DeserializeDocHashes(docHashFileName))
+                    stream.Seek(ix.DocHashOffset, SeekOrigin.Begin);
+
+                    var buffer = new byte[TableSerializer.SizeOfDocHash()];
+
+                    while (stream.Position < ix.DocAddressesOffset)
                     {
-                        var hash = documentConfiguration.Hash.ToString(CultureInfo.InvariantCulture);
+                        stream.Read(buffer, 0, buffer.Length);
 
-                        IList<Word> found = deleteSet.IsWord(hash).ToList();
+                        var hash = TableSerializer.DeserializeDocHash(buffer);
 
-                        var block = documentConfiguration;
-
-                        if (found.Any())
+                        if (deleteSet.Contains(hash.Hash))
                         {
-                            if (!documentConfiguration.IsObsolete)
-                            {
-                                block = new DocHash(
-                                    documentConfiguration.Hash, true);
-                                deleted++;    
-                            }
+                            stream.Position = stream.Position - buffer.Length;
+                            buffer[0] = 1;
+                            stream.Write(buffer, 0, buffer.Length);
+                            deleteSet.Remove(hash.Hash);
                         }
-
-                        block.Serialize(stream);
+                        if (deleteSet.Count == 0) break;
                     }
-                }               
-
-                if (deleted > 0)
-                {
-                    ix.DocumentCount -= deleted;
-                    ix.Serialize(tmpIxFileName);
-
-                    File.Copy(tmpIxFileName, ixFileName, overwrite: true);
-                    File.Copy(tmpDocHashFileName, docHashFileName, overwrite: true);
-
-                    File.Delete(tmpIxFileName);
-                    File.Delete(tmpDocHashFileName);
                 }
             }
         }

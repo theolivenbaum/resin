@@ -31,6 +31,11 @@ namespace Resin
         {
         }
 
+        public Searcher(string directory, long version)
+            : this(directory, version, new QueryParser(new Analyzer()), new TfIdfFactory(), new ReadSessionFactory(directory))
+        {
+        }
+
         public Searcher(string directory, QueryParser parser, IScoringSchemeFactory scorerFactory, IReadSessionFactory sessionFactory = null)
         {
             _directory = directory;
@@ -43,11 +48,22 @@ namespace Resin
             _readSession = _sessionFactory.OpenReadSession(_version);
         }
 
-        public Result Search(QueryContext query, int page = 0, int size = 10000)
+        public Searcher(string directory, long version, QueryParser parser, IScoringSchemeFactory scorerFactory, IReadSessionFactory sessionFactory = null)
+        {
+            _directory = directory;
+            _parser = parser;
+            _scorerFactory = scorerFactory;
+            _version = version;
+            _blockSize = BlockSerializer.SizeOfBlock();
+            _sessionFactory = sessionFactory ?? new ReadSessionFactory(directory);
+            _readSession = _sessionFactory.OpenReadSession(_version);
+        }
+
+        public ScoredResult Search(QueryContext query, int page = 0, int size = 10000)
         {
             if (query == null)
             {
-                return new Result { Docs = new List<ScoredDocument>() };
+                return new ScoredResult { Docs = new List<ScoredDocument>() };
             }
 
             var searchTime = Stopwatch.StartNew();
@@ -62,7 +78,7 @@ namespace Resin
 
             Log.DebugFormat("fetched {0} docs for query {1} in {2}", docs.Count, query, docTime.Elapsed);
 
-            var result = new Result
+            var result = new ScoredResult
             {
                 Total = scores.Count,
                 Docs = docs.OrderByDescending(d => d.Score).ToList()
@@ -73,7 +89,7 @@ namespace Resin
             return result;
         }
 
-        public Result Search(string query, int page = 0, int size = 10000)
+        public ScoredResult Search(string query, int page = 0, int size = 10000)
         {
             var queryContext = _parser.Parse(query);
 

@@ -6,7 +6,6 @@ using Resin.Analysis;
 using Resin.IO;
 using Resin.Sys;
 using System.Diagnostics;
-using System.Linq;
 using DocumentTable;
 
 namespace Resin
@@ -25,6 +24,7 @@ namespace Resin
         private readonly PostingsWriter _postingsWriter;
         private readonly BatchInfo _ix;
         private readonly Stream _compoundFile;
+        private readonly Stream _lockFile;
 
         public UpsertCommand(
             string directory, 
@@ -33,39 +33,46 @@ namespace Resin
             DocumentStream documents, 
             IWriteSessionFactory storeWriterFactory = null)
         {
+            var version = Util.GetNextChronologicalFileId();
+            var compoundFileName = Path.Combine(directory, version + ".rdb");
+
+            FileStream lockFile;
+
+            if (!Util.TryAquireWriteLock(directory, out lockFile))
+            {
+                _compoundFile = new FileStream(
+                    compoundFileName,
+                    FileMode.CreateNew,
+                    FileAccess.Write,
+                    FileShare.ReadWrite,
+                    4096
+                    );
+            }
+            else
+            {
+                _compoundFile = new FileStream(
+                    compoundFileName,
+                    FileMode.Append,
+                    FileAccess.Write,
+                    FileShare.ReadWrite,
+                    4096
+                    );
+            }
+
             _directory = directory;
             _analyzer = analyzer;
             _compression = compression;
             _documents = documents;
 
-            var firstCommit = Util.GetIndexFileNamesInChronologicalOrder(_directory)
-                .FirstOrDefault();
-
-            if (firstCommit != null)
-            {
-                var ix = BatchInfo.Load(firstCommit);
-
-                _count = ix.DocumentCount;
-            }
-
             _ix = new BatchInfo
             {
-                VersionId = Util.GetNextChronologicalFileId(),
+                VersionId = version,
                 Compression = _compression,
                 PrimaryKeyFieldName = documents.PrimaryKeyFieldName
             };
 
             var posFileName = Path.Combine(
                 _directory, string.Format("{0}.{1}", _ix.VersionId, "pos"));
-
-            var compoundFileName = Path.Combine(_directory, _ix.VersionId + ".rdb");
-            _compoundFile = new FileStream(
-                compoundFileName, 
-                FileMode.CreateNew, 
-                FileAccess.ReadWrite, 
-                FileShare.ReadWrite, 
-                4096
-                );
 
             var factory = storeWriterFactory ?? new WriteSessionFactory(directory, _ix, _compression);
 
@@ -184,7 +191,7 @@ namespace Resin
         {
             if (!_committed) Commit();
 
-            Util.ReleaseFileLock(_directory);
+            if (_lockFile != null)_lockFile.Dispose();
         }
     }
 }

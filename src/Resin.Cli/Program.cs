@@ -133,7 +133,7 @@ namespace Resin.Cli
             var page = 0;
             var size = 10;
 
-            Result result;
+            ScoredResult result;
 
             if (Array.IndexOf(args, "-p") > 0) page = int.Parse(args[Array.IndexOf(args, "-p") + 1]);
             if (Array.IndexOf(args, "-s") > 0) size = int.Parse(args[Array.IndexOf(args, "-s") + 1]);

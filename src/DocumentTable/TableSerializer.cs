@@ -120,6 +120,18 @@ namespace DocumentTable
             }
         }
 
+        public static DocHash DeserializeDocHash(byte[] buffer)
+        {
+            var isObsoleteByte = buffer[0];
+
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(buffer, 1, sizeof(ulong));
+            }
+
+            return new DocHash(BitConverter.ToUInt64(buffer, 1), isObsoleteByte == 1);
+        }
+
         public static DocHash DeserializeDocHash(Stream stream)
         {
             var isObsoleteByte = stream.ReadByte();

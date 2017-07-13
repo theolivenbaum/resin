@@ -15,30 +15,34 @@ namespace DocumentTable
         private readonly int _take;
         private readonly int _skip;
         private readonly string _directory;
+        private readonly Stream _dataFile;
 
         public DtblStream(string fileName, string primaryKeyFieldName = null, int skip = 0, int take = int.MaxValue) 
             : base(primaryKeyFieldName)
         {
-            throw new DivideByZeroException();
-            //var versionId = Path.GetFileNameWithoutExtension(fileName);
-            //var directory = Path.GetDirectoryName(fileName);
-            //var docFileName = Path.Combine(directory, versionId + ".dtbl");
-            //var docAddressFn = Path.Combine(directory, versionId + ".da");
-            //var docHashesFileName = Path.Combine(directory, string.Format("{0}.{1}", versionId, "pk"));
-            //var keyIndexFileName = Path.Combine(directory, versionId + ".kix");
-            //var keyIndex = TableSerializer.GetKeyIndex(keyIndexFileName);
+            var versionId = Path.GetFileNameWithoutExtension(fileName);
+            var directory = Path.GetDirectoryName(fileName);
+            var dataFileName = Path.Combine(directory, versionId + ".rdb");
+            
+            _ix = BatchInfo.Load(Path.Combine(directory, versionId + ".ix"));
+            _dataFile = new FileStream(
+                dataFileName,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                4096 * 1,
+                FileOptions.RandomAccess);
 
-            //_ix = BatchInfo.Load(Path.Combine(directory, versionId + ".ix"));
-            //_hashReader = new DocHashReader(docHashesFileName);
-            //_addressReader = new DocumentAddressReader(new FileStream(docAddressFn, FileMode.Open, FileAccess.Read));
-            //_documentReader = new DocumentReader(
-            //    new FileStream(docFileName, FileMode.Open, FileAccess.Read), 
-            //    _ix.Compression,
-            //    keyIndex);
+            _dataFile.Seek(_ix.KeyIndexOffset, SeekOrigin.Begin);
+            var keyIndex = TableSerializer.ReadKeyIndex(_dataFile, _ix.KeyIndexSize);
 
-            //_skip = skip;
-            //_take = take;
-            //_directory = directory;
+            _hashReader = new DocHashReader(_dataFile, _ix.DocHashOffset);
+            _addressReader = new DocumentAddressReader(_dataFile, _ix.DocAddressesOffset);
+            _documentReader = new DocumentReader(_dataFile, _ix.Compression, keyIndex);
+
+            _skip = skip;
+            _take = take;
+            _directory = directory;
         }
 
         public void Dispose()

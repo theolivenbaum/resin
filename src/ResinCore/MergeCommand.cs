@@ -105,9 +105,6 @@ namespace Resin
 
             using (var documentStream = new DtblStream(documentFileName, srcIx.PrimaryKeyFieldName))
             {
-
-                Util.TryAquireWriteLock(_directory);
-
                 using (var upsert = new UpsertCommand(
                     _directory,
                     _analyzer,
@@ -118,8 +115,6 @@ namespace Resin
                     upsert.Commit();
 
                 }
-
-                Util.ReleaseFileLock(_directory);
 
                 Log.InfoFormat("ix {0} fully truncated", _ixFilesToProcess[0]);
             }

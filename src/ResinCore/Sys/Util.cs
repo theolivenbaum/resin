@@ -36,7 +36,7 @@ namespace Resin.Sys
         public static IEnumerable<string> GetIndexFileNamesInChronologicalOrder(string directory)
         {
             return GetIndexFileNames(directory)
-                .Select(f => new {id = long.Parse(new FileInfo(f).Name.Replace(".ix", "")), fileName = f})
+                .Select(f => new {id = long.Parse(Path.GetFileNameWithoutExtension(f)), fileName = f})
                 .OrderBy(info => info.id)
                 .Select(info => info.fileName);
         }
@@ -89,25 +89,21 @@ namespace Resin.Sys
             return dictionary;
         }
 
-        public static bool TryAquireWriteLock(string directory)
+        public static bool TryAquireWriteLock(string directory, out FileStream lockFile)
         {
-            var lockFile = Path.Combine(directory, "write.lock");
-
+            var fileName = Path.Combine(directory, "write.lock");
             try
             {
-                new FileStream(lockFile, FileMode.CreateNew).Dispose();
-
+                lockFile = new FileStream(
+                                fileName, FileMode.CreateNew, FileAccess.Write,
+                                FileShare.None, 4, FileOptions.DeleteOnClose);
                 return true;
             }
-            catch (IOException)
+            catch(IOException)
             {
+                lockFile = null;
                 return false;
-            }
-        }
-
-        public static void ReleaseFileLock(string directory)
-        {
-            File.Delete(Path.Combine(directory, "write.lock"));
+            } 
         }
 
         public static bool WriteLockExists(string directory)
