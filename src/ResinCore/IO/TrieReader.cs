@@ -287,6 +287,7 @@ namespace Resin.IO.Read
         public LcrsTrie ReadWholeFile()
         {
             var words = new List<Word>();
+
             DepthFirst(string.Empty, new List<char>(), words, -1);
 
             var root = new LcrsTrie();

@@ -1,7 +1,6 @@
 ﻿using DocumentTable;
 using log4net;
 using Resin.Analysis;
-using Resin.IO.Read;
 using Resin.Sys;
 using System;
 using System.Collections.Generic;
@@ -11,9 +10,9 @@ using System.Threading;
 
 namespace Resin
 {
-    public class MergeTransaction : IDisposable
+    public class MergeCommand : IDisposable
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(MergeTransaction));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(MergeCommand));
 
         private IList<DocHashReader> _hashReader;
         private IList<DocumentAddressReader> _addressReader;
@@ -23,7 +22,7 @@ namespace Resin
         private readonly IAnalyzer _analyzer;
         private IList<string> _tmpFiles;
 
-        public MergeTransaction(string directory, IAnalyzer analyzer = null)
+        public MergeCommand(string directory, IAnalyzer analyzer = null)
         {
             _directory = directory;
             _analyzer = analyzer ?? new Analyzer();
@@ -109,7 +108,7 @@ namespace Resin
 
                 Util.TryAquireWriteLock(_directory);
 
-                using (var upsert = new UpsertTransaction(
+                using (var upsert = new UpsertCommand(
                     _directory,
                     _analyzer,
                     srcIx.Compression,
@@ -137,7 +136,7 @@ namespace Resin
             long version;
             using (var documentStream = new DtblStream(documentFileName, ix.PrimaryKeyFieldName))
             {
-                using (var upsert = new UpsertTransaction(
+                using (var upsert = new UpsertCommand(
                     _directory,
                     _analyzer,
                     ix.Compression,

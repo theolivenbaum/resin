@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using log4net;
 using Resin.Analysis;
 using Resin.IO;
@@ -12,9 +11,9 @@ using DocumentTable;
 
 namespace Resin
 {
-    public class UpsertTransaction : IDisposable
+    public class UpsertCommand : IDisposable
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(UpsertTransaction));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(UpsertCommand));
 
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
@@ -27,7 +26,7 @@ namespace Resin
         private readonly BatchInfo _ix;
         private readonly Stream _compoundFile;
 
-        public UpsertTransaction(
+        public UpsertCommand(
             string directory, 
             IAnalyzer analyzer, 
             Compression compression, 
@@ -89,7 +88,7 @@ namespace Resin
 
             var trieBuilder = new TrieBuilder();
             var docTimer = Stopwatch.StartNew();
-            var upsert = new DocumentUpsertOperation(_writeSession, _analyzer, trieBuilder);
+            var upsert = new DocumentUpsertCommand(_writeSession, _analyzer, trieBuilder);
 
             foreach (var doc in _documents.ReadSource())
             {

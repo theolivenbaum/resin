@@ -96,7 +96,7 @@ namespace Resin.Cli
 
             if (dir != null)
             {
-                using (var merge = new MergeTransaction(dir))
+                using (var merge = new MergeCommand(dir))
                 {
                     var result = merge.Commit();
                     
@@ -118,7 +118,7 @@ namespace Resin.Cli
             var timer = new Stopwatch();
             timer.Start();
 
-            new DeleteByPrimaryKeyTransaction(dir, ids).Commit();
+            new DeleteByPrimaryKeyCommand(dir, ids).Commit();
 
             Console.WriteLine("delete operation took {0}", timer.Elapsed);
         }
@@ -218,7 +218,7 @@ namespace Resin.Cli
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
             using (var documents = new JsonDocumentStream(fileName, skip, take, pk))
-            using (var upsert = new UpsertTransaction(dir, new Analyzer(), compression, documents))
+            using (var upsert = new UpsertCommand(dir, new Analyzer(), compression, documents))
             {
                 upsert.Write();
             }
@@ -251,7 +251,7 @@ namespace Resin.Cli
             writeTimer.Start();
 
             using (var documents = new DtblStream(fileName, pk, skip, take))
-            using (var upsert = new UpsertTransaction(dir, new Analyzer(), compression, documents))
+            using (var upsert = new UpsertCommand(dir, new Analyzer(), compression, documents))
             {
                 upsert.Write();
             }

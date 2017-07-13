@@ -27,7 +27,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertTransaction(
+            var writer = new UpsertCommand(
                 dir, new Analyzer(), compression: Compression.GZip, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
@@ -74,7 +74,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertTransaction(
+            var writer = new UpsertCommand(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
@@ -121,7 +121,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertTransaction(
+            var writer = new UpsertCommand(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
@@ -150,7 +150,7 @@ namespace Tests
                 new {_id = "2", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertTransaction(
+            var writer = new UpsertCommand(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
@@ -172,7 +172,7 @@ namespace Tests
                 new {_id = "5", title = "the raiders of the lost ark" },
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer2 = new UpsertTransaction(
+            var writer2 = new UpsertCommand(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: moreDocs);
             long indexName2 = writer2.Write();
             writer2.Dispose();
@@ -212,19 +212,19 @@ namespace Tests
             long indexName;
             long indexName2;
 
-            using (var writer = new UpsertTransaction(
+            using (var writer = new UpsertCommand(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: docs))
             {
                 indexName = writer.Write();
 
-                using(var writer2 = new UpsertTransaction(
+                using(var writer2 = new UpsertCommand(
                     dir, new Analyzer(), compression: Compression.NoCompression, documents: moreDocs))
                 {
                     indexName2 = writer2.Write();
                 }
             }
 
-            using (var merge1 = new MergeTransaction(dir))
+            using (var merge1 = new MergeCommand(dir))
                 merge1.Commit();
 
             using (var searcher = new Searcher(dir))
@@ -238,7 +238,7 @@ namespace Tests
                 Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
             }
 
-            using (var merge2 = new MergeTransaction(dir))
+            using (var merge2 = new MergeCommand(dir))
                 merge2.Commit();
 
             using (var searcher = new Searcher(dir))
@@ -252,7 +252,7 @@ namespace Tests
                 Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
             }
 
-            using (var merge3 = new MergeTransaction(dir))
+            using (var merge3 = new MergeCommand(dir))
             {
                 var result = merge3.Commit();
 
@@ -286,7 +286,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertTransaction(
+            var writer = new UpsertCommand(
                 dir, new Analyzer(), compression: Compression.GZip, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();

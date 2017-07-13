@@ -1,17 +1,16 @@
-using System.Linq;
 using Resin.Analysis;
 using Resin.IO;
 using DocumentTable;
 
 namespace Resin
 {
-    public class DocumentUpsertOperation
+    public class DocumentUpsertCommand
     {
         private readonly IWriteSession _writeSession;
         private readonly IAnalyzer _analyzer;
         private readonly TrieBuilder _treeBuilder;
 
-        public DocumentUpsertOperation(IWriteSession writeSession, IAnalyzer analyzer, TrieBuilder treeBuilder)
+        public DocumentUpsertCommand(IWriteSession writeSession, IAnalyzer analyzer, TrieBuilder treeBuilder)
         {
             _writeSession = writeSession;
             _analyzer = analyzer;

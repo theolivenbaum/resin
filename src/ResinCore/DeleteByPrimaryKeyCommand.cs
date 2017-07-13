@@ -9,13 +9,13 @@ using System;
 
 namespace Resin
 {
-    public class DeleteByPrimaryKeyTransaction : IDeleteTransaction
+    public class DeleteByPrimaryKeyCommand : IDeleteTransaction
     {
         private readonly string _directory;
         private readonly IEnumerable<string> _pks;
         private readonly List<BatchInfo> _ixs;
 
-        public DeleteByPrimaryKeyTransaction(string directory, IEnumerable<string> primaryKeyValues)
+        public DeleteByPrimaryKeyCommand(string directory, IEnumerable<string> primaryKeyValues)
         {
             throw new DivideByZeroException();
 
