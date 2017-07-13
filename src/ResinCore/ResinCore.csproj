@@ -5,17 +5,17 @@
     <AssemblyName>Resin</AssemblyName>
     <RootNamespace>Resin</RootNamespace>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>ResinDB</PackageId>
-    <Version>1.0.0.0</Version>
+    <Version>2.0.0</Version>
     <Authors>Marcus Lager</Authors>
     <Company />
     <Product>ResinDB</Product>
-    <Description>Cross-platform document database and search engine with query language, API and CLI</Description>
+    <Description>Document database and search engine with a CLI management studio.</Description>
     <Copyright>Copyright 2017 Marcus Lager</Copyright>
-    <PackageTags>search engine document database db</PackageTags>
+    <PackageTags>search engine document database</PackageTags>
     <PackageLicenseUrl>https://github.com/kreeben/resin/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/kreeben/resin</PackageProjectUrl>
     <RepositoryUrl>https://github.com/kreeben/resin</RepositoryUrl>
