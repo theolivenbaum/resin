@@ -36,9 +36,9 @@ namespace DocumentTable
             _dataFile.Seek(_ix.KeyIndexOffset, SeekOrigin.Begin);
             var keyIndex = TableSerializer.ReadKeyIndex(_dataFile, _ix.KeyIndexSize);
 
-            _hashReader = new DocHashReader(_dataFile, _ix.DocHashOffset);
+            _hashReader = new DocHashReader(_dataFile, _ix.DocHashOffset, leaveOpen:false);
             _addressReader = new DocumentAddressReader(_dataFile, _ix.DocAddressesOffset);
-            _documentReader = new DocumentReader(_dataFile, _ix.Compression, keyIndex);
+            _documentReader = new DocumentReader(_dataFile, _ix.Compression, keyIndex, leaveOpen:false);
 
             _skip = skip;
             _take = take;

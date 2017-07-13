@@ -11,7 +11,8 @@ namespace DocumentTable
         private readonly long _offset;
 
         public DocumentReader(
-            Stream stream, Compression compression, IDictionary<short, string> keyIndex) : base(stream)
+            Stream stream, Compression compression, IDictionary<short, string> keyIndex, bool leaveOpen) 
+            : base(stream, leaveOpen)
         {
             _compression = compression;
             _keyIndex = keyIndex;

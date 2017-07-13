@@ -21,10 +21,9 @@ namespace Resin
         private readonly string _directory;
         private readonly QueryParser _parser;
         private readonly IScoringSchemeFactory _scorerFactory;
-        private readonly long _version;
+        private readonly BatchInfo[] _versions;
         private readonly int _blockSize;
         private readonly IReadSessionFactory _sessionFactory;
-        private readonly IReadSession _readSession;
 
         public Searcher(string directory)
             :this(directory, new QueryParser(new Analyzer()), new TfIdfFactory(), new ReadSessionFactory(directory))
@@ -41,11 +40,10 @@ namespace Resin
             _directory = directory;
             _parser = parser;
             _scorerFactory = scorerFactory;
-            _version = long.Parse(Path.GetFileNameWithoutExtension(
-                Util.GetIndexFileNamesInChronologicalOrder(directory).First()));
+            _versions = Util.GetIndexFileNamesInChronologicalOrder(directory)
+                .Select(f => BatchInfo.Load(f)).ToArray();
             _blockSize = BlockSerializer.SizeOfBlock();
             _sessionFactory = sessionFactory ?? new ReadSessionFactory(directory);
-            _readSession = _sessionFactory.OpenReadSession(_version);
         }
 
         public Searcher(string directory, long version, QueryParser parser, IScoringSchemeFactory scorerFactory, IReadSessionFactory sessionFactory = null)
@@ -53,10 +51,9 @@ namespace Resin
             _directory = directory;
             _parser = parser;
             _scorerFactory = scorerFactory;
-            _version = version;
+            _versions = new[] { BatchInfo.Load(Path.Combine(directory, version + ".ix"))};
             _blockSize = BlockSerializer.SizeOfBlock();
             _sessionFactory = sessionFactory ?? new ReadSessionFactory(directory);
-            _readSession = _sessionFactory.OpenReadSession(_version);
         }
 
         public ScoredResult Search(QueryContext query, int page = 0, int size = 10000)
@@ -68,13 +65,17 @@ namespace Resin
 
             var searchTime = Stopwatch.StartNew();
             var skip = page * size;
-            var scores = Collect(query, _version);
+            var scores = Collect(query);
             var paged = scores.Skip(skip).Take(size).ToList();
-            var docs = new List<ScoredDocument>(size);
-            var docTime = new Stopwatch();
-            docTime.Start();
 
-            GetDocs(paged, _version, docs);
+            var docTime = Stopwatch.StartNew();
+            var docs = new List<ScoredDocument>(size);
+            var groupedByIx = paged.GroupBy(s => s.Ix);
+
+            foreach (var group in groupedByIx)
+            {
+                GetDocs(group.ToList(), group.Key.VersionId, docs);
+            }
 
             Log.DebugFormat("fetched {0} docs for query {1} in {2}", docs.Count, query, docTime.Elapsed);
 
@@ -96,9 +97,22 @@ namespace Resin
             return Search(queryContext, page, size);
         }
 
-        private IList<DocumentScore> Collect(QueryContext query, long version)
+        private IList<DocumentScore> Collect(QueryContext query)
         {
-            using (var collector = new Collector(_directory, _readSession, _scorerFactory))
+            var scores = new List<IList<DocumentScore>>();
+            foreach (var version in _versions)
+            {
+                using (var readSession = _sessionFactory.OpenReadSession(version.VersionId))
+                {
+                    scores.Add(Collect(query, readSession));
+                }
+            }
+            return scores.CombineTakingLatestVersion();
+        }
+
+        private IList<DocumentScore> Collect(QueryContext query, IReadSession readSession)
+        {
+            using (var collector = new Collector(_directory, readSession, _scorerFactory))
             {
                 return collector.Collect(query);
             }
@@ -108,11 +122,10 @@ namespace Resin
         {
             var documentIds = scores.Select(s => s.DocumentId).ToList();
 
-            var docFileName = Path.Combine(_directory, version + ".dtbl");
-
             var dic = scores.ToDictionary(x => x.DocumentId, y => y.Score);
 
-            foreach (var doc in _readSession.ReadDocuments(documentIds))
+            using (var readSession = _sessionFactory.OpenReadSession(version))
+            foreach (var doc in readSession.ReadDocuments(documentIds))
             {
                 var score = dic[doc.Id];
 
@@ -122,7 +135,7 @@ namespace Resin
 
         public void Dispose()
         {
-            _readSession.Dispose();
+            ((IDisposable)_sessionFactory).Dispose();
         }
     }
 }

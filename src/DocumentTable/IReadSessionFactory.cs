@@ -1,4 +1,6 @@
-﻿namespace DocumentTable
+﻿using System;
+
+namespace DocumentTable
 {
     public interface IReadSessionFactory
     {

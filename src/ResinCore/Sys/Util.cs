@@ -27,16 +27,18 @@ namespace Resin.Sys
             return GetTicks();
         }
 
-        private static IEnumerable<string> GetIndexFileNames(string directory)
-        {
-            //TODO: check for a lock file
-            return Directory.GetFiles(directory, "*.ix");
-        }
-
         public static IEnumerable<string> GetIndexFileNamesInChronologicalOrder(string directory)
         {
-            return GetIndexFileNames(directory)
+            return Directory.GetFiles(directory, "*.ix")
                 .Select(f => new {id = long.Parse(Path.GetFileNameWithoutExtension(f)), fileName = f})
+                .OrderBy(info => info.id)
+                .Select(info => info.fileName);
+        }
+
+        public static IEnumerable<string> GetDataFileNamesInChronologicalOrder(string directory)
+        {
+            return Directory.GetFiles(directory, "*.rdb")
+                .Select(f => new { id = long.Parse(Path.GetFileNameWithoutExtension(f)), fileName = f })
                 .OrderBy(info => info.id)
                 .Select(info => info.fileName);
         }

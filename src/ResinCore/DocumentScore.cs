@@ -52,12 +52,12 @@ namespace Resin
 
             return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>
             {
-                var list = group.ToList();
+                var list = group.ToArray();
                 
-                var top = list.First();
-                foreach (var score in list.Skip(1))
+                var top = list[0];
+                for (int index = 1; index < list.Length; index++)
                 {
-                    top.Add(score);
+                    top.Add(list[index]);
                 }
                 return top;
             }).ToList();
@@ -88,7 +88,7 @@ namespace Resin
 
     public static class DocumentScoreExtensions
     {
-        public static IEnumerable<DocumentScore> CombineTakingLatestVersion(this IList<IList<DocumentScore>> source)
+        public static IList<DocumentScore> CombineTakingLatestVersion(this IList<IList<DocumentScore>> source)
         {
             if (source.Count == 0) return new List<DocumentScore>();
 

@@ -12,7 +12,7 @@ namespace DocumentTable
         }
 
         public PostingsReader(Stream stream, long offset)
-            : base(stream, offset)
+            : base(stream, offset, true)
         {
         }
 

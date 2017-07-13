@@ -11,15 +11,17 @@ namespace StreamIndex
         private readonly long _offset;
 
         private readonly Stream _stream;
+        private readonly bool _leaveOpen;
 
-        protected BlockReader(Stream stream):this(stream, 0)
+        protected BlockReader(Stream stream, bool leaveOpen = false):this(stream, 0, leaveOpen)
         {
         }
 
-        protected BlockReader(Stream stream, long offset)
+        protected BlockReader(Stream stream, long offset, bool leaveOpen = false)
         {
             _stream = stream;
             _offset = offset;
+            _leaveOpen = leaveOpen;
         }
 
         public IList<T> Read(IList<BlockInfo> blocks)
@@ -43,7 +45,7 @@ namespace StreamIndex
 
         public void Dispose()
         {
-            _stream.Dispose();
+            if (!_leaveOpen) _stream.Dispose();
         }
     }
 }

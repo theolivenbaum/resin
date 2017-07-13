@@ -2,8 +2,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Resin;
 using Resin.Analysis;
-using Resin.IO;
-using Resin.Sys;
 using System.Collections.Generic;
 using System.Linq;
 

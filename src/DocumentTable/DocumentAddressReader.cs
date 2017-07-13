@@ -9,7 +9,7 @@ namespace DocumentTable
         {
         }
 
-        public DocumentAddressReader(Stream stream, long offset) : base(stream, offset)
+        public DocumentAddressReader(Stream stream, long offset) : base(stream, offset, true)
         {
         }
 

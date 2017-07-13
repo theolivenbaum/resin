@@ -7,16 +7,18 @@ namespace DocumentTable
     {
         private readonly Stream _stream;
         private readonly long _offset;
+        private readonly bool _leaveOpen;
 
         public DocHashReader(string fileName)
-            : this(new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read), 0)
+            : this(new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read), 0, false)
         {
         }
 
-        public DocHashReader(Stream stream, long offset)
+        public DocHashReader(Stream stream, long offset, bool leaveOpen = true)
         {
             _stream = stream;
             _offset = offset;
+            _leaveOpen = leaveOpen;
         }
 
         public DocHash Read(int docId)
@@ -32,7 +34,7 @@ namespace DocumentTable
 
         public void Dispose()
         {
-            _stream.Dispose();
+            if (!_leaveOpen) _stream.Dispose();
         }
     }
 }

@@ -64,12 +64,14 @@ namespace DocumentTable
             _stream.Seek(Version.KeyIndexOffset, SeekOrigin.Begin);
             var keyIndex = TableSerializer.ReadKeyIndex(_stream, Version.KeyIndexSize);
 
-            using (var documentReader = new DocumentReader(_stream, Version.Compression, keyIndex))
-            foreach (var document in documentReader.Read(docAddresses))
-            {
-                document.Id = documentIds[index++];
-                documents.Add(document);
-            }
+            using (var documentReader = new DocumentReader(
+                _stream, Version.Compression, keyIndex, leaveOpen: true))
+
+                foreach (var document in documentReader.Read(docAddresses))
+                {
+                    document.Id = documentIds[index++];
+                    documents.Add(document);
+                }
 
             return documents;
         }
@@ -79,7 +81,6 @@ namespace DocumentTable
             _addressReader.Dispose();
             _docHashReader.Dispose();
             _postingsReader.Dispose();
-            _stream.Dispose();
         }
     }
 }

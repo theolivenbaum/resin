@@ -302,7 +302,8 @@ namespace Tests
             long version = writer.Write();
             writer.Dispose();
 
-            using (var readSession = CreateReadSession(dir, version))
+            using(var factory = new ReadSessionFactory(dir))
+            using (var readSession = factory.OpenReadSession(version))
             using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
@@ -315,7 +316,8 @@ namespace Tests
             var operation = new DeleteByPrimaryKeyCommand(dir, new[] { "0" });
             operation.Commit();
 
-            using (var readSession = CreateReadSession(dir, version))
+            using (var factory = new ReadSessionFactory(dir))
+            using (var readSession = factory.OpenReadSession(version))
             using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
