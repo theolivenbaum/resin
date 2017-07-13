@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.26430.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.Cli", "Resin.Cli\Resin.Cli.csproj", "{1440DE2D-BD2B-4E68-9021-3A26955CF0C7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResinCore", "ResinCore\ResinCore.csproj", "{AD0B922D-DE0D-48DD-8E88-70833F62F8D7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResinDB", "ResinCore\ResinDB.csproj", "{AD0B922D-DE0D-48DD-8E88-70833F62F8D7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Resources", "Resources", "{170DE0FC-3DF8-49E7-A084-CF4D1E2F7DAF}"
 	ProjectSection(SolutionItems) = preProject

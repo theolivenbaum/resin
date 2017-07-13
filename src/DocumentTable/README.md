@@ -68,11 +68,11 @@ Batches are timestamped. When reading from a document table only the last versio
 
 ## Implementations
 ### A document table row
-[DocumentTableRow](https://github.com/kreeben/resin/blob/master/src/ResinCore/Document.cs#L38)
-### A writer that takes a document row and returns a [BlockInfo](https://github.com/kreeben/resin/blob/master/src/ResinCore/IO/BlockInfo.cs)
-[DocumentWriter](https://github.com/kreeben/resin/blob/master/src/ResinCore/IO/Write/DocumentWriter.cs)
+[Document](https://github.com/kreeben/resin/blob/master/src/DocumentTable/Document.cs#L38)
+### A writer that takes a document row and returns a [BlockInfo](https://github.com/kreeben/resin/blob/master/src/StreamIndex/BlockInfo.cs)
+[DocumentWriter](https://github.com/kreeben/resin/blob/master/src/DocumentTable/DocumentWriter.cs)
 ### A reader that takes a list of BlockInfo's, sorts them by position, and returns deserialized document table rows.
-[DocumentTableRow](https://github.com/kreeben/resin/blob/master/src/ResinCore/IO/Read/DocumentReader.cs)
+[DocumentReader](https://github.com/kreeben/resin/blob/master/src/DocumentTable/DocumentReader.cs)
 ### A stream of document table rows (filters out obsolete data).
-[RDocStream](https://github.com/kreeben/resin/blob/master/src/ResinCore/RDocStream.cs)
+[DtblStream](https://github.com/kreeben/resin/blob/master/src/ResinCore/DtblStream.cs)
 
