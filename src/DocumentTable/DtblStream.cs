@@ -14,25 +14,13 @@ namespace DocumentTable
         private readonly BatchInfo _ix;
         private readonly int _take;
         private readonly int _skip;
-        private readonly string _directory;
         private readonly Stream _dataFile;
 
-        public DtblStream(string fileName, string primaryKeyFieldName = null, int skip = 0, int take = int.MaxValue) 
-            : base(primaryKeyFieldName)
+        public DtblStream(Stream stream, BatchInfo ix, int skip = 0, int take = int.MaxValue) 
+            : base(ix.PrimaryKeyFieldName)
         {
-            var versionId = Path.GetFileNameWithoutExtension(fileName);
-            var directory = Path.GetDirectoryName(fileName);
-            var dataFileName = Path.Combine(directory, versionId + ".rdb");
-            
-            _ix = BatchInfo.Load(Path.Combine(directory, versionId + ".ix"));
-            _dataFile = new FileStream(
-                dataFileName,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                4096 * 1,
-                FileOptions.RandomAccess);
-
+            _dataFile = stream;
+            _ix = ix;
             _dataFile.Seek(_ix.KeyIndexOffset, SeekOrigin.Begin);
             var keyIndex = TableSerializer.ReadKeyIndex(_dataFile, _ix.KeyIndexSize);
 
@@ -42,7 +30,6 @@ namespace DocumentTable
 
             _skip = skip;
             _take = take;
-            _directory = directory;
         }
 
         public void Dispose()

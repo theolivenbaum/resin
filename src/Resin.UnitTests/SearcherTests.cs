@@ -265,9 +265,7 @@ namespace Tests
 
             using (var merge3 = new MergeCommand(dir))
             {
-                var result = merge3.Commit();
-
-                Assert.AreEqual(-1, result);
+                merge3.Commit();
             }
 
             using (var searcher = new Searcher(dir))

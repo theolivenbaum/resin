@@ -250,11 +250,12 @@ namespace Resin.Cli
             var writeTimer = new Stopwatch();
             writeTimer.Start();
 
-            using (var documents = new DtblStream(fileName, pk, skip, take))
-            using (var upsert = new UpsertCommand(dir, new Analyzer(), compression, documents))
-            {
-                upsert.Write();
-            }
+            //using (var stream = new FileStream(fileName, FileMode.Open))
+            //using (var documents = new DtblStream(stream, pk, skip, take))
+            //using (var upsert = new UpsertCommand(dir, new Analyzer(), compression, documents))
+            //{
+            //    upsert.Write();
+            //}
 
             Console.WriteLine("write operation took {0}", writeTimer.Elapsed);
         }
@@ -279,21 +280,21 @@ namespace Resin.Cli
             var writeTimer = new Stopwatch();
             writeTimer.Start();
 
-            using (var outStream = new FileStream(targetFileName, FileMode.Create))
-            using (var jsonWriter = new StreamWriter(outStream, Encoding.UTF8))
-            using (var documents = new DtblStream(sourceFileName, ix.PrimaryKeyFieldName, skip, take))
-            {
-                jsonWriter.WriteLine("[");
+            //using (var outStream = new FileStream(targetFileName, FileMode.Create))
+            //using (var jsonWriter = new StreamWriter(outStream, Encoding.UTF8))
+            //using (var documents = new DtblStream(sourceFileName, ix.PrimaryKeyFieldName, skip, take))
+            //{
+            //    jsonWriter.WriteLine("[");
 
-                foreach (var document in documents.ReadSource())
-                {
-                    var dic = document.Fields.ToDictionary(x => x.Key, y => y.Value.Value);
-                    var json = JsonConvert.SerializeObject(dic, Formatting.None);
-                    jsonWriter.WriteLine(json);
-                }
+            //    foreach (var document in documents.ReadSource())
+            //    {
+            //        var dic = document.Fields.ToDictionary(x => x.Key, y => y.Value.Value);
+            //        var json = JsonConvert.SerializeObject(dic, Formatting.None);
+            //        jsonWriter.WriteLine(json);
+            //    }
 
-                jsonWriter.Write("]");
-            }
+            //    jsonWriter.Write("]");
+            //}
 
             Console.WriteLine("write operation took {0}", writeTimer.Elapsed);
         }

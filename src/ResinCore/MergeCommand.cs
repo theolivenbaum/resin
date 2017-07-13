@@ -26,8 +26,11 @@ namespace Resin
         {
             _directory = directory;
             _analyzer = analyzer ?? new Analyzer();
-            var ixs = Util.GetIndexFileNamesInChronologicalOrder(_directory).Take(2).ToList();
-            _ixFilesToProcess = ixs.ToArray();
+
+            _ixFilesToProcess = Directory.GetFiles(directory, "*.ix")
+                .Select(f => new { id = long.Parse(Path.GetFileNameWithoutExtension(f)), fileName = f })
+                .OrderBy(info => info.id)
+                .Select(info => info.fileName).Take(2).ToArray();
 
             _hashReader = new List<DocHashReader>();
             _addressReader = new List<DocumentAddressReader>();
@@ -74,7 +77,7 @@ namespace Resin
         {
             if (_ixFilesToProcess.Length == 1)
             {
-                // merge segments
+                // truncate segments
 
                 var ix = BatchInfo.Load(_ixFilesToProcess[0]);
 
@@ -90,7 +93,15 @@ namespace Resin
 
             // merge branches
 
-            return Merge(_ixFilesToProcess[1]);
+            var branchFileName = _ixFilesToProcess[1];
+            var dir = Path.GetDirectoryName(branchFileName);
+            var dataFileName = Path.Combine(dir, Path.GetFileNameWithoutExtension(branchFileName) + ".rdb");
+            if (File.Exists(dataFileName))
+            {
+                return Merge(_ixFilesToProcess[1]);
+            }
+
+            return long.Parse(Path.GetFileNameWithoutExtension(_ixFilesToProcess[0]));
         }
 
         private long Truncate(string srcIxFileName)
@@ -98,12 +109,11 @@ namespace Resin
             Log.InfoFormat("truncating {0}", srcIxFileName);
 
             var srcIx = BatchInfo.Load(srcIxFileName);
-            var documentFileName = Path.Combine(_directory, srcIx.VersionId + ".dtbl");
-            var docAddressFn = Path.Combine(_directory, srcIx.VersionId + ".da");
-            var docHashesFileName = Path.Combine(_directory, string.Format("{0}.{1}", srcIx.VersionId, "pk"));
+            var dataFileName = Path.Combine(_directory, srcIx.VersionId + ".rdb");
             long version;
 
-            using (var documentStream = new DtblStream(documentFileName, srcIx.PrimaryKeyFieldName))
+            using (var stream = new FileStream(dataFileName, FileMode.Open))
+            using (var documentStream = new DtblStream(stream, srcIx))
             {
                 using (var upsert = new UpsertCommand(
                     _directory,
@@ -127,9 +137,11 @@ namespace Resin
             Log.InfoFormat("merging branch {0} with trunk {1}", _ixFilesToProcess[1], _ixFilesToProcess[0]);
 
             var ix = BatchInfo.Load(srcIxFileName);
-            var documentFileName = Path.Combine(_directory, ix.VersionId + ".dtbl");
+            var dataFileName = Path.Combine(_directory, ix.VersionId + ".rdb");
             long version;
-            using (var documentStream = new DtblStream(documentFileName, ix.PrimaryKeyFieldName))
+
+            using (var stream = new FileStream(dataFileName, FileMode.Open))
+            using (var documentStream = new DtblStream(stream, ix))
             {
                 using (var upsert = new UpsertCommand(
                     _directory,
