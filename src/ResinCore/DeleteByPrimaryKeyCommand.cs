@@ -19,7 +19,7 @@ namespace Resin
             _pks = primaryKeyValues;
         }
 
-        public void Commit()
+        public void Execute()
         {
             var deleteSet = new HashSet<ulong>(
                 _pks.Select(x => x.ToHash()).ToList());

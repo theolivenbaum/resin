@@ -25,7 +25,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertCommand(
+            var writer = new UpsertTransaction(
                 dir, new Analyzer(), compression: Compression.GZip, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
@@ -72,7 +72,7 @@ namespace Tests
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertCommand(
+            var writer = new UpsertTransaction(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
@@ -116,7 +116,7 @@ namespace Tests
                 new {_id = "2", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer = new UpsertCommand(
+            var writer = new UpsertTransaction(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: docs);
             long indexName = writer.Write();
             writer.Dispose();
@@ -138,7 +138,7 @@ namespace Tests
                 new {_id = "5", title = "the raiders of the lost ark" },
             }.ToDocuments(primaryKeyFieldName: "_id");
 
-            var writer2 = new UpsertCommand(
+            var writer2 = new UpsertTransaction(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: moreDocs);
             long indexName2 = writer2.Write();
             writer2.Dispose();
@@ -178,12 +178,12 @@ namespace Tests
             long indexName;
             long indexName2;
 
-            using (var writer = new UpsertCommand(
+            using (var writer = new UpsertTransaction(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: docs))
             {
                 indexName = writer.Write();
             }
-            using (var writer2 = new UpsertCommand(
+            using (var writer2 = new UpsertTransaction(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: moreDocs))
             {
                 indexName2 = writer2.Write();
@@ -223,12 +223,12 @@ namespace Tests
             long indexName;
             long indexName2;
 
-            using (var writer = new UpsertCommand(
+            using (var writer = new UpsertTransaction(
                 dir, new Analyzer(), compression: Compression.NoCompression, documents: docs))
             {
                 indexName = writer.Write();
 
-                using(var writer2 = new UpsertCommand(
+                using(var writer2 = new UpsertTransaction(
                     dir, new Analyzer(), compression: Compression.NoCompression, documents: moreDocs))
                 {
                     indexName2 = writer2.Write();

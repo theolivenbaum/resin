@@ -115,7 +115,7 @@ namespace Resin
             using (var stream = new FileStream(dataFileName, FileMode.Open))
             using (var documentStream = new DtblStream(stream, srcIx))
             {
-                using (var upsert = new UpsertCommand(
+                using (var upsert = new UpsertTransaction(
                     _directory,
                     _analyzer,
                     srcIx.Compression,
@@ -144,7 +144,7 @@ namespace Resin
             using (var documentStream = new DtblStream(stream, ix))
             {
                 // TODO: instead of rewriting, copy the segments from the branch file into the main data file.
-                using (var upsert = new UpsertCommand(
+                using (var upsert = new UpsertTransaction(
                     _directory,
                     _analyzer,
                     ix.Compression,

@@ -11,9 +11,9 @@ using System.Linq;
 
 namespace Resin
 {
-    public class UpsertCommand : IDisposable
+    public class UpsertTransaction : IDisposable
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(UpsertCommand));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(UpsertTransaction));
 
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
@@ -26,7 +26,7 @@ namespace Resin
         private readonly Stream _compoundFile;
         private readonly Stream _lockFile;
 
-        public UpsertCommand(
+        public UpsertTransaction(
             string directory, 
             IAnalyzer analyzer, 
             Compression compression, 
@@ -199,7 +199,6 @@ namespace Resin
 
             var fileName = Path.Combine(_directory, _ix.VersionId + ".ix");
 
-            _ix.DocumentCount = _count;
             _ix.Serialize(fileName);
 
             _committed = true;

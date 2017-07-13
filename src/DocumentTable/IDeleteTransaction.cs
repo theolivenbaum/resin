@@ -2,6 +2,6 @@
 {
     public interface IDeleteTransaction
     {
-        void Commit();
+        void Execute();
     }
 }
