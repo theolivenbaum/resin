@@ -17,7 +17,6 @@ namespace Resin
 
         private readonly string _directory;
         private readonly IAnalyzer _analyzer;
-        private readonly Compression _compression;
         private readonly DocumentStream _documents;
         private readonly IWriteSession _writeSession;
         private int _count;
@@ -81,20 +80,19 @@ namespace Resin
 
             _directory = directory;
             _analyzer = analyzer;
-            _compression = compression;
             _documents = documents;
 
             _ix = new BatchInfo
             {
                 VersionId = version,
-                Compression = _compression,
+                Compression = compression,
                 PrimaryKeyFieldName = documents.PrimaryKeyFieldName
             };
 
             var posFileName = Path.Combine(
                 _directory, string.Format("{0}.{1}", _ix.VersionId, "pos"));
 
-            var factory = storeWriterFactory ?? new WriteSessionFactory(directory, _ix, _compression);
+            var factory = storeWriterFactory ?? new WriteSessionFactory(directory, _ix);
 
             _writeSession = factory.OpenWriteSession(_compoundFile);
 

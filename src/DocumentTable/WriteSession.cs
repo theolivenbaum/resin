@@ -12,11 +12,11 @@ namespace DocumentTable
         private readonly IDictionary<string, short> _keyIndex;
         private readonly List<string> _fieldNames;
         private readonly string _keyIndexFileName;
-        private readonly Stream _compoundFile;
+        private readonly Stream _dataFile;
         private bool _flushed;
         private readonly BatchInfo _ix;
 
-        public WriteSession(string directory, BatchInfo ix, Compression compression, Stream compoundFile)
+        public WriteSession(string directory, BatchInfo ix, Stream dataFile)
         {
             var docFileName = Path.Combine(directory, ix.VersionId + ".dtbl");
             var docAddressFn = Path.Combine(directory, ix.VersionId + ".da");
@@ -30,7 +30,7 @@ namespace DocumentTable
 
             _docWriter = new DocumentWriter(
                 new FileStream(docFileName, FileMode.CreateNew, FileAccess.ReadWrite,
-                    FileShare.None, 4096, FileOptions.DeleteOnClose), compression);
+                    FileShare.None, 4096, FileOptions.DeleteOnClose), ix.Compression);
 
             _docHashesStream = new FileStream(
                 docHashesFileName, FileMode.CreateNew, FileAccess.ReadWrite,
@@ -39,7 +39,7 @@ namespace DocumentTable
             _keyIndex = new Dictionary<string, short>();
             _fieldNames = new List<string>();
 
-            _compoundFile = compoundFile;
+            _dataFile = dataFile;
         }
         
         public void Write(Document document)
@@ -68,22 +68,22 @@ namespace DocumentTable
         {
             if (_flushed) return;
 
-            _ix.DocHashOffset = _compoundFile.Position;
+            _ix.DocHashOffset = _dataFile.Position;
             _docHashesStream.Flush();
             _docHashesStream.Position = 0;
-            _docHashesStream.CopyTo(_compoundFile);
+            _docHashesStream.CopyTo(_dataFile);
 
-            _ix.DocAddressesOffset = _compoundFile.Position;
+            _ix.DocAddressesOffset = _dataFile.Position;
             _addressWriter.Stream.Flush();
             _addressWriter.Stream.Position = 0;
-            _addressWriter.Stream.CopyTo(_compoundFile);
+            _addressWriter.Stream.CopyTo(_dataFile);
 
-            _ix.KeyIndexOffset = _compoundFile.Position;
-            _ix.KeyIndexSize = _fieldNames.Serialize(_compoundFile);
+            _ix.KeyIndexOffset = _dataFile.Position;
+            _ix.KeyIndexSize = _fieldNames.Serialize(_dataFile);
 
             _docWriter.Stream.Flush();
             _docWriter.Stream.Position = 0;
-            _docWriter.Stream.CopyTo(_compoundFile);
+            _docWriter.Stream.CopyTo(_dataFile);
 
             _flushed = true;
         }
