@@ -241,19 +241,22 @@ namespace Resin.Cli
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
 
             var compression = gzip ? Compression.GZip : lz ? Compression.Lz : Compression.NoCompression;
-            var fileName = args[Array.IndexOf(args, "--file") + 1];
+            var dataFileName = args[Array.IndexOf(args, "--file") + 1];
+            var ixFileName = Directory.GetFiles(Path.GetDirectoryName(dataFileName), "*.ix")
+                .OrderBy(s => s).First();
+            var ix = BatchInfo.Load(ixFileName);
 
             Console.WriteLine("rewriting...");
 
             var writeTimer = new Stopwatch();
             writeTimer.Start();
 
-            //using (var stream = new FileStream(fileName, FileMode.Open))
-            //using (var documents = new DtblStream(stream, pk, skip, take))
-            //using (var upsert = new UpsertCommand(dir, new Analyzer(), compression, documents))
-            //{
-            //    upsert.Write();
-            //}
+            using (var stream = new FileStream(dataFileName, FileMode.Open))
+            using (var documents = new DtblStream(stream, ix, skip, take))
+            using (var upsert = new UpsertCommand(dir, new Analyzer(), compression, documents))
+            {
+                upsert.Write();
+            }
 
             Console.WriteLine("write operation took {0}", writeTimer.Elapsed);
         }
@@ -266,7 +269,7 @@ namespace Resin.Cli
             if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
             if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
 
-            var  sourceFileName= args[Array.IndexOf(args, "--source-file") + 1];
+            var sourceFileName= args[Array.IndexOf(args, "--source-file") + 1];
             var targetFileName = args[Array.IndexOf(args, "--target-file") + 1];
 
             var dir = Path.GetDirectoryName(sourceFileName);
@@ -278,21 +281,22 @@ namespace Resin.Cli
             var writeTimer = new Stopwatch();
             writeTimer.Start();
 
-            //using (var outStream = new FileStream(targetFileName, FileMode.Create))
-            //using (var jsonWriter = new StreamWriter(outStream, Encoding.UTF8))
-            //using (var documents = new DtblStream(sourceFileName, ix.PrimaryKeyFieldName, skip, take))
-            //{
-            //    jsonWriter.WriteLine("[");
+            using (var sourceStream = new FileStream(sourceFileName, FileMode.Open))
+            using (var targetStream = new FileStream(targetFileName, FileMode.Create))
+            using (var jsonWriter = new StreamWriter(targetStream, Encoding.UTF8))
+            using (var documents = new DtblStream(sourceStream, ix, skip, take))
+            {
+                jsonWriter.WriteLine("[");
 
-            //    foreach (var document in documents.ReadSource())
-            //    {
-            //        var dic = document.Fields.ToDictionary(x => x.Key, y => y.Value.Value);
-            //        var json = JsonConvert.SerializeObject(dic, Formatting.None);
-            //        jsonWriter.WriteLine(json);
-            //    }
+                foreach (var document in documents.ReadSource())
+                {
+                    var dic = document.Fields.ToDictionary(x => x.Key, y => y.Value.Value);
+                    var json = JsonConvert.SerializeObject(dic, Formatting.None);
+                    jsonWriter.WriteLine(json);
+                }
 
-            //    jsonWriter.Write("]");
-            //}
+                jsonWriter.Write("]");
+            }
 
             Console.WriteLine("write operation took {0}", writeTimer.Elapsed);
         }
