@@ -2,6 +2,7 @@
 
 namespace DocumentTable
 {
+    // Note, this object's equatability property is key. Making this into a struct would only led to boxing.
     public class DocHash : IEquatable<DocHash>
     {
         public UInt64 Hash { get; private set; }
