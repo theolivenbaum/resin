@@ -7,6 +7,7 @@ using Resin.IO;
 using Resin.Sys;
 using System.Diagnostics;
 using DocumentTable;
+using System.Linq;
 
 namespace Resin
 {
@@ -33,13 +34,14 @@ namespace Resin
             DocumentStream documents, 
             IWriteSessionFactory storeWriterFactory = null)
         {
-            var version = Util.GetNextChronologicalFileId();
-            var compoundFileName = Path.Combine(directory, version + ".rdb");
+            long version = Util.GetNextChronologicalFileId();
 
             FileStream lockFile;
 
             if (!Util.TryAquireWriteLock(directory, out lockFile))
             {
+                var compoundFileName = Path.Combine(directory, version + ".rdb");
+
                 _compoundFile = new FileStream(
                     compoundFileName,
                     FileMode.CreateNew,
@@ -50,6 +52,20 @@ namespace Resin
             }
             else
             {
+                var ixFileName = Util.GetIndexFileNamesInChronologicalOrder(directory).FirstOrDefault();
+                long dataFileVersion;
+
+                if (ixFileName == null)
+                {
+                    dataFileVersion = version;
+                }
+                else
+                {
+                    dataFileVersion = long.Parse(Path.GetFileNameWithoutExtension(ixFileName));
+                }
+
+                var compoundFileName = Path.Combine(directory, dataFileVersion + ".rdb");
+
                 _compoundFile = new FileStream(
                     compoundFileName,
                     FileMode.Append,
@@ -57,6 +73,8 @@ namespace Resin
                     FileShare.ReadWrite,
                     4096
                     );
+
+                _lockFile = lockFile;
             }
 
             _directory = directory;
@@ -191,7 +209,10 @@ namespace Resin
         {
             if (!_committed) Commit();
 
-            if (_lockFile != null)_lockFile.Dispose();
+            if (_lockFile != null)
+            {
+                _lockFile.Dispose();
+            }
         }
     }
 }

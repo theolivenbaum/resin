@@ -91,6 +91,8 @@ namespace Resin.Sys
 
         public static bool TryAquireWriteLock(string directory, out FileStream lockFile)
         {
+            lockFile = null;
+
             var fileName = Path.Combine(directory, "write.lock");
             try
             {
@@ -99,16 +101,15 @@ namespace Resin.Sys
                                 FileShare.None, 4, FileOptions.DeleteOnClose);
                 return true;
             }
-            catch(IOException)
+            catch (IOException)
             {
-                lockFile = null;
+                if (lockFile != null)
+                {
+                    lockFile.Dispose();
+                    lockFile = null;
+                }
                 return false;
             } 
-        }
-
-        public static bool WriteLockExists(string directory)
-        {
-            return File.Exists(Path.Combine(directory, "write.lock"));
         }
 
         public static bool IsSegmented(string ixFileName)

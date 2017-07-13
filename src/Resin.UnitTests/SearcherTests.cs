@@ -159,7 +159,52 @@ namespace Tests
         }
 
         [TestMethod]
-        public void Can_truncate()
+        public void Can_search_appended_file()
+        {
+            var dir = CreateDir();
+
+            var docs = new List<dynamic>
+            {
+                new {_id = "0", title = "Rambo First Blood" },
+                new {_id = "1", title = "the rain man" },
+                new {_id = "2", title = "the good, the bad and the ugly" }
+            }.ToDocuments(primaryKeyFieldName: "_id");
+
+            var moreDocs = new List<dynamic>
+{
+                new {_id = "3", title = "rambo 2" },
+                new {_id = "4", title = "rocky 2" },
+                new {_id = "5", title = "the raiders of the lost ark" },
+            }.ToDocuments(primaryKeyFieldName: "_id");
+
+            long indexName;
+            long indexName2;
+
+            using (var writer = new UpsertCommand(
+                dir, new Analyzer(), compression: Compression.NoCompression, documents: docs))
+            {
+                indexName = writer.Write();
+            }
+            using (var writer2 = new UpsertCommand(
+                dir, new Analyzer(), compression: Compression.NoCompression, documents: moreDocs))
+            {
+                indexName2 = writer2.Write();
+            }
+
+            using (var searcher = new Searcher(dir))
+            {
+                var result = searcher.Search("title:rambo");
+
+                Assert.AreEqual(2, result.Total);
+                Assert.AreEqual(2, result.Docs.Count);
+
+                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "0"));
+                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
+            }
+        }
+
+        [TestMethod]
+        public void Can_merge()
         {
             var dir = CreateDir();
 
@@ -236,52 +281,6 @@ namespace Tests
 
                 Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "0"));
                 Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
-            }
-        }
-
-        [TestMethod]
-        public void Can_search_split_tree()
-        {
-            var dir = CreateDir();
-
-            var docs = new List<dynamic>
-            {
-                new {_id = "0", title = "Rambo First Blood" },
-                new {_id = "1", title = "rambo 2" },
-                new {_id = "2", title = "rocky 2" },
-                new {_id = "3", title = "the raiders of the lost ark" },
-                new {_id = "4", title = "the rain man" },
-                new {_id = "5", title = "the good, the bad and the ugly" }
-            }.ToDocuments(primaryKeyFieldName: "_id");
-
-            var writer = new UpsertCommand(
-                dir, new Analyzer(), compression: Compression.GZip, documents: docs);
-            long indexName = writer.Write();
-            writer.Dispose();
-
-            using (var searcher = new Searcher(dir))
-            {
-                var result = searcher.Search("title:bad");
-
-                Assert.AreEqual(1, result.Total);
-                Assert.AreEqual(1, result.Docs.Count);
-
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 5));
-
-                Assert.AreEqual(
-                    "the good, the bad and the ugly",
-                    result.Docs.First(d => d.Document.Id == 5).Document.Fields["title"].Value);
-            }
-
-            using (var searcher = new Searcher(dir))
-            {
-                var result = searcher.Search("title:the");
-
-                Assert.AreEqual(3, result.Total);
-                Assert.AreEqual(3, result.Docs.Count);
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 3));
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 4));
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 5));
             }
         }
     }
