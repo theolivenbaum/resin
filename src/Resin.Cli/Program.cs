@@ -208,8 +208,6 @@ namespace Resin.Cli
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
             if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
 
-            Console.WriteLine("writing...");
-
             var docs = new List<Dictionary<string, string>>();
 
             var writeTimer = new Stopwatch();

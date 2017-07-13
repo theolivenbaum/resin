@@ -36,6 +36,8 @@ namespace Resin
         {
             long version = Util.GetNextChronologicalFileId();
 
+            Log.InfoFormat("begin writing {0}", version);
+
             FileStream lockFile;
 
             if (!Util.TryAquireWriteLock(directory, out lockFile))
@@ -122,7 +124,7 @@ namespace Resin
                 upsert.Write(doc);
             }
 
-            Log.InfoFormat("stored {0} documents in {1}", _count+1, docTimer.Elapsed);
+            Log.InfoFormat("stored {0} documents in {1}", _count, docTimer.Elapsed);
 
             var posTimer = Stopwatch.StartNew(); 
             
