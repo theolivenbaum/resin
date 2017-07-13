@@ -143,6 +143,7 @@ namespace Resin
             using (var stream = new FileStream(dataFileName, FileMode.Open))
             using (var documentStream = new DtblStream(stream, ix))
             {
+                // TODO: instead of rewriting, copy the segments from the branch file into the main data file.
                 using (var upsert = new UpsertCommand(
                     _directory,
                     _analyzer,
