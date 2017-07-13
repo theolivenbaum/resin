@@ -23,7 +23,7 @@ namespace DocumentTable
                 compoundFileName,
                 FileMode.Open,
                 FileAccess.Read,
-                FileShare.Read,
+                FileShare.ReadWrite,
                 4096 * 1,
                 FileOptions.RandomAccess);
         }
