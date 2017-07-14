@@ -48,7 +48,7 @@ ResinDB's read/write model allow for multi-threaded read and write access to the
 
 ## Dense Unicode trie
 
-A dense (compact) trie is a trie where nodes void of data from any word have been left out. This is in contrast to a sparse (fully expanded) trie where each node has as many children as there are letters in the alphabet. Further more, in a dense trie a word is marked by a flag directly on the node, instead of following the more common trie regime of marking the end of a word with a node carrying a null value.
+A dense (compact) trie is a trie where nodes void of data from any word have been left out. This is in contrast to a sparse (fully expanded) trie where each node has as many children as there are letters in the code page. Further more, in a dense trie a word is marked by a flag directly on the node, instead of following the more common trie regime of marking the end of a word with a node carrying a null value.
 
 The disk representation of a LcrsTrie is a LcrsNode.
 
