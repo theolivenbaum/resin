@@ -27,7 +27,7 @@ namespace Resin
             _scoreCache = new Dictionary<Query, IList<DocumentScore>>();
         }
 
-        public IList<DocumentScore> Collect(QueryContext query)
+        public DocumentScore[] Collect(QueryContext query)
         {
             var scoreTime = new Stopwatch();
             scoreTime.Start();
@@ -45,9 +45,9 @@ namespace Resin
             var reduceTime = new Stopwatch();
             reduceTime.Start();
 
-            var reduced = query.Reduce().OrderByDescending(s => s.Score).ToList();
+            var reduced = query.Reduce().OrderByDescending(s => s.Score).ToArray();
 
-            Log.DebugFormat("reduced query {0} producing {1} scores in {2}", query, reduced.Count, scoreTime.Elapsed);
+            Log.DebugFormat("reduced query {0} producing {1} scores in {2}", query, reduced.Length, scoreTime.Elapsed);
 
             return reduced;
         }
@@ -105,8 +105,7 @@ namespace Resin
 
         private void GetPostings(QueryContext subQuery)
         {
-            var time = new Stopwatch();
-            time.Start();
+            var time = Stopwatch.StartNew();
 
             var postings = subQuery.Terms.Count > 0 ? _readSession.ReadPostings(subQuery.Terms) : null;
 
@@ -115,7 +114,6 @@ namespace Resin
             if (postings == null)
             {
                 reduced = null;
-                
             }
             else
             {
@@ -176,7 +174,6 @@ namespace Resin
                     }
                 }
             }
-
             return scores;
         }
 
@@ -190,7 +187,6 @@ namespace Resin
                 _readSession.Stream.Seek(offset, SeekOrigin.Begin);
                 return new MappedTrieReader(_readSession.Stream);
             }
-
             return null;
         }
 

@@ -81,7 +81,7 @@ namespace Resin
 
             var result = new ScoredResult
             {
-                Total = scores.Count,
+                Total = scores.Length,
                 Docs = docs.OrderByDescending(d => d.Score).ToList()
             };
 
@@ -97,9 +97,9 @@ namespace Resin
             return Search(queryContext, page, size);
         }
 
-        private IList<DocumentScore> Collect(QueryContext query)
+        private DocumentScore[] Collect(QueryContext query)
         {
-            var scores = new List<IList<DocumentScore>>();
+            var scores = new List<DocumentScore[]>();
             foreach (var version in _versions)
             {
                 using (var readSession = _sessionFactory.OpenReadSession(version.VersionId))
@@ -110,7 +110,7 @@ namespace Resin
             return scores.CombineTakingLatestVersion();
         }
 
-        private IList<DocumentScore> Collect(QueryContext query, IReadSession readSession)
+        private DocumentScore[] Collect(QueryContext query, IReadSession readSession)
         {
             using (var collector = new Collector(_directory, readSession, _scorerFactory))
             {

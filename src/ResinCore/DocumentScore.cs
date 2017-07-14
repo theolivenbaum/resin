@@ -88,9 +88,9 @@ namespace Resin
 
     public static class DocumentScoreExtensions
     {
-        public static IList<DocumentScore> CombineTakingLatestVersion(this IList<IList<DocumentScore>> source)
+        public static DocumentScore[] CombineTakingLatestVersion(this IList<DocumentScore[]> source)
         {
-            if (source.Count == 0) return new List<DocumentScore>();
+            if (source.Count == 0) return new DocumentScore[0];
 
             if (source.Count == 1) return source[0];
 
@@ -98,12 +98,12 @@ namespace Resin
 
             foreach (var list in source.Skip(1))
             {
-                first = CombineTakingLatestVersion(first, list).ToList();
+                first = CombineTakingLatestVersion(first, list).ToArray();
             }
             return first;
         }
 
-        public static IEnumerable<DocumentScore> CombineTakingLatestVersion(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> second)
+        public static IEnumerable<DocumentScore> CombineTakingLatestVersion(DocumentScore[] first, DocumentScore[] second)
         {
             var unique = new Dictionary<UInt64, DocumentScore>();
 
