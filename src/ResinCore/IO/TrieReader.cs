@@ -309,10 +309,14 @@ namespace Resin.IO.Read
 
             while (node != LcrsNode.MinValue)
             {
-                if (node.Depth != currentDepth)
+                while (node.Depth != currentDepth)
                 {
                     Skip(node.Weight - 1);
                     node = Step();
+                    if (node == LcrsNode.MinValue)
+                    {
+                        break;
+                    }
                 }
 
                 if (node == LcrsNode.MinValue)
