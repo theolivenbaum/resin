@@ -2,7 +2,7 @@
   "profiles": {
     "Resin.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "query --dir c:\\temp\\resin_data\\pg -q \"title:abeyance\""
+      "commandLineArgs": "query --dir c:\\temp\\resin_data\\pg -q \"title:hamlet\""
     }
   }
 }

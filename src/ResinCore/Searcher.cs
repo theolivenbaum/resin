@@ -66,7 +66,7 @@ namespace Resin
             var searchTime = Stopwatch.StartNew();
             var skip = page * size;
             var scores = Collect(query);
-            var paged = scores.Skip(skip).Take(size).ToList();
+            var paged = scores.OrderByDescending(s=>s.Score).Skip(skip).Take(size).ToArray();
 
             var docTime = Stopwatch.StartNew();
             var docs = new List<ScoredDocument>(size);
