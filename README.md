@@ -29,6 +29,51 @@ ResinDB is designed to be used as
 
 ResinDB's architecture can be compared to that of Lucene, LevelDB or SQL Server LocalDB in that it runs in-process. What sets ResinDB apart is its full-text search index, its scoring mechanisms and its latch-free writing.
 
+## Query syntax and execution plan
+
+A query string may contain groups of [key]:[value] pairs. Each such pair is a query term:
+
+	title:rambo+genre:action
+
+Query terms may be concatenated by a space (meaning OR), a + sign (meaning AND) or a - sign (meaning NOT):
+
+	title:first title:blood
+	title:first+title:blood
+	title:first-title:blood
+
+Query terms may be grouped together by enclosing them in parenthasis:
+
+	title:jesus+(genre:history genre:fiction)
+
+### Execution plan
+
+Given a query string, a page number and a page size the following constitutes the read algorithm:
+
+	//parse query string into tree of query terms
+	query_tree = parse(query_string)
+
+	for each query_term in query_tree
+
+		//scan index for matching terms
+		terms = scan(query_term)
+
+		for each term in terms	
+		
+			//get postings
+			postings = read_postings(term)
+
+			// calculate the relevance of each posting
+			query_term.scores = score(postings)
+
+	// apply boolean logic between nodes to reduce tree into a list of scores
+	scores = reduce(query_tree)
+
+	// paginate
+	paginated_scores = scores.skip(page_number*page_size).take(page_size)
+
+	//fetch documents
+	documents = read(paginated_scores)
+
 ## DocumentTable
 
 A document table is a table where  
