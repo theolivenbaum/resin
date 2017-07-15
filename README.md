@@ -206,8 +206,6 @@ Stored document fields can be compressed individually with either QuickLZ or GZi
 
 Compressing documents affect querying performance very little. The reason for this is that no data needs to be read and deflated until scoring and pagination has been performed.
 
-In some scenarios compressing documents speeds up writing. 
-
 ## Merge and truncate
 
 Writing to a store uncontended yields a new index segment. Multiple simultaneous writes are allowed. When they happen the index forks into two or more branches and the document file fragments into two or more files. 
