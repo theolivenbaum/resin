@@ -33,7 +33,7 @@ ResinDB's architecture can be compared to that of Lucene, LevelDB or SQL Server 
 
 A query string may contain groups of [key]:[value] pairs. Each such pair is a query term:
 
-	title:rambo+genre:action
+	title:rambo genre:action
 
 Query terms may be concatenated by a space (meaning OR), a + sign (meaning AND) or a - sign (meaning NOT):
 
