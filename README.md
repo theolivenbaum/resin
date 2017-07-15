@@ -52,7 +52,7 @@ Query terms may be grouped together by enclosing them in parenthesis:
 
 	title:jesus+(genre:history genre:fiction)
 
-### Fuzzy, prefix and range queries are re-written
+### Fuzzy, prefix, range and phrase queries are re-written
 
 A fuzzy query term is suffixed with a `~`:
 
@@ -62,19 +62,23 @@ A prefix query term is suffixed with a `*`:
 
 	body:morph*
 	
-Greater than:
+A greater-than query term separates the key and the value with a `>`:
 
 	created_date>2017-07-15
 
-Less than:
+A greater-than query term separates the key and the value with a `<`:
 
 	created_date>2017-07-15
 
-Range:
+A range query:
 
 	created_date<2017-07-15+created_date>2017-07-15
 
-When Resin is subjected to a fuzzy, prefix or range query it expands the query to include all terms that exists in the corpus and that lives within the boundaries as specified by the prefix, fuzzy or range operators.
+Same query re-ordered:
+
+	created_date>2017-07-15+created_date<2017-07-15
+
+When Resin is subjected to a fuzzy, prefix or range query it expands the query to include all terms that exists in the corpus and that lives within the boundaries as specified by the prefix, fuzzy or range operators (`* ~ < >`).
 
 ### Query execution plan
 
