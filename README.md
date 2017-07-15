@@ -68,7 +68,7 @@ A greater-than query term separates the key and the value with a `>`:
 
 A less-than query term separates the key and the value with a `<`:
 
-	created_date>2017-07-15
+	created_date<2017-07-15
 
 A range query:
 
