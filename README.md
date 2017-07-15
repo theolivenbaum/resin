@@ -38,7 +38,7 @@ ResinDB provides term-based lookups. A term references both a field (key) and a 
 
 	title:rambo
 	
-Issuing such a statement will yield all documents with the word `rambo` in it's title sorted by relevance.
+Issuing such a statement will yield all documents with the word `rambo` somwhere in the title, sorted by relevance.
 
 A query string may contain groups of `key:value` pairs. Each such pair is a query term:
 
