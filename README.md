@@ -37,6 +37,8 @@ ResinDB's architecture can be compared to that of Lucene, LevelDB or SQL Server 
 ResinDB provides term-based lookups. A term references both a field (key) and a word (value):
 
 	title:rambo
+	
+Issuing such a statement will yield all documents with the word `rambo` in it's title sorted by relevance.
 
 A query string may contain groups of `key:value` pairs. Each such pair is a query term:
 
