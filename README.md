@@ -3,7 +3,9 @@
 [![NuGet Version](https://img.shields.io/badge/nuget-v2.0.1-blue.svg)](https://www.nuget.org/packages/ResinDB)
 [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/ResinDB/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
 
-ResinDB is a cross-platform document database and search engine with a query language, API and CLI. A performant database with a unique feature set:  
+ResinDB is an embedded disk-based database and search engine with concurrent read/write. Utilize it's indexing and querying properties through an API, a query language and a command-line interface.  
+
+## A unique feature set
 
 Feature | ResinDB | Lucene | SQL Server LocalDB | LevelDB | RocksDB
 --- | --- | --- | --- | --- | ---
@@ -25,36 +27,65 @@ ResinDB is designed to be used as
 - a index of your data
 - a component of a distributed database
 - a framework for experimenting with scoring models 
+- a big data analysis tool
 - a search engine
 
 ResinDB's architecture can be compared to that of Lucene, LevelDB or SQL Server LocalDB in that it runs in-process. What sets ResinDB apart is its full-text search index, its scoring mechanisms and its latch-free writing.
 
-## Query syntax and execution plan
+## Query language and execution plan
 
-A query string may contain groups of [key]:[value] pairs. Each such pair is a query term:
+ResinDB provides term-based lookups. A term references both a field (key) and a word (value):
+
+	title:rambo
+
+A query string may contain groups of `key:value` pairs. Each such pair is a query term:
 
 	title:rambo genre:action
 
-Query terms may be concatenated by a space (meaning OR), a + sign (meaning AND) or a - sign (meaning NOT):
+Query terms may be concatenated by a `space` (meaning OR), a `+` sign (meaning AND) or a `-` sign (meaning NOT):
 
 	title:first title:blood
 	title:first+title:blood
 	title:first-title:blood
 
-Query terms may be grouped together by enclosing them in parenthasis:
+Query terms may be grouped together by enclosing them in parenthesis:
 
 	title:jesus+(genre:history genre:fiction)
 
-### Execution plan
+### Fuzzy, prefix and range queries are re-written
 
-Given a query string, a page number and a page size the following constitutes the read algorithm:
+A fuzzy query term is suffixed with a `~`:
 
-	//parse query string into tree of query terms
+	body:morpheous~
+
+A prefix query term is suffixed with a `*`:
+
+	body:morph*
+	
+Greater than:
+
+	created_date>2017-07-15
+
+Less than:
+
+	created_date>2017-07-15
+
+Range:
+
+	created_date<2017-07-15+created_date>2017-07-15
+
+When Resin is subjected to a fuzzy, prefix or range query it expands the query to include all terms that exists in the corpus and that lives within the boundaries as specified by the prefix, fuzzy or range operators.
+
+### Query execution plan
+
+Given a query string, a page number and a page size, the following constitutes the ResinDB read algorithm:
+
+	//parse query string into a tree of query terms
 	query_tree = parse(query_string)
 
 	for each query_term in query_tree
 
-		//scan index for matching terms
+		//scan index for matching terms (query term may be exact, fuzzy, prefix or range)
 		terms = scan(query_term)
 
 		for each term in terms	
@@ -74,62 +105,44 @@ Given a query string, a page number and a page size the following constitutes th
 	//fetch documents
 	documents = read(paginated_scores)
 
-## DocumentTable
+## Embedded disk-based database with concurrent read/write
+
+ResinDB is a library, not a service. It runs inside of your application's memory space. Because of that ResinDB has been optimized to be able to immediately respond to queries without having to first rebuild data structures in-memory. 
+
+ResinDB's read/write model allow for multi-threaded read and write access to the data files. Writing is append-only. Reading is snapshot-based.
+
+## Dense Unicode trie
+
+Resin's index is a dense, bucket-less, doubly chained Unicode character trie. On disk it's represented as a bitmap.
+
+A dense (compact) trie is a trie where nodes void of data from any word have been left out. This is in contrast to a sparse (fully expanded) trie where each node has as many children as there are letters in the code page. Further more a word is marked by a flag directly on the node, instead of following the more common trie regime of marking the end of a word with a node carrying a null value.
+
+The disk representation of a LcrsTrie is a LcrsNode. Nodes are stored in a node table.
+
+## NodeTable compared to a SSTable
+
+A sorted string table contains key/value pairs sorted by key.
+
+A node table is a file with key/value pairs arranged in a tree. It's sorted by key. Keys are spread out onto many nodes in a trie-like fashion. The value connected to the key is an address to a list of postings. Each node is encoded with the weight of their sub tree such that skipping over sub trees is efficiently done by seeking a distance in the file equal to the weight of a sub tree root node * the size of a node (which is fixed in size).
+
+From a sorted list of strings you can create a binary search tree. In a node table the nodes are already laid out as a tree in such a way that lexiographic depth-first search is a forward-only read. Breadth-first search could also be performed but would require lots of seeking back and forth. The effects had serializing been done depth-first is the layout of the file would be breadth-first. This layout would allow for breadth-first search using forward-only read. 
+
+## Data is stored in a DocumentTable
 
 A document table is a table where  
 
 - each row has a variable amount of named columns
 - each column is a variable length byte array
 
-[DocumentTable specification](src/DocumentTable/README.md)  
+[DocumentTable specification](src/DocumentTable/README.md) 
 
-## Disk-based concurrent read/write
+## There is no schema
 
-Resin is a library, not a service. It runs inside of your application's memory space. Because of that ResinDB has been optimized to be able to immediately respond to queries without having to first rebuild data structures in-memory. 
+You may store documents with variable number columns (fields). 
 
-The default index type is a dense, bucket-less, doubly chained Unicode character trie. On disk it's represented as a bitmap.
-
-ResinDB's read/write model allow for multi-threaded read and write access to the data files. Writing is append-only. Reading is snapshot-based.
-
-## Dense Unicode trie
-
-A dense (compact) trie is a trie where nodes void of data from any word have been left out. This is in contrast to a sparse (fully expanded) trie where each node has as many children as there are letters in the code page. Further more, in a dense trie a word is marked by a flag directly on the node, instead of following the more common trie regime of marking the end of a word with a node carrying a null value.
-
-The disk representation of a LcrsTrie is a LcrsNode.
-
-## NodeTable compared to a SSTable
-
-A sorted string table is a file with key/value pairs sorted by key.
-
-A node table is a file with key/value pairs sorted by key where the key is spread out onto many trie nodes and where the value is an address to a list of postings. Each node is encoded with the weight of their sub tree such that skipping over sub trees is efficiently done by seeking a distance in the file equal to the weight of a sub tree root node * the size of a node (which is fixed in size).
-
-From a sorted list of strings you can create a binary search tree. In a node table the nodes are already laid out as a tree in such a way that depth-first search is a forward-only read. Breadth-first search could be done but would require lots of seeking back and forth as the file is currently laid out. 
-
-The effects had serializing been done depth-first is the layout of the file would be breadth-first. This would allow for breadth-first search using forward-only read. 
-
-## No schema
-
-You may store documents with variable number columns ("fields"). 
-
-If you have graph-like business entities you would like full queryability into, then flatten them out and use paths as field names. 
+If you have graph-like business entities you would like full queryability into, flatten them out and use paths as field names, so that Resin can understand them. 
 
 In queries you reference document fields by key (or path).
-
-## Field-oriented indexing options
-
-Resin creates and maintains an index per document field. 
-
-You can opt out of indexing entirely. You can index verbatim (unanalyzed) data. You can choose to store data both is its original and its analyzed state, or you can choose to store either one of those.
-
-Indexed fields (both analyzed and unanalyzed) can participate in queries. Primary keys or paths used as identifiers should not be analyzed but certanly indexed and if they're significant enough, also stored.
-
-Indxed data is encoded as nodes in a corpus-wide trie.
-
-## Compression
-
-Stored document fields can be compressed individually with either QuickLZ or GZip. For unstructured data this leaves a smaller footprint on disk and enables faster writes.
-
-Compressing documents affect querying very little. In some scenarios it speeds up writing. 
 
 ## Full-text search
 
@@ -171,9 +184,23 @@ Documents are mapped in vector space, sorted by their distance from the query, p
 
 __Answer__: Something you can have or possibly be.
 
-## Pluggable storage engine
+## Field-oriented indexing options
 
-Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
+Resin creates and maintains an index per document field. 
+
+You can opt out of indexing entirely. You can index verbatim (unanalyzed) data. You can choose to store data both is its original and its analyzed state, or you can choose to store either one of those.
+
+Indexed fields (both analyzed and unanalyzed) can participate in queries. Primary keys or paths used as identifiers should not be analyzed but certanly indexed and if they're significant enough, also stored.
+
+Indexed data is encoded as nodes in a corpus-wide trie.
+
+## Compression
+
+Stored document fields can be compressed individually with either QuickLZ or GZip. For unstructured data this leaves a smaller footprint on disk and enables faster writes.
+
+Compressing documents affect querying performance very little. The reason for this is that no data needs to be read and deflated until scoring and pagination has been performed.
+
+In some scenarios compressing documents speeds up writing. 
 
 ## Merge and truncate
 
@@ -189,6 +216,10 @@ Merging two forks leads to a single multi-segmented index.
 
 Issuing a merge operation on a single multi-segmented index results in a unisegmented index. If the merge operation was uncontended the store will now have a single branch/single segment index.
 
+## Pluggable storage engine
+
+Implement your own storage engine through the IDocumentStoreWriter, IDocumentStoreReadSessionFactory, IDocumentStoreReadSession and IDocumentStoreDeleteOperation interfaces.
+
 ## Flexible and extensible
 
 Analyzers, tokenizers and scoring schemes are customizable.
@@ -201,9 +232,7 @@ Are you looking for something other than a document database or a search engine?
 
 ResinDB is built for dotnet Core 1.1.
 
-## Usage
-
-### CLI
+## CLI
 
 [Some test data](https://drive.google.com/file/d/0BzlUqjJAklk9bWZqbVZTRnlnblE/view?usp=sharing) (~20K novels from The Gutenberg Project, zipped, in JSON format).
 
