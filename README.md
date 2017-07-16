@@ -32,7 +32,7 @@ ResinDB is designed to be used as
 
 ## Realize, there is no schema (nor a whole lot of tables)
 
-There exists databases that are document databases that have a schema and have support for SQL. Resin is not such a document database.
+There exists databases that are document databases that have schema and support for SQL. Resin is not such a document database.
 
 You know how you have to first create a schema (tables) before writing to a SQL database? With ResinDB you don't have to do that. You can just start writing immediately.
 
