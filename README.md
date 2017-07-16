@@ -116,7 +116,7 @@ Given a query string, a page number and a page size, the following constitutes t
 			// calculate the relevance of each posting
 			query_term.scores = score(postings)
 
-	// apply boolean logic between nodes to reduce tree into a list of scores
+	// apply boolean logic and summation between nodes to reduce tree into a list of scores
 	scores = reduce(query_tree)
 
 	// paginate
