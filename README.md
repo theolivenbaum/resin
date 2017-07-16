@@ -86,11 +86,19 @@ Same query re-ordered:
 
 This is a phrase query:
 	
-	title:the good bad ugly and
+	title:"the good bad ugly and"
 
 Resin re-writes it into:
 
 	title:the title:good title:bad title:ugly title:and
+
+A phrase can be fuzzy:
+
+	title:"the good bad ugly and"~
+	
+Resin re-writes that into:
+
+	title:the~ title:good~ title:bad~ title:ugly~ title:and~
 
 When Resin is subjected to a fuzzy, prefix or range query it expands the query to include all terms that exists in the corpus and that lives within the boundaries as specified by the prefix, fuzzy or range operators (`* ~ < >`).
 
@@ -98,9 +106,11 @@ E.g.
 
 	title:bananna~
 
-will be re-written to (if those terms exists in the corpus and are near enough from the original term):
+will be expanded into:
 
 	title:banana title:bananas
+	
+...if those are the terms that exists in the corpus and are near enough from the original term.
 
 You may follow the parsing of the query and its execution plan by switching to DEBUG logging (in log4net.config) and then issuing the query through the CLI.
 
