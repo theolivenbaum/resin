@@ -149,7 +149,7 @@ A sorted string table contains key/value pairs sorted by key.
 
 A node table is a file with key/value pairs arranged in a tree. It's sorted by key. Keys are spread out onto many nodes in a trie-like fashion. The value connected to the key is an address to a list of postings. Each node is encoded with the weight of their sub tree such that skipping over sub trees is efficiently done by seeking a distance in the file equal to the weight of a sub tree root node * the size of a node (which is fixed in size).
 
-From a sorted list of strings you can create a binary search tree. In a node table the nodes are already laid out as a tree in such a way that lexiographic depth-first search is a forward-only read. Breadth-first search could also be performed but would require lots of seeking back and forth. The effects had serializing been done depth-first is the layout of the file would be breadth-first. This layout would allow for breadth-first search using forward-only read. 
+From a sorted list of strings you can create a binary search tree. In a node table the nodes are already laid out as a tree in such a way that lexiographic depth-first search is a forward-only read. Breadth-first search could also be performed but would require lots of seeking back and forth. The effects had serializing been done depth-first is a layout that would allow for breadth-first search using forward-only read. 
 
 ## Data is stored in a DocumentTable
 
