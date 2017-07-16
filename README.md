@@ -3,7 +3,7 @@
 [![NuGet Version](https://img.shields.io/badge/nuget-v2.0.1-blue.svg)](https://www.nuget.org/packages/ResinDB)
 [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/ResinDB/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
 
-ResinDB is a database and search engine library with concurrent read/write and zero warm-up time that runs embedded in your app's memory space. You may utilize it's indexing and querying properties through an API, a query language and a command-line interface.  
+ResinDB is a schemaless (document) database and search engine library with concurrent read/write and zero warm-up time that runs embedded in your app's memory space. You may utilize it's indexing and querying properties through an API, a query language and a command-line interface.  
 
 ## A unique feature set
 
@@ -169,6 +169,8 @@ A document table is a table where
 [DocumentTable specification](src/DocumentTable/README.md) 
 
 ## There is no schema
+
+You know how you have to first create a schema (tables) before writing to a SQL database? With ResinDB you don't have to do that. You can just start writing immediately.
 
 You may store documents with variable number columns (fields). 
 
