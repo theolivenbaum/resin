@@ -3,7 +3,7 @@
 [![NuGet Version](https://img.shields.io/badge/nuget-v2.0.1-blue.svg)](https://www.nuget.org/packages/ResinDB)
 [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/ResinDB/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
 
-ResinDB is an .Net Core embedded/in-process and disk-based database and search engine with concurrent read/write and zero warm-up time. You may utilize it's indexing and querying properties through an API, a query language and a command-line interface.  
+ResinDB is an embedded/in-process and disk-based database and search engine with concurrent read/write and zero warm-up time. You may utilize it's indexing and querying properties through an API, a query language and a command-line interface.  
 
 ## A unique feature set
 
