@@ -36,9 +36,7 @@ You know how you have to first create a schema (tables) before writing to a SQL 
 
 Imagine a document as a row in a database table. In a document database you may store rows of data in that table with variable number of columns. There is only one table.
 
-If you have graph-like business entities you would like full queryability into, flatten them out and use paths as field names, so that Resin can understand them. 
-
-In queries you reference document fields by key (or path).
+In queries you reference document columns (fields) by key.
 
 Do you need two tables? Then create two ResinDB databases. 
 
