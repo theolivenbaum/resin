@@ -30,7 +30,7 @@ ResinDB is designed to be used as
 - a big data analysis tool
 - a search engine
 
-## Realize, there is no schema (and not a whole lot of tables)
+## Realize, there is no schema (nor a whole lot of tables)
 
 You know how you have to first create a schema (tables) before writing to a SQL database? With ResinDB you don't have to do that. You can just start writing immediately.
 
