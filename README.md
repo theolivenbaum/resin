@@ -30,6 +30,18 @@ ResinDB is designed to be used as
 - a big data analysis tool
 - a search engine
 
+## Realize, there is no schema (and not a whole lot of tables)
+
+You know how you have to first create a schema (tables) before writing to a SQL database? With ResinDB you don't have to do that. You can just start writing immediately.
+
+Imagine a document as a row in a database table. In a document database you may store rows of data in that table with variable number of columns. There is only one table.
+
+If you have graph-like business entities you would like full queryability into, flatten them out and use paths as field names, so that Resin can understand them. 
+
+In queries you reference document fields by key (or path).
+
+Do you need two tables? Then create two ResinDB databases. 
+
 ## Embedded, zero conf/warmup, with concurrent read/write
 
 ResinDB is a library, not a service. Because of that ResinDB has been optimized to be able to immediately respond to queries without having to first rebuild data structures in-memory. 
@@ -167,16 +179,6 @@ A document table is a table where
 - each column is a variable length byte array
 
 [DocumentTable specification](src/DocumentTable/README.md) 
-
-## There is no schema
-
-You know how you have to first create a schema (tables) before writing to a SQL database? With ResinDB you don't have to do that. You can just start writing immediately.
-
-You may store documents with variable number columns (fields). 
-
-If you have graph-like business entities you would like full queryability into, flatten them out and use paths as field names, so that Resin can understand them. 
-
-In queries you reference document fields by key (or path).
 
 ## Full-text search
 
