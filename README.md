@@ -86,6 +86,14 @@ Same query re-ordered:
 
 	created_date>2017-07-15+created_date<2017-07-15
 
+This is a phrase query:
+	
+	title:the good bad ugly and
+
+Resin re-writes it into:
+
+	title:the title:good title:bad title:ugly title:and
+
 When Resin is subjected to a fuzzy, prefix or range query it expands the query to include all terms that exists in the corpus and that lives within the boundaries as specified by the prefix, fuzzy or range operators (`* ~ < >`).
 
 ### Query execution plan
