@@ -30,11 +30,9 @@ ResinDB is designed to be used as
 - a big data analysis tool
 - a search engine
 
-ResinDB's architecture can be compared to that of Lucene, LevelDB or SQL Server LocalDB in that it runs in-process. What sets ResinDB apart is its full-text search index, its scoring mechanisms and its latch-free writing.
+## Embedded, zero conf/warmup, with concurrent read/write
 
-## Embedded disk-based database with concurrent read/write
-
-ResinDB is a library, not a service. It runs inside of your application's memory space. Because of that ResinDB has been optimized to be able to immediately respond to queries without having to first rebuild data structures in-memory. 
+ResinDB is a library, not a service. Because of that ResinDB has been optimized to be able to immediately respond to queries without having to first rebuild data structures in-memory. 
 
 ResinDB's read/write model allow for multi-threaded read and write access to the data files. Writing is append-only. Reading is snapshot-based.
 
