@@ -96,6 +96,16 @@ Resin re-writes it into:
 
 When Resin is subjected to a fuzzy, prefix or range query it expands the query to include all terms that exists in the corpus and that lives within the boundaries as specified by the prefix, fuzzy or range operators (`* ~ < >`).
 
+E.g.
+
+	title:bananna~
+
+will be re-written to (if those terms exists in the corpus and are near enough from the original term):
+
+	title:banana title:bananas
+
+You may follow the parsing of the query and its execution plan by switching to DEBUG logging (in log4net.config) and then issuing the query through the CLI.
+
 ### Query execution plan
 
 Given a query string, a page number and a page size, the following constitutes the ResinDB read algorithm:
