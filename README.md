@@ -22,7 +22,7 @@ Has pluggable storage engine | &#9989; |   |   |   |
 
 ResinDB is designed to be used as  
 
-- a disk-based replacement for your in-memory business entity cache
+- a disk-based replacement to your in-memory business entity cache
 - a training data vector store
 - a index of your data
 - a component of a distributed database
