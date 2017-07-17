@@ -1,7 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Version>2.0.3</Version>
+    <Description>A generic IO system for variable sized byte arrays.</Description>
+    <Authors>Marcus Lager</Authors>
+    <Company>Marcus Lager</Company>
+    <Copyright>Copyright 2017 Marcus Lager</Copyright>
+    <PackageLicenseUrl>https://github.com/kreeben/resin/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/kreeben/resin</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/kreeben/resin</RepositoryUrl>
+    <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
 
 </Project>

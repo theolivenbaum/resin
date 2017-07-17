@@ -2,14 +2,21 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Version>2.0.3</Version>
+    <Authors>Marcus Lager</Authors>
+    <Company>Marcus Lager</Company>
+    <Description>A document storage file.</Description>
+    <Copyright>Copyright 2017 Marcus Lager</Copyright>
+    <PackageLicenseUrl>https://github.com/kreeben/resin/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/kreeben/resin</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/kreeben/resin</RepositoryUrl>
+    <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.8" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\StreamIndex\StreamIndex.csproj" />
+    <PackageReference Include="StreamIndex" Version="2.0.3" />
   </ItemGroup>
 
 </Project>
