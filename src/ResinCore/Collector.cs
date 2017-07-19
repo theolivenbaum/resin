@@ -127,54 +127,44 @@ namespace Resin
 
         private void Score(QueryContext query)
         {
-            if (query.Postings == null)
-            {
-                query.Scored = new List<DocumentScore>();
-            }
-            else
-            {
-                query.Scored = DoScore(query.Postings);
-            }
-        }
+            var scores = new List<DocumentScore>(query.Postings.Count);
 
-        private IList<DocumentScore> DoScore(IList<DocumentPosting> postings)
-        {
-            var scores = new List<DocumentScore>(postings.Count);
-
-            if (_scorerFactory == null)
+            if (query.Postings != null)
             {
-                foreach (var posting in postings)
+                if (_scorerFactory == null)
                 {
-                    var docHash = _readSession.ReadDocHash(posting.DocumentId);
-
-                    if (!docHash.IsObsolete)
-                    {
-                        scores.Add(new DocumentScore(posting.DocumentId, docHash.Hash, 0, _readSession.Version));
-                    }
-                }
-            }
-            else
-            {
-                if (postings.Any())
-                {
-                    var docsWithTerm = postings.Count;
-
-                    var scorer = _scorerFactory.CreateScorer(_readSession.Version.DocumentCount, docsWithTerm);
-
-                    foreach (var posting in postings)
+                    foreach (var posting in query.Postings)
                     {
                         var docHash = _readSession.ReadDocHash(posting.DocumentId);
 
                         if (!docHash.IsObsolete)
                         {
-                            var score = scorer.Score(posting);
-
-                            scores.Add(new DocumentScore(posting.DocumentId, docHash.Hash, score, _readSession.Version));
+                            scores.Add(new DocumentScore(posting.DocumentId, docHash.Hash, 0, _readSession.Version));
                         }
                     }
                 }
+                else
+                {
+                    if (query.Postings.Any())
+                    {
+                        var docsWithTerm = query.Postings.Count;
+                        var scorer = _scorerFactory.CreateScorer(_readSession.Version.DocumentCount, docsWithTerm);
+
+                        foreach (var posting in query.Postings)
+                        {
+                            var docHash = _readSession.ReadDocHash(posting.DocumentId);
+
+                            if (!docHash.IsObsolete)
+                            {
+                                var score = scorer.Score(posting);
+
+                                scores.Add(new DocumentScore(posting.DocumentId, docHash.Hash, score, _readSession.Version));
+                            }
+                        }
+                    }
+                }
+                query.Scored = scores;
             }
-            return scores;
         }
 
         private ITrieReader GetTreeReader(string field)
