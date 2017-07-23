@@ -9,9 +9,23 @@ namespace Resin.Sys
 {
     public static class Util
     {
+        private static readonly Random Rnd;
+        private static long Ticks;
+
+        static Util()
+        {
+            Rnd = new Random();
+            Ticks = DateTime.Now.Ticks;
+        }
+
         private static Int64 GetTicks()
         {
-            return DateTime.Now.Ticks;
+            var count = Rnd.Next(1, 4);
+            for (int i = 0; i < count; i++)
+            {
+                if (Rnd.Next(1, 6).Equals(count)) break;
+            }
+            return Ticks++;
         }
 
         public static string ReplaceOrAppend(this string input, int index, char newChar)
