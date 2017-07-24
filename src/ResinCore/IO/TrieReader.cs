@@ -31,10 +31,6 @@ namespace Resin.IO.Read
             LcrsNode node;
             if (TryFindDepthFirst(word, out node))
             {
-                if (node.PostingsAddress == null)
-                    throw new InvalidOperationException(
-                        "cannot create word without postings address");
-
                 if (node.EndOfWord)
                     words.Add(new Word(word, node.PostingsAddress));
             }
@@ -52,6 +48,9 @@ namespace Resin.IO.Read
 
             if (TryFindDepthFirst(prefix, out node))
             {
+                if (node.EndOfWord)
+                    words.Add(new Word(prefix, node.PostingsAddress));
+
                 DepthFirst(prefix, new List<char>(), words, prefix.Length - 1);
             }
 

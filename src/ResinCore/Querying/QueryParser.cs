@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
 using Resin.Analysis;
 
 namespace Resin.Querying
@@ -10,6 +8,22 @@ namespace Resin.Querying
     {
         private readonly IAnalyzer _analyzer;
         private readonly float _fuzzySimilarity;
+        
+        // alphabets (this machine's vocabulaly, so to speak):
+
+        // key/value delimiters:
+        private static readonly List<char> a0 = new List<char> { ':', '<', '>' };
+
+        // anything that can come immediately after a value:
+        // value suffixes
+        // value hints (enclosings)
+        // key/value pair delimiters
+        private static readonly List<char> a1 = new List<char> { '*', '~', '+', '-', ' ', '"', '\'', '\\' };
+
+        // key/value pair delimiters
+        private static readonly List<char> a2 = new List<char> { '+', '-', ' ' };
+
+        public QueryParser(float fuzzySimilarity = 0.75f):this(new Analyzer(), fuzzySimilarity) { }
 
         public QueryParser(IAnalyzer analyzer, float fuzzySimilarity = 0.75f)
         {
@@ -17,146 +31,273 @@ namespace Resin.Querying
             _fuzzySimilarity = fuzzySimilarity;
         }
 
-        public QueryContext Parse(string query)
+        public IList<QueryContext> Parse(string query)
         {
             if (string.IsNullOrWhiteSpace(query)) throw new ArgumentException("query");
 
-            // http://stackoverflow.com/questions/521146/c-sharp-split-string-but-keep-split-chars-separators
+            if (query[0] == ' ' || query[0] == '-') throw new ArgumentException("first query must be inclusive (and)");
 
-            var trimmedQuery = query.Trim();
-            var parts = Regex.Split(trimmedQuery, @"(?<=[ ])");
-            var clauses = new List<string>();
+            int state = 0;
+            var queries = new List<QueryContext>();
 
-            foreach (var part in parts)
+            // -----------
+            // read states
+            // -----------
+            //
+            // state 0: read key until key/value delimiter
+            // state 1: read value until either suffix operator or term delimiter
+            // state 2: read term delimiter
+            // state 3: yield term
+            //
+            // allowed state transitions: 
+            //
+            // 0->1
+            // 1->2
+            // 2->3
+            // 3->0
+            //
+            // state transitions given the following query:
+            //
+            //  title:'first'~+title:'blood'
+            // 0.....1......230.....1.......23
+            //
+            // phrases are enclosed with double-quotes, terms with single quotes 
+            // and dates with backslashes. numbers are not enclosed:
+            //
+            // title:"john rambo"+genre:'action'+created<\2000-01-01\+rating>3
+            //
+
+            var segment = new QuerySegment();
+            var not = false;
+            var or = false;
+            var prevNot = false;
+            var prevOr = false;
+            bool isPhrase = false;
+            bool isTerm = false;
+            bool isDate = false;
+
+            Action appendQuery = () =>
             {
-                if (part.Contains(':') || part.Contains('<') || part.Contains('>'))
+                Query q = null;
+                var key = new string(segment.Buf0.ToArray());
+                var value = new string(segment.Buf1.ToArray());
+
+                if (segment.IsTerm)
                 {
-                    clauses.Add(part);
-                }
-                else
-                {
-                    if (clauses.Count == 0)
+                    var values = _analyzer.Analyze(value);
+
+                    if (values.Count == 1)
                     {
-                        throw new ArgumentException("Query must be a term, i.e. reference a key (field) followed by a colon and then a value.");
-                    }
-                    clauses[clauses.Count - 1] += part;
-                }
-            }
-
-            QueryContext root = null;
-            
-            for (int i = 0; i < clauses.Count; i++)
-            {
-                var splitBy = ':';
-                var greaterThan = false;
-                var lessThan = false;
-
-                if (clauses[i].Contains(">"))
-                {
-                    splitBy = '>';
-                    greaterThan = true;
-                }
-                else if (clauses[i].Contains("<"))
-                {
-                    splitBy = '<';
-                    lessThan = true;
-                }
-
-                var segs = clauses[i].Split(splitBy);
-                var field = segs[0];
-                var t = CreateTerm(field, segs[1], i);
-
-                t.GreaterThan = greaterThan;
-                t.LessThan = lessThan;
-
-                if (root == null)
-                {
-                    root = t;
-                }
-                else
-                {
-                    root.Add(t);
-                }
-            }
-
-            return root;
-        }
-
-        private QueryContext CreateTerm(string field, string word, int positionInQuery)
-        {
-            var analyze = field[0] != '_' && field.Length > 1 && field[1] != '_';
-            QueryContext root = null;
-
-            if (analyze)
-            {
-                var tokenOperator = word.Trim().Last();
-                var analyzable = word.Trim();
-
-                if (tokenOperator == '~' || tokenOperator == '*')
-                {
-                    analyzable = analyzable.Substring(0, analyzable.Length - 1);
-                }
-
-                var analyzed = _analyzer.Analyze(analyzable).ToArray();
-                var operatorLessField = field.Replace("+", "");
-
-                foreach (string token in analyzed)
-                {
-                    if (root == null)
-                    {
-                        var t = Parse(field, token, tokenOperator, positionInQuery);
-                        
-                        root = t;
+                        q = new TermQuery(key, values[0]);
                     }
                     else
                     {
-                        var t = Parse(operatorLessField, token, tokenOperator, positionInQuery + 1);
-
-                        root.Add(t);
+                        q = new PhraseQuery(key, values);
                     }
+                }
+                else if (segment.IsPhrase)
+                {
+                    var values = _analyzer.Analyze(value);
+
+                    q = new PhraseQuery(key, values);
+                }
+                else if (segment.IsDate)
+                {
+                    q = new TermQuery(key, DateTime.Parse(value));
+                }
+                else
+                {
+                    q = new TermQuery(key, long.Parse(value));
+                }
+
+                q.GreaterThan = segment.Gt;
+                q.LessThan = segment.Lt;
+                q.Not = prevNot;
+                q.Or = prevOr;
+                q.Fuzzy = segment.Fz;
+                q.Prefix = segment.Px;
+
+                if (segment.Fz)
+                {
+                    q.Similarity = _fuzzySimilarity;
+                }
+
+                var qc = new QueryContext();
+                qc.Query = q;
+
+                Append(queries, qc);
+
+                segment = new QuerySegment();
+                prevNot = not;
+                prevOr = or;
+                state = 0;
+            };
+
+            for (int index = 0; index < query.Length; index++)
+            {
+                var c = query[index];
+
+                if (state == 3)
+                {
+                    appendQuery();
+                }
+
+                if (state == 0)
+                {
+                    if (a0.Contains(c))
+                    {
+                        if (c == '<')
+                        {
+                            segment.Lt = true;
+                        }
+                        else if (c == '>')
+                        {
+                            segment.Gt = true;
+                        }
+                        state = 1;
+                    }
+                    else
+                    {
+                        if (c != '+')
+                        {
+                            segment.Buf0.Add(c);
+                        }
+                    }
+                }
+                else if (state == 1)
+                {
+                    if (!isPhrase && !isTerm && !isDate && a1.Contains(c))
+                    {
+                        if (c == '-')
+                        {
+                            not = true;
+                            state = 3;
+                        }
+                        else if (c == '+')
+                        {
+                            state = 3;
+                        }
+                        else if (c == ' ')
+                        {
+                            or = true;
+                            state = 3;
+                        }
+                        else if (c == '*')
+                        {
+                            segment.Px = true;
+                            state = 2;
+                        }
+                        else if (c == '~')
+                        {
+                            segment.Fz = true;
+                            state = 2;
+                        }
+                        else if (c == '"')
+                        {
+                            isPhrase = true;
+                            segment.IsPhrase = true;
+                        }
+                        else if (c == '\'')
+                        {
+                            isTerm = true;
+                            segment.IsTerm = true;
+                        }
+                        else if (c == '\\')
+                        {
+                            isDate = true;
+                            segment.IsDate = true;
+                        }
+                    }
+                    else if (isPhrase && c == '"')
+                    {
+                        isPhrase = false;
+                    }
+                    else if (isTerm && c == '\'')
+                    {
+                        isTerm = false;
+                    }
+                    else if (isDate && c == '\\')
+                    {
+                        isDate = false;
+                    }
+                    else
+                    {
+                        segment.Buf1.Add(c);
+                    }
+                }
+                else // state == 2
+                {
+                    if (a2.Contains(c))
+                    {
+                        if (c == '-')
+                        {
+                            not = true;
+                        }
+                        else if (c == ' ')
+                        {
+                            or = true;
+                        }
+
+                        state = 3;
+                    }
+                    else
+                    {
+                        segment.Buf1.Add(c);
+                    }
+                }
+            }
+
+            if (state > 0)
+            {
+                appendQuery();
+            }
+
+            return queries;
+        }
+
+        private void Append(IList<QueryContext> list, QueryContext query)
+        {
+            if (list.Count > 0)
+            {
+                var prev = list[list.Count - 1];
+                if ((query.Query.LessThan || query.Query.GreaterThan) && 
+                    (prev.Query.GreaterThan || prev.Query.LessThan))
+                {
+                    if (!QueryContextHelper.TryCompress(prev, query))
+                    {
+                        list.Add(query);
+                    }
+                }
+                else
+                {
+                    list.Add(query);
                 }
             }
             else
             {
-                root = Parse(field, word);
+                list.Add(query);
             }
-            return root;
         }
+    }
 
-        private QueryContext Parse(string field, string value, char tokenOperator = '\0', int positionInQuery = 0)
+    public class QuerySegment
+    {
+        public List<char> Buf0 = new List<char>();
+        public List<char> Buf1 = new List<char>();
+        public bool Gt = false;
+        public bool Lt = false;
+        public bool Fz = false;
+        public bool Px = false;
+        public bool IsPhrase = false;
+        public bool IsTerm = false;
+        public bool IsDate = false;
+
+        public bool TypeUndetermined
         {
-            var and = false;
-            var not = false;
-            var prefix = tokenOperator == '*';
-            var fuzzy = tokenOperator == '~';
-
-            string fieldName;
-
-            if (field[0] == '-')
+            get
             {
-                not = true;
-                fieldName = field.Substring(1);
+                return IsPhrase == false && IsTerm == false && IsDate == false;
             }
-            else if (field[0] == '+')
-            {
-                and = true;
-                fieldName = field.Substring(1);
-            }
-            else
-            {
-                fieldName = field;
-            }
-
-            if (positionInQuery == 0) and = true;
-
-            DateTime date;
-
-            if (DateTime.TryParse(value, out date))
-            {
-                value = date.Ticks.ToString();
-            }
-
-            return new QueryContext(fieldName, value) { And = and, Not = not, Prefix = prefix, Fuzzy = fuzzy, Similarity = _fuzzySimilarity};
         }
     }
 }

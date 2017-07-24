@@ -56,7 +56,7 @@ namespace Resin
             _sessionFactory = sessionFactory ?? new ReadSessionFactory(directory);
         }
 
-        public ScoredResult Search(QueryContext query, int page = 0, int size = 10000)
+        public ScoredResult Search(IList<QueryContext> query, int page = 0, int size = 10000)
         {
             if (query == null)
             {
@@ -97,7 +97,7 @@ namespace Resin
             return Search(queryContext, page, size);
         }
 
-        private DocumentScore[] Collect(QueryContext query)
+        private DocumentScore[] Collect(IList<QueryContext> query)
         {
             var scores = new List<DocumentScore[]>();
             foreach (var version in _versions)
@@ -110,7 +110,7 @@ namespace Resin
             return scores.CombineTakingLatestVersion();
         }
 
-        private DocumentScore[] Collect(QueryContext query, IReadSession readSession)
+        private DocumentScore[] Collect(IList<QueryContext> query, IReadSession readSession)
         {
             using (var collector = new Collector(_directory, readSession, _scorerFactory))
             {

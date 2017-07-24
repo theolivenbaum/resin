@@ -36,18 +36,20 @@ namespace Tests
             using(var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
             {
-                var scores = collector.Collect(new QueryContext("_id", "3")).ToList();
+                var query = new QueryParser().Parse("_id:'3'");
+                var scores = collector.Collect(query);
 
-                Assert.AreEqual(1, scores.Count);
+                Assert.AreEqual(1, scores.Length);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
             }
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
             {
-                var scores = collector.Collect(new QueryContext("_id", "5five")).ToList();
+                var query = new QueryParser().Parse("_id:'5five'");
+                var scores = collector.Collect(query);
 
-                Assert.AreEqual(1, scores.Count);
+                Assert.AreEqual(1, scores.Length);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 5));
             }
         }
@@ -71,7 +73,7 @@ namespace Tests
             long version = writer.Write();
             writer.Dispose();
 
-            var query = new QueryParser(new Analyzer()).Parse("+title:rain man");
+            var query = new QueryParser(new Analyzer()).Parse("+title:\"rain man\"");
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
@@ -82,7 +84,7 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
             }
 
-            query = new QueryParser(new Analyzer(), 0.75f).Parse("+title:rain man~");
+            query = new QueryParser(new Analyzer(), 0.75f).Parse("+title:\"rain man\"~");
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
@@ -116,7 +118,7 @@ namespace Tests
             long version = writer.Write();
             writer.Dispose();
 
-            var query = new QueryParser(new Analyzer()).Parse("+title:the");
+            var query = new QueryParser(new Analyzer()).Parse("+title:'the'");
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
@@ -129,7 +131,7 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 5));
             }
 
-            query = new QueryParser(new Analyzer()).Parse("+title:the +title:ugly");
+            query = new QueryParser(new Analyzer()).Parse("+title:'the'+title:'ugly'");
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
@@ -160,7 +162,7 @@ namespace Tests
             long version = writer.Write();
             writer.Dispose();
 
-            var query = new QueryParser(new Analyzer()).Parse("+title:rocky");
+            var query = new QueryParser(new Analyzer()).Parse("+title:'rocky'");
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
@@ -171,7 +173,7 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 2));
             }
 
-            query = new QueryParser(new Analyzer()).Parse("+title:rambo");
+            query = new QueryParser(new Analyzer()).Parse("+title:'rambo'");
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
@@ -183,7 +185,7 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
             }
 
-            query = new QueryParser(new Analyzer()).Parse("+title:rocky title:rambo");
+            query = new QueryParser(new Analyzer()).Parse("+title:'rocky' title:'rambo'");
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
@@ -216,7 +218,7 @@ namespace Tests
             long version = writer.Write();
             writer.Dispose();
 
-            var query = new QueryParser(new Analyzer()).Parse("+title:the");
+            var query = new QueryParser(new Analyzer()).Parse("+title:'the'");
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
@@ -229,7 +231,7 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 5));
             }
 
-            query = new QueryParser(new Analyzer()).Parse("+title:the -title:ugly");
+            query = new QueryParser(new Analyzer()).Parse("+title:'the'-title:'ugly'");
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
@@ -264,9 +266,10 @@ namespace Tests
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
             {
-                var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
+                var query = new QueryParser().Parse("title:'rambo'");
+                var scores = collector.Collect(query);
 
-                Assert.AreEqual(2, scores.Count);
+                Assert.AreEqual(2, scores.Length);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 0));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
             }
@@ -274,9 +277,10 @@ namespace Tests
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
             {
-                var scores = collector.Collect(new QueryContext("title", "the")).ToList();
+                var query = new QueryParser().Parse("title:'the'");
+                var scores = collector.Collect(query);
 
-                Assert.AreEqual(3, scores.Count);
+                Assert.AreEqual(3, scores.Length);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 5));
@@ -306,9 +310,10 @@ namespace Tests
             using (var readSession = factory.OpenReadSession(version))
             using (var collector = new Collector(dir, readSession))
             {
-                var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
+                var query = new QueryParser().Parse("title:'rambo'");
+                var scores = collector.Collect(query);
 
-                Assert.AreEqual(2, scores.Count);
+                Assert.AreEqual(2, scores.Length);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 0));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
             }
@@ -320,9 +325,10 @@ namespace Tests
             using (var readSession = factory.OpenReadSession(version))
             using (var collector = new Collector(dir, readSession))
             {
-                var scores = collector.Collect(new QueryContext("title", "rambo")).ToList();
+                var query = new QueryParser().Parse("title:'rambo'");
+                var scores = collector.Collect(query);
 
-                Assert.AreEqual(1, scores.Count);
+                Assert.AreEqual(1, scores.Length);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
             }
         }
@@ -348,9 +354,10 @@ namespace Tests
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
             {
-                var scores = collector.Collect(new QueryContext("title", "ra") { Prefix = true }).ToList();
+                var query = new QueryParser().Parse("title:'ra'*");
+                var scores = collector.Collect(query);
 
-                Assert.AreEqual(4, scores.Count);
+                Assert.AreEqual(4, scores.Length);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 0));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
@@ -379,18 +386,20 @@ namespace Tests
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
             {
-                var scores = collector.Collect(new QueryContext("title", "raider") { Fuzzy = false, Edits = 1 }).ToList();
+                var query = new QueryParser().Parse("title:'raider'");
+                var scores = collector.Collect(query);
 
-                Assert.AreEqual(1, scores.Count);
+                Assert.AreEqual(1, scores.Length);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
             }
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
             {
-                var scores = collector.Collect(new QueryContext("title", "raider") { Fuzzy = true, Edits = 1 }).ToList();
+                var query = new QueryParser().Parse("title:'raider'~");
+                var scores = collector.Collect(query);
 
-                Assert.AreEqual(2, scores.Count);
+                Assert.AreEqual(2, scores.Length);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
             }
@@ -417,7 +426,7 @@ namespace Tests
             long version = writer.Write();
             writer.Dispose();
 
-            var query = new QueryContext("title", 3);
+            var query = new QueryParser().Parse("title:3");
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
@@ -428,7 +437,8 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 2));
             }
 
-            query = new QueryContext("title", 0, 3);
+            //query = new List<QueryContext>{new QueryContext("title", 0, 3) };
+            query = new QueryParser().Parse("title<3+title>0");
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
@@ -439,6 +449,44 @@ namespace Tests
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 5));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 2));
+            }
+        }
+
+        [TestMethod]
+        public void Can_collect_date_range()
+        {
+            var dir = CreateDir();
+
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            var lowerBound = DateTime.Now;
+            var upperBound = DateTime.Now.AddDays(1);
+
+            var docs = new List<dynamic>
+            {
+                new {_id = "0", created = DateTime.Now.AddDays(-1) },
+                new {_id = "1", created = lowerBound  },
+                new {_id = "2", created = upperBound  },
+                new {_id = "3", created = upperBound.AddDays(1)  },
+                new {_id = "4", created = upperBound.AddDays(2)  },
+                new {_id = "5", created = upperBound.AddDays(3)  }
+            }.ToDocuments(primaryKeyFieldName: "_id");
+
+            var writer = new UpsertTransaction(dir, new Analyzer(), compression: Compression.Lz, documents: docs);
+            long version = writer.Write();
+            writer.Dispose();
+
+            //query = new List<QueryContext> { new QueryContext("created", lowerBound, upperBound) };
+            var query = new QueryParser().Parse("created>\\" + lowerBound + "\\+created<\\" + upperBound + "\\");
+
+            using (var readSession = CreateReadSession(dir, version))
+            using (var collector = new Collector(dir, readSession))
+            {
+                var scores = collector.Collect(query).ToList();
+
+                Assert.AreEqual(2, scores.Count);
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 2));
             }
         }
@@ -467,18 +515,8 @@ namespace Tests
             long version = writer.Write();
             writer.Dispose();
 
-            var query = new QueryContext("created", upperBound);
-
-            using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
-            {
-                var scores = collector.Collect(query).ToList();
-
-                Assert.AreEqual(1, scores.Count);
-                Assert.IsTrue(scores.Any(d => d.DocumentId == 2));
-            }
-
-            query = new QueryContext("created", lowerBound);
+            //query = new List<QueryContext> { new QueryContext("created", lowerBound, upperBound) };
+            var query = new QueryParser().Parse("created:\\" + lowerBound + "\\");
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
@@ -487,18 +525,6 @@ namespace Tests
 
                 Assert.AreEqual(1, scores.Count);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
-            }
-
-            query = new QueryContext("created", lowerBound, upperBound);
-
-            using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
-            {
-                var scores = collector.Collect(query).ToList();
-
-                Assert.AreEqual(2, scores.Count);
-                Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
-                Assert.IsTrue(scores.Any(d => d.DocumentId == 2));
             }
         }
     }

@@ -27,17 +27,14 @@ namespace Resin
             _scoreCache = new Dictionary<Query, IList<DocumentScore>>();
         }
 
-        public DocumentScore[] Collect(QueryContext query)
+        public DocumentScore[] Collect(IList<QueryContext> query)
         {
             var scoreTime = new Stopwatch();
             scoreTime.Start();
 
-            var queries = query.ToList();
-            foreach (var subQuery in queries)
+            foreach (var clause in query)
             {
-                Scan(subQuery);
-                GetPostings(subQuery);
-                Score(subQuery);
+                Scan(clause);
             }
 
             Log.DebugFormat("scored query {0} in {1}", query, scoreTime.Elapsed);
@@ -52,88 +49,144 @@ namespace Resin
             return reduced;
         }
 
-        private void Scan(QueryContext subQuery)
+        private void Scan(QueryContext ctx)
         {
             var time = new Stopwatch();
             time.Start();
 
-            var reader = GetTreeReader(subQuery.Field);
-
-            if (reader == null)
+            if (ctx.Query is TermQuery)
             {
-                subQuery.Terms = new List<Term>(0);
+                TermScan(ctx);
+            }
+            else if (ctx.Query is PhraseQuery)
+            {
+                PhraseScan(ctx);
             }
             else
             {
-                using (reader)
-                {
-                    IList<Term> terms;
+                RangeScan(ctx);
+            }
 
-                    if (subQuery.Fuzzy)
+            if (Log.IsDebugEnabled && ctx.Terms.Count > 1)
+            {
+                Log.DebugFormat("expanded {0}: {1}",
+                    ctx.Query.Value, string.Join(" ", ctx.Terms.Select(t => t.Word.Value)));
+            }
+
+            Log.DebugFormat("scanned {0} in {1}", ctx.Query.Serialize(), time.Elapsed);
+        }
+
+        private void TermScan(QueryContext ctx)
+        {
+            IList<Term> terms;
+
+            using (var reader = GetTreeReader(ctx.Query.Field))
+            {
+                if (ctx.Query.Fuzzy)
+                {
+                    terms = reader.SemanticallyNear(ctx.Query.Value, ctx.Query.Edits(ctx.Query.Value))
+                        .ToTerms(ctx.Query.Field);
+                }
+                else if (ctx.Query.Prefix)
+                {
+                    terms = reader.StartsWith(ctx.Query.Value)
+                        .ToTerms(ctx.Query.Field);
+                }
+                else
+                {
+                    terms = reader.IsWord(ctx.Query.Value)
+                        .ToTerms(ctx.Query.Field);
+                }
+            }
+            ctx.Terms = terms;
+            ctx.Postings = GetPostings(ctx);
+            ctx.Scored = Score(ctx.Postings);
+        }
+
+        private void PhraseScan(QueryContext query)
+        {
+            var tokens = ((PhraseQuery)query.Query).Values;
+
+            var termMatrix = new IList<Term>[tokens.Count];
+
+            for (int index = 0;index < tokens.Count; index++)
+            {
+                var token = tokens[index];
+                IList<Term> terms;
+
+                using (var reader = GetTreeReader(query.Query.Field))
+                {
+                    if (query.Query.Fuzzy)
                     {
-                        terms = reader.SemanticallyNear(subQuery.Value, subQuery.Edits)
-                            .ToTerms(subQuery.Field);
+                        terms = reader.SemanticallyNear(token, query.Query.Edits(token))
+                            .ToTerms(query.Query.Field);
                     }
-                    else if (subQuery.Prefix)
+                    else if (query.Query.Prefix)
                     {
-                        terms = reader.StartsWith(subQuery.Value)
-                            .ToTerms(subQuery.Field);
-                    }
-                    else if (subQuery.Range)
-                    {
-                        terms = reader.Range(subQuery.Value, subQuery.ValueUpperBound)
-                            .ToTerms(subQuery.Field);
+                        terms = reader.StartsWith(token)
+                            .ToTerms(query.Query.Field);
                     }
                     else
                     {
-                        terms = reader.IsWord(subQuery.Value)
-                            .ToTerms(subQuery.Field);
-                    }
-
-                    subQuery.Terms = terms;
-
-                    if (Log.IsDebugEnabled && terms.Count > 1)
-                    {
-                        Log.DebugFormat("expanded {0}: {1}", 
-                            subQuery.Value, string.Join(" ", terms.Select(t => t.Word.Value)));
+                        terms = reader.IsWord(token)
+                            .ToTerms(query.Query.Field);
                     }
                 }
-            }
 
-            Log.DebugFormat("scanned {0} in {1}", subQuery.Serialize(), time.Elapsed);
+                termMatrix[index] = terms;
+            }
         }
 
-        private void GetPostings(QueryContext subQuery)
+        private void RangeScan(QueryContext ctx)
+        {
+            using (var reader = GetTreeReader(ctx.Query.Field))
+            {
+                ctx.Terms = reader.Range(ctx.Query.Value, ((RangeQuery)ctx.Query).ValueUpperBound)
+                        .ToTerms(ctx.Query.Field);
+            }
+
+            ctx.Postings = GetPostings(ctx);
+            ctx.Scored = Score(ctx.Postings);
+        }
+
+        private IList<DocumentPosting> GetPostings(QueryContext query)
         {
             var time = Stopwatch.StartNew();
 
-            var postings = subQuery.Terms.Count > 0 ? _readSession.ReadPostings(subQuery.Terms) : null;
+            var postings = GetPostings(query.Terms);
+
+            Log.DebugFormat("read postings for {0} in {1}", query.Query.Serialize(), time.Elapsed);
+
+            return postings;
+        }
+
+        private IList<DocumentPosting> GetPostings(IList<Term> terms)
+        {
+            var postings = terms.Count > 0 ? _readSession.ReadPostings(terms) : null;
 
             IList<DocumentPosting> reduced;
 
             if (postings == null)
             {
-                reduced = null;
+                reduced = new DocumentPosting[0];
             }
             else
             {
                 reduced = postings.Sum();
             }
 
-            subQuery.Postings = reduced;
-
-            Log.DebugFormat("read postings for {0} in {1}", subQuery.Serialize(), time.Elapsed);
+            return reduced;
         }
 
-        private void Score(QueryContext query)
+        private IList<DocumentScore> Score(IList<DocumentPosting> postings)
         {
-            var scores = new List<DocumentScore>(query.Postings.Count);
+            var scores = new List<DocumentScore>(postings.Count);
 
-            if (query.Postings != null)
+            if (postings != null)
             {
                 if (_scorerFactory == null)
                 {
-                    foreach (var posting in query.Postings)
+                    foreach (var posting in postings)
                     {
                         var docHash = _readSession.ReadDocHash(posting.DocumentId);
 
@@ -145,12 +198,12 @@ namespace Resin
                 }
                 else
                 {
-                    if (query.Postings.Any())
+                    if (postings.Any())
                     {
-                        var docsWithTerm = query.Postings.Count;
+                        var docsWithTerm = postings.Count;
                         var scorer = _scorerFactory.CreateScorer(_readSession.Version.DocumentCount, docsWithTerm);
 
-                        foreach (var posting in query.Postings)
+                        foreach (var posting in postings)
                         {
                             var docHash = _readSession.ReadDocHash(posting.DocumentId);
 
@@ -163,8 +216,9 @@ namespace Resin
                         }
                     }
                 }
-                query.Scored = scores;
             }
+            return scores;
+
         }
 
         private ITrieReader GetTreeReader(string field)

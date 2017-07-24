@@ -1,68 +1,31 @@
 using System;
+using System.Collections.Generic;
 
 namespace Resin.Querying
 {
-    public class Query : IEquatable<Query>
+    public abstract class Query
     {
-        private int _edits;
-
+        public float Similarity { get; set; }
         public string Field { get; protected set; }
-        public string Value { get; protected set; }
-        public string ValueUpperBound { get; set; }
+        public string Value { get; set; }
 
-        public bool And { get; set; }
+        public bool Or { get; set; }
         public bool Not { get; set; }
         public bool Prefix { get; set; }
         public bool Fuzzy { get; set; }
 
         public bool GreaterThan { get; set; }
         public bool LessThan { get; set; }
-        public bool Range { get; set; }
 
-        public int Edits
+        public int Edits(string word)
         {
-            get
-            {
-                return _edits;
-            }
-            set
-            {
-                _edits = value;
-
-                if (Fuzzy && Edits == 0)
-                {
-                    Fuzzy = false;
-                }
-            }
-        }
-
-        public float Similarity
-        {
-            set
-            {
-                _edits = Convert.ToInt32(Math.Floor(Value.Length * (1 - value)));
-
-                if (Fuzzy && Edits == 0)
-                {
-                    Fuzzy = false;
-                }
-            }
+            return Convert.ToInt32(Math.Floor(word.Length * (1 - Similarity)));
         }
 
         public Query(string field, string value)
         {
             Field = field;
             Value = value;
-            And = true;
-        }
-
-        public Query(string field, string value, string valueUpperBound)
-        {
-            Field = field;
-            Value = value;
-            ValueUpperBound = valueUpperBound;
-            And = true;
-            Range = true;
         }
 
         public Query(string field, long value)
@@ -70,70 +33,116 @@ namespace Resin.Querying
         {
         }
 
-        public Query(string field, long value, long valueUpperBound)
-            : this(field, value.ToString().PadLeft(19, '0'), valueUpperBound.ToString().PadLeft(19, '0'))
-        {
-        }
-
         public Query(string field, DateTime value)
             : this(field, value.ToUniversalTime().Ticks)
         {
         }
-
-        public Query(string field, DateTime value, DateTime valueUpperBound)
-            : this(field, value.ToUniversalTime().Ticks, valueUpperBound.ToUniversalTime().Ticks)
-        {
-        }
-
+        
         public override string ToString()
         {
             return Serialize();
         }
 
-        public string Serialize()
+        public virtual string Serialize()
         {
-            var fldPrefix = And ? "+" : Not ? "-" : string.Empty;
+            var fldPrefix = Or ? " " : Not ? "-" : "+";
             var tokenSuffix = Prefix ? "*" : Fuzzy ? "~" : string.Empty;
 
-            if (Range)
+            var delimiter = ":";
+
+            if (GreaterThan) delimiter = ">";
+            else if (LessThan) delimiter = "<";
+
+            var val = Value;
+
+            return string.Format("{0}{1}{2}{3}{4}",
+                fldPrefix, Field, delimiter, val, tokenSuffix);
+        }
+    }
+
+    public class TermQuery : Query
+    {
+        public TermQuery(string field, string value) 
+            : base(field, value)
+        {
+        }
+        public TermQuery(string field, long value)
+            : base(field, value)
+        {
+        }
+        public TermQuery(string field, DateTime value)
+            : base(field, value)
+        {
+        }
+    }
+
+    public class PhraseQuery : Query
+    {
+        public IList<string> Values { get; set; }
+
+        public PhraseQuery(string field, IList<string> values)
+            : base (field, null)
+        {
+            if (values.Count == 1)
             {
-                var s = string.Format("{0}{1}>{2}{3} {1}<{4}", 
-                    fldPrefix, Field, Value, tokenSuffix, ValueUpperBound);
-                return s;
+                Value = values[0];
             }
             else
             {
-                var delimiter = ":";
-
-                if (GreaterThan) delimiter = ">";
-                else if (LessThan) delimiter = "<";
-
-                return string.Format("{0}{1}{2}{3}{4}", 
-                    fldPrefix, Field, delimiter, Value, tokenSuffix);
+                Values = values;
             }
         }
 
-        public bool Equals(Query other)
+        public override string Serialize()
         {
-            if (other == null) return false;
+            var fldPrefix = Or ? " " : Not ? "-" : "+";
+            var tokenSuffix = Prefix ? "*" : Fuzzy ? "~" : string.Empty;
 
-            return other.Field == Field && other.Value == Value;
+            var delimiter = ":";
+
+            if (GreaterThan) delimiter = ">";
+            else if (LessThan) delimiter = "<";
+
+            var val = string.Join(" ", Values);
+
+            return string.Format("{0}{1}{2}{3}{4}",
+                fldPrefix, Field, delimiter, val, tokenSuffix);
+        }
+    }
+
+    public class RangeQuery : Query
+    {
+        public string ValueUpperBound { get; set; }
+
+        public RangeQuery(string field, string value)
+            : base(field, value)
+        {
         }
 
-        public override int GetHashCode()
+        public RangeQuery(string field, string value, string valueUpperBound)
+            : base(field, value)
         {
-            unchecked
-            {
-                int hash = 17;
-                hash = hash * 23 + Field.GetHashCode();
-                hash = hash * 23 + Value.GetHashCode();
-                return hash;
-            }
+            ValueUpperBound = valueUpperBound;
         }
 
-        public override bool Equals(object obj)
+        public RangeQuery(string field, long value, long valueUpperBound)
+            : this(field, value.ToString().PadLeft(19, '0'), valueUpperBound.ToString().PadLeft(19, '0'))
         {
-            return Equals(obj as Query);
+        }
+
+        public RangeQuery(string field, DateTime value, DateTime valueUpperBound)
+            : this(field, value.ToUniversalTime().Ticks, valueUpperBound.ToUniversalTime().Ticks)
+        {
+        }
+
+        public override string Serialize()
+        {
+            var fldPrefix = Or ? " " : Not ? "-" : "+";
+            var tokenSuffix = Prefix ? "*" : Fuzzy ? "~" : string.Empty;
+
+            var s = string.Format("{0}{1}>{2}{3} {1}<{4}",
+                    fldPrefix, Field, Value, tokenSuffix, ValueUpperBound);
+            return s;
         }
     }
 }

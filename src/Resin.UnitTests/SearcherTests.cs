@@ -32,7 +32,7 @@ namespace Tests
 
             using (var searcher = new Searcher(dir))
             {
-                var result = searcher.Search("title:rambo");
+                var result = searcher.Search("title:'rambo'");
 
                 Assert.AreEqual(2, result.Total);
                 Assert.AreEqual(2, result.Docs.Count);
@@ -47,7 +47,7 @@ namespace Tests
 
             using (var searcher = new Searcher(dir))
             {
-                var result = searcher.Search("title:the");
+                var result = searcher.Search("title:'the'");
 
                 Assert.AreEqual(3, result.Total);
                 Assert.AreEqual(3, result.Docs.Count);
@@ -79,7 +79,7 @@ namespace Tests
 
             using (var searcher = new Searcher(dir))
             {
-                var result = searcher.Search("title:rambo");
+                var result = searcher.Search("title:'rambo'");
 
                 Assert.AreEqual(2, result.Total);
                 Assert.AreEqual(2, result.Docs.Count);
@@ -94,7 +94,7 @@ namespace Tests
 
             using (var searcher = new Searcher(dir))
             {
-                var result = searcher.Search("title:the");
+                var result = searcher.Search("title:'the'");
 
                 Assert.AreEqual(3, result.Total);
                 Assert.AreEqual(3, result.Docs.Count);
@@ -123,7 +123,7 @@ namespace Tests
 
             using (var searcher = new Searcher(dir))
             {
-                var result = searcher.Search("title:rambo");
+                var result = searcher.Search("title:'rambo'");
 
                 Assert.AreEqual(1, result.Total);
                 Assert.AreEqual(1, result.Docs.Count);
@@ -145,7 +145,7 @@ namespace Tests
 
             using (var searcher = new Searcher(dir))
             {
-                var result = searcher.Search("title:rambo");
+                var result = searcher.Search("title:'rambo'");
 
                 Assert.AreEqual(2, result.Total);
                 Assert.AreEqual(2, result.Docs.Count);
@@ -191,7 +191,7 @@ namespace Tests
 
             using (var searcher = new Searcher(dir))
             {
-                var result = searcher.Search("title:rambo");
+                var result = searcher.Search("title:'rambo'");
 
                 Assert.AreEqual(2, result.Total);
                 Assert.AreEqual(2, result.Docs.Count);
@@ -240,7 +240,7 @@ namespace Tests
 
             using (var searcher = new Searcher(dir))
             {
-                var result = searcher.Search("title:rambo");
+                var result = searcher.Search("title:'rambo'");
 
                 Assert.AreEqual(2, result.Total);
                 Assert.AreEqual(2, result.Docs.Count);
@@ -254,7 +254,7 @@ namespace Tests
 
             using (var searcher = new Searcher(dir))
             {
-                var result = searcher.Search("title:rambo");
+                var result = searcher.Search("title:'rambo'");
 
                 Assert.AreEqual(2, result.Total);
                 Assert.AreEqual(2, result.Docs.Count);
@@ -270,7 +270,7 @@ namespace Tests
 
             using (var searcher = new Searcher(dir))
             {
-                var result = searcher.Search("title:rambo");
+                var result = searcher.Search("title:'rambo'");
 
                 Assert.AreEqual(2, result.Total);
                 Assert.AreEqual(2, result.Docs.Count);

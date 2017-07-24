@@ -2,7 +2,7 @@
   "profiles": {
     "Resin.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "query --dir c:\\temp\\resin_data\\pg -q \"title:hamlet\""
+      "commandLineArgs": "query --dir C:\\temp\\resin_data\\pg -q \"body:\\\"The Complete Historical Romances\\\"\""
     }
   }
 }

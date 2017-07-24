@@ -1,145 +1,85 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using DocumentTable;
-using System;
 
 namespace Resin.Querying
 {
-    public class QueryContext : Query
+    public class QueryContext
     {
         public IList<Term> Terms { get; set; }
         public IList<DocumentPosting> Postings { get; set; }
-        public IEnumerable<DocumentScore> Scored { get; set; }
+        public IList<DocumentScore> Scored { get; set; }
+        public Query Query { get; set; }
+    }
 
-        private IList<QueryContext> _queries = new List<QueryContext>();
- 
-        public QueryContext(string field, string value) : base(field, value)
+    public static class QueryContextHelper
+    {
+        public static IList<DocumentScore> Reduce(this IList<QueryContext> query)
         {
-        }
+            var first = query[0].Scored;
 
-        public QueryContext(string field, long value) : base(field, value)
-        {
-        }
-
-        public QueryContext(string field, DateTime value) : base(field, value)
-        {
-        }
-
-        public QueryContext(string field, string value, string upperBound)
-            : base(field, value, upperBound)
-        {
-        }
-
-        public QueryContext(string field, long value, long upperBound)
-            : base(field, value, upperBound)
-        {
-        }
-
-        public QueryContext(string field, DateTime value, DateTime upperBound)
-            : base(field, value, upperBound)
-        {
-        }
-
-        public IList<QueryContext> ToList()
-        {
-            return YieldAll().ToList();
-        }
-
-        private IEnumerable<QueryContext> YieldAll()
-        {
-            yield return this;
-
-            foreach (var q in _queries)
+            for (int i = 1; i < query.Count; i++)
             {
-                foreach (var sq in q.YieldAll()) yield return sq;
-            }
-        } 
+                var term = query[i];
+                var other = term.Scored;
 
-        public IEnumerable<DocumentScore> Reduce()
-        {
-            var first = Scored;
-
-            if (_queries != null)
-            {
-                foreach (var child in _queries)
+                if (term.Query.Or)
                 {
-                    var other = child.Reduce();
-
-                    if (child.And)
-                    {
-                        first = DocumentScore.CombineAnd(first, other);
-                    }
-                    else if (child.Not)
-                    {
-                        first = DocumentScore.Not(first, other);
-                    }
-                    else // Or
-                    {
-                        first = DocumentScore.CombineOr(first, other);
-                    }
-                } 
+                    first = DocumentScore.CombineOr(first, other);
+                }
+                else if (term.Query.Not)
+                {
+                    first = DocumentScore.Not(first, other);
+                }
+                else // And
+                {
+                    first = DocumentScore.CombineAnd(first, other);
+                }
             }
 
             return first;
         }
 
-        public void Add(QueryContext queryContext)
-        {
-            if (_queries == null) _queries = new List<QueryContext>();
-
-            if ((GreaterThan || LessThan) && (queryContext.GreaterThan || queryContext.LessThan))
-            {
-                // compress a GT or LS with another LS or GT to create a range query
-                if (queryContext.Field.Equals(Field))
-                {
-                    Range = true;
-                }
-
-                if (GreaterThan)
-                {
-                    ValueUpperBound = queryContext.Value;
-                }
-                else
-                {
-                    ValueUpperBound = Value;
-                    Value = queryContext.Value;
-                }
-
-                GreaterThan = false;
-                LessThan = false;
-            }
-            else
-            {
-                _queries.Add(queryContext);
-            }
-        }
-
-        public override string ToString()
+        public static string ToQueryString(this IList<QueryContext> query)
         {
             var log = new StringBuilder();
 
-            log.Append(base.ToString());
-
-            if (_queries != null && _queries.Count > 0)
+            foreach (var q in query)
             {
-                log.Append(' ');
+                log.Append(q.Query.ToString());
+            }
 
-                var entries = new List<string>();
+            return log.ToString();
+        }
 
-                foreach (var q in _queries)
+        public static bool TryCompress(QueryContext first, QueryContext second)
+        {
+            var field = first.Query.Field;
+            var valLo = first.Query.Value;
+            string valHi = null;
+
+            if ((first.Query.GreaterThan || first.Query.LessThan) && 
+                (second.Query.GreaterThan || second.Query.LessThan))
+            {
+                // compress a GT or LS with another LS or GT to create a range query
+
+                if (second.Query.Field.Equals(first.Query.Field))
                 {
-                    entries.Add(q.ToString());
-                    entries.Add(" ");
-                }
+                    if (first.Query.GreaterThan)
+                    {
+                        valHi = second.Query.Value;
+                    }
+                    else
+                    {
+                        valHi = first.Query.Value;
+                        valLo = second.Query.Value;
+                    }
 
-                foreach (var e in entries.Take(entries.Count-1))
-                {
-                    log.Append(e);
+                    first.Query = new RangeQuery(field, valLo, valHi);
+                    return true;
                 }
             }
-            
-            return log.ToString();
+            return false;
         }
     }
 }
