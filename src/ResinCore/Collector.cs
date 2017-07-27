@@ -29,12 +29,12 @@ namespace Resin
 
         public DocumentScore[] Collect(IList<QueryContext> query)
         {
-            var scoreTime = new Stopwatch();
-            scoreTime.Start();
+            var scoreTime = Stopwatch.StartNew();
 
             foreach (var clause in query)
             {
                 Scan(clause);
+                Score(clause);
             }
 
             Log.DebugFormat("scored query {0} in {1}", query, scoreTime.Elapsed);
@@ -100,41 +100,42 @@ namespace Resin
             }
             ctx.Terms = terms;
             ctx.Postings = GetPostings(ctx);
-            ctx.Scored = Score(ctx.Postings);
         }
 
-        private void PhraseScan(QueryContext query)
+        private void PhraseScan(QueryContext ctx)
         {
-            var tokens = ((PhraseQuery)query.Query).Values;
-
-            var termMatrix = new IList<Term>[tokens.Count];
+            var tokens = ((PhraseQuery)ctx.Query).Values;
+            var postingsMatrix = new IList<DocumentPosting>[tokens.Count];
 
             for (int index = 0;index < tokens.Count; index++)
             {
                 var token = tokens[index];
                 IList<Term> terms;
 
-                using (var reader = GetTreeReader(query.Query.Field))
+                using (var reader = GetTreeReader(ctx.Query.Field))
                 {
-                    if (query.Query.Fuzzy)
+                    if (ctx.Query.Fuzzy)
                     {
-                        terms = reader.SemanticallyNear(token, query.Query.Edits(token))
-                            .ToTerms(query.Query.Field);
+                        terms = reader.SemanticallyNear(token, ctx.Query.Edits(token))
+                            .ToTerms(ctx.Query.Field);
                     }
-                    else if (query.Query.Prefix)
+                    else if (ctx.Query.Prefix)
                     {
                         terms = reader.StartsWith(token)
-                            .ToTerms(query.Query.Field);
+                            .ToTerms(ctx.Query.Field);
                     }
                     else
                     {
                         terms = reader.IsWord(token)
-                            .ToTerms(query.Query.Field);
+                            .ToTerms(ctx.Query.Field);
                     }
                 }
 
-                termMatrix[index] = terms;
+                var postings = GetPostings(terms);
+                postingsMatrix[index] = postings;
             }
+
+            ctx.Postings = postingsMatrix.Sum();
         }
 
         private void RangeScan(QueryContext ctx)
@@ -146,7 +147,6 @@ namespace Resin
             }
 
             ctx.Postings = GetPostings(ctx);
-            ctx.Scored = Score(ctx.Postings);
         }
 
         private IList<DocumentPosting> GetPostings(QueryContext query)
@@ -176,6 +176,11 @@ namespace Resin
             }
 
             return reduced;
+        }
+
+        private void Score(QueryContext ctx)
+        {
+            ctx.Scored = Score(ctx.Postings);
         }
 
         private IList<DocumentScore> Score(IList<DocumentPosting> postings)
