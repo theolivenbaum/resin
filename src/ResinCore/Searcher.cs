@@ -77,7 +77,10 @@ namespace Resin
                 GetDocs(group.ToList(), group.Key.VersionId, docs);
             }
 
-            Log.DebugFormat("fetched {0} docs for query {1} in {2}", docs.Count, query, docTime.Elapsed);
+            if (Log.IsDebugEnabled)
+            {
+                Log.DebugFormat("fetched {0} docs for query {1} in {2}", docs.Count, query.ToQueryString(), docTime.Elapsed);
+            }
 
             var result = new ScoredResult
             {
@@ -85,7 +88,10 @@ namespace Resin
                 Docs = docs.OrderByDescending(d => d.Score).ToList()
             };
 
-            Log.DebugFormat("searched {0} in {1}", query, searchTime.Elapsed);
+            if (Log.IsDebugEnabled)
+            {
+                Log.DebugFormat("searched {0} in {1}", query.ToQueryString(), searchTime.Elapsed);
+            }
 
             return result;
         }

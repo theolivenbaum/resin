@@ -1,11 +1,15 @@
-﻿using StreamIndex;
+﻿using log4net;
+using StreamIndex;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace DocumentTable
 {
     public class ReadSession : IReadSession
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ReadSession));
+
         private readonly PostingsReader _postingsReader;
         private readonly DocHashReader _docHashReader;
         private readonly DocumentAddressReader _addressReader;
@@ -38,6 +42,8 @@ namespace DocumentTable
 
         public IList<IList<DocumentPosting>> ReadPostings(IList<Term> terms)
         {
+            var time = Stopwatch.StartNew();
+
             var addresses = new List<BlockInfo>(terms.Count);
 
             foreach (var term in terms)
@@ -45,7 +51,11 @@ namespace DocumentTable
                 addresses.Add(term.Word.PostingsAddress.Value);
             }
 
-            return _postingsReader.Read(addresses);
+            var postings = _postingsReader.Read(addresses);
+
+            Log.DebugFormat("read postings in {0}", time.Elapsed);
+
+            return postings;
         }
 
         public IList<Document> ReadDocuments(IList<int> documentIds)

@@ -30,7 +30,7 @@ namespace Resin
             Score = (Score + score.Score);
         }
 
-        public static IList<DocumentScore> Not(IEnumerable<DocumentScore> source, IEnumerable<DocumentScore> exclude)
+        public static IList<DocumentScore> Not(IList<DocumentScore> source, IList<DocumentScore> exclude)
         {
             var dic = exclude.ToDictionary(x => x.DocumentId);
             var result = new List<DocumentScore>();
@@ -46,9 +46,51 @@ namespace Resin
             return result;
         }
 
-        public static IList<DocumentScore> CombineOr(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
+        public static IList<DocumentScore> CombineOrPhrase(IList<DocumentScore> first, IList<DocumentScore> other)
         {
-            if (first == null) return other.ToList();
+            if (first == null && other == null) return new DocumentScore[0];
+            if (first == null) return other;
+            if (other == null) return first;
+
+            return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>
+            {
+                var list = group.ToArray();
+
+                var top = list[0];
+                for (int index = 1; index < list.Length; index++)
+                {
+                    top.Add(list[index]);
+                }
+                return top;
+            }).ToArray();
+        }
+
+        public static IList<DocumentScore> CombineAndPhrase(IList<DocumentScore> first, IList<DocumentScore> other)
+        {
+            if (first == null && other == null) return new DocumentScore[0];
+            if (first == null) return other;
+            if (other == null) return first;
+
+            var dic = other.ToDictionary(x => x.DocumentId);
+            var result = new List<DocumentScore>(dic.Count);
+
+            foreach (var score in first)
+            {
+                DocumentScore exists;
+                if (dic.TryGetValue(score.DocumentId, out exists))
+                {
+                    score.Add(exists);
+                    result.Add(score);
+                }
+            }
+            return result;
+        }
+
+        public static IList<DocumentScore> CombineOr(IList<DocumentScore> first, IList<DocumentScore> other)
+        {
+            if (first == null && other == null) return new DocumentScore[0];
+            if (first == null) return other;
+            if (other == null) return first;
 
             return first.Concat(other).GroupBy(x => x.DocumentId).Select(group =>
             {
@@ -60,10 +102,10 @@ namespace Resin
                     top.Add(list[index]);
                 }
                 return top;
-            }).ToList();
+            }).ToArray();
         }
 
-        public static IList<DocumentScore> CombineAnd(IEnumerable<DocumentScore> first, IEnumerable<DocumentScore> other)
+        public static IList<DocumentScore> CombineAnd(IList<DocumentScore> first, IList<DocumentScore> other)
         {
             var dic = other.ToDictionary(x => x.DocumentId);
             var result = new List<DocumentScore>(dic.Count);
@@ -88,6 +130,21 @@ namespace Resin
 
     public static class DocumentScoreExtensions
     {
+        public static IList<DocumentScore> CombinePhrase(this IList<DocumentScore>[] source)
+        {
+            if (source.Length == 0) return new DocumentScore[0];
+
+            if (source.Length == 1) return source[0];
+
+            var first = source[0];
+
+            for (int i = 1; i < source.Length; i++)
+            {
+                first = DocumentScore.CombineAndPhrase(first, source[i]);
+            }
+            return first;
+        }
+
         public static DocumentScore[] CombineTakingLatestVersion(this IList<DocumentScore[]> source)
         {
             if (source.Count == 0) return new DocumentScore[0];
@@ -96,14 +153,14 @@ namespace Resin
 
             var first = source[0];
 
-            foreach (var list in source.Skip(1))
+            for (int i = 1; i < source.Count; i++)
             {
-                first = CombineTakingLatestVersion(first, list).ToArray();
+                first = CombineTakingLatestVersion(first, source[i]);
             }
             return first;
         }
 
-        public static IEnumerable<DocumentScore> CombineTakingLatestVersion(DocumentScore[] first, DocumentScore[] second)
+        public static DocumentScore[] CombineTakingLatestVersion(DocumentScore[] first, DocumentScore[] second)
         {
             var unique = new Dictionary<UInt64, DocumentScore>();
 
@@ -120,10 +177,7 @@ namespace Resin
                     unique.Add(score.DocHash, score);
                 }
             }
-            foreach(var score in unique.Values)
-            {
-                yield return score;
-            }
+            return unique.Values.ToArray();
         }
 
         public static DocumentScore TakeLatestVersion(DocumentScore first, DocumentScore second)

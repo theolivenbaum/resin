@@ -37,9 +37,9 @@ namespace DocumentTable
 
             var first = source[0];
 
-            foreach(var list in source.Skip(1))
+            for (var i = 1;i<source.Count; i++)
             {
-                first = Sum(first, list);
+                first = Sum(first, source[i]);
             }
 
             return first;

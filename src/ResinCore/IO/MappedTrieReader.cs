@@ -37,10 +37,10 @@ namespace Resin.IO.Read
 
                 _stream.Seek(distance, SeekOrigin.Current);
 
-                if (Log.IsDebugEnabled)
-                {
-                    Log.DebugFormat("skip {0}", count);
-                }
+                //if (Log.IsDebugEnabled)
+                //{
+                //    Log.DebugFormat("skip {0}", count);
+                //}
             }
         }
 
@@ -55,10 +55,10 @@ namespace Resin.IO.Read
 
             var node = Serializer.DeserializeNode(_stream);
 
-            if (Log.IsDebugEnabled)
-            {
-                Log.DebugFormat("read {0} {1} {2}", node.Depth, node.Value, _stream.Position);
-            }
+            //if (Log.IsDebugEnabled)
+            //{
+            //    Log.DebugFormat("read {0} {1} {2}", node.Depth, node.Value, _stream.Position);
+            //}
 
             LastRead = node;
 

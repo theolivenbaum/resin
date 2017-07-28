@@ -29,22 +29,15 @@ namespace Resin
 
         public DocumentScore[] Collect(IList<QueryContext> query)
         {
-            var scoreTime = Stopwatch.StartNew();
-
             foreach (var clause in query)
             {
                 Scan(clause);
-                Score(clause);
             }
 
-            Log.DebugFormat("scored query {0} in {1}", query, scoreTime.Elapsed);
-
-            var reduceTime = new Stopwatch();
-            reduceTime.Start();
-
+            var reduceTime = Stopwatch.StartNew();
             var reduced = query.Reduce().ToArray();
 
-            Log.DebugFormat("reduced query {0} producing {1} scores in {2}", query, reduced.Length, scoreTime.Elapsed);
+            Log.DebugFormat("reduced query {0} producing {1} scores in {2}", query.ToQueryString(), reduced.Length, reduceTime.Elapsed);
 
             return reduced;
         }
@@ -65,12 +58,6 @@ namespace Resin
             else
             {
                 RangeScan(ctx);
-            }
-
-            if (Log.IsDebugEnabled && ctx.Terms.Count > 1)
-            {
-                Log.DebugFormat("expanded {0}: {1}",
-                    ctx.Query.Value, string.Join(" ", ctx.Terms.Select(t => t.Word.Value)));
             }
 
             Log.DebugFormat("scanned {0} in {1}", ctx.Query.Serialize(), time.Elapsed);
@@ -98,14 +85,21 @@ namespace Resin
                         .ToTerms(ctx.Query.Field);
                 }
             }
-            ctx.Terms = terms;
-            ctx.Postings = GetPostings(ctx);
+
+            if (Log.IsDebugEnabled && terms.Count > 1)
+            {
+                Log.DebugFormat("expanded {0}: {1}",
+                    ctx.Query.Value, string.Join(" ", terms.Select(t => t.Word.Value)));
+            }
+
+            var postings = GetPostings(terms);
+            ctx.Scores = Score(postings);
         }
 
         private void PhraseScan(QueryContext ctx)
         {
             var tokens = ((PhraseQuery)ctx.Query).Values;
-            var postingsMatrix = new IList<DocumentPosting>[tokens.Count];
+            var scoreMatrix = new IList<DocumentScore>[tokens.Count];
 
             for (int index = 0;index < tokens.Count; index++)
             {
@@ -131,33 +125,30 @@ namespace Resin
                     }
                 }
 
-                var postings = GetPostings(terms);
-                postingsMatrix[index] = postings;
+                var postings = terms.Count > 0 ? _readSession.ReadPostings(terms).Sum() : null;
+
+                if (postings != null)
+                {
+                    var scores = Score(postings);
+                    scoreMatrix[index] = scores;
+                }
             }
 
-            ctx.Postings = postingsMatrix.Sum();
+            ctx.Scores = scoreMatrix.CombinePhrase();
         }
 
         private void RangeScan(QueryContext ctx)
         {
+            IList<Term> terms;
+
             using (var reader = GetTreeReader(ctx.Query.Field))
             {
-                ctx.Terms = reader.Range(ctx.Query.Value, ((RangeQuery)ctx.Query).ValueUpperBound)
+                terms = reader.Range(ctx.Query.Value, ((RangeQuery)ctx.Query).ValueUpperBound)
                         .ToTerms(ctx.Query.Field);
             }
 
-            ctx.Postings = GetPostings(ctx);
-        }
-
-        private IList<DocumentPosting> GetPostings(QueryContext query)
-        {
-            var time = Stopwatch.StartNew();
-
-            var postings = GetPostings(query.Terms);
-
-            Log.DebugFormat("read postings for {0} in {1}", query.Query.Serialize(), time.Elapsed);
-
-            return postings;
+            var postings = GetPostings(terms);
+            ctx.Scores = Score(postings);
         }
 
         private IList<DocumentPosting> GetPostings(IList<Term> terms)
@@ -178,13 +169,10 @@ namespace Resin
             return reduced;
         }
 
-        private void Score(QueryContext ctx)
-        {
-            ctx.Scored = Score(ctx.Postings);
-        }
-
         private IList<DocumentScore> Score(IList<DocumentPosting> postings)
         {
+            var scoreTime = Stopwatch.StartNew();
+
             var scores = new List<DocumentScore>(postings.Count);
 
             if (postings != null)
@@ -222,8 +210,10 @@ namespace Resin
                     }
                 }
             }
-            return scores;
 
+            Log.DebugFormat("scored in {0}", scoreTime.Elapsed);
+
+            return scores;
         }
 
         private ITrieReader GetTreeReader(string field)

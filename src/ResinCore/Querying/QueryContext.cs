@@ -1,14 +1,11 @@
 using System.Collections.Generic;
 using System.Text;
-using DocumentTable;
 
 namespace Resin.Querying
 {
     public class QueryContext
     {
-        public IList<Term> Terms { get; set; }
-        public IList<DocumentPosting> Postings { get; set; }
-        public IList<DocumentScore> Scored { get; set; }
+        public IList<DocumentScore> Scores { get; set; }
         public Query Query { get; set; }
     }
 
@@ -16,12 +13,12 @@ namespace Resin.Querying
     {
         public static IList<DocumentScore> Reduce(this IList<QueryContext> query)
         {
-            var first = query[0].Scored;
+            var first = query[0].Scores;
 
             for (int i = 1; i < query.Count; i++)
             {
                 var term = query[i];
-                var other = term.Scored;
+                var other = term.Scores;
 
                 if (term.Query.Or)
                 {
