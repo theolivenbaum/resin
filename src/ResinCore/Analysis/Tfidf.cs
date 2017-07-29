@@ -25,10 +25,10 @@ namespace Resin.Analysis
             _idf = Math.Log10(docsInCorpus - docsWithTerm / (double)docsWithTerm);
         }
 
-        public double Score(DocumentPosting posting)
+        public double Score(int termCount)
         {
             // log-normalized term frequency
-            return 1 + Math.Log10(posting.Count) * _idf;
+            return 1 + Math.Log10(termCount) * _idf;
         }
     }
 }

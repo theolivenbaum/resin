@@ -4,6 +4,6 @@ namespace Resin
 {
     public interface IScoringScheme
     {
-        double Score(DocumentPosting posting);
+        double Score(int termCount);
     }
 }

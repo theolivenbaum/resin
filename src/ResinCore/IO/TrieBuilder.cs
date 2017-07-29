@@ -18,7 +18,7 @@ namespace Resin.IO
             _tries = new Dictionary<ulong, LcrsTrie>();
         }
 
-        public void Add(string key, string value, DocumentPosting posting)
+        public void Add(string key, string value, IList<DocumentPosting> postings)
         {
             _timer.Start();
 
@@ -32,7 +32,7 @@ namespace Resin.IO
                 _tries.Add(hashedKey, trie);
             }
 
-            trie.Add(value, 0, posting);
+            trie.Add(value, 0, postings);
         }
 
         public IDictionary<ulong, LcrsTrie> GetTries()

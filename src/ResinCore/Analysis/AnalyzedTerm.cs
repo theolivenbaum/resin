@@ -1,16 +1,17 @@
 ﻿using DocumentTable;
+using System.Collections.Generic;
 
 namespace Resin.Analysis
 {
     public class AnalyzedTerm
     {
         public Term Term { get; private set; }
-        public DocumentPosting Posting { get; private set; }
+        public IList<DocumentPosting> Postings { get; private set; }
 
-        public AnalyzedTerm(Term term, DocumentPosting posting)
+        public AnalyzedTerm(Term term, IList<DocumentPosting> postings)
         {
             Term = term;
-            Posting = posting;
+            Postings = postings;
         }
     }
 }

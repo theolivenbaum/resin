@@ -25,9 +25,9 @@ namespace Resin
             {
                 var field = word.Term.Field;
                 var token = word.Term.Word.Value;
-                var posting = word.Posting;
+                var postings = word.Postings;
 
-                _treeBuilder.Add(field, token, posting);
+                _treeBuilder.Add(field, token, postings);
             }
 
             _writeSession.Write(document);

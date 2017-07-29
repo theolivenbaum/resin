@@ -20,36 +20,43 @@ namespace Resin.Analysis
             {
                 if (field.Analyze && field.Index)
                 {
-                    var tokens = Analyze(field.Value);
-                    var tokenDic = new Dictionary<string, int>();
+                    var words = Analyze(field.Value);
+                    var wordMatrix = new Dictionary<string, IList<int>>();
 
-                    foreach (var token in tokens)
+                    for (var index = 0;index<words.Count;index++)
                     {
-                        if (tokenDic.ContainsKey(token))
+                        var word = words[index];
+                        IList<int> positions;
+                        if (wordMatrix.TryGetValue(word, out positions))
                         {
-                            tokenDic[token]++;
+                            positions.Add(index);
                         }
                         else
                         {
-                            tokenDic[token] = 1;
+                            wordMatrix.Add(word, new List<int> { index });
                         }
                     }
 
-                    foreach (var tokenGroup in tokenDic)
+                    foreach (var wordInfo in wordMatrix)
                     {
-                        var word = new Word(tokenGroup.Key);
+                        var word = new Word(wordInfo.Key);
                         var term = new Term(field.Key, word);
-                        var posting = new DocumentPosting(document.Id, tokenGroup.Value);
+                        var postings = new List<DocumentPosting>(wordInfo.Value.Count);
 
-                        analyzedTerms.Add(new AnalyzedTerm(term, posting));
+                        foreach (var position in wordInfo.Value)
+                        {
+                            postings.Add(new DocumentPosting(document.Id, position));
+                        }
+
+                        analyzedTerms.Add(new AnalyzedTerm(term, postings));
                     }
                 }
                 else if (field.Index)
                 {
                     var term = new Term(field.Key, new Word(field.Value));
-                    var posting = new DocumentPosting(document.Id, 1);
+                    var postings = new List<DocumentPosting> { new DocumentPosting(document.Id, 0) };
 
-                    analyzedTerms.Add(new AnalyzedTerm(term, posting));
+                    analyzedTerms.Add(new AnalyzedTerm(term, postings));
                 }
             }
             return analyzedTerms;

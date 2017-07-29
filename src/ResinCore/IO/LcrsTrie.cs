@@ -110,10 +110,10 @@ namespace Resin.IO
 
         public void Add(string word)
         {
-            Add(word, 0, new DocumentPosting(-1, 1));
+            Add(word, 0, new DocumentPosting[] { new DocumentPosting(-1, 1) });
         }
 
-        public void Add(string word, int index, params DocumentPosting[] postings)
+        public void Add(string word, int index, IList<DocumentPosting> postings)
         {
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 

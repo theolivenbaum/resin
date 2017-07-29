@@ -8,6 +8,7 @@ using Resin.IO.Read;
 using Resin.Querying;
 using Resin.IO;
 using DocumentTable;
+using Resin.Analysis;
 
 namespace Resin
 {
@@ -23,7 +24,7 @@ namespace Resin
         {
             _readSession = readSession;
             _directory = directory;
-            _scorerFactory = scorerFactory;
+            _scorerFactory = scorerFactory??new TfIdfFactory();
             _scoreCache = new Dictionary<Query, IList<DocumentScore>>();
         }
 
@@ -169,44 +170,27 @@ namespace Resin
             return reduced;
         }
 
-        private IList<DocumentScore> Score(IList<DocumentPosting> postings)
+        private IList<DocumentScore> Score (IList<DocumentPosting> postings)
         {
             var scoreTime = Stopwatch.StartNew();
-
             var scores = new List<DocumentScore>(postings.Count);
 
-            if (postings != null)
+            if (postings != null && postings.Count > 0)
             {
-                if (_scorerFactory == null)
+                var docsWithTerm = postings.Count;
+                var scorer = _scorerFactory.CreateScorer(_readSession.Version.DocumentCount, docsWithTerm);
+                var postingsByDoc = postings.GroupBy(p => p.DocumentId);
+
+                foreach (var posting in postingsByDoc)
                 {
-                    foreach (var posting in postings)
+                    var docId = posting.Key;
+                    var docHash = _readSession.ReadDocHash(docId);
+
+                    if (!docHash.IsObsolete)
                     {
-                        var docHash = _readSession.ReadDocHash(posting.DocumentId);
+                        var score = scorer.Score(posting.Count());
 
-                        if (!docHash.IsObsolete)
-                        {
-                            scores.Add(new DocumentScore(posting.DocumentId, docHash.Hash, 0, _readSession.Version));
-                        }
-                    }
-                }
-                else
-                {
-                    if (postings.Any())
-                    {
-                        var docsWithTerm = postings.Count;
-                        var scorer = _scorerFactory.CreateScorer(_readSession.Version.DocumentCount, docsWithTerm);
-
-                        foreach (var posting in postings)
-                        {
-                            var docHash = _readSession.ReadDocHash(posting.DocumentId);
-
-                            if (!docHash.IsObsolete)
-                            {
-                                var score = scorer.Score(posting);
-
-                                scores.Add(new DocumentScore(posting.DocumentId, docHash.Hash, score, _readSession.Version));
-                            }
-                        }
+                        scores.Add(new DocumentScore(docId, docHash.Hash, score, _readSession.Version));
                     }
                 }
             }

@@ -9,21 +9,19 @@ namespace DocumentTable
     public struct DocumentPosting
     {
         public int DocumentId { get; private set; }
-        public int Count { get; set; }
+        public int Position { get; set; }
 
-        public DocumentPosting(int documentId, int count)
+        public DocumentPosting(int documentId, int position)
         {
-            if (count < 1) throw new ArgumentOutOfRangeException("count");
-
             DocumentId = documentId;
-            Count = count;
+            Position = position;
         }
 
         public void Add(DocumentPosting other)
         {
             if (other.DocumentId != DocumentId) throw new ArgumentException("other");
 
-            Count += other.Count;
+            Position += other.Position;
         }
     }
 

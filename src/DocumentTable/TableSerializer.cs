@@ -550,7 +550,7 @@ namespace DocumentTable
             foreach (var posting in postings)
             {
                 byte[] idBytes = BitConverter.GetBytes(posting.DocumentId);
-                byte[] countBytes = BitConverter.GetBytes(posting.Count);
+                byte[] countBytes = BitConverter.GetBytes(posting.Position);
 
                 if (!BitConverter.IsLittleEndian)
                 {
