@@ -100,10 +100,12 @@ namespace Resin
         private void PhraseScan(QueryContext ctx)
         {
             var tokens = ((PhraseQuery)ctx.Query).Values;
-            var scoreMatrix = new IList<DocumentScore>[tokens.Count];
+            var postingsMatrix = new List<DocumentPosting>[tokens.Count];
 
             for (int index = 0;index < tokens.Count; index++)
             {
+                postingsMatrix[index] = new List<DocumentPosting>();
+
                 var token = tokens[index];
                 IList<Term> terms;
 
@@ -127,15 +129,14 @@ namespace Resin
                 }
 
                 var postings = terms.Count > 0 ? _readSession.ReadPostings(terms).Sum() : null;
-
                 if (postings != null)
                 {
-                    var scores = Score(postings);
-                    scoreMatrix[index] = scores;
+                    postingsMatrix[index].AddRange(postings);
                 }
+                
             }
 
-            ctx.Scores = scoreMatrix.CombinePhrase();
+            ctx.Scores = ScorePhrase(postingsMatrix);
         }
 
         private void RangeScan(QueryContext ctx)
@@ -198,6 +199,71 @@ namespace Resin
             Log.DebugFormat("scored in {0}", scoreTime.Elapsed);
 
             return scores;
+        }
+
+        private IList<DocumentScore> ScorePhrase(IList<DocumentPosting>[] postings)
+        {
+            var scoreTime = Stopwatch.StartNew();
+            var weights = new List<DocumentScore>[postings.Length];
+
+            for (int index = 0; index < weights.Length; index++)
+            {
+                SetWeights(index, postings, weights);
+            }
+
+            Log.DebugFormat("scored phrase in {0}", scoreTime.Elapsed);
+
+            return weights.Sum();
+        }
+
+        private void SetWeights(int listIndex, IList<DocumentPosting>[] postings, IList<DocumentScore>[] weights)
+        {
+            var w = new List<DocumentScore>();
+            weights[listIndex] = w;
+
+            var maxDistance = postings.Length - 1;
+            var first = postings[listIndex];
+            var other = postings[postings.Length - (1 + listIndex)];
+            var otherIndex = 0;
+
+            for (int i = 0; i < first.Count; i++)
+            {
+                var firstPosting = first[i];
+                var docHash = _readSession.ReadDocHash(firstPosting.DocumentId);
+                var score = 0;
+
+                if (docHash.IsObsolete)
+                {
+                    continue;
+                }
+
+                if (otherIndex + 1 <= other.Count)
+                {
+                    var otherPosting = other[otherIndex];
+                    var end = other.Count - 1;
+                    while (otherIndex < end)
+                    {
+                        if (otherPosting.DocumentId == firstPosting.DocumentId) break;
+
+                        otherPosting = other[++otherIndex];
+                    }
+
+                    if (otherPosting.DocumentId == firstPosting.DocumentId)
+                    {
+                        var distance = Math.Abs(firstPosting.Position - otherPosting.Position);
+
+                        if (distance <= maxDistance)
+                        {
+                            score = 1;
+                        }
+                    }
+
+                    w.Add(
+                        new DocumentScore(
+                            firstPosting.DocumentId, docHash.Hash, score, _readSession.Version));
+                }
+                
+            }
         }
 
         private ITrieReader GetTreeReader(string field)

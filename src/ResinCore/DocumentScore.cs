@@ -130,32 +130,61 @@ namespace Resin
 
     public static class DocumentScoreExtensions
     {
-        public static IList<DocumentScore> CombinePhrase(this IList<DocumentScore>[] source)
+        public static IList<DocumentScore> Sum(this IList<DocumentScore>[] scores)
         {
-            if (source.Length == 0) return new DocumentScore[0];
+            if (scores.Length == 0) return new DocumentScore[0];
 
-            if (source.Length == 1) return source[0];
+            if (scores.Length == 1) return scores[0].Compress();
 
-            var first = source[0];
+            var first = scores[0];
 
-            for (int i = 1; i < source.Length; i++)
+            for (int i = 1; i < scores.Length; i++)
             {
-                first = DocumentScore.CombineAndPhrase(first, source[i]);
+                first = DocumentScore.CombineOr(first, scores[i]);
             }
             return first;
         }
 
-        public static DocumentScore[] CombineTakingLatestVersion(this IList<DocumentScore[]> source)
+        public static IList<DocumentScore> Compress(this IList<DocumentScore> scores)
         {
-            if (source.Count == 0) return new DocumentScore[0];
-
-            if (source.Count == 1) return source[0];
-
-            var first = source[0];
-
-            for (int i = 1; i < source.Count; i++)
+            var compressed = new List<DocumentScore>();
+            DocumentScore tmp = null;
+            foreach(var score in scores)
             {
-                first = CombineTakingLatestVersion(first, source[i]);
+                if (tmp == null)
+                {
+                    tmp = score;
+                    continue;
+                }
+                if (score.DocumentId == tmp.DocumentId)
+                {
+                    tmp.Add(score);
+                    tmp = score;
+                }
+                else
+                {
+                    compressed.Add(tmp);
+                    tmp = null;
+                }
+            }
+            if (tmp != null)
+            {
+                compressed.Add(tmp);
+            }
+            return compressed;
+        }
+
+        public static DocumentScore[] CombineTakingLatestVersion(this IList<DocumentScore[]> scores)
+        {
+            if (scores.Count == 0) return new DocumentScore[0];
+
+            if (scores.Count == 1) return scores[0];
+
+            var first = scores[0];
+
+            for (int i = 1; i < scores.Count; i++)
+            {
+                first = CombineTakingLatestVersion(first, scores[i]);
             }
             return first;
         }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DocumentTable
 {
-    [System.Diagnostics.DebuggerDisplay("{Value} {Count}")]
+    [System.Diagnostics.DebuggerDisplay("{Value}")]
     public class Word
     {
         public readonly string Value;

@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace DocumentTable
 {
-    [DebuggerDisplay("{DocumentId}:{Count}")]
+    [DebuggerDisplay("{DocumentId}:{Position}")]
     public struct DocumentPosting
     {
         public int DocumentId { get; private set; }

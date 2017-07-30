@@ -21,7 +21,7 @@ namespace Resin
         private readonly string _directory;
         private readonly QueryParser _parser;
         private readonly IScoringSchemeFactory _scorerFactory;
-        private readonly BatchInfo[] _versions;
+        private readonly long[] _versions;
         private readonly int _blockSize;
         private readonly IReadSessionFactory _sessionFactory;
 
@@ -41,7 +41,7 @@ namespace Resin
             _parser = parser;
             _scorerFactory = scorerFactory;
             _versions = Util.GetIndexFileNamesInChronologicalOrder(directory)
-                .Select(f => BatchInfo.Load(f)).ToArray();
+                .Select(f => long.Parse(Path.GetFileNameWithoutExtension(f))).ToArray();
             _blockSize = BlockSerializer.SizeOfBlock();
             _sessionFactory = sessionFactory ?? new ReadSessionFactory(directory);
         }
@@ -51,7 +51,7 @@ namespace Resin
             _directory = directory;
             _parser = parser;
             _scorerFactory = scorerFactory;
-            _versions = new[] { BatchInfo.Load(Path.Combine(directory, version + ".ix"))};
+            _versions = new[] { version};
             _blockSize = BlockSerializer.SizeOfBlock();
             _sessionFactory = sessionFactory ?? new ReadSessionFactory(directory);
         }
@@ -106,9 +106,10 @@ namespace Resin
         private DocumentScore[] Collect(IList<QueryContext> query)
         {
             var scores = new List<DocumentScore[]>();
+
             foreach (var version in _versions)
             {
-                using (var readSession = _sessionFactory.OpenReadSession(version.VersionId))
+                using (var readSession = _sessionFactory.OpenReadSession(version))
                 {
                     scores.Add(Collect(query, readSession));
                 }

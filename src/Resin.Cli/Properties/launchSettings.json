@@ -2,7 +2,7 @@
   "profiles": {
     "Resin.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "query --dir c:\\temp\\resin_data\\pg -q \"title:\\\"In the beginning God created the heavens\\\"\""
+      "commandLineArgs": "write --file c:\\temp\\636326999602241674.dtbl.json --dir c:\\temp\\resin_data\\pg --pk url --skip 0 --take 320"
     }
   }
 }
