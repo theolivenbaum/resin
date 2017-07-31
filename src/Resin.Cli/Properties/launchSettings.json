@@ -2,7 +2,7 @@
   "profiles": {
     "Resin.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "write --file c:\\temp\\636326999602241674.dtbl.json --dir c:\\temp\\resin_data\\pg --pk url --skip 0 --take 320"
+      "commandLineArgs": "write-pg --source-dir C:\\temp\\pgdvd --dir c:\\temp\\resin_data\\pg skip 0 --take 350"
     }
   }
 }

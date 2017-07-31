@@ -39,6 +39,15 @@ namespace Resin.Cli
                 }
                 Write(args);
             }
+            if (args[0].ToLower() == "write-pg")
+            {
+                if (Array.IndexOf(args, "--dir") == -1)
+                {
+                    Console.WriteLine("I need a directory.");
+                    return;
+                }
+                WritePg(args);
+            }
             else if (args[0].ToLower() == "query")
             {
                 if (Array.IndexOf(args, "-q") == -1)
@@ -156,9 +165,8 @@ namespace Resin.Cli
                         Print(doc);
                     }
                 }
-                
 
-                Console.WriteLine("\r\n{0}-{1} results of {2} in {3}", (page * size)+1, docs.Count + (page * size), result.Total, timer.Elapsed);
+                Console.WriteLine("\r\n{0} results of {1} in {2}", docs.Count + (page * size), result.Total, timer.Elapsed);
             }
 
         }
@@ -204,12 +212,8 @@ namespace Resin.Cli
 
             var fileName = args[Array.IndexOf(args, "--file") + 1];
             string dir = null;
-            string indexName = null;
 
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
-            if (Array.IndexOf(args, "--name") > 0) indexName = args[Array.IndexOf(args, "--name") + 1];
-
-            var docs = new List<Dictionary<string, string>>();
 
             var writeTimer = new Stopwatch();
             writeTimer.Start();
@@ -217,6 +221,44 @@ namespace Resin.Cli
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
             using (var documents = new JsonDocumentStream(fileName, skip, take, pk))
+            using (var upsert = new UpsertTransaction(dir, new Analyzer(), compression, documents))
+            {
+                upsert.Write();
+            }
+
+            Console.WriteLine("write operation took {0}", writeTimer.Elapsed);
+        }
+
+        static void WritePg(string[] args)
+        {
+            var take = int.MaxValue;
+            var skip = 0;
+            bool gzip = false;
+            bool lz = false;
+            string pk = null;
+
+            if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
+            if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
+            if (Array.IndexOf(args, "--gzip") > 0) gzip = true;
+            if (Array.IndexOf(args, "--lz") > 0) lz = true;
+            if (Array.IndexOf(args, "--pk") > 0) pk = args[Array.IndexOf(args, "--pk") + 1];
+
+            var compression = gzip ? Compression.GZip : lz ? Compression.Lz : Compression.NoCompression;
+
+            var fileName = args[Array.IndexOf(args, "--file") + 1];
+            string dir = null;
+            string sourceDir = null;
+
+            if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
+            if (Array.IndexOf(args, "--source-dir") > 0) sourceDir = args[Array.IndexOf(args, "--source-dir") + 1];
+
+
+            var writeTimer = new Stopwatch();
+            writeTimer.Start();
+
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            var documents = new ProjGutenbergDvdStream(sourceDir, skip, take);
             using (var upsert = new UpsertTransaction(dir, new Analyzer(), compression, documents))
             {
                 upsert.Write();
