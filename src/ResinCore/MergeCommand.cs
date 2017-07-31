@@ -98,7 +98,7 @@ namespace Resin
             var dataFileName = Path.Combine(dir, Path.GetFileNameWithoutExtension(branchFileName) + ".rdb");
             if (File.Exists(dataFileName))
             {
-                return Merge(_ixFilesToProcess[1]);
+                return Merge(_ixFilesToProcess[1], _ixFilesToProcess[0]);
             }
 
             return long.Parse(Path.GetFileNameWithoutExtension(_ixFilesToProcess[0]));
@@ -109,11 +109,11 @@ namespace Resin
             Log.InfoFormat("truncating {0}", srcIxFileName);
 
             var srcIx = BatchInfo.Load(srcIxFileName);
-            var dataFileName = Path.Combine(_directory, srcIx.VersionId + ".rdb");
+            var srcDataFileName = Path.Combine(_directory, srcIx.VersionId + ".rdb");
             long version;
 
-            using (var stream = new FileStream(dataFileName, FileMode.Open))
-            using (var documentStream = new DtblStream(stream, srcIx))
+            using (var source = new FileStream(srcDataFileName, FileMode.Open))
+            using (var documentStream = new DocumentTableStream(source, srcIx))
             {
                 using (var upsert = new UpsertTransaction(
                     _directory,
@@ -123,43 +123,82 @@ namespace Resin
                 {
                     version = upsert.Write();
                     upsert.Commit();
-
                 }
 
-                Log.InfoFormat("ix {0} fully truncated", _ixFilesToProcess[0]);
+                Log.InfoFormat("truncated ix {0}", version);
             }
-            Util.RemoveAll(srcIxFileName);
+            File.Delete(srcIxFileName);
             return version;
         }
 
-        private long Merge(string srcIxFileName)
+        private long Merge(string srcIxFileName, string targetIxFileName)
         {
-            Log.InfoFormat("merging branch {0} with trunk {1}", _ixFilesToProcess[1], _ixFilesToProcess[0]);
+            Log.InfoFormat("merging branch {0} with trunk {1}", srcIxFileName, targetIxFileName);
 
-            var ix = BatchInfo.Load(srcIxFileName);
-            var dataFileName = Path.Combine(_directory, ix.VersionId + ".rdb");
-            long version;
+            var srcIx = BatchInfo.Load(srcIxFileName);
+            var targetIx = BatchInfo.Load(targetIxFileName);
+            var srcDataFileName = Path.Combine(_directory, srcIx.VersionId + ".rdb");
+            var targetDataFileName = Path.Combine(_directory, targetIx.VersionId + ".rdb");
 
-            using (var stream = new FileStream(dataFileName, FileMode.Open))
-            using (var documentStream = new DtblStream(stream, ix))
+            FileStream lockFile;
+
+            if (!Util.TryAquireWriteLock(_directory, out lockFile))
             {
-                // TODO: instead of rewriting, copy the segments from the branch file into the main data file.
-                using (var upsert = new UpsertTransaction(
-                    _directory,
-                    _analyzer,
-                    ix.Compression,
-                    documentStream))
-                {
-                    version = upsert.Write();
-                    upsert.Commit();
+                throw new InvalidOperationException(
+                    "Cannot merge because there are other writes in progress.");
+            }
 
+            using (lockFile)
+            using (var source = new FileStream(srcDataFileName, FileMode.Open))
+            using (var target = new FileStream(targetDataFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+            {
+                var newStartIndex = targetIx.Length;
+                var fieldOffsets = new Dictionary<ulong, long>();
+
+                foreach (var field in srcIx.FieldOffsets)
+                {
+                    fieldOffsets[field.Key] = field.Value + newStartIndex;
+                }
+                srcIx.FieldOffsets = fieldOffsets;
+
+                var tree = new byte[srcIx.PostingsOffset];
+                var postings = new byte[srcIx.DocHashOffset - srcIx.PostingsOffset];
+                var docHashes = new byte[srcIx.DocAddressesOffset - srcIx.DocHashOffset];
+                var docAddresses = new byte[srcIx.KeyIndexOffset - srcIx.DocAddressesOffset];
+                var documents = new byte[srcIx.Length - srcIx.KeyIndexOffset];
+                var sum = tree.Length + postings.Length + docHashes.Length + docAddresses.Length + documents.Length;
+
+                if (sum != srcIx.Length)
+                {
+                    throw new DataMisalignedException("Size of segment does not compute.");
                 }
 
-                Log.InfoFormat("{0} merged with {1} creating a segmented index", srcIxFileName, _ixFilesToProcess[0]);
+                source.Read(tree, 0, tree.Length);
+                source.Read(postings, 0, postings.Length);
+                source.Read(docHashes, 0, docHashes.Length);
+                source.Read(docAddresses, 0, docAddresses.Length);
+                source.Read(documents, 0, documents.Length);
 
+                target.Write(tree, 0, tree.Length);
+
+                srcIx.PostingsOffset = target.Position;
+                target.Write(postings, 0, postings.Length);
+
+                srcIx.DocHashOffset = target.Position;
+                target.Write(docHashes, 0, docHashes.Length);
+
+                srcIx.DocAddressesOffset = target.Position;
+                target.Write(docAddresses, 0, docAddresses.Length);
+
+                srcIx.KeyIndexOffset = target.Position;
+                target.Write(documents, 0, documents.Length);
+
+                srcIx.Serialize(srcIxFileName);
+
+                Log.InfoFormat("merged {0} with {1} creating a segmented index", srcIxFileName, targetIx);
             }
-            Util.RemoveAll(srcIxFileName);
-            return version;
+            File.Delete(srcDataFileName);
+            return srcIx.VersionId;
         }
     }
 }

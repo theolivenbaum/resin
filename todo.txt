@@ -1,4 +1,3 @@
 implement sort by term
 add index and query support for decimals
-merge without rewriting tree
 implement (group by)

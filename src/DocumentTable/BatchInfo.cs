@@ -30,6 +30,8 @@ namespace DocumentTable
 
         public int KeyIndexSize { get; set; }
 
+        public long Length { get; set; }
+
         public static BatchInfo Load(string fileName)
         {
             var time = new Stopwatch();

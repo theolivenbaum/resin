@@ -16,7 +16,10 @@
 
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.8" />
-    <PackageReference Include="StreamIndex" Version="2.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StreamIndex\StreamIndex.csproj" />
   </ItemGroup>
 
 </Project>

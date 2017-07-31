@@ -259,6 +259,10 @@ namespace DocumentTable
 
             stream.Read(keyIndexSizeBytes, 0, sizeof(int));
 
+            var lenBytes = new byte[sizeof(long)];
+
+            stream.Read(lenBytes, 0, sizeof(long));
+
             var pkFnLenBytes = new byte[sizeof(int)];
 
             stream.Read(pkFnLenBytes, 0, sizeof(int));
@@ -286,6 +290,7 @@ namespace DocumentTable
                 Array.Reverse(pkFieldNameBytes);
                 Array.Reverse(keyIndexOffsetBytes);
                 Array.Reverse(keyIndexSizeBytes);
+                Array.Reverse(lenBytes);
             }
 
             var postingsOffset = BitConverter.ToInt64(postingsOffsetBytes, 0);
@@ -305,7 +310,8 @@ namespace DocumentTable
                 DocAddressesOffset = docAddressesOffset,
                 FieldOffsets = fieldOffsets,
                 KeyIndexOffset = keyIndexOffset,
-                KeyIndexSize = keyIndexSize
+                KeyIndexSize = keyIndexSize,
+                Length = BitConverter.ToInt64(lenBytes, 0)
             };
         }
 
@@ -507,6 +513,7 @@ namespace DocumentTable
                 byte[] docAddressesOffsetBytes = BitConverter.GetBytes(ix.DocAddressesOffset);
                 byte[] keyIndexOffsetBytes = BitConverter.GetBytes(ix.KeyIndexOffset);
                 byte[] keyIndexSizeBytes = BitConverter.GetBytes(ix.KeyIndexSize);
+                byte[] lenBytes = BitConverter.GetBytes(ix.Length);
 
                 if (!BitConverter.IsLittleEndian)
                 {
@@ -520,6 +527,7 @@ namespace DocumentTable
                     Array.Reverse(docAddressesOffsetBytes);
                     Array.Reverse(keyIndexOffsetBytes);
                     Array.Reverse(keyIndexSizeBytes);
+                    Array.Reverse(lenBytes);
                 }
 
                 var fieldCountBytes = BitConverter.GetBytes(ix.FieldOffsets.Count);
@@ -536,9 +544,12 @@ namespace DocumentTable
                 stream.Write(docAddressesOffsetBytes, 0, sizeof(long));
                 stream.Write(keyIndexOffsetBytes, 0, sizeof(long));
                 stream.Write(keyIndexSizeBytes, 0, sizeof(int));
+                stream.Write(lenBytes, 0, sizeof(long));
+
                 stream.Write(pkFnLenBytes, 0, sizeof(int));
 
-                if (pkFnLenBytes.Length > 0) stream.Write(pkFieldNameBytes, 0, pkFieldNameBytes.Length);
+                if (pkFnLenBytes.Length > 0)
+                    stream.Write(pkFieldNameBytes, 0, pkFieldNameBytes.Length);
 
                 return stream.ToArray();
             }

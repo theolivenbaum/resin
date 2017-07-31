@@ -107,6 +107,23 @@ namespace Resin
                     ));
         }
 
+        private IDictionary<ulong, long> SerializeTries(IDictionary<ulong, LcrsTrie> tries, Stream stream)
+        {
+            var offsets = new Dictionary<ulong, long>();
+
+            foreach (var t in tries)
+            {
+                offsets.Add(t.Key, stream.Position);
+
+                var fileName = Path.Combine(
+                    _directory, string.Format("{0}-{1}.tri", _ix.VersionId, t.Key));
+
+                t.Value.Serialize(stream);
+            }
+
+            return offsets;
+        }
+
         public long Write()
         {
             if (_committed) return _ix.VersionId;
@@ -165,23 +182,6 @@ namespace Resin
             return _ix.VersionId;
         }
 
-        private IDictionary<ulong, long> SerializeTries(IDictionary<ulong, LcrsTrie> tries, Stream stream)
-        {
-            var offsets = new Dictionary<ulong, long>();
-
-            foreach (var t in tries)
-            {
-                offsets.Add(t.Key, stream.Position);
-
-                var fileName = Path.Combine(
-                    _directory, string.Format("{0}-{1}.tri", _ix.VersionId, t.Key));
-
-                t.Value.Serialize(stream);
-            }
-
-            return offsets;
-        }
-
         private IEnumerable<Document> ReadSource()
         {
             return _documents.ReadSource();
@@ -191,15 +191,11 @@ namespace Resin
         {
             if (_committed) return;
 
-            _writeSession.Flush();
-
             _postingsWriter.Dispose();
-            _compoundFile.Dispose();
+
+            _writeSession.Flush();
             _writeSession.Dispose();
-
-            var fileName = Path.Combine(_directory, _ix.VersionId + ".ix");
-
-            _ix.Serialize(fileName);
+            _compoundFile.Dispose();
 
             _committed = true;
         }

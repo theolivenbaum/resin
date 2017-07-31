@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace DocumentTable
 {
-    public class DtblStream : DocumentStream, IDisposable
+    public class DocumentTableStream : DocumentStream, IDisposable
     {
         private readonly DocHashReader _hashReader;
         private readonly DocumentAddressReader _addressReader;
@@ -16,7 +16,7 @@ namespace DocumentTable
         private readonly int _skip;
         private readonly Stream _dataFile;
 
-        public DtblStream(Stream stream, BatchInfo ix, int skip = 0, int take = int.MaxValue) 
+        public DocumentTableStream(Stream stream, BatchInfo ix, int skip = 0, int take = int.MaxValue) 
             : base(ix.PrimaryKeyFieldName)
         {
             _dataFile = stream;

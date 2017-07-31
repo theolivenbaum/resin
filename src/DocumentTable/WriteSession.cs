@@ -15,6 +15,8 @@ namespace DocumentTable
         private readonly Stream _dataFile;
         private bool _flushed;
         private readonly BatchInfo _ix;
+        private readonly long _startPosition;
+        private readonly string _directory;
 
         public WriteSession(string directory, BatchInfo ix, Stream dataFile)
         {
@@ -22,6 +24,8 @@ namespace DocumentTable
             var docAddressFn = Path.Combine(directory, ix.VersionId + ".da");
             var docHashesFileName = Path.Combine(directory, string.Format("{0}.{1}", ix.VersionId, "pk"));
 
+            _directory = directory;
+            _startPosition = dataFile.Position;
             _keyIndexFileName = Path.Combine(directory, ix.VersionId + ".kix");
             _ix = ix;
             _addressWriter = new DocumentAddressWriter(
@@ -85,16 +89,20 @@ namespace DocumentTable
             _docWriter.Stream.Position = 0;
             _docWriter.Stream.CopyTo(_dataFile);
 
+            _docWriter.Dispose();
+            _docHashesStream.Dispose();
+            _addressWriter.Dispose();
+
+            _ix.Length = _dataFile.Position-_startPosition;
+
+            _ix.Serialize(Path.Combine(_directory, _ix.VersionId + ".ix"));
+
             _flushed = true;
         }
 
         public void Dispose()
         {
             if (!_flushed) Flush();
-
-            _docWriter.Dispose();
-            _docHashesStream.Dispose();
-            _addressWriter.Dispose();
         }
     }
 

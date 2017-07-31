@@ -253,7 +253,7 @@ namespace Resin.Cli
             writeTimer.Start();
 
             using (var stream = new FileStream(dataFileName, FileMode.Open))
-            using (var documents = new DtblStream(stream, ix, skip, take))
+            using (var documents = new DocumentTableStream(stream, ix, skip, take))
             using (var upsert = new UpsertTransaction(dir, new Analyzer(), compression, documents))
             {
                 upsert.Write();
@@ -285,7 +285,7 @@ namespace Resin.Cli
             using (var sourceStream = new FileStream(sourceFileName, FileMode.Open))
             using (var targetStream = new FileStream(targetFileName, FileMode.Create))
             using (var jsonWriter = new StreamWriter(targetStream, Encoding.UTF8))
-            using (var documents = new DtblStream(sourceStream, ix, skip, take))
+            using (var documents = new DocumentTableStream(sourceStream, ix, skip, take))
             {
                 jsonWriter.WriteLine("[");
 

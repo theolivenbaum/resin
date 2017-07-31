@@ -145,19 +145,5 @@ namespace Resin.Sys
 
             return false;
         }
-
-        public static void RemoveAll(string ixFileName)
-        {
-            File.Delete(ixFileName);
-
-            var dir = Path.GetDirectoryName(ixFileName);
-            var searchPattern = Path.GetFileNameWithoutExtension(ixFileName) + "*";
-            var files = Directory.GetFiles(dir, searchPattern);
-
-            foreach (var file in files)
-            {
-                File.Delete(file);
-            }
-        }
     }
 }
