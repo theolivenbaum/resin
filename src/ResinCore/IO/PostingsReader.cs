@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace DocumentTable
+namespace Resin.IO
 {
     public class PostingsReader : BlockReader<IList<DocumentPosting>>
     {
@@ -20,7 +20,7 @@ namespace DocumentTable
         {
             stream.Seek(offset, SeekOrigin.Begin);
 
-            return TableSerializer.DeserializePostings(stream, size);
+            return Serializer.DeserializePostings(stream, size);
         }
     }
 }

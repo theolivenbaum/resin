@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace DocumentTable
+namespace Resin
 {
     [DebuggerDisplay("{DocumentId}:{Position}")]
     public struct DocumentPosting

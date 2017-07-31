@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace DocumentTable
+namespace Resin.IO
 {
     public class PostingsWriter : BlockWriter<List<DocumentPosting>>
     {

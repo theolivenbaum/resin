@@ -2,6 +2,7 @@
 using Resin.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using DocumentTable;
+using Resin;
 
 namespace Tests
 {

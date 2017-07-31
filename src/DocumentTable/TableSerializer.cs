@@ -72,34 +72,6 @@ namespace DocumentTable
             return strings;
         }
 
-        public static IList<DocumentPosting> DeserializePostings(Stream stream, int size)
-        {
-            var count = size / (2 * sizeof(int));
-            var postings = new List<DocumentPosting>(count);
-            var buffer = new byte[2 * sizeof(int)];
-            var read = 0;
-
-            while (read < count)
-            {
-                stream.Read(buffer, 0, buffer.Length);
-
-                if (!BitConverter.IsLittleEndian)
-                {
-                    Array.Reverse(buffer, 0, sizeof(int));
-                    Array.Reverse(buffer, sizeof(int), sizeof(int));
-                }
-
-                postings.Add(new DocumentPosting(
-                    BitConverter.ToInt32(buffer, 0),
-                    BitConverter.ToInt32(buffer, sizeof(int))
-                    ));
-
-                read++;
-            }
-
-            return postings;
-        }
-
         public static IEnumerable<DocHash> DeserializeDocHashes(Stream stream)
         {
             while (true)
@@ -553,28 +525,6 @@ namespace DocumentTable
 
                 return stream.ToArray();
             }
-        }
-
-        public static int Serialize(this IEnumerable<DocumentPosting> postings, Stream stream)
-        {
-            var size = 0;
-            foreach (var posting in postings)
-            {
-                byte[] idBytes = BitConverter.GetBytes(posting.DocumentId);
-                byte[] countBytes = BitConverter.GetBytes(posting.Position);
-
-                if (!BitConverter.IsLittleEndian)
-                {
-                    Array.Reverse(idBytes);
-                    Array.Reverse(countBytes);
-                }
-
-                stream.Write(idBytes, 0, sizeof(int));
-                stream.Write(countBytes, 0, sizeof(int));
-
-                size += (idBytes.Length + countBytes.Length);
-            }
-            return size;
         }
     }
 }

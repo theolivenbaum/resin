@@ -1,7 +1,7 @@
 using StreamIndex;
 using System.Collections.Generic;
 
-namespace DocumentTable
+namespace Resin
 {
     [System.Diagnostics.DebuggerDisplay("{Value}")]
     public class Word

@@ -1,7 +1,6 @@
 ﻿using log4net;
 using StreamIndex;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 
 namespace DocumentTable
@@ -10,7 +9,6 @@ namespace DocumentTable
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(ReadSession));
 
-        private readonly PostingsReader _postingsReader;
         private readonly DocHashReader _docHashReader;
         private readonly DocumentAddressReader _addressReader;
         private readonly int _blockSize;
@@ -21,7 +19,6 @@ namespace DocumentTable
 
         public ReadSession(
             BatchInfo version, 
-            PostingsReader postingsReader, 
             DocHashReader docHashReader, 
             DocumentAddressReader addressReader, 
             Stream stream)
@@ -30,7 +27,6 @@ namespace DocumentTable
 
             _stream = stream;
             _docHashReader = docHashReader;
-            _postingsReader = postingsReader;
             _addressReader = addressReader;
             _blockSize = BlockSerializer.SizeOfBlock();
         }
@@ -38,24 +34,6 @@ namespace DocumentTable
         public DocHash ReadDocHash(int docId)
         {
             return _docHashReader.Read(docId);
-        }
-
-        public IList<IList<DocumentPosting>> ReadPostings(IList<Term> terms)
-        {
-            var time = Stopwatch.StartNew();
-
-            var addresses = new List<BlockInfo>(terms.Count);
-
-            foreach (var term in terms)
-            {
-                addresses.Add(term.Word.PostingsAddress.Value);
-            }
-
-            var postings = _postingsReader.Read(addresses);
-
-            Log.DebugFormat("read postings in {0}", time.Elapsed);
-
-            return postings;
         }
 
         public IList<Document> ReadDocuments(IList<int> documentIds)
@@ -90,7 +68,6 @@ namespace DocumentTable
         {
             _addressReader.Dispose();
             _docHashReader.Dispose();
-            _postingsReader.Dispose();
         }
     }
 }

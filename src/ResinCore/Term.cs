@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace DocumentTable
+namespace Resin
 {
     [DebuggerDisplay("{Field}:{Word}")]
     public class Term : IEquatable<Term>, IComparable<Term>

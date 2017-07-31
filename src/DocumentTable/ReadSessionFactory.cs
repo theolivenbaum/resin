@@ -32,7 +32,6 @@ namespace DocumentTable
            
             return new ReadSession(
                 ix,
-                new PostingsReader(_compoundFile, ix.PostingsOffset),
                 new DocHashReader(_compoundFile, ix.DocHashOffset),
                 new DocumentAddressReader(_compoundFile, ix.DocAddressesOffset),
                 _compoundFile);

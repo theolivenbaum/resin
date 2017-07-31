@@ -9,6 +9,7 @@ using Resin.Querying;
 using Resin.IO;
 using DocumentTable;
 using Resin.Analysis;
+using StreamIndex;
 
 namespace Resin
 {
@@ -19,6 +20,7 @@ namespace Resin
         private readonly IScoringSchemeFactory _scorerFactory;
         private readonly IDictionary<Query, IList<DocumentScore>> _scoreCache;
         private readonly IReadSession _readSession;
+        private readonly PostingsReader _postingsReader;
 
         public Collector(string directory, IReadSession readSession, IScoringSchemeFactory scorerFactory = null)
         {
@@ -26,6 +28,8 @@ namespace Resin
             _directory = directory;
             _scorerFactory = scorerFactory??new TfIdfFactory();
             _scoreCache = new Dictionary<Query, IList<DocumentScore>>();
+            _postingsReader = new PostingsReader(
+                _readSession.Stream, _readSession.Version.PostingsOffset);
         }
 
         public DocumentScore[] Collect(IList<QueryContext> query)
@@ -128,7 +132,7 @@ namespace Resin
                     }
                 }
 
-                var postings = terms.Count > 0 ? _readSession.ReadPostings(terms).Sum() : null;
+                var postings = terms.Count > 0 ? ReadPostings(terms).Sum() : null;
                 if (postings != null)
                 {
                     postingsMatrix[index].AddRange(postings);
@@ -155,7 +159,7 @@ namespace Resin
 
         private IList<DocumentPosting> GetPostings(IList<Term> terms)
         {
-            var postings = terms.Count > 0 ? _readSession.ReadPostings(terms) : null;
+            var postings = terms.Count > 0 ? ReadPostings(terms) : null;
 
             IList<DocumentPosting> reduced;
 
@@ -169,6 +173,24 @@ namespace Resin
             }
 
             return reduced;
+        }
+
+        public IList<IList<DocumentPosting>> ReadPostings(IList<Term> terms)
+        {
+            var time = Stopwatch.StartNew();
+
+            var addresses = new List<BlockInfo>(terms.Count);
+
+            foreach (var term in terms)
+            {
+                addresses.Add(term.Word.PostingsAddress.Value);
+            }
+
+            var postings = _postingsReader.Read(addresses);
+
+            Log.DebugFormat("read postings in {0}", time.Elapsed);
+
+            return postings;
         }
 
         private IList<DocumentScore> Score (IList<DocumentPosting> postings)
@@ -281,6 +303,7 @@ namespace Resin
 
         public void Dispose()
         {
+            _postingsReader.Dispose();
         }
     }
 }
