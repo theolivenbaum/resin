@@ -134,7 +134,7 @@ namespace Resin
         {
             if (scores.Length == 0) return new DocumentScore[0];
 
-            if (scores.Length == 1) return scores[0].Compress();
+            if (scores.Length == 1) return scores[0].Sum();
 
             var first = scores[0];
 
@@ -145,7 +145,7 @@ namespace Resin
             return first;
         }
 
-        public static IList<DocumentScore> Compress(this IList<DocumentScore> scores)
+        public static IList<DocumentScore> Sum(this IList<DocumentScore> scores)
         {
             var compressed = new List<DocumentScore>();
             DocumentScore tmp = null;
