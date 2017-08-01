@@ -1,5 +1,6 @@
 using DocumentTable;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Resin;
 using System;
 using System.IO;
 
@@ -19,7 +20,7 @@ namespace Tests
 
         protected static IReadSession CreateReadSession(string directory, long version)
         {
-            return new ReadSessionFactory(directory).OpenReadSession(version);
+            return new FullTextReadSessionFactory(directory).OpenReadSession(version);
         }
 
         [AssemblyInitialize()]

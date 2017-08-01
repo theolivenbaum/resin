@@ -6,6 +6,7 @@ using System.Text;
 using Resin.IO.Read;
 using log4net;
 using StreamIndex;
+using DocumentTable;
 
 namespace Resin.IO
 {
@@ -194,6 +195,81 @@ namespace Resin.IO
             return size;
         }
 
+        public static void Serialize(this FullTextSegmentInfo ix, string fileName)
+        {
+            using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4, FileOptions.WriteThrough))
+            {
+                ix.Serialize(fs);
+            }
+        }
+
+        public static void Serialize(this FullTextSegmentInfo ix, Stream stream)
+        {
+            var bytes = ix.Serialize();
+
+            stream.Write(bytes, 0, bytes.Length);
+        }
+
+        public static byte[] Serialize(this FullTextSegmentInfo ix)
+        {
+            using (var stream = new MemoryStream())
+            {
+                byte[] versionBytes = BitConverter.GetBytes(ix.VersionId);
+                byte[] docCountBytes = BitConverter.GetBytes(ix.DocumentCount);
+                byte[] compressionEnumBytes = BitConverter.GetBytes((int)ix.Compression);
+                byte[] pkFieldNameBytes = ix.PrimaryKeyFieldName == null
+                    ? new byte[0]
+                    : Encoding.GetBytes(ix.PrimaryKeyFieldName);
+                byte[] pkFnLenBytes = BitConverter.GetBytes(pkFieldNameBytes.Length);
+                byte[] postingsOffsetBytes = BitConverter.GetBytes(ix.PostingsOffset);
+                byte[] docHashOffsetBytes = BitConverter.GetBytes(ix.DocHashOffset);
+                byte[] docAddressesOffsetBytes = BitConverter.GetBytes(ix.DocAddressesOffset);
+                byte[] keyIndexOffsetBytes = BitConverter.GetBytes(ix.KeyIndexOffset);
+                byte[] keyIndexSizeBytes = BitConverter.GetBytes(ix.KeyIndexSize);
+                byte[] lenBytes = BitConverter.GetBytes(ix.Length);
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(versionBytes);
+                    Array.Reverse(docCountBytes);
+                    Array.Reverse(compressionEnumBytes);
+                    Array.Reverse(pkFieldNameBytes);
+                    Array.Reverse(pkFnLenBytes);
+                    Array.Reverse(postingsOffsetBytes);
+                    Array.Reverse(docHashOffsetBytes);
+                    Array.Reverse(docAddressesOffsetBytes);
+                    Array.Reverse(keyIndexOffsetBytes);
+                    Array.Reverse(keyIndexSizeBytes);
+                    Array.Reverse(lenBytes);
+                }
+
+                //stream.WriteByte(EncodedBoolean[ix.WordPositions]);
+
+                var fieldCountBytes = BitConverter.GetBytes(ix.FieldOffsets.Count);
+
+                stream.Write(fieldCountBytes, 0, sizeof(int));
+
+                ix.FieldOffsets.Serialize(stream);
+
+                stream.Write(versionBytes, 0, sizeof(long));
+                stream.Write(docCountBytes, 0, sizeof(int));
+                stream.Write(compressionEnumBytes, 0, sizeof(int));
+                stream.Write(postingsOffsetBytes, 0, sizeof(long));
+                stream.Write(docHashOffsetBytes, 0, sizeof(long));
+                stream.Write(docAddressesOffsetBytes, 0, sizeof(long));
+                stream.Write(keyIndexOffsetBytes, 0, sizeof(long));
+                stream.Write(keyIndexSizeBytes, 0, sizeof(int));
+                stream.Write(lenBytes, 0, sizeof(long));
+
+                stream.Write(pkFnLenBytes, 0, sizeof(int));
+
+                if (pkFnLenBytes.Length > 0)
+                    stream.Write(pkFieldNameBytes, 0, pkFieldNameBytes.Length);
+
+                return stream.ToArray();
+            }
+        }
+
         public static byte[] DeSerializeFile(string fileName)
         {
             using (var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -215,6 +291,107 @@ namespace Resin.IO
                 }
                 return ms.ToArray();
             }
+        }
+
+        public static FullTextSegmentInfo DeserializeSegmentInfo(Stream stream)
+        {
+            //var wordPositions = stream.ReadByte() == 1;
+
+            var fieldCountBytes = new byte[sizeof(int)];
+
+            stream.Read(fieldCountBytes, 0, sizeof(int));
+
+            var fieldCount = BitConverter.ToInt32(fieldCountBytes, 0);
+
+            var fieldOffsets = TableSerializer.DeserializeUlongLongDic(stream, fieldCount).ToDictionary(x => x.Key, y => y.Value);
+
+            var versionBytes = new byte[sizeof(long)];
+
+            stream.Read(versionBytes, 0, sizeof(long));
+
+            var docCountBytes = new byte[sizeof(int)];
+
+            stream.Read(docCountBytes, 0, sizeof(int));
+
+            var compression = new byte[sizeof(int)];
+
+            stream.Read(compression, 0, sizeof(int));
+
+            var postingsOffsetBytes = new byte[sizeof(long)];
+
+            stream.Read(postingsOffsetBytes, 0, sizeof(long));
+
+            var docHashOffsetBytes = new byte[sizeof(long)];
+
+            stream.Read(docHashOffsetBytes, 0, sizeof(long));
+
+            var docAddressesOffsetBytes = new byte[sizeof(long)];
+
+            stream.Read(docAddressesOffsetBytes, 0, sizeof(long));
+
+            var keyIndexOffsetBytes = new byte[sizeof(long)];
+
+            stream.Read(keyIndexOffsetBytes, 0, sizeof(long));
+
+            var keyIndexSizeBytes = new byte[sizeof(int)];
+
+            stream.Read(keyIndexSizeBytes, 0, sizeof(int));
+
+            var lenBytes = new byte[sizeof(long)];
+
+            stream.Read(lenBytes, 0, sizeof(long));
+
+            var pkFnLenBytes = new byte[sizeof(int)];
+
+            stream.Read(pkFnLenBytes, 0, sizeof(int));
+
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(pkFnLenBytes);
+            }
+
+            var pkFnLen = BitConverter.ToInt32(pkFnLenBytes, 0);
+
+            var pkFieldNameBytes = new byte[pkFnLen];
+
+            if (pkFnLen > 0)
+                stream.Read(pkFieldNameBytes, 0, pkFieldNameBytes.Length);
+
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(versionBytes);
+                Array.Reverse(docCountBytes);
+                Array.Reverse(compression);
+                Array.Reverse(postingsOffsetBytes);
+                Array.Reverse(docHashOffsetBytes);
+                Array.Reverse(docAddressesOffsetBytes);
+                Array.Reverse(pkFieldNameBytes);
+                Array.Reverse(keyIndexOffsetBytes);
+                Array.Reverse(keyIndexSizeBytes);
+                Array.Reverse(lenBytes);
+            }
+
+            var postingsOffset = BitConverter.ToInt64(postingsOffsetBytes, 0);
+            var docHashOffset = BitConverter.ToInt64(docHashOffsetBytes, 0);
+            var docAddressesOffset = BitConverter.ToInt64(docAddressesOffsetBytes, 0);
+            var keyIndexOffset = BitConverter.ToInt64(keyIndexOffsetBytes, 0);
+            var keyIndexSize = BitConverter.ToInt32(keyIndexSizeBytes, 0);
+
+            return new FullTextSegmentInfo
+            {
+                VersionId = BitConverter.ToInt64(versionBytes, 0),
+                DocumentCount = BitConverter.ToInt32(docCountBytes, 0),
+                Compression = (Compression)BitConverter.ToInt32(compression, 0),
+                PrimaryKeyFieldName = Encoding.GetString(pkFieldNameBytes),
+                PostingsOffset = postingsOffset,
+                DocHashOffset = docHashOffset,
+                DocAddressesOffset = docAddressesOffset,
+                FieldOffsets = fieldOffsets,
+                KeyIndexOffset = keyIndexOffset,
+                KeyIndexSize = keyIndexSize,
+                Length = BitConverter.ToInt64(lenBytes, 0),
+                WordPositions = true
+            };
         }
 
         public static IList<DocumentPosting> DeserializePostings(Stream stream, int size)

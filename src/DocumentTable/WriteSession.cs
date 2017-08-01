@@ -14,11 +14,11 @@ namespace DocumentTable
         private readonly string _keyIndexFileName;
         private readonly Stream _dataFile;
         private bool _flushed;
-        private readonly BatchInfo _ix;
+        protected readonly SegmentInfo _ix;
         private readonly long _startPosition;
-        private readonly string _directory;
+        protected readonly string _directory;
 
-        public WriteSession(string directory, BatchInfo ix, Stream dataFile)
+        public WriteSession(string directory, SegmentInfo ix, Stream dataFile)
         {
             var docFileName = Path.Combine(directory, ix.VersionId + ".dtbl");
             var docAddressFn = Path.Combine(directory, ix.VersionId + ".da");
@@ -95,9 +95,14 @@ namespace DocumentTable
 
             _ix.Length = _dataFile.Position-_startPosition;
 
-            _ix.Serialize(Path.Combine(_directory, _ix.VersionId + ".ix"));
+            SaveSegmentInfo(_ix);
 
             _flushed = true;
+        }
+
+        protected virtual void SaveSegmentInfo(SegmentInfo ix)
+        {
+            ix.Serialize(Path.Combine(_directory, _ix.VersionId + ".ix"));
         }
 
         public void Dispose()

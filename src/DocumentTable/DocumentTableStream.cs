@@ -11,12 +11,12 @@ namespace DocumentTable
         private readonly DocHashReader _hashReader;
         private readonly DocumentAddressReader _addressReader;
         private readonly DocumentReader _documentReader;
-        private readonly BatchInfo _ix;
+        private readonly SegmentInfo _ix;
         private readonly int _take;
         private readonly int _skip;
         private readonly Stream _dataFile;
 
-        public DocumentTableStream(Stream stream, BatchInfo ix, int skip = 0, int take = int.MaxValue) 
+        public DocumentTableStream(Stream stream, SegmentInfo ix, int skip = 0, int take = int.MaxValue) 
             : base(ix.PrimaryKeyFieldName)
         {
             _dataFile = stream;

@@ -10,12 +10,12 @@ namespace Resin
     {
         private readonly string _directory;
         private readonly IEnumerable<string> _pks;
-        private readonly List<BatchInfo> _ixs;
+        private readonly List<SegmentInfo> _ixs;
 
         public DeleteByPrimaryKeyCommand(string directory, IEnumerable<string> primaryKeyValues)
         {
             _directory = directory;
-            _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(BatchInfo.Load).ToList();
+            _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(SegmentInfo.Load).ToList();
             _pks = primaryKeyValues;
         }
 

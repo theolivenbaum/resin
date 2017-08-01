@@ -5,9 +5,9 @@ namespace DocumentTable
     public class WriteSessionFactory : IWriteSessionFactory
     {
         private readonly string _directory;
-        private readonly BatchInfo _ix;
+        private readonly SegmentInfo _ix;
 
-        public WriteSessionFactory(string directory, BatchInfo ix)
+        public WriteSessionFactory(string directory, SegmentInfo ix)
         {
             _ix = ix;
             _directory = directory;

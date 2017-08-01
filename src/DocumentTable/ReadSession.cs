@@ -14,11 +14,11 @@ namespace DocumentTable
         private readonly int _blockSize;
         private readonly Stream _stream;
 
-        public BatchInfo Version { get; set; }
+        public SegmentInfo Version { get; set; }
         public Stream Stream { get { return _stream; } }
 
         public ReadSession(
-            BatchInfo version, 
+            SegmentInfo version, 
             DocHashReader docHashReader, 
             DocumentAddressReader addressReader, 
             Stream stream)

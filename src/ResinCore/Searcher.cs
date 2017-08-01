@@ -26,12 +26,12 @@ namespace Resin
         private readonly IReadSessionFactory _sessionFactory;
 
         public Searcher(string directory)
-            :this(directory, new QueryParser(new Analyzer()), new TfIdfFactory(), new ReadSessionFactory(directory))
+            :this(directory, new QueryParser(new Analyzer()), new TfIdfFactory(), new FullTextReadSessionFactory(directory))
         {
         }
 
         public Searcher(string directory, long version)
-            : this(directory, version, new QueryParser(new Analyzer()), new TfIdfFactory(), new ReadSessionFactory(directory))
+            : this(directory, version, new QueryParser(new Analyzer()), new TfIdfFactory(), new FullTextReadSessionFactory(directory))
         {
         }
 
@@ -43,7 +43,7 @@ namespace Resin
             _versions = Util.GetIndexFileNamesInChronologicalOrder(directory)
                 .Select(f => long.Parse(Path.GetFileNameWithoutExtension(f))).ToArray();
             _blockSize = BlockSerializer.SizeOfBlock();
-            _sessionFactory = sessionFactory ?? new ReadSessionFactory(directory);
+            _sessionFactory = sessionFactory ?? new FullTextReadSessionFactory(directory);
         }
 
         public Searcher(string directory, long version, QueryParser parser, IScoringSchemeFactory scorerFactory, IReadSessionFactory sessionFactory = null)
@@ -53,7 +53,7 @@ namespace Resin
             _scorerFactory = scorerFactory;
             _versions = new[] { version};
             _blockSize = BlockSerializer.SizeOfBlock();
-            _sessionFactory = sessionFactory ?? new ReadSessionFactory(directory);
+            _sessionFactory = sessionFactory ?? new FullTextReadSessionFactory(directory);
         }
 
         public ScoredResult Search(IList<QueryContext> query, int page = 0, int size = 10000)

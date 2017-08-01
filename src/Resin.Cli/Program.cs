@@ -298,7 +298,7 @@ namespace Resin.Cli
             var dataFileName = args[Array.IndexOf(args, "--file") + 1];
             var ixFileName = Directory.GetFiles(Path.GetDirectoryName(dataFileName), "*.ix")
                 .OrderBy(s => s).First();
-            var ix = BatchInfo.Load(ixFileName);
+            var ix = SegmentInfo.Load(ixFileName);
 
             Console.WriteLine("rewriting...");
 
@@ -328,7 +328,7 @@ namespace Resin.Cli
 
             var dir = Path.GetDirectoryName(sourceFileName);
             var version = Path.GetFileNameWithoutExtension(sourceFileName);
-            var ix = BatchInfo.Load(Path.Combine(dir, version + ".ix"));
+            var ix = SegmentInfo.Load(Path.Combine(dir, version + ".ix"));
 
             Console.WriteLine("migrating...");
 

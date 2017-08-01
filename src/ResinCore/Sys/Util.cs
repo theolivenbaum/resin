@@ -60,11 +60,11 @@ namespace Resin.Sys
         public static int GetDocumentCount(string directory)
         {
             return GetIndexFileNamesInChronologicalOrder(directory)
-                .Select(BatchInfo.Load)
+                .Select(SegmentInfo.Load)
                 .Sum(x=>x.DocumentCount);   
         }
 
-        public static int GetDocumentCount(IEnumerable<BatchInfo> ixs)
+        public static int GetDocumentCount(IEnumerable<SegmentInfo> ixs)
         {
             return ixs.Sum(x => x.DocumentCount);
         }

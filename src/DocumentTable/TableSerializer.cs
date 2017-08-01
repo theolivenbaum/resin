@@ -189,7 +189,7 @@ namespace DocumentTable
             }
         }
 
-        public static BatchInfo DeserializeBatchInfo(Stream stream)
+        public static SegmentInfo DeserializeSegmentInfo(Stream stream)
         {
             var fieldCountBytes = new byte[sizeof(int)];
 
@@ -271,7 +271,7 @@ namespace DocumentTable
             var keyIndexOffset = BitConverter.ToInt64(keyIndexOffsetBytes, 0);
             var keyIndexSize = BitConverter.ToInt32(keyIndexSizeBytes, 0);
 
-            return new BatchInfo
+            return new SegmentInfo
             {
                 VersionId = BitConverter.ToInt64(versionBytes, 0),
                 DocumentCount = BitConverter.ToInt32(docCountBytes, 0),
@@ -454,7 +454,7 @@ namespace DocumentTable
             }
         }
 
-        public static void Serialize(this BatchInfo ix, string fileName)
+        public static void Serialize(this SegmentInfo ix, string fileName)
         {
             using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4, FileOptions.WriteThrough))
             {
@@ -462,14 +462,14 @@ namespace DocumentTable
             }
         }
 
-        public static void Serialize(this BatchInfo ix, Stream stream)
+        public static void Serialize(this SegmentInfo ix, Stream stream)
         {
             var bytes = ix.Serialize();
 
             stream.Write(bytes, 0, bytes.Length);
         }
 
-        public static byte[] Serialize(this BatchInfo ix)
+        public static byte[] Serialize(this SegmentInfo ix)
         {
             using (var stream = new MemoryStream())
             {

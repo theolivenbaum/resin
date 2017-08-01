@@ -20,11 +20,12 @@ namespace Resin
         private readonly DocumentStream _documents;
         private readonly IWriteSession _writeSession;
         private int _count;
-        private bool _committed;
+        private bool _flushed;
         private readonly PostingsWriter _postingsWriter;
-        private readonly BatchInfo _ix;
+        private readonly FullTextSegmentInfo _ix;
         private readonly Stream _compoundFile;
         private readonly Stream _lockFile;
+        private readonly bool _wordPositions;
 
         public UpsertTransaction(
             string directory, 
@@ -33,6 +34,8 @@ namespace Resin
             DocumentStream documents, 
             IWriteSessionFactory storeWriterFactory = null)
         {
+            _wordPositions = true; // TODO: implement writing without storing word positions
+
             long version = Util.GetNextChronologicalFileId();
 
             Log.InfoFormat("begin writing {0}", version);
@@ -82,17 +85,18 @@ namespace Resin
             _analyzer = analyzer;
             _documents = documents;
 
-            _ix = new BatchInfo
+            _ix = new FullTextSegmentInfo
             {
                 VersionId = version,
                 Compression = compression,
-                PrimaryKeyFieldName = documents.PrimaryKeyFieldName
+                PrimaryKeyFieldName = documents.PrimaryKeyFieldName,
+                WordPositions = _wordPositions
             };
 
             var posFileName = Path.Combine(
                 _directory, string.Format("{0}.{1}", _ix.VersionId, "pos"));
 
-            var factory = storeWriterFactory ?? new WriteSessionFactory(directory, _ix);
+            var factory = storeWriterFactory ?? new FullTextWriteSessionFactory(directory, _ix);
 
             _writeSession = factory.OpenWriteSession(_compoundFile);
 
@@ -126,7 +130,7 @@ namespace Resin
 
         public long Write()
         {
-            if (_committed) return _ix.VersionId;
+            if (_flushed) return _ix.VersionId;
 
             var trieBuilder = new TrieBuilder();
             var docTimer = Stopwatch.StartNew();
@@ -172,6 +176,7 @@ namespace Resin
 
             Log.InfoFormat("serialized trees in {0}", treeTimer.Elapsed);
 
+            _ix.WordPositions = _wordPositions;
             _ix.PostingsOffset = _compoundFile.Position;
             _postingsWriter.Stream.Flush();
             _postingsWriter.Stream.Position = 0;
@@ -187,9 +192,9 @@ namespace Resin
             return _documents.ReadSource();
         }
 
-        public void Commit()
+        public void Flush()
         {
-            if (_committed) return;
+            if (_flushed) return;
 
             _postingsWriter.Dispose();
 
@@ -197,12 +202,12 @@ namespace Resin
             _writeSession.Dispose();
             _compoundFile.Dispose();
 
-            _committed = true;
+            _flushed = true;
         }
 
         public void Dispose()
         {
-            if (!_committed) Commit();
+            if (!_flushed) Flush();
 
             if (_lockFile != null)
             {

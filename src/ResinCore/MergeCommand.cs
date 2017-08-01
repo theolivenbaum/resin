@@ -79,7 +79,7 @@ namespace Resin
             {
                 // truncate segments
 
-                var ix = BatchInfo.Load(_ixFilesToProcess[0]);
+                var ix = SegmentInfo.Load(_ixFilesToProcess[0]);
 
                 if (Util.IsSegmented(_ixFilesToProcess[0]))
                 {
@@ -108,7 +108,7 @@ namespace Resin
         {
             Log.InfoFormat("truncating {0}", srcIxFileName);
 
-            var srcIx = BatchInfo.Load(srcIxFileName);
+            var srcIx = SegmentInfo.Load(srcIxFileName);
             var srcDataFileName = Path.Combine(_directory, srcIx.VersionId + ".rdb");
             long version;
 
@@ -122,7 +122,7 @@ namespace Resin
                     documentStream))
                 {
                     version = upsert.Write();
-                    upsert.Commit();
+                    upsert.Flush();
                 }
 
                 Log.InfoFormat("truncated ix {0}", version);
@@ -135,8 +135,8 @@ namespace Resin
         {
             Log.InfoFormat("merging branch {0} with trunk {1}", srcIxFileName, targetIxFileName);
 
-            var srcIx = BatchInfo.Load(srcIxFileName);
-            var targetIx = BatchInfo.Load(targetIxFileName);
+            var srcIx = SegmentInfo.Load(srcIxFileName);
+            var targetIx = SegmentInfo.Load(targetIxFileName);
             var srcDataFileName = Path.Combine(_directory, srcIx.VersionId + ".rdb");
             var targetDataFileName = Path.Combine(_directory, targetIx.VersionId + ".rdb");
 

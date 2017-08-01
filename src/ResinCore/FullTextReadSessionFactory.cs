@@ -1,15 +1,16 @@
-﻿using System;
+﻿using DocumentTable;
+using System;
 using System.IO;
 using System.Linq;
 
-namespace DocumentTable
+namespace Resin
 {
-    public class ReadSessionFactory : IReadSessionFactory, IDisposable
+    public class FullTextReadSessionFactory : IReadSessionFactory, IDisposable
     {
         private readonly string _directory;
         private readonly FileStream _compoundFile;
 
-        public ReadSessionFactory(string directory)
+        public FullTextReadSessionFactory(string directory)
         {
             _directory = directory;
 
@@ -28,7 +29,7 @@ namespace DocumentTable
 
         public IReadSession OpenReadSession(long version)
         {
-            var ix = SegmentInfo.Load(Path.Combine(_directory, version + ".ix"));
+            var ix = FullTextSegmentInfo.Load(Path.Combine(_directory, version + ".ix"));
            
             return new ReadSession(
                 ix,

@@ -56,7 +56,7 @@ namespace Resin
             }
             else if (ctx.Query is PhraseQuery)
             {
-                if (_readSession.Version.WordPositions)
+                if (((FullTextSegmentInfo)(_readSession.Version)).WordPositions)
                 {
                     new CBOWSearch(_readSession, _scorerFactory, _postingsReader)
                         .Search(ctx, ((PhraseQuery)ctx.Query).Values);

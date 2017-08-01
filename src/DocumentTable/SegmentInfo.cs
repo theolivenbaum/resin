@@ -6,9 +6,9 @@ using System.Collections.Generic;
 namespace DocumentTable
 {
     [DebuggerDisplay("{VersionId}")]
-    public class BatchInfo
+    public class SegmentInfo
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof (BatchInfo));
+        protected static readonly ILog Log = LogManager.GetLogger(typeof (SegmentInfo));
 
         public long VersionId { get; set; }
 
@@ -32,18 +32,16 @@ namespace DocumentTable
 
         public long Length { get; set; }
 
-        public bool WordPositions { get; set; }
-
-        public static BatchInfo Load(string fileName)
+        public static SegmentInfo Load(string fileName)
         {
             var time = new Stopwatch();
             time.Start();
 
-            BatchInfo ix;
+            SegmentInfo ix;
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                ix = TableSerializer.DeserializeBatchInfo(fs);
+                ix = TableSerializer.DeserializeSegmentInfo(fs);
             }
 
             Log.DebugFormat("loaded ix in {0}", time.Elapsed);
