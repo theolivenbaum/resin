@@ -51,26 +51,43 @@ namespace Resin.IO
 
         public IEnumerable<LcrsTrie> EndOfWordNodes()
         {
-            if (EndOfWord)
-            {
-                yield return this;
-            }
+            var list = new List<LcrsTrie>();
+            var node = this;
+            var queue = new Queue<LcrsTrie>();
 
-            if (LeftChild != null)
+            while (node != null)
             {
-                foreach (var node in LeftChild.EndOfWordNodes())
+                if (node.EndOfWord)
                 {
-                    yield return node;
+                    list.Add(node);
+                }
+
+                if (node.LeftChild == null)
+                {
+                    if (node.RightSibling != null)
+                    {
+                        queue.Enqueue(node.RightSibling);
+                    }
+                }
+                else 
+                {
+                    if (node.RightSibling != null)
+                    {
+                        queue.Enqueue(node.RightSibling);
+                    }
+                    node = node.LeftChild;
+                    continue;
+                }
+                if (queue.Count > 0)
+                {
+                    node = queue.Dequeue();
+                }
+                else
+                {
+                    node = null; 
                 }
             }
-
-            if (RightSibling != null)
-            {
-                foreach (var node in RightSibling.EndOfWordNodes())
-                {
-                    yield return node;
-                }
-            }
+            return list;
         }
 
         public IEnumerable<LcrsTrie> AllNodesDepthFirst()

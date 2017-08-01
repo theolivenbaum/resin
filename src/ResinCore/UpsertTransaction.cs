@@ -151,7 +151,8 @@ namespace Resin
 
             foreach (var trie in tries)
             {
-                foreach (var node in trie.Value.EndOfWordNodes())
+                var nodes = trie.Value.EndOfWordNodes();
+                foreach (var node in nodes)
                 {
                     node.PostingsAddress = _postingsWriter.Write(node.PostingsStream);
                 }
