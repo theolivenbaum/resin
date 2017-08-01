@@ -151,10 +151,9 @@ namespace Resin
 
             foreach (var trie in tries)
             {
-                // decode into a list of words and set postings address
                 foreach (var node in trie.Value.EndOfWordNodes())
                 {
-                    node.PostingsAddress = _postingsWriter.Write(node.Postings);
+                    node.PostingsAddress = _postingsWriter.Write(node.PostingsStream);
                 }
 
                 if (Log.IsDebugEnabled)
@@ -195,8 +194,6 @@ namespace Resin
         public void Flush()
         {
             if (_flushed) return;
-
-            _postingsWriter.Dispose();
 
             _writeSession.Flush();
             _writeSession.Dispose();

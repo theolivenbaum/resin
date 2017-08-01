@@ -1,17 +1,26 @@
 ﻿using StreamIndex;
-using System.Collections.Generic;
+using System;
 using System.IO;
 
 namespace Resin.IO
 {
-    public class PostingsWriter : BlockWriter<List<DocumentPosting>>
+    public class PostingsWriter
     {
-        public PostingsWriter(Stream stream) : base(stream)
+        public Stream Stream { get; private set; }
+
+        public PostingsWriter(Stream stream)
         {
+            Stream = stream;
         }
-        protected override int Serialize(List<DocumentPosting> block, Stream stream)
+
+        public BlockInfo Write(Stream postings)
         {
-            return block.Serialize(stream);
+            postings.Position = 0;
+            var pos = Stream.Position;
+            postings.CopyTo(Stream);
+            int size = Convert.ToInt32(Stream.Position - pos);
+            postings.Dispose();
+            return new BlockInfo(pos, size);
         }
     }
 }

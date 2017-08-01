@@ -17,11 +17,6 @@ namespace DocumentTable
             return sizeof(UInt64) + sizeof(byte);
         }
 
-        public static int SizeOfPosting()
-        {
-            return 2 * sizeof(int);
-        }
-
         public static IDictionary<short, string> ReadKeyIndex(Stream stream, int size)
         {
             var keys = DeserializeStringList(stream, size);

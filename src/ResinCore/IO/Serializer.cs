@@ -17,6 +17,11 @@ namespace Resin.IO
         private static readonly Dictionary<bool, byte> EncodedBoolean = new Dictionary<bool, byte> { { true, 1 }, { false, 0 } };
         public static char SegmentDelimiter = (char)23;
 
+        public static int SizeOfPosting()
+        {
+            return 2 * sizeof(int);
+        }
+
         public static int SizeOfNode()
         {
             return sizeof(char) + 3 * sizeof(byte) + 1 * sizeof(int) + 1 * sizeof(short);

@@ -6,7 +6,7 @@ using Resin.Analysis;
 using Resin.Sys;
 using System.Text;
 using StreamIndex;
-using DocumentTable;
+using System.IO;
 
 namespace Resin.IO
 {
@@ -16,9 +16,9 @@ namespace Resin.IO
         public LcrsTrie RightSibling { get; set; }
         public LcrsTrie LeftChild { get; set; }
         public BlockInfo PostingsAddress { get; set; }
-        public List<DocumentPosting> Postings { get; set; }
         public char Value { get; private set; }
         public bool EndOfWord { get; private set; }
+        public Stream PostingsStream { get; set; }
 
         public int Weight
         {
@@ -38,20 +38,6 @@ namespace Resin.IO
         {
             Value = value;
             EndOfWord = endOfWord;
-        }
-
-        public void Merge(LcrsTrie other)
-        {
-            var words = new List<Word>();
-
-            other.LeftChild.DepthFirst(string.Empty, new List<char>(), words);
-
-            var nodes = other.LeftChild.EndOfWordNodes().ToArray();
-
-            for (int index = 0;index < nodes.Length; index++)
-            {
-                Add(words[index].Value, 0, nodes[index].Postings.ToArray());
-            }
         }
 
         public IEnumerable<Word> Words()
@@ -166,14 +152,16 @@ namespace Resin.IO
             {
                 node.EndOfWord = true;
 
-                if (node.Postings == null)
+                if (node.PostingsStream == null)
                 {
-                    node.Postings = new List<DocumentPosting>();
+                    node.PostingsStream = new FileStream(
+                        Path.Combine(Path.GetTempFileName()),
+                        FileMode.Create, FileAccess.ReadWrite, 
+                        FileShare.None, 4069, FileOptions.DeleteOnClose);
                 }
-                foreach (var posting in postings)
-                {
-                    node.Postings.Add(posting);
-                }
+
+                postings.Serialize(node.PostingsStream);
+
             }
             else
             {
@@ -247,7 +235,7 @@ namespace Resin.IO
                 if (node.EndOfWord)
                 {
                     words.Add(new Word(
-                        word, node.PostingsAddress, node.Postings));
+                        word, node.PostingsAddress));
                 }
             }
 
@@ -379,7 +367,7 @@ namespace Resin.IO
                 if ((surpassedLbound && word != lbound) || word != ubound)
                 {
                     
-                    words.Add(new Word(word, PostingsAddress, Postings));
+                    words.Add(new Word(word, PostingsAddress));
                 }
             }
 

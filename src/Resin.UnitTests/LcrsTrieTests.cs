@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using Resin.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using DocumentTable;
 using Resin;
 
 namespace Tests
@@ -9,29 +8,6 @@ namespace Tests
     [TestClass]
     public class LcrsTrieTests
     {
-        [TestMethod]
-        public void Can_merge_tries()
-        {
-            var one = new LcrsTrie('\0', false);
-            one.Add("ape");
-            one.Add("app");
-            one.Add("bananas");
-
-            var two = new LcrsTrie('\0', false);
-            two.Add("apple");
-            two.Add("banana");
-            two.Add("citron");
-
-            one.Merge(two);
-            
-            Assert.IsTrue(one.IsWord("ape").Any());
-            Assert.IsTrue(one.IsWord("app").Any());
-            Assert.IsTrue(one.IsWord("apple").Any());
-            Assert.IsTrue(one.IsWord("banana").Any());
-            Assert.IsTrue(one.IsWord("bananas").Any());
-            Assert.IsTrue(one.IsWord("citron").Any());
-        }
-
         [TestMethod]
         public void Can_get_weight()
         {
