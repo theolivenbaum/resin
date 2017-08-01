@@ -5,6 +5,7 @@ namespace DocumentTable
 {
     public static class Deflator
     {
+        //TODO: write directly to output stream
         public static byte[] Compress(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return new byte[0];
