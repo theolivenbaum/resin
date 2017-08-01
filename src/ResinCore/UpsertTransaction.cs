@@ -143,7 +143,7 @@ namespace Resin
                 upsert.Write(doc);
             }
 
-            Log.InfoFormat("stored {0} documents in {1}", _count, docTimer.Elapsed);
+            Log.InfoFormat("stored and analyzed {0} documents in {1}", _count, docTimer.Elapsed);
 
             var posTimer = Stopwatch.StartNew(); 
             
@@ -167,7 +167,7 @@ namespace Resin
             }
 
             Log.InfoFormat(
-                "stored postings refs in trees in {0}", 
+                "stored postings list references in in {0}", 
                 posTimer.Elapsed);
 
             var treeTimer = Stopwatch.StartNew();
