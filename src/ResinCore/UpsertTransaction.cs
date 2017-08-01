@@ -132,7 +132,7 @@ namespace Resin
         {
             if (_flushed) return _ix.VersionId;
 
-            var trieBuilder = new TrieBuilder();
+            var trieBuilder = new TreeBuilder();
             var docTimer = Stopwatch.StartNew();
             var upsert = new DocumentUpsertCommand(_writeSession, _analyzer, trieBuilder);
 
@@ -147,7 +147,7 @@ namespace Resin
 
             var posTimer = Stopwatch.StartNew(); 
             
-            var tries = trieBuilder.GetTries();
+            var tries = trieBuilder.GetTrees();
 
             foreach (var trie in tries)
             {

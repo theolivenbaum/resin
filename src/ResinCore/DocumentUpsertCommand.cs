@@ -8,9 +8,9 @@ namespace Resin
     {
         private readonly IWriteSession _writeSession;
         private readonly IAnalyzer _analyzer;
-        private readonly TrieBuilder _treeBuilder;
+        private readonly TreeBuilder _treeBuilder;
 
-        public DocumentUpsertCommand(IWriteSession writeSession, IAnalyzer analyzer, TrieBuilder treeBuilder)
+        public DocumentUpsertCommand(IWriteSession writeSession, IAnalyzer analyzer, TreeBuilder treeBuilder)
         {
             _writeSession = writeSession;
             _analyzer = analyzer;
