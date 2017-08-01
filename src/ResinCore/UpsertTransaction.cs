@@ -156,13 +156,13 @@ namespace Resin
                     node.PostingsAddress = _postingsWriter.Write(node.PostingsStream);
                 }
 
-                if (Log.IsDebugEnabled)
-                {
-                    foreach (var word in trie.Value.Words())
-                    {
-                        Log.DebugFormat("{0}\t{1}", word.Value, word.Postings.Count);
-                    }
-                }
+                //if (Log.IsDebugEnabled)
+                //{
+                //    foreach (var word in trie.Value.Words())
+                //    {
+                //        Log.Debug(word.Value);
+                //    }
+                //}
             }
 
             Log.InfoFormat(

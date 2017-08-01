@@ -8,20 +8,17 @@ namespace Resin
     {
         public readonly string Value;
         public readonly BlockInfo? PostingsAddress;
-        public readonly IList<DocumentPosting> Postings;
 
         public Word(string value)
         {
             Value = value;
             PostingsAddress = null;
-            Postings = null;
         }
 
-        public Word(string value, BlockInfo? postingsAddress, IList<DocumentPosting> postings = null)
+        public Word(string value, BlockInfo? postingsAddress)
         {
             Value = value;
             PostingsAddress = postingsAddress;
-            Postings = postings;
         }
 
         public static Word MinValue { get { return new Word(string.Empty);} }

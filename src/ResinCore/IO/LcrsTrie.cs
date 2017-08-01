@@ -157,7 +157,7 @@ namespace Resin.IO
                     node.PostingsStream = new FileStream(
                         Path.Combine(Path.GetTempFileName()),
                         FileMode.Create, FileAccess.ReadWrite, 
-                        FileShare.None, 4069, FileOptions.DeleteOnClose);
+                        FileShare.None, 4096*100, FileOptions.DeleteOnClose);
                 }
 
                 postings.Serialize(node.PostingsStream);
