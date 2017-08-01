@@ -32,6 +32,8 @@ namespace DocumentTable
 
         public long Length { get; set; }
 
+        public bool WordPositions { get; set; }
+
         public static BatchInfo Load(string fileName)
         {
             var time = new Stopwatch();

@@ -23,6 +23,8 @@ namespace Resin.Cli
         // rewrite --file c:\temp\resin_data\636326999602241674.rdoc --dir c:\temp\resin_data\pg --pk "url"
         // export --source-file c:\temp\resin_data\636326999602241674.rdoc --target-file c:\temp\636326999602241674.rdoc.json
 
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Program));
+
         static void Main(string[] args)
         {
             var assembly = Assembly.GetEntryAssembly();
@@ -135,7 +137,9 @@ namespace Resin.Cli
         static void Query(string[] args)
         {
             string dir = null;
+            bool log = false;
 
+            if (Array.IndexOf(args, "--log") > 0) log = true;
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
 
             var q = args[Array.IndexOf(args, "-q") + 1];
@@ -156,17 +160,24 @@ namespace Resin.Cli
 
                 timer.Stop();
 
-                var docs = result.Docs;
-
-                if (docs.Any())
+                if (result.Docs.Any())
                 {
-                    foreach (var doc in docs)
+                    foreach (var doc in result.Docs)
                     {
                         Print(doc);
                     }
+
+                    if (log)
+                    {
+                        foreach (var doc in result.Docs)
+                        {
+                            Log.Debug(doc.ToString());
+                        }
+                    }
                 }
 
-                Console.WriteLine("\r\n{0} results of {1} in {2}", docs.Count + (page * size), result.Total, timer.Elapsed);
+                Console.WriteLine("\r\n{0} results of {1} in {2}", 
+                    result.Docs.Count + (page * size), result.Total, timer.Elapsed);
             }
 
         }

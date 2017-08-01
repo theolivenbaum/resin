@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace DocumentTable
 {
@@ -29,6 +30,16 @@ namespace DocumentTable
         public IDictionary<short, Field> ToTableRow(IDictionary<string, short> keyIndex)
         {
             return Fields.Values.ToDictionary(field=> keyIndex[field.Key], y => y);
+        }
+
+        public override string ToString()
+        {
+            var output = new StringBuilder();
+            foreach(var field in Fields.Values)
+            {
+                output.AppendLine(field.ToString());
+            }
+            return output.ToString();
         }
     }
 }

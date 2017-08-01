@@ -45,5 +45,10 @@ namespace DocumentTable
                 _value = obj.ToString().PadLeft(19, '0');
             }
         }
+
+        public override string ToString()
+        {
+            return string.Format("{0}:{1}", Key, Value);
+        }
     }
 }

@@ -14,5 +14,10 @@ namespace Resin
             Document = document;
             Score = score;
         }
+
+        public override string ToString()
+        {
+            return Document.ToString();
+        }
     }
 }
