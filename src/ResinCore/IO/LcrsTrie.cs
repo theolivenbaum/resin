@@ -154,10 +154,12 @@ namespace Resin.IO
 
                 if (node.PostingsStream == null)
                 {
-                    node.PostingsStream = new FileStream(
-                        Path.Combine(Path.GetTempFileName()),
-                        FileMode.Create, FileAccess.ReadWrite, 
-                        FileShare.None, 4096*100, FileOptions.DeleteOnClose);
+                    //node.PostingsStream = new FileStream(
+                    //    Path.Combine(Path.GetTempFileName()),
+                    //    FileMode.Create, FileAccess.ReadWrite, 
+                    //    FileShare.None, 4096*100, FileOptions.DeleteOnClose);
+
+                    node.PostingsStream = new MemoryStream();
                 }
 
                 postings.Serialize(node.PostingsStream);
