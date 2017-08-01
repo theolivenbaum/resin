@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DocumentTable\DocumentTable.csproj" />
+    <ProjectReference Include="..\DocumentTable\Resin.Document.csproj" />
   </ItemGroup>
 
 </Project>

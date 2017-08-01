@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ResinCore\ResinDB.csproj" />
+    <ProjectReference Include="..\ResinCore\Resin.Search.csproj" />
   </ItemGroup>
 
   <ItemGroup>
