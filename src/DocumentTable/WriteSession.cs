@@ -6,7 +6,7 @@ namespace DocumentTable
 {
     public class WriteSession : IWriteSession
     {
-        private readonly DocumentAddressWriter _addressWriter;
+        private readonly BlockInfoWriter _addressWriter;
         private readonly DocumentWriter _docWriter;
         private readonly Stream _docHashesStream;
         private readonly IDictionary<string, short> _keyIndex;
@@ -28,7 +28,7 @@ namespace DocumentTable
             _startPosition = dataFile.Position;
             _keyIndexFileName = Path.Combine(directory, ix.VersionId + ".kix");
             _ix = ix;
-            _addressWriter = new DocumentAddressWriter(
+            _addressWriter = new BlockInfoWriter(
                     new FileStream(docAddressFn, FileMode.CreateNew, FileAccess.ReadWrite,
                     FileShare.None, 4096, FileOptions.DeleteOnClose));
 

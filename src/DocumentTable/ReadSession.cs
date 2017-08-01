@@ -10,7 +10,7 @@ namespace DocumentTable
         private static readonly ILog Log = LogManager.GetLogger(typeof(ReadSession));
 
         private readonly DocHashReader _docHashReader;
-        private readonly DocumentAddressReader _addressReader;
+        private readonly BlockInfoReader _addressReader;
         private readonly int _blockSize;
         private readonly Stream _stream;
 
@@ -20,7 +20,7 @@ namespace DocumentTable
         public ReadSession(
             SegmentInfo version, 
             DocHashReader docHashReader, 
-            DocumentAddressReader addressReader, 
+            BlockInfoReader addressReader, 
             Stream stream)
         {
             Version = version;

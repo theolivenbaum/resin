@@ -1,4 +1,5 @@
 ﻿using DocumentTable;
+using StreamIndex;
 using System;
 using System.IO;
 using System.Linq;
@@ -34,7 +35,7 @@ namespace Resin
             return new ReadSession(
                 ix,
                 new DocHashReader(_compoundFile, ix.DocHashOffset),
-                new DocumentAddressReader(_compoundFile, ix.DocAddressesOffset),
+                new BlockInfoReader(_compoundFile, ix.DocAddressesOffset),
                 _compoundFile);
         }
 

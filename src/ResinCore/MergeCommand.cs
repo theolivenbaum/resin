@@ -2,6 +2,7 @@
 using log4net;
 using Resin.Analysis;
 using Resin.Sys;
+using StreamIndex;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,7 +16,7 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(MergeCommand));
 
         private IList<DocHashReader> _hashReader;
-        private IList<DocumentAddressReader> _addressReader;
+        private IList<BlockInfoReader> _addressReader;
         private IList<DocumentReader> _documentReader;
         private readonly string _directory;
         private readonly string[] _ixFilesToProcess;
@@ -33,7 +34,7 @@ namespace Resin
                 .Select(info => info.fileName).Take(2).ToArray();
 
             _hashReader = new List<DocHashReader>();
-            _addressReader = new List<DocumentAddressReader>();
+            _addressReader = new List<BlockInfoReader>();
             _documentReader = new List<DocumentReader>();
             _tmpFiles = new List<string>();
         }

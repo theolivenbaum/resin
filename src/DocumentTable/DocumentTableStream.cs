@@ -9,7 +9,7 @@ namespace DocumentTable
     public class DocumentTableStream : DocumentStream, IDisposable
     {
         private readonly DocHashReader _hashReader;
-        private readonly DocumentAddressReader _addressReader;
+        private readonly BlockInfoReader _addressReader;
         private readonly DocumentReader _documentReader;
         private readonly SegmentInfo _ix;
         private readonly int _take;
@@ -25,7 +25,7 @@ namespace DocumentTable
             var keyIndex = TableSerializer.ReadKeyIndex(_dataFile, _ix.KeyIndexSize);
 
             _hashReader = new DocHashReader(_dataFile, _ix.DocHashOffset, leaveOpen:false);
-            _addressReader = new DocumentAddressReader(_dataFile, _ix.DocAddressesOffset);
+            _addressReader = new BlockInfoReader(_dataFile, _ix.DocAddressesOffset);
             _documentReader = new DocumentReader(_dataFile, _ix.Compression, keyIndex, leaveOpen:false);
 
             _skip = skip;
