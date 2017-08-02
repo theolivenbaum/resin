@@ -36,28 +36,45 @@ namespace Resin.IO
             }
         }
 
-        public static void Serialize(this LcrsTrie trie, Stream treeStream)
+        public static void Serialize(this LcrsTrie trie, Stream stream)
         {
             if (trie.LeftChild != null)
             {
-                trie.LeftChild.SerializeDepthFirst(treeStream, 0);
-                LcrsNode.MinValue.Serialize(treeStream);
+                trie.LeftChild.SerializeDepthFirst(stream);
+                LcrsNode.MinValue.Serialize(stream);
             }
         }
 
-        private static void SerializeDepthFirst(
-            this LcrsTrie trie, Stream treeStream, short depth)
+        private static void SerializeDepthFirst(this LcrsTrie trie, Stream stream)
         {
-            new LcrsNode(trie, depth, trie.Weight, trie.PostingsAddress).Serialize(treeStream);
+            var stack = new Stack<LcrsNode>();
+            var node = new LcrsNode(trie, 0, trie.Weight, trie.PostingsAddress);
 
-            if (trie.LeftChild != null)
+            while (node != null)
             {
-                trie.LeftChild.SerializeDepthFirst(treeStream, (short)(depth + 1));
-            }
+                node.Serialize(stream);
 
-            if (trie.RightSibling != null)
-            {
-                trie.RightSibling.SerializeDepthFirst(treeStream, depth);
+                if (node.Tree.RightSibling != null)
+                {
+                    stack.Push(new LcrsNode(
+                                node.Tree.RightSibling, node.Depth,
+                                node.Tree.RightSibling.Weight, node.Tree.RightSibling.PostingsAddress));
+                }
+
+                if (node.Tree.LeftChild != null)
+                {
+                    node = new LcrsNode(
+                        node.Tree.LeftChild, (short)(node.Depth + 1),
+                        node.Tree.LeftChild.Weight, node.Tree.LeftChild.PostingsAddress);
+                }
+                else if (stack.Count > 0)
+                {
+                    node = stack.Pop();
+                }
+                else
+                {
+                    break;
+                }
             }
         }
 

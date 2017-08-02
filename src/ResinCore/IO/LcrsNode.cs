@@ -14,9 +14,11 @@ namespace Resin.IO
         public readonly short Depth;
         public readonly int Weight;
         public readonly BlockInfo? PostingsAddress;
+        public readonly LcrsTrie Tree;
 
         public LcrsNode(LcrsTrie trie, short depth, int weight, BlockInfo? postingsAddress)
         {
+            Tree = trie;
             Value = trie.Value;
             HaveSibling = trie.RightSibling != null;
             HaveChild = trie.LeftChild != null;
@@ -28,6 +30,7 @@ namespace Resin.IO
 
         public LcrsNode(char value, bool haveSibling, bool haveChild, bool endOfWord, short depth, int weight, BlockInfo? postingsAddress)
         {
+            Tree = null;
             Value = value;
             HaveSibling = haveSibling;
             HaveChild = haveChild;
@@ -53,11 +56,17 @@ namespace Resin.IO
 
         public static bool operator ==(LcrsNode left, LcrsNode right)
         {
+            if (ReferenceEquals(null, left) && !ReferenceEquals(null, right)) return false;
+            if (ReferenceEquals(null, left)) return false;
+            if (ReferenceEquals(null, right)) return false;
             return left.Equals(right);
         }
 
         public static bool operator !=(LcrsNode left, LcrsNode right)
         {
+            if (ReferenceEquals(right, left)) return false;
+            if (ReferenceEquals(null, left)) return true;
+            if (ReferenceEquals(null, right)) return true;
             return !left.Equals(right);
         }
 
@@ -68,6 +77,13 @@ namespace Resin.IO
 
         public bool Equals(LcrsNode other)
         {
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other)) return true;
+
             return Value == other.Value
                 && HaveSibling.Equals(other.HaveSibling) 
                 && HaveChild.Equals(other.HaveChild) 

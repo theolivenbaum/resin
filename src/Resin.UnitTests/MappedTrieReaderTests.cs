@@ -263,20 +263,6 @@ namespace Tests
         }
 
         [TestMethod]
-        public void Can_create_unicode_index()
-        {
-            var offset = BitConverter.GetBytes(long.MaxValue);
-            var size = BitConverter.GetBytes(int.MaxValue);
-
-            using (var fs = new FileStream("Can_create_unicode_index.bin", FileMode.Create))
-            for (int index = 0; index < 1112064; index++)
-            {
-                    fs.Write(offset, 0, offset.Length);
-                    fs.Write(size, 0, size.Length);
-            }
-        }
-
-        [TestMethod]
         public void Can_deserialize_whole_file()
         {
             var dir = CreateDir();
