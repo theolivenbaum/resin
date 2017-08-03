@@ -69,7 +69,7 @@ namespace Resin.Querying
             return scores;
         }
 
-        public IList<IList<DocumentPosting>> ReadPostings(IList<Term> terms)
+        public IList<IList<DocumentPosting>> GetPostingsListVector(IList<Term> terms)
         {
             var time = Stopwatch.StartNew();
 
@@ -87,9 +87,9 @@ namespace Resin.Querying
             return postings;
         }
 
-        protected IList<DocumentPosting> GetPostings(IList<Term> terms)
+        protected IList<DocumentPosting> GetPostingsList(IList<Term> terms)
         {
-            var postings = terms.Count > 0 ? ReadPostings(terms) : null;
+            var postings = terms.Count > 0 ? GetPostingsListVector(terms) : null;
 
             IList<DocumentPosting> reduced;
 
@@ -103,6 +103,11 @@ namespace Resin.Querying
             }
 
             return reduced;
+        }
+
+        protected IList<DocumentPosting> GetPostingsList(Term term)
+        {
+            return PostingsReader.Read(new BlockInfo[] { term.Word.PostingsAddress.Value })[0];
         }
     }
 }

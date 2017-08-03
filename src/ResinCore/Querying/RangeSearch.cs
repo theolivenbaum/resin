@@ -20,7 +20,7 @@ namespace Resin.Querying
                         .ToTerms(ctx.Query.Field);
             }
 
-            var postings = GetPostings(terms);
+            var postings = GetPostingsList(terms);
             ctx.Scores = Score(postings);
         }
     }

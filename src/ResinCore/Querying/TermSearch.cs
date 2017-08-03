@@ -40,7 +40,7 @@ namespace Resin.Querying
                     ctx.Query.Value, string.Join(" ", terms.Select(t => t.Word.Value)));
             }
 
-            var postings = GetPostings(terms);
+            var postings = GetPostingsList(terms);
             ctx.Scores = Score(postings);
         }
     }

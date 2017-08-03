@@ -140,7 +140,7 @@ namespace Resin
 
             for (int i = 1; i < scores.Length; i++)
             {
-                first = DocumentScore.CombineOr(first, scores[i]);
+                first = DocumentScore.CombineAnd(first, scores[i]);
             }
             return first;
         }

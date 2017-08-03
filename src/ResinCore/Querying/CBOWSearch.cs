@@ -11,9 +11,11 @@ namespace Resin.Querying
         public CBOWSearch(IReadSession session, IScoringSchemeFactory scoringFactory, PostingsReader postingsReader)
             : base(session, scoringFactory, postingsReader) { }
 
-        public void Search(QueryContext ctx, IList<string> tokens)
+        public void Search(QueryContext ctx)
         {
-            var postingsMatrix = new List<DocumentPosting>[tokens.Count];
+            var tokens = ((PhraseQuery)ctx.Query).Values;
+
+            var postingsMatrix = new IList<DocumentPosting>[tokens.Count];
 
             for (int index = 0; index < tokens.Count; index++)
             {
@@ -24,29 +26,13 @@ namespace Resin.Querying
 
                 using (var reader = GetTreeReader(ctx.Query.Field))
                 {
-                    if (ctx.Query.Fuzzy)
-                    {
-                        terms = reader.SemanticallyNear(token, ctx.Query.Edits(token))
+                    terms = reader.IsWord(token)
                             .ToTerms(ctx.Query.Field);
-                    }
-                    else if (ctx.Query.Prefix)
-                    {
-                        terms = reader.StartsWith(token)
-                            .ToTerms(ctx.Query.Field);
-                    }
-                    else
-                    {
-                        terms = reader.IsWord(token)
-                            .ToTerms(ctx.Query.Field);
-                    }
                 }
 
-                var postings = terms.Count > 0 ? ReadPostings(terms).Sum() : null;
-                if (postings != null)
-                {
-                    postingsMatrix[index].AddRange(postings);
-                }
+                var postings = GetPostingsList(terms[0]);
 
+                postingsMatrix[index] = postings;
             }
 
             ctx.Scores = Score(postingsMatrix);
@@ -73,48 +59,55 @@ namespace Resin.Querying
             weights[listIndex] = w;
 
             var maxDistance = postings.Length - 1;
-            var first = postings[listIndex];
-            var other = postings[postings.Length - (1 + listIndex)];
-            var otherIndex = 0;
+            var firstList = postings[listIndex];
+            var secondList = postings[postings.Length - (1 + listIndex)];
 
-            for (int i = 0; i < first.Count; i++)
+            DocumentPosting posting1;
+            DocumentPosting posting2;
+            DocHash docHash;
+            int score;
+
+            for (int index = 0; index < firstList.Count; index++)
             {
-                var firstPosting = first[i];
-                var docHash = Session.ReadDocHash(firstPosting.DocumentId);
-                var score = 0;
+                posting1 = firstList[index];
+                docHash = Session.ReadDocHash(posting1.DocumentId);
+                score = 0;
 
                 if (docHash.IsObsolete)
                 {
                     continue;
                 }
 
-                if (otherIndex + 1 <= other.Count)
+                for (int secondIndex = 0; secondIndex < secondList.Count; secondIndex++)
                 {
-                    var otherPosting = other[otherIndex];
-                    var end = other.Count - 1;
-                    while (otherIndex < end)
-                    {
-                        if (otherPosting.DocumentId == firstPosting.DocumentId) break;
+                    posting2 = secondList[secondIndex];
 
-                        otherPosting = other[++otherIndex];
+                    if (posting2.DocumentId < posting1.DocumentId)
+                    {
+                        continue;
                     }
 
-                    if (otherPosting.DocumentId == firstPosting.DocumentId)
+                    if (posting2.DocumentId > posting1.DocumentId)
                     {
-                        var distance = Math.Abs(firstPosting.Position - otherPosting.Position);
-
-                        if (distance <= maxDistance)
-                        {
-                            score = 1;
-                        }
+                        break;
                     }
 
-                    w.Add(
-                        new DocumentScore(
-                            firstPosting.DocumentId, docHash.Hash, score, Session.Version));
+                    var distance = Math.Abs(posting1.Position - posting2.Position);
+
+                    if (distance <= maxDistance)
+                    {
+                        score = 1;
+                    }
                 }
 
+                if (score > 0)
+                {
+                    w.Add(
+                    new DocumentScore(
+                        posting1.DocumentId, docHash.Hash, score, Session.Version));
+                }
             }
+
         }
     }
 }

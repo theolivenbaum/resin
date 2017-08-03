@@ -4,13 +4,15 @@ using System.Collections.Generic;
 
 namespace Resin.Querying
 {
-    public class TermFrequencyPhraseSearch : Search
+    public class BOWSearch : Search
     {
-        public TermFrequencyPhraseSearch(IReadSession session, IScoringSchemeFactory scoringFactory, PostingsReader postingsReader) 
+        public BOWSearch(IReadSession session, IScoringSchemeFactory scoringFactory, PostingsReader postingsReader) 
             : base(session, scoringFactory, postingsReader) { }
 
-        public void Search(QueryContext ctx, IList<string>tokens)
+        public void Search(QueryContext ctx)
         {
+            var tokens = ((PhraseQuery)ctx.Query).Values;
+
             var scoreMatrix = new IList<DocumentScore>[tokens.Count];
 
             for (int index = 0; index < tokens.Count; index++)
@@ -37,7 +39,7 @@ namespace Resin.Querying
                     }
                 }
 
-                var postings = terms.Count > 0 ? ReadPostings(terms).Sum() : null;
+                var postings = terms.Count > 0 ? GetPostingsListVector(terms).Sum() : null;
 
                 if (postings != null)
                 {

@@ -59,12 +59,12 @@ namespace Resin
                 if (((FullTextSegmentInfo)(_readSession.Version)).WordPositions)
                 {
                     new CBOWSearch(_readSession, _scorerFactory, _postingsReader)
-                        .Search(ctx, ((PhraseQuery)ctx.Query).Values);
+                        .Search(ctx);
                 }
                 else
                 {
-                    new TermFrequencyPhraseSearch(_readSession, _scorerFactory, _postingsReader)
-                        .Search(ctx, ((PhraseQuery)ctx.Query).Values);
+                    new BOWSearch(_readSession, _scorerFactory, _postingsReader)
+                        .Search(ctx);
                 }
             }
             else

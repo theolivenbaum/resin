@@ -55,16 +55,16 @@ namespace Tests
         }
 
         [TestMethod]
-        public void Can_collect_near_phrase()
+        public void Can_collect_phrase()
         {
             var dir = CreateDir();
 
             var docs = new List<dynamic>
             {
-                new {_id = "0", title = "rambo first blood" },
+                new {_id = "0", title = "from the sky there was rain and the man was cold" },
                 new {_id = "1", title = "rambo 2" },
                 new {_id = "2", title = "rocky 2" },
-                new {_id = "3", title = "the raid" },
+                new {_id = "3", title = "the raid men" },
                 new {_id = "4", title = "the rain man" },
                 new {_id = "5", title = "the good, the bad and the ugly" }
             }.ToDocuments(primaryKeyFieldName: "_id");
@@ -83,22 +83,10 @@ namespace Tests
                 Assert.AreEqual(1, scores.Count);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
             }
-
-            query = new QueryParser(new Analyzer(), 0.75f).Parse("+title:\"rain man\"~");
-
-            using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
-            {
-                var scores = collector.Collect(query).ToList();
-
-                Assert.AreEqual(2, scores.Count);
-                Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
-                Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
-            }
         }
 
         [TestMethod]
-        public void Can_collect_exact_phrase_joined_by_and()
+        public void Can_collect_exact_terms_joined_by_and()
         {
             var dir = CreateDir();
 
@@ -144,7 +132,7 @@ namespace Tests
         }
 
         [TestMethod]
-        public void Can_collect_exact_phrase_joined_by_or()
+        public void Can_collect_exact_terms_joined_by_or()
         {
             var dir = CreateDir();
 
@@ -200,7 +188,7 @@ namespace Tests
         }
 
         [TestMethod]
-        public void Can_collect_exact_phrase_joined_by_not()
+        public void Can_collect_exact_terms_joined_by_not()
         {
             var dir = CreateDir();
 
