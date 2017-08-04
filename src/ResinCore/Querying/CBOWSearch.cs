@@ -65,10 +65,11 @@ namespace Resin.Querying
 
             var timer = Stopwatch.StartNew();
 
+            var postingsList = postings[0];
+
             for (int index = 0; index < postings.Length; index++)
             {
                 var maxDistance = weights.Length + index;
-                var postingsList = postings[0];
                 var next = index + 1;
 
                 if (next > weights.Length)
@@ -76,43 +77,48 @@ namespace Resin.Querying
                     break;
                 }
 
-                var w = new List<DocumentScore>();
-                weights[index] = w;
+                var scores = Score(postingsList, postings[next], maxDistance);
 
-                var secondList = postings[next];
-
-                DocumentPosting posting;
-                DocHash docHash;
-                float score;
-                int avg = secondList.Count / 4;
-                int leftOver = secondList.Count - (avg * 3);
-
-                for (int postingIndex = 0; postingIndex < postingsList.Count; postingIndex++)
-                {
-                    posting = postingsList[postingIndex];
-
-                    score = ScoreDistanceOfWordsInNDimensions(
-                        posting, secondList, maxDistance);
-
-                    if (score > 0)
-                    {
-                        docHash = Session.ReadDocHash(posting.DocumentId);
-
-                        if (!docHash.IsObsolete)
-                        {
-                            w.Add(
-                                new DocumentScore(
-                                    posting.DocumentId, docHash.Hash, score, Session.Version));
-                        }
-
-                    }
-                    Log.DebugFormat("document ID {0} scored {1}",
-                        posting.DocumentId, score);
-                }
+                weights[index] = scores;
 
                 Log.DebugFormat("produced {0} scores in {1}",
-                    w.Count, timer.Elapsed);
+                    scores.Count, timer.Elapsed);
             }
+        }
+
+        private IList<DocumentScore> Score (
+            IList<DocumentPosting> list1, IList<DocumentPosting> list2, int maxDistance)
+        {
+            var scores = new List<DocumentScore>();
+            DocumentPosting posting;
+            DocHash docHash;
+            float score;
+            int avg = list2.Count / 4;
+            int leftOver = list2.Count - (avg * 3);
+
+            for (int postingIndex = 0; postingIndex < list1.Count; postingIndex++)
+            {
+                posting = list1[postingIndex];
+
+                score = ScoreDistanceOfWordsInNDimensions(
+                    posting, list2, maxDistance);
+
+                if (score > 0)
+                {
+                    docHash = Session.ReadDocHash(posting.DocumentId);
+
+                    if (!docHash.IsObsolete)
+                    {
+                        scores.Add(
+                            new DocumentScore(
+                                posting.DocumentId, docHash.Hash, score, Session.Version));
+                    }
+
+                }
+                Log.DebugFormat("document ID {0} scored {1}",
+                    posting.DocumentId, score);
+            }
+            return scores;
         }
 
         private float ScoreDistanceOfWordsInNDimensions(
