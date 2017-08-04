@@ -9,26 +9,26 @@ namespace Resin.Querying
 {
     public class CBOWSearch : Search
     {
-        private readonly Func<int, int, DocumentPosting, IList<DocumentPosting>, int, float>
-                        _measureAndScoreDistanceOfWordsInNDimensions;
-
         public CBOWSearch(IReadSession session, IScoringSchemeFactory scoringFactory, PostingsReader postingsReader)
             : base(session, scoringFactory, postingsReader)
         {
-            _measureAndScoreDistanceOfWordsInNDimensions = (start, count, p1, list, maxDist) =>
+        }
+
+        private float ScoreDistanceOfWordsInNDimensions (
+            int start, int count, DocumentPosting p1, IList<DocumentPosting> list, int maxDist)
             {
                 float score = 0;
                 var prevDistance = int.MaxValue;
                 var took = 0;
 
-                for (int i = start; i < list.Count; i++)
+                for (int i = start; i<list.Count; i++)
                 {
                     if (took == count) break;
 
                     var p2 = list[i];
                     took++;
 
-                    if (p2.DocumentId < p1.DocumentId)
+                    if (p2.DocumentId<p1.DocumentId)
                     {
                         continue;
                     }
@@ -50,7 +50,7 @@ namespace Resin.Querying
                     }
                     else if (distance > maxDist)
                     {
-                        if (prevDistance < distance)
+                        if (prevDistance<distance)
                         {
                             break;
                         }
@@ -58,8 +58,7 @@ namespace Resin.Querying
                     }
                 }
                 return score;
-            };
-        }
+            }
 
         public void Search(QueryContext ctx)
         {
@@ -141,24 +140,24 @@ namespace Resin.Querying
 
                     if (secondList.Count > 3)
                     {
-                        score = _measureAndScoreDistanceOfWordsInNDimensions(
+                        score = ScoreDistanceOfWordsInNDimensions(
                             avg * 3, leftOver, posting1, secondList, maxDistance);
 
                         if (score == 0)
-                            score = _measureAndScoreDistanceOfWordsInNDimensions(
+                            score = ScoreDistanceOfWordsInNDimensions(
                                 avg * 0, avg, posting1, secondList, maxDistance);
 
                         if (score == 0)
-                            score = _measureAndScoreDistanceOfWordsInNDimensions(
+                            score = ScoreDistanceOfWordsInNDimensions(
                                 avg * 2, avg, posting1, secondList, maxDistance);
 
                         if (score == 0)
-                            score = _measureAndScoreDistanceOfWordsInNDimensions(
+                            score = ScoreDistanceOfWordsInNDimensions(
                                 avg * 1, avg, posting1, secondList, maxDistance);
                     }
                     else
                     {
-                        score = _measureAndScoreDistanceOfWordsInNDimensions(
+                        score = ScoreDistanceOfWordsInNDimensions(
                             0, secondList.Count, posting1, secondList, maxDistance);
                     }
                     if (score > 0)
@@ -171,6 +170,7 @@ namespace Resin.Querying
                                 new DocumentScore(
                                     posting1.DocumentId, docHash.Hash, score, Session.Version));
                         }
+
                     }
                     Log.DebugFormat("document ID {0} scored {1}",
                         posting1.DocumentId, score);
