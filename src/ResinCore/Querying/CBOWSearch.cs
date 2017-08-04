@@ -65,21 +65,19 @@ namespace Resin.Querying
 
             var timer = Stopwatch.StartNew();
 
-            var postingsList = postings[0];
+            var first = postings[0];
+            var maxDistance = postings.Length;
+            var firstScoreList = Score(first, postings[1], maxDistance);
 
-            for (int index = 0; index < postings.Length; index++)
+            weights[0] = firstScoreList;
+
+            for (int index = 2; index < postings.Length; index++)
             {
-                var maxDistance = weights.Length + index;
-                var next = index + 1;
+                maxDistance++;
 
-                if (next > weights.Length)
-                {
-                    break;
-                }
+                var scores = Score(first, postings[index], maxDistance);
 
-                var scores = Score(postingsList, postings[next], maxDistance);
-
-                weights[index] = scores;
+                weights[index-1] = scores;
 
                 Log.DebugFormat("produced {0} scores in {1}",
                     scores.Count, timer.Elapsed);
@@ -91,7 +89,6 @@ namespace Resin.Querying
         {
             var scores = new List<DocumentScore>();
             DocumentPosting posting;
-            DocHash docHash;
             float score;
             int avg = list2.Count / 4;
             int leftOver = list2.Count - (avg * 3);
@@ -105,14 +102,9 @@ namespace Resin.Querying
 
                 if (score > 0)
                 {
-                    docHash = Session.ReadDocHash(posting.DocumentId);
-
-                    if (!docHash.IsObsolete)
-                    {
-                        scores.Add(
+                    scores.Add(
                             new DocumentScore(
-                                posting.DocumentId, docHash.Hash, score, Session.Version));
-                    }
+                                posting.DocumentId, score, Session.Version));
 
                 }
                 Log.DebugFormat("document ID {0} scored {1}",
@@ -140,7 +132,12 @@ namespace Resin.Querying
                     break;
                 }
 
-                var distance = Math.Abs(p1.Position - p2.Position);
+                var distance = p2.Position - p1.Position;
+
+                if (distance < 0)
+                {
+                    distance = Math.Abs(distance-1);
+                }
 
                 if (distance <= maxDist)
                 {

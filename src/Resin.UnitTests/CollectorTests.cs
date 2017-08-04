@@ -73,15 +73,17 @@ namespace Tests
             long version = writer.Write();
             writer.Dispose();
 
-            var query = new QueryParser(new Analyzer()).Parse("+title:\"rain man\"");
+            var query = new QueryParser(new Analyzer()).Parse("+title:\"the rain man\"");
 
             using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
-                Assert.AreEqual(1, scores.Count);
+                Assert.AreEqual(2, scores.Count);
+                Assert.IsTrue(scores.Any(d => d.DocumentId == 0));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
+                Assert.IsTrue(scores.OrderByDescending(s => s.Score).First().DocumentId.Equals(4));
             }
         }
 

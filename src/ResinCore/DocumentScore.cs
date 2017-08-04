@@ -23,6 +23,13 @@ namespace Resin
             DocHash = docHash;
         }
 
+        public DocumentScore(int documentId, double score, SegmentInfo ix)
+        {
+            DocumentId = documentId;
+            Score = score;
+            Ix = ix;
+        }
+
         public void Add(DocumentScore score)
         {
             if (!score.DocumentId.Equals(DocumentId)) throw new ArgumentException("Document IDs differ. Cannot combine.", "score");
