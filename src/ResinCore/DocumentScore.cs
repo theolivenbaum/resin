@@ -107,16 +107,29 @@ namespace Resin
 
         public static IList<DocumentScore> CombineAnd(IList<DocumentScore> first, IList<DocumentScore> other)
         {
-            var dic = other.ToDictionary(x => x.DocumentId);
+            if (other == null) return first;
+
+            var dic = other.GroupBy(s=>s.DocumentId).ToDictionary(x => x.Key, y=>y);
+
             var result = new List<DocumentScore>(dic.Count);
 
-            foreach (var score in first)
+            foreach (var score in first.GroupBy(s => s.DocumentId))
             {
-                DocumentScore exists;
-                if (dic.TryGetValue(score.DocumentId, out exists))
+                IGrouping<int,DocumentScore> second;
+                if (dic.TryGetValue(score.Key, out second))
                 {
-                    score.Add(exists);
-                    result.Add(score);
+                    var list = score.ToArray();
+                    var firstScore = list[0];
+
+                    for(int i = 1;i< list.Length; i++)
+                    {
+                        firstScore.Add(list[i]);
+                    }
+                    foreach(var sc in second)
+                    {
+                        firstScore.Add(sc);
+                    }
+                    result.Add(firstScore);
                 }
             }
             return result;
