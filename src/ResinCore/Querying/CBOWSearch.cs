@@ -24,9 +24,8 @@ namespace Resin.Querying
             {
                 var timer = Stopwatch.StartNew();
 
-                postingsMatrix[index] = new List<DocumentPosting>();
-
                 var token = tokens[index];
+
                 IList<Term> terms;
 
                 using (var reader = GetTreeReader(ctx.Query.Field))
@@ -143,7 +142,7 @@ namespace Resin.Querying
 
                 if (distance <= maxDist)
                 {
-                    var sc = (float)1 / distance;
+                    float sc = (float)1 / distance;
                     if (sc > score)
                     {
                         score = sc;
