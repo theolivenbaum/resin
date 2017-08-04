@@ -106,11 +106,11 @@ namespace Resin.Querying
             Log.Debug("scoring.. ");
 
             var timer = Stopwatch.StartNew();
-            var maxDistance = postings.Length;
 
             for (int index = 0; index < postings.Length; index++)
             {
-                var firstList = postings[index];
+                var maxDistance = weights.Length + index;
+                var firstList = postings[0];
                 var next = index + 1;
 
                 if (next > weights.Length)
