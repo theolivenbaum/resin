@@ -42,7 +42,7 @@ namespace Resin.Querying
 
                     if (distance <= maxDist)
                     {
-                        var sc = (float)1 / (distance + 1);
+                        var sc = (float)1 / (distance);
                         if (sc > score)
                         {
                             score = sc;

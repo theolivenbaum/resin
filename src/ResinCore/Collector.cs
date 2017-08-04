@@ -72,8 +72,6 @@ namespace Resin
                 new RangeSearch(_readSession, _scorerFactory, _postingsReader)
                     .Search(ctx, ((RangeQuery)ctx.Query).ValueUpperBound);
             }
-
-            Log.DebugFormat("scanned {0} in {1}", ctx.Query.Serialize(), time.Elapsed);
         }
 
         public void Dispose()
