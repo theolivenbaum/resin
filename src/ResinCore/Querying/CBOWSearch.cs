@@ -94,6 +94,11 @@ namespace Resin.Querying
 
         private IList<DocumentScore> Score(IList<DocumentPosting>[] postings)
         {
+            if (postings.Length == 1)
+            {
+                return Score(postings[0]);
+            }
+
             var weights = new List<DocumentScore>[postings.Length-1];
 
             SetWeights(postings, weights);
