@@ -67,7 +67,7 @@ namespace Resin.Querying
 
             var first = postings[0];
             var maxDistance = postings.Length;
-            var firstScoreList = Score(first, postings[1], maxDistance);
+            var firstScoreList = Score(ref first, postings[1], maxDistance);
 
             weights[0] = firstScoreList;
 
@@ -75,7 +75,7 @@ namespace Resin.Querying
             {
                 maxDistance++;
 
-                var scores = Score(first, postings[index], maxDistance);
+                var scores = Score(ref first, postings[index], maxDistance);
 
                 weights[index-1] = scores;
 
@@ -85,13 +85,12 @@ namespace Resin.Querying
         }
 
         private IList<DocumentScore> Score (
-            IList<DocumentPosting> list1, IList<DocumentPosting> list2, int maxDistance)
+            ref IList<DocumentPosting> list1, IList<DocumentPosting> list2, int maxDistance)
         {
             var scores = new List<DocumentScore>();
             DocumentPosting posting;
             float score;
-            int avg = list2.Count / 4;
-            int leftOver = list2.Count - (avg * 3);
+            var nearPostings = new List<DocumentPosting>();
 
             for (int postingIndex = 0; postingIndex < list1.Count; postingIndex++)
             {
@@ -106,10 +105,13 @@ namespace Resin.Querying
                             new DocumentScore(
                                 posting.DocumentId, score, Session.Version));
 
-                }
-                Log.DebugFormat("document ID {0} scored {1}",
+                    nearPostings.Add(posting);
+
+                    Log.DebugFormat("document ID {0} scored {1}",
                     posting.DocumentId, score);
+                }
             }
+            list1 = nearPostings;
             return scores;
         }
 

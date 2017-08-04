@@ -62,8 +62,8 @@ namespace Tests
             var docs = new List<dynamic>
             {
                 new {_id = "0", title = "from the sky there was rain and the man was cold" },
-                new {_id = "1", title = "rambo 2" },
-                new {_id = "2", title = "rocky 2" },
+                new {_id = "1", title = "the rambo 2" },
+                new {_id = "2", title = "the rocky 2" },
                 new {_id = "3", title = "the raid men" },
                 new {_id = "4", title = "the rain man" },
                 new {_id = "5", title = "the good, the bad and the ugly" }
