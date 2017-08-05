@@ -65,7 +65,7 @@ namespace Resin.Querying
             var timer = Stopwatch.StartNew();
 
             var first = postings[0];
-            var maxDistance = postings.Length;
+            var maxDistance = 2;
             var firstScoreList = Score(ref first, postings[1], maxDistance);
 
             weights[0] = firstScoreList;
@@ -84,7 +84,9 @@ namespace Resin.Querying
         }
 
         private IList<DocumentScore> Score (
-            ref IList<DocumentPosting> list1, IList<DocumentPosting> list2, int maxDistance)
+            ref IList<DocumentPosting> list1, 
+            IList<DocumentPosting> list2, 
+            int maxDistance)
         {
             var scores = new List<DocumentScore>();
             DocumentPosting posting;
@@ -107,7 +109,7 @@ namespace Resin.Querying
                     nearPostings.Add(posting);
 
                     Log.DebugFormat("document ID {0} scored {1}",
-                    posting.DocumentId, score);
+                        posting.DocumentId, score);
                 }
             }
             list1 = nearPostings;
@@ -115,9 +117,10 @@ namespace Resin.Querying
         }
 
         private float ScoreDistanceOfWordsInNDimensions(
-            DocumentPosting p1, IList<DocumentPosting> list, int maxDist)
+            DocumentPosting p1, IList<DocumentPosting> list, int maxDistance)
         {
-            float score = 0;
+            var start = -1;
+            var count = -1;
 
             for (int i = 0; i < list.Count; i++)
             {
@@ -130,30 +133,107 @@ namespace Resin.Querying
 
                 if (p2.DocumentId > p1.DocumentId)
                 {
+                    count = i;
                     break;
                 }
 
-                var distance = p2.Position - p1.Position;
-
-                if (distance < 0)
+                if (start == -1)
                 {
-                    distance = Math.Abs(distance-1);
+                    start = i;
                 }
+            }
 
-                if (distance <= maxDist)
+            if (start < 0 || count < 0)
+            {
+                return 0;
+            }
+
+            var tree = ToPostingsBST(list, start, count);
+            var score = tree.FindNearestNeighbours(p1, maxDistance);
+
+            return score;
+        }
+
+        private Node ToPostingsBST(IList<DocumentPosting> sorted, int start, int count)
+        {
+            if (count == 1)
+            {
+                return new Node(sorted[start]);
+            }
+
+            int mid = (start + count) / 2;
+            Node node = new Node(sorted[mid]);
+
+            node.Left = ToPostingsBST(sorted, start, mid - 1);
+            node.Right = ToPostingsBST(sorted, mid + 1, count);
+
+            return node;
+        }
+
+        [DebuggerDisplay("{Data}")]
+        private class Node
+        {
+            public DocumentPosting Data;
+            public Node Left, Right;
+
+            public Node(DocumentPosting data)
+            {
+                Data = data;
+                Left = Right = null;
+            }
+
+            public float FindNearestNeighbours(
+                DocumentPosting posting, int maxDistance)
+            {
+                float score = 0;
+                var node = this;
+                var debugList = new List<DocumentPosting>();
+                var stack = new Stack<Node>();
+
+                while (node!= null)
                 {
-                    float sc = (float)1 / distance;
-                    if (sc > score)
+                    var distance = node.Data.Position - posting.Position;
+
+                    if (distance < 0)
                     {
-                        score = sc;
+                        distance = Math.Abs(distance);
+
+                        if (distance > maxDistance)
+                        {
+                            node = node.Right;
+                            continue;
+                        }
+                    }
+                    else if (distance > maxDistance)
+                    {
+                        node = node.Left;
+                        continue;
+                    }
+
+                    var s = (float)1 / distance;
+                    score += s;
+                    debugList.Add(node.Data);
+
+                    if (node.Right != null)
+                    {
+                        stack.Push(node.Right);
+                    }
+
+                    if (node.Left != null)
+                    {
+                        node = node.Left;
+                    }
+                    else if (stack.Count > 0)
+                    {
+                        node = stack.Pop();
                     }
                     else
                     {
                         break;
                     }
                 }
+                return score;
             }
-            return score;
         }
     }
 }
