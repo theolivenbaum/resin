@@ -69,7 +69,7 @@ namespace Resin.Querying
             return scores;
         }
 
-        public IList<IList<DocumentPosting>> GetPostingsListVector(IList<Term> terms)
+        public IList<IList<DocumentPosting>> GetManyPostingsLists(IList<Term> terms)
         {
             var time = Stopwatch.StartNew();
 
@@ -89,7 +89,7 @@ namespace Resin.Querying
 
         protected IList<DocumentPosting> GetPostingsList(IList<Term> terms)
         {
-            var postings = terms.Count > 0 ? GetPostingsListVector(terms) : null;
+            var postings = terms.Count > 0 ? GetManyPostingsLists(terms) : null;
 
             IList<DocumentPosting> reduced;
 

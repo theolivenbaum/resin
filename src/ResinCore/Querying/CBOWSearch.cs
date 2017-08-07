@@ -16,39 +16,34 @@ namespace Resin.Querying
 
         public void Search(QueryContext ctx)
         {
-            var tokens = ((PhraseQuery)ctx.Query).Values.Distinct().ToArray();
+            var tokens = ((PhraseQuery)ctx.Query).Values;
+            var terms = new List<Term>(tokens.Count);
+            var timer = Stopwatch.StartNew();
 
-            var postingsMatrix = new IList<DocumentPosting>[tokens.Length];
-
-            for (int index = 0; index < tokens.Length; index++)
+            for (int index = 0; index < tokens.Count; index++)
             {
-                var timer = Stopwatch.StartNew();
-
-                var token = tokens[index];
-
-                IList<Term> terms;
-
                 using (var reader = GetTreeReader(ctx.Query.Field))
                 {
-                    terms = reader.IsWord(token)
-                            .ToTerms(ctx.Query.Field);
+                    var words = reader.IsWord(tokens[index]);
+                    if (words.Count > 0)
+                    {
+                        terms.Add(new Term(ctx.Query.Field, words[0]));
+                    }
                 }
-
-                var postings = GetPostingsList(terms[0]);
-
-                Log.DebugFormat("read postings for {0} in {1}", terms[0].Word.Value, timer.Elapsed);
-
-                postingsMatrix[index] = postings;
             }
 
-            ctx.Scores = Score(postingsMatrix);
+            var postings = terms.Count > 0 ? GetManyPostingsLists(terms): null;
+
+            Log.DebugFormat("read postings for {0} in {1}", ctx.Query, timer.Elapsed);
+
+            ctx.Scores = Score(postings);
         }
 
-        private IList<DocumentScore> Score(IList<DocumentPosting>[] postings)
+        private IList<DocumentScore> Score(IList<IList<DocumentPosting>> postings)
         {
-            var trees = new Node[postings.Length];
+            var trees = new Node[postings.Count];
 
-            for (int i = 0;i<postings.Length;i++)
+            for (int i = 0;i<postings.Count; i++)
             {
                 var timer = Stopwatch.StartNew();
 
@@ -58,19 +53,19 @@ namespace Resin.Querying
                     postings[i].Count, timer.Elapsed);
             }
 
-            if (postings.Length == 1)
+            if (postings.Count == 1)
             {
                 return Score(postings[0]);
             }
 
-            var weights = new List<DocumentScore>[postings.Length-1];
+            var weights = new List<DocumentScore>[postings.Count - 1];
 
             SetWeights(postings, trees, weights);
 
             return weights.Sum();
         }
 
-        private void SetWeights(IList<DocumentPosting>[] postings, Node[] trees, IList<DocumentScore>[] weights)
+        private void SetWeights(IList<IList<DocumentPosting>> postings, Node[] trees, IList<DocumentScore>[] weights)
         {
             Log.Debug("measuring distances in documents between first and second word");
 
@@ -126,8 +121,8 @@ namespace Resin.Querying
                             new DocumentScore(
                                 posting.DocumentId, score, Session.Version));
 
-                    //Log.DebugFormat("document ID {0} scored {1}",
-                    //    posting.DocumentId, score);
+                    Log.DebugFormat("document ID {0} scored {1}",
+                        posting.DocumentId, score);
                 }
             }
             return scores;
@@ -243,17 +238,20 @@ namespace Resin.Querying
                     if (distance < 0)
                     {
                         distance = Math.Abs(distance) + 1;
+                    }
 
-                        if (distance > maxDistance)
+                    if (distance > maxDistance)
+                    {
+                        if(node.Data.Position < posting.Position)
                         {
                             node = node.Right;
                             continue;
                         }
-                    }
-                    else if (distance > maxDistance)
-                    {
-                        node = node.Left;
-                        continue;
+                        else
+                        {
+                            node = node.Left;
+                            continue;
+                        }
                     }
 
                     score += (float)1 / distance;

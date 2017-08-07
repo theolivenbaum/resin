@@ -39,7 +39,7 @@ namespace Resin.Querying
                     }
                 }
 
-                var postings = terms.Count > 0 ? GetPostingsListVector(terms).Sum() : null;
+                var postings = terms.Count > 0 ? GetManyPostingsLists(terms).Sum() : null;
 
                 if (postings != null)
                 {
