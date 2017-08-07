@@ -96,7 +96,6 @@ namespace Resin.Querying
             int maxDistance)
         {
             var scores = new List<DocumentScore>();
-            float score;
             Node subTree = null;
             var documentId = -1;
 
@@ -110,7 +109,8 @@ namespace Resin.Querying
                     }
                     documentId = posting.Data.DocumentId;
                 }
-                score = ScoreDistanceOfWordsInNDimensions(
+
+                var score = ScoreDistanceOfWordsInNDimensions(
                     posting.Data, subTree, maxDistance);
 
                 if (score > 0)
@@ -233,11 +233,16 @@ namespace Resin.Querying
             {
                 float score = 0;
                 var node = this;
-                var debugList = new List<DocumentPosting>();
+                //var debugList = new List<DocumentPosting>();
                 var stack = new Stack<Node>();
 
                 while (node!= null)
                 {
+                    if (posting.DocumentId != node.Data.DocumentId)
+                    {
+                        break;
+                    }
+
                     var distance = node.Data.Position - posting.Position;
 
                     if (distance < 0)
@@ -258,7 +263,7 @@ namespace Resin.Querying
 
                     var s = (float)1 / distance;
                     score += s;
-                    debugList.Add(node.Data);
+                    //debugList.Add(node.Data);
 
                     if (node.Right != null)
                     {
