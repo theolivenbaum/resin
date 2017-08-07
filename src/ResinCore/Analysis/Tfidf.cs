@@ -1,5 +1,4 @@
 ﻿using System;
-using DocumentTable;
 
 namespace Resin.Analysis
 {
@@ -14,20 +13,16 @@ namespace Resin.Analysis
 
         /// <summary>
         /// Create scorer. 
-        /// On tf-idf: 
-        /// https://en.wikipedia.org/wiki/Tf%E2%80%93idf
         /// </summary>
         /// <param name="docsInCorpus"></param>
         /// <param name="docsWithTerm"></param>
         public TfIdf(int docsInCorpus, int docsWithTerm)
         {
-            // probabilistic inverse document frequency
             _idf = Math.Log10(docsInCorpus - docsWithTerm / (double)docsWithTerm);
         }
 
         public double Score(int termCount)
         {
-            // log-normalized term frequency
             return 1 + Math.Log10(termCount) * _idf;
         }
     }
