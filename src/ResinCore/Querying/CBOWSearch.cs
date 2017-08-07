@@ -50,7 +50,12 @@ namespace Resin.Querying
 
             for (int i = 0;i<postings.Length;i++)
             {
+                var timer = Stopwatch.StartNew();
+
                 trees[i] = ToBST(postings[i], 0, postings[i].Count-1);
+
+                Log.DebugFormat("built postings tree with len {0} in {1}", 
+                    postings[i].Count, timer.Elapsed);
             }
 
             if (postings.Length == 1)
@@ -67,7 +72,7 @@ namespace Resin.Querying
 
         private void SetWeights(IList<DocumentPosting>[] postings, Node[] trees, IList<DocumentScore>[] weights)
         {
-            Log.Debug("scoring.. ");
+            Log.Debug("measuring distances in documents between first and second word");
 
             var timer = Stopwatch.StartNew();
 
@@ -80,6 +85,9 @@ namespace Resin.Querying
             for (int index = 2; index < trees.Length; index++)
             {
                 maxDistance++;
+
+                Log.DebugFormat(
+                    "measuring distances in documents between first word and word {0}", index);
 
                 var scores = Score(first, trees[index], maxDistance);
 
@@ -118,8 +126,8 @@ namespace Resin.Querying
                             new DocumentScore(
                                 posting.DocumentId, score, Session.Version));
 
-                    Log.DebugFormat("document ID {0} scored {1}",
-                        posting.DocumentId, score);
+                    //Log.DebugFormat("document ID {0} scored {1}",
+                    //    posting.DocumentId, score);
                 }
             }
             return scores;
