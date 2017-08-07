@@ -34,7 +34,7 @@ namespace Resin
             DocumentStream documents, 
             IWriteSessionFactory storeWriterFactory = null)
         {
-            _wordPositions = true; // TODO: implement writing without storing word positions
+            _wordPositions = true; // TODO: implement writing that doesn't store word positions
 
             long version = Util.GetNextChronologicalFileId();
 
