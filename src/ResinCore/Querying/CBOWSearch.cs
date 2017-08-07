@@ -59,13 +59,13 @@ namespace Resin.Querying
         }
 
         private void SetWeights(IList<DocumentPosting>[] postings, IList<DocumentScore>[] weights)
-        {
+            {
             Log.Debug("scoring.. ");
 
             var timer = Stopwatch.StartNew();
 
             var first = postings[0];
-            var maxDistance = 2;
+            var maxDistance = postings.Length;
             var firstScoreList = Score(ref first, postings[1], maxDistance);
 
             weights[0] = firstScoreList;
@@ -141,6 +141,8 @@ namespace Resin.Querying
                 {
                     start = i;
                 }
+
+                count = list.Count - start;
             }
 
             if (start < 0 || count < 0)
@@ -196,7 +198,7 @@ namespace Resin.Querying
 
                     if (distance < 0)
                     {
-                        distance = Math.Abs(distance);
+                        distance = Math.Abs(distance) + 1;
 
                         if (distance > maxDistance)
                         {
