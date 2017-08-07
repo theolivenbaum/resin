@@ -46,6 +46,13 @@ namespace Resin.Querying
 
         private IList<DocumentScore> Score(IList<DocumentPosting>[] postings)
         {
+            var trees = new Node[postings.Length];
+
+            for(int i = 0;i<postings.Length;i++)
+            {
+                trees[i] = ToBTS(postings[i], 0, postings[i].Count-1);
+            }
+
             if (postings.Length == 1)
             {
                 return Score(postings[0]);
@@ -53,12 +60,12 @@ namespace Resin.Querying
 
             var weights = new List<DocumentScore>[postings.Length-1];
 
-            SetWeights(postings, weights);
+            SetWeights(trees, weights);
 
             return weights.Sum();
         }
 
-        private void SetWeights(IList<DocumentPosting>[] postings, IList<DocumentScore>[] weights)
+        private void SetWeights(Node[] postings, IList<DocumentScore>[] weights)
             {
             Log.Debug("scoring.. ");
 
@@ -66,7 +73,7 @@ namespace Resin.Querying
 
             var first = postings[0];
             var maxDistance = postings.Length;
-            var firstScoreList = Score(ref first, postings[1], maxDistance);
+            var firstScoreList = Score(first, postings[1], maxDistance);
 
             weights[0] = firstScoreList;
 
@@ -74,7 +81,7 @@ namespace Resin.Querying
             {
                 maxDistance++;
 
-                var scores = Score(ref first, postings[index], maxDistance);
+                var scores = Score(first, postings[index], maxDistance);
 
                 weights[index-1] = scores;
 
@@ -84,90 +91,62 @@ namespace Resin.Querying
         }
 
         private IList<DocumentScore> Score (
-            ref IList<DocumentPosting> list1, 
-            IList<DocumentPosting> list2, 
+            Node list1, 
+            Node list2, 
             int maxDistance)
         {
             var scores = new List<DocumentScore>();
-            DocumentPosting posting;
             float score;
-            var nearPostings = new List<DocumentPosting>();
+            Node subTree = null;
+            var documentId = -1;
 
-            for (int postingIndex = 0; postingIndex < list1.Count; postingIndex++)
+            foreach (var posting in list1.All())
             {
-                posting = list1[postingIndex];
-
+                if (documentId != posting.Data.DocumentId)
+                {
+                    if(!list2.TryGetSubTree(posting.Data.DocumentId, out subTree))
+                    {
+                        continue;
+                    }
+                    documentId = posting.Data.DocumentId;
+                }
                 score = ScoreDistanceOfWordsInNDimensions(
-                    posting, list2, maxDistance);
+                    posting.Data, subTree, maxDistance);
 
                 if (score > 0)
                 {
                     scores.Add(
                             new DocumentScore(
-                                posting.DocumentId, score, Session.Version));
-
-                    nearPostings.Add(posting);
+                                posting.Data.DocumentId, score, Session.Version));
 
                     Log.DebugFormat("document ID {0} scored {1}",
-                        posting.DocumentId, score);
+                        posting.Data.DocumentId, score);
                 }
             }
-            list1 = nearPostings;
             return scores;
         }
 
         private float ScoreDistanceOfWordsInNDimensions(
-            DocumentPosting p1, IList<DocumentPosting> list, int maxDistance)
+            DocumentPosting p1, Node list, int maxDistance)
         {
-            var start = -1;
-            var count = -1;
-
-            for (int i = 0; i < list.Count; i++)
-            {
-                var p2 = list[i];
-
-                if (p2.DocumentId < p1.DocumentId)
-                {
-                    continue;
-                }
-
-                if (p2.DocumentId > p1.DocumentId)
-                {
-                    count = i;
-                    break;
-                }
-
-                if (start == -1)
-                {
-                    start = i;
-                }
-
-                count = list.Count - start;
-            }
-
-            if (start < 0 || count < 0)
-            {
-                return 0;
-            }
-
-            var tree = ToPostingsBST(list, start, count);
-            var score = tree.FindNearestNeighbours(p1, maxDistance);
-
+            var score = list.FindNearestNeighbours(p1, maxDistance);
             return score;
         }
 
-        private Node ToPostingsBST(IList<DocumentPosting> sorted, int start, int count)
+        private Node ToBTS(IList<DocumentPosting> sorted, int start, int end)
         {
-            if (count == 1)
-            {
-                return new Node(sorted[start]);
-            }
+            if (start > end) return null;
 
-            int mid = (start + count) / 2;
+            //if (end == 1)
+            //{
+            //    return new Node(sorted[start]);
+            //}
+
+            int mid = (start + end) / 2;
             Node node = new Node(sorted[mid]);
 
-            node.Left = ToPostingsBST(sorted, start, mid - 1);
-            node.Right = ToPostingsBST(sorted, mid + 1, count);
+            node.Left = ToBTS(sorted, start, mid - 1);
+            node.Right = ToBTS(sorted, mid + 1, end);
 
             return node;
         }
@@ -182,6 +161,71 @@ namespace Resin.Querying
             {
                 Data = data;
                 Left = Right = null;
+            }
+
+            public IEnumerable<Node> All()
+            {
+                var stack = new Stack<Node>();
+                var node = this;
+
+                while (node != null)
+                {
+                    yield return node;
+
+                    if (node.Right != null)
+                    {
+                        stack.Push(node.Right);
+                    }
+
+                    if (node.Left != null)
+                    {
+                        node = node.Left;
+                    }
+                    else if (stack.Count > 0)
+                    {
+                        node = stack.Pop();
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            public bool TryGetSubTree(int documentId, out Node subTree)
+            {
+                var node = this;
+                var stack = new Stack<Node>();
+
+                while (node != null)
+                {
+                    if (node.Data.DocumentId == documentId)
+                    {
+                        subTree = node;
+                        return true;
+                    }
+
+                    if (node.Right != null)
+                    {
+                        stack.Push(node.Right);
+                    }
+
+                    if (node.Left != null)
+                    {
+                        node = node.Left;
+                    }
+                    else if (stack.Count > 0)
+                    {
+                        node = stack.Pop();
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                subTree = null;
+                return false;
             }
 
             public float FindNearestNeighbours(
