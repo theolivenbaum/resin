@@ -48,7 +48,7 @@ namespace Resin.Querying
         {
             var trees = new Node[postings.Length];
 
-            for(int i = 0;i<postings.Length;i++)
+            for (int i = 0;i<postings.Length;i++)
             {
                 trees[i] = ToBST(postings[i], 0, postings[i].Count-1);
             }
@@ -60,28 +60,28 @@ namespace Resin.Querying
 
             var weights = new List<DocumentScore>[postings.Length-1];
 
-            SetWeights(trees, weights);
+            SetWeights(postings, trees, weights);
 
             return weights.Sum();
         }
 
-        private void SetWeights(Node[] postings, IList<DocumentScore>[] weights)
-            {
+        private void SetWeights(IList<DocumentPosting>[] postings, Node[] trees, IList<DocumentScore>[] weights)
+        {
             Log.Debug("scoring.. ");
 
             var timer = Stopwatch.StartNew();
 
             var first = postings[0];
-            var maxDistance = postings.Length;
-            var firstScoreList = Score(first, postings[1], maxDistance);
+            var maxDistance = trees.Length;
+            var firstScoreList = Score(first, trees[1], maxDistance);
 
             weights[0] = firstScoreList;
 
-            for (int index = 2; index < postings.Length; index++)
+            for (int index = 2; index < trees.Length; index++)
             {
                 maxDistance++;
 
-                var scores = Score(first, postings[index], maxDistance);
+                var scores = Score(first, trees[index], maxDistance);
 
                 weights[index-1] = scores;
 
@@ -91,56 +91,43 @@ namespace Resin.Querying
         }
 
         private IList<DocumentScore> Score (
-            Node list1, 
+            IList<DocumentPosting> list1, 
             Node list2, 
             int maxDistance)
         {
             var scores = new List<DocumentScore>();
-            Node subTree = null;
             var documentId = -1;
+            Node subTree = null;
 
-            foreach (var posting in list1.All())
+            foreach (var posting in list1)
             {
-                if (documentId != posting.Data.DocumentId)
+                if (documentId != posting.DocumentId)
                 {
-                    if(!list2.TryGetSubTree(posting.Data.DocumentId, out subTree))
+                    if (!list2.TryGetSubTree(posting.DocumentId, out subTree))
                     {
                         continue;
                     }
-                    documentId = posting.Data.DocumentId;
+                    documentId = posting.DocumentId;
                 }
 
-                var score = ScoreDistanceOfWordsInNDimensions(
-                    posting.Data, subTree, maxDistance);
+                var score = subTree.FindNearPostings(posting, maxDistance);
 
                 if (score > 0)
                 {
                     scores.Add(
                             new DocumentScore(
-                                posting.Data.DocumentId, score, Session.Version));
+                                posting.DocumentId, score, Session.Version));
 
                     Log.DebugFormat("document ID {0} scored {1}",
-                        posting.Data.DocumentId, score);
+                        posting.DocumentId, score);
                 }
             }
             return scores;
         }
 
-        private float ScoreDistanceOfWordsInNDimensions(
-            DocumentPosting p1, Node list, int maxDistance)
-        {
-            var score = list.FindNearestNeighbours(p1, maxDistance);
-            return score;
-        }
-
         private Node ToBST(IList<DocumentPosting> sorted, int start, int end)
         {
             if (start > end) return null;
-
-            //if (end == 1)
-            //{
-            //    return new Node(sorted[start]);
-            //}
 
             int mid = (start + end) / 2;
             Node node = new Node(sorted[mid]);
@@ -228,7 +215,7 @@ namespace Resin.Querying
                 return false;
             }
 
-            public float FindNearestNeighbours(
+            public float FindNearPostings(
                 DocumentPosting posting, int maxDistance)
             {
                 float score = 0;
@@ -261,8 +248,7 @@ namespace Resin.Querying
                         continue;
                     }
 
-                    var s = (float)1 / distance;
-                    score += s;
+                    score += (float)1 / distance;
                     //debugList.Add(node.Data);
 
                     if (node.Right != null)

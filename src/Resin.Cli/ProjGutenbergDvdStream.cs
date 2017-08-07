@@ -73,7 +73,10 @@ namespace Resin
                     var document = new Document(
                         new List<Field>
                         {
-                            new Field("title", title.Replace("The Project Gutenberg EBook of ", "").Replace("Project Gutenberg's", "")),
+                            new Field("title", title
+                                .Replace("The Project Gutenberg EBook of ", "")
+                                .Replace("Project Gutenberg's", "")
+                                .Replace("The Project Gutenberg eBook, ", "")),
                             new Field("head", head),
                             new Field("body", body),
                             new Field("uri", zipFileName.Replace(_directory, ""))
