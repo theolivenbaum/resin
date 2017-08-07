@@ -50,7 +50,7 @@ namespace Resin.Querying
 
             for(int i = 0;i<postings.Length;i++)
             {
-                trees[i] = ToBTS(postings[i], 0, postings[i].Count-1);
+                trees[i] = ToBST(postings[i], 0, postings[i].Count-1);
             }
 
             if (postings.Length == 1)
@@ -133,7 +133,7 @@ namespace Resin.Querying
             return score;
         }
 
-        private Node ToBTS(IList<DocumentPosting> sorted, int start, int end)
+        private Node ToBST(IList<DocumentPosting> sorted, int start, int end)
         {
             if (start > end) return null;
 
@@ -145,8 +145,8 @@ namespace Resin.Querying
             int mid = (start + end) / 2;
             Node node = new Node(sorted[mid]);
 
-            node.Left = ToBTS(sorted, start, mid - 1);
-            node.Right = ToBTS(sorted, mid + 1, end);
+            node.Left = ToBST(sorted, start, mid - 1);
+            node.Right = ToBST(sorted, mid + 1, end);
 
             return node;
         }
