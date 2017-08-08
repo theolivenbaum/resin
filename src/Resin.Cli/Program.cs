@@ -138,8 +138,10 @@ namespace Resin.Cli
         {
             string dir = null;
             bool log = false;
+            bool logAnalyzed = false;
 
             if (Array.IndexOf(args, "--log") > 0) log = true;
+            if (Array.IndexOf(args, "--analyze") > 0) logAnalyzed = true;
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
 
             var q = args[Array.IndexOf(args, "-q") + 1];
@@ -171,7 +173,23 @@ namespace Resin.Cli
                     {
                         foreach (var doc in result.Docs)
                         {
-                            Log.Debug(doc.ToString());
+                            using (var fs = File.Create(Path.GetFileName(doc.Document.Fields["uri"].Value)+".log"))
+                            using(var writer = new StreamWriter(fs))
+                            {
+                                writer.Write(doc.ToString());
+
+                                if (logAnalyzed)
+                                {
+                                    var analyzer = new Analyzer();
+
+                                    var analyzed = analyzer.AnalyzeDocument(doc.Document);
+
+                                    //foreach (var a in analyzed)
+                                    //{
+                                    //    writer.WriteLine(a.ToString());
+                                    //}
+                                }
+                            }
                         }
                     }
                 }

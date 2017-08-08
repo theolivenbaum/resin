@@ -1,10 +1,13 @@
 using DocumentTable;
+using log4net;
 using System.Collections.Generic;
 
 namespace Resin.Analysis
 {
     public class Analyzer : IAnalyzer
     {
+        protected static readonly ILog Log = LogManager.GetLogger(typeof(Analyzer));
+
         private readonly ITokenizer _tokenizer;
  
         public Analyzer(ITokenizer tokenizer = null, int[] tokenSeparators = null)
@@ -35,6 +38,8 @@ namespace Resin.Analysis
                         {
                             wordMatrix.Add(word, new List<int> { index });
                         }
+
+                        Log.DebugFormat("found term {0} at pos {1}", word, index);
                     }
 
                     foreach (var wordInfo in wordMatrix)
@@ -64,18 +69,11 @@ namespace Resin.Analysis
 
         public IList<string> Analyze(string value)
         {
-            var tokens = new List<(int Start, int Length)>();
+            var tokens = new List<string>();
 
             _tokenizer.Tokenize(value, tokens);
 
-            var result = new List<string>();
-
-            foreach (var token in tokens)
-            {
-                result.Add(value.Substring(token.Start, token.Length).ToLowerInvariant());
-            }
-
-            return result;
+            return tokens;
         }
     }
 }

@@ -15,32 +15,32 @@ namespace Resin.Analysis
             _customTokenDelimiters = tokenDelimiters == null ? null : new HashSet<int>(tokenDelimiters);
         }
 
-        public void Tokenize(string value, List<(int Start, int Length)> tokens)
+        public void Tokenize(string value, List<string> tokens)
         {
-            int length = 0, start = 0;
+            var normalized = value.ToLower();
 
-            for (int i = 0; i < value.Length; i++)
+            var washed = new List<char>();
+
+            for (int index = 0; index < normalized.Length; index++)
             {
-                if (IsData(value[i]))
-                {
-                    length++;
-                    continue;
-                }
+                var c = normalized[index];
 
-                if (length == 0)
+                if (IsData(c))
                 {
-                    start++;
-                    continue;
+                    washed.Add(c);
                 }
-
-                tokens.Add((start, length));
-                start += length + 1;
-                length = 0;
+                else
+                {
+                    if (washed.Count > 0)
+                    {
+                        tokens.Add(new string(washed.ToArray()));
+                        washed.Clear();
+                    }
+                }
             }
-
-            if (length > 0)
+            if (washed.Count > 0)
             {
-                tokens.Add((start, length));
+                tokens.Add(new string(washed.ToArray()));
             }
         }
 

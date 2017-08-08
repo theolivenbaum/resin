@@ -59,7 +59,7 @@ namespace Resin.Querying
             var timer = Stopwatch.StartNew();
 
             var first = postings[0];
-            var maxDistance = postings.Count;
+            var maxDistance = postings.Count - 1;
             var firstScoreList = Score(first, postings[1], maxDistance);
 
             weights[0] = firstScoreList;
@@ -93,34 +93,24 @@ namespace Resin.Querying
             var scores = new List<DocumentScore>();
             var cursor1 = 0;
             var cursor2 = 0;
+            var posOfLastP2 = int.MaxValue;
 
             while (cursor1 < list1.Count && cursor2 < list2.Count)
             {
                 var p1 = list1[cursor1];
                 var p2 = list2[cursor2];
 
-                while (p1.DocumentId > p2.DocumentId)
+                if (p2.DocumentId > p1.DocumentId)
                 {
-                    if (cursor2 == list2.Count) break;
-
-                    p2 = list2[cursor2++];
+                    cursor1++;
+                    continue;
                 }
 
                 if (p1.DocumentId > p2.DocumentId)
                 {
-                    break;
-                }
-
-                while (p1.DocumentId < p2.DocumentId)
-                {
-                    if (cursor1 == list1.Count) break;
-
-                    p1 = list1[cursor1++];
-                }
-
-                if (p1.DocumentId < p2.DocumentId)
-                {
-                    break;
+                    cursor2++;
+                    posOfLastP2 = int.MaxValue;
+                    continue;
                 }
 
                 var distance = p2.Position - p1.Position;
@@ -128,26 +118,17 @@ namespace Resin.Querying
                 if (distance < 0)
                 {
                     distance = Math.Abs(distance)+1;
+
                     if (distance > maxDistance)
                     {
-                        var documentId = p1.DocumentId;
-                        while (documentId == p1.DocumentId)
-                        {
-                            if (cursor1 == list1.Count) break;
-
-                            p1 = list1[cursor1++];
-                        }
+                        cursor2++;
+                        posOfLastP2 = int.MaxValue;
+                        continue;
                     }
-                    else
-                    {
-                        cursor1++;
-                    }
+                    
+                }
 
-                }
-                else
-                {
-                    cursor1++;
-                }
+                posOfLastP2 = p2.Position;
 
                 if (distance <= maxDistance)
                 {
@@ -158,6 +139,7 @@ namespace Resin.Querying
                     Log.DebugFormat("document ID {0} scored {1}",
                         p1.DocumentId, score);
                 }
+                cursor1++;
             }
             return scores;
         }

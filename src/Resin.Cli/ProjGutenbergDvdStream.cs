@@ -9,7 +9,6 @@ namespace Resin
 {
     public class ProjGutenbergDvdStream : DocumentStream
     {
-        private readonly string[] _files;
         private readonly int _take;
         private readonly int _skip;
         private readonly string _directory;
@@ -32,8 +31,7 @@ namespace Resin
             var files = Directory.GetFiles(_directory, "*.zip", SearchOption.AllDirectories);
             foreach (var zipFileName in files)
             {
-                if (Path.GetFileNameWithoutExtension(zipFileName).EndsWith("_8") ||
-                    Path.GetFileNameWithoutExtension(zipFileName).EndsWith("_H"))
+                if (zipFileName.StartsWith("\\ETEXT"))
                 {
                     continue;
                 }
@@ -46,24 +44,35 @@ namespace Resin
                     var title = reader.ReadLine() + " " + reader.ReadLine();
                     var head = new StringBuilder();
                     var couldNotRead = false;
+                    string encoding = null;
 
                     while (true)
                     {
                         var line = reader.ReadLine();
+
                         if (line == null)
                         {
                             couldNotRead = true;
                             break;
                         }
-                        if (line.Contains("***"))
+                        else if (line.Contains("***"))
                         {
                             break;
                         }
-                        head.Append(" ");
-                        head.Append(line);
+
+                        if (line.Contains("encoding: ASCII"))
+                        {
+                            encoding = line;
+                        }
+                        else
+                        {
+                            head.Append(" ");
+                            head.Append(line);
+                        }
+                        
                     }
 
-                    if (couldNotRead)
+                    if (encoding == null || couldNotRead)
                     {
                         continue;
                     }

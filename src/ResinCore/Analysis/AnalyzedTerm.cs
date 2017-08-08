@@ -1,5 +1,4 @@
-﻿using DocumentTable;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Resin.Analysis
 {
@@ -12,6 +11,11 @@ namespace Resin.Analysis
         {
             Term = term;
             Postings = postings;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}:{1}", Term, Postings.Count);
         }
     }
 }

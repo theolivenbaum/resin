@@ -1,3 +1,4 @@
+call rn write-pg --source-dir C:\temp\pgdvd --dir c:\temp\resin_data\pg --pk url --skip 0 --take 1000
 call rn write-pg --source-dir C:\temp\pgdvd --dir c:\temp\resin_data\pg --pk url --skip 1000 --take 1000
 call rn write-pg --source-dir C:\temp\pgdvd --dir c:\temp\resin_data\pg --pk url --skip 2000 --take 1000
 call rn write-pg --source-dir C:\temp\pgdvd --dir c:\temp\resin_data\pg --pk url --skip 3000 --take 1000

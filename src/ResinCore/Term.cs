@@ -17,6 +17,11 @@ namespace Resin
             Word = word;
         }
 
+        public override string ToString()
+        {
+            return string.Format("{0}:{1}", Field, Word);
+        }
+
         public bool Equals(Term other)
         {
             if (ReferenceEquals(null, other)) return false;

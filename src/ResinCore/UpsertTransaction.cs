@@ -176,11 +176,15 @@ namespace Resin
 
             Log.InfoFormat("serialized trees in {0}", treeTimer.Elapsed);
 
+            var postingsTimer = Stopwatch.StartNew();
+
             _ix.WordPositions = _wordPositions;
             _ix.PostingsOffset = _compoundFile.Position;
             _postingsWriter.Stream.Flush();
             _postingsWriter.Stream.Position = 0;
             _postingsWriter.Stream.CopyTo(_compoundFile);
+
+            Log.InfoFormat("wrote postings to data file in {0}", postingsTimer.Elapsed);
 
             _ix.DocumentCount = _count;
 
