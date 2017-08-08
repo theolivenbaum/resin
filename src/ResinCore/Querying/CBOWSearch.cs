@@ -3,7 +3,6 @@ using Resin.IO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace Resin.Querying
 {
@@ -43,7 +42,7 @@ namespace Resin.Querying
         {
             var trees = new Node[postings.Count];
 
-            for (int i = 0;i<postings.Count; i++)
+            for (int i = 0; i<postings.Count; i++)
             {
                 var timer = Stopwatch.StartNew();
 
