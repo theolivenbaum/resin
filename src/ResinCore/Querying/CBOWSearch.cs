@@ -76,8 +76,13 @@ namespace Resin.Querying
 
             weights[0] = firstScoreList;
 
+            Log.DebugFormat("produced {0} scores in {1}",
+                    firstScoreList.Count, timer.Elapsed);
+
             for (int index = 2; index < trees.Length; index++)
             {
+                timer = Stopwatch.StartNew();
+
                 maxDistance++;
 
                 Log.DebugFormat(
