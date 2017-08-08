@@ -82,7 +82,7 @@ namespace Resin.Querying
 
             var postings = PostingsReader.Read(addresses);
 
-            Log.DebugFormat("read postings in {0}", time.Elapsed);
+            Log.DebugFormat("fetched {0} postings lists in {1}", terms.Count, time.Elapsed);
 
             return postings;
         }

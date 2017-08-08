@@ -11,7 +11,11 @@ namespace Resin.Querying
 
         public void Search(QueryContext ctx)
         {
-            var tokens = ((PhraseQuery)ctx.Query).Values;
+            var phraseQuery = (PhraseQuery)ctx.Query;
+
+            Log.DebugFormat("executing {0}", phraseQuery);
+
+            var tokens = phraseQuery.Values;
 
             var scoreMatrix = new IList<DocumentScore>[tokens.Count];
 

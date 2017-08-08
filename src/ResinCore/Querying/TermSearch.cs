@@ -13,6 +13,8 @@ namespace Resin.Querying
 
         public void Search(QueryContext ctx)
         {
+            Log.DebugFormat("executing {0}", ctx.Query);
+
             IList<Term> terms;
 
             using (var reader = GetTreeReader(ctx.Query.Field))

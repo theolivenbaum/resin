@@ -15,9 +15,11 @@ namespace Resin.Querying
 
         public void Search(QueryContext ctx)
         {
-            var tokens = ((PhraseQuery)ctx.Query).Values;
+            var phraseQuery = (PhraseQuery)ctx.Query;
+            var tokens = phraseQuery.Values;
             var terms = new List<Term>(tokens.Count);
-            var timer = Stopwatch.StartNew();
+
+            Log.DebugFormat("executing {0}", phraseQuery);
 
             for (int index = 0; index < tokens.Count; index++)
             {
@@ -33,25 +35,11 @@ namespace Resin.Querying
 
             var postings = terms.Count > 0 ? GetManyPostingsLists(terms): null;
 
-            Log.DebugFormat("read postings for {0} in {1}", ctx.Query, timer.Elapsed);
-
             ctx.Scores = Score(postings);
         }
 
         private IList<DocumentScore> Score(IList<IList<DocumentPosting>> postings)
         {
-            var trees = new Node[postings.Count];
-
-            for (int i = 0; i<postings.Count; i++)
-            {
-                var timer = Stopwatch.StartNew();
-
-                trees[i] = ToBST(postings[i], 0, postings[i].Count-1);
-
-                Log.DebugFormat("built postings tree with len {0} in {1}", 
-                    postings[i].Count, timer.Elapsed);
-            }
-
             if (postings.Count == 1)
             {
                 return Score(postings[0]);
@@ -59,36 +47,36 @@ namespace Resin.Querying
 
             var weights = new List<DocumentScore>[postings.Count - 1];
 
-            SetWeights(postings, trees, weights);
+            SetWeights(postings, weights);
 
             return weights.Sum();
         }
 
-        private void SetWeights(IList<IList<DocumentPosting>> postings, Node[] trees, IList<DocumentScore>[] weights)
+        private void SetWeights(IList<IList<DocumentPosting>> postings, IList<DocumentScore>[] weights)
         {
-            Log.Debug("measuring distances in documents between first and second word");
+            Log.Debug("measuring distances in documents between word 0 and word 1");
 
             var timer = Stopwatch.StartNew();
 
             var first = postings[0];
-            var maxDistance = trees.Length;
-            var firstScoreList = Score(first, trees[1], maxDistance);
+            var maxDistance = postings.Count;
+            var firstScoreList = Score(first, postings[1], maxDistance);
 
             weights[0] = firstScoreList;
 
             Log.DebugFormat("produced {0} scores in {1}",
                     firstScoreList.Count, timer.Elapsed);
 
-            for (int index = 2; index < trees.Length; index++)
+            for (int index = 2; index < postings.Count; index++)
             {
                 timer = Stopwatch.StartNew();
 
                 maxDistance++;
 
                 Log.DebugFormat(
-                    "measuring distances in documents between first word and word {0}", index);
+                    "measuring distances in documents between word 0 and word {0}", index);
 
-                var scores = Score(first, trees[index], maxDistance);
+                var scores = Score(first, postings[index], maxDistance);
 
                 weights[index-1] = scores;
 
@@ -98,35 +86,77 @@ namespace Resin.Querying
         }
 
         private IList<DocumentScore> Score (
-            IList<DocumentPosting> list1, 
-            Node list2, 
+            IList<DocumentPosting> list1,
+            IList<DocumentPosting> list2, 
             int maxDistance)
         {
             var scores = new List<DocumentScore>();
-            var documentId = -1;
-            Node subTree = null;
+            var cursor1 = 0;
+            var cursor2 = 0;
 
-            foreach (var posting in list1)
+            while (cursor1 < list1.Count && cursor2 < list2.Count)
             {
-                if (documentId != posting.DocumentId)
+                var p1 = list1[cursor1];
+                var p2 = list2[cursor2];
+
+                while (p1.DocumentId > p2.DocumentId)
                 {
-                    if (!list2.TryGetSubTree(posting.DocumentId, out subTree))
-                    {
-                        continue;
-                    }
-                    documentId = posting.DocumentId;
+                    if (cursor2 == list2.Count) break;
+
+                    p2 = list2[cursor2++];
                 }
 
-                var score = subTree.FindNearPostings(posting, maxDistance);
-
-                if (score > 0)
+                if (p1.DocumentId > p2.DocumentId)
                 {
-                    scores.Add(
-                            new DocumentScore(
-                                posting.DocumentId, score, Session.Version));
+                    break;
+                }
+
+                while (p1.DocumentId < p2.DocumentId)
+                {
+                    if (cursor1 == list1.Count) break;
+
+                    p1 = list1[cursor1++];
+                }
+
+                if (p1.DocumentId < p2.DocumentId)
+                {
+                    break;
+                }
+
+                var distance = p2.Position - p1.Position;
+
+                if (distance < 0)
+                {
+                    distance = Math.Abs(distance)+1;
+                    if (distance > maxDistance)
+                    {
+                        var documentId = p1.DocumentId;
+                        while (documentId == p1.DocumentId)
+                        {
+                            if (cursor1 == list1.Count) break;
+
+                            p1 = list1[cursor1++];
+                        }
+                    }
+                    else
+                    {
+                        cursor1++;
+                    }
+
+                }
+                else
+                {
+                    cursor1++;
+                }
+
+                if (distance <= maxDistance)
+                {
+                    var score = (float)1 / distance;
+
+                    scores.Add(new DocumentScore(p1.DocumentId, score, Session.Version));
 
                     Log.DebugFormat("document ID {0} scored {1}",
-                        posting.DocumentId, score);
+                        p1.DocumentId, score);
                 }
             }
             return scores;
