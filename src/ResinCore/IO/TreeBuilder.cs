@@ -12,7 +12,7 @@ namespace Resin.IO
             _tries = new Dictionary<ulong, LcrsTrie>();
         }
 
-        public void Add(string key, string value, IList<DocumentPosting> postings)
+        public void Add(string key, string value, IList<Posting> postings)
         {
             var tree = GetTree(key);
 

@@ -46,11 +46,11 @@ namespace Resin.Analysis
                     {
                         var word = new Word(wordInfo.Key);
                         var term = new Term(field.Key, word);
-                        var postings = new List<DocumentPosting>(wordInfo.Value.Count);
+                        var postings = new List<Posting>(wordInfo.Value.Count);
 
                         foreach (var position in wordInfo.Value)
                         {
-                            postings.Add(new DocumentPosting(document.Id, position));
+                            postings.Add(new Posting(document.Id, position));
                         }
 
                         analyzedTerms.Add(new AnalyzedTerm(term, postings));
@@ -59,7 +59,7 @@ namespace Resin.Analysis
                 else if (field.Index)
                 {
                     var term = new Term(field.Key, new Word(field.Value));
-                    var postings = new List<DocumentPosting> { new DocumentPosting(document.Id, 0) };
+                    var postings = new List<Posting> { new Posting(document.Id, 0) };
 
                     analyzedTerms.Add(new AnalyzedTerm(term, postings));
                 }

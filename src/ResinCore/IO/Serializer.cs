@@ -195,7 +195,7 @@ namespace Resin.IO
             }
         }
 
-        public static int Serialize(this IEnumerable<DocumentPosting> postings, Stream stream)
+        public static int Serialize(this IEnumerable<Posting> postings, Stream stream)
         {
             var size = 0;
             foreach (var posting in postings)

@@ -6,10 +6,11 @@ using System.Linq;
 namespace Resin
 {
     [DebuggerDisplay("{DocumentId}:{Position}")]
-    public struct DocumentPosting
+    public class DocumentPosting
     {
         public int DocumentId { get; private set; }
         public int Position { get; set; }
+        public DocumentPosting Next { get; set; }
 
         public DocumentPosting(int documentId, int position)
         {
@@ -22,6 +23,24 @@ namespace Resin
             if (other.DocumentId != DocumentId) throw new ArgumentException("other");
 
             Position += other.Position;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}:{1}", DocumentId, Position);
+        }
+    }
+
+    [DebuggerDisplay("{DocumentId}:{Position}")]
+    public struct Posting
+    {
+        public int DocumentId { get; private set; }
+        public int Position { get; set; }
+
+        public Posting(int documentId, int position)
+        {
+            DocumentId = documentId;
+            Position = position;
         }
 
         public override string ToString()
