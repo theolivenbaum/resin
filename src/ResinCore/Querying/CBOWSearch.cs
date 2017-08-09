@@ -59,7 +59,7 @@ namespace Resin.Querying
             var timer = Stopwatch.StartNew();
 
             var first = postings[0];
-            var maxDistance = postings.Count - 1;
+            var maxDistance = postings.Count;
             var firstScoreList = Score(first, postings[1], maxDistance);
 
             weights[0] = firstScoreList;
