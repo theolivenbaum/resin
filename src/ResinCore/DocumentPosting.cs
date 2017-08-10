@@ -10,7 +10,6 @@ namespace Resin
     {
         public int DocumentId { get; private set; }
         public int Position { get; set; }
-        public DocumentPosting Next { get; set; }
 
         public DocumentPosting(int documentId, int position)
         {

@@ -11,9 +11,11 @@ namespace Resin
     public class DocumentScore
     {
         public int DocumentId { get; private set; }
-        public double Score { get; private set; }
+        public double Score { get; set; }
         public SegmentInfo Ix { get; private set; }
         public UInt64 DocHash { get; private set; }
+        public DocumentScore Next { get; set; }
+        public int Weight { get; private set; }
 
         public DocumentScore(int documentId, UInt64 docHash, double score, SegmentInfo ix)
         {
@@ -28,6 +30,18 @@ namespace Resin
             DocumentId = documentId;
             Score = score;
             Ix = ix;
+            Weight = 1;
+        }
+
+        public void Append(DocumentScore score)
+        {
+            var node = this;
+            while (node.Next != null)
+            {
+                node = node.Next;
+            }
+            node.Next = score;
+            Weight++;
         }
 
         public void Add(DocumentScore score)
@@ -167,7 +181,7 @@ namespace Resin
 
         public static IList<DocumentScore> Sum(this IList<DocumentScore> scores)
         {
-            var compressed = new List<DocumentScore>();
+            var sum = new List<DocumentScore>();
             DocumentScore tmp = null;
             foreach(var score in scores)
             {
@@ -179,19 +193,29 @@ namespace Resin
                 if (score.DocumentId == tmp.DocumentId)
                 {
                     tmp.Add(score);
-                    tmp = score;
                 }
                 else
                 {
-                    compressed.Add(tmp);
-                    tmp = null;
+                    sum.Add(tmp);
                 }
+                tmp = score;
             }
             if (tmp != null)
             {
-                compressed.Add(tmp);
+                sum.Add(tmp);
             }
-            return compressed;
+            return sum;
+        }
+
+        public static DocumentScore Sum(this DocumentScore root)
+        {
+            var node = root.Next;
+            while (node!=null)
+            {
+                root.Add(node);
+                node = node.Next;
+            }
+            return root;
         }
 
         public static DocumentScore[] CombineTakingLatestVersion(this IList<DocumentScore[]> scores)

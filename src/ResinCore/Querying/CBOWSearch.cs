@@ -45,72 +45,91 @@ namespace Resin.Querying
                 return Score(postings[0]);
             }
 
-            var weights = new List<DocumentScore>[postings.Count - 1];
+            var timer = Stopwatch.StartNew();
+
+            var weights = new DocumentScore[postings[0].Count][];
 
             SetWeights(postings, weights);
 
-            return weights.Sum();
+            Log.DebugFormat("produced {0} weights in {1}",
+                    weights.Length, timer.Elapsed);
+
+            timer = Stopwatch.StartNew();
+
+            var scores = new List<DocumentScore>();
+
+            foreach(DocumentScore[] score in weights)
+            {
+                if (score != null)
+                {
+                    DocumentScore first = score[0];
+                    for (int i = 1; i < score.Length; i++)
+                    {
+                        if (score[i] == null)
+                        {
+                            first = null;
+                            break;
+                        }
+                        first.Add(score[i]);
+                    }
+                    if (first != null)
+                    {
+                        scores.Add(first);
+                    }
+                }
+            }
+
+            Log.DebugFormat("scored weights in {0}", timer.Elapsed);
+
+            return scores.Sum();
         }
 
-        private void SetWeights(IList<IList<DocumentPosting>> postings, IList<DocumentScore>[] weights)
+        private void SetWeights(IList<IList<DocumentPosting>> postings, DocumentScore[][] weights)
         {
-            Log.Debug("measuring distances in documents between word 0 and word 1");
-
+            int maxDistance = 1;
             var timer = Stopwatch.StartNew();
-
             var first = postings[0];
-            var maxDistance = postings.Count;
-            var firstScoreList = Score(ref first, postings[1], maxDistance);
 
-            weights[0] = firstScoreList;
-
-            Log.DebugFormat("produced {0} scores in {1}",
-                    firstScoreList.Count, timer.Elapsed);
-
-            for (int index = 2; index < postings.Count; index++)
+            for (int index = 1; index < postings.Count; index++)
             {
-                timer = Stopwatch.StartNew();
-
-                maxDistance++;
+                var second = postings[index];
 
                 Log.DebugFormat(
-                    "measuring distances in documents between word 0 and word {0}", index);
+                    "measuring distances in documents between word {0} and word {1}", index - 1, index);
 
-                var scores = Score(ref first, postings[index], maxDistance);
-
-                weights[index-1] = scores;
-
-                Log.DebugFormat("produced {0} scores in {1}",
-                    scores.Count, timer.Elapsed);
+                Score(weights, ref first, second, ++maxDistance, postings.Count - 1, index - 1);
             }
+
+            Log.DebugFormat("produced {0} weights in {1}",
+                    weights.Length, timer.Elapsed);
         }
 
-        private IList<DocumentScore> Score (
-            ref IList<DocumentPosting> list1,
-            IList<DocumentPosting> list2, 
-            int maxDistance)
+        private void Score (
+            DocumentScore[][] weights, ref IList<DocumentPosting> list1, IList<DocumentPosting> list2, int maxDistance, int numOfPasses, int passIndex)
         {
-            var scoredPostings = new List<DocumentPosting>();
-            var scores = new List<DocumentScore>();
             var cursor1 = 0;
             var cursor2 = 0;
-            var posOfLastP2 = int.MaxValue;
 
             while (cursor1 < list1.Count && cursor2 < list2.Count)
             {
-                var p1 = list1[cursor1];
-                var p2 = list2[cursor2];
-
-                if (p2.DocumentId > p1.DocumentId)
+                if (list1[cursor1] == null)
                 {
                     cursor1++;
                     continue;
                 }
 
-                if (p1.DocumentId > p2.DocumentId)
+                var p1 = list1[cursor1];
+                var p2 = list2[cursor2];
+
+                if (p2.DocumentId > p1.DocumentId)
+                {
+                    list1[cursor1] = null;
+                    cursor1++;
+                    continue;
+                }
+                else if (p1.DocumentId > p2.DocumentId)
                 {
                     cursor2++;
-                    posOfLastP2 = int.MaxValue;
                     continue;
                 }
 
@@ -123,27 +142,38 @@ namespace Resin.Querying
                     if (distance > maxDistance)
                     {
                         cursor2++;
-                        posOfLastP2 = int.MaxValue;
                         continue;
                     }
-                    
                 }
-
-                posOfLastP2 = p2.Position;
 
                 if (distance <= maxDistance)
                 {
                     var score = (float)1 / distance;
+                    var documentScore = new DocumentScore(p1.DocumentId, score, Session.Version);
 
-                    scores.Add(new DocumentScore(p1.DocumentId, score, Session.Version));
-                    scoredPostings.Add(p1);
+                    if (weights[cursor1] == null)
+                    {
+                        weights[cursor1] = new DocumentScore[numOfPasses];
+                        weights[cursor1][passIndex] = documentScore;
+                    }
+                    else
+                    {
+                        if (weights[cursor1][passIndex] == null || 
+                            weights[cursor1][passIndex].Score < score)
+                        {
+                            weights[cursor1][passIndex] = documentScore;
+                        }
+                    }
+
                     Log.DebugFormat("document ID {0} scored {1}",
                         p1.DocumentId, score);
                 }
+                else
+                {
+                    list1[cursor1] = null;
+                }
                 cursor1++;
             }
-            list1 = scoredPostings;
-            return scores;
         }
 
         private Node ToBST(IList<DocumentPosting> sorted, int start, int end)
