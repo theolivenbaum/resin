@@ -127,7 +127,7 @@ namespace Resin.Querying
                 Score(weights, ref first, second, ++maxDistance, postings.Count - 1, index - 1);
             }
 
-            Log.DebugFormat("produced {0} weights in {1}",
+            Log.DebugFormat("calculated {0} weights in {1}",
                     weights.Length, timer.Elapsed);
         }
 
@@ -140,7 +140,7 @@ namespace Resin.Querying
 
             while (cursor1 < list1.Count && cursor2 < list2.Count)
             {
-                if (list1[cursor1] == null)
+                if (list1[cursor1].HasValue == false)
                 {
                     cursor1++;
                     continue;
@@ -151,7 +151,10 @@ namespace Resin.Querying
 
                 if (p2.DocumentId > p1.DocumentId)
                 {
-                    list1[cursor1] = null;
+                    var p = list1[cursor1];
+                    p.HasValue = false;
+                    list1[cursor1] = p;
+
                     cursor1++;
                     continue;
                 }
@@ -193,7 +196,9 @@ namespace Resin.Querying
                 }
                 else
                 {
-                    list1[cursor1] = null;
+                    var p = list1[cursor1];
+                    p.HasValue = false;
+                    list1[cursor1] = p;
                 }
                 cursor1++;
             }
