@@ -150,13 +150,8 @@ namespace Resin.Querying
 
                 if (distance < 0)
                 {
-                    distance = Math.Abs(distance)+1;
-
-                    if (distance > maxDistance)
-                    {
-                        cursor2++;
-                        continue;
-                    }
+                    cursor2++;
+                    continue;
                 }
 
                 if (distance <= maxDistance)
