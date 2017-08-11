@@ -122,7 +122,7 @@ namespace Resin.Querying
                 var second = postings[index];
 
                 Log.DebugFormat(
-                    "calculate distances in documents between word {0} and word {1}", index - 1, index);
+                    "calculate distances in documents between word 0 and word {0}", index);
 
                 Score(weights, ref first, second, ++maxDistance, postings.Count - 1, index - 1);
             }
