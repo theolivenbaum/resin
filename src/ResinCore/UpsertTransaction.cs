@@ -25,7 +25,6 @@ namespace Resin
         private readonly FullTextSegmentInfo _ix;
         private readonly Stream _compoundFile;
         private readonly Stream _lockFile;
-        private readonly bool _wordPositions;
 
         public UpsertTransaction(
             string directory, 
@@ -34,8 +33,6 @@ namespace Resin
             DocumentStream documents, 
             IWriteSessionFactory storeWriterFactory = null)
         {
-            _wordPositions = true; // TODO: implement writing that doesn't store word positions
-
             long version = Util.GetNextChronologicalFileId();
 
             Log.InfoFormat("begin writing {0}", version);
@@ -89,8 +86,7 @@ namespace Resin
             {
                 VersionId = version,
                 Compression = compression,
-                PrimaryKeyFieldName = documents.PrimaryKeyFieldName,
-                WordPositions = _wordPositions
+                PrimaryKeyFieldName = documents.PrimaryKeyFieldName
             };
 
             var posFileName = Path.Combine(
@@ -178,7 +174,6 @@ namespace Resin
 
             var postingsTimer = Stopwatch.StartNew();
 
-            _ix.WordPositions = _wordPositions;
             _ix.PostingsOffset = _compoundFile.Position;
             _postingsWriter.Stream.Flush();
             _postingsWriter.Stream.Position = 0;

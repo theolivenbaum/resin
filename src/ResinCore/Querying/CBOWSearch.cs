@@ -18,8 +18,7 @@ namespace Resin.Querying
         {
             var phraseQuery = (PhraseQuery)ctx.Query;
             var tokens = phraseQuery.Values;
-            var terms = new List<Term>(tokens.Count);
-            var postingsCache = new Dictionary<string, IList<DocumentPosting>>();
+            var terms = new List<Term>();
 
             for (int index = 0; index < tokens.Count; index++)
             {
@@ -27,10 +26,29 @@ namespace Resin.Querying
 
                 using (var reader = GetTreeReader(ctx.Query.Field))
                 {
-                    var words = reader.IsWord(token);
-                    if (words.Count > 0)
+                    if (ctx.Query.Fuzzy)
                     {
-                        terms.Add(new Term(ctx.Query.Field, words[0]));
+                        var words = reader.SemanticallyNear(token, ctx.Query.Edits(token));
+                        foreach (var word in words)
+                        {
+                            terms.Add(new Term(ctx.Query.Field, word));
+                        }
+                    }
+                    else if (ctx.Query.Prefix)
+                    {
+                        var words = reader.StartsWith(token);
+                        foreach(var word in words)
+                        {
+                            terms.Add(new Term(ctx.Query.Field, word));
+                        }
+                    }
+                    else
+                    {
+                        var words = reader.IsWord(token);
+                        if (words.Count > 0)
+                        {
+                            terms.Add(new Term(ctx.Query.Field, words[0]));
+                        }
                     }
                 }
             }
@@ -104,7 +122,7 @@ namespace Resin.Querying
                 var second = postings[index];
 
                 Log.DebugFormat(
-                    "measuring distances in documents between word {0} and word {1}", index - 1, index);
+                    "calculate distances in documents between word {0} and word {1}", index - 1, index);
 
                 Score(weights, ref first, second, ++maxDistance, postings.Count - 1, index - 1);
             }

@@ -91,18 +91,18 @@ namespace Resin.Querying
         {
             var postings = terms.Count > 0 ? GetManyPostingsLists(terms) : null;
 
-            IList<DocumentPosting> reduced;
+            IList<DocumentPosting> result = new List<DocumentPosting>();
 
-            if (postings == null)
+            if (postings != null)
             {
-                reduced = new DocumentPosting[0];
-            }
-            else
-            {
-                reduced = postings.Sum();
+                foreach (var list in postings)
+                foreach (var p in list)
+                {
+                    result.Add(p);
+                }
             }
 
-            return reduced;
+            return result;
         }
 
         protected IList<DocumentPosting> GetPostingsList(Term term)

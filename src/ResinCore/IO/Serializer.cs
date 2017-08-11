@@ -412,7 +412,6 @@ namespace Resin.IO
                 KeyIndexOffset = keyIndexOffset,
                 KeyIndexSize = keyIndexSize,
                 Length = BitConverter.ToInt64(lenBytes, 0),
-                WordPositions = true
             };
         }
 

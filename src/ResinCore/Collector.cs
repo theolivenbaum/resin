@@ -56,16 +56,8 @@ namespace Resin
             }
             else if (ctx.Query is PhraseQuery)
             {
-                if (((FullTextSegmentInfo)(_readSession.Version)).WordPositions)
-                {
-                    new CBOWSearch(_readSession, _scorerFactory, _postingsReader)
+                new CBOWSearch(_readSession, _scorerFactory, _postingsReader)
                         .Search(ctx);
-                }
-                else
-                {
-                    new BOWSearch(_readSession, _scorerFactory, _postingsReader)
-                        .Search(ctx);
-                }
             }
             else
             {
