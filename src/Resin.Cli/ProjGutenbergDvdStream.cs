@@ -29,6 +29,7 @@ namespace Resin
         private IEnumerable<Document> ReadInternal()
         {
             var files = Directory.GetFiles(_directory, "*.zip", SearchOption.AllDirectories);
+
             foreach (var zipFileName in files)
             {
                 if (zipFileName.StartsWith("\\ETEXT"))
@@ -36,19 +37,12 @@ namespace Resin
                     continue;
                 }
 
-                using (var file = new FileStream(zipFileName, FileMode.Open))
-                {
-                    ZipArchive zip;
-                    try
-                    {
-                        zip = new ZipArchive(file, ZipArchiveMode.Read);
-                    }
-                    catch
-                    {
-                        continue;
-                    }
+                Document document = null;
 
-                    using (zip)
+                try
+                {
+                    using (var file = new FileStream(zipFileName, FileMode.Open))
+                    using (var zip = new ZipArchive(file, ZipArchiveMode.Read))
                     using (var txt = zip.Entries[0].Open())
                     using (var reader = new StreamReader(txt))
                     {
@@ -90,21 +84,26 @@ namespace Resin
 
                         var body = reader.ReadToEnd();
 
-                        var document = new Document(
+                        document = new Document(
                             new List<Field>
                             {
-                            new Field("title", title
-                                .Replace("The Project Gutenberg EBook of ", "")
-                                .Replace("Project Gutenberg's", "")
-                                .Replace("The Project Gutenberg eBook, ", "")),
-                            new Field("head", head),
-                            new Field("body", body),
-                            new Field("uri", zipFileName.Replace(_directory, ""))
+                        new Field("title", title
+                            .Replace("The Project Gutenberg EBook of ", "")
+                            .Replace("Project Gutenberg's", "")
+                            .Replace("The Project Gutenberg eBook, ", "")),
+                        new Field("head", head),
+                        new Field("body", body),
+                        new Field("uri", zipFileName.Replace(_directory, ""))
                             });
 
-                        yield return document;
                     }
                 }
+                catch
+                {
+                    continue;
+                }
+
+                if (document != null) yield return document;
             }
         }
     }
