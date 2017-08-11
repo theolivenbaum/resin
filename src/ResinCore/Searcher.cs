@@ -90,7 +90,7 @@ namespace Resin
 
             if (Log.IsDebugEnabled)
             {
-                Log.DebugFormat("searched {0} in {1}", query.ToQueryString(), searchTime.Elapsed);
+                Log.DebugFormat("total search time for query {0} in {1}", query.ToQueryString(), searchTime.Elapsed);
             }
 
             return result;
