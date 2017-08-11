@@ -44,8 +44,6 @@ namespace Resin.Analysis
 
                     foreach (var wordInfo in wordMatrix)
                     {
-                        var word = new Word(wordInfo.Key);
-                        var term = new Term(field.Key, word);
                         var postings = new List<Posting>(wordInfo.Value.Count);
 
                         foreach (var position in wordInfo.Value)
@@ -53,15 +51,14 @@ namespace Resin.Analysis
                             postings.Add(new Posting(document.Id, position));
                         }
 
-                        analyzedTerms.Add(new AnalyzedTerm(term, postings));
+                        analyzedTerms.Add(new AnalyzedTerm(field.Key, wordInfo.Key, postings));
                     }
                 }
                 else if (field.Index)
                 {
-                    var term = new Term(field.Key, new Word(field.Value));
                     var postings = new List<Posting> { new Posting(document.Id, 0) };
 
-                    analyzedTerms.Add(new AnalyzedTerm(term, postings));
+                    analyzedTerms.Add(new AnalyzedTerm(field.Key, field.Value, postings));
                 }
             }
             return analyzedTerms;

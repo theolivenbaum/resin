@@ -26,11 +26,9 @@ namespace Resin
 
             foreach (var word in analyzedTerms)
             {
-                var field = word.Term.Field;
-                var token = word.Term.Word.Value;
                 var postings = word.Postings;
 
-                _treeBuilder.Add(field, token, postings);
+                _treeBuilder.Add(word.Field, word.Value, postings);
             }
 
             _writeSession.Write(document);

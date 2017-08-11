@@ -4,18 +4,20 @@ namespace Resin.Analysis
 {
     public class AnalyzedTerm
     {
-        public Term Term { get; private set; }
+        public string Field { get; private set; }
+        public readonly string Value;
         public IList<Posting> Postings { get; private set; }
 
-        public AnalyzedTerm(Term term, IList<Posting> postings)
+        public AnalyzedTerm(string key, string value, IList<Posting> postings)
         {
-            Term = term;
+            Field = key;
+            Value = value;
             Postings = postings;
         }
 
         public override string ToString()
         {
-            return string.Format("{0}:{1}", Term, Postings.Count);
+            return string.Format("{0}:{1}:{2}", Field, Value, Postings.Count);
         }
     }
 }
