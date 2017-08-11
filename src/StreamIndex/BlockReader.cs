@@ -7,11 +7,12 @@ namespace StreamIndex
     public abstract class BlockReader<T> : IDisposable
     {
         protected abstract T Deserialize(long offset, int size, Stream stream);
-
+        protected abstract T Clone(T input);
         private readonly long _offset;
 
         private readonly Stream _stream;
         private readonly bool _leaveOpen;
+        private readonly IDictionary<long, T> _cache = new Dictionary<long, T>();
 
         protected BlockReader(Stream stream, bool leaveOpen = false):this(stream, 0, leaveOpen)
         {
@@ -29,7 +30,18 @@ namespace StreamIndex
             var result = new List<T>(blocks.Count);
             foreach (var block in blocks)
             {
-                result.Add(ReadInternal(block));
+                T cached;
+                if (!_cache.TryGetValue(block.Position, out cached))
+                {
+                    var read = ReadInternal(block);
+                    result.Add(read);
+                    _cache.Add(block.Position, read);
+                }
+                else
+                {
+                    result.Add(Clone(cached));
+                }
+                
             }
             return result;
         }

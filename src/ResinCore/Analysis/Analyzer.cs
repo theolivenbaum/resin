@@ -39,7 +39,7 @@ namespace Resin.Analysis
                             wordMatrix.Add(word, new List<int> { index });
                         }
 
-                        Log.DebugFormat("found term {0} at pos {1}", word, index);
+                        //Log.DebugFormat("found term {0} at pos {1}", word, index);
                     }
 
                     foreach (var wordInfo in wordMatrix)

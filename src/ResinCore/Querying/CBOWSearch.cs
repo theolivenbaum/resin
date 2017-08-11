@@ -19,14 +19,15 @@ namespace Resin.Querying
             var phraseQuery = (PhraseQuery)ctx.Query;
             var tokens = phraseQuery.Values;
             var terms = new List<Term>(tokens.Count);
-
-            Log.DebugFormat("executing {0}", phraseQuery);
+            var postingsCache = new Dictionary<string, IList<DocumentPosting>>();
 
             for (int index = 0; index < tokens.Count; index++)
             {
+                var token = tokens[index];
+
                 using (var reader = GetTreeReader(ctx.Query.Field))
                 {
-                    var words = reader.IsWord(tokens[index]);
+                    var words = reader.IsWord(token);
                     if (words.Count > 0)
                     {
                         terms.Add(new Term(ctx.Query.Field, words[0]));
@@ -46,16 +47,11 @@ namespace Resin.Querying
                 return Score(postings[0]);
             }
 
-            var timer = Stopwatch.StartNew();
-
             var weights = new DocumentScore[postings[0].Count][];
 
             SetWeights(postings, weights);
 
-            Log.DebugFormat("produced {0} weights in {1}",
-                    weights.Length, timer.Elapsed);
-
-            timer = Stopwatch.StartNew();
+           var timer = Stopwatch.StartNew();
 
             var scores = new Dictionary<int, DocumentScore>();
 
@@ -174,8 +170,8 @@ namespace Resin.Querying
                         }
                     }
 
-                    Log.DebugFormat("document ID {0} scored {1}",
-                        p1.DocumentId, score);
+                    //Log.DebugFormat("document ID {0} scored {1}",
+                    //    p1.DocumentId, score);
                 }
                 else
                 {

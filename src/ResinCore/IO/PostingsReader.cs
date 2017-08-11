@@ -22,5 +22,15 @@ namespace Resin.IO
 
             return Serializer.DeserializePostings(stream, size);
         }
+
+        protected override IList<DocumentPosting> Clone(IList<DocumentPosting> input)
+        {
+            var result = new List<DocumentPosting>();
+            foreach(var p in input)
+            {
+                result.Add(new DocumentPosting(p.DocumentId, p.Position));
+            }
+            return result;
+        }
     }
 }

@@ -20,6 +20,12 @@ namespace DocumentTable
             Id = documentId;
         }
 
+        public Document(int documentId, IDictionary<string, Field> fields)
+        {
+            Id = documentId;
+            _fields = fields;
+        }
+
         public Document(IList<Field> fields)
         {
             if (fields == null) throw new ArgumentNullException("fields");

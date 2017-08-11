@@ -37,51 +37,62 @@ namespace Resin
                 }
 
                 using (var file = new FileStream(zipFileName, FileMode.Open))
-                using (var zip = new ZipArchive(file, ZipArchiveMode.Read))
-                using (var txt = zip.Entries[0].Open())
-                using(var reader = new StreamReader(txt))
                 {
-                    var title = reader.ReadLine() + " " + reader.ReadLine();
-                    var head = new StringBuilder();
-                    var couldNotRead = false;
-                    string encoding = null;
-
-                    while (true)
+                    ZipArchive zip;
+                    try
                     {
-                        var line = reader.ReadLine();
-
-                        if (line == null)
-                        {
-                            couldNotRead = true;
-                            break;
-                        }
-                        else if (line.Contains("***"))
-                        {
-                            break;
-                        }
-
-                        if (line.Contains("encoding: ASCII"))
-                        {
-                            encoding = line;
-                        }
-                        else
-                        {
-                            head.Append(" ");
-                            head.Append(line);
-                        }
-                        
+                        zip = new ZipArchive(file, ZipArchiveMode.Read);
                     }
-
-                    if (encoding == null || couldNotRead)
+                    catch
                     {
                         continue;
                     }
 
-                    var body = reader.ReadToEnd();
+                    using (zip)
+                    using (var txt = zip.Entries[0].Open())
+                    using (var reader = new StreamReader(txt))
+                    {
+                        var title = reader.ReadLine() + " " + reader.ReadLine();
+                        var head = new StringBuilder();
+                        var couldNotRead = false;
+                        string encoding = null;
 
-                    var document = new Document(
-                        new List<Field>
+                        while (true)
                         {
+                            var line = reader.ReadLine();
+
+                            if (line == null)
+                            {
+                                couldNotRead = true;
+                                break;
+                            }
+                            else if (line.Contains("***"))
+                            {
+                                break;
+                            }
+
+                            if (line.Contains("encoding: ASCII"))
+                            {
+                                encoding = line;
+                            }
+                            else
+                            {
+                                head.Append(" ");
+                                head.Append(line);
+                            }
+
+                        }
+
+                        if (encoding == null || couldNotRead)
+                        {
+                            continue;
+                        }
+
+                        var body = reader.ReadToEnd();
+
+                        var document = new Document(
+                            new List<Field>
+                            {
                             new Field("title", title
                                 .Replace("The Project Gutenberg EBook of ", "")
                                 .Replace("Project Gutenberg's", "")
@@ -89,9 +100,10 @@ namespace Resin
                             new Field("head", head),
                             new Field("body", body),
                             new Field("uri", zipFileName.Replace(_directory, ""))
-                        });
+                            });
 
-                    yield return document;
+                        yield return document;
+                    }
                 }
             }
         }

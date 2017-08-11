@@ -35,7 +35,7 @@ namespace Resin
 
             _writeSession.Write(document);
 
-            Log.DebugFormat("stored and analyzed {0}", document.Id);
+            Log.DebugFormat("stored and analyzed doc ID {0}", document.Id);
         }
     }
 }
