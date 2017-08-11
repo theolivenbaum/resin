@@ -140,20 +140,23 @@ namespace Resin.Querying
             {
                 var second = postings[index];
 
-                Log.DebugFormat(
-                    "calculate distances in documents between word 0 and word {0}", index);
+                var count = Score(
+                    weights, ref first, second, ++maxDistance, postings.Count - 1, index - 1);
 
-                Score(weights, ref first, second, ++maxDistance, postings.Count - 1, index - 1);
+                Log.DebugFormat(
+                    "found {0} postings in word position {1} within close proximity of word 0",
+                    count, index);
             }
 
-            Log.DebugFormat("calculated {0} weights in {1}",
+            Log.DebugFormat("created weight matrix with {0} rows in {1}",
                     weights.Length, timer.Elapsed);
         }
 
-        private void Score (
+        private int Score (
             DocumentScore[][] weights, ref IList<DocumentPosting> list1, 
             IList<DocumentPosting> list2, int maxDistance, int numOfPasses, int passIndex)
         {
+            var count = 0;
             var cursor1 = 0;
             var cursor2 = 0;
 
@@ -212,6 +215,8 @@ namespace Resin.Querying
 
                     //Log.DebugFormat("document ID {0} scored {1}",
                     //    p1.DocumentId, score);
+
+                    count++;
                 }
                 else
                 {
@@ -221,6 +226,8 @@ namespace Resin.Querying
                 }
                 cursor1++;
             }
+
+            return count;
         }
 
         private Node ToBST(IList<DocumentPosting> sorted, int start, int end)
