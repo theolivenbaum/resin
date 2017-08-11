@@ -123,7 +123,7 @@ namespace Tests
 
             using (var searcher = new Searcher(dir))
             {
-                var result = searcher.Search("title:'rambo'");
+                var result = searcher.Search("title:\"rambo first\"");
 
                 Assert.AreEqual(1, result.Total);
                 Assert.AreEqual(1, result.Docs.Count);
@@ -133,8 +133,8 @@ namespace Tests
 
             var moreDocs = new List<dynamic>
 {
-                new {_id = "3", title = "rambo 2" },
-                new {_id = "4", title = "rocky 2" },
+                new {_id = "3", title = "rocky 2" },
+                new {_id = "4", title = "rambo 2" },
                 new {_id = "5", title = "the raiders of the lost ark" },
             }.ToDocuments(primaryKeyFieldName: "_id");
 
@@ -145,13 +145,12 @@ namespace Tests
 
             using (var searcher = new Searcher(dir))
             {
-                var result = searcher.Search("title:'rambo'");
+                var result = searcher.Search("title:\"rambo first\"");
 
-                Assert.AreEqual(2, result.Total);
-                Assert.AreEqual(2, result.Docs.Count);
+                Assert.AreEqual(1, result.Total);
+                Assert.AreEqual(1, result.Docs.Count);
 
                 Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "0"));
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
 
             }
         }

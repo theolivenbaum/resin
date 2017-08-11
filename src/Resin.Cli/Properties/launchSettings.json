@@ -2,7 +2,7 @@
   "profiles": {
     "Resin.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "query --dir c:\\temp\\resin_data\\pg -q \"body:\\\"to be or not to be\\\"\" -p 0 -s 20"
+      "commandLineArgs": "query --dir c:\\temp\\resin_data\\pg -q \"body:\\\"to be or not to be\\\"\" -p 0 -s 30"
     }
   }
 }

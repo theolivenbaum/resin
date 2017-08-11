@@ -55,7 +55,14 @@ namespace Resin.Querying
 
             var postings = terms.Count > 0 ? GetManyPostingsLists(terms): null;
 
-            ctx.Scores = Score(postings);
+            if (postings == null || postings.Count < tokens.Count)
+            {
+                ctx.Scores = new DocumentScore[0];
+            }
+            else
+            {
+                ctx.Scores = Score(postings);
+            }
         }
 
         private IList<DocumentScore> Score(IList<IList<DocumentPosting>> postings)
@@ -71,7 +78,7 @@ namespace Resin.Querying
 
            var timer = Stopwatch.StartNew();
 
-            var scores = new Dictionary<int, DocumentScore>();
+            var scoreDic = new Dictionary<int, DocumentScore>();
 
             foreach(DocumentScore[] score in weights)
             {
@@ -91,16 +98,16 @@ namespace Resin.Querying
                     if (sum != null)
                     {
                         DocumentScore existing;
-                        if (scores.TryGetValue(sum.DocumentId, out existing))
+                        if (scoreDic.TryGetValue(sum.DocumentId, out existing))
                         {
                             if (sum.Score > existing.Score)
                             {
-                                scores[sum.DocumentId] = sum;
+                                scoreDic[sum.DocumentId] = sum;
                             }
                         }
                         else
                         {
-                            scores[sum.DocumentId] = sum;
+                            scoreDic[sum.DocumentId] = sum;
                         }
                     }
                 }
@@ -108,7 +115,19 @@ namespace Resin.Querying
 
             Log.DebugFormat("scored weights in {0}", timer.Elapsed);
 
-            return scores.Values.ToList();
+            var notObsolete = new List<DocumentScore>();
+
+            foreach (var score in scoreDic.Values)
+            {
+                var docHash = Session.ReadDocHash(score.DocumentId);
+
+                if (!docHash.IsObsolete)
+                {
+                    score.DocHash = docHash.Hash;
+                    notObsolete.Add(score);
+                }
+            }
+            return notObsolete;
         }
 
         private void SetWeights(IList<IList<DocumentPosting>> postings, DocumentScore[][] weights)

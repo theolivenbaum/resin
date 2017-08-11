@@ -121,7 +121,8 @@ namespace Resin
         {
             using (var collector = new Collector(_directory, readSession, _scorerFactory))
             {
-                return collector.Collect(query);
+                var scores = collector.Collect(query);
+                return scores;
             }
         }
 
