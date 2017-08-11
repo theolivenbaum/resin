@@ -99,7 +99,7 @@ namespace Resin.Querying
 
         private void SetWeights(IList<IList<DocumentPosting>> postings, DocumentScore[][] weights)
         {
-            int maxDistance = 1;
+            int maxDistance = postings.Count;
             var timer = Stopwatch.StartNew();
             var first = postings[0];
 
@@ -118,7 +118,8 @@ namespace Resin.Querying
         }
 
         private void Score (
-            DocumentScore[][] weights, ref IList<DocumentPosting> list1, IList<DocumentPosting> list2, int maxDistance, int numOfPasses, int passIndex)
+            DocumentScore[][] weights, ref IList<DocumentPosting> list1, 
+            IList<DocumentPosting> list2, int maxDistance, int numOfPasses, int passIndex)
         {
             var cursor1 = 0;
             var cursor2 = 0;
