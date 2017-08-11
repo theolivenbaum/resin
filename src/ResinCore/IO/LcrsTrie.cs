@@ -113,10 +113,10 @@ namespace Resin.IO
 
         public void Add(string word)
         {
-            Add(word, 0, new Posting[] { new Posting(-1, 1) });
+            Add(word, 0, new AnalyzedTerm(-1, null, null, new int[] { -1 }));
         }
 
-        public void Add(string word, int index, IList<Posting> postings)
+        public void Add(string word, int index, AnalyzedTerm term)
         {
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
 
@@ -179,12 +179,12 @@ namespace Resin.IO
                     node.PostingsStream = new MemoryStream();
                 }
 
-                postings.Serialize(node.PostingsStream);
+                term.Serialize(node.PostingsStream);
 
             }
             else
             {
-                node.Add(word, index + 1, postings);
+                node.Add(word, index + 1, term);
             }
         }
 

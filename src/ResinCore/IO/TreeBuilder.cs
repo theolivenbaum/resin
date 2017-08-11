@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using DocumentTable;
+using Resin.Analysis;
 
 namespace Resin.IO
 {
@@ -12,11 +13,11 @@ namespace Resin.IO
             _tries = new Dictionary<ulong, LcrsTrie>();
         }
 
-        public void Add(string key, string value, IList<Posting> postings)
+        public void Add(string key, string value, AnalyzedTerm term)
         {
             var tree = GetTree(key);
 
-            tree.Add(value, 0, postings);
+            tree.Add(value, 0, term);
         }
 
         private LcrsTrie GetTree(string key)

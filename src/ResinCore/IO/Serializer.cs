@@ -7,6 +7,7 @@ using Resin.IO.Read;
 using log4net;
 using StreamIndex;
 using DocumentTable;
+using Resin.Analysis;
 
 namespace Resin.IO
 {
@@ -195,27 +196,45 @@ namespace Resin.IO
             }
         }
 
-        public static int Serialize(this IEnumerable<Posting> postings, Stream stream)
+        public static void Serialize(this AnalyzedTerm term, Stream stream)
         {
-            var size = 0;
-            foreach (var posting in postings)
+            foreach (var position in term.Positions)
             {
-                byte[] idBytes = BitConverter.GetBytes(posting.DocumentId);
-                byte[] countBytes = BitConverter.GetBytes(posting.Position);
+                byte[] idBytes = BitConverter.GetBytes(term.DocumentId);
+                byte[] dataBytes = BitConverter.GetBytes(position);
 
                 if (!BitConverter.IsLittleEndian)
                 {
                     Array.Reverse(idBytes);
-                    Array.Reverse(countBytes);
+                    Array.Reverse(dataBytes);
                 }
 
                 stream.Write(idBytes, 0, sizeof(int));
-                stream.Write(countBytes, 0, sizeof(int));
-
-                size += (idBytes.Length + countBytes.Length);
+                stream.Write(dataBytes, 0, sizeof(int));
             }
-            return size;
         }
+
+        //public static int Serialize(this IEnumerable<Posting> postings, Stream stream)
+        //{
+        //    var size = 0;
+        //    foreach (var posting in postings)
+        //    {
+        //        byte[] idBytes = BitConverter.GetBytes(posting.DocumentId);
+        //        byte[] countBytes = BitConverter.GetBytes(posting.Position);
+
+        //        if (!BitConverter.IsLittleEndian)
+        //        {
+        //            Array.Reverse(idBytes);
+        //            Array.Reverse(countBytes);
+        //        }
+
+        //        stream.Write(idBytes, 0, sizeof(int));
+        //        stream.Write(countBytes, 0, sizeof(int));
+
+        //        size += (idBytes.Length + countBytes.Length);
+        //    }
+        //    return size;
+        //}
 
         public static void Serialize(this FullTextSegmentInfo ix, string fileName)
         {

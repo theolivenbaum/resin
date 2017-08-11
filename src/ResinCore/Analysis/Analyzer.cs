@@ -44,21 +44,23 @@ namespace Resin.Analysis
 
                     foreach (var wordInfo in wordMatrix)
                     {
-                        var postings = new List<Posting>(wordInfo.Value.Count);
+                        var postings = new List<int>(wordInfo.Value.Count);
 
                         foreach (var position in wordInfo.Value)
                         {
-                            postings.Add(new Posting(document.Id, position));
+                            postings.Add(position);
                         }
 
-                        analyzedTerms.Add(new AnalyzedTerm(field.Key, wordInfo.Key, postings));
+                        analyzedTerms.Add(
+                            new AnalyzedTerm(document.Id, field.Key, wordInfo.Key, postings));
                     }
                 }
                 else if (field.Index)
                 {
-                    var postings = new List<Posting> { new Posting(document.Id, 0) };
+                    var postings = new int[] { 0 };
 
-                    analyzedTerms.Add(new AnalyzedTerm(field.Key, field.Value, postings));
+                    analyzedTerms.Add(
+                        new AnalyzedTerm(document.Id, field.Key, field.Value, postings));
                 }
             }
             return analyzedTerms;
