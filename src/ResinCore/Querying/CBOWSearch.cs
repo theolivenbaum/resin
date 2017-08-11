@@ -166,7 +166,7 @@ namespace Resin.Querying
 
                 var distance = p2.Position - p1.Position;
 
-                if (distance < 0)
+                if (distance <= 0)
                 {
                     cursor2++;
                     continue;
@@ -174,7 +174,7 @@ namespace Resin.Querying
 
                 if (distance <= maxDistance)
                 {
-                    var score = (double)1 / Math.Max(1, distance);
+                    var score = (double)1 / distance;
                     var documentScore = new DocumentScore(p1.DocumentId, score, Session.Version);
 
                     if (weights[cursor1] == null)
