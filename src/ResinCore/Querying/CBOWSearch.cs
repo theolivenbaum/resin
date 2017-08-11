@@ -3,6 +3,7 @@ using Resin.IO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Resin.Querying
 {
@@ -56,32 +57,44 @@ namespace Resin.Querying
 
             timer = Stopwatch.StartNew();
 
-            var scores = new List<DocumentScore>();
+            var scores = new Dictionary<int, DocumentScore>();
 
             foreach(DocumentScore[] score in weights)
             {
                 if (score != null)
                 {
-                    DocumentScore first = score[0];
+                    DocumentScore sum = score[0];
                     for (int i = 1; i < score.Length; i++)
                     {
-                        if (score[i] == null)
+                        var s = score[i];
+                        if (s == null)
                         {
-                            first = null;
+                            sum = null;
                             break;
                         }
-                        first.Add(score[i]);
+                        sum.Add(s);
                     }
-                    if (first != null)
+                    if (sum != null)
                     {
-                        scores.Add(first);
+                        DocumentScore existing;
+                        if (scores.TryGetValue(sum.DocumentId, out existing))
+                        {
+                            if (sum.Score > existing.Score)
+                            {
+                                scores[sum.DocumentId] = sum;
+                            }
+                        }
+                        else
+                        {
+                            scores[sum.DocumentId] = sum;
+                        }
                     }
                 }
             }
 
             Log.DebugFormat("scored weights in {0}", timer.Elapsed);
 
-            return scores.Sum();
+            return scores.Values.ToList();
         }
 
         private void SetWeights(IList<IList<DocumentPosting>> postings, DocumentScore[][] weights)
@@ -148,7 +161,7 @@ namespace Resin.Querying
 
                 if (distance <= maxDistance)
                 {
-                    var score = (float)1 / distance;
+                    var score = (double)1 / Math.Max(1, distance);
                     var documentScore = new DocumentScore(p1.DocumentId, score, Session.Version);
 
                     if (weights[cursor1] == null)
