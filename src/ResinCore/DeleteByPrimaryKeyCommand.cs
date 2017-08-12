@@ -10,12 +10,12 @@ namespace Resin
     {
         private readonly string _directory;
         private readonly IEnumerable<string> _pks;
-        private readonly List<SegmentInfo> _ixs;
+        private readonly IDictionary<long, SegmentInfo> _ixs;
 
         public DeleteByPrimaryKeyCommand(string directory, IEnumerable<string> primaryKeyValues)
         {
             _directory = directory;
-            _ixs = Util.GetIndexFileNamesInChronologicalOrder(directory).Select(SegmentInfo.Load).ToList();
+            _ixs = Util.GetIndexVersionInfoInChronologicalOrder(directory);
             _pks = primaryKeyValues;
         }
 
@@ -26,15 +26,15 @@ namespace Resin
 
             foreach (var ix in _ixs)
             {
-                var dataFile = Path.Combine(_directory, ix.VersionId + ".rdb");
+                var dataFile = Path.Combine(_directory, ix.Key + ".rdb");
 
                 using (var stream = new FileStream(dataFile, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
-                    stream.Seek(ix.DocHashOffset, SeekOrigin.Begin);
+                    stream.Seek(ix.Value.DocHashOffset, SeekOrigin.Begin);
 
                     var buffer = new byte[TableSerializer.SizeOfDocHash()];
 
-                    while (stream.Position < ix.DocAddressesOffset)
+                    while (stream.Position < ix.Value.DocAddressesOffset)
                     {
                         stream.Read(buffer, 0, buffer.Length);
 

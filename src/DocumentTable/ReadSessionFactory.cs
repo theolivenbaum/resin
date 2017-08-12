@@ -30,7 +30,12 @@ namespace DocumentTable
         public IReadSession OpenReadSession(long version)
         {
             var ix = SegmentInfo.Load(Path.Combine(_directory, version + ".ix"));
-           
+
+            return OpenReadSession(ix);
+        }
+
+        public IReadSession OpenReadSession(SegmentInfo ix)
+        {
             return new ReadSession(
                 ix,
                 new DocHashReader(_compoundFile, ix.DocHashOffset),

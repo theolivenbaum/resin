@@ -144,7 +144,7 @@ namespace Resin.Querying
                     weights, ref first, second, ++maxDistance, postings.Count - 1, index - 1);
 
                 Log.DebugFormat(
-                    "found {0} postings in word position {1} within close proximity of word 0",
+                    "found {0} postings at word position {1} within close proximity of word 0",
                     count, index);
             }
 

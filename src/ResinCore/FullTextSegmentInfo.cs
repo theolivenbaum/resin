@@ -7,6 +7,11 @@ namespace Resin
 {
     public class FullTextSegmentInfo : SegmentInfo
     {
+        public new static FullTextSegmentInfo Load(string directory, long version)
+        {
+            return Load(Path.Combine(directory, version + ".ix"));
+        }
+
         public new static FullTextSegmentInfo Load(string fileName)
         {
             var time = new Stopwatch();

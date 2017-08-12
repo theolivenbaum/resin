@@ -7,15 +7,14 @@ namespace DocumentTable
 {
     public class ReadSession : IReadSession
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(ReadSession));
+        protected static readonly ILog Log = LogManager.GetLogger(typeof(ReadSession));
 
-        private readonly DocHashReader _docHashReader;
-        private readonly BlockInfoReader _addressReader;
-        private readonly int _blockSize;
-        private readonly Stream _stream;
+        protected readonly DocHashReader DocHashReader;
+        protected readonly BlockInfoReader AddressReader;
+        protected readonly int BlockSize;
 
         public SegmentInfo Version { get; set; }
-        public Stream Stream { get { return _stream; } }
+        public Stream Stream { get; protected set; }
 
         public ReadSession(
             SegmentInfo version, 
@@ -25,15 +24,15 @@ namespace DocumentTable
         {
             Version = version;
 
-            _stream = stream;
-            _docHashReader = docHashReader;
-            _addressReader = addressReader;
-            _blockSize = BlockSerializer.SizeOfBlock();
+            Stream = stream;
+            DocHashReader = docHashReader;
+            AddressReader = addressReader;
+            BlockSize = BlockSerializer.SizeOfBlock();
         }
 
         public DocHash ReadDocHash(int docId)
         {
-            return _docHashReader.Read(docId);
+            return DocHashReader.Read(docId);
         }
 
         public IList<Document> ReadDocuments(IList<int> documentIds)
@@ -42,18 +41,19 @@ namespace DocumentTable
 
             foreach (var id in documentIds)
             {
-                addresses.Add(new BlockInfo(id * _blockSize, _blockSize));
+                addresses.Add(new BlockInfo(id * BlockSize, BlockSize));
             }
 
-            var docAddresses = _addressReader.Read(addresses);
+            var docAddresses = AddressReader.Read(addresses);
             var index = 0;
             var documents = new List<Document>(documentIds.Count);
 
-            _stream.Seek(Version.KeyIndexOffset, SeekOrigin.Begin);
-            var keyIndex = TableSerializer.ReadKeyIndex(_stream, Version.KeyIndexSize);
+            Stream.Seek(Version.KeyIndexOffset, SeekOrigin.Begin);
+
+            var keyIndex = TableSerializer.ReadKeyIndex(Stream, Version.KeyIndexSize);
 
             using (var documentReader = new DocumentReader(
-                _stream, Version.Compression, keyIndex, leaveOpen: true))
+                Stream, Version.Compression, keyIndex, leaveOpen: true))
 
                 foreach (var document in documentReader.Read(docAddresses))
                 {
@@ -66,8 +66,8 @@ namespace DocumentTable
 
         public void Dispose()
         {
-            _addressReader.Dispose();
-            _docHashReader.Dispose();
+            AddressReader.Dispose();
+            DocHashReader.Dispose();
         }
     }
 }

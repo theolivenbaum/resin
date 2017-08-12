@@ -39,7 +39,7 @@ namespace Tests
                 var query = new QueryParser().Parse("_id:'3'");
                 var scores = collector.Collect(query);
 
-                Assert.AreEqual(1, scores.Length);
+                Assert.AreEqual(1, scores.Count);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
             }
 
@@ -49,7 +49,7 @@ namespace Tests
                 var query = new QueryParser().Parse("_id:'5five'");
                 var scores = collector.Collect(query);
 
-                Assert.AreEqual(1, scores.Length);
+                Assert.AreEqual(1, scores.Count);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 5));
             }
         }
@@ -259,7 +259,7 @@ namespace Tests
                 var query = new QueryParser().Parse("title:'rambo'");
                 var scores = collector.Collect(query);
 
-                Assert.AreEqual(2, scores.Length);
+                Assert.AreEqual(2, scores.Count);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 0));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
             }
@@ -270,7 +270,7 @@ namespace Tests
                 var query = new QueryParser().Parse("title:'the'");
                 var scores = collector.Collect(query);
 
-                Assert.AreEqual(3, scores.Length);
+                Assert.AreEqual(3, scores.Count);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 5));
@@ -303,7 +303,7 @@ namespace Tests
                 var query = new QueryParser().Parse("title:'rambo'");
                 var scores = collector.Collect(query);
 
-                Assert.AreEqual(2, scores.Length);
+                Assert.AreEqual(2, scores.Count);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 0));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
             }
@@ -318,7 +318,7 @@ namespace Tests
                 var query = new QueryParser().Parse("title:'rambo'");
                 var scores = collector.Collect(query);
 
-                Assert.AreEqual(1, scores.Length);
+                Assert.AreEqual(1, scores.Count);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
             }
         }
@@ -347,7 +347,7 @@ namespace Tests
                 var query = new QueryParser().Parse("title:'ra'*");
                 var scores = collector.Collect(query);
 
-                Assert.AreEqual(4, scores.Length);
+                Assert.AreEqual(4, scores.Count);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 0));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 1));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
@@ -379,7 +379,7 @@ namespace Tests
                 var query = new QueryParser().Parse("title:'raider'");
                 var scores = collector.Collect(query);
 
-                Assert.AreEqual(1, scores.Length);
+                Assert.AreEqual(1, scores.Count);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
             }
 
@@ -389,7 +389,7 @@ namespace Tests
                 var query = new QueryParser().Parse("title:'raider'~");
                 var scores = collector.Collect(query);
 
-                Assert.AreEqual(2, scores.Length);
+                Assert.AreEqual(2, scores.Count);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 3));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
             }

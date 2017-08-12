@@ -193,26 +193,66 @@ namespace Resin
             return sum;
         }
 
-        public static DocumentScore[] CombineTakingLatestVersion(this IList<DocumentScore[]> scores)
+        public static IList<DocumentScore> SortByScoreAndTakeLatestVersion(
+            this IList<List<DocumentScore>> scores, int skip, int size, out int total)
         {
-            if (scores.Count == 0) return new DocumentScore[0];
-
-            if (scores.Count == 1) return scores[0];
+            if (scores.Count == 0)
+            {
+                total = 0;
+                return new DocumentScore[0];
+            }
 
             var first = scores[0];
 
+            if (scores.Count == 1)
+            {
+                total = first.Count;
+            }
+
             for (int i = 1; i < scores.Count; i++)
             {
-                first = CombineTakingLatestVersion(first, scores[i]);
+                var sortedAndCurrent = TakeLatestVersion(first, scores[i]);
+                first = sortedAndCurrent;
             }
-            return first;
-        }
 
-        public static DocumentScore[] CombineTakingLatestVersion(DocumentScore[] first, DocumentScore[] second)
+            first.Sort(new DescendingDocumentScoreComparer());
+            total = first.Count;
+
+            var took = 0;
+            var skipped = 0;
+            var result = new List<DocumentScore>(size);
+
+            for (int index = 0; index < first.Count; index++)
+            {
+                if (took == size)
+                {
+                    break;
+                }
+
+                if (skip > 0 && skipped++ < skip)
+                {
+                    continue;
+                }
+
+                result.Add(first[index]);
+                took++;
+            }
+            
+            return result;
+        }
+        
+        public static List<DocumentScore> TakeLatestVersion(
+            IList<DocumentScore> first, IList<DocumentScore> second)
         {
             var unique = new Dictionary<UInt64, DocumentScore>();
+            var result = new List<DocumentScore>();
 
-            foreach (var score in first.Concat(second))
+            foreach (var score in first)
+            {
+                unique.Add(score.DocHash, score);
+                result.Add(score);
+            }
+            foreach (var score in second)
             {
                 DocumentScore exists;
 
@@ -223,9 +263,11 @@ namespace Resin
                 else
                 {
                     unique.Add(score.DocHash, score);
+                    result.Add(score);
                 }
             }
-            return unique.Values.ToArray();
+
+            return result;
         }
 
         public static DocumentScore TakeLatestVersion(DocumentScore first, DocumentScore second)
@@ -237,6 +279,26 @@ namespace Resin
                 return first;
             }
             return second;
+        }
+    }
+
+    public class DescendingDocumentScoreComparer : IComparer<DocumentScore>
+    {
+        public int Compare(DocumentScore x, DocumentScore y)
+        {
+            if (x.Score < y.Score) return 1;
+            if (x.Score > y.Score) return -1;
+            return 0;
+        }
+    }
+
+    public class DescendingScoreComparer : IComparer<double>
+    {
+        public int Compare(double x, double y)
+        {
+            if (x < y) return 1;
+            if (x > y) return -1;
+            return 0;
         }
     }
 }

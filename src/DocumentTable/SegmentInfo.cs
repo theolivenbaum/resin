@@ -32,6 +32,11 @@ namespace DocumentTable
 
         public long Length { get; set; }
 
+        public static SegmentInfo Load(string directory, long version)
+        {
+            return Load(Path.Combine(directory, version + ".ix"));
+        }
+
         public static SegmentInfo Load(string fileName)
         {
             var time = new Stopwatch();
@@ -44,7 +49,7 @@ namespace DocumentTable
                 ix = TableSerializer.DeserializeSegmentInfo(fs);
             }
 
-            Log.DebugFormat("loaded ix in {0}", time.Elapsed);
+            Log.DebugFormat("loaded ix {0} in {1}", fileName, time.Elapsed);
 
             return ix;
         }

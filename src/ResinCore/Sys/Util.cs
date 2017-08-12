@@ -41,12 +41,43 @@ namespace Resin.Sys
             return GetTicks();
         }
 
-        public static IEnumerable<string> GetIndexFileNamesInChronologicalOrder(string directory)
+        public static string[] GetIndexFileNamesInChronologicalOrder(string directory)
         {
-            return Directory.GetFiles(directory, "*.ix")
-                .Select(f => new {id = long.Parse(Path.GetFileNameWithoutExtension(f)), fileName = f})
-                .OrderBy(info => info.id)
-                .Select(info => info.fileName);
+            return Directory.GetFiles(directory, "*.ix");
+        }
+
+        public static IList<SegmentInfo> GetIndexVersionListInChronologicalOrder(string directory)
+        {
+            var list = new List<SegmentInfo>();
+            foreach (var file in Directory.GetFiles(directory, "*.ix"))
+            {
+                var version = long.Parse(Path.GetFileNameWithoutExtension(file));
+                var ix = SegmentInfo.Load(Path.Combine(directory, version + ".ix"));
+                list.Add(ix);
+            }
+            return list;
+        }
+
+        public static IDictionary<long, SegmentInfo> GetIndexVersionInfoInChronologicalOrder(string directory)
+        {
+            var list = new Dictionary<long, SegmentInfo>();
+            foreach (var file in Directory.GetFiles(directory, "*.ix"))
+            {
+                var version = long.Parse(Path.GetFileNameWithoutExtension(file));
+                var ix = SegmentInfo.Load(Path.Combine(directory, version + ".ix"));
+                list.Add(version, ix);
+            }
+            return list;
+        }
+
+        public static long[] GetIndexVersionsInChronologicalOrder(string directory)
+        {
+            var list = new List<long>();
+            foreach(var file in Directory.GetFiles(directory, "*.ix"))
+            {
+                list.Add(long.Parse(Path.GetFileNameWithoutExtension(file)));
+            }
+            return list.ToArray();
         }
 
         public static IEnumerable<string> GetDataFileNamesInChronologicalOrder(string directory)
@@ -59,8 +90,8 @@ namespace Resin.Sys
 
         public static int GetDocumentCount(string directory)
         {
-            return GetIndexFileNamesInChronologicalOrder(directory)
-                .Select(SegmentInfo.Load)
+            return GetIndexVersionInfoInChronologicalOrder(directory)
+                .Values
                 .Sum(x=>x.DocumentCount);   
         }
 
@@ -70,7 +101,7 @@ namespace Resin.Sys
         }
 
         /// <summary>
-        /// Divides one big workload into many smaller workloads.
+        /// Divides one big workload into a number of smaller workloads with set size.
         /// </summary>
         public static IEnumerable<IEnumerable<T>> IntoBatches<T>(this IEnumerable<T> list, int size)
         {

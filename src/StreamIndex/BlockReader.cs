@@ -25,6 +25,22 @@ namespace StreamIndex
             _leaveOpen = leaveOpen;
         }
 
+        public T Read(BlockInfo block)
+        {
+            T cached;
+
+            if (!_cache.TryGetValue(block.Position, out cached))
+            {
+                var read = ReadInternal(block);
+                _cache.Add(block.Position, read);
+                return Clone(read);
+            }
+            else
+            {
+                return Clone(cached);
+            }
+        }
+
         public IList<T> Read(IList<BlockInfo> blocks)
         {
             var result = new List<T>(blocks.Count);
@@ -41,7 +57,7 @@ namespace StreamIndex
                 {
                     result.Add(Clone(cached));
                 }
-                
+
             }
             return result;
         }

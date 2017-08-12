@@ -29,7 +29,7 @@ namespace Resin
                 _readSession.Stream, _readSession.Version.PostingsOffset);
         }
 
-        public DocumentScore[] Collect(IList<QueryContext> query)
+        public List<DocumentScore> Collect(IList<QueryContext> query)
         {
             foreach (var clause in query)
             {
@@ -37,9 +37,10 @@ namespace Resin
             }
 
             var reduceTime = Stopwatch.StartNew();
-            var reduced = query.Reduce().ToArray();
+            var reduced = query.Reduce().ToList();
 
-            Log.DebugFormat("reduced query {0} producing {1} scores in {2}", query.ToQueryString(), reduced.Length, reduceTime.Elapsed);
+            Log.DebugFormat("reduced query {0} producing {1} scores in {2}", 
+                query.ToQueryString(), reduced.Count, reduceTime.Elapsed);
 
             return reduced;
         }

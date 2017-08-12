@@ -31,8 +31,13 @@ namespace Resin
         public IReadSession OpenReadSession(long version)
         {
             var ix = FullTextSegmentInfo.Load(Path.Combine(_directory, version + ".ix"));
-           
-            return new ReadSession(
+
+            return OpenReadSession(ix);
+        }
+
+        public IReadSession OpenReadSession(SegmentInfo ix)
+        {
+            return new FullTextReadSession(
                 ix,
                 new DocHashReader(_compoundFile, ix.DocHashOffset),
                 new BlockInfoReader(_compoundFile, ix.DocAddressesOffset),
