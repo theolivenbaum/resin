@@ -83,6 +83,10 @@ namespace Resin.Querying
         public PhraseQuery(string field, IList<string> values)
             : base (field, null)
         {
+            if (values.Count == 1)
+            {
+                Value = values[0];
+            }
             Values = values;
         }
 

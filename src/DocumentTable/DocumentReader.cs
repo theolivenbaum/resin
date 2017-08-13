@@ -25,10 +25,5 @@ namespace DocumentTable
 
             return TableSerializer.DeserializeDocument(stream, size, _compression, _keyIndex);
         }
-
-        protected override Document Clone(Document input)
-        {
-            return new Document(input.Id, input.Fields);
-        }
     }
 }

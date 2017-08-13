@@ -7,7 +7,6 @@ using Resin.IO;
 using Resin.Sys;
 using System.Diagnostics;
 using DocumentTable;
-using System.Linq;
 
 namespace Resin
 {
@@ -53,7 +52,7 @@ namespace Resin
             }
             else
             {
-                var ixFileName = Util.GetIndexFileNamesInChronologicalOrder(directory).FirstOrDefault();
+                var ixFileName = Util.GetFirstIndexFileNameInChronologicalOrder(directory);
                 long dataFileVersion;
 
                 if (ixFileName == null)

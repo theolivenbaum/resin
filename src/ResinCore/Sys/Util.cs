@@ -41,6 +41,13 @@ namespace Resin.Sys
             return GetTicks();
         }
 
+        public static string GetFirstIndexFileNameInChronologicalOrder(string directory)
+        {
+            var files = Directory.GetFiles(directory, "*.ix");
+            if (files.Length == 0) return null;
+            return files[0];
+        }
+
         public static string[] GetIndexFileNamesInChronologicalOrder(string directory)
         {
             return Directory.GetFiles(directory, "*.ix");

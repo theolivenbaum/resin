@@ -50,7 +50,7 @@ namespace Resin.Querying
                 }
                 else
                 {
-                    if (data.Position < node.Data.Position)
+                    if (data.Data < node.Data.Data)
                     {
                         if (node.Left == null)
                         {

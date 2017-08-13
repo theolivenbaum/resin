@@ -18,12 +18,11 @@ namespace Resin.Querying
         {
             var phraseQuery = (PhraseQuery)ctx.Query;
             var tokens = phraseQuery.Values;
-            var postings = new List<IList<DocumentPosting>>();
+            var addressesMatrix = new List<IList<BlockInfo>>();
 
             for (int index = 0; index < tokens.Count; index++)
             {
                 var time = Stopwatch.StartNew();
-
                 var token = tokens[index];
                 var addresses = new List<BlockInfo>();
 
@@ -49,32 +48,24 @@ namespace Resin.Querying
                     }
                     else
                     {
-                        var words = reader.IsWord(token);
-                        foreach (var word in words)
+                        var word = reader.IsWord(token);
+                        if (word != null)
                         {
                             addresses.Add(word.PostingsAddress.Value);
                         }
                     }
+                    addressesMatrix.Add(addresses);
                 }
 
                 Log.DebugFormat("found {0} matching words for the query {1} in {2}",
                     addresses.Count, ctx.Query, time.Elapsed);
-
-                if (addresses.Count == 1)
-                {
-                    postings.Add(GetPostingsList(addresses[0]));
-                    
-                }
-                else if(addresses.Count > 0)
-                {
-                    var sortedPostings = GetSortedPostingsList(addresses);
-                    postings.Add(sortedPostings);
-                }
             }
+
+            var postings = PostingsReader.ReadMany(addressesMatrix);
 
             if (postings.Count < tokens.Count)
             {
-                ctx.Scores = new DocumentScore[0];
+                ctx.Scores = new List<DocumentScore>();
             }
             else
             {
@@ -203,7 +194,7 @@ namespace Resin.Querying
                     continue;
                 }
 
-                var distance = p2.Position - p1.Position;
+                var distance = p2.Data - p1.Data;
 
                 if (distance <= 0)
                 {
@@ -351,7 +342,7 @@ namespace Resin.Querying
                         break;
                     }
 
-                    var distance = node.Data.Position - posting.Position;
+                    var distance = node.Data.Data - posting.Data;
 
                     if (distance < 0)
                     {
@@ -360,7 +351,7 @@ namespace Resin.Querying
 
                     if (distance > maxDistance)
                     {
-                        if(node.Data.Position < posting.Position)
+                        if(node.Data.Data < posting.Data)
                         {
                             node = node.Right;
                             continue;

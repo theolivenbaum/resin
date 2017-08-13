@@ -44,26 +44,27 @@ namespace Resin
 
         private void Scan(QueryContext ctx)
         {
-            if (ctx.Query is TermQuery)
-            {
-                new TermSearch(_readSession, _scorerFactory, _postingsReader)
-                    .Search(ctx);
-            }
-            else if (ctx.Query is PhraseQuery)
+            var rangeQ = ctx.Query as PhraseQuery;
+
+            if (rangeQ != null && rangeQ.Value == null)
             {
                 new CBOWSearch(_readSession, _scorerFactory, _postingsReader)
                         .Search(ctx);
             }
-            else
+            else if (ctx.Query is RangeQuery)
             {
                 new RangeSearch(_readSession, _scorerFactory, _postingsReader)
                     .Search(ctx, ((RangeQuery)ctx.Query).ValueUpperBound);
+            }
+            else
+            {
+                new TermSearch(_readSession, _scorerFactory, _postingsReader)
+                    .Search(ctx);
             }
         }
 
         public void Dispose()
         {
-            _postingsReader.Dispose();
         }
     }
 }

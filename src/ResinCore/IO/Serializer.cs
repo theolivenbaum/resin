@@ -434,6 +434,49 @@ namespace Resin.IO
             };
         }
 
+        public static IList<DocumentPosting> DeserializeTermCounts(Stream stream, int size)
+        {
+            var count = size / (2 * sizeof(int));
+            var postings = new List<DocumentPosting>();
+            var buffer = new byte[2 * sizeof(int)];
+            var read = 0;
+            var documentId = -1;
+            var termCount = 0;
+
+            while (read < count)
+            {
+                stream.Read(buffer, 0, buffer.Length);
+
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(buffer, 0, sizeof(int));
+                }
+
+                var id = BitConverter.ToInt32(buffer, 0);
+
+                if (id != documentId)
+                {
+                    if (documentId > -1)
+                    {
+                        postings.Add(
+                            new DocumentPosting(documentId, termCount));
+                    }
+                    documentId = id;
+                    termCount = 1;
+                }
+                else
+                {
+                    termCount++;
+                }
+
+                read++;
+            }
+
+            postings.Add(new DocumentPosting(documentId, termCount));
+
+            return postings;
+        }
+
         public static IList<DocumentPosting> DeserializePostings(Stream stream, int size)
         {
             var count = size / (2 * sizeof(int));

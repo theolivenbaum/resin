@@ -3,23 +3,23 @@ using System.Diagnostics;
 
 namespace Resin
 {
-    [DebuggerDisplay("{DocumentId}:{Position}")]
+    [DebuggerDisplay("{DocumentId}:{Data}")]
     public struct DocumentPosting
     {
         public int DocumentId { get; private set; }
-        public int Position { get; set; }
+        public int Data { get; set; }
         public bool HasValue { get; set; }
 
-        public DocumentPosting(int documentId, int position)
+        public DocumentPosting(int documentId, int data)
         {
             DocumentId = documentId;
-            Position = position;
+            Data = data;
             HasValue = true;
         }
 
         public override string ToString()
         {
-            return string.Format("{0}:{1}", DocumentId, Position);
+            return string.Format("{0}:{1}", DocumentId, Data);
         }
     }
 
@@ -30,8 +30,8 @@ namespace Resin
             if (x.DocumentId < y.DocumentId) return -1;
             if (x.DocumentId > y.DocumentId) return 1;
 
-            if (x.Position < y.Position) return -1;
-            if (x.Position > y.Position) return 1;
+            if (x.Data < y.Data) return -1;
+            if (x.Data > y.Data) return 1;
 
             return 0;
         }

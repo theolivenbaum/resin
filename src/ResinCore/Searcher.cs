@@ -88,13 +88,13 @@ namespace Resin
 
         private IList<IList<DocumentScore>> Collect(IList<QueryContext> query)
         {
-            var scores = new IList<DocumentScore>[_versions.Count];
+            var scores = new List<IList<DocumentScore>>(_versions.Count);
 
             for (var index = 0;index<_versions.Count;index++)
             {
                 using (var readSession = _sessionFactory.OpenReadSession(_versions[index]))
                 {
-                    scores[index] = Collect(query, readSession);
+                    scores.Add(Collect(query, readSession));
                 }
             }
 

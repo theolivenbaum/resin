@@ -1,5 +1,6 @@
 ﻿using DocumentTable;
 using Resin.IO;
+using StreamIndex;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -15,18 +16,23 @@ namespace Resin.Querying
         {
             var time = Stopwatch.StartNew();
 
-            IList<Term> terms;
+            var addresses = new List<BlockInfo>();
 
             using (var reader = GetTreeReader(ctx.Query.Key))
             {
-                terms = reader.Range(ctx.Query.Value, valueUpperBound)
-                        .ToTerms(ctx.Query.Key);
+                var words = reader.Range(ctx.Query.Value, valueUpperBound);
+
+                foreach (var word in words)
+                {
+                    addresses.Add(word.PostingsAddress.Value);
+                }
             }
 
             Log.DebugFormat("found {0} matching terms for the query {1} in {2}",
-                    terms.Count, ctx.Query, time.Elapsed);
+                    addresses.Count, ctx.Query, time.Elapsed);
 
-            var postings = GetPostingsList(terms);
+            var postings = PostingsReader.Read(addresses);
+
             ctx.Scores = Score(postings);
         }
     }

@@ -1,36 +1,82 @@
-﻿using StreamIndex;
+﻿using log4net;
+using StreamIndex;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace Resin.IO
 {
-    public class PostingsReader : BlockReader<IList<DocumentPosting>>
+    public class PostingsReader
     {
-        public PostingsReader(Stream stream)
-            : base(stream)
-        {
-        }
+        protected static readonly ILog Log = LogManager.GetLogger(typeof(PostingsReader));
+
+        private readonly Stream _stream;
+        private readonly long _offset;
 
         public PostingsReader(Stream stream, long offset)
-            : base(stream, offset, true)
         {
+            _stream = stream;
+            _offset = offset;
         }
 
-        protected override IList<DocumentPosting> Deserialize(long offset, int size, Stream stream)
+        public IList<DocumentPosting> ReadTermCounts(IList<BlockInfo> addresses)
         {
-            stream.Seek(offset, SeekOrigin.Begin);
-
-            return Serializer.DeserializePostings(stream, size);
-        }
-
-        protected override IList<DocumentPosting> Clone(IList<DocumentPosting> input)
-        {
+            var time = Stopwatch.StartNew();
             var result = new List<DocumentPosting>();
-            foreach(var p in input)
+
+            foreach (var address in addresses)
             {
-                result.Add(new DocumentPosting(p.DocumentId, p.Position));
+                result.AddRange(ReadTermCountsFromStream(address));
             }
+
+            Log.DebugFormat("read {0} postings in {1}", result.Count, time.Elapsed);
+
             return result;
+        }
+
+        public IList<IList<DocumentPosting>> ReadMany(IList<IList<BlockInfo>> addresses)
+        {
+            var time = Stopwatch.StartNew();
+            var result = new List<IList<DocumentPosting>>();
+
+            foreach(var list in addresses)
+            {
+                foreach(var address in list)
+                {
+                    result.Add(ReadFromStream(address));
+                }
+            }
+
+            Log.DebugFormat("read {0} wide postings matrix in {1}", result.Count, time.Elapsed);
+            return result;
+        }
+
+        public IList<DocumentPosting> Read(IList<BlockInfo> addresses)
+        {
+            var time = Stopwatch.StartNew();
+            var result = new List<DocumentPosting>();
+
+            foreach (var address in addresses)
+            {
+                result.AddRange(ReadFromStream(address));
+            }
+
+            Log.DebugFormat("read {0} postings in {1}", result.Count, time.Elapsed);
+            return result;
+        }
+
+        private IList<DocumentPosting> ReadFromStream(BlockInfo address)
+        {
+            _stream.Seek(_offset + address.Position, SeekOrigin.Begin);
+
+            return Serializer.DeserializePostings(_stream, address.Length);
+        }
+
+        private IList<DocumentPosting> ReadTermCountsFromStream(BlockInfo address)
+        {
+            _stream.Seek(_offset + address.Position, SeekOrigin.Begin);
+
+            return Serializer.DeserializeTermCounts(_stream, address.Length);
         }
     }
 }

@@ -18,10 +18,5 @@ namespace StreamIndex
 
             return BlockSerializer.DeserializeBlock(stream);
         }
-
-        protected override BlockInfo Clone(BlockInfo input)
-        {
-            return new BlockInfo(input.Position, input.Length);
-        }
     }
 }

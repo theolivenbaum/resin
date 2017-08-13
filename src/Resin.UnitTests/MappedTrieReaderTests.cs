@@ -234,31 +234,31 @@ namespace Tests
 
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.IsTrue(reader.IsWord("xxx").Any());
+                Assert.IsTrue(reader.IsWord("xxx")!=null);
             }
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.IsTrue(reader.IsWord("xxx").Any());
+                Assert.IsTrue(reader.IsWord("xxx")!=null);
             }
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.IsTrue(reader.IsWord("baby").Any());
+                Assert.IsTrue(reader.IsWord("baby")!=null);
             }
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.IsTrue(reader.IsWord("xxx").Any());
+                Assert.IsTrue(reader.IsWord("xxx")!=null);
             }
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.IsTrue(reader.IsWord("baby").Any());
+                Assert.IsTrue(reader.IsWord("baby")!=null);
             }
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.IsTrue(reader.IsWord("dad").Any());
+                Assert.IsTrue(reader.IsWord("dad")!=null);
             }
             using (var reader = new MappedTrieReader(fileName))
             {
-                Assert.IsTrue(reader.IsWord("daddy").Any());
+                Assert.IsTrue(reader.IsWord("daddy")!=null);
             }
         }
 
@@ -289,17 +289,17 @@ namespace Tests
                 node.PostingsAddress = new BlockInfo(long.MinValue, int.MinValue);
             }
 
-            Assert.IsTrue(tree.IsWord("baby").Any());
-            Assert.IsTrue(tree.IsWord("bad").Any());
-            Assert.IsTrue(tree.IsWord("badness").Any());
-            Assert.IsTrue(tree.IsWord("bank").Any());
-            Assert.IsTrue(tree.IsWord("box").Any());
-            Assert.IsTrue(tree.IsWord("dad").Any());
-            Assert.IsTrue(tree.IsWord("dance").Any());
-            Assert.IsTrue(tree.IsWord("flower").Any());
-            Assert.IsTrue(tree.IsWord("flowers").Any());
-            Assert.IsTrue(tree.IsWord("globe").Any());
-            Assert.IsTrue(tree.IsWord("global").Any());
+            Assert.IsTrue(tree.IsWord("baby")!=null);
+            Assert.IsTrue(tree.IsWord("bad")!=null);
+            Assert.IsTrue(tree.IsWord("badness")!=null);
+            Assert.IsTrue(tree.IsWord("bank")!=null);
+            Assert.IsTrue(tree.IsWord("box")!=null);
+            Assert.IsTrue(tree.IsWord("dad")!=null);
+            Assert.IsTrue(tree.IsWord("dance")!=null);
+            Assert.IsTrue(tree.IsWord("flower")!=null);
+            Assert.IsTrue(tree.IsWord("flowers")!=null);
+            Assert.IsTrue(tree.IsWord("globe")!=null);
+            Assert.IsTrue(tree.IsWord("global")!=null);
 
             tree.Serialize(fileName);
 
@@ -309,17 +309,17 @@ namespace Tests
 
             var result = recreated.IsWord("baby");
 
-            Assert.IsTrue(result.Any());
-            Assert.IsTrue(recreated.IsWord("bad").Any());
-            Assert.IsTrue(recreated.IsWord("badness").Any());
-            Assert.IsTrue(recreated.IsWord("bank").Any());
-            Assert.IsTrue(recreated.IsWord("box").Any());
-            Assert.IsTrue(recreated.IsWord("dad").Any());
-            Assert.IsTrue(recreated.IsWord("dance").Any());
-            Assert.IsTrue(recreated.IsWord("flower").Any());
-            Assert.IsTrue(recreated.IsWord("flowers").Any());
-            Assert.IsTrue(recreated.IsWord("globe").Any());
-            Assert.IsTrue(recreated.IsWord("global").Any());
+            Assert.IsTrue(result!=null);
+            Assert.IsTrue(recreated.IsWord("bad")!=null);
+            Assert.IsTrue(recreated.IsWord("badness")!=null);
+            Assert.IsTrue(recreated.IsWord("bank")!=null);
+            Assert.IsTrue(recreated.IsWord("box")!=null);
+            Assert.IsTrue(recreated.IsWord("dad")!=null);
+            Assert.IsTrue(recreated.IsWord("dance")!=null);
+            Assert.IsTrue(recreated.IsWord("flower")!=null);
+            Assert.IsTrue(recreated.IsWord("flowers")!=null);
+            Assert.IsTrue(recreated.IsWord("globe")!=null);
+            Assert.IsTrue(recreated.IsWord("global")!=null);
         }
     }
 }

@@ -30,7 +30,7 @@ namespace Tests
             var tree = new LcrsTrie('\0', false);
             var near = tree.SemanticallyNear("ba", 1).Select(w=>w.Value).ToList();
 
-            Assert.IsFalse(near.Any());
+            Assert.IsTrue(near.Count==0);
 
             tree.Add("bad");
             near = tree.SemanticallyNear("ba", 1).Select(w => w.Value).ToList();
@@ -124,25 +124,25 @@ namespace Tests
         {
             var tree = new LcrsTrie('\0', false);
             Word word;
-            Assert.IsFalse(tree.IsWord("xxx").Any());
+            Assert.IsFalse(tree.IsWord("xxx")!=null);
 
             tree.Add("xxx");
 
-            Assert.IsTrue(tree.IsWord("xxx").Any());
-            Assert.IsFalse(tree.IsWord("baby").Any());
-            Assert.IsFalse(tree.IsWord("dad").Any());
+            Assert.IsTrue(tree.IsWord("xxx")!=null);
+            Assert.IsFalse(tree.IsWord("baby")!=null);
+            Assert.IsFalse(tree.IsWord("dad")!=null);
 
             tree.Add("baby");
 
-            Assert.IsTrue(tree.IsWord("xxx").Any());
-            Assert.IsTrue(tree.IsWord("baby").Any());
-            Assert.IsFalse(tree.IsWord("dad").Any());
+            Assert.IsTrue(tree.IsWord("xxx")!=null);
+            Assert.IsTrue(tree.IsWord("baby")!=null);
+            Assert.IsFalse(tree.IsWord("dad")!=null);
 
             tree.Add("dad");
 
-            Assert.IsTrue(tree.IsWord("xxx").Any());
-            Assert.IsTrue(tree.IsWord("baby").Any());
-            Assert.IsTrue(tree.IsWord("dad").Any());
+            Assert.IsTrue(tree.IsWord("xxx")!=null);
+            Assert.IsTrue(tree.IsWord("baby")!=null);
+            Assert.IsTrue(tree.IsWord("dad")!=null);
         }
 
         [TestMethod]
@@ -157,7 +157,7 @@ namespace Tests
             Assert.AreEqual('b', tree.LeftChild.LeftChild.LeftChild.Value);
             Assert.AreEqual('y', tree.LeftChild.LeftChild.LeftChild.LeftChild.Value);
 
-            Assert.IsTrue(tree.IsWord("baby").Any());
+            Assert.IsTrue(tree.IsWord("baby")!=null);
         }
 
         [TestMethod]
@@ -176,8 +176,8 @@ namespace Tests
             Assert.AreEqual('b', root.LeftChild.LeftChild.LeftChild.Value);
             Assert.AreEqual('y', root.LeftChild.LeftChild.LeftChild.LeftChild.Value);
 
-            Assert.IsTrue(root.IsWord("baby").Any());
-            Assert.IsTrue(root.IsWord("dad").Any());
+            Assert.IsTrue(root.IsWord("baby")!=null);
+            Assert.IsTrue(root.IsWord("dad")!=null);
         }
 
         [TestMethod]
@@ -196,8 +196,8 @@ namespace Tests
             Assert.AreEqual('b', root.LeftChild.LeftChild.LeftChild.Value);
             Assert.AreEqual('y', root.LeftChild.LeftChild.LeftChild.LeftChild.Value);
 
-            Assert.IsTrue(root.IsWord("baby").Any());
-            Assert.IsTrue(root.IsWord("bad").Any());
+            Assert.IsTrue(root.IsWord("baby")!=null);
+            Assert.IsTrue(root.IsWord("bad")!=null);
         }
     }
 }

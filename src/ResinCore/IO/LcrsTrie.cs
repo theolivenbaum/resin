@@ -237,23 +237,21 @@ namespace Resin.IO
             }
         }
 
-        public IList<Word> IsWord(string word)
+        public Word IsWord(string word)
         {
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException("word");
-
-            var words = new List<Word>();
 
             LcrsTrie node;
             if (TryFindPath(word, out node))
             {
                 if (node.EndOfWord)
                 {
-                    words.Add(new Word(
-                        word, node.PostingsAddress));
+                    return new Word(
+                        word, node.PostingsAddress);
                 }
             }
 
-            return words;
+            return null;
         }
 
         public bool IsWord(char[] word)
