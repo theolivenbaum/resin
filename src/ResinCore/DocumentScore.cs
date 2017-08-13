@@ -194,7 +194,7 @@ namespace Resin
         }
 
         public static IList<DocumentScore> SortByScoreAndTakeLatestVersion(
-            this IList<List<DocumentScore>> scores, int skip, int size, out int total)
+            this IList<IList<DocumentScore>> scores, int skip, int size, out int total)
         {
             if (scores.Count == 0)
             {
@@ -211,11 +211,11 @@ namespace Resin
 
             for (int i = 1; i < scores.Count; i++)
             {
-                var sortedAndCurrent = TakeLatestVersion(first, scores[i]);
-                first = sortedAndCurrent;
+                var upToDate = TakeLatestVersion(first, scores[i]);
+                first = upToDate;
             }
 
-            first.Sort(new DescendingDocumentScoreComparer());
+            ((List<DocumentScore>)first).Sort(new DescendingDocumentScoreComparer());
             total = first.Count;
 
             var took = 0;
@@ -241,7 +241,7 @@ namespace Resin
             return result;
         }
         
-        public static List<DocumentScore> TakeLatestVersion(
+        public static IList<DocumentScore> TakeLatestVersion(
             IList<DocumentScore> first, IList<DocumentScore> second)
         {
             var unique = new Dictionary<UInt64, DocumentScore>();
@@ -252,6 +252,7 @@ namespace Resin
                 unique.Add(score.DocHash, score);
                 result.Add(score);
             }
+
             foreach (var score in second)
             {
                 DocumentScore exists;

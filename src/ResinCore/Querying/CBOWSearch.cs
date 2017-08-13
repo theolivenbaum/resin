@@ -1,5 +1,6 @@
 ﻿using DocumentTable;
 using Resin.IO;
+using StreamIndex;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,44 +19,48 @@ namespace Resin.Querying
         {
             var phraseQuery = (PhraseQuery)ctx.Query;
             var tokens = phraseQuery.Values;
-            var terms = new List<Term>();
+            var postings = new List<IList<DocumentPosting>>();
 
             for (int index = 0; index < tokens.Count; index++)
             {
                 var token = tokens[index];
+                var addresses = new List<BlockInfo>();
 
                 using (var reader = GetTreeReader(ctx.Query.Field))
                 {
                     if (ctx.Query.Fuzzy)
                     {
                         var words = reader.SemanticallyNear(token, ctx.Query.Edits(token));
+
                         foreach (var word in words)
                         {
-                            terms.Add(new Term(ctx.Query.Field, word));
+                            addresses.Add(word.PostingsAddress.Value);
                         }
+                        
                     }
                     else if (ctx.Query.Prefix)
                     {
                         var words = reader.StartsWith(token);
-                        foreach(var word in words)
+                        foreach (var word in words)
                         {
-                            terms.Add(new Term(ctx.Query.Field, word));
+                            addresses.Add(word.PostingsAddress.Value);
                         }
                     }
                     else
                     {
                         var words = reader.IsWord(token);
-                        if (words.Count > 0)
+                        foreach (var word in words)
                         {
-                            terms.Add(new Term(ctx.Query.Field, words[0]));
+                            addresses.Add(word.PostingsAddress.Value);
                         }
                     }
                 }
+
+                var sortedPostings = GetSortedPostingsList(addresses);
+                postings.Add(sortedPostings);
             }
 
-            var postings = terms.Count > 0 ? GetManyPostingsLists(terms): null;
-
-            if (postings == null || postings.Count < tokens.Count)
+            if (postings.Count < tokens.Count)
             {
                 ctx.Scores = new DocumentScore[0];
             }
@@ -325,7 +330,6 @@ namespace Resin.Querying
             {
                 float score = 0;
                 var node = this;
-                //var debugList = new List<DocumentPosting>();
                 var stack = new Stack<Node>();
 
                 while (node!= null)
@@ -357,7 +361,6 @@ namespace Resin.Querying
                     }
 
                     score += (float)1 / distance;
-                    //debugList.Add(node.Data);
 
                     if (node.Right != null)
                     {

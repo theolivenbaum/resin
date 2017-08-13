@@ -109,5 +109,21 @@ namespace Resin.Querying
         {
             return PostingsReader.Read(new BlockInfo[] { term.Word.PostingsAddress.Value })[0];
         }
+
+        protected IList<DocumentPosting> GetSortedPostingsList(IList<BlockInfo> addresses)
+        {
+            var result = new List<DocumentPosting>();
+            var many = PostingsReader.Read(addresses);
+
+            foreach(var list in many)
+            {
+                foreach (var posting in list)
+                {
+                    result.Add(posting);
+                }
+            }
+            result.Sort(new DocumentPostingComparer());
+            return result;
+        }
     }
 }

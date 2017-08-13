@@ -86,9 +86,9 @@ namespace Resin
             return result;
         }
 
-        private IList<List<DocumentScore>> Collect(IList<QueryContext> query)
+        private IList<IList<DocumentScore>> Collect(IList<QueryContext> query)
         {
-            var scores = new List<DocumentScore>[_versions.Count];
+            var scores = new IList<DocumentScore>[_versions.Count];
 
             for (var index = 0;index<_versions.Count;index++)
             {
@@ -101,7 +101,7 @@ namespace Resin
             return scores;
         }
 
-        private List<DocumentScore> Collect(IList<QueryContext> query, IReadSession readSession)
+        private IList<DocumentScore> Collect(IList<QueryContext> query, IReadSession readSession)
         {
             using (var collector = new Collector(_directory, readSession, _scorerFactory))
             {
@@ -110,7 +110,7 @@ namespace Resin
         }
 
         private IList<ScoredDocument> GetDocs(
-            IList<List<DocumentScore>> scores, int skip, int size, out int total)
+            IList<IList<DocumentScore>> scores, int skip, int size, out int total)
         {
             var paged = scores.SortByScoreAndTakeLatestVersion(skip, size, out total);
             var result = new List<ScoredDocument>();
