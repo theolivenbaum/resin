@@ -14,7 +14,6 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly string _directory;
         private readonly IScoringSchemeFactory _scorerFactory;
-        private readonly IDictionary<Query, IList<DocumentScore>> _scoreCache;
         private readonly IReadSession _readSession;
         private readonly PostingsReader _postingsReader;
 
@@ -23,7 +22,6 @@ namespace Resin
             _readSession = readSession;
             _directory = directory;
             _scorerFactory = scorerFactory??new TfIdfFactory();
-            _scoreCache = new Dictionary<Query, IList<DocumentScore>>();
             _postingsReader = new PostingsReader(
                 _readSession.Stream, _readSession.Version.PostingsOffset);
         }

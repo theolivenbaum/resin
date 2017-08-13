@@ -107,23 +107,6 @@ namespace Resin
                     ));
         }
 
-        private IDictionary<ulong, long> SerializeTries(IDictionary<ulong, LcrsTrie> tries, Stream stream)
-        {
-            var offsets = new Dictionary<ulong, long>();
-
-            foreach (var t in tries)
-            {
-                offsets.Add(t.Key, stream.Position);
-
-                var fileName = Path.Combine(
-                    _directory, string.Format("{0}-{1}.tri", _ix.VersionId, t.Key));
-
-                t.Value.Serialize(stream);
-            }
-
-            return offsets;
-        }
-
         public long Write()
         {
             if (_flushed) return _ix.VersionId;
@@ -148,10 +131,10 @@ namespace Resin
             foreach (var trie in tries)
             {
                 var nodes = trie.Value.EndOfWordNodes();
+
                 foreach (var node in nodes)
                 {
                     node.PostingsAddress = _postingsWriter.Write(node.PostingsStream);
-                    _postingsWriter.Stream.Flush();
                 }
 
                 //if (Log.IsDebugEnabled)
@@ -185,6 +168,23 @@ namespace Resin
             _ix.DocumentCount = _count;
 
             return _ix.VersionId;
+        }
+
+        private IDictionary<ulong, long> SerializeTries(IDictionary<ulong, LcrsTrie> tries, Stream stream)
+        {
+            var offsets = new Dictionary<ulong, long>();
+
+            foreach (var t in tries)
+            {
+                offsets.Add(t.Key, stream.Position);
+
+                var fileName = Path.Combine(
+                    _directory, string.Format("{0}-{1}.tri", _ix.VersionId, t.Key));
+
+                t.Value.Serialize(stream);
+            }
+
+            return offsets;
         }
 
         private IEnumerable<Document> ReadSource()

@@ -13,7 +13,6 @@ namespace Resin.IO
     [DebuggerDisplay("{Value} {EndOfWord}")]
     public class LcrsTrie : ITrieReader
     {
-        public int NumOfPostingsLists { get; set; }
         public LcrsTrie RightSibling { get; set; }
         public LcrsTrie LeftChild { get; set; }
         public BlockInfo PostingsAddress { get; set; }
@@ -173,16 +172,9 @@ namespace Resin.IO
                 if (node.PostingsStream == null)
                 {
                     node.PostingsStream = new MemoryStream();
-
-                    //node.PostingsStream = new FileStream(
-                    //    Path.Combine(Path.GetTempFileName()),
-                    //    FileMode.Create, FileAccess.ReadWrite,
-                    //    FileShare.None, 4096 * 100, FileOptions.DeleteOnClose);
                 }
 
                 term.Serialize(node.PostingsStream);
-                //node.PostingsStream.Flush();
-                node.NumOfPostingsLists++;
 
             }
             else
