@@ -6,7 +6,7 @@ namespace Resin.Querying
     public abstract class Query
     {
         public float Similarity { get; set; }
-        public string Field { get; protected set; }
+        public string Key { get; protected set; }
         public string Value { get; set; }
 
         public bool Or { get; set; }
@@ -24,7 +24,7 @@ namespace Resin.Querying
 
         public Query(string field, string value)
         {
-            Field = field;
+            Key = field;
             Value = value;
         }
 
@@ -56,7 +56,7 @@ namespace Resin.Querying
             var val = Value;
 
             return string.Format("{0}{1}{2}{3}{4}",
-                fldPrefix, Field, delimiter, val, tokenSuffix);
+                fldPrefix, Key, delimiter, val, tokenSuffix);
         }
     }
 
@@ -99,7 +99,7 @@ namespace Resin.Querying
             var val = string.Join(" ", Values);
 
             return string.Format("{0}{1}{2}{3}{4}",
-                fldPrefix, Field, delimiter, val, tokenSuffix);
+                fldPrefix, Key, delimiter, val, tokenSuffix);
         }
     }
 
@@ -134,7 +134,7 @@ namespace Resin.Querying
             var tokenSuffix = Prefix ? "*" : Fuzzy ? "~" : string.Empty;
 
             var s = string.Format("{0}{1}>{2}{3} {1}<{4}",
-                    fldPrefix, Field, Value, tokenSuffix, ValueUpperBound);
+                    fldPrefix, Key, Value, tokenSuffix, ValueUpperBound);
             return s;
         }
     }

@@ -1,6 +1,7 @@
 ﻿using DocumentTable;
 using Resin.IO;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Resin.Querying
 {
@@ -12,15 +13,18 @@ namespace Resin.Querying
 
         public void Search(QueryContext ctx, string valueUpperBound)
         {
-            Log.DebugFormat("executing {0}", ctx.Query);
+            var time = Stopwatch.StartNew();
 
             IList<Term> terms;
 
-            using (var reader = GetTreeReader(ctx.Query.Field))
+            using (var reader = GetTreeReader(ctx.Query.Key))
             {
                 terms = reader.Range(ctx.Query.Value, valueUpperBound)
-                        .ToTerms(ctx.Query.Field);
+                        .ToTerms(ctx.Query.Key);
             }
+
+            Log.DebugFormat("found {0} matching terms for the query {1} in {2}",
+                    terms.Count, ctx.Query, time.Elapsed);
 
             var postings = GetPostingsList(terms);
             ctx.Scores = Score(postings);

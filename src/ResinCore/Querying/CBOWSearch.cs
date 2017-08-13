@@ -22,10 +22,12 @@ namespace Resin.Querying
 
             for (int index = 0; index < tokens.Count; index++)
             {
+                var time = Stopwatch.StartNew();
+
                 var token = tokens[index];
                 var addresses = new List<BlockInfo>();
 
-                using (var reader = GetTreeReader(ctx.Query.Field))
+                using (var reader = GetTreeReader(ctx.Query.Key))
                 {
                     if (ctx.Query.Fuzzy)
                     {
@@ -54,6 +56,9 @@ namespace Resin.Querying
                         }
                     }
                 }
+
+                Log.DebugFormat("found {0} matching words for the query {1} in {2}",
+                    addresses.Count, ctx.Query, time.Elapsed);
 
                 if (addresses.Count == 1)
                 {

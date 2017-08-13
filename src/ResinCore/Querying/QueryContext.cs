@@ -51,7 +51,7 @@ namespace Resin.Querying
 
         public static bool TryCompress(QueryContext first, QueryContext second)
         {
-            var field = first.Query.Field;
+            var field = first.Query.Key;
             var valLo = first.Query.Value;
             string valHi = null;
 
@@ -60,7 +60,7 @@ namespace Resin.Querying
             {
                 // compress a GT or LS with another LS or GT to create a range query
 
-                if (second.Query.Field.Equals(first.Query.Field))
+                if (second.Query.Key.Equals(first.Query.Key))
                 {
                     if (first.Query.GreaterThan)
                     {

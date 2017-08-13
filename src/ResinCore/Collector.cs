@@ -44,9 +44,6 @@ namespace Resin
 
         private void Scan(QueryContext ctx)
         {
-            var time = new Stopwatch();
-            time.Start();
-
             if (ctx.Query is TermQuery)
             {
                 new TermSearch(_readSession, _scorerFactory, _postingsReader)
