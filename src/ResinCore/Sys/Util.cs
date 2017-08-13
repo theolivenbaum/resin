@@ -88,11 +88,16 @@ namespace Resin.Sys
                 .Select(info => info.fileName);
         }
 
-        public static int GetDocumentCount(string directory)
+        public static int GetDocumentCount(string directory, out int numOfSegments)
         {
-            return GetIndexVersionInfoInChronologicalOrder(directory)
-                .Values
-                .Sum(x=>x.DocumentCount);   
+            var total = 0;
+            numOfSegments = 0;
+            foreach (var segment in GetIndexVersionListInChronologicalOrder(directory))
+            {
+                numOfSegments++;
+                total += segment.DocumentCount;
+            }
+            return total;
         }
 
         public static int GetDocumentCount(IEnumerable<SegmentInfo> ixs)

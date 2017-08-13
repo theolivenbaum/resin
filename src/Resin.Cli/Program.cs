@@ -11,6 +11,7 @@ using Resin.IO;
 using System.Text;
 using Newtonsoft.Json;
 using DocumentTable;
+using Resin.Sys;
 
 namespace Resin.Cli
 {
@@ -85,6 +86,15 @@ namespace Resin.Cli
                 }
                 Export(args);
             }
+            else if (args[0].ToLower() == "status")
+            {
+                if (Array.IndexOf(args, "--dir") == -1)
+                {
+                    Console.WriteLine("I need a directory.");
+                    return;
+                }
+                Status(args);
+            }
             else
             {
                 Console.WriteLine("usage:");
@@ -96,6 +106,25 @@ namespace Resin.Cli
     rn rewrite --file rdoc_filename --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take] [--gzip] [--lz]
     rn export --source-file rdoc_filename --target-file json_filename
 ");
+            }
+        }
+
+        static void Status(string[] args)
+        {
+            string dir = null;
+
+            if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
+
+            if (dir != null)
+            {
+                int numOfSegments;
+                var documentCount = Util.GetDocumentCount(dir, out numOfSegments);
+
+                Console.WriteLine("");
+                Console.WriteLine("status for {0}", dir);
+                Console.WriteLine("");
+                Console.WriteLine("segments: {0}", numOfSegments);
+                Console.WriteLine("documents: {0}", documentCount);
             }
         }
 
