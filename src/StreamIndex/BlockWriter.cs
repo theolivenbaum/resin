@@ -29,6 +29,11 @@ namespace StreamIndex
             return info;
         }
 
+        public void Flush()
+        {
+            _stream.Flush();
+        }
+
         public void Dispose()
         {
             _stream.Dispose();

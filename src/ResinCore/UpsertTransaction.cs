@@ -151,6 +151,7 @@ namespace Resin
                 foreach (var node in nodes)
                 {
                     node.PostingsAddress = _postingsWriter.Write(node.PostingsStream);
+                    _postingsWriter.Stream.Flush();
                 }
 
                 //if (Log.IsDebugEnabled)
@@ -163,7 +164,7 @@ namespace Resin
             }
 
             Log.InfoFormat(
-                "stored postings list references in in {0}", 
+                "stored postings in in {0}", 
                 posTimer.Elapsed);
 
             var treeTimer = Stopwatch.StartNew();
@@ -179,7 +180,7 @@ namespace Resin
             _postingsWriter.Stream.Position = 0;
             _postingsWriter.Stream.CopyTo(_compoundFile);
 
-            Log.InfoFormat("wrote postings to data file in {0}", postingsTimer.Elapsed);
+            Log.InfoFormat("copied postings to data file in {0}", postingsTimer.Elapsed);
 
             _ix.DocumentCount = _count;
 

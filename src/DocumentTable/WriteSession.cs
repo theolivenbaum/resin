@@ -1,11 +1,15 @@
-﻿using StreamIndex;
+﻿using log4net;
+using StreamIndex;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace DocumentTable
 {
     public class WriteSession : IWriteSession
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(WriteSession));
+
         private readonly BlockInfoWriter _addressWriter;
         private readonly DocumentWriter _docWriter;
         private readonly Stream _docHashesStream;
@@ -66,6 +70,8 @@ namespace DocumentTable
             _addressWriter.Write(adr);
 
             new DocHash(document.Hash).Serialize(_docHashesStream);
+
+            _docWriter.Flush();
         }
 
         public void Flush()
@@ -74,20 +80,35 @@ namespace DocumentTable
 
             _ix.DocHashOffset = _dataFile.Position;
             _docHashesStream.Flush();
+
+            var timer = Stopwatch.StartNew();
+
             _docHashesStream.Position = 0;
             _docHashesStream.CopyTo(_dataFile);
 
+            Log.InfoFormat("copied doc primary keys to data file in {0}", timer.Elapsed);
+
             _ix.DocAddressesOffset = _dataFile.Position;
             _addressWriter.Stream.Flush();
+
+            timer = Stopwatch.StartNew();
+
             _addressWriter.Stream.Position = 0;
             _addressWriter.Stream.CopyTo(_dataFile);
+
+            Log.InfoFormat("copied doc addresses to data file in {0}", timer.Elapsed);
 
             _ix.KeyIndexOffset = _dataFile.Position;
             _ix.KeyIndexSize = _fieldNames.Serialize(_dataFile);
 
             _docWriter.Stream.Flush();
+
+            timer = Stopwatch.StartNew();
+
             _docWriter.Stream.Position = 0;
             _docWriter.Stream.CopyTo(_dataFile);
+
+            Log.InfoFormat("copied documents to data file in {0}", timer.Elapsed);
 
             _docWriter.Dispose();
             _docHashesStream.Dispose();

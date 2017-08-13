@@ -44,7 +44,7 @@ namespace Resin
                     continue;
                 }
 
-                if (took++ == _take)
+                if (took == _take)
                 {
                     break;
                 }
@@ -99,13 +99,13 @@ namespace Resin
                         document = new Document(
                             new List<Field>
                             {
-                        new Field("title", title
-                            .Replace("The Project Gutenberg EBook of ", "")
-                            .Replace("Project Gutenberg's", "")
-                            .Replace("The Project Gutenberg eBook, ", "")),
-                        new Field("head", head),
-                        new Field("body", body),
-                        new Field("uri", zipFileName.Replace(_directory, ""))
+                                new Field("title", title
+                                    .Replace("The Project Gutenberg EBook of ", "")
+                                    .Replace("Project Gutenberg's", "")
+                                    .Replace("The Project Gutenberg eBook, ", "")),
+                                new Field("head", head),
+                                new Field("body", body),
+                                new Field("uri", zipFileName.Replace(_directory, ""))
                             });
 
                     }
@@ -115,7 +115,11 @@ namespace Resin
                     continue;
                 }
 
-                if (document != null) yield return document;
+                if (document != null)
+                {
+                    yield return document;
+                    took++;
+                }
             }
         }
     }
