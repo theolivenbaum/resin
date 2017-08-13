@@ -23,18 +23,30 @@ namespace Resin
 
         public override IEnumerable<Document> ReadSource()
         {
-            return ReadSourceAndAssignPk(ReadInternal().Skip(_skip).Take(_take));
+            return ReadSourceAndAssignPk(ReadInternal());
         }
 
         private IEnumerable<Document> ReadInternal()
         {
             var files = Directory.GetFiles(_directory, "*.zip", SearchOption.AllDirectories);
+            var skipped = 0;
+            var took = 0;
 
             foreach (var zipFileName in files)
             {
                 if (zipFileName.StartsWith("\\ETEXT"))
                 {
                     continue;
+                }
+
+                if (_skip > 0 && skipped++ < _skip)
+                {
+                    continue;
+                }
+
+                if (took++ == _take)
+                {
+                    break;
                 }
 
                 Document document = null;
