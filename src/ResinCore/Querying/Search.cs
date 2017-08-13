@@ -107,7 +107,12 @@ namespace Resin.Querying
 
         protected IList<DocumentPosting> GetPostingsList(Term term)
         {
-            return PostingsReader.Read(new BlockInfo[] { term.Word.PostingsAddress.Value })[0];
+            return GetPostingsList(term.Word.PostingsAddress.Value);
+        }
+
+        protected IList<DocumentPosting> GetPostingsList(BlockInfo address)
+        {
+            return PostingsReader.Read(new BlockInfo[] { address })[0];
         }
 
         protected IList<DocumentPosting> GetSortedPostingsList(IList<BlockInfo> addresses)

@@ -55,8 +55,15 @@ namespace Resin.Querying
                     }
                 }
 
-                var sortedPostings = GetSortedPostingsList(addresses);
-                postings.Add(sortedPostings);
+                if (addresses.Count > 1)
+                {
+                    var sortedPostings = GetSortedPostingsList(addresses);
+                    postings.Add(sortedPostings);
+                }
+                else
+                {
+                    postings.Add(GetPostingsList(addresses[0]));
+                }
             }
 
             if (postings.Count < tokens.Count)
