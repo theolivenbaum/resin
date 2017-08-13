@@ -55,14 +55,15 @@ namespace Resin.Querying
                     }
                 }
 
-                if (addresses.Count > 1)
+                if (addresses.Count == 1)
+                {
+                    postings.Add(GetPostingsList(addresses[0]));
+                    
+                }
+                else if(addresses.Count > 0)
                 {
                     var sortedPostings = GetSortedPostingsList(addresses);
                     postings.Add(sortedPostings);
-                }
-                else
-                {
-                    postings.Add(GetPostingsList(addresses[0]));
                 }
             }
 
