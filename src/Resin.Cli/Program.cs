@@ -293,13 +293,11 @@ namespace Resin.Cli
             var skip = 0;
             bool gzip = false;
             bool lz = false;
-            string pk = null;
 
             if (Array.IndexOf(args, "--take") > 0) take = int.Parse(args[Array.IndexOf(args, "--take") + 1]);
             if (Array.IndexOf(args, "--skip") > 0) skip = int.Parse(args[Array.IndexOf(args, "--skip") + 1]);
             if (Array.IndexOf(args, "--gzip") > 0) gzip = true;
             if (Array.IndexOf(args, "--lz") > 0) lz = true;
-            if (Array.IndexOf(args, "--pk") > 0) pk = args[Array.IndexOf(args, "--pk") + 1];
 
             var compression = gzip ? Compression.GZip : lz ? Compression.Lz : Compression.NoCompression;
 

@@ -8,7 +8,8 @@ namespace DocumentTable
     {
         public abstract IEnumerable<Document> ReadSource();
 
-        private static readonly ILog Log = LogManager.GetLogger(typeof(DocumentStream));
+        protected static readonly ILog Log = LogManager.GetLogger(typeof(DocumentStream));
+
         private readonly Dictionary<ulong, object> _primaryKeys;
         private string _primaryKeyFieldName;
 

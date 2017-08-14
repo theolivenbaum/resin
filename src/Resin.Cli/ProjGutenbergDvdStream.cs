@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Linq;
 using DocumentTable;
 using System.IO.Compression;
+using System;
 
 namespace Resin
 {
@@ -99,10 +99,7 @@ namespace Resin
                         document = new Document(
                             new List<Field>
                             {
-                                new Field("title", title
-                                    .Replace("The Project Gutenberg EBook of ", "")
-                                    .Replace("Project Gutenberg's", "")
-                                    .Replace("The Project Gutenberg eBook, ", "")),
+                                new Field("title", title),
                                 new Field("head", head),
                                 new Field("body", body),
                                 new Field("uri", zipFileName.Replace(_directory, ""))
@@ -110,8 +107,9 @@ namespace Resin
 
                     }
                 }
-                catch
+                catch(Exception ex)
                 {
+                    Log.Info(ex);
                     continue;
                 }
 
