@@ -176,12 +176,29 @@ namespace Resin.IO
 
                 term.Serialize(node.PostingsStream);
 
+                node.Size += term.Positions.Count;
+
+                if (node.Size > 10000 && node.WriteToDisk == false)
+                {
+                    var fn = Path.Combine(Directory.GetCurrentDirectory(), Path.GetRandomFileName());
+                    var fs = new FileStream(fn, FileMode.Create, FileAccess.ReadWrite, 
+                        FileShare.None, 4096, FileOptions.DeleteOnClose);
+                    node.PostingsStream.Position = 0;
+                    node.PostingsStream.CopyTo(fs);
+                    node.PostingsStream.Dispose();
+
+                    node.PostingsStream = fs;
+                    node.WriteToDisk = true;
+                }
             }
             else
             {
                 node.Add(word, index + 1, term);
             }
         }
+
+        public long Size { get; set; }
+        public bool WriteToDisk { get; set; }
 
         private bool TryGetChild(char c, out LcrsTrie node)
         {

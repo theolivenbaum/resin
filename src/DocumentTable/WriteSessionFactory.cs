@@ -11,8 +11,6 @@ namespace DocumentTable
         {
             _ix = ix;
             _directory = directory;
-
-            Directory.SetCurrentDirectory(directory);
         }
 
         public IWriteSession OpenWriteSession(Stream compoundFile)
