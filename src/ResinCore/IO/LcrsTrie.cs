@@ -176,8 +176,6 @@ namespace Resin.IO
 
                 term.Serialize(node.PostingsStream);
 
-                node.Size += term.Positions.Count;
-
                 if (node.Size > 10000 && node.WriteToDisk == false)
                 {
                     var fn = Path.Combine(Directory.GetCurrentDirectory(), Path.GetRandomFileName());
@@ -189,6 +187,11 @@ namespace Resin.IO
 
                     node.PostingsStream = fs;
                     node.WriteToDisk = true;
+                }
+                else if (node.WriteToDisk == false)
+                {
+                    node.Size += term.Positions.Count;
+
                 }
             }
             else
