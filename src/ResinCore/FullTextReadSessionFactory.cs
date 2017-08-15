@@ -25,7 +25,9 @@ namespace Resin
                 compoundFileName,
                 FileMode.Open,
                 FileAccess.Read,
-                FileShare.ReadWrite);
+                FileShare.ReadWrite,
+                4096*8,
+                FileOptions.RandomAccess);
         }
 
         public IReadSession OpenReadSession(long version)
