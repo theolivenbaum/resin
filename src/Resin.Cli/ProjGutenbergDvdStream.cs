@@ -34,11 +34,6 @@ namespace Resin
 
             foreach (var zipFileName in files)
             {
-                if (zipFileName.StartsWith("\\ETEXT"))
-                {
-                    continue;
-                }
-
                 if (_skip > 0 && skipped++ < _skip)
                 {
                     continue;
@@ -53,59 +48,75 @@ namespace Resin
 
                 try
                 {
-                    using (var file = new FileStream(zipFileName, FileMode.Open))
-                    using (var zip = new ZipArchive(file, ZipArchiveMode.Read))
-                    using (var txt = zip.Entries[0].Open())
-                    using (var reader = new StreamReader(txt))
+                    using (var fileStream = new FileStream(zipFileName, FileMode.Open))
+                    using (var zip = new ZipArchive(fileStream, ZipArchiveMode.Read))
                     {
-                        var title = reader.ReadLine() + " " + reader.ReadLine();
-                        var head = new StringBuilder();
-                        var couldNotRead = false;
-                        string encoding = null;
-
-                        while (true)
+                        ZipArchiveEntry txtFile = null;
+                        foreach(var entry in zip.Entries)
                         {
-                            var line = reader.ReadLine();
-
-                            if (line == null)
+                            if (entry.Name.EndsWith(".txt"))
                             {
-                                couldNotRead = true;
+                                txtFile = entry;
                                 break;
                             }
-                            else if (line.Contains("***"))
-                            {
-                                break;
-                            }
-
-                            if (line.Contains("encoding: ASCII"))
-                            {
-                                encoding = line;
-                            }
-                            else
-                            {
-                                head.Append(" ");
-                                head.Append(line);
-                            }
-
                         }
-
-                        if (encoding == null || couldNotRead)
+                        if (txtFile != null)
                         {
-                            continue;
-                        }
-
-                        var body = reader.ReadToEnd();
-
-                        document = new Document(
-                            new List<Field>
+                            using (var txtStream = txtFile.Open())
+                            using (var reader = new StreamReader(txtStream))
                             {
+                                var title = reader.ReadLine() + " " + reader.ReadLine();
+                                var head = new StringBuilder();
+                                var couldNotRead = false;
+                                string encoding = null;
+
+                                while (true)
+                                {
+                                    var line = reader.ReadLine();
+
+                                    if (line == null)
+                                    {
+                                        couldNotRead = true;
+                                        break;
+                                    }
+                                    else if (line.Contains("*** "))
+                                    {
+                                        break;
+                                    }
+
+                                    if (line.Contains("encoding: ASCII"))
+                                    {
+                                        encoding = line;
+                                    }
+                                    else
+                                    {
+                                        head.Append(" ");
+                                        head.Append(line);
+                                    }
+
+                                }
+
+                                if (encoding == null || couldNotRead)
+                                {
+                                    continue;
+                                }
+
+                                var body = reader.ReadToEnd();
+
+                                document = new Document(
+                                    new List<Field>
+                                    {
                                 new Field("title", title),
                                 new Field("head", head),
                                 new Field("body", body),
                                 new Field("uri", zipFileName.Replace(_directory, ""))
-                            });
+                                    });
 
+                            }
+                        }
+                        
                     }
+                    
                 }
                 catch(Exception ex)
                 {
