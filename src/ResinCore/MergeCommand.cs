@@ -110,7 +110,7 @@ namespace Resin
             Log.InfoFormat("truncating {0}", srcIxFileName);
 
             var srcIx = SegmentInfo.Load(srcIxFileName);
-            var srcDataFileName = Path.Combine(_directory, srcIx.VersionId + ".rdb");
+            var srcDataFileName = Path.Combine(_directory, srcIx.Version + ".rdb");
             long version;
 
             using (var source = new FileStream(srcDataFileName, FileMode.Open))
@@ -123,7 +123,6 @@ namespace Resin
                     documentStream))
                 {
                     version = upsert.Write();
-                    upsert.Flush();
                 }
 
                 Log.InfoFormat("truncated ix {0}", version);
@@ -138,12 +137,12 @@ namespace Resin
 
             var srcIx = SegmentInfo.Load(srcIxFileName);
             var targetIx = SegmentInfo.Load(targetIxFileName);
-            var srcDataFileName = Path.Combine(_directory, srcIx.VersionId + ".rdb");
-            var targetDataFileName = Path.Combine(_directory, targetIx.VersionId + ".rdb");
+            var srcDataFileName = Path.Combine(_directory, srcIx.Version + ".rdb");
+            var targetDataFileName = Path.Combine(_directory, targetIx.Version + ".rdb");
 
             FileStream lockFile;
 
-            if (!Util.TryAquireWriteLock(_directory, out lockFile))
+            if (!LockUtil.TryAquireWriteLock(_directory, out lockFile))
             {
                 throw new InvalidOperationException(
                     "Cannot merge because there are other writes in progress.");
@@ -199,7 +198,7 @@ namespace Resin
                 Log.InfoFormat("merged {0} with {1} creating a segmented index", srcIxFileName, targetIx);
             }
             File.Delete(srcDataFileName);
-            return srcIx.VersionId;
+            return srcIx.Version;
         }
     }
 }

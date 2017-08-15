@@ -1,9 +1,7 @@
-﻿using System.IO;
-
-namespace DocumentTable
+﻿namespace DocumentTable
 {
     public interface IWriteSessionFactory
     {
-        IWriteSession OpenWriteSession(Stream compoundFile);
+        IWriteSession OpenWriteSession(Compression compression);
     }
 }

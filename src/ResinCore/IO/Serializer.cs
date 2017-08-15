@@ -255,7 +255,7 @@ namespace Resin.IO
         {
             using (var stream = new MemoryStream())
             {
-                byte[] versionBytes = BitConverter.GetBytes(ix.VersionId);
+                byte[] versionBytes = BitConverter.GetBytes(ix.Version);
                 byte[] docCountBytes = BitConverter.GetBytes(ix.DocumentCount);
                 byte[] compressionEnumBytes = BitConverter.GetBytes((int)ix.Compression);
                 byte[] pkFieldNameBytes = ix.PrimaryKeyFieldName == null
@@ -283,8 +283,6 @@ namespace Resin.IO
                     Array.Reverse(keyIndexSizeBytes);
                     Array.Reverse(lenBytes);
                 }
-
-                //stream.WriteByte(EncodedBoolean[ix.WordPositions]);
 
                 var fieldCountBytes = BitConverter.GetBytes(ix.FieldOffsets.Count);
 
@@ -420,7 +418,7 @@ namespace Resin.IO
 
             return new FullTextSegmentInfo
             {
-                VersionId = BitConverter.ToInt64(versionBytes, 0),
+                Version = BitConverter.ToInt64(versionBytes, 0),
                 DocumentCount = BitConverter.ToInt32(docCountBytes, 0),
                 Compression = (Compression)BitConverter.ToInt32(compression, 0),
                 PrimaryKeyFieldName = Encoding.GetString(pkFieldNameBytes),

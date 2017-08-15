@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Resin.IO;
@@ -9,43 +8,12 @@ namespace Resin.Sys
 {
     public static class Util
     {
-        private static readonly Random Rnd;
-        private static long Ticks;
-
-        static Util()
-        {
-            Rnd = new Random();
-            Ticks = DateTime.Now.Ticks;
-        }
-
-        private static Int64 GetTicks()
-        {
-            var count = Rnd.Next(1, 4);
-            for (int i = 0; i < count; i++)
-            {
-                if (Rnd.Next(1, 6).Equals(count)) break;
-            }
-            return Ticks++;
-        }
-
         public static string ReplaceOrAppend(this string input, int index, char newChar)
         {
             var chars = input.ToCharArray();
             if (index == input.Length) return input + newChar;
             chars[index] = newChar;
             return new string(chars);
-        }
-
-        public static long GetNextChronologicalFileId()
-        {
-            return GetTicks();
-        }
-
-        public static string GetFirstIndexFileNameInChronologicalOrder(string directory)
-        {
-            var files = Directory.GetFiles(directory, "*.ix");
-            if (files.Length == 0) return null;
-            return files[0];
         }
 
         public static string[] GetIndexFileNamesInChronologicalOrder(string directory)
@@ -146,29 +114,6 @@ namespace Resin.Sys
                 if (propertyInfo.CanRead && propertyInfo.GetIndexParameters().Length == 0)
                     dictionary[propertyInfo.Name] = propertyInfo.GetValue(obj, null);
             return dictionary;
-        }
-
-        public static bool TryAquireWriteLock(string directory, out FileStream lockFile)
-        {
-            lockFile = null;
-
-            var fileName = Path.Combine(directory, "write.lock");
-            try
-            {
-                lockFile = new FileStream(
-                                fileName, FileMode.CreateNew, FileAccess.Write,
-                                FileShare.None, 4, FileOptions.DeleteOnClose);
-                return true;
-            }
-            catch (IOException)
-            {
-                if (lockFile != null)
-                {
-                    lockFile.Dispose();
-                    lockFile = null;
-                }
-                return false;
-            } 
         }
 
         public static bool IsSegmented(string ixFileName)

@@ -5,17 +5,17 @@ namespace DocumentTable
     public class WriteSessionFactory : IWriteSessionFactory
     {
         private readonly string _directory;
-        private readonly SegmentInfo _ix;
 
-        public WriteSessionFactory(string directory, SegmentInfo ix)
+        public WriteSessionFactory(string directory)
         {
-            _ix = ix;
             _directory = directory;
+
+            Directory.SetCurrentDirectory(directory);
         }
 
-        public IWriteSession OpenWriteSession(Stream compoundFile)
+        public IWriteSession OpenWriteSession(Compression compression)
         {
-            return new WriteSession(_directory, _ix, compoundFile);
+            return new WriteSession(_directory, compression);
         }
     }
 }

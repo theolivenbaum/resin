@@ -1,24 +1,25 @@
 ﻿using DocumentTable;
-using System.IO;
+using Resin.IO;
 
 namespace Resin
 {
-    public class FullTextWriteSessionFactory : IWriteSessionFactory
+    public class FullTextWriteSessionFactory : IFullTextWriteSessionFactory
     {
         private readonly string _directory;
-        private readonly FullTextSegmentInfo _ix;
 
-        public FullTextWriteSessionFactory(string directory, FullTextSegmentInfo ix)
+        public FullTextWriteSessionFactory(string directory)
         {
-            _ix = ix;
             _directory = directory;
-
-            Directory.SetCurrentDirectory(directory);
         }
 
-        public IWriteSession OpenWriteSession(Stream compoundFile)
+        public IWriteSession OpenWriteSession(Compression compression, TreeBuilder treeBuilder)
         {
-            return new FullTextWriteSession(_directory, _ix, compoundFile);
+            return new FullTextWriteSession(_directory, compression, treeBuilder);
+        }
+
+        public IWriteSession OpenWriteSession(Compression compression)
+        {
+            return new WriteSession(_directory, compression);
         }
     }
 }

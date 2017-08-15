@@ -5,12 +5,12 @@ using System.Collections.Generic;
 
 namespace DocumentTable
 {
-    [DebuggerDisplay("{VersionId}")]
+    [DebuggerDisplay("{Version}")]
     public class SegmentInfo
     {
         protected static readonly ILog Log = LogManager.GetLogger(typeof (SegmentInfo));
 
-        public long VersionId { get; set; }
+        public long Version { get; set; }
 
         public int DocumentCount { get; set; }
 

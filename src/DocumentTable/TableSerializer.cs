@@ -268,7 +268,7 @@ namespace DocumentTable
 
             return new SegmentInfo
             {
-                VersionId = BitConverter.ToInt64(versionBytes, 0),
+                Version = BitConverter.ToInt64(versionBytes, 0),
                 DocumentCount = BitConverter.ToInt32(docCountBytes, 0),
                 Compression = (Compression)BitConverter.ToInt32(compression, 0),
                 PrimaryKeyFieldName = Encoding.GetString(pkFieldNameBytes),
@@ -468,7 +468,7 @@ namespace DocumentTable
         {
             using (var stream = new MemoryStream())
             {
-                byte[] versionBytes = BitConverter.GetBytes(ix.VersionId);
+                byte[] versionBytes = BitConverter.GetBytes(ix.Version);
                 byte[] docCountBytes = BitConverter.GetBytes(ix.DocumentCount);
                 byte[] compressionEnumBytes = BitConverter.GetBytes((int)ix.Compression);
                 byte[] pkFieldNameBytes = ix.PrimaryKeyFieldName == null

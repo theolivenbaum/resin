@@ -275,7 +275,7 @@ namespace Resin
         {
             if (!first.DocHash.Equals(second.DocHash)) throw new ArgumentException("Document hashes differ. Cannot take latest version.", "score");
 
-            if (first.Ix.VersionId > second.Ix.VersionId)
+            if (first.Ix.Version > second.Ix.Version)
             {
                 return first;
             }
