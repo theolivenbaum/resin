@@ -49,7 +49,7 @@ namespace Resin.IO
 
             lists.Sort(new PostingsListsComparer());
 
-            Log.DebugFormat("created a postings matrix with width {0} in {1}", lists.Count, time.Elapsed);
+            Log.InfoFormat("created a postings matrix with width {0} in {1}", lists.Count, time.Elapsed);
 
             return lists;
         }

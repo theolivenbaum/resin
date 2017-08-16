@@ -57,7 +57,7 @@ namespace Resin.Querying
                     addressesMatrix.Add(addresses);
                 }
 
-                Log.DebugFormat("found {0} matching words for the term {1}:{2} in {3}",
+                Log.InfoFormat("found {0} matching words for the term {1}:{2} in {3}",
                     addresses.Count, ctx.Query.Key, token, time.Elapsed);
             }
 

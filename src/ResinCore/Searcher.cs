@@ -73,7 +73,7 @@ namespace Resin
             int total;
             var docs = GetDocs(scores, page * size, size, out total);
 
-            Log.DebugFormat("fetched {0} docs for query {1} in {2}", docs.Count, query.ToQueryString(), docTime.Elapsed);
+            Log.InfoFormat("fetched {0} docs for query {1} in {2}", docs.Count, query.ToQueryString(), docTime.Elapsed);
 
             var result = new ScoredResult
             {

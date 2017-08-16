@@ -50,7 +50,7 @@ namespace Resin.Querying
                 }
             }
 
-            Log.DebugFormat("found {0} matching terms for the query {1} in {2}",
+            Log.InfoFormat("found {0} matching terms for the query {1} in {2}",
                     addresses.Count, ctx.Query, time.Elapsed);
 
             var postings = PostingsReader.ReadTermCounts(addresses);
