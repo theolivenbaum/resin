@@ -479,25 +479,35 @@ namespace Resin.IO
         {
             var count = size / (2 * sizeof(int));
             var postings = new List<DocumentPosting>(count);
-            var buffer = new byte[2 * sizeof(int)];
+            var buffer = new byte[100 * 2 * sizeof(int)];
             var read = 0;
 
             while (read < count)
             {
                 stream.Read(buffer, 0, buffer.Length);
 
-                if (!BitConverter.IsLittleEndian)
+                var bufCount = buffer.Length / (2 * sizeof(int));
+
+                for (int index = 0; index < bufCount; index++)
                 {
-                    Array.Reverse(buffer, 0, sizeof(int));
-                    Array.Reverse(buffer, sizeof(int), sizeof(int));
+                    if (read == count) break;
+
+                    var firstIndex = index * 2 * sizeof(int);
+                    var secondIndex = firstIndex + sizeof(int);
+
+                    if (!BitConverter.IsLittleEndian)
+                    {
+                        Array.Reverse(buffer, firstIndex, sizeof(int));
+                        Array.Reverse(buffer, secondIndex, sizeof(int));
+                    }
+
+                    postings.Add(new DocumentPosting(
+                        BitConverter.ToInt32(buffer, firstIndex),
+                        BitConverter.ToInt32(buffer, secondIndex)
+                        ));
+
+                    read++;
                 }
-
-                postings.Add(new DocumentPosting(
-                    BitConverter.ToInt32(buffer, 0),
-                    BitConverter.ToInt32(buffer, sizeof(int))
-                    ));
-
-                read++;
             }
 
             return postings;

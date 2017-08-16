@@ -10,7 +10,7 @@ namespace DocumentTable
         private readonly string _directory;
         private readonly FileStream _compoundFile;
 
-        public ReadSessionFactory(string directory)
+        public ReadSessionFactory(string directory, int bufferSize = 4096 * 12)
         {
             _directory = directory;
 
@@ -24,7 +24,9 @@ namespace DocumentTable
                 compoundFileName,
                 FileMode.Open,
                 FileAccess.Read,
-                FileShare.ReadWrite);
+                FileShare.ReadWrite,
+                bufferSize,
+                FileOptions.RandomAccess);
         }
 
         public IReadSession OpenReadSession(long version)

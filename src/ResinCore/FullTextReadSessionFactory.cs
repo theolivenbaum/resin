@@ -11,7 +11,7 @@ namespace Resin
         private readonly string _directory;
         private readonly FileStream _compoundFile;
 
-        public FullTextReadSessionFactory(string directory)
+        public FullTextReadSessionFactory(string directory, int bufferSize = 4096*12)
         {
             _directory = directory;
 
@@ -26,7 +26,7 @@ namespace Resin
                 FileMode.Open,
                 FileAccess.Read,
                 FileShare.ReadWrite,
-                4096*8,
+                bufferSize,
                 FileOptions.RandomAccess);
         }
 
