@@ -116,7 +116,7 @@ namespace Resin
             using (var source = new FileStream(srcDataFileName, FileMode.Open))
             using (var documentStream = new DocumentTableStream(source, srcIx))
             {
-                using (var upsert = new UpsertTransaction(
+                using (var upsert = new FullTextUpsertTransaction(
                     _directory,
                     _analyzer,
                     srcIx.Compression,

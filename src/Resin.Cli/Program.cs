@@ -279,7 +279,7 @@ namespace Resin.Cli
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
             using (var documents = new JsonDocumentStream(fileName, skip, take, pk))
-            using (var upsert = new UpsertTransaction(dir, new Analyzer(), compression, documents))
+            using (var upsert = new FullTextUpsertTransaction(dir, new Analyzer(), compression, documents))
             {
                 upsert.Write();
             }
@@ -315,7 +315,7 @@ namespace Resin.Cli
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
             var documents = new ProjGutenbergDvdStream(sourceDir, skip, take);
-            using (var upsert = new UpsertTransaction(dir, new Analyzer(), compression, documents))
+            using (var upsert = new FullTextUpsertTransaction(dir, new Analyzer(), compression, documents))
             {
                 upsert.Write();
             }
@@ -352,7 +352,7 @@ namespace Resin.Cli
 
             using (var stream = new FileStream(dataFileName, FileMode.Open))
             using (var documents = new DocumentTableStream(stream, ix, skip, take))
-            using (var upsert = new UpsertTransaction(dir, new Analyzer(), compression, documents))
+            using (var upsert = new FullTextUpsertTransaction(dir, new Analyzer(), compression, documents))
             {
                 upsert.Write();
             }

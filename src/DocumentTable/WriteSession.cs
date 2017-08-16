@@ -30,7 +30,7 @@ namespace DocumentTable
             _version = CreateNewSegmentInfo(version);
             _version.Compression = compression;
 
-            Log.InfoFormat("begin writing {0}", _version);
+            Log.InfoFormat("begin writing {0}", _version.Version);
 
             var docFileName = Path.Combine(Directory.GetCurrentDirectory(), Path.GetRandomFileName() + ".dtbl");
             var docAddressFn = Path.Combine(Directory.GetCurrentDirectory(), Path.GetRandomFileName() + ".da");
