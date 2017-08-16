@@ -57,8 +57,8 @@ namespace Resin.Querying
                     addressesMatrix.Add(addresses);
                 }
 
-                Log.DebugFormat("found {0} matching words for the query {1} in {2}",
-                    addresses.Count, ctx.Query, time.Elapsed);
+                Log.DebugFormat("found {0} matching words for the term {1}:{2} in {3}",
+                    addresses.Count, ctx.Query.Key, token, time.Elapsed);
             }
 
             var postings = PostingsReader.ReadMany(addressesMatrix);
@@ -93,6 +93,12 @@ namespace Resin.Querying
                 if (score != null)
                 {
                     DocumentScore sum = score[0];
+
+                    if (sum == null)
+                    {
+                        continue;
+                    }
+
                     for (int i = 1; i < score.Length; i++)
                     {
                         var s = score[i];

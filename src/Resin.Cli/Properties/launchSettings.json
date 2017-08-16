@@ -2,7 +2,7 @@
   "profiles": {
     "Resin.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "write-pg --source-dir C:\\temp\\pgdvd --dir c:\\temp\\resin_data\\pg --skip 10000"
+      "commandLineArgs": "query --dir c:\\temp\\resin_data\\pg -q \"body:\\\"The Hand But Not the Heart\\\"\" -p 0 -s 100"
     }
   }
 }
