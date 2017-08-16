@@ -436,7 +436,7 @@ namespace Resin.IO
         {
             var count = size / (2 * sizeof(int));
             var postings = new List<DocumentPosting>();
-            var buffer = new byte[2 * sizeof(int)];
+            var buffer = new byte[100 * 2 * sizeof(int)];
             var read = 0;
             var documentId = -1;
             var termCount = 0;
@@ -445,29 +445,38 @@ namespace Resin.IO
             {
                 stream.Read(buffer, 0, buffer.Length);
 
-                if (!BitConverter.IsLittleEndian)
-                {
-                    Array.Reverse(buffer, 0, sizeof(int));
-                }
+                var bufCount = buffer.Length / (2 * sizeof(int));
 
-                var id = BitConverter.ToInt32(buffer, 0);
-
-                if (id != documentId)
+                for (int index = 0; index < bufCount; index++)
                 {
-                    if (documentId > -1)
+                    if (read == count) break;
+
+                    var bufIndex = index * 2 * sizeof(int);
+
+                    if (!BitConverter.IsLittleEndian)
                     {
-                        postings.Add(
-                            new DocumentPosting(documentId, termCount));
+                        Array.Reverse(buffer, bufIndex, sizeof(int));
                     }
-                    documentId = id;
-                    termCount = 1;
-                }
-                else
-                {
-                    termCount++;
-                }
 
-                read++;
+                    var id = BitConverter.ToInt32(buffer, bufIndex);
+
+                    if (id != documentId)
+                    {
+                        if (documentId > -1)
+                        {
+                            postings.Add(
+                                new DocumentPosting(documentId, termCount));
+                        }
+                        documentId = id;
+                        termCount = 1;
+                    }
+                    else
+                    {
+                        termCount++;
+                    }
+
+                    read++;
+                }
             }
 
             postings.Add(new DocumentPosting(documentId, termCount));
