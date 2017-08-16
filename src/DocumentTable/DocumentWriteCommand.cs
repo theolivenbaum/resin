@@ -10,7 +10,7 @@ namespace DocumentTable
         {
             session.Write(document);
 
-            Log.DebugFormat("stored and analyzed doc ID {0}", document.Id);
+            Log.DebugFormat("stored doc ID {0}", document.Id);
         }
     }
 }

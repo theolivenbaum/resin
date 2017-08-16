@@ -120,7 +120,7 @@ namespace Resin
                 }
                 catch(Exception ex)
                 {
-                    Log.Info(ex);
+                    Log.InfoFormat("unreadable file: {0} {1}", zipFileName, ex.Message);
                     continue;
                 }
 

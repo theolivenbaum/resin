@@ -191,7 +191,10 @@ namespace Resin.IO
                 else if (node.WriteToDisk == false)
                 {
                     node.Size += term.Positions.Count;
-
+                }
+                else
+                {
+                    node.PostingsStream.Flush();
                 }
             }
             else

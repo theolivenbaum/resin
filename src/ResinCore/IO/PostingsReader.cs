@@ -47,7 +47,7 @@ namespace Resin.IO
                 }
             }
 
-            Log.DebugFormat("read {0} wide postings matrix in {1}", result.Count, time.Elapsed);
+            Log.DebugFormat("read a postings matrix with width {0} in {1}", result.Count, time.Elapsed);
             return result;
         }
 
