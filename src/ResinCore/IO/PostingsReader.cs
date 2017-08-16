@@ -37,18 +37,21 @@ namespace Resin.IO
         public IList<IList<DocumentPosting>> ReadMany(IList<IList<BlockInfo>> addresses)
         {
             var time = Stopwatch.StartNew();
-            var result = new List<IList<DocumentPosting>>();
+            var lists = new List<IList<DocumentPosting>>();
 
             foreach(var list in addresses)
             {
                 foreach(var address in list)
                 {
-                    result.Add(ReadFromStream(address));
+                    lists.Add(ReadFromStream(address));
                 }
             }
 
-            Log.DebugFormat("created a postings matrix with width {0} in {1}", result.Count, time.Elapsed);
-            return result;
+            lists.Sort(new PostingsListsComparer());
+
+            Log.DebugFormat("created a postings matrix with width {0} in {1}", lists.Count, time.Elapsed);
+
+            return lists;
         }
 
         public IList<DocumentPosting> Read(IList<BlockInfo> addresses)

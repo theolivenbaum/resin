@@ -43,4 +43,14 @@ namespace Resin
             return 0;
         }
     }
+
+    public class PostingsListsComparer : IComparer<IList<DocumentPosting>>
+    {
+        public int Compare(IList<DocumentPosting> x, IList<DocumentPosting> y)
+        {
+            if (x.Count < y.Count) return -1;
+            if (x.Count > y.Count) return 1;
+            return 0;
+        }
+    }
 }

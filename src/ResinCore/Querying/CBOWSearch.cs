@@ -84,7 +84,7 @@ namespace Resin.Querying
 
             SetWeights(postings, weights);
 
-           var timer = Stopwatch.StartNew();
+            var timer = Stopwatch.StartNew();
 
             var scoreDic = new Dictionary<int, DocumentScore>();
 
@@ -155,10 +155,10 @@ namespace Resin.Querying
                 var second = postings[index];
 
                 var count = Score(
-                    weights, ref first, second, ++maxDistance, postings.Count - 1, index - 1);
+                    weights, ref first, second, maxDistance, postings.Count - 1, index - 1);
 
                 Log.DebugFormat(
-                    "found {0} postings at word position {1} within close proximity of word 0",
+                    "found {0} postings at word vector position {1}",
                     count, index);
             }
 
@@ -200,13 +200,13 @@ namespace Resin.Querying
                     continue;
                 }
 
-                var distance = p2.Data - p1.Data;
+                var distance = Math.Abs(p2.Data - p1.Data);
 
-                if (distance <= 0)
-                {
-                    cursor2++;
-                    continue;
-                }
+                //if (distance <= 0)
+                //{
+                //    cursor2++;
+                //    continue;
+                //}
 
                 if (distance <= maxDistance)
                 {
@@ -227,8 +227,8 @@ namespace Resin.Querying
                         }
                     }
 
-                    //Log.DebugFormat("document ID {0} scored {1}",
-                    //    p1.DocumentId, score);
+                    Log.DebugFormat("document ID {0} scored {1} with a distance of {2}",
+                        p1.DocumentId, score, distance);
 
                     count++;
                 }
