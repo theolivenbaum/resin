@@ -61,7 +61,7 @@ namespace Tests
 
             var docs = new List<dynamic>
             {
-                new {_id = "0", title = "into the cold rain came a man" },
+                new {_id = "0", title = "man, the rain is cold" },
                 new {_id = "1", title = "the rambo 2" },
                 new {_id = "2", title = "the rocky 2" },
                 new {_id = "3", title = "the rain maker" },
@@ -83,7 +83,6 @@ namespace Tests
                 Assert.AreEqual(2, scores.Count);
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 0));
                 Assert.IsTrue(scores.Any(d => d.DocumentId == 4));
-                Assert.IsTrue(scores.OrderByDescending(s => s.Score).First().DocumentId.Equals(4));
             }
         }
 
