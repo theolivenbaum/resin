@@ -18,9 +18,9 @@ namespace Tests
             return dir;
         }
 
-        protected static IReadSession CreateReadSession(string directory, long version)
+        protected static IFullTextReadSession CreateReadSession(string directory, long version)
         {
-            return new FullTextReadSessionFactory(directory).OpenReadSession(version);
+            return (IFullTextReadSession)new FullTextReadSessionFactory(directory).OpenReadSession(version);
         }
 
         [AssemblyInitialize()]

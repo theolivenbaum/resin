@@ -1,14 +1,20 @@
 ﻿using DocumentTable;
+using Resin.IO;
 using StreamIndex;
 using System.Collections.Generic;
 using System.IO;
 
 namespace Resin
 {
-    public class FullTextReadSession : ReadSession
+    public class FullTextReadSession : ReadSession, IFullTextReadSession
     {
         public FullTextReadSession(SegmentInfo version, DocHashReader docHashReader, BlockInfoReader addressReader, Stream stream) : base(version, docHashReader, addressReader, stream)
         {
+        }
+
+        public PostingsReader GetPostingsReader()
+        {
+            return new PostingsReader(Stream, Version.PostingsOffset);
         }
 
         public ScoredDocument ReadDocuments(DocumentScore score)
@@ -60,5 +66,10 @@ namespace Resin
 
             return documents;
         }
+    }
+
+    public interface IFullTextReadSession:IReadSession
+    {
+        PostingsReader GetPostingsReader();
     }
 }

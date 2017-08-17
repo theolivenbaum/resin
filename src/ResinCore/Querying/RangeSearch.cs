@@ -1,5 +1,4 @@
-﻿using DocumentTable;
-using Resin.IO;
+﻿using Resin.IO;
 using StreamIndex;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,8 +7,8 @@ namespace Resin.Querying
 {
     public class RangeSearch : Search
     {
-        public RangeSearch(IReadSession session, IScoringSchemeFactory scoringFactory, PostingsReader postingsReader)
-            : base(session, scoringFactory, postingsReader) { }
+        public RangeSearch(IFullTextReadSession session, IScoringSchemeFactory scoringFactory)
+            : base(session, scoringFactory) { }
 
 
         public void Search(QueryContext ctx, string valueUpperBound)
@@ -31,7 +30,7 @@ namespace Resin.Querying
             Log.InfoFormat("found {0} matching terms for the query {1} in {2}",
                     addresses.Count, ctx.Query, time.Elapsed);
 
-            var postings = PostingsReader.Read(addresses);
+            var postings = Session.GetPostingsReader().Read(addresses);
 
             ctx.Scores = Score(postings);
         }

@@ -1,5 +1,4 @@
-﻿using DocumentTable;
-using Resin.IO;
+﻿using Resin.IO;
 using StreamIndex;
 using System;
 using System.Collections.Generic;
@@ -9,8 +8,8 @@ namespace Resin.Querying
 {
     public class CBOWSearch : Search
     {
-        public CBOWSearch(IReadSession session, IScoringSchemeFactory scoringFactory, PostingsReader postingsReader)
-            : base(session, scoringFactory, postingsReader)
+        public CBOWSearch(IFullTextReadSession session, IScoringSchemeFactory scoringFactory)
+            : base(session, scoringFactory)
         {
         }
 
@@ -61,7 +60,7 @@ namespace Resin.Querying
                     addresses.Count, ctx.Query.Key, token, time.Elapsed);
             }
 
-            var postings = PostingsReader.ReadMany(addressesMatrix);
+            var postings = Session.GetPostingsReader().ReadMany(addressesMatrix);
 
             if (postings.Count < tokens.Count)
             {

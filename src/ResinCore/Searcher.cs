@@ -92,7 +92,7 @@ namespace Resin
 
             for (var index = 0;index<_versions.Count;index++)
             {
-                using (var readSession = _sessionFactory.OpenReadSession(_versions[index]))
+                using (var readSession = (IFullTextReadSession)_sessionFactory.OpenReadSession(_versions[index]))
                 {
                     scores.Add(Collect(query, readSession));
                 }
@@ -101,7 +101,7 @@ namespace Resin
             return scores;
         }
 
-        private IList<DocumentScore> Collect(IList<QueryContext> query, IReadSession readSession)
+        private IList<DocumentScore> Collect(IList<QueryContext> query, IFullTextReadSession readSession)
         {
             using (var collector = new Collector(_directory, readSession, _scorerFactory))
             {

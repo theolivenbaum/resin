@@ -12,16 +12,14 @@ namespace Resin.Querying
     {
         protected static readonly ILog Log = LogManager.GetLogger(typeof(Search));
 
-        protected IReadSession Session { get; set; }
+        protected IFullTextReadSession Session { get; set; }
         protected IScoringSchemeFactory ScoringFactory { get; set; }
-        protected PostingsReader PostingsReader { get; set; }
 
         protected Search(
-            IReadSession session, IScoringSchemeFactory scoringFactory, PostingsReader postingsReader)
+            IFullTextReadSession session, IScoringSchemeFactory scoringFactory)
         {
             Session = session;
             ScoringFactory = scoringFactory;
-            PostingsReader = postingsReader;
         }
 
         protected ITrieReader GetTreeReader(string field)

@@ -14,16 +14,13 @@ namespace Resin
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
         private readonly string _directory;
         private readonly IScoringSchemeFactory _scorerFactory;
-        private readonly IReadSession _readSession;
-        private readonly PostingsReader _postingsReader;
+        private readonly IFullTextReadSession _readSession;
 
-        public Collector(string directory, IReadSession readSession, IScoringSchemeFactory scorerFactory = null)
+        public Collector(string directory, IFullTextReadSession readSession, IScoringSchemeFactory scorerFactory = null)
         {
             _readSession = readSession;
             _directory = directory;
             _scorerFactory = scorerFactory??new TfIdfFactory();
-            _postingsReader = new PostingsReader(
-                _readSession.Stream, _readSession.Version.PostingsOffset);
         }
 
         public IList<DocumentScore> Collect(IList<QueryContext> query)
@@ -48,17 +45,17 @@ namespace Resin
 
             if (rangeQ != null && rangeQ.Value == null)
             {
-                new CBOWSearch(_readSession, _scorerFactory, _postingsReader)
-                        .Search(ctx);
+                new CBOWSearch(_readSession, _scorerFactory)
+                    .Search(ctx);
             }
             else if (ctx.Query is RangeQuery)
             {
-                new RangeSearch(_readSession, _scorerFactory, _postingsReader)
+                new RangeSearch(_readSession, _scorerFactory)
                     .Search(ctx, ((RangeQuery)ctx.Query).ValueUpperBound);
             }
             else
             {
-                new TermSearch(_readSession, _scorerFactory, _postingsReader)
+                new TermSearch(_readSession, _scorerFactory)
                     .Search(ctx);
             }
         }

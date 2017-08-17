@@ -295,8 +295,7 @@ namespace Tests
             long version = writer.Write();
             writer.Dispose();
 
-            using(var factory = new ReadSessionFactory(dir))
-            using (var readSession = factory.OpenReadSession(version))
+            using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
             {
                 var query = new QueryParser().Parse("title:'rambo'");
@@ -310,8 +309,7 @@ namespace Tests
             var operation = new DeleteByPrimaryKeyCommand(dir, new[] { "0" });
             operation.Execute();
 
-            using (var factory = new ReadSessionFactory(dir))
-            using (var readSession = factory.OpenReadSession(version))
+            using (var readSession = CreateReadSession(dir, version))
             using (var collector = new Collector(dir, readSession))
             {
                 var query = new QueryParser().Parse("title:'rambo'");
