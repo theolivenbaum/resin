@@ -2,7 +2,7 @@
   "profiles": {
     "Resin.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "query --dir c:\\temp\\resin_data\\pg -q \"body:\\\"the romance of rubber\\\"\" -p 0 -s 10"
+      "commandLineArgs": "write-pg --dir c:\\temp\\resin_data\\pg --source-dir c:\\temp\\pgdvd"
     }
   }
 }

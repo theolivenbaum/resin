@@ -176,7 +176,7 @@ namespace Resin.IO
 
                 term.Serialize(node.PostingsStream);
 
-                if (node.Size > 100000 && node.WriteToDisk == false)
+                if (node.Size > 82000 && node.WriteToDisk == false)
                 {
                     var fn = Path.Combine(Directory.GetCurrentDirectory(), Path.GetRandomFileName());
                     var fs = new FileStream(fn, FileMode.Create, FileAccess.ReadWrite, 

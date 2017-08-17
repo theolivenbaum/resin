@@ -21,6 +21,8 @@ namespace DocumentTable
         {
             _directory = directory;
             _documents = documents;
+
+            System.IO.Directory.SetCurrentDirectory(directory);
         }
 
         public DocumentUpsertTransaction(

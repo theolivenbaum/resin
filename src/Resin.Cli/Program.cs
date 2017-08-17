@@ -301,13 +301,11 @@ namespace Resin.Cli
 
             var compression = gzip ? Compression.GZip : lz ? Compression.Lz : Compression.NoCompression;
 
-            var fileName = args[Array.IndexOf(args, "--file") + 1];
             string dir = null;
             string sourceDir = null;
 
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
             if (Array.IndexOf(args, "--source-dir") > 0) sourceDir = args[Array.IndexOf(args, "--source-dir") + 1];
-
 
             var writeTimer = new Stopwatch();
             writeTimer.Start();
