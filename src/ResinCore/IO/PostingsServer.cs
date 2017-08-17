@@ -54,42 +54,32 @@ namespace Resin.IO
 
         public void Start()
         {
-            // Data buffer for incoming data.  
             byte[] request;
 
             try
             {
-                // Start listening for connections.  
                 while (true)
                 {
-                    Log.Info("Waiting for a connection...");
-                    // Program is suspended while waiting for an incoming connection.  
+                    Log.Info("postings server idle");
+
                     Socket handler = _listener.Accept();
 
-                    // An incoming connection needs to be processed.  
-                    request = new byte[sizeof(byte) + sizeof(long) + sizeof(int)];
+                    request = new byte[sizeof(long) + sizeof(int)];
 
-                    int requestLength = handler.Receive(request);
-                    var isTermCountRequest = request[0] == 0;
-                    var address = BlockSerializer.DeserializeBlock(request, 1);
-                    byte[] response;
+                    int received = handler.Receive(request);
 
-                    if (isTermCountRequest)
-                    {
-                        Log.Info("term counts requested");
-                        response = new StreamPostingsReader(_data, _offset)
-                            .ReadTermCountsFromStream(address);
-                    }
-                    else
-                    {
-                        Log.Info("positions requested");
-                        response = new StreamPostingsReader(_data, _offset)
-                            .ReadPositionsFromStream(address);
-                    }
+                    Log.InfoFormat("received a {0} byte request", received);
+
+                    var address = BlockSerializer.DeserializeBlock(request, 0);
+
+                    byte[] response = new StreamPostingsReader(_data, _offset)
+                        .ReadPositionsFromStream(address);
 
                     handler.Send(response);
                     handler.Shutdown(SocketShutdown.Both);
                     handler.Dispose();
+
+                    Log.InfoFormat("responded with a {0} byte postings list", response.Length);
                 }
             }
             catch (Exception e)

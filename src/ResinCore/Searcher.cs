@@ -17,7 +17,7 @@ namespace Resin
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
         private readonly string _directory;
-        private readonly QueryParser _parser;
+        private readonly IQueryParser _parser;
         private readonly IScoringSchemeFactory _scorerFactory;
         private readonly IList<SegmentInfo> _versions;
         private readonly int _blockSize;
@@ -33,11 +33,11 @@ namespace Resin
         {
         }
 
-        public Searcher(string directory, QueryParser parser, IScoringSchemeFactory scorerFactory, IReadSessionFactory sessionFactory = null)
+        public Searcher(string directory, IQueryParser parser = null, IScoringSchemeFactory scorerFactory = null, IReadSessionFactory sessionFactory = null)
         {
             _directory = directory;
-            _parser = parser;
-            _scorerFactory = scorerFactory;
+            _parser = parser ?? new QueryParser();
+            _scorerFactory = scorerFactory ?? new TfIdfFactory();
             _versions = Util.GetIndexVersionListInChronologicalOrder(directory);
             _blockSize = BlockSerializer.SizeOfBlock();
             _sessionFactory = sessionFactory ?? new FullTextReadSessionFactory(directory);

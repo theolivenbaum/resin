@@ -1,52 +1,31 @@
 ﻿using DocumentTable;
-using log4net;
 using Resin.IO;
 using StreamIndex;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Net.Sockets;
 
 namespace Resin
 {
     public class NetworkFullTextReadSession : ReadSession, IFullTextReadSession
     {
-        protected static readonly ILog Log = LogManager.GetLogger(typeof(NetworkFullTextReadSession));
-        private readonly Socket _socket;
+        private readonly IPEndPoint _ip;
 
         public NetworkFullTextReadSession(
-            SegmentInfo version, DocHashReader docHashReader, BlockInfoReader addressReader, Stream stream) 
+            IPEndPoint ip, SegmentInfo version, DocHashReader docHashReader, BlockInfoReader addressReader, Stream stream) 
             : base(version, docHashReader, addressReader, stream)
         {
-            IPHostEntry ipHostInfo = Dns.GetHostEntryAsync(Dns.GetHostName()).Result;
-            IPAddress ipAddress = ipHostInfo.AddressList[0];
-            IPEndPoint remoteEP = new IPEndPoint(ipAddress, 11100);
-
-            _socket = new Socket(AddressFamily.InterNetwork,
-                SocketType.Stream, ProtocolType.Tcp);
-
-            try
-            {
-                _socket.Connect(remoteEP);
-
-                Log.InfoFormat("Socket connected to {0}",
-                    _socket.RemoteEndPoint.ToString());
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Unexpected exception : {0}", e.ToString());
-            }
+            _ip = ip;
         }
 
         public IList<DocumentPosting> ReadTermCounts(IList<BlockInfo> addresses)
         {
-            return new NetworkPostingsReader(_socket).ReadTermCounts(addresses);
+            return new NetworkPostingsReader(_ip).ReadTermCounts(addresses);
         }
 
         public IList<IList<DocumentPosting>> ReadPositions(IList<IList<BlockInfo>> addresses)
         {
-            return new NetworkPostingsReader(_socket).ReadPositions(addresses);
+            return new NetworkPostingsReader(_ip).ReadPositions(addresses);
         }
 
         public ScoredDocument ReadDocument(DocumentScore score)
@@ -65,14 +44,6 @@ namespace Resin
                 document.Id = score.DocumentId;
                 return new ScoredDocument(document, score.Score);
             }
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-
-            _socket.Shutdown(SocketShutdown.Both);
-            _socket.Dispose();
         }
     }
 }

@@ -1,43 +1,36 @@
-﻿using log4net;
-using StreamIndex;
+﻿using StreamIndex;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 
 namespace Resin.IO
 {
     public class NetworkPostingsReader : PostingsReader
     {
-        protected static readonly ILog Log = LogManager.GetLogger(typeof(NetworkPostingsReader));
+        private readonly IPEndPoint _ip;
 
-        private readonly Socket _socket;
-
-        public NetworkPostingsReader(Socket socket)
+        public NetworkPostingsReader(IPEndPoint ip)
         {
-            _socket = socket;
+            _ip = ip;
         }
 
         public override IList<DocumentPosting> ReadPositionsFromStream(BlockInfo address)
         {
-            var msg = new byte[sizeof(byte) + sizeof(long) + sizeof(int)];
-
-            msg[0] = 0; // signals we want positions (not term counts)
-
-            var pos = BitConverter.GetBytes(address.Position);
-            var len = BitConverter.GetBytes(address.Length);
-
-            pos.CopyTo(msg, sizeof(byte));
-            len.CopyTo(msg, sizeof(byte) + sizeof(long));
-
-            var sent = _socket.Send(msg);
-            var data = new byte[address.Length];
-            var recieved = _socket.Receive(data);
+            var data = ReadOverNetwork(address);
             var postings = Serializer.DeserializePostings(data);
 
             return postings;
         }
 
         public override IList<DocumentPosting> ReadTermCountsFromStream(BlockInfo address)
+        {
+            var data = ReadOverNetwork(address);
+            var termCounts = Serializer.DeserializeTermCounts(data);
+            return termCounts;
+        }
+
+        private byte[] ReadOverNetwork(BlockInfo address)
         {
             var msg = new byte[sizeof(long) + sizeof(int)];
             var pos = BitConverter.GetBytes(address.Position);
@@ -46,12 +39,20 @@ namespace Resin.IO
             pos.CopyTo(msg, 0);
             len.CopyTo(msg, sizeof(long));
 
-            var sent = _socket.Send(msg);
-            var data = new byte[address.Length];
-            var recieved = _socket.Receive(data);
-            var postings = Serializer.DeserializeTermCounts(data);
+            var socket = new Socket(AddressFamily.InterNetwork,
+                SocketType.Stream, ProtocolType.Tcp);
+            socket.Connect(_ip);
 
-            return postings;
+            Log.InfoFormat("Socket connected to {0}", socket.RemoteEndPoint.ToString());
+
+            var sent = socket.Send(msg);
+            var data = new byte[address.Length];
+            var recieved = socket.Receive(data);
+
+            socket.Shutdown(SocketShutdown.Both);
+            socket.Dispose();
+
+            return data;
         }
     }
 }

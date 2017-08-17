@@ -4,7 +4,7 @@ using Resin.Analysis;
 
 namespace Resin.Querying
 {
-    public class QueryParser
+    public class QueryParser : IQueryParser
     {
         private readonly IAnalyzer _analyzer;
         private readonly float _fuzzySimilarity;
@@ -278,6 +278,11 @@ namespace Resin.Querying
                 list.Add(query);
             }
         }
+    }
+
+    public interface IQueryParser
+    {
+        IList<QueryContext> Parse(string query);
     }
 
     public class QuerySegment

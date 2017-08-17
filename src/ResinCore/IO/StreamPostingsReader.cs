@@ -24,16 +24,5 @@ namespace Resin.IO
 
             return buffer;
         }
-
-        public byte[] ReadTermCountsFromStream(BlockInfo address)
-        {
-            _stream.Seek(_offset + address.Position, SeekOrigin.Begin);
-
-            var termCounts = Serializer.DeserializeTermCounts(_stream, address.Length);
-
-            var data = termCounts.Serialize();
-
-            return data;
-        }
     }
 }
