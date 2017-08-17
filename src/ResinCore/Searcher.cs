@@ -125,9 +125,9 @@ namespace Resin
 
         private ScoredDocument GetDoc(DocumentScore score)
         {
-            using (var readSession = (FullTextReadSession)_sessionFactory.OpenReadSession(score.Ix))
+            using (var readSession = (IFullTextReadSession)_sessionFactory.OpenReadSession(score.Ix))
             {
-                return readSession.ReadDocuments(score);
+                return readSession.ReadDocument(score);
             }
         }
 
