@@ -1,5 +1,4 @@
-﻿using DocumentTable;
-using log4net;
+﻿using log4net;
 using Resin.Sys;
 using StreamIndex;
 using System;
@@ -17,7 +16,7 @@ namespace Resin.IO
         private readonly Socket _listener;
         private long _offset;
 
-        public PostingsServer(string directory, int bufferSize = 4096 * 12)
+        public PostingsServer(string hostName, int port, string directory, int bufferSize = 4096 * 12)
         {
             var version = Util.GetIndexVersionListInChronologicalOrder(directory)[0];
 
@@ -33,12 +32,9 @@ namespace Resin.IO
                 bufferSize,
                 FileOptions.RandomAccess);
 
-            // Establish the local endpoint for the socket.  
-            // Dns.GetHostName returns the name of the   
-            // host running the application.  
-            IPHostEntry ipHostInfo = Dns.GetHostEntryAsync(Dns.GetHostName()).Result;
-            IPAddress ipAddress = ipHostInfo.AddressList[0];
-            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 11100);
+            IPHostEntry ipHostInfo = Dns.GetHostEntryAsync(hostName).Result;
+            IPAddress ipAddress = ipHostInfo.AddressList[1];
+            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, port);
 
             // Create a TCP/IP socket.  
             _listener = new Socket(AddressFamily.InterNetwork,
@@ -71,7 +67,7 @@ namespace Resin.IO
                     Socket handler = _listener.Accept();
 
                     // An incoming connection needs to be processed.  
-                    request = new byte[sizeof(bool) + sizeof(long) + sizeof(int)];
+                    request = new byte[sizeof(byte) + sizeof(long) + sizeof(int)];
 
                     int requestLength = handler.Receive(request);
                     var isTermCountRequest = request[0] == 0;

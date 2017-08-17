@@ -2,7 +2,7 @@
   "profiles": {
     "Resin.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "write-pg --dir c:\\temp\\resin_data\\pg --source-dir c:\\temp\\pgdvd"
+      "commandLineArgs": "start-server --dir c:\\temp\\resin_data\\pg"
     }
   }
 }

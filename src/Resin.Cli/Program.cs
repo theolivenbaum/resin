@@ -7,11 +7,11 @@ using System.Linq;
 using System.Reflection;
 using log4net.Config;
 using log4net;
-using Resin.IO;
 using System.Text;
 using Newtonsoft.Json;
 using DocumentTable;
 using Resin.Sys;
+using Resin.IO;
 
 namespace Resin.Cli
 {
@@ -42,7 +42,7 @@ namespace Resin.Cli
                 }
                 Write(args);
             }
-            if (args[0].ToLower() == "write-pg")
+            else if (args[0].ToLower() == "write-pg")
             {
                 if (Array.IndexOf(args, "--dir") == -1)
                 {
@@ -50,6 +50,15 @@ namespace Resin.Cli
                     return;
                 }
                 WritePg(args);
+            }
+            else if (args[0].ToLower() == "start-server")
+            {
+                if (Array.IndexOf(args, "--dir") == -1)
+                {
+                    Console.WriteLine("I need a directory.");
+                    return;
+                }
+                StartServer(args);
             }
             else if (args[0].ToLower() == "query")
             {
@@ -106,6 +115,19 @@ namespace Resin.Cli
     rn rewrite --file rdoc_filename --dir store_directory [--pk primary_key] [--skip num_of_items_to_skip] [--take num_to_take] [--gzip] [--lz]
     rn export --source-file rdoc_filename --target-file json_filename
 ");
+            }
+        }
+
+        static void StartServer(string[] args)
+        {
+            string dir = null;
+
+            if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
+
+            if (dir != null)
+            {
+                var server = new PostingsServer("localhost", 11111, dir);
+                server.Start();
             }
         }
 

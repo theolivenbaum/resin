@@ -19,12 +19,15 @@ namespace Resin.IO
 
         public override IList<DocumentPosting> ReadPositionsFromStream(BlockInfo address)
         {
-            var msg = new byte[sizeof(long) + sizeof(int)];
+            var msg = new byte[sizeof(byte) + sizeof(long) + sizeof(int)];
+
+            msg[0] = 0; // signals we want positions (not term counts)
+
             var pos = BitConverter.GetBytes(address.Position);
             var len = BitConverter.GetBytes(address.Length);
 
-            pos.CopyTo(msg, 0);
-            len.CopyTo(msg, sizeof(long));
+            pos.CopyTo(msg, sizeof(byte));
+            len.CopyTo(msg, sizeof(byte) + sizeof(long));
 
             var sent = _socket.Send(msg);
             var data = new byte[address.Length];
