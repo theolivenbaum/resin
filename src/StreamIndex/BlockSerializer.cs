@@ -27,15 +27,15 @@ namespace StreamIndex
             return new BlockInfo(BitConverter.ToInt64(posBytes, 0), BitConverter.ToInt32(lenBytes, 0));
         }
 
-        public static BlockInfo DeserializeBlock(byte[] bytes)
+        public static BlockInfo DeserializeBlock(byte[] bytes, int offset = 0)
         {
             if (!BitConverter.IsLittleEndian)
             {
                 Array.Reverse(bytes);
             }
 
-            var pos = BitConverter.ToInt64(bytes, 0);
-            var len = BitConverter.ToInt32(bytes, sizeof(long));
+            var pos = BitConverter.ToInt64(bytes, offset);
+            var len = BitConverter.ToInt32(bytes, offset + sizeof(long));
 
             return new BlockInfo(pos, len);
         }

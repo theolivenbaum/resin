@@ -78,18 +78,7 @@ namespace Resin
         {
             if (_ixFilesToProcess.Length == 1)
             {
-                // truncate segments
-
-                var ix = SegmentInfo.Load(_ixFilesToProcess[0]);
-
-                if (Util.IsSegmented(_ixFilesToProcess[0]))
-                {
-                    return Truncate(_ixFilesToProcess[0]);
-                }
-                else
-                {
-                    return -1;
-                }
+                return 0;
             }
 
             // merge branches

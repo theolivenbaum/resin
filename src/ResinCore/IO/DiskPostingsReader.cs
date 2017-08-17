@@ -14,15 +14,15 @@ namespace Resin.IO
             _stream = stream;
             _offset = offset;
         }
-        
-        protected override IList<DocumentPosting> ReadPostingsFromStream(BlockInfo address)
+
+        public override IList<DocumentPosting> ReadPositionsFromStream(BlockInfo address)
         {
             _stream.Seek(_offset + address.Position, SeekOrigin.Begin);
 
             return Serializer.DeserializePostings(_stream, address.Length);
         }
 
-        protected override IList<DocumentPosting> ReadTermCountsFromStream(BlockInfo address)
+        public override IList<DocumentPosting> ReadTermCountsFromStream(BlockInfo address)
         {
             _stream.Seek(_offset + address.Position, SeekOrigin.Begin);
 

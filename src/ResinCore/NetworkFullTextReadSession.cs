@@ -44,14 +44,9 @@ namespace Resin
             return new NetworkPostingsReader(_socket).ReadTermCounts(addresses);
         }
 
-        public IList<IList<DocumentPosting>> ReadMany(IList<IList<BlockInfo>> addresses)
+        public IList<IList<DocumentPosting>> ReadPositions(IList<IList<BlockInfo>> addresses)
         {
-            return new NetworkPostingsReader(_socket).ReadMany(addresses);
-        }
-
-        public IList<DocumentPosting> Read(IList<BlockInfo> addresses)
-        {
-            return new NetworkPostingsReader(_socket).Read(addresses);
+            return new NetworkPostingsReader(_socket).ReadPositions(addresses);
         }
 
         public ScoredDocument ReadDocument(DocumentScore score)

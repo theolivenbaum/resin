@@ -16,8 +16,8 @@ namespace Resin.IO
         {
             _socket = socket;
         }
-        
-        protected override IList<DocumentPosting> ReadPostingsFromStream(BlockInfo address)
+
+        public override IList<DocumentPosting> ReadPositionsFromStream(BlockInfo address)
         {
             var msg = new byte[sizeof(long) + sizeof(int)];
             var pos = BitConverter.GetBytes(address.Position);
@@ -34,7 +34,7 @@ namespace Resin.IO
             return postings;
         }
 
-        protected override IList<DocumentPosting> ReadTermCountsFromStream(BlockInfo address)
+        public override IList<DocumentPosting> ReadTermCountsFromStream(BlockInfo address)
         {
             var msg = new byte[sizeof(long) + sizeof(int)];
             var pos = BitConverter.GetBytes(address.Position);

@@ -60,7 +60,7 @@ namespace Resin.Querying
                     addresses.Count, ctx.Query.Key, token, time.Elapsed);
             }
 
-            var postings = Session.ReadMany(addressesMatrix);
+            var postings = Session.ReadPositions(addressesMatrix);
 
             if (postings.Count < tokens.Count)
             {

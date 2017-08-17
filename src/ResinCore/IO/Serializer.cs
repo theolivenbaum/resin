@@ -214,27 +214,28 @@ namespace Resin.IO
             }
         }
 
-        //public static int Serialize(this IEnumerable<Posting> postings, Stream stream)
-        //{
-        //    var size = 0;
-        //    foreach (var posting in postings)
-        //    {
-        //        byte[] idBytes = BitConverter.GetBytes(posting.DocumentId);
-        //        byte[] countBytes = BitConverter.GetBytes(posting.Position);
+        public static byte[] Serialize(this IList<DocumentPosting> postings)
+        {
+            var buffer = new byte[2*sizeof(int)*postings.Count];
+            for(int index = 0;index < postings.Count;index++)
+            {
+                byte[] idBytes = BitConverter.GetBytes(postings[index].DocumentId);
+                byte[] dataBytes = BitConverter.GetBytes(postings[index].Data);
 
-        //        if (!BitConverter.IsLittleEndian)
-        //        {
-        //            Array.Reverse(idBytes);
-        //            Array.Reverse(countBytes);
-        //        }
+                if (!BitConverter.IsLittleEndian)
+                {
+                    Array.Reverse(idBytes);
+                    Array.Reverse(dataBytes);
+                }
 
-        //        stream.Write(idBytes, 0, sizeof(int));
-        //        stream.Write(countBytes, 0, sizeof(int));
+                var firstIndex = index * 2 * sizeof(int);
+                var secondIndex = firstIndex + sizeof(int);
 
-        //        size += (idBytes.Length + countBytes.Length);
-        //    }
-        //    return size;
-        //}
+                idBytes.CopyTo(buffer, firstIndex);
+                dataBytes.CopyTo(buffer, secondIndex);
+            }
+            return buffer;
+        }
 
         public static void Serialize(this FullTextSegmentInfo ix, string fileName)
         {

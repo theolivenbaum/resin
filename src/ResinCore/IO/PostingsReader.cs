@@ -9,8 +9,8 @@ namespace Resin.IO
     {
         protected static readonly ILog Log = LogManager.GetLogger(typeof(PostingsReader));
 
-        protected abstract IList<DocumentPosting> ReadPostingsFromStream(BlockInfo address);
-        protected abstract IList<DocumentPosting> ReadTermCountsFromStream(BlockInfo address);
+        public abstract IList<DocumentPosting> ReadPositionsFromStream(BlockInfo address);
+        public abstract IList<DocumentPosting> ReadTermCountsFromStream(BlockInfo address);
 
         public IList<DocumentPosting> ReadTermCounts(IList<BlockInfo> addresses)
         {
@@ -27,7 +27,7 @@ namespace Resin.IO
             return result;
         }
 
-        public IList<IList<DocumentPosting>> ReadMany(IList<IList<BlockInfo>> addresses)
+        public IList<IList<DocumentPosting>> ReadPositions(IList<IList<BlockInfo>> addresses)
         {
             var time = Stopwatch.StartNew();
             var lists = new List<IList<DocumentPosting>>();
@@ -36,7 +36,7 @@ namespace Resin.IO
             {
                 foreach (var address in list)
                 {
-                    lists.Add(ReadPostingsFromStream(address));
+                    lists.Add(ReadPositionsFromStream(address));
                 }
             }
 
@@ -45,20 +45,6 @@ namespace Resin.IO
             Log.InfoFormat("created a postings matrix with width {0} in {1}", lists.Count, time.Elapsed);
 
             return lists;
-        }
-
-        public IList<DocumentPosting> Read(IList<BlockInfo> addresses)
-        {
-            var time = Stopwatch.StartNew();
-            var result = new List<DocumentPosting>();
-
-            foreach (var address in addresses)
-            {
-                result.AddRange(ReadPostingsFromStream(address));
-            }
-
-            Log.DebugFormat("read {0} postings in {1}", result.Count, time.Elapsed);
-            return result;
         }
     }
 }

@@ -17,14 +17,9 @@ namespace Resin
             return new DiskPostingsReader(Stream, Version.PostingsOffset).ReadTermCounts(addresses);
         }
 
-        public IList<IList<DocumentPosting>> ReadMany(IList<IList<BlockInfo>> addresses)
+        public IList<IList<DocumentPosting>> ReadPositions(IList<IList<BlockInfo>> addresses)
         {
-            return new DiskPostingsReader(Stream, Version.PostingsOffset).ReadMany(addresses);
-        }
-
-        public IList<DocumentPosting> Read(IList<BlockInfo> addresses)
-        {
-            return new DiskPostingsReader(Stream, Version.PostingsOffset).Read(addresses);
+            return new DiskPostingsReader(Stream, Version.PostingsOffset).ReadPositions(addresses);
         }
 
         public ScoredDocument ReadDocument(DocumentScore score)
