@@ -27,6 +27,7 @@ namespace Resin.IO
         {
             var data = ReadOverNetwork(address);
             var termCounts = Serializer.DeserializeTermCounts(data);
+
             return termCounts;
         }
 
@@ -43,7 +44,7 @@ namespace Resin.IO
                 SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(_ip);
 
-            Log.InfoFormat("Socket connected to {0}", socket.RemoteEndPoint.ToString());
+            Log.InfoFormat("fetching postings from {0}", socket.RemoteEndPoint.ToString());
 
             var sent = socket.Send(msg);
             var data = new byte[address.Length];
