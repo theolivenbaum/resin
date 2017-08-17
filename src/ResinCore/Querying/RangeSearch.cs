@@ -30,7 +30,7 @@ namespace Resin.Querying
             Log.InfoFormat("found {0} matching terms for the query {1} in {2}",
                     addresses.Count, ctx.Query, time.Elapsed);
 
-            var postings = Session.GetPostingsReader().Read(addresses);
+            var postings = Session.Read(addresses);
 
             ctx.Scores = Score(postings);
         }

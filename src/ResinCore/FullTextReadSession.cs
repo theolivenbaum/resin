@@ -1,6 +1,7 @@
 ﻿using DocumentTable;
 using Resin.IO;
 using StreamIndex;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Resin
@@ -11,9 +12,19 @@ namespace Resin
         {
         }
 
-        public PostingsReader GetPostingsReader()
+        public IList<DocumentPosting> ReadTermCounts(IList<BlockInfo> addresses)
         {
-            return new PostingsReader(Stream, Version.PostingsOffset);
+            return new PostingsReader(Stream, Version.PostingsOffset).ReadTermCounts(addresses);
+        }
+
+        public IList<IList<DocumentPosting>> ReadMany(IList<IList<BlockInfo>> addresses)
+        {
+            return new PostingsReader(Stream, Version.PostingsOffset).ReadMany(addresses);
+        }
+
+        public IList<DocumentPosting> Read(IList<BlockInfo> addresses)
+        {
+            return new PostingsReader(Stream, Version.PostingsOffset).Read(addresses);
         }
 
         public ScoredDocument ReadDocument(DocumentScore score)
