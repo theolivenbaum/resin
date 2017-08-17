@@ -484,6 +484,84 @@ namespace Resin.IO
             return postings;
         }
 
+        public static IList<DocumentPosting> DeserializeTermCounts(byte[] data)
+        {
+            var count = data.Length / (2 * sizeof(int));
+            var postings = new List<DocumentPosting>();
+            var read = 0;
+            var documentId = -1;
+            var termCount = 0;
+
+            while (read < count)
+            {
+                for (int index = 0; index < count; index++)
+                {
+                    if (read == count) break;
+
+                    var bufIndex = index * 2 * sizeof(int);
+
+                    if (!BitConverter.IsLittleEndian)
+                    {
+                        Array.Reverse(data, bufIndex, sizeof(int));
+                    }
+
+                    var id = BitConverter.ToInt32(data, bufIndex);
+
+                    if (id != documentId)
+                    {
+                        if (documentId > -1)
+                        {
+                            postings.Add(
+                                new DocumentPosting(documentId, termCount));
+                        }
+                        documentId = id;
+                        termCount = 1;
+                    }
+                    else
+                    {
+                        termCount++;
+                    }
+
+                    read++;
+                }
+            }
+
+            postings.Add(new DocumentPosting(documentId, termCount));
+
+            return postings;
+        }
+
+        public static IList<DocumentPosting> DeserializePostings(byte[] data)
+        {
+            var count = data.Length / (2 * sizeof(int));
+            var postings = new List<DocumentPosting>(count);
+            var read = 0;
+
+            while (read < count)
+            {
+                for (int index = 0; index < count; index++)
+                {
+                    var firstIndex = index * 2 * sizeof(int);
+                    var secondIndex = firstIndex + sizeof(int);
+
+                    if (!BitConverter.IsLittleEndian)
+                    {
+                        Array.Reverse(data, firstIndex, sizeof(int));
+                        Array.Reverse(data, secondIndex, sizeof(int));
+                    }
+
+                    postings.Add(new DocumentPosting(
+                        BitConverter.ToInt32(data, firstIndex),
+                        BitConverter.ToInt32(data, secondIndex)
+                        ));
+
+                    read++;
+                }
+            }
+
+            return postings;
+        }
+
         public static IList<DocumentPosting> DeserializePostings(Stream stream, int size)
         {
             var count = size / (2 * sizeof(int));

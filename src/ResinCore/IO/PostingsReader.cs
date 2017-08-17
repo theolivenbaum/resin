@@ -2,22 +2,15 @@
 using StreamIndex;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 
 namespace Resin.IO
 {
-    public class PostingsReader
+    public abstract class PostingsReader
     {
         protected static readonly ILog Log = LogManager.GetLogger(typeof(PostingsReader));
 
-        private readonly Stream _stream;
-        private readonly long _offset;
-
-        public PostingsReader(Stream stream, long offset)
-        {
-            _stream = stream;
-            _offset = offset;
-        }
+        protected abstract IList<DocumentPosting> ReadPostingsFromStream(BlockInfo address);
+        protected abstract IList<DocumentPosting> ReadTermCountsFromStream(BlockInfo address);
 
         public IList<DocumentPosting> ReadTermCounts(IList<BlockInfo> addresses)
         {
@@ -39,11 +32,11 @@ namespace Resin.IO
             var time = Stopwatch.StartNew();
             var lists = new List<IList<DocumentPosting>>();
 
-            foreach(var list in addresses)
+            foreach (var list in addresses)
             {
-                foreach(var address in list)
+                foreach (var address in list)
                 {
-                    lists.Add(ReadFromStream(address));
+                    lists.Add(ReadPostingsFromStream(address));
                 }
             }
 
@@ -61,25 +54,11 @@ namespace Resin.IO
 
             foreach (var address in addresses)
             {
-                result.AddRange(ReadFromStream(address));
+                result.AddRange(ReadPostingsFromStream(address));
             }
 
             Log.DebugFormat("read {0} postings in {1}", result.Count, time.Elapsed);
             return result;
-        }
-
-        private IList<DocumentPosting> ReadFromStream(BlockInfo address)
-        {
-            _stream.Seek(_offset + address.Position, SeekOrigin.Begin);
-
-            return Serializer.DeserializePostings(_stream, address.Length);
-        }
-
-        private IList<DocumentPosting> ReadTermCountsFromStream(BlockInfo address)
-        {
-            _stream.Seek(_offset + address.Position, SeekOrigin.Begin);
-
-            return Serializer.DeserializeTermCounts(_stream, address.Length);
         }
     }
 }

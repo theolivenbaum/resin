@@ -64,7 +64,7 @@ namespace DocumentTable
             return documents;
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             AddressReader.Dispose();
             DocHashReader.Dispose();
