@@ -32,13 +32,13 @@ namespace Resin
                 {
                     stream.Seek(ix.Value.DocHashOffset, SeekOrigin.Begin);
 
-                    var buffer = new byte[TableSerializer.SizeOfDocHash()];
+                    var buffer = new byte[DocumentSerializer.SizeOfDocHash()];
 
                     while (stream.Position < ix.Value.DocAddressesOffset)
                     {
                         stream.Read(buffer, 0, buffer.Length);
 
-                        var hash = TableSerializer.DeserializeDocHash(buffer);
+                        var hash = DocumentSerializer.DeserializeDocHash(buffer);
 
                         if (deleteSet.Contains(hash.Hash))
                         {

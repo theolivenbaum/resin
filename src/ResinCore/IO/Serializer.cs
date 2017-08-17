@@ -342,7 +342,7 @@ namespace Resin.IO
 
             var fieldCount = BitConverter.ToInt32(fieldCountBytes, 0);
 
-            var fieldOffsets = TableSerializer.DeserializeUlongLongDic(stream, fieldCount).ToDictionary(x => x.Key, y => y.Value);
+            var fieldOffsets = DocumentSerializer.DeserializeUlongLongDic(stream, fieldCount).ToDictionary(x => x.Key, y => y.Value);
 
             var versionBytes = new byte[sizeof(long)];
 

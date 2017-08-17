@@ -23,11 +23,11 @@ namespace DocumentTable
 
         public DocHash Read(int docId)
         {
-            var pos = docId*TableSerializer.SizeOfDocHash() + _offset;
+            var pos = docId*DocumentSerializer.SizeOfDocHash() + _offset;
 
             _stream.Seek(pos, SeekOrigin.Begin);
 
-            var hash = TableSerializer.DeserializeDocHash(_stream);
+            var hash = DocumentSerializer.DeserializeDocHash(_stream);
 
             return hash;
         }

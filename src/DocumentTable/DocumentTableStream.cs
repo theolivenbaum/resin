@@ -22,7 +22,7 @@ namespace DocumentTable
             _dataFile = stream;
             _ix = ix;
             _dataFile.Seek(_ix.KeyIndexOffset, SeekOrigin.Begin);
-            var keyIndex = TableSerializer.ReadKeyIndex(_dataFile, _ix.KeyIndexSize);
+            var keyIndex = DocumentSerializer.ReadKeyIndex(_dataFile, _ix.KeyIndexSize);
 
             _hashReader = new DocHashReader(_dataFile, _ix.DocHashOffset, leaveOpen:false);
             _addressReader = new BlockInfoReader(_dataFile, _ix.DocAddressesOffset);

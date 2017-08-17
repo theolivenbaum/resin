@@ -6,7 +6,7 @@ using System.Text;
 
 namespace DocumentTable
 {
-    public static class TableSerializer
+    public static class DocumentSerializer
     {
         public static readonly Encoding Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 

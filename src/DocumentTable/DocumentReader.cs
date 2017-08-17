@@ -23,7 +23,7 @@ namespace DocumentTable
         {
             stream.Seek(_offset + offset, SeekOrigin.Begin);
 
-            return TableSerializer.DeserializeDocument(stream, size, _compression, _keyIndex);
+            return DocumentSerializer.DeserializeDocument(stream, size, _compression, _keyIndex);
         }
     }
 }

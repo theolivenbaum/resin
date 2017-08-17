@@ -46,7 +46,7 @@ namespace DocumentTable
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                ix = TableSerializer.DeserializeSegmentInfo(fs);
+                ix = DocumentSerializer.DeserializeSegmentInfo(fs);
             }
 
             Log.DebugFormat("loaded ix {0} in {1}", fileName, time.Elapsed);

@@ -18,7 +18,7 @@ namespace Resin
 
             Stream.Seek(Version.KeyIndexOffset, SeekOrigin.Begin);
 
-            var keyIndex = TableSerializer.ReadKeyIndex(Stream, Version.KeyIndexSize);
+            var keyIndex = DocumentSerializer.ReadKeyIndex(Stream, Version.KeyIndexSize);
 
             using (var documentReader = new DocumentReader(
                 Stream, Version.Compression, keyIndex, leaveOpen: true))
@@ -44,7 +44,7 @@ namespace Resin
 
             Stream.Seek(Version.KeyIndexOffset, SeekOrigin.Begin);
 
-            var keyIndex = TableSerializer.ReadKeyIndex(Stream, Version.KeyIndexSize);
+            var keyIndex = DocumentSerializer.ReadKeyIndex(Stream, Version.KeyIndexSize);
 
             using (var documentReader = new DocumentReader(
                 Stream, Version.Compression, keyIndex, leaveOpen: true))

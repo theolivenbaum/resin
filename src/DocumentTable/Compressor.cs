@@ -10,7 +10,7 @@ namespace DocumentTable
         {
             if (string.IsNullOrWhiteSpace(text)) return new byte[0];
 
-            var bytes = TableSerializer.Encoding.GetBytes(text);
+            var bytes = DocumentSerializer.Encoding.GetBytes(text);
 
             return Compress(bytes);
         }
