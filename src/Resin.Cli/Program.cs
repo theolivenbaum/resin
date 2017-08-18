@@ -190,8 +190,10 @@ namespace Resin.Cli
             string dir = null;
             bool log = false;
             bool logAnalyzed = false;
+            bool net = false;
 
             if (Array.IndexOf(args, "--log") > 0) log = true;
+            if (Array.IndexOf(args, "--net") > 0) net = true;
             if (Array.IndexOf(args, "--analyze") > 0) logAnalyzed = true;
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
 
@@ -207,7 +209,19 @@ namespace Resin.Cli
             var timer = new Stopwatch();
             timer.Start();
 
-            using (var s = new Searcher(dir))
+            Searcher s;
+
+            if (net)
+            {
+                s = new Searcher(dir, sessionFactory: new NetworkFullTextReadSessionFactory(
+                "localhost", 11111, dir));
+            }
+            else
+            {
+                s = new Searcher(dir);
+            }
+
+            using (s)
             {
                 result = s.Search(q, page, size);
 
