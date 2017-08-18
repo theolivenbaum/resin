@@ -531,7 +531,7 @@ namespace Resin.IO
 
             return postings;
         }
-
+        
         public static IList<DocumentPosting> DeserializePostings(byte[] data)
         {
             var count = data.Length / (2 * sizeof(int));
@@ -763,10 +763,11 @@ namespace Resin.IO
             }
         }
 
-        public static LcrsTrie DeserializeTrie(string fileName)
+        public static LcrsTrie DeserializeTrie(string fileName, long offset)
         {
             using (var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
+                stream.Seek(offset, SeekOrigin.Begin);
                 return DeserializeTrie(stream);
             }
         }

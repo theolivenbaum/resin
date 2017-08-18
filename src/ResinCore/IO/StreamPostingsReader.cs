@@ -14,7 +14,7 @@ namespace Resin.IO
             _offset = offset;
         }
 
-        public byte[] ReadPositionsFromStream(BlockInfo address)
+        public byte[] ReadTermPositionsFromStream(BlockInfo address)
         {
             var buffer = new byte[address.Length];
 

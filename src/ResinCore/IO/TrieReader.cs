@@ -280,11 +280,18 @@ namespace Resin.IO.Read
             }
         }
 
-        public LcrsTrie ReadWholeFile()
+        public IEnumerable<Word> Words()
         {
             var words = new List<Word>();
 
             DepthFirst(string.Empty, new List<char>(), words, -1);
+
+            return words;
+        }
+
+        public LcrsTrie ReadWholeFile()
+        {
+            var words = Words();
 
             var root = new LcrsTrie();
 
@@ -336,15 +343,6 @@ namespace Resin.IO.Read
                 node = Step();
             }
             return false;
-        }
-
-        public IEnumerable<Word> Words()
-        {
-            var words = new List<Word>();
-
-            DepthFirst(string.Empty, new List<char>(), words, -1);
-
-            return words;
         }
 
         private void Rewind()

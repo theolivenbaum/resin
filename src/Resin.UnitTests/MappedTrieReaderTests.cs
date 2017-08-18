@@ -303,7 +303,7 @@ namespace Tests
 
             tree.Serialize(fileName);
 
-            var recreated = Serializer.DeserializeTrie(fileName);
+            var recreated = Serializer.DeserializeTrie(fileName, 0);
 
             File.WriteAllText("Can_deserialize_whole_file_recreated.log", recreated.Visualize(), Encoding.UTF8);
 

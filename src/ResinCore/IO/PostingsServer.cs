@@ -1,7 +1,10 @@
 ﻿using log4net;
+using Resin.IO.Read;
 using Resin.Sys;
 using StreamIndex;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -14,7 +17,8 @@ namespace Resin.IO
 
         private readonly Stream _data;
         private readonly Socket _listener;
-        private long _offset;
+        private readonly long _offset;
+        private readonly byte[][] _cache;
 
         public PostingsServer(string hostName, int port, string directory, int bufferSize = 4096 * 12)
         {
@@ -41,6 +45,20 @@ namespace Resin.IO
 
             _listener.Bind(localEndPoint);
             _listener.Listen(10);
+
+            //var addresses = new List<BlockInfo>();
+
+            //using (var reader = new MappedTrieReader(_data))
+            //{
+            //    var words = reader.Words();
+
+            //    foreach (var word in words)
+            //    {
+            //        addresses.Add(word.PostingsAddress.Value);
+            //    }
+            //}
+
+            //addresses.Sort(new BlockInfoPositionComparer());
         }
 
         public void Dispose()
@@ -70,7 +88,7 @@ namespace Resin.IO
                     var address = BlockSerializer.DeserializeBlock(request, 0);
 
                     byte[] response = new StreamPostingsReader(_data, _offset)
-                        .ReadPositionsFromStream(address);
+                            .ReadTermPositionsFromStream(address);
 
                     handler.Send(response);
                     handler.Shutdown(SocketShutdown.Both);
