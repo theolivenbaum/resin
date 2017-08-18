@@ -8,13 +8,11 @@ namespace Resin
     {
         public int DocumentId { get; private set; }
         public int Data { get; set; }
-        public bool HasValue { get; set; }
 
         public DocumentPosting(int documentId, int data)
         {
             DocumentId = documentId;
             Data = data;
-            HasValue = true;
         }
 
         public override string ToString()
@@ -44,7 +42,7 @@ namespace Resin
         }
     }
 
-    public class PostingsListsComparer : IComparer<IList<DocumentPosting>>
+    public class MostSignificantPostingsListsComparer : IComparer<IList<DocumentPosting>>
     {
         public int Compare(IList<DocumentPosting> x, IList<DocumentPosting> y)
         {

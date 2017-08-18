@@ -55,7 +55,7 @@ namespace Resin.Querying
                     addressesMatrix.Add(addresses);
                 }
 
-                Log.InfoFormat("found {0} matching words for the term {1}:{2} in {3}",
+                Log.InfoFormat("{0} hit/-s for term {1}:{2} in {3}",
                     addresses.Count, ctx.Query.Key, token, time.Elapsed);
             }
 
@@ -144,20 +144,20 @@ namespace Resin.Querying
 
         private void SetWeights(IList<IList<DocumentPosting>> postings, DocumentScore[][] weights)
         {
-            int maxDistance = postings.Count;
+            int maxDistance = postings.Count - 1;
             var timer = Stopwatch.StartNew();
             var first = postings[0];
 
             for (int index = 1; index < postings.Count; index++)
             {
+                var pass = index - 1;
                 var second = postings[index];
-
                 var count = Score(
-                    weights, ref first, second, maxDistance, postings.Count - 1, index - 1);
+                    weights, ref first, second, maxDistance, postings.Count - 1, pass);
 
                 Log.DebugFormat(
                     "found {0} postings at word vector position {1}",
-                    count, index);
+                    count, pass);
             }
 
             Log.DebugFormat("created weight matrix with {0} rows in {1}",
@@ -174,21 +174,11 @@ namespace Resin.Querying
 
             while (cursor1 < list1.Count && cursor2 < list2.Count)
             {
-                if (list1[cursor1].HasValue == false)
-                {
-                    cursor1++;
-                    continue;
-                }
-
                 var p1 = list1[cursor1];
                 var p2 = list2[cursor2];
 
                 if (p2.DocumentId > p1.DocumentId)
                 {
-                    var p = list1[cursor1];
-                    p.HasValue = false;
-                    list1[cursor1] = p;
-
                     cursor1++;
                     continue;
                 }
@@ -198,17 +188,21 @@ namespace Resin.Querying
                     continue;
                 }
 
-                var distance = Math.Abs(p2.Data - p1.Data);
+                int distance = p1.Data - p2.Data;
+                int absDistance = Math.Abs(distance);
 
-                //if (distance <= 0)
-                //{
-                //    cursor2++;
-                //    continue;
-                //}
+                //    Log.DebugFormat("pass {0}: d of {1}:{2} and {3}:{4} = {5}",
+                //            passIndex, p1.DocumentId, p1.Data, p2.DocumentId, p2.Data, distance);
 
-                if (distance <= maxDistance)
+                if (absDistance <= maxDistance)
                 {
-                    var score = (double)1 / distance;
+                    var score = (double)1 / absDistance;
+
+                    if (distance < 0)
+                    {
+                        score -= Math.Log(absDistance);
+                    }
+
                     var documentScore = new DocumentScore(p1.DocumentId, score, Session.Version);
 
                     if (weights[cursor1] == null)
@@ -225,18 +219,24 @@ namespace Resin.Querying
                         }
                     }
 
-                    Log.DebugFormat("document ID {0} scored {1} with a distance of {2}",
-                        p1.DocumentId, score, distance);
+                    //Log.DebugFormat("{0}:{1}:{2} scored {3}, distance {4}",
+                    //    passIndex, p1.DocumentId, p1.Data, score, distance);
 
                     count++;
+
+                    if (absDistance == 1)
+                    {
+                        cursor1++;
+                        continue;
+                    }
                 }
-                else
+                else if (distance < 0)
                 {
-                    var p = list1[cursor1];
-                    p.HasValue = false;
-                    list1[cursor1] = p;
+                    cursor1++;
+                    continue;
                 }
-                cursor1++;
+
+                cursor2++;
             }
 
             return count;

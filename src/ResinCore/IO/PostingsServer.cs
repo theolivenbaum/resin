@@ -36,12 +36,9 @@ namespace Resin.IO
             IPAddress ipAddress = ipHostInfo.AddressList[1];
             IPEndPoint localEndPoint = new IPEndPoint(ipAddress, port);
 
-            // Create a TCP/IP socket.  
             _listener = new Socket(AddressFamily.InterNetwork,
                 SocketType.Stream, ProtocolType.Tcp);
 
-            // Bind the socket to the local endpoint and   
-            // listen for incoming connections.  
             _listener.Bind(localEndPoint);
             _listener.Listen(10);
         }

@@ -40,7 +40,7 @@ namespace Resin.IO
                 }
             }
 
-            lists.Sort(new PostingsListsComparer());
+            lists.Sort(new MostSignificantPostingsListsComparer());
 
             Log.InfoFormat("created a postings matrix with width {0} in {1}", lists.Count, time.Elapsed);
 

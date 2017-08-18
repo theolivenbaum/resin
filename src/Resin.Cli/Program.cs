@@ -207,8 +207,7 @@ namespace Resin.Cli
             var timer = new Stopwatch();
             timer.Start();
 
-            using (var s = new Searcher(dir, sessionFactory: new NetworkFullTextReadSessionFactory(
-                "localhost", 11111, dir)))
+            using (var s = new Searcher(dir))
             {
                 result = s.Search(q, page, size);
 
@@ -225,8 +224,8 @@ namespace Resin.Cli
                     {
                         foreach (var doc in result.Docs)
                         {
-                            using (var fs = File.Create(Path.GetFileName(doc.Document.Fields["uri"].Value) + ".log"))
-                            using (var writer = new StreamWriter(fs))
+                            using (var fs = File.Create(Path.GetFileName(doc.Document.Fields["uri"].Value)+".log"))
+                            using(var writer = new StreamWriter(fs))
                             {
                                 writer.Write(doc.ToString());
 
@@ -246,7 +245,7 @@ namespace Resin.Cli
                     }
                 }
 
-                Console.WriteLine("\r\n{0} results of {1} in {2}",
+                Console.WriteLine("\r\n{0} results of {1} in {2}", 
                     result.Docs.Count + (page * size), result.Total, timer.Elapsed);
             }
 
