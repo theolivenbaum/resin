@@ -1,10 +1,9 @@
-﻿using log4net;
-using Resin.IO.Read;
+﻿using DocumentTable;
+using log4net;
 using Resin.Sys;
 using StreamIndex;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -17,16 +16,15 @@ namespace Resin.IO
 
         private readonly Stream _data;
         private readonly Socket _listener;
-        private readonly long _offset;
-        private readonly byte[][] _cache;
+        private readonly ConcurrentDictionary<long, byte[]> _cache;
+        private readonly SegmentInfo _version;
+        private readonly StreamPostingsReader _postingsReader;
 
         public PostingsServer(string hostName, int port, string directory, int bufferSize = 4096 * 12)
         {
-            var version = Util.GetIndexVersionListInChronologicalOrder(directory)[0];
+            _version = Util.GetIndexVersionListInChronologicalOrder(directory)[0];
 
-            _offset = version.PostingsOffset;
-
-            var dataFn = Path.Combine(directory, version.Version + ".rdb");
+            var dataFn = Path.Combine(directory, _version.Version + ".rdb");
 
             _data = new FileStream(
                 dataFn,
@@ -35,6 +33,8 @@ namespace Resin.IO
                 FileShare.ReadWrite,
                 bufferSize,
                 FileOptions.RandomAccess);
+
+            _postingsReader = new StreamPostingsReader(_data, _version.PostingsOffset);
 
             IPHostEntry ipHostInfo = Dns.GetHostEntryAsync(hostName).Result;
             IPAddress ipAddress = ipHostInfo.AddressList[1];
@@ -46,19 +46,18 @@ namespace Resin.IO
             _listener.Bind(localEndPoint);
             _listener.Listen(10);
 
-            //var addresses = new List<BlockInfo>();
+            _cache = new ConcurrentDictionary<long, byte[]>();
+        }
 
-            //using (var reader = new MappedTrieReader(_data))
-            //{
-            //    var words = reader.Words();
-
-            //    foreach (var word in words)
-            //    {
-            //        addresses.Add(word.PostingsAddress.Value);
-            //    }
-            //}
-
-            //addresses.Sort(new BlockInfoPositionComparer());
+        private byte[] FindInCache(BlockInfo address)
+        {
+            byte[] data;
+            if(!_cache.TryGetValue(address.Position, out data))
+            {
+                data = _postingsReader.ReadTermPositionsFromStream(address);
+                _cache.GetOrAdd(address.Position, data);
+            }
+            return data;
         }
 
         public void Dispose()
@@ -87,8 +86,7 @@ namespace Resin.IO
 
                     var address = BlockSerializer.DeserializeBlock(request, 0);
 
-                    byte[] response = new StreamPostingsReader(_data, _offset)
-                            .ReadTermPositionsFromStream(address);
+                    byte[] response = FindInCache(address);
 
                     handler.Send(response);
                     handler.Shutdown(SocketShutdown.Both);
@@ -102,6 +100,7 @@ namespace Resin.IO
                 Log.Info(e.ToString());
             }
         }
+        
     }
 }
     
