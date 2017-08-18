@@ -15,18 +15,26 @@ namespace Resin.IO
             _offset = offset;
         }
 
-        public override IList<DocumentPosting> ReadPositionsFromStream(BlockInfo address)
+        public override IList<DocumentPosting> ReadPositionsFromStream(IList<BlockInfo> addresses)
         {
-            _stream.Seek(_offset + address.Position, SeekOrigin.Begin);
-
-            return Serializer.DeserializePostings(_stream, address.Length);
+            var result = new List<DocumentPosting>();
+            foreach(var address in addresses)
+            {
+                _stream.Seek(_offset + address.Position, SeekOrigin.Begin);
+                result.AddRange(Serializer.DeserializePostings(_stream, address.Length));
+            }
+            return result;
         }
 
-        public override IList<DocumentPosting> ReadTermCountsFromStream(BlockInfo address)
+        public override IList<DocumentPosting> ReadTermCountsFromStream(IList<BlockInfo> addresses)
         {
-            _stream.Seek(_offset + address.Position, SeekOrigin.Begin);
-
-            return Serializer.DeserializeTermCounts(_stream, address.Length);
+            var result = new List<DocumentPosting>();
+            foreach (var address in addresses)
+            {
+                _stream.Seek(_offset + address.Position, SeekOrigin.Begin);
+                result.AddRange(Serializer.DeserializeTermCounts(_stream, address.Length));
+            }
+            return result;
         }
     }
 }

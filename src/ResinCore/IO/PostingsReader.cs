@@ -9,20 +9,15 @@ namespace Resin.IO
     {
         protected static readonly ILog Log = LogManager.GetLogger(typeof(PostingsReader));
 
-        public abstract IList<DocumentPosting> ReadPositionsFromStream(BlockInfo address);
-        public abstract IList<DocumentPosting> ReadTermCountsFromStream(BlockInfo address);
+        public abstract IList<DocumentPosting> ReadPositionsFromStream(IList<BlockInfo> addresses);
+        public abstract IList<DocumentPosting> ReadTermCountsFromStream(IList<BlockInfo> addresses);
 
         public IList<DocumentPosting> ReadTermCounts(IList<BlockInfo> addresses)
         {
             var time = Stopwatch.StartNew();
-            var result = new List<DocumentPosting>();
+            var result = ReadTermCountsFromStream(addresses);
 
-            foreach (var address in addresses)
-            {
-                result.AddRange(ReadTermCountsFromStream(address));
-            }
-
-            Log.DebugFormat("read {0} postings in {1}", result.Count, time.Elapsed);
+            Log.DebugFormat("read {0} term counts in {1}", result.Count, time.Elapsed);
 
             return result;
         }
@@ -34,10 +29,7 @@ namespace Resin.IO
 
             foreach (var list in addresses)
             {
-                foreach (var address in list)
-                {
-                    lists.Add(ReadPositionsFromStream(address));
-                }
+                lists.Add(ReadPositionsFromStream(list));
             }
 
             lists.Sort(new MostSignificantPostingsListsComparer());

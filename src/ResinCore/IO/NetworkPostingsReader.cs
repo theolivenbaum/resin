@@ -1,6 +1,7 @@
 ﻿using StreamIndex;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 
@@ -15,24 +16,38 @@ namespace Resin.IO
             _ip = ip;
         }
 
-        public override IList<DocumentPosting> ReadPositionsFromStream(BlockInfo address)
+        public override IList<DocumentPosting> ReadPositionsFromStream(IList<BlockInfo> addresses)
         {
-            var data = ReadOverNetwork(address);
-            var postings = Serializer.DeserializePostings(data);
+            var result = new List<DocumentPosting>();
 
-            return postings;
+            foreach (var address in addresses)
+            {
+                var data = ReadOverNetwork(address);
+                var postings = Serializer.DeserializePostings(data);
+                result.AddRange(postings);
+            }
+
+            return result;
         }
 
-        public override IList<DocumentPosting> ReadTermCountsFromStream(BlockInfo address)
+        public override IList<DocumentPosting> ReadTermCountsFromStream(IList<BlockInfo> addresses)
         {
-            var data = ReadOverNetwork(address);
-            var termCounts = Serializer.DeserializeTermCounts(data);
+            var result = new List<DocumentPosting>();
 
-            return termCounts;
+            foreach (var address in addresses)
+            {
+                var data = ReadOverNetwork(address);
+                var termCounts = Serializer.DeserializeTermCounts(data);
+                result.AddRange(termCounts);
+            }
+
+            return result;
         }
 
         private byte[] ReadOverNetwork(BlockInfo address)
         {
+            var timer = Stopwatch.StartNew();
+
             var msg = new byte[sizeof(long) + sizeof(int)];
             var pos = BitConverter.GetBytes(address.Position);
             var len = BitConverter.GetBytes(address.Length);
@@ -44,14 +59,15 @@ namespace Resin.IO
                 SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(_ip);
 
-            Log.InfoFormat("fetching postings from {0}", socket.RemoteEndPoint.ToString());
-
             var sent = socket.Send(msg);
             var data = new byte[address.Length];
             var recieved = socket.Receive(data);
 
             socket.Shutdown(SocketShutdown.Both);
             socket.Dispose();
+
+            Log.InfoFormat("read postings from {0} in {1}", 
+                _ip, timer.Elapsed);
 
             return data;
         }
