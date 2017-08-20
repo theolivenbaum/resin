@@ -56,9 +56,8 @@ namespace Resin.IO
             {
                 data = _postingsReader.ReadTermPositionsFromStream(address);
                 _cache.GetOrAdd(address.Position, data);
-                Log.InfoFormat("read {0} bytes from disk", data.Length);
+                Log.InfoFormat("read {0} bytes from DISK", data.Length);
             }
-            Log.InfoFormat("read {0} bytes from memory", data.Length);
             return data;
         }
 

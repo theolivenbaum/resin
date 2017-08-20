@@ -48,26 +48,43 @@ namespace Resin.IO
         {
             var timer = Stopwatch.StartNew();
 
-            var msg = new byte[sizeof(long) + sizeof(int)];
+            var requestMessage = new byte[sizeof(long) + sizeof(int)];
             var pos = BitConverter.GetBytes(address.Position);
             var len = BitConverter.GetBytes(address.Length);
 
-            pos.CopyTo(msg, 0);
-            len.CopyTo(msg, sizeof(long));
+            pos.CopyTo(requestMessage, 0);
+            len.CopyTo(requestMessage, sizeof(long));
 
             var socket = new Socket(AddressFamily.InterNetwork,
                 SocketType.Stream, ProtocolType.Tcp);
+
             socket.Connect(_ip);
 
-            var sent = socket.Send(msg);
-            var data = new byte[address.Length];
-            var recieved = socket.Receive(data);
+            var sent = socket.Send(requestMessage);
+            var data = Read(socket, address.Length);
 
             socket.Shutdown(SocketShutdown.Both);
             socket.Dispose();
 
             Log.InfoFormat("read postings from {0} in {1}", 
                 _ip, timer.Elapsed);
+
+            return data;
+        }
+
+        private byte[] Read(Socket socket, int length)
+        {
+            var data = new byte[length];
+            var receivedTotal = 0;
+            var bufferSize = Math.Min(length, 16384);
+
+            while (receivedTotal < length)
+            {
+                var size = Math.Min(length - receivedTotal, bufferSize);
+                var received = socket.Receive(data, receivedTotal, size, SocketFlags.None);
+
+                receivedTotal += received;
+            }
 
             return data;
         }
