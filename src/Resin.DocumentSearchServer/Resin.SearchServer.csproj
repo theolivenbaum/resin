@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
-    <PackageId>Resinous</PackageId>
-    <Description>Distributed database and full-text search server</Description>
+    <PackageId>Resin Search Engine</PackageId>
+    <Description>A distributed full-text search server.</Description>
   </PropertyGroup>
 
   <ItemGroup>
