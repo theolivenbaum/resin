@@ -18,7 +18,7 @@
     },
     "Resin.DocumentSearchServer": {
         "commandName": "Project",
-        "commandLineArgs": "--dir c:\\temp\\resin_data\\pg --ps localhost --port 11111",
+        "commandLineArgs": "--dir c:\\temp\\resin_data\\pg --ps localhost --pport 11111 --ds localhost --dport 11112",
         "launchBrowser": true,
         "launchUrl": "search",
         "environmentVariables": {
