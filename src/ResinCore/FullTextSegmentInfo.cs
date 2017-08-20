@@ -1,7 +1,7 @@
-﻿using DocumentTable;
-using Resin.IO;
+﻿using Resin.IO;
 using System.Diagnostics;
 using System.IO;
+using Resin.Documents;
 
 namespace Resin
 {

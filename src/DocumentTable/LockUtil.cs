@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace DocumentTable
+namespace Resin.Documents
 {
     public static class LockUtil
     {

@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using DocumentTable;
 using System.IO.Compression;
 using System;
+using Resin.Documents;
 
 namespace Resin
 {

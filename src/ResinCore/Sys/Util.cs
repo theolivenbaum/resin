@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using Resin.Documents;
+using Resin.IO;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Resin.IO;
-using DocumentTable;
 
 namespace Resin.Sys
 {
@@ -53,14 +53,6 @@ namespace Resin.Sys
                 list.Add(long.Parse(Path.GetFileNameWithoutExtension(file)));
             }
             return list.ToArray();
-        }
-
-        public static IEnumerable<string> GetDataFileNamesInChronologicalOrder(string directory)
-        {
-            return Directory.GetFiles(directory, "*.rdb")
-                .Select(f => new { id = long.Parse(Path.GetFileNameWithoutExtension(f)), fileName = f })
-                .OrderBy(info => info.id)
-                .Select(info => info.fileName);
         }
 
         public static int GetDocumentCount(string directory, out int numOfSegments)

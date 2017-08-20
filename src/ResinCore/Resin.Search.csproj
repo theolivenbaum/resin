@@ -13,7 +13,7 @@
     <Authors>Marcus Lager</Authors>
     <Company />
     <Product>ResinDB</Product>
-    <Description>Document database and search engine with a CLI management studio.</Description>
+    <Description>Full-text search server</Description>
     <Copyright>Copyright 2017 Marcus Lager</Copyright>
     <PackageTags>search engine document database</PackageTags>
     <PackageLicenseUrl>https://github.com/kreeben/resin/blob/master/LICENSE</PackageLicenseUrl>
@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DocumentTable\Resin.Document.csproj" />
+    <ProjectReference Include="..\DocumentTable\Resin.Documents.csproj" />
   </ItemGroup>
 
 </Project>

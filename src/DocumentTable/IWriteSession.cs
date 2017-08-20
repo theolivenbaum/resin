@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DocumentTable
+namespace Resin.Documents
 {
     public interface IWriteSession : IDisposable
     {

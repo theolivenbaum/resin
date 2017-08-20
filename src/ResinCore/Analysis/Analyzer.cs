@@ -1,5 +1,5 @@
-using DocumentTable;
 using log4net;
+using Resin.Documents;
 using System.Collections.Generic;
 
 namespace Resin.Analysis

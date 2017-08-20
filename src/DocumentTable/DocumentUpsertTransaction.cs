@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using log4net;
 using System.Diagnostics;
 
-namespace DocumentTable
+namespace Resin.Documents
 {
     public class DocumentUpsertTransaction : IDisposable
     {

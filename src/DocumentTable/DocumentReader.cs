@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace DocumentTable
+namespace Resin.Documents
 {
     public class DocumentReader : BlockReader<Document>
     {

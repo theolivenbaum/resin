@@ -3,8 +3,8 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Resin;
-using DocumentTable;
 using StreamIndex;
+using Resin.Documents;
 
 namespace Tests
 {

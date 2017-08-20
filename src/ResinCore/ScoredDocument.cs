@@ -1,5 +1,5 @@
-﻿using DocumentTable;
-using System;
+﻿using System;
+using Resin.Documents;
 
 namespace Resin
 {

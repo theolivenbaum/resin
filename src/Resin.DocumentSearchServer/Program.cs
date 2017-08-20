@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using System;
-using DocumentTable;
+using Resin.Documents;
 
 namespace Resin.DocumentSearchServer
 {

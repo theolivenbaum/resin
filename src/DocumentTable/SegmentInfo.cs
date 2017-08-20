@@ -3,7 +3,7 @@ using System.IO;
 using log4net;
 using System.Collections.Generic;
 
-namespace DocumentTable
+namespace Resin.Documents
 {
     [DebuggerDisplay("{Version}")]
     public class SegmentInfo

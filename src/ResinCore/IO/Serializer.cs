@@ -6,8 +6,8 @@ using System.Text;
 using Resin.IO.Read;
 using log4net;
 using StreamIndex;
-using DocumentTable;
 using Resin.Analysis;
+using Resin.Documents;
 
 namespace Resin.IO
 {

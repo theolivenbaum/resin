@@ -6,7 +6,7 @@
     <Version>2.0.3</Version>
     <Authors>Marcus Lager</Authors>
     <Company>Marcus Lager</Company>
-    <Description>A document storage file.</Description>
+    <Description>Store variable sized entities as fixed-sized bitmaps.</Description>
     <Copyright>Copyright 2017 Marcus Lager</Copyright>
     <PackageLicenseUrl>https://github.com/kreeben/resin/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/kreeben/resin</PackageProjectUrl>

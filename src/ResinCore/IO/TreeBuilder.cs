@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using DocumentTable;
 using Resin.Analysis;
+using Resin.Documents;
 
 namespace Resin.IO
 {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace DocumentTable
+namespace Resin.Documents
 {
     public class DocumentTableStream : DocumentStream, IDisposable
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace DocumentTable
+namespace Resin.Documents
 {
     [DebuggerDisplay("{Value}")]
     public class Field

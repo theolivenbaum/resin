@@ -20,7 +20,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.UnitTests", "Resin.Un
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{47C9EBB6-39BE-4B19-BA51-401EC9777BA6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.Document", "DocumentTable\Resin.Document.csproj", "{2FD09C0D-881D-468C-8F99-346718FAED5E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.Documents", "DocumentTable\Resin.Documents.csproj", "{2FD09C0D-881D-468C-8F99-346718FAED5E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.Bitmap", "StreamIndex\Resin.Bitmap.csproj", "{5BED9FA1-6BED-4AC1-859A-A85C06C93096}"
 EndProject

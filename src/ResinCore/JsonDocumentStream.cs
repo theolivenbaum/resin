@@ -4,7 +4,7 @@ using System.Text;
 using System.Linq;
 using System;
 using Newtonsoft.Json;
-using DocumentTable;
+using Resin.Documents;
 
 namespace Resin
 {

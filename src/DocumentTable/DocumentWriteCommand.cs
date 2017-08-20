@@ -1,6 +1,6 @@
 using log4net;
 
-namespace DocumentTable
+namespace Resin.Documents
 {
     public class DocumentWriteCommand : IDocumentWriteCommand
     {

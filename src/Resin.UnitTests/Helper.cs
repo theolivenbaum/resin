@@ -1,4 +1,4 @@
-﻿using DocumentTable;
+﻿using Resin.Documents;
 using Resin.Sys;
 using System.Collections.Generic;
 using System.Linq;

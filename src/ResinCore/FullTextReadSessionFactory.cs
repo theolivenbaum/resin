@@ -1,8 +1,8 @@
-﻿using DocumentTable;
-using StreamIndex;
+﻿using StreamIndex;
 using System;
 using System.IO;
 using System.Linq;
+using Resin.Documents;
 
 namespace Resin
 {

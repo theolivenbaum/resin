@@ -1,3 +1,4 @@
+using Resin.Documents;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,7 +7,6 @@ using Resin.Analysis;
 using Resin.Querying;
 using Resin.Sys;
 using StreamIndex;
-using DocumentTable;
 
 namespace Resin
 {

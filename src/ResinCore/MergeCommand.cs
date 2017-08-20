@@ -1,13 +1,12 @@
-﻿using DocumentTable;
-using log4net;
+﻿using log4net;
 using Resin.Analysis;
-using Resin.Sys;
 using StreamIndex;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Resin.Documents;
 
 namespace Resin
 {

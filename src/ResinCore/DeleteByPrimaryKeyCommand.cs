@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using Resin.Sys;
-using DocumentTable;
+using Resin.Documents;
 
 namespace Resin
 {

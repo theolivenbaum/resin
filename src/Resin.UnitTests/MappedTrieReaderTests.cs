@@ -4,10 +4,8 @@ using Resin.IO;
 using Resin.IO.Read;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using System;
 using System.Text;
 using StreamIndex;
-using DocumentTable;
 using Resin;
 
 namespace Tests

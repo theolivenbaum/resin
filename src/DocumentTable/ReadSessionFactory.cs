@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Linq;
 
-namespace DocumentTable
+namespace Resin.Documents
 {
     public class ReadSessionFactory : IReadSessionFactory, IDisposable
     {

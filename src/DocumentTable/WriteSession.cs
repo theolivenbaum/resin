@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-namespace DocumentTable
+namespace Resin.Documents
 {
     public class WriteSession : IWriteSession
     {

@@ -1,9 +1,9 @@
-﻿using DocumentTable;
-using log4net;
+﻿using log4net;
 using Resin.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using Resin.Documents;
 
 namespace Resin
 {

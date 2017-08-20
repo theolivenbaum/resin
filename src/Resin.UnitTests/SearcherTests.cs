@@ -1,7 +1,7 @@
-﻿using DocumentTable;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Resin;
 using Resin.Analysis;
+using Resin.Documents;
 using System.Collections.Generic;
 using System.Linq;
 

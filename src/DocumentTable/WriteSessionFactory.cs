@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace DocumentTable
+namespace Resin.Documents
 {
     public class WriteSessionFactory : IWriteSessionFactory
     {

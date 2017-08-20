@@ -5,8 +5,8 @@ using Resin;
 using Resin.Analysis;
 using Resin.Querying;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using DocumentTable;
 using System;
+using Resin.Documents;
 
 namespace Tests
 {

@@ -1,7 +1,7 @@
 using Resin.Analysis;
 using Resin.IO;
-using DocumentTable;
 using log4net;
+using Resin.Documents;
 
 namespace Resin
 {

@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace DocumentTable
+namespace Resin.Documents
 {
     public static class DocumentSerializer
     {

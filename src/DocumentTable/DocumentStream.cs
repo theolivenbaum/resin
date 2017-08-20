@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DocumentTable
+namespace Resin.Documents
 {
     public abstract class DocumentStream
     {

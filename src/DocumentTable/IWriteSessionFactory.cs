@@ -1,4 +1,4 @@
-﻿namespace DocumentTable
+﻿namespace Resin.Documents
 {
     public interface IWriteSessionFactory
     {
