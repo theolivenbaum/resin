@@ -1,6 +1,6 @@
 # Resin Search Engine
 
-## A distributed full-text search server.
+## A full-text search server.
 
 Gather all of your business entities with their varying types of variable-length fields. Analyze, compress and store each entity and their meta-data in a set of disk-based bitmaps designed for fast reading and full-text lookup. Distribute the data onto a set of  servers that you can connect to in a RPC-like manner through a simple type system and over TCP or, through a JSON HTTP API. Host on-premise or in the cloud.
 
@@ -31,6 +31,18 @@ Read, write and analyze your index with a commandline tool.
 - a framework for experimenting with scoring models 
 - a big data analysis tool
 - a search engine
+
+## Scale
+
+1. Distribute data and load and increase performance of the JSON HTTP server by serving postings and documents from two separate servers.
+
+2. Add more disks and RAM on all three servers.
+
+3. Move your HTTP, postings and documents servers to the cloud and to a service that can supply you with 500 TB disks or larger, or build a fast networked storage solution.
+
+4. For redundancy and load balancing, create more HTTP servers, each one supported by a pair of postings and documents servers. Let a JSON HTTP server, a postings server and a document server constitute either a shard or a mirror.
+
+Alternatively, scale only the postings and document services by placing both behind load balancers. Then do the same with the HTTP server.
 
 ## Query language and execution plan
 
