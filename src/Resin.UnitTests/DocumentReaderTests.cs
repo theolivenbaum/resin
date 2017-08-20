@@ -48,7 +48,7 @@ namespace Tests
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            using (var reader = new DocumentReader(fs, Compression.GZip, revKeyIndex, leaveOpen:false))
+            using (var reader = new DocumentReader(fs, Compression.GZip, revKeyIndex, 0, leaveOpen:false))
             {
                 var doc = reader.Read(new[] { blocks[2] });
 
@@ -56,7 +56,7 @@ namespace Tests
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            using (var reader = new DocumentReader(fs, Compression.GZip, revKeyIndex, leaveOpen: false))
+            using (var reader = new DocumentReader(fs, Compression.GZip, revKeyIndex, 0, leaveOpen: false))
             {
                 var doc = reader.Read(new[] { blocks[1] });
 
@@ -64,7 +64,7 @@ namespace Tests
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            using (var reader = new DocumentReader(fs, Compression.GZip, revKeyIndex, leaveOpen: false))
+            using (var reader = new DocumentReader(fs, Compression.GZip, revKeyIndex, 0, leaveOpen: false))
             {
                 var doc = reader.Read(new[] { blocks[0] });
 
@@ -72,7 +72,7 @@ namespace Tests
             }
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            using (var reader = new DocumentReader(fs, Compression.GZip, revKeyIndex, leaveOpen: false))
+            using (var reader = new DocumentReader(fs, Compression.GZip, revKeyIndex, 0, leaveOpen: false))
             {
                 var ds = reader.Read(blocks.Values.OrderBy(b => b.Position).ToList()).ToList();
 

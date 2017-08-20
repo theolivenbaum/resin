@@ -11,12 +11,12 @@ namespace DocumentTable
         private readonly long _offset;
 
         public DocumentReader(
-            Stream stream, Compression compression, IDictionary<short, string> keyIndex, bool leaveOpen) 
+            Stream stream, Compression compression, IDictionary<short, string> keyIndex, long offset, bool leaveOpen) 
             : base(stream, leaveOpen)
         {
             _compression = compression;
             _keyIndex = keyIndex;
-            _offset = stream.Position;
+            _offset = offset;
         }
 
         protected override Document Deserialize(long offset, int size, Stream stream)

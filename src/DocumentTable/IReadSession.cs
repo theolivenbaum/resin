@@ -7,7 +7,7 @@ namespace DocumentTable
     public interface IReadSession : IDisposable
     {
         SegmentInfo Version { get; set; }
-        IList<Document> ReadDocuments(IList<int> documentIds);
+        Document ReadDocument(int documentId);
         DocHash ReadDocHash(int docId);
         Stream Stream { get; }
     }

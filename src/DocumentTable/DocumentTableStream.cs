@@ -26,7 +26,8 @@ namespace DocumentTable
 
             _hashReader = new DocHashReader(_dataFile, _ix.DocHashOffset, leaveOpen:false);
             _addressReader = new BlockInfoReader(_dataFile, _ix.DocAddressesOffset);
-            _documentReader = new DocumentReader(_dataFile, _ix.Compression, keyIndex, leaveOpen:false);
+            _documentReader = new DocumentReader(
+                _dataFile, _ix.Compression, keyIndex, _ix.KeyIndexOffset+_ix.KeyIndexSize, leaveOpen:false);
 
             _skip = skip;
             _take = take;

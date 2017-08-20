@@ -15,6 +15,7 @@ namespace DocumentTable
 
         public SegmentInfo Version { get; set; }
         public Stream Stream { get; protected set; }
+        public IDictionary<short, string> KeyIndex { get; protected set; }
 
         public ReadSession(
             SegmentInfo version, 
@@ -28,6 +29,8 @@ namespace DocumentTable
             DocHashReader = docHashReader;
             AddressReader = addressReader;
             BlockSize = BlockSerializer.SizeOfBlock();
+            Stream.Seek(Version.KeyIndexOffset, SeekOrigin.Begin);
+            KeyIndex = DocumentSerializer.ReadKeyIndex(Stream, Version.KeyIndexSize);
         }
 
         public DocHash ReadDocHash(int docId)
@@ -35,33 +38,20 @@ namespace DocumentTable
             return DocHashReader.Read(docId);
         }
 
-        public IList<Document> ReadDocuments(IList<int> documentIds)
+        public Document ReadDocument(int documentId)
         {
-            var addresses = new List<BlockInfo>(documentIds.Count);
+            var address = AddressReader.Read(
+                new BlockInfo(documentId * BlockSize, BlockSize));
 
-            foreach (var id in documentIds)
-            {
-                addresses.Add(new BlockInfo(id * BlockSize, BlockSize));
-            }
-
-            var docAddresses = AddressReader.Read(addresses);
-            var index = 0;
-            var documents = new List<Document>(documentIds.Count);
-
-            Stream.Seek(Version.KeyIndexOffset, SeekOrigin.Begin);
-
-            var keyIndex = DocumentSerializer.ReadKeyIndex(Stream, Version.KeyIndexSize);
+            var documentsOffset = Version.KeyIndexOffset + Version.KeyIndexSize;
 
             using (var documentReader = new DocumentReader(
-                Stream, Version.Compression, keyIndex, leaveOpen: true))
-
-                foreach (var document in documentReader.Read(docAddresses))
-                {
-                    document.Id = documentIds[index++];
-                    documents.Add(document);
-                }
-
-            return documents;
+                Stream, Version.Compression, KeyIndex, documentsOffset, leaveOpen: true))
+            {
+                var document = documentReader.Read(address);
+                document.Id = documentId;
+                return document;
+            }
         }
 
         public virtual void Dispose()

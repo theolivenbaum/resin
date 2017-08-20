@@ -24,20 +24,8 @@ namespace Resin
 
         public ScoredDocument ReadDocument(DocumentScore score)
         {
-            var docAddress = AddressReader.Read(
-                new BlockInfo(score.DocumentId * BlockSize, BlockSize));
-
-            Stream.Seek(Version.KeyIndexOffset, SeekOrigin.Begin);
-
-            var keyIndex = DocumentSerializer.ReadKeyIndex(Stream, Version.KeyIndexSize);
-
-            using (var documentReader = new DocumentReader(
-                Stream, Version.Compression, keyIndex, leaveOpen: true))
-            {
-                var document = documentReader.Read(docAddress);
-                document.Id = score.DocumentId;
-                return new ScoredDocument(document, score.Score);
-            }
+            var document = ReadDocument(score.DocumentId);
+            return new ScoredDocument(document, score.Score);
         }
     }
 }
