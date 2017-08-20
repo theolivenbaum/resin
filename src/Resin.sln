@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.Cli", "Resin.Cli\Resin.Cli.csproj", "{1440DE2D-BD2B-4E68-9021-3A26955CF0C7}"
 EndProject
@@ -23,6 +23,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.Document", "DocumentTable\Resin.Document.csproj", "{2FD09C0D-881D-468C-8F99-346718FAED5E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.Bitmap", "StreamIndex\Resin.Bitmap.csproj", "{5BED9FA1-6BED-4AC1-859A-A85C06C93096}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.DocumentSearchServer", "Resin.DocumentSearchServer\Resin.DocumentSearchServer.csproj", "{251FEE31-D9FE-472F-A919-B4BE7B28417A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -50,11 +52,18 @@ Global
 		{5BED9FA1-6BED-4AC1-859A-A85C06C93096}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5BED9FA1-6BED-4AC1-859A-A85C06C93096}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5BED9FA1-6BED-4AC1-859A-A85C06C93096}.Release|Any CPU.Build.0 = Release|Any CPU
+		{251FEE31-D9FE-472F-A919-B4BE7B28417A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{251FEE31-D9FE-472F-A919-B4BE7B28417A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{251FEE31-D9FE-472F-A919-B4BE7B28417A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{251FEE31-D9FE-472F-A919-B4BE7B28417A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{B9CEA923-07C2-4ADE-8DD5-E2CDAC3EA9A7} = {47C9EBB6-39BE-4B19-BA51-401EC9777BA6}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {51632100-E25A-49E9-9823-0AC619CF86E8}
 	EndGlobalSection
 EndGlobal
