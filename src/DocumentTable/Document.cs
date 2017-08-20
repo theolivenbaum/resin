@@ -15,17 +15,6 @@ namespace Resin.Documents
 
         public IDictionary<string, Field> Fields { get { return _fields; } }
 
-        public Document(int documentId, IList<Field> fields) : this(fields)
-        {
-            Id = documentId;
-        }
-
-        public Document(int documentId, IDictionary<string, Field> fields)
-        {
-            Id = documentId;
-            _fields = fields;
-        }
-
         public Document(IList<Field> fields)
         {
             if (fields == null) throw new ArgumentNullException("fields");

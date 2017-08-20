@@ -16,21 +16,21 @@ namespace Tests
         {
             var docs = new List<Document>
             {
-                new Document(0, new List<Field>
+                new Document(new List<Field>
                 {
                     new Field("title", "rambo"),
                     new Field("_id", "0")
-                }),
-                new Document(1, new List<Field>
+                }){Id=0 },
+                new Document(new List<Field>
                 {
                     new Field("title", "rocky"),
                     new Field("_id", "1")
-                }),
-                new Document(2, new List<Field>
+                }){Id=1 },
+                new Document(new List<Field>
                 {
                     new Field("title", "rocky 2"),
                     new Field("_id", "2")
-                })
+                }){Id=2 }
             };
 
             var fileName = Path.Combine(CreateDir(), "DocumentReaderTests.Can_read");
