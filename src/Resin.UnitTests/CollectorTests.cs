@@ -34,7 +34,7 @@ namespace Tests
                 version = writer.Write();
             }
             using(var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var query = new QueryParser().Parse("_id:'3'");
                 var scores = collector.Collect(query);
@@ -44,7 +44,7 @@ namespace Tests
             }
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var query = new QueryParser().Parse("_id:'5five'");
                 var scores = collector.Collect(query);
@@ -76,7 +76,7 @@ namespace Tests
             var query = new QueryParser(new Analyzer()).Parse("+title:\"the rain man\"");
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -110,7 +110,7 @@ namespace Tests
             var query = new QueryParser(new Analyzer()).Parse("+title:'the'");
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -123,7 +123,7 @@ namespace Tests
             query = new QueryParser(new Analyzer()).Parse("+title:'the'+title:'ugly'");
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -154,7 +154,7 @@ namespace Tests
             var query = new QueryParser(new Analyzer()).Parse("+title:'rocky'");
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -165,7 +165,7 @@ namespace Tests
             query = new QueryParser(new Analyzer()).Parse("+title:'rambo'");
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -177,7 +177,7 @@ namespace Tests
             query = new QueryParser(new Analyzer()).Parse("+title:'rocky' title:'rambo'");
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -210,7 +210,7 @@ namespace Tests
             var query = new QueryParser(new Analyzer()).Parse("+title:'the'");
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -223,7 +223,7 @@ namespace Tests
             query = new QueryParser(new Analyzer()).Parse("+title:'the'-title:'ugly'");
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -253,7 +253,7 @@ namespace Tests
             writer.Dispose();
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var query = new QueryParser().Parse("title:'rambo'");
                 var scores = collector.Collect(query);
@@ -264,7 +264,7 @@ namespace Tests
             }
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var query = new QueryParser().Parse("title:'the'");
                 var scores = collector.Collect(query);
@@ -296,7 +296,7 @@ namespace Tests
             writer.Dispose();
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var query = new QueryParser().Parse("title:'rambo'");
                 var scores = collector.Collect(query);
@@ -310,7 +310,7 @@ namespace Tests
             operation.Execute();
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var query = new QueryParser().Parse("title:'rambo'");
                 var scores = collector.Collect(query);
@@ -339,7 +339,7 @@ namespace Tests
             writer.Dispose();
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var query = new QueryParser().Parse("title:'ra'*");
                 var scores = collector.Collect(query);
@@ -371,7 +371,7 @@ namespace Tests
             writer.Dispose();
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var query = new QueryParser().Parse("title:'raider'");
                 var scores = collector.Collect(query);
@@ -381,7 +381,7 @@ namespace Tests
             }
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var query = new QueryParser().Parse("title:'raider'~");
                 var scores = collector.Collect(query);
@@ -416,7 +416,7 @@ namespace Tests
             var query = new QueryParser().Parse("title:3");
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -428,7 +428,7 @@ namespace Tests
             query = new QueryParser().Parse("title<3+title>0");
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -468,7 +468,7 @@ namespace Tests
             var query = new QueryParser().Parse("created>\\" + lowerBound + "\\+created<\\" + upperBound + "\\");
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var scores = collector.Collect(query).ToList();
 
@@ -506,7 +506,7 @@ namespace Tests
             var query = new QueryParser().Parse("created:\\" + lowerBound + "\\");
 
             using (var readSession = CreateReadSession(dir, version))
-            using (var collector = new Collector(dir, readSession))
+            using (var collector = new Collector(readSession))
             {
                 var scores = collector.Collect(query).ToList();
 

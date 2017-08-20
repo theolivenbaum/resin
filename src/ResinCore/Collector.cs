@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using log4net;
 using Resin.Querying;
-using Resin.IO;
-using DocumentTable;
 using Resin.Analysis;
 
 namespace Resin
@@ -12,14 +10,12 @@ namespace Resin
     public class Collector : IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Collector));
-        private readonly string _directory;
         private readonly IScoringSchemeFactory _scorerFactory;
         private readonly IFullTextReadSession _readSession;
 
-        public Collector(string directory, IFullTextReadSession readSession, IScoringSchemeFactory scorerFactory = null)
+        public Collector(IFullTextReadSession readSession, IScoringSchemeFactory scorerFactory = null)
         {
             _readSession = readSession;
-            _directory = directory;
             _scorerFactory = scorerFactory??new TfIdfFactory();
         }
 

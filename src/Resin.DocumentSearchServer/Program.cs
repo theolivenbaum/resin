@@ -2,12 +2,13 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using System;
+using DocumentTable;
 
 namespace Resin.DocumentSearchServer
 {
     public class Program
     {
-        public static Searcher Searcher { get; private set; }
+        public static IReadSessionFactory SessionFactory { get; private set; }
 
         public static void Main(string[] args)
         {
@@ -29,12 +30,12 @@ namespace Resin.DocumentSearchServer
 
             if (postingsServerHostName == null)
             {
-                Searcher = new Searcher(dataDirectory);
+                SessionFactory = new FullTextReadSessionFactory(dataDirectory);
             }
             else
             {
-                Searcher = new Searcher(dataDirectory, sessionFactory: new NetworkFullTextReadSessionFactory(
-                postingsServerHostName, port, dataDirectory));
+                SessionFactory = new NetworkFullTextReadSessionFactory(
+                        postingsServerHostName, port, dataDirectory);
             }
 
             var host = new WebHostBuilder()
@@ -46,7 +47,7 @@ namespace Resin.DocumentSearchServer
 
             host.Run();
 
-            Searcher.Dispose();
+            SessionFactory.Dispose();
         }
     }
 }

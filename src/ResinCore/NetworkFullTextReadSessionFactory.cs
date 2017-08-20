@@ -5,12 +5,13 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 
 namespace Resin
 {
     public class NetworkFullTextReadSessionFactory : IReadSessionFactory, IDisposable
     {
+        public string DirectoryName { get { return _directory; } }
+
         protected static readonly ILog Log = LogManager.GetLogger(typeof(NetworkFullTextReadSessionFactory));
 
         private readonly string _directory;

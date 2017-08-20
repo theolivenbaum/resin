@@ -8,6 +8,8 @@ namespace Resin
 {
     public class FullTextReadSessionFactory : IReadSessionFactory, IDisposable
     {
+        public string DirectoryName { get { return _directory; } }
+
         private readonly string _directory;
         private readonly FileStream _data;
 

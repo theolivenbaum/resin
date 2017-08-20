@@ -16,7 +16,6 @@ namespace Resin
     public class Searcher : IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Searcher));
-        private readonly string _directory;
         private readonly IQueryParser _parser;
         private readonly IScoringSchemeFactory _scorerFactory;
         private readonly IList<SegmentInfo> _versions;
@@ -28,14 +27,8 @@ namespace Resin
         {
         }
 
-        public Searcher(string directory, long version)
-            : this(directory, version, new QueryParser(new Analyzer()), new TfIdfFactory(), new FullTextReadSessionFactory(directory))
-        {
-        }
-
         public Searcher(string directory, IQueryParser parser = null, IScoringSchemeFactory scorerFactory = null, IReadSessionFactory sessionFactory = null)
         {
-            _directory = directory;
             _parser = parser ?? new QueryParser();
             _scorerFactory = scorerFactory ?? new TfIdfFactory();
             _versions = Util.GetIndexVersionListInChronologicalOrder(directory);
@@ -43,14 +36,13 @@ namespace Resin
             _sessionFactory = sessionFactory ?? new FullTextReadSessionFactory(directory);
         }
 
-        public Searcher(string directory, long version, QueryParser parser, IScoringSchemeFactory scorerFactory, IReadSessionFactory sessionFactory = null)
+        public Searcher(IReadSessionFactory sessionFactory)
         {
-            _directory = directory;
-            _parser = parser;
-            _scorerFactory = scorerFactory;
-            _versions = new List<SegmentInfo> { { SegmentInfo.Load(directory, version) } };
+            _parser = new QueryParser();
+            _scorerFactory = new TfIdfFactory();
+            _versions = Util.GetIndexVersionListInChronologicalOrder(sessionFactory.DirectoryName);
             _blockSize = BlockSerializer.SizeOfBlock();
-            _sessionFactory = sessionFactory ?? new FullTextReadSessionFactory(directory);
+            _sessionFactory = sessionFactory;
         }
 
         public ScoredResult Search(string query, int page = 0, int size = 10)
@@ -103,7 +95,7 @@ namespace Resin
 
         private IList<DocumentScore> Collect(IList<QueryContext> query, IFullTextReadSession readSession)
         {
-            using (var collector = new Collector(_directory, readSession, _scorerFactory))
+            using (var collector = new Collector(readSession, _scorerFactory))
             {
                 return collector.Collect(query);
             }
