@@ -10,17 +10,16 @@ using System.Net.Sockets;
 
 namespace Resin.IO
 {
-    public class PostingsServer : IDisposable
+    public class DocumentServer : IDisposable
     {
         protected static readonly ILog Log = LogManager.GetLogger(typeof(PostingsServer));
 
         private readonly Stream _data;
         private readonly Socket _listener;
-        private readonly ConcurrentDictionary<long, byte[]> _cache;
         private readonly SegmentInfo _version;
-        private readonly StreamBlockReader _postingsReader;
+        private readonly StreamBlockReader _reader;
 
-        public PostingsServer(string hostName, int port, string directory, int bufferSize = 4096 * 12)
+        public DocumentServer(string hostName, int port, string directory, int bufferSize = 4096 * 12)
         {
             _version = Util.GetIndexVersionListInChronologicalOrder(directory)[0];
 
@@ -34,7 +33,8 @@ namespace Resin.IO
                 bufferSize,
                 FileOptions.RandomAccess);
 
-            _postingsReader = new StreamBlockReader(_data, _version.PostingsOffset);
+            _reader = new StreamBlockReader(
+                _data, _version.KeyIndexOffset + _version.KeyIndexSize);
 
             IPHostEntry ipHostInfo = Dns.GetHostEntryAsync(hostName).Result;
             IPAddress ipAddress = ipHostInfo.AddressList[1];
@@ -45,19 +45,12 @@ namespace Resin.IO
 
             _listener.Bind(localEndPoint);
             _listener.Listen(10);
-
-            _cache = new ConcurrentDictionary<long, byte[]>();
         }
 
-        private byte[] FindInCache(BlockInfo address)
+        private byte[] ReadFromDisk(BlockInfo address)
         {
-            byte[] data;
-            if(!_cache.TryGetValue(address.Position, out data))
-            {
-                data = _postingsReader.ReadFromStream(address);
-                _cache.GetOrAdd(address.Position, data);
-                Log.InfoFormat("read {0} bytes from DISK", data.Length);
-            }
+            byte[] data = _reader.ReadFromStream(address);
+            Log.InfoFormat("read {0} bytes from DISK", data.Length);
             return data;
         }
 
@@ -75,7 +68,7 @@ namespace Resin.IO
             {
                 while (true)
                 {
-                    Log.Info("postings server idle");
+                    Log.Info("document server idle");
 
                     Socket handler = _listener.Accept();
 
@@ -87,13 +80,13 @@ namespace Resin.IO
 
                     var address = BlockSerializer.DeserializeBlock(request, 0);
 
-                    byte[] response = FindInCache(address);
+                    byte[] response = ReadFromDisk(address);
 
                     handler.Send(response);
                     handler.Shutdown(SocketShutdown.Both);
                     handler.Dispose();
 
-                    Log.InfoFormat("responded with a {0} byte postings list", response.Length);
+                    Log.InfoFormat("responded with a {0} byte document", response.Length);
                 }
             }
             catch (Exception e)

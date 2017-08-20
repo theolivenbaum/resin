@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using DocumentTable;
 using Resin.Sys;
 using Resin.IO;
+using System.Threading.Tasks;
 
 namespace Resin.Cli
 {
@@ -51,14 +52,14 @@ namespace Resin.Cli
                 }
                 WritePg(args);
             }
-            else if (args[0].ToLower() == "start-server")
+            else if (args[0].ToLower() == "start-servers")
             {
                 if (Array.IndexOf(args, "--dir") == -1)
                 {
                     Console.WriteLine("I need a directory.");
                     return;
                 }
-                StartServer(args);
+                StartServers(args);
             }
             else if (args[0].ToLower() == "query")
             {
@@ -118,17 +119,28 @@ namespace Resin.Cli
             }
         }
 
-        static void StartServer(string[] args)
+        static void StartServers(string[] args)
         {
             string dir = null;
 
             if (Array.IndexOf(args, "--dir") > 0) dir = args[Array.IndexOf(args, "--dir") + 1];
 
+            var tasks = new List<Task>();
+
             if (dir != null)
             {
-                var server = new PostingsServer("localhost", 11111, dir);
-                server.Start();
+                tasks.Add(Task.Run(() =>
+                {
+                    var postingServer = new PostingsServer("localhost", 11111, dir);
+                    postingServer.Start();
+                }));
+                tasks.Add(Task.Run(() =>
+                {
+                    var documentServer = new DocumentServer("localhost", 11112, dir);
+                    documentServer.Start();
+                }));
             }
+            Task.WaitAll(tasks.ToArray());
         }
 
         static void Status(string[] args)

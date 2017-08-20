@@ -3,18 +3,18 @@ using System.IO;
 
 namespace Resin.IO
 {
-    public class StreamPostingsReader
+    public class StreamBlockReader
     {
         private readonly Stream _stream;
         private readonly long _offset;
 
-        public StreamPostingsReader(Stream stream, long offset)
+        public StreamBlockReader(Stream stream, long offset)
         {
             _stream = stream;
             _offset = offset;
         }
 
-        public byte[] ReadTermPositionsFromStream(BlockInfo address)
+        public byte[] ReadFromStream(BlockInfo address)
         {
             var buffer = new byte[address.Length];
 
