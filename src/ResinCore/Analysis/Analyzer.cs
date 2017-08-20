@@ -52,7 +52,7 @@ namespace Resin.Analysis
                         }
 
                         analyzedTerms.Add(
-                            new AnalyzedTerm(document.Id, field.Key, wordInfo.Key, postings));
+                            new AnalyzedTerm(document.TableId, field.Key, wordInfo.Key, postings));
                     }
                 }
                 else if (field.Index)
@@ -60,7 +60,7 @@ namespace Resin.Analysis
                     var postings = new int[] { 0 };
 
                     analyzedTerms.Add(
-                        new AnalyzedTerm(document.Id, field.Key, field.Value, postings));
+                        new AnalyzedTerm(document.TableId, field.Key, field.Value, postings));
                 }
             }
             return analyzedTerms;

@@ -29,7 +29,7 @@ namespace Resin
 
             session.Write(document);
 
-            Log.DebugFormat("analyzed doc ID {0}", document.Id);
+            Log.DebugFormat("analyzed doc ID {0}", document.TableId);
         }
     }
 }

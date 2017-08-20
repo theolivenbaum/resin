@@ -49,7 +49,7 @@ namespace Resin.Documents
                 Stream, Version.Compression, KeyIndex, documentsOffset, leaveOpen: true))
             {
                 var document = documentReader.Read(address);
-                document.Id = documentId;
+                document.TableId = documentId;
                 return document;
             }
         }

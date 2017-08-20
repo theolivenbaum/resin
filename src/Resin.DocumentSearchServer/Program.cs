@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using System;
 using Resin.Documents;
 
-namespace Resin.DocumentSearchServer
+namespace Resin.SearchServer
 {
     public class Program
     {

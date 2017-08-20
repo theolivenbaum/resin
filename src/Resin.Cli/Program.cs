@@ -250,7 +250,7 @@ namespace Resin.Cli
                     {
                         foreach (var doc in result.Docs)
                         {
-                            using (var fs = File.Create(Path.GetFileName(doc.Document.Fields["uri"].Value)+".log"))
+                            using (var fs = File.Create(Path.GetFileName(doc.TableRow.Fields["uri"].Value)+".log"))
                             using(var writer = new StreamWriter(fs))
                             {
                                 writer.Write(doc.ToString());
@@ -259,7 +259,7 @@ namespace Resin.Cli
                                 {
                                     var analyzer = new Analyzer();
 
-                                    var analyzed = analyzer.AnalyzeDocument(doc.Document);
+                                    var analyzed = analyzer.AnalyzeDocument(doc.TableRow);
 
                                     //foreach (var a in analyzed)
                                     //{
@@ -291,8 +291,8 @@ namespace Resin.Cli
         private static void Print(ScoredDocument doc)
         {
             Console.Write(doc.Score.ToString("#.##") + "\t");
-            Console.Write(doc.Document.Id + "\t");
-            Console.WriteLine(doc.Document.Fields["title"].Value);
+            Console.Write(doc.TableRow.TableId + "\t");
+            Console.WriteLine(doc.TableRow.Fields["title"].Value);
         }
 
         private static void Print(string value)

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.IO;
 using System.Diagnostics;
 
-namespace Resin.DocumentSearchServer
+namespace Resin.SearchServer
 {
     public class SearchController : Controller
     {

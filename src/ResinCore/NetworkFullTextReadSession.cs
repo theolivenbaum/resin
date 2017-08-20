@@ -37,7 +37,7 @@ namespace Resin
             var documentStream = new MemoryStream(documentData);
             var document = DocumentSerializer.DeserializeDocument(documentStream, address.Length, Version.Compression, KeyIndex);
 
-            document.Id = score.DocumentId;
+            document.TableId = score.DocumentId;
             return new ScoredDocument(document, score.Score);
         }
     }

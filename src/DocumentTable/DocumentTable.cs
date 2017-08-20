@@ -5,9 +5,16 @@ using System.Text;
 
 namespace Resin.Documents
 {
-    public class DocumentTableRow
+    public class DocumentTable
     {
         public int Id { get; set; }
+        public IList<DocumentTableRow> Row { get; set; }
+    }
+
+    public class DocumentTableRow
+    {
+        public int TableId { get; set; }
+        public int RowId { get; set; }
 
         public UInt64 Hash { get; set; }
 

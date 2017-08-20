@@ -37,12 +37,12 @@ namespace Tests
                 Assert.AreEqual(2, result.Total);
                 Assert.AreEqual(2, result.Docs.Count);
 
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 0));
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 1));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.TableId == 0));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.TableId == 1));
 
                 Assert.AreEqual(
                     "Rambo First Blood",
-                    result.Docs.First(d => d.Document.Id == 0).Document.Fields["title"].Value);
+                    result.Docs.First(d => d.TableRow.TableId == 0).TableRow.Fields["title"].Value);
             }
 
             using (var searcher = new Searcher(dir))
@@ -51,9 +51,9 @@ namespace Tests
 
                 Assert.AreEqual(3, result.Total);
                 Assert.AreEqual(3, result.Docs.Count);
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 3));
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 4));
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 5));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.TableId == 3));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.TableId == 4));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.TableId == 5));
             }
         }
 
@@ -84,12 +84,12 @@ namespace Tests
                 Assert.AreEqual(2, result.Total);
                 Assert.AreEqual(2, result.Docs.Count);
 
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 0));
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 1));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.TableId == 0));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.TableId == 1));
 
                 Assert.AreEqual(
                     "Rambo First Blood",
-                    result.Docs.First(d => d.Document.Id == 0).Document.Fields["title"].Value);
+                    result.Docs.First(d => d.TableRow.TableId == 0).TableRow.Fields["title"].Value);
             }
 
             using (var searcher = new Searcher(dir))
@@ -98,9 +98,9 @@ namespace Tests
 
                 Assert.AreEqual(3, result.Total);
                 Assert.AreEqual(3, result.Docs.Count);
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 3));
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 4));
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Id == 5));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.TableId == 3));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.TableId == 4));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.TableId == 5));
             }
         }
 
@@ -128,7 +128,7 @@ namespace Tests
                 Assert.AreEqual(1, result.Total);
                 Assert.AreEqual(1, result.Docs.Count);
 
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "0"));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.Fields["_id"].Value == "0"));
             }
 
             var moreDocs = new List<dynamic>
@@ -150,7 +150,7 @@ namespace Tests
                 Assert.AreEqual(1, result.Total);
                 Assert.AreEqual(1, result.Docs.Count);
 
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "0"));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.Fields["_id"].Value == "0"));
 
             }
         }
@@ -195,8 +195,8 @@ namespace Tests
                 Assert.AreEqual(2, result.Total);
                 Assert.AreEqual(2, result.Docs.Count);
 
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "0"));
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.Fields["_id"].Value == "0"));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.Fields["_id"].Value == "3"));
             }
         }
 
@@ -244,8 +244,8 @@ namespace Tests
                 Assert.AreEqual(2, result.Total);
                 Assert.AreEqual(2, result.Docs.Count);
 
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "0"));
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.Fields["_id"].Value == "0"));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.Fields["_id"].Value == "3"));
             }
 
             using (var merge2 = new MergeCommand(dir))
@@ -258,8 +258,8 @@ namespace Tests
                 Assert.AreEqual(2, result.Total);
                 Assert.AreEqual(2, result.Docs.Count);
 
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "0"));
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.Fields["_id"].Value == "0"));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.Fields["_id"].Value == "3"));
             }
 
             using (var merge3 = new MergeCommand(dir))
@@ -274,8 +274,8 @@ namespace Tests
                 Assert.AreEqual(2, result.Total);
                 Assert.AreEqual(2, result.Docs.Count);
 
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "0"));
-                Assert.IsTrue(result.Docs.Any(d => d.Document.Fields["_id"].Value == "3"));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.Fields["_id"].Value == "0"));
+                Assert.IsTrue(result.Docs.Any(d => d.TableRow.Fields["_id"].Value == "3"));
             }
         }
     }

@@ -49,7 +49,7 @@ namespace Resin.Documents
 
             foreach (var doc in _documents.ReadSource())
             {
-                doc.Id = count++;
+                doc.TableId = count++;
 
                 DocumentWriteCommand.Write(doc, WriteSession);
             }

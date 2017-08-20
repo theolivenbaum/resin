@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Resin.DocumentSearchServer
+namespace Resin.SearchServer
 {
     public class ResultInfo
     {

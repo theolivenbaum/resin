@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Resin.DocumentSearchServer
+namespace Resin.SearchServer
 {
     public class SearchPage
     {

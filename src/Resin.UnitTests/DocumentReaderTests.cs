@@ -20,17 +20,17 @@ namespace Tests
                 {
                     new Field("title", "rambo"),
                     new Field("_id", "0")
-                }){Id=0 },
+                }){TableId=0 },
                 new DocumentTableRow(new List<Field>
                 {
                     new Field("title", "rocky"),
                     new Field("_id", "1")
-                }){Id=1 },
+                }){TableId=1 },
                 new DocumentTableRow(new List<Field>
                 {
                     new Field("title", "rocky 2"),
                     new Field("_id", "2")
-                }){Id=2 }
+                }){TableId=2 }
             };
 
             var fileName = Path.Combine(CreateDir(), "DocumentReaderTests.Can_read");
@@ -43,7 +43,7 @@ namespace Tests
             {
                 foreach (var doc in docs)
                 {
-                    blocks.Add(doc.Id, writer.Write(doc.ToDocumentTableRow(keyIndex)));
+                    blocks.Add(doc.TableId, writer.Write(doc.ToDocumentTableRow(keyIndex)));
                 }
             }
 

@@ -10,7 +10,7 @@ namespace Resin.Documents
         {
             session.Write(document);
 
-            Log.DebugFormat("stored doc ID {0}", document.Id);
+            Log.DebugFormat("stored doc ID {0}", document.TableId);
         }
     }
 }

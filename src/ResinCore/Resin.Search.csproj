@@ -13,7 +13,7 @@
     <Authors>Marcus Lager</Authors>
     <Company />
     <Product>ResinFramework</Product>
-    <Description>Full-text search framework</Description>
+    <Description>Full-text search and database framework</Description>
     <Copyright>Copyright 2017 Marcus Lager</Copyright>
     <PackageTags>search engine document database</PackageTags>
     <PackageLicenseUrl>https://github.com/kreeben/resin/blob/master/LICENSE</PackageLicenseUrl>

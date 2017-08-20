@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Resin.DocumentSearchServer
+namespace Resin.SearchServer
 {
     public static class SearchHitHelper
     {
@@ -10,9 +10,9 @@ namespace Resin.DocumentSearchServer
         {
             return documents.Select(d => new SearchHit
             {
-                Title = d.Document.Fields["title"].Value,
-                Body = d.Document.Fields["body"].Value,
-                Uri = d.Document.Fields["uri"].Value,
+                Title = d.TableRow.Fields["title"].Value,
+                Body = d.TableRow.Fields["body"].Value,
+                Uri = d.TableRow.Fields["uri"].Value,
                 //DisplayUrl = new Uri(d.Document.Fields["uri"].Value).ToDisplayUrl()
             });
         }

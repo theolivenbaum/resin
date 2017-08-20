@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Resin.DocumentSearchServer
+namespace Resin.SearchServer
 {
     public class Startup
     {

@@ -1,4 +1,4 @@
-﻿namespace Resin.DocumentSearchServer
+﻿namespace Resin.SearchServer
 {
     public class SearchHit
     {

@@ -24,7 +24,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.Documents", "Document
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.Bitmap", "StreamIndex\Resin.Bitmap.csproj", "{5BED9FA1-6BED-4AC1-859A-A85C06C93096}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.DocumentSearchServer", "Resin.DocumentSearchServer\Resin.DocumentSearchServer.csproj", "{251FEE31-D9FE-472F-A919-B4BE7B28417A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resin.SearchServer", "Resin.DocumentSearchServer\Resin.SearchServer.csproj", "{251FEE31-D9FE-472F-A919-B4BE7B28417A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
