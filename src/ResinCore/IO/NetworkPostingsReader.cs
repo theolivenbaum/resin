@@ -76,7 +76,7 @@ namespace Resin.IO
         {
             var data = new byte[length];
             var receivedTotal = 0;
-            var bufferSize = Math.Min(length, 16384);
+            var bufferSize = Math.Min(length, 8192);
 
             while (receivedTotal < length)
             {

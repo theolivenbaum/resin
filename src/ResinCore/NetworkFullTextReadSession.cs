@@ -9,23 +9,23 @@ namespace Resin
 {
     public class NetworkFullTextReadSession : ReadSession, IFullTextReadSession
     {
-        private readonly IPEndPoint _ip;
+        private readonly NetworkPostingsReader _postingsReader;
 
         public NetworkFullTextReadSession(
             IPEndPoint ip, SegmentInfo version, DocHashReader docHashReader, BlockInfoReader addressReader, Stream stream) 
             : base(version, docHashReader, addressReader, stream)
         {
-            _ip = ip;
+            _postingsReader = new NetworkPostingsReader(ip);
         }
 
         public IList<DocumentPosting> ReadTermCounts(IList<BlockInfo> addresses)
         {
-            return new NetworkPostingsReader(_ip).ReadTermCounts(addresses);
+            return _postingsReader.ReadTermCounts(addresses);
         }
 
         public IList<IList<DocumentPosting>> ReadPositions(IList<IList<BlockInfo>> addresses)
         {
-            return new NetworkPostingsReader(_ip).ReadPositions(addresses);
+            return _postingsReader.ReadPositions(addresses);
         }
 
         public ScoredDocument ReadDocument(DocumentScore score)
