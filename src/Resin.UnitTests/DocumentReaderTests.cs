@@ -14,19 +14,19 @@ namespace Tests
         [TestMethod]
         public void Can_read()
         {
-            var docs = new List<Document>
+            var docs = new List<DocumentTableRow>
             {
-                new Document(new List<Field>
+                new DocumentTableRow(new List<Field>
                 {
                     new Field("title", "rambo"),
                     new Field("_id", "0")
                 }){Id=0 },
-                new Document(new List<Field>
+                new DocumentTableRow(new List<Field>
                 {
                     new Field("title", "rocky"),
                     new Field("_id", "1")
                 }){Id=1 },
-                new Document(new List<Field>
+                new DocumentTableRow(new List<Field>
                 {
                     new Field("title", "rocky 2"),
                     new Field("_id", "2")
@@ -43,7 +43,7 @@ namespace Tests
             {
                 foreach (var doc in docs)
                 {
-                    blocks.Add(doc.Id, writer.Write(doc.ToTableRow(keyIndex)));
+                    blocks.Add(doc.Id, writer.Write(doc.ToDocumentTableRow(keyIndex)));
                 }
             }
 

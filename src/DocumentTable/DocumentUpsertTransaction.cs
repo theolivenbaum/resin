@@ -65,7 +65,7 @@ namespace Resin.Documents
             return WriteSession.Version.Version;
         }
 
-        private IEnumerable<Document> ReadSource()
+        private IEnumerable<DocumentTableRow> ReadSource()
         {
             return _documents.ReadSource();
         }

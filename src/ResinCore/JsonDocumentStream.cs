@@ -28,7 +28,7 @@ namespace Resin
             Reader = new StreamReader(new BufferedStream(stream), Encoding.UTF8);
         }
 
-        public override IEnumerable<Document> ReadSource()
+        public override IEnumerable<DocumentTableRow> ReadSource()
         {
             Reader.ReadLine();
 
@@ -45,7 +45,7 @@ namespace Resin
             return ReadSourceAndAssignPk( ReadInternal().Take(_take));
         }
 
-        private IEnumerable<Document> ReadInternal()
+        private IEnumerable<DocumentTableRow> ReadInternal()
         {
             string line;
             while ((line=Reader.ReadLine()) != "]")
@@ -54,7 +54,7 @@ namespace Resin
 
                 var dict = JsonConvert.DeserializeObject<IDictionary<string, string>>(line);
 
-                yield return new Document(dict.Select(p=>new Field(p.Key, p.Value)).ToList());
+                yield return new DocumentTableRow(dict.Select(p=>new Field(p.Key, p.Value)).ToList());
             }
         }
 

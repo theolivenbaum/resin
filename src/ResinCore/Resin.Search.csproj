@@ -5,15 +5,15 @@
     <AssemblyName>Resin</AssemblyName>
     <RootNamespace>Resin</RootNamespace>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <AssemblyVersion>2.0.3.0</AssemblyVersion>
-    <FileVersion>2.0.3.0</FileVersion>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <FileVersion>3.0.0.0</FileVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageId>ResinDB</PackageId>
-    <Version>2.0.3</Version>
+    <PackageId>ResinFramework</PackageId>
+    <Version>3.0.0</Version>
     <Authors>Marcus Lager</Authors>
     <Company />
-    <Product>ResinDB</Product>
-    <Description>Full-text search server</Description>
+    <Product>ResinFramework</Product>
+    <Description>Full-text search framework</Description>
     <Copyright>Copyright 2017 Marcus Lager</Copyright>
     <PackageTags>search engine document database</PackageTags>
     <PackageLicenseUrl>https://github.com/kreeben/resin/blob/master/LICENSE</PackageLicenseUrl>

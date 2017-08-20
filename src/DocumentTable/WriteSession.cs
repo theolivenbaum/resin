@@ -54,7 +54,7 @@ namespace Resin.Documents
             _fieldNames = new List<string>();
         }
         
-        public void Write(Document document)
+        public void Write(DocumentTableRow document)
         {
             foreach (var field in document.Fields)
             {
@@ -67,7 +67,7 @@ namespace Resin.Documents
                 }
             }
 
-            var tableRow = document.ToTableRow(_keyIndex);
+            var tableRow = document.ToDocumentTableRow(_keyIndex);
 
             BlockInfo adr = _docWriter.Write(tableRow);
 

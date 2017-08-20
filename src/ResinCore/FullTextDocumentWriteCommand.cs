@@ -18,7 +18,7 @@ namespace Resin
             _treeBuilder = treeBuilder;
         }
 
-        public void Write(Document document, IWriteSession session)
+        public void Write(DocumentTableRow document, IWriteSession session)
         {
             var analyzedTerms = _analyzer.AnalyzeDocument(document);
 

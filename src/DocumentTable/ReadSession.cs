@@ -38,7 +38,7 @@ namespace Resin.Documents
             return DocHashReader.Read(docId);
         }
 
-        public Document ReadDocument(int documentId)
+        public DocumentTableRow ReadDocument(int documentId)
         {
             var address = AddressReader.Read(
                 new BlockInfo(documentId * BlockSize, BlockSize));

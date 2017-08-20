@@ -15,7 +15,7 @@ namespace Resin.Analysis
             _tokenizer = tokenizer ?? new Tokenizer(tokenSeparators);
         }
 
-        public IList<AnalyzedTerm> AnalyzeDocument(Document document)
+        public IList<AnalyzedTerm> AnalyzeDocument(DocumentTableRow document)
         {
             var analyzedTerms = new List<AnalyzedTerm>();
 

@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Resin.Documents
 {
-    public class DocumentReader : BlockReader<Document>
+    public class DocumentReader : BlockReader<DocumentTableRow>
     {
         private readonly Compression _compression;
         private readonly IDictionary<short, string> _keyIndex;
@@ -19,7 +19,7 @@ namespace Resin.Documents
             _offset = offset;
         }
 
-        protected override Document Deserialize(long offset, int size, Stream stream)
+        protected override DocumentTableRow Deserialize(long offset, int size, Stream stream)
         {
             stream.Seek(_offset + offset, SeekOrigin.Begin);
 

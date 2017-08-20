@@ -21,12 +21,12 @@ namespace Resin
             _take = take;
         }
 
-        public override IEnumerable<Document> ReadSource()
+        public override IEnumerable<DocumentTableRow> ReadSource()
         {
             return ReadSourceAndAssignPk(ReadInternal());
         }
 
-        private IEnumerable<Document> ReadInternal()
+        private IEnumerable<DocumentTableRow> ReadInternal()
         {
             var files = Directory.GetFiles(_directory, "*.zip", SearchOption.AllDirectories);
             var skipped = 0;
@@ -44,7 +44,7 @@ namespace Resin
                     break;
                 }
 
-                Document document = null;
+                DocumentTableRow document = null;
 
                 try
                 {
@@ -103,7 +103,7 @@ namespace Resin
 
                                 var body = reader.ReadToEnd();
 
-                                document = new Document(
+                                document = new DocumentTableRow(
                                     new List<Field>
                                     {
                                 new Field("title", title),

@@ -5,10 +5,10 @@ namespace Resin
 {
     public class ScoredDocument
     {
-        public Document Document { get; private set; }
+        public DocumentTableRow Document { get; private set; }
         public double Score { get; private set; }
 
-        public ScoredDocument(Document document, double score)
+        public ScoredDocument(DocumentTableRow document, double score)
         {
             if (document == null) throw new ArgumentNullException("document");
             Document = document;

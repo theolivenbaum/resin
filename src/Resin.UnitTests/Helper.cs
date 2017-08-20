@@ -7,7 +7,7 @@ namespace Resin
 {
     public static class Helper
     {
-        public static IDictionary<string, short> ToKeyIndex(this Document document)
+        public static IDictionary<string, short> ToKeyIndex(this DocumentTableRow document)
         {
             var keys = document.Fields.Keys.ToList();
             var keyIndex = new Dictionary<string, short>();
@@ -28,7 +28,7 @@ namespace Resin
                 primaryKeyFieldName);
         }
 
-        private static IEnumerable<Document> ToDocumentsInternal(
+        private static IEnumerable<DocumentTableRow> ToDocumentsInternal(
             this IEnumerable<dynamic> dynamicDocuments, string primaryKeyFieldName = null)
         {
             foreach (var dyn in dynamicDocuments)
@@ -39,7 +39,7 @@ namespace Resin
                 {
                     fields.Add(new Field(field.Key, field.Value));
                 }
-                yield return new Document(fields);
+                yield return new DocumentTableRow(fields);
             }
         }
     }

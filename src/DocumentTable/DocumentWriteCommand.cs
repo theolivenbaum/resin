@@ -6,7 +6,7 @@ namespace Resin.Documents
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(DocumentWriteCommand));
 
-        public void Write(Document document, IWriteSession session)
+        public void Write(DocumentTableRow document, IWriteSession session)
         {
             session.Write(document);
 

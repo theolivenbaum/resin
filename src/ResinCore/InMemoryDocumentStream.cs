@@ -5,14 +5,14 @@ namespace Resin
 {
     public class InMemoryDocumentStream : DocumentStream
     {
-        private readonly IEnumerable<Document> _documents;
+        private readonly IEnumerable<DocumentTableRow> _documents;
 
-        public InMemoryDocumentStream(IEnumerable<Document> documents, string primaryKeyFieldName = null) 
+        public InMemoryDocumentStream(IEnumerable<DocumentTableRow> documents, string primaryKeyFieldName = null) 
             : base(primaryKeyFieldName)
         {
             _documents = documents;
         }
-        public override IEnumerable<Document> ReadSource()
+        public override IEnumerable<DocumentTableRow> ReadSource()
         {
             return ReadSourceAndAssignPk(_documents);
         }

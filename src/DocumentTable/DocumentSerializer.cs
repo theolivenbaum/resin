@@ -121,11 +121,11 @@ namespace Resin.Documents
             return new DocHash(BitConverter.ToUInt64(hashBytes, 0), isObsoleteByte == 1);
         }
 
-        public static Document DeserializeDocument(Stream stream, int sizeOfDoc, Compression compression, IDictionary<short, string> keyIndex)
+        public static DocumentTableRow DeserializeDocument(Stream stream, int sizeOfDoc, Compression compression, IDictionary<short, string> keyIndex)
         {
             var doc = DeserializeFields(stream, sizeOfDoc, compression, keyIndex);
 
-            return new Document(doc);
+            return new DocumentTableRow(doc);
         }
 
         public static IList<Field> DeserializeFields(Stream stream, int size, Compression compression, IDictionary<short, string> keyIndex)

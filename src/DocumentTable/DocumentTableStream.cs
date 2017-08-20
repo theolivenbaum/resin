@@ -40,12 +40,12 @@ namespace Resin.Documents
             _documentReader.Dispose();
         }
 
-        public override IEnumerable<Document> ReadSource()
+        public override IEnumerable<DocumentTableRow> ReadSource()
         {
             return ReadSourceAndAssignPk(StreamDocuments());
         }
 
-        private IEnumerable<Document> StreamDocuments()
+        private IEnumerable<DocumentTableRow> StreamDocuments()
         {
             var skipped = 0;
             var took = 0;

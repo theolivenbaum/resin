@@ -6,7 +6,7 @@ namespace Resin.Documents
 {
     public abstract class DocumentStream
     {
-        public abstract IEnumerable<Document> ReadSource();
+        public abstract IEnumerable<DocumentTableRow> ReadSource();
 
         protected static readonly ILog Log = LogManager.GetLogger(typeof(DocumentStream));
 
@@ -21,8 +21,8 @@ namespace Resin.Documents
             _primaryKeyFieldName = primaryKeyFieldName;
         }
 
-        protected IEnumerable<Document> ReadSourceAndAssignPk(
-            IEnumerable<Document> documents)
+        protected IEnumerable<DocumentTableRow> ReadSourceAndAssignPk(
+            IEnumerable<DocumentTableRow> documents)
         {
             var autoGeneratePk = string.IsNullOrWhiteSpace(_primaryKeyFieldName);
 

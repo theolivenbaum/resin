@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Resin.Documents
 {
-    public class Document
+    public class DocumentTableRow
     {
         public int Id { get; set; }
 
@@ -15,16 +15,16 @@ namespace Resin.Documents
 
         public IDictionary<string, Field> Fields { get { return _fields; } }
 
-        public Document(IList<Field> fields)
+        public DocumentTableRow(IList<Field> fields)
         {
             if (fields == null) throw new ArgumentNullException("fields");
 
             _fields = fields.ToDictionary(x=>x.Key);
         }
 
-        public IDictionary<short, Field> ToTableRow(IDictionary<string, short> keyIndex)
+        public IDictionary<short, Field> ToDocumentTableRow(IDictionary<string, short> keyIndex)
         {
-            return Fields.Values.ToDictionary(field=> keyIndex[field.Key], y => y);
+            return Fields.Values.ToDictionary(field => keyIndex[field.Key], y => y);
         }
 
         public override string ToString()
