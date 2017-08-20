@@ -54,10 +54,7 @@ namespace Resin.DocumentSearchServer
 
         private ScoredResult DoSearch(string query, string dataDirectory)
         {
-            using (var searcher = new Searcher(dataDirectory))
-            {
-                return searcher.Search(query, 0, 15);
-            }
+            return Program.Searcher.Search(query, 0, 15);
         }
     }
 }

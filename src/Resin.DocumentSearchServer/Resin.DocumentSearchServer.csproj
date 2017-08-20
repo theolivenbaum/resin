@@ -18,10 +18,5 @@
   <ItemGroup>
     <ProjectReference Include="..\ResinCore\Resin.Search.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <None Update="server.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 
 </Project>

@@ -10,21 +10,21 @@
   "profiles": {
     "IIS Express": {
       "commandName": "IISExpress",
-      "commandLineArgs": "--data-dir c:\\temp\\resin_data\\pg",
       "launchBrowser": true,
       "launchUrl": "search",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "Dire": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "launchUrl": "api/values",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "http://localhost:62136"
+    "Resin.DocumentSearchServer": {
+        "commandName": "Project",
+        "commandLineArgs": "--dir c:\\temp\\resin_data\\pg --ps localhost --port 11111",
+        "launchBrowser": true,
+        "launchUrl": "search",
+        "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development"
+        },
+        "applicationUrl": "http://localhost:62136"
     }
   }
 }
