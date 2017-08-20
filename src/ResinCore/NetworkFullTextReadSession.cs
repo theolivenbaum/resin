@@ -10,12 +10,14 @@ namespace Resin
     public class NetworkFullTextReadSession : ReadSession, IFullTextReadSession
     {
         private readonly NetworkPostingsReader _postingsReader;
+        private readonly NetworkBlockReader _documentsReader;
 
         public NetworkFullTextReadSession(
-            IPEndPoint ip, SegmentInfo version, DocHashReader docHashReader, BlockInfoReader addressReader, Stream stream) 
+            IPEndPoint postingsEndpoint, IPEndPoint documentsEndpoint, SegmentInfo version, DocHashReader docHashReader, BlockInfoReader addressReader, Stream stream) 
             : base(version, docHashReader, addressReader, stream)
         {
-            _postingsReader = new NetworkPostingsReader(ip);
+            _postingsReader = new NetworkPostingsReader(postingsEndpoint);
+            _documentsReader = new NetworkBlockReader(documentsEndpoint);
         }
 
         public IList<DocumentPosting> ReadTermCounts(IList<BlockInfo> addresses)
@@ -30,7 +32,12 @@ namespace Resin
 
         public ScoredDocument ReadDocument(DocumentScore score)
         {
-            var document = ReadDocument(score.DocumentId);
+            var address = AddressReader.Read(new BlockInfo(score.DocumentId * BlockSize, BlockSize));
+            var documentData = _documentsReader.ReadOverNetwork(address);
+            var documentStream = new MemoryStream(documentData);
+            var document = DocumentSerializer.DeserializeDocument(documentStream, address.Length, Version.Compression, KeyIndex);
+
+            document.Id = score.DocumentId;
             return new ScoredDocument(document, score.Score);
         }
     }

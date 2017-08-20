@@ -14,12 +14,20 @@ namespace Resin.DocumentSearchServer
         {
             string dataDirectory = "c:\\temp\\resin_data\\pg";
             string postingsServerHostName = null;
-            int port = 0;
+            int pport = 0;
+            string documentsServerHostName = null;
+            int dport = 0;
 
             if (Array.IndexOf(args, "--ps") > -1)
             {
                 postingsServerHostName = args[Array.IndexOf(args, "--ps") + 1];
-                port = int.Parse(args[Array.IndexOf(args, "--port") + 1]);
+                pport = int.Parse(args[Array.IndexOf(args, "--pport") + 1]);
+            }
+
+            if (Array.IndexOf(args, "--ds") > -1)
+            {
+                documentsServerHostName = args[Array.IndexOf(args, "--ds") + 1];
+                dport = int.Parse(args[Array.IndexOf(args, "--dport") + 1]);
             }
 
             if (Array.IndexOf(args, "--dir") > -1)
@@ -28,14 +36,15 @@ namespace Resin.DocumentSearchServer
             var bin = Directory.GetCurrentDirectory();
             Directory.SetCurrentDirectory(dataDirectory);
 
-            if (postingsServerHostName == null)
+            if (postingsServerHostName == null && documentsServerHostName == null)
             {
                 SessionFactory = new FullTextReadSessionFactory(dataDirectory);
             }
             else
             {
+                //TODO: make katamaran servers optional
                 SessionFactory = new NetworkFullTextReadSessionFactory(
-                        postingsServerHostName, port, dataDirectory);
+                        postingsServerHostName, pport, documentsServerHostName, dport, dataDirectory);
             }
 
             var host = new WebHostBuilder()

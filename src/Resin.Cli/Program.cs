@@ -226,7 +226,7 @@ namespace Resin.Cli
             if (net)
             {
                 s = new Searcher(dir, sessionFactory: new NetworkFullTextReadSessionFactory(
-                "localhost", 11111, dir));
+                "localhost", 11111, "localhost", 11112, dir));
             }
             else
             {

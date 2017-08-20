@@ -16,9 +16,10 @@ namespace Resin
 
         private readonly string _directory;
         private readonly FileStream _data;
-        private readonly IPEndPoint _ip;
+        private readonly IPEndPoint _postingsEndpoint;
+        private readonly IPEndPoint _documentsEndpoint;
 
-        public NetworkFullTextReadSessionFactory(string hostName, int port, string directory, int bufferSize = 4096 * 12)
+        public NetworkFullTextReadSessionFactory(string postingsHostName, int postingsPort, string documentsHostName, int documentsPort, string directory, int bufferSize = 4096 * 12)
         {
             _directory = directory;
 
@@ -36,10 +37,21 @@ namespace Resin
                 bufferSize,
                 FileOptions.RandomAccess);
 
-            IPHostEntry ipHostInfo = Dns.GetHostEntryAsync(hostName).Result;
-            IPAddress ipAddress = ipHostInfo.AddressList[1];
+            if (postingsHostName != null)
+            {
+                IPHostEntry postingsHost = Dns.GetHostEntryAsync(postingsHostName).Result;
+                IPAddress postingsIp = postingsHost.AddressList[1];
 
-            _ip = new IPEndPoint(ipAddress, port);
+                _postingsEndpoint = new IPEndPoint(postingsIp, postingsPort);
+            }
+            
+            if (documentsHostName != null)
+            {
+                IPHostEntry documentsHost = Dns.GetHostEntryAsync(documentsHostName).Result;
+                IPAddress documentsIp = documentsHost.AddressList[1];
+
+                _documentsEndpoint = new IPEndPoint(documentsIp, documentsPort);
+            }
         }
 
         public IReadSession OpenReadSession(long version)
@@ -52,7 +64,8 @@ namespace Resin
         public IReadSession OpenReadSession(SegmentInfo ix)
         {
             return new NetworkFullTextReadSession(
-                _ip,
+                _postingsEndpoint,
+                _documentsEndpoint,
                 ix,
                 new DocHashReader(_data, ix.DocHashOffset),
                 new BlockInfoReader(_data, ix.DocAddressesOffset),

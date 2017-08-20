@@ -16,6 +16,7 @@ namespace Resin.IO
 
         private readonly Stream _data;
         private readonly Socket _listener;
+        private readonly ConcurrentDictionary<long, byte[]> _cache;
         private readonly SegmentInfo _version;
         private readonly StreamBlockReader _reader;
 
@@ -45,6 +46,19 @@ namespace Resin.IO
 
             _listener.Bind(localEndPoint);
             _listener.Listen(10);
+
+            _cache = new ConcurrentDictionary<long, byte[]>();
+        }
+
+        private byte[] FindInCache(BlockInfo address)
+        {
+            byte[] data;
+            if (!_cache.TryGetValue(address.Position, out data))
+            {
+                data = ReadFromDisk(address);
+                _cache.GetOrAdd(address.Position, data);
+            }
+            return data;
         }
 
         private byte[] ReadFromDisk(BlockInfo address)
@@ -80,7 +94,7 @@ namespace Resin.IO
 
                     var address = BlockSerializer.DeserializeBlock(request, 0);
 
-                    byte[] response = ReadFromDisk(address);
+                    byte[] response = FindInCache(address);
 
                     handler.Send(response);
                     handler.Shutdown(SocketShutdown.Both);
