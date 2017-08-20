@@ -12,22 +12,22 @@ Map and compress variable sized business entities into fixed-sized bitmaps.
 
 ### Resin.Search
 
-Framework for querying and maintaining a full-text index of your business data.
+Query and maintain a full-text index of your business data.
 
 ### Resin.SearchServer
 
-A JSON HTTP API
+Query your data with a JSON HTTP API
 
 ### Resin.Cli
 
-A commandline tool for reading, writing and analyzing indices.
+Read, write and analyze your index with a commandline tool.
 
 ## Some use cases
 
 - a disk-based replacement to your in-memory business entity cache
 - a training data vector store
 - a index of your data
-- a component of a distributed database
+- a distributed database
 - a framework for experimenting with scoring models 
 - a big data analysis tool
 - a search engine
