@@ -2,7 +2,7 @@
 
 ## A distributed full-text search server.
 
-Gather all of your business entities with their variable types of variable-length fields. Analyze, compress and store each entity and their meta-data in a set of disk-based bitmaps designed for fast reading and full-text lookup. Distribute the data onto a set of  servers that you can connect to in a RPC-like manner through a simple type system and over TCP or, through a JSON HTTP API. Host on-premise or in the cloud. Use Resin Search Engine, designed for this exact purpose.
+Gather all of your business entities with their variable types of variable-length fields. Analyze, compress and store each entity and their meta-data in a set of disk-based bitmaps designed for fast reading and full-text lookup. Distribute the data onto a set of  servers that you can connect to in a RPC-like manner through a simple type system and over TCP or, through a JSON HTTP API. Host on-premise or in the cloud.
 
 ## Main building blocks
 
@@ -112,9 +112,10 @@ You may follow the parsing of the query and its execution plan by switching to D
 
 ## Full-text search
 
+### Character trie index
 ResinDB's main index data structure is a disk-based doubly-linked character trie. Querying operations support includes term, fuzzy, prefix, phrase and range. 
 
-## Tf-idf weighted continuous bag-of-words model
+### Tf-idf weighted continuous bag-of-words model
 
 Scores are calculated using a word vector space tf-idf continuous bag-of-words model for phrases and through a simpler tf-idf model for term-based queries.
 
@@ -122,11 +123,9 @@ Scores are calculated using a word vector space tf-idf continuous bag-of-words m
 
 Resin creates and maintains an index per document field. 
 
-You can opt out of indexing entirely. You can index verbatim (unanalyzed) data. You can choose to store data both is its original and its analyzed state, or you can choose to store either one of those.
+You may opt out of indexing entirely. You may index unanalyzed data. You may choose to store data both is its original and its analyzed state or in one or the other.
 
-Indexed fields (both analyzed and unanalyzed) can participate in queries. Primary keys or paths used as identifiers should not be analyzed but certanly indexed and if they're significant enough, also stored.
-
-Indexed data is encoded as nodes in a corpus-wide trie.
+Indexed fields (both analyzed and unanalyzed) can participate in queries. Preferably primary keys or paths used as identifiers should not be analyzed but certanly indexed.
 
 ## Compression
 
@@ -136,7 +135,7 @@ Compressing documents affect querying performance very little. The reason for th
 
 ## Flexible and extensible
 
-Analyzers, tokenizers and scoring schemes are customizable.
+Most parts such as analyzers, tokenizers, scoring schemes and more are customizable.
 
 ## Runtime environment
 
@@ -146,7 +145,7 @@ Resin is built for .Net Core 1.1.
 
 ### Some test data
 
-[Gutenberg DVD](https://www.google.se/search?q=gutenberg+dvd+torrent&oq=gutenberg+dvd+torrent).
+[Gutenberg DVD](https://www.google.se/search?q=gutenberg+dvd+torrent&oq=gutenberg+dvd+torrent).  
 [Wikipedia as JSON](https://dumps.wikimedia.org/wikidatawiki/entities/).
 
 ### Syntax
