@@ -67,23 +67,27 @@ namespace DocumentTable
             return strings;
         }
 
-        public static IEnumerable<DocHash> DeserializeDocHashes(Stream stream)
+        public static IList<DocHash> DeserializeDocHashes(Stream stream)
         {
+            var result = new List<DocHash>();
+
             while (true)
             {
                 var hash = DeserializeDocHash(stream);
 
                 if (hash == null) break;
 
-                yield return hash;
+                result.Add(hash);
             }
+
+            return result;
         }
 
         public static IList<DocHash> DeserializeDocHashes(string fileName)
         {
             using (var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                return DeserializeDocHashes(stream).ToList();
+                return DeserializeDocHashes(stream);
             }
         }
 
@@ -119,14 +123,15 @@ namespace DocumentTable
 
         public static Document DeserializeDocument(Stream stream, int sizeOfDoc, Compression compression, IDictionary<short, string> keyIndex)
         {
-            var doc = DeserializeFields(stream, sizeOfDoc, compression, keyIndex).ToList();
+            var doc = DeserializeFields(stream, sizeOfDoc, compression, keyIndex);
 
             return new Document(doc);
         }
 
-        public static IEnumerable<Field> DeserializeFields(Stream stream, int size, Compression compression, IDictionary<short, string> keyIndex)
+        public static IList<Field> DeserializeFields(Stream stream, int size, Compression compression, IDictionary<short, string> keyIndex)
         {
             var read = 0;
+            var fields = new List<Field>();
 
             while (read < size)
             {
@@ -180,8 +185,9 @@ namespace DocumentTable
 
                 read += sizeof(short) + sizeof(int) + valBytes.Length;
 
-                yield return new Field(key, value);
+                fields.Add(new Field(key, value));
             }
+            return fields;
         }
 
         public static SegmentInfo DeserializeSegmentInfo(Stream stream)
@@ -192,7 +198,8 @@ namespace DocumentTable
 
             var fieldCount = BitConverter.ToInt32(fieldCountBytes, 0);
 
-            var fieldOffsets = DeserializeUlongLongDic(stream, fieldCount).ToDictionary(x=>x.Key, y=>y.Value);
+            var fieldOffsets = DeserializeUlongLongDic(stream, fieldCount)
+                .ToDictionary(x=>x.Key, y=>y.Value);
 
             var versionBytes = new byte[sizeof(long)];
 
