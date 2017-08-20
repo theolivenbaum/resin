@@ -2,7 +2,7 @@
 
 ## A distributed full-text search server.
 
-Gather all of your business entities with their variable types of variable-length fields. Analyze, compress and store each entity and their meta-data in a set of disk-based bitmaps designed for fast reading and full-text lookup. Distribute the data onto a set of  servers that you can connect to in a RPC-like manner through a simple type system and over TCP or, through a JSON HTTP API. Host on-premise or in the cloud.
+Gather all of your business entities with their varying types of variable-length fields. Analyze, compress and store each entity and their meta-data in a set of disk-based bitmaps designed for fast reading and full-text lookup. Distribute the data onto a set of  servers that you can connect to in a RPC-like manner through a simple type system and over TCP or, through a JSON HTTP API. Host on-premise or in the cloud.
 
 ## Main building blocks
 
