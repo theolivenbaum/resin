@@ -1,4 +1,4 @@
-# Sir.Store (formerly "Resin")
+# Sir.Store
 
 Full-text search framework with a 16-bit vector space index.
 
