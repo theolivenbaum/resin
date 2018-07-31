@@ -5,7 +5,7 @@ HTTP API and data endpoint for when you want to design read and write data pipel
 - aggregate data from many sources
 - dispatch data to many targets
 - parse many formats
-- 
+- understand many query languages
 
 ## Programmability
 
