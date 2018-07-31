@@ -8,6 +8,6 @@
 
 ## Documentation
 
-[Sir.Core](src/Sir.Core/README.md)  
+[Sir.Core](src/Sir/README.md)  
 [Sir.Store](src/Sir.Store/README.md)  
 [Sir.HttpServer](src/Sir.HttpServer/README.md)  
