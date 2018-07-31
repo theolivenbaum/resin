@@ -1,1 +1,0 @@
-index version file --> data file(tree --> postings --> dochash --> doc addresses --> kix --> documents)

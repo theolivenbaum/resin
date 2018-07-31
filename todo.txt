@@ -1,4 +1,0 @@
-namespacing
-implement sort by term
-add index and query support for decimals
-implement (group by)

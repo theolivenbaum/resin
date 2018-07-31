@@ -1,1 +1,0 @@
-dotnet src\Resin.Cli\bin\Debug\netcoreapp1.1\rn.dll %*
