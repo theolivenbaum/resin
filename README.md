@@ -8,6 +8,6 @@
 
 ## Documentation
 
-[Sir.Core](blob/master/src/Sir.Core/README.md)
-[Sir.Store](blob/master/src/Sir.Store/README.md)
-[Sir.HttpServer](blob/master/src/Sir.HttpServer/README.md)
+[Sir.Core](/src/Sir.Core/README.md)
+[Sir.Store](/src/Sir.Store/README.md)
+[Sir.HttpServer](/src/Sir.HttpServer/README.md)
