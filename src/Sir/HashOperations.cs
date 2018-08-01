@@ -2,7 +2,7 @@
 
 namespace Sir
 {
-    public static class BinaryHelper
+    public static class HashOperations
     {
         public static ulong ToHash(this string text)
         {

@@ -3,11 +3,6 @@
     public class BooleanKeyValueQueryParser : IQueryParser
     {
         public string ContentType => "*";
-        public int Ordinal => 0;
-
-        public void Dispose()
-        {
-        }
 
         public Query Parse(string query)
         {
@@ -52,6 +47,10 @@
 
                 query = next;
             }
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

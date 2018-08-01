@@ -13,11 +13,20 @@ namespace Sir.Store
             _stream = stream;
         }
 
+        /// <summary>
+        /// Get the next auto-incrementing doc id (peeks are allowed)
+        /// </summary>
+        /// <returns>The next auto-incrementing doc id</returns>
         public ulong GetNextDocId()
         {
             return _stream.Position == 0 ? 0 : (ulong)_stream.Position / (ulong)_blockSize;
         }
 
+        /// <summary>
+        /// Add offset and length of doc map to index
+        /// </summary>
+        /// <param name="offset">offset of doc map</param>
+        /// <param name="len">length of doc map</param>
         public void Append(long offset, int len)
         {
             _stream.Write(BitConverter.GetBytes(offset), 0, sizeof(long));

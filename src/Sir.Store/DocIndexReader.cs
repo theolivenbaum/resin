@@ -13,6 +13,11 @@ namespace Sir.Store
             _stream = stream;
         }
 
+        /// <summary>
+        /// Get the offset and length of a document's key_id/value_id map.
+        /// </summary>
+        /// <param name="docId">Document ID</param>
+        /// <returns>The offset and length of a document's key_id/value_id map</returns>
         public (long offset, int length) Read(ulong docId)
         {
             var offs = (long) docId * _blockSize;
