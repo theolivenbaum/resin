@@ -89,6 +89,33 @@ Response:
 		}
 	]
 
+#### HTTP Update
+
+	HTTP PUT http://localhost:54865/io/mycollection/1/?key=id
+
+Body:
+
+	[
+		{
+			"id": "1",
+			"year": "1985",
+			"title": "Rambo: First Blood Part II (second-best movie ever)",
+			"body": "John Rambo is released from prison by the government for a top-secret covert mission to the last place on Earth he'd want to return - the jungles of Vietnam."
+		}
+	]
+
+#### HTTP Delete
+
+	HTTP DELETE http://localhost:54865/io/mycollection
+
+Body:
+
+	title:first blood
+
+Response:
+
+	HTTP 202 Marked for deletion
+
 ### Platform
 
 .NET Core 2.0.
