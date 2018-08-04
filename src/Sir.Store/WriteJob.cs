@@ -5,14 +5,13 @@ using System.Threading;
 
 namespace Sir.Store
 {
-    public class WriteTransaction : IDisposable
+    public class WriteJob : IDisposable
     {
         public ulong CollectionId { get; }
         public IEnumerable<IDictionary> Data { get; private set; }
-        public bool Committed { get { return _committed; } set { _committed = value; } }
-        private volatile bool _committed;
+        public bool Executed { get; set; }
 
-        public WriteTransaction(ulong collectionId, IEnumerable<IDictionary> data)
+        public WriteJob(ulong collectionId, IEnumerable<IDictionary> data)
         {
             CollectionId = collectionId;
             Data = data;
@@ -20,7 +19,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            while (!_committed)
+            while (!Executed)
             {
                 Thread.Sleep(10);
             }

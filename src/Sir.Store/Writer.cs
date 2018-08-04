@@ -7,7 +7,7 @@ namespace Sir.Store
     {
         public string ContentType => "*";
 
-        private readonly ProducerConsumerQueue<WriteTransaction> _writeQueue;
+        private readonly ProducerConsumerQueue<WriteJob> _writeQueue;
         private readonly SessionFactory _sessionFactory;
         private readonly ITokenizer _tokenizer;
 
@@ -15,24 +15,24 @@ namespace Sir.Store
         {
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;
-            _writeQueue = new ProducerConsumerQueue<WriteTransaction>(Commit);
+            _writeQueue = new ProducerConsumerQueue<WriteJob>(Commit);
         }
 
         public void Write(string collectionId, IEnumerable<IDictionary> data)
         {
-            using (var tx = new WriteTransaction(collectionId.ToHash(), data))
+            using (var tx = new WriteJob(collectionId.ToHash(), data))
             {
                 _writeQueue.Enqueue(tx);
             }
         }
 
-        private void Commit(WriteTransaction tx)
+        private void Commit(WriteJob tx)
         {
             using (var session = _sessionFactory.CreateWriteSession(tx.CollectionId))
             {
                 session.Write(tx.Data, _tokenizer);                
             }
-            tx.Committed = true;
+            tx.Executed = true;
         }
 
         public void Dispose()
