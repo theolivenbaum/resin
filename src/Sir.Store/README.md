@@ -2,10 +2,6 @@
 
 Full-text search framework with a 16-bit vector space index.
 
-## Platform
-
-.NET Core 2.0.
-
 ## File format
 
 ### _.kmap
@@ -47,3 +43,7 @@ Full-text search framework with a 16-bit vector space index.
 ### .vec
 
 	[char][int][char][int]...
+
+## Platform
+
+.NET Core 2.0.
