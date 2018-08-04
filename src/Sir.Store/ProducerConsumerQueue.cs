@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Sir.Store
 {
     /// <summary>
-    /// Enques items and runs a single consumer thread.
+    /// Enque items and run a single consumer thread.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class ProducerConsumerQueue<T> : IDisposable where T : class
