@@ -40,7 +40,7 @@ Body:
 		}
 	]
 
-Returns:
+Response:
 	
 	HTTP 201 Created
 	Location: /io/mycollection
@@ -65,7 +65,7 @@ Body:
 	title:rambo
 	+title:first blood
 
-Returns:
+Response:
 
 	[
 		{
