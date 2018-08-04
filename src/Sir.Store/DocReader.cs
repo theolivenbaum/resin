@@ -4,6 +4,9 @@ using System.IO;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Document map stream reader, for fetching a document maps (key_id/val_id) from the document map stream.
+    /// </summary>
     public class DocReader
     {
         private readonly Stream _stream;

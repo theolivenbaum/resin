@@ -3,6 +3,9 @@ using System.IO;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Write document meta-data (offset and length of document map) to the document index stream.
+    /// </summary>
     public class DocIndexWriter
     {
         private readonly Stream _stream;

@@ -4,6 +4,9 @@ using System.IO;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Write document maps (key_id/val_id) from the document map stream.
+    /// </summary>
     public class DocWriter
     {
         private readonly Stream _stream;

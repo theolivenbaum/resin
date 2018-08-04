@@ -55,12 +55,18 @@ namespace Sir.Store
                     var fullTextTokens = new List<Term>();
                     uint keyId, valId;
 
-                    if (str != null) //TODO: implement numeric index
+                    if (str != null) 
                     {
                         foreach (var token in tokenizer.Tokenize(str))
                         {
                             fullTextTokens.Add(new Term(keyStr, token));
                         }
+                    }
+                    else
+                    {
+                        //TODO: implement numeric index
+
+                        fullTextTokens.Add(new Term(keyStr, val.ToString()));
                     }
 
                     if (fieldIndex == null)

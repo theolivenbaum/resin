@@ -2,6 +2,6 @@
 {
     public interface IQueryParser : IPlugin
     {
-        Query Parse(string query);
+        Query Parse(string query, ITokenizer tokenizer);
     }
 }

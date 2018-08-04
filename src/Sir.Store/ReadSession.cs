@@ -67,7 +67,7 @@ namespace Sir.Store
                     }
                     else // Or
                     {
-                        result = result.Concat(docIds);
+                        result = result.Concat(docIds).Distinct();
                     }
                 }
                 query = query.Next;

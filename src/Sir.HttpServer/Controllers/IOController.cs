@@ -77,13 +77,14 @@ namespace Sir.HttpServer.Controllers
 
             var queryParser = _plugins.Get<IQueryParser>(contentType);
             var reader = _plugins.Get<IReader>();
+            var tokenizer = _plugins.Get<ITokenizer>(contentType);
 
             if (queryParser == null || reader == null)
             {
                 throw new NotSupportedException();
             }
 
-            var parsedQuery = queryParser.Parse(query);
+            var parsedQuery = queryParser.Parse(query, tokenizer);
             parsedQuery.CollectionId = collectionId.ToHash();
 
             var payload = reader.Read(parsedQuery).ToList();

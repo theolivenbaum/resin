@@ -65,7 +65,10 @@ namespace Sir.HttpServer
             {
                 plugins.Add(service.ContentType, service);
             }
-
+            foreach (var service in serviceProvider.GetServices<ITokenizer>())
+            {
+                plugins.Add(service.ContentType, service);
+            }
             return serviceProvider;
         }
     }

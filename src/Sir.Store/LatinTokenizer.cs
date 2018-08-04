@@ -13,10 +13,16 @@ namespace Sir.Store
                             '"', '`', '´'
                             };
 
+        public string ContentType => "*";
+
         public string[] Tokenize(string text)
         {
             return text.ToLower(CultureInfo.CurrentCulture).Split(
                 _delimiters, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

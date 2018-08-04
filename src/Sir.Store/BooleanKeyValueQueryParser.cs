@@ -1,22 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 
 namespace Sir.Store
 {
     /// <summary>
-    /// Parses key:value clauses that are separated by a newline characters into <see cref="Sir.Term"/>s . 
-    /// Clauses may be appended with a + sign (meaning AND), a - sign (meaning NOT) or 
-    /// a space (meaning OR).
+    /// Parses key:value clauses where keys are separated from values by a ':' and
+    /// clauses are separated by newline characters. 
+    /// Clauses may be appended with a + sign (meaning AND), a - sign (meaning NOT) or nothing (meaning OR).
     /// </summary>
     public class BooleanKeyValueQueryParser : IQueryParser
     {
         public string ContentType => "*";
         private static  char[] Operators = new char[] { ' ', '+', '-' };
 
-        public Query Parse(string query)
+        public Query Parse(string query, ITokenizer tokenizer)
         {
-            
             Query root = null;
             var clauses = query.Split('\n');
 
@@ -34,28 +31,33 @@ namespace Sir.Store
                     key = key.Substring(1);
                 }
 
-                var q = new Query { Term = new Term(key, val) };
+                var terms = tokenizer.Tokenize(val);
 
-                if (root == null)
+                foreach (var term in terms)
                 {
-                    q.And = true;
-                    root = q;
-                }
-                else
-                {
-                    if (and)
+                    var q = new Query { Term = new Term(key, term) };
+
+                    if (root == null)
                     {
                         q.And = true;
-                    }
-                    else if (not)
-                    {
-                        q.Not = true;
+                        root = q;
                     }
                     else
                     {
-                        q.Or = true;
+                        if (and)
+                        {
+                            q.And = true;
+                        }
+                        else if (not)
+                        {
+                            q.Not = true;
+                        }
+                        else
+                        {
+                            q.Or = true;
+                        }
+                        root.Next = q;
                     }
-                    root.Next = q;
                 }
             }
             
