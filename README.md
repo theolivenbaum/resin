@@ -6,9 +6,24 @@
 
 ### Vector-space model
 
-To provide full-text search across your documents words and phrases are mapped to a 65k dimensional vector-space that form clusters of syntactically similar "bag-of-chars". On disk and in-memory this model is represented as a binary tree ([VectorNode](src/Sir.Store/VectorNode.cs)).
+To provide full-text search words and phrases extracted from documents are mapped to a 65k dimensional vector-space that form clusters of syntactically similar "bag-of-chars". 
+
+On disk and in-memory this model is represented as a binary tree ([VectorNode](src/Sir.Store/VectorNode.cs)).
+
+Each node carries as their payload a list of document references.
 
 ### API
+
+#### API write
+
+	IEnumerable<IDictionary> data = GetData();
+
+	var sessionFactory = new SessionFactory(@"c:\mydir");
+
+	using (var writer = new Writer(sessionFactory, new LatinTokenizer()))
+	{
+		writer.Write("mycollection", data);
+	}
 
 #### HTTP Write
 
@@ -45,15 +60,13 @@ Response:
 	HTTP 201 Created
 	Location: /io/mycollection
 
-#### API write
+#### API Read/query
 
-	IEnumerable<IDictionary> data = GetData();
+	var query = new BooleanKeyValueQueryParser().Parse("title:rambo\n+title:first blood", new LatinTokenizer());
+	query.CollectionId = "mycollection".ToHash();
 	var sessionFactory = new SessionFactory(@"c:\mydir");
-
-	using (var writer = new Writer(sessionFactory, new LatinTokenizer()))
-	{
-		writer.Write("mycollection", data);
-	}
+	var reader = new Reader(sessionFactory);
+	var documents = reader.Read(query);
 
 #### HTTP Read/query
 
@@ -75,14 +88,6 @@ Response:
 			"body": "John Rambo is released from prison by the government for a top-secret covert mission to the last place on Earth he'd want to return - the jungles of Vietnam."
 		}
 	]
-
-#### API Read/query
-
-	var queryParser = new BooleanKeyValueQueryParser();
-	var query = queryParser.Parse("title:rambo\n+title:first blood", new LatinTokenizer());
-	var sessionFactory = new SessionFactory(@"c:\mydir");
-	var reader = new Reader(sessionFactory);
-	var documents = reader.Read(query);
 
 ### Platform
 
