@@ -10,8 +10,6 @@ To provide full-text search across your documents words and phrases are mapped t
 
 ### HTTP API
 
-You may send and recieve data in any format using any query language through pluggable read/write pipelines. [Read more](src/Sir.HttpServer/README.md).
-
 #### Write
 
 To create a collection (table) and add three documents:
