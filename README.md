@@ -17,7 +17,7 @@ To create a collection (table) and add three documents:
 	HTTP POST http://localhost:54865/io/mycollection
 	Content-Type: application/json
 
-Payload:
+Body:
 
 	[
 		{
@@ -50,7 +50,7 @@ Returns:
 	HTTP PUT http://localhost:54865/io/mycollection
 	Content-Type: text/plain
 
-Payload:
+Body:
 
 	title:rambo
 	+title:first blood
