@@ -1,0 +1,16 @@
+﻿@{
+    ViewData["Title"] = "Add your page to the 'Did you go go?' index.";
+    Layout = "~/Views/_Layout.cshtml";
+}
+
+@using (Html.BeginRouteForm("default", new { controller = "Add", action="Add" }, FormMethod.Get))
+{
+    <div>
+        <p>
+            <input type="text" id="url" name="url" placeholder="yoursite.com/page.html" />
+            <input type="submit" value="Go" />
+        </p>
+    </div>
+}
+
+<a href="/">Reset</a>

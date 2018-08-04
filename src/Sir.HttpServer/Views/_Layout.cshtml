@@ -11,16 +11,17 @@
             float: left;
         }
     </style>
+    <h1>Did you go go?</h1>
     @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
     {
     <div>
         <textarea rows="1" cols="30" id="q" name="q" placeholder="Ask anything."></textarea>
-        <input type="submit" value="Go" id="btn0" name="btn0" alt="Ask away!" />
-        <input type="button" value="Go" id="btn1" name="btn1" disabled alt="A yes/no answer will be provided if your search phrase is a (binary) question." />
+        <input type="submit" value="Go" />
     </div>
     }
     <div>
         @RenderBody()
     </div>
+
 </body>
 </html>
