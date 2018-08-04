@@ -53,7 +53,7 @@ namespace Sir.HttpServer.Controllers
                 }
             }
             Response.Headers.Add(
-                "Location", new Microsoft.Extensions.Primitives.StringValues(string.Format("/{0}", collectionId)));
+                "Location", new Microsoft.Extensions.Primitives.StringValues(string.Format("/io/{0}", collectionId)));
 
             return StatusCode(201); // Created
         }
@@ -87,6 +87,7 @@ namespace Sir.HttpServer.Controllers
             parsedQuery.CollectionId = collectionId.ToHash();
 
             var payload = reader.Read(parsedQuery).ToList();
+
             return new ObjectResult(payload);
         }
     }

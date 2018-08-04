@@ -10,7 +10,7 @@ namespace Sir.Store
 
         protected SessionFactory SessionFactory { get; private set; }
         protected ulong CollectionId { get; }
-        protected SortedList<uint, VectorNode> Index { get; set; }
+        protected SortedList<long, VectorNode> Index { get; set; }
         protected Stream ValueStream { get; set; }
         protected Stream KeyStream { get; set; }
         protected Stream DocStream { get; set; }
@@ -29,7 +29,7 @@ namespace Sir.Store
 
         public VectorNode GetIndex(ulong key)
         {
-            uint keyId;
+            long keyId;
             if (!SessionFactory.TryGetKeyId(key, out keyId))
             {
                 return null;

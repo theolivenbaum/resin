@@ -13,11 +13,11 @@ namespace Sir.Store
             _stream = stream;
         }
 
-        public (long offset, int len, byte dataType) Read(uint index)
+        public (long offset, int len, byte dataType) Read(long id)
         {
-            var offs = index * _blockSize;
+            var offset = id * _blockSize;
 
-            _stream.Seek(offs, SeekOrigin.Begin);
+            _stream.Seek(offset, SeekOrigin.Begin);
 
             var buf = new byte[_blockSize];
             var read = _stream.Read(buf, 0, _blockSize);

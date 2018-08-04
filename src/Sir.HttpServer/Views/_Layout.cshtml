@@ -7,16 +7,16 @@
 </head>
 <body>
     <style>
-        input[type="text"] {
-            width: 300px;
+        textarea {
+            float: left;
         }
     </style>
     @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
     {
-        <div>
-            <input type="text" id="q" name="q" placeholder="Ask anything." />
-            <input type="submit" value="Search" alt="A yes/no answer will be provided if your search phrase is a (binary) question." />
-        </div>
+    <div>
+        <textarea rows="1" cols="30" id="q" name="q" placeholder="Ask anything."></textarea>
+        <input type="submit" value="Search" alt="A yes/no answer will be provided if your search phrase is a (binary) question." />
+    </div>
     }
     <div>
         @RenderBody()

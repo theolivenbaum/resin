@@ -16,7 +16,7 @@ namespace Sir.Store
             _stream = stream;
         }
 
-        public IList<(uint keyId, uint valId)> Read(long offset, int length)
+        public IList<(long keyId, long valId)> Read(long offset, int length)
         {
             _stream.Seek(offset, SeekOrigin.Begin);
 
@@ -28,15 +28,15 @@ namespace Sir.Store
                 throw new InvalidDataException();
             }
 
-            const int blockSize = sizeof(uint) + sizeof(uint);
+            const int blockSize = sizeof(long) + sizeof(long);
             var blockCount = length / blockSize;
-            var docMapping = new List<(uint, uint)>();
+            var docMapping = new List<(long, long)>();
 
             for (int i = 0; i < blockCount; i++)
             {
                 var offs = i * blockSize;
-                var key = BitConverter.ToUInt32(buf, offs);
-                var val = BitConverter.ToUInt32(buf, offs + sizeof(uint));
+                var key = BitConverter.ToInt64(buf, offs);
+                var val = BitConverter.ToInt64(buf, offs + sizeof(long));
 
                 docMapping.Add((key, val));
             }

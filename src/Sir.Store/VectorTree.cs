@@ -10,27 +10,27 @@ namespace Sir.Store
         public int Count { get; private set; }
         public int MergeCount { get; private set; }
 
-        private SortedList<ulong, SortedList<uint, VectorNode>> _ix;
+        private SortedList<ulong, SortedList<long, VectorNode>> _ix;
 
-        public VectorTree() : this(new SortedList<ulong, SortedList<uint, VectorNode>>()) { }
+        public VectorTree() : this(new SortedList<ulong, SortedList<long, VectorNode>>()) { }
 
-        public VectorTree(SortedList<ulong, SortedList<uint, VectorNode>> ix)
+        public VectorTree(SortedList<ulong, SortedList<long, VectorNode>> ix)
         {
             _ix = ix;
         }
 
-        public SortedList<uint, VectorNode> GetOrCreateIndex(ulong collectionId)
+        public SortedList<long, VectorNode> GetOrCreateIndex(ulong collectionId)
         {
-            SortedList<uint, VectorNode> ix;
+            SortedList<long, VectorNode> ix;
             if(!_ix.TryGetValue(collectionId, out ix))
             {
-                ix = new SortedList<uint, VectorNode>();
+                ix = new SortedList<long, VectorNode>();
                 _ix.Add(collectionId, ix);
             }
             return ix;
         }
 
-        public (int depth, int width) Size(ulong collectionId, uint keyId)
+        public (int depth, int width) Size(ulong collectionId, long keyId)
         {
             var root = _ix[collectionId][keyId];
 
@@ -52,14 +52,14 @@ namespace Sir.Store
             return (depth, width);
         }
 
-        public VectorNode Find(ulong colId, uint keyId, string pattern)
+        public VectorNode Find(ulong colId, long keyId, string pattern)
         {
             return GetNode(colId, keyId).ClosestMatch(pattern);
         }
 
-        public VectorNode GetNode(ulong colId, uint keyId)
+        public VectorNode GetNode(ulong colId, long keyId)
         {
-            SortedList<uint,VectorNode> nodes;
+            SortedList<long,VectorNode> nodes;
             if (!_ix.TryGetValue(colId, out nodes))
             {
                 return null;
@@ -72,7 +72,7 @@ namespace Sir.Store
             return node;
         }
 
-        public string Visualize(ulong collectionId, uint keyId)
+        public string Visualize(ulong collectionId, long keyId)
         {
             return _ix[collectionId][keyId].Visualize();
         }

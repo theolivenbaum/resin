@@ -27,7 +27,7 @@ namespace Sir.Store
         public IEnumerable<IDictionary> Read(Query query)
         {
             ulong keyHash = query.Term.Key.ToString().ToHash();
-            uint keyId;
+            long keyId;
 
             if (_sessionFactory.TryGetKeyId(keyHash, out keyId))
             {

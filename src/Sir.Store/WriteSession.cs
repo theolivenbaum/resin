@@ -46,7 +46,7 @@ namespace Sir.Store
             foreach (var model in data)
             {
                 var docId = _docIx.GetNextDocId();
-                var docMap = new List<(uint keyId, uint valId)>();
+                var docMap = new List<(long keyId, long valId)>();
 
                 foreach (var key in model.Keys)
                 {
@@ -56,7 +56,7 @@ namespace Sir.Store
                     var val = (IComparable)model[key];
                     var str = val as string;
                     var fullTextTokens = new List<Term>();
-                    uint keyId, valId;
+                    long keyId, valId;
 
                     if (str != null) 
                     {

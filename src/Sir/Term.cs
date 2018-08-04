@@ -7,7 +7,7 @@ namespace Sir
     {
         public IComparable Key { get; private set; }
         public IComparable Value { get; set; }
-        public uint KeyId { get; set; }
+        public long KeyId { get; set; }
 
         public Term(IComparable key, IComparable value)
         {

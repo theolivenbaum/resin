@@ -6,7 +6,7 @@ namespace Sir.Store
 {
     public class SessionFactory : IDisposable
     {
-        private readonly SortedList<ulong, uint> _keys;
+        private readonly SortedList<ulong, long> _keys;
         private readonly object Sync = new object();
         private readonly VectorTree _index;
         private readonly string _dir;
@@ -42,13 +42,13 @@ namespace Sir.Store
             WritableKeyMapStream = new FileStream(Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         }
 
-        public static SortedList<ulong, uint> LoadKeyMap(string dir)
+        public static SortedList<ulong, long> LoadKeyMap(string dir)
         {
-            var keys = new SortedList<ulong, uint>();
+            var keys = new SortedList<ulong, long>();
 
             using (var stream = new FileStream(Path.Combine(dir, "_.kmap"), FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
             {
-                uint i = 0;
+                long i = 0;
                 var buf = new byte[sizeof(ulong)];
                 var read = stream.Read(buf, 0, buf.Length);
 
@@ -65,18 +65,18 @@ namespace Sir.Store
 
         public static VectorTree DeserializeTree(string dir)
         {
-            var ix = new SortedList<ulong, SortedList<uint, VectorNode>>();
+            var ix = new SortedList<ulong, SortedList<long, VectorNode>>();
 
             foreach (var ixFileName in Directory.GetFiles(dir, "*.ix"))
             {
                 var name = Path.GetFileNameWithoutExtension(ixFileName).Split(".", StringSplitOptions.RemoveEmptyEntries);
                 var colHash = ulong.Parse(name[0]);
-                var keyId = uint.Parse(name[1]);
-                SortedList<uint, VectorNode> colIx;
+                var keyId = long.Parse(name[1]);
+                SortedList<long, VectorNode> colIx;
 
                 if (!ix.TryGetValue(colHash, out colIx))
                 {
-                    colIx = new SortedList<uint, VectorNode>();
+                    colIx = new SortedList<long, VectorNode>();
                     ix.Add(colHash, colIx);
                 }
 
@@ -92,7 +92,7 @@ namespace Sir.Store
             return new VectorTree(ix);
         }
 
-        public void AddKey(ulong keyHash, uint keyId)
+        public void AddKey(ulong keyHash, long keyId)
         {
             _keys.Add(keyHash, keyId);
 
@@ -102,12 +102,12 @@ namespace Sir.Store
             WritableKeyMapStream.Flush();
         }
 
-        public uint GetKey(ulong keyHash)
+        public long GetKey(ulong keyHash)
         {
             return _keys[keyHash];
         }
 
-        public bool TryGetKeyId(ulong key, out uint keyId)
+        public bool TryGetKeyId(ulong key, out long keyId)
         {
             if (!_keys.TryGetValue(key, out keyId))
             {
@@ -127,7 +127,7 @@ namespace Sir.Store
             return new ReadSession(_dir, collectionId, this);
         }
 
-        public SortedList<uint, VectorNode> GetIndex(ulong collectionId)
+        public SortedList<long, VectorNode> GetIndex(ulong collectionId)
         {
             return _index.GetOrCreateIndex(collectionId);
         }
