@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Sir.Store
 {
-    public class Session : IDisposable
+    public abstract class CollectionSession : IDisposable
     {
         protected readonly string Dir;
 
@@ -20,7 +20,7 @@ namespace Sir.Store
         protected Stream PostingsStream { get; set; }
         protected Stream VectorStream { get; set; }
 
-        public Session(string directory, ulong collectionId, SessionFactory sessionFactory)
+        public CollectionSession(string directory, ulong collectionId, SessionFactory sessionFactory)
         {
             Dir = directory;
             SessionFactory = sessionFactory;

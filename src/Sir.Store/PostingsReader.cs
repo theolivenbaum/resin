@@ -4,6 +4,10 @@ using System.IO;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Postings stream reader that lets you get a list of document references,
+    /// but only if you know its offset and length.
+    /// </summary>
     public class PostingsReader
     {
         private readonly Stream _stream;

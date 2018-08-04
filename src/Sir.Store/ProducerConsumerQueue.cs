@@ -5,6 +5,10 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Enques items and runs a single consumer thread.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class ProducerConsumerQueue<T> : IDisposable where T : class
     {
         private readonly BlockingCollection<T> _queue;

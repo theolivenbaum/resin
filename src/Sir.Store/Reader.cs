@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Read from the document store.
+    /// </summary>
     public class Reader : IReader
     {
         public string ContentType => "*";

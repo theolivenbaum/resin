@@ -5,7 +5,10 @@ using System.Linq;
 
 namespace Sir.Store
 {
-    public class ReadSession : Session
+    /// <summary>
+    /// Create a read session targetting a single collection ("table").
+    /// </summary>
+    public class ReadSession : CollectionSession
     {
         private readonly DocIndexReader _docIx;
         private readonly DocReader _docs;

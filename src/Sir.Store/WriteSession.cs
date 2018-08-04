@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Sir.Store
 {
-    public class WriteSession : Session
+    public class WriteSession : CollectionSession
     {
         private readonly IDictionary<string, VectorNode> _dirty;
         private readonly ValueWriter _vals;
