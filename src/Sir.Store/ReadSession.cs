@@ -61,13 +61,13 @@ namespace Sir.Store
                                   select doc);
                         
                     }
-                    else if (query.Or)
-                    {
-                        result = result.Concat(docIds);
-                    }
-                    else // Not
+                    else if (query.Not)
                     {
                         result = result.Except(docIds);
+                    }
+                    else // Or
+                    {
+                        result = result.Concat(docIds);
                     }
                 }
                 query = query.Next;

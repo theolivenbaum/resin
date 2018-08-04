@@ -12,9 +12,11 @@ namespace Sir.Store
     public class BooleanKeyValueQueryParser : IQueryParser
     {
         public string ContentType => "*";
+        private static  char[] Operators = new char[] { ' ', '+', '-' };
 
         public Query Parse(string query)
         {
+            
             Query root = null;
             var clauses = query.Split('\n');
 
@@ -25,11 +27,13 @@ namespace Sir.Store
                 var val = tokens[1];
                 var and = root == null || key[0] == '+';
                 var not = key[0] == '-';
+                var or = !and && !not;
 
-                if (root != null)
+                if (Operators.Contains(key[0]))
                 {
                     key = key.Substring(1);
                 }
+
                 var q = new Query { Term = new Term(key, val) };
 
                 if (root == null)
@@ -45,11 +49,11 @@ namespace Sir.Store
                     }
                     else if (not)
                     {
-                        root.Not = true;
+                        q.Not = true;
                     }
                     else
                     {
-                        root.Or = true;
+                        q.Or = true;
                     }
                     root.Next = q;
                 }

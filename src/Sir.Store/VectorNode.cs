@@ -8,7 +8,7 @@ namespace Sir.Store
     public class VectorNode
     {
         public const double IdenticalAngle = 0.99d;
-        public const double TrueAngle = 0.9d;
+        public const double TrueAngle = 0.8d;
         public const double FalseAngle = 0.1;
 
         private VectorNode _right;
@@ -41,8 +41,6 @@ namespace Sir.Store
             }
         }
 
-        public uint ValueId { get; set; }
-
         public VectorNode() 
             : this('\0'.ToString()) { }
 
@@ -55,11 +53,6 @@ namespace Sir.Store
         {
             _docIds = new HashSet<ulong>();
             TermVector = wordVector;
-        }
-
-        public void AddPosting(ulong docId)
-        {
-            _docIds.Add(docId);
         }
 
         private IEnumerable<byte[]> ToStream()
@@ -87,7 +80,6 @@ namespace Sir.Store
             yield return BitConverter.GetBytes(_vecOffset);
             yield return BitConverter.GetBytes(PostingsOffset);
             yield return BitConverter.GetBytes(PostingsSize);
-            yield return BitConverter.GetBytes(ValueId);
             yield return BitConverter.GetBytes(TermVector.Count);
             yield return terminator;
         }
@@ -121,7 +113,7 @@ namespace Sir.Store
 
         public static VectorNode Deserialize(Stream treeStream, Stream vectorStream)
         {
-            const int nodeSize = sizeof(double) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(uint) + sizeof(int) + sizeof(byte);
+            const int nodeSize = sizeof(double) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
             const int kvpSize = sizeof(char) + sizeof(double);
 
             var buf = new byte[nodeSize];
@@ -136,8 +128,7 @@ namespace Sir.Store
             var vecOffset = BitConverter.ToInt64(buf,       sizeof(double));
             var postingsOffset = BitConverter.ToInt64(buf,  sizeof(double) + sizeof(long));
             var postingsSize = BitConverter.ToInt32(buf,    sizeof(double) + sizeof(long) + sizeof(long));
-            var valueId = BitConverter.ToUInt32(buf,        sizeof(double) + sizeof(long) + sizeof(long) + sizeof(int));
-            var listCount = BitConverter.ToInt32(buf,       sizeof(double) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(uint));
+            var listCount = BitConverter.ToInt32(buf,       sizeof(double) + sizeof(long) + sizeof(long) + sizeof(int));
             var terminator = buf[nodeSize - 1];
             var vec = new SortedList<char, double>();
             var listBuf = new byte[listCount * kvpSize];
@@ -158,7 +149,6 @@ namespace Sir.Store
 
             var node = new VectorNode(vec);
             node.Angle = angle;
-            node.ValueId = valueId;
             node.PostingsOffset = postingsOffset;
             node.PostingsSize = postingsSize;
 
@@ -230,19 +220,22 @@ namespace Sir.Store
             return best;
         }
 
-        public bool Add(string word, uint valueId, ulong docId)
+        /// <summary>
+        /// Add word to index.
+        /// </summary>
+        /// <returns>True if word is unique, false if it's a duplicate.</returns>
+        public bool Add(string word, ulong docId)
         {
-            var node = new VectorNode(word) { ValueId = valueId };
-            node.AddPosting(docId);
+            var node = new VectorNode(word);
+            node._docIds.Add(docId);
             return Add(node);
         }
 
         /// <summary>
-        /// Add word node to tree.
+        /// Add node to tree.
         /// </summary>
-        /// <returns>True if the word is unique, false if it's a duplicate, i.e. there is already a word in the tree
-        /// that is similiar enough to the one being added that they're basically equal.</returns>
-        public bool Add(VectorNode node )
+        /// <returns>True if node is unique, false if it's a duplicate.</returns>
+        public bool Add(VectorNode node)
         {
             node.Angle = node.TermVector.CosAngle(TermVector);
 

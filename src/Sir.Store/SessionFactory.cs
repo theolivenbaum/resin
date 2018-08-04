@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace Sir.Store
 {
@@ -11,22 +10,22 @@ namespace Sir.Store
         private readonly object Sync = new object();
         private readonly VectorTree _index;
         private readonly string _dir;
-        private readonly Stream _writableValueStream;
-        private readonly Stream _writableKeyMapStream;
-        private readonly Stream _writableValueIndexStream;
-        private readonly Stream _valueStream;
-        private readonly Stream _valueIndexStream;
 
-        public Stream ValueStream => _valueStream;
+        public Stream ValueStream { get; }
 
-        public Stream ValueIndexStream => _valueIndexStream;
+        public Stream ValueIndexStream { get; }
+        public Stream WritableValueStream { get; }
+
+        public Stream WritableKeyMapStream { get; }
+
+        public Stream WritableValueIndexStream { get; }
 
         public void Dispose()
         {
-            _writableValueStream.Dispose();
+            WritableValueStream.Dispose();
             ValueIndexStream.Dispose();
-            _writableValueIndexStream.Dispose();
-            _writableKeyMapStream.Dispose();
+            WritableValueIndexStream.Dispose();
+            WritableKeyMapStream.Dispose();
             ValueStream.Dispose();
         }
 
@@ -35,11 +34,12 @@ namespace Sir.Store
             _keys = LoadKeyMap(dir);
             _index = DeserializeTree(dir);
             _dir = dir;
-            _valueStream = CreateReadWriteStream(Path.Combine(dir, "_.val"));
-            _writableValueStream = CreateAppendStream(Path.Combine(dir, "_.val"));
-            _valueIndexStream = CreateReadWriteStream(Path.Combine(dir, "_.vix"));
-            _writableValueIndexStream = CreateAppendStream(Path.Combine(dir, "_.vix"));
-            _writableKeyMapStream = new FileStream(Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+
+            ValueStream = CreateReadWriteStream(Path.Combine(dir, "_.val"));
+            WritableValueStream = CreateAppendStream(Path.Combine(dir, "_.val"));
+            ValueIndexStream = CreateReadWriteStream(Path.Combine(dir, "_.vix"));
+            WritableValueIndexStream = CreateAppendStream(Path.Combine(dir, "_.vix"));
+            WritableKeyMapStream = new FileStream(Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         }
 
         public static SortedList<ulong, uint> LoadKeyMap(string dir)
@@ -98,8 +98,8 @@ namespace Sir.Store
 
             var buf = BitConverter.GetBytes(keyHash);
 
-            _writableKeyMapStream.Write(buf, 0, sizeof(ulong));
-            _writableKeyMapStream.Flush();
+            WritableKeyMapStream.Write(buf, 0, sizeof(ulong));
+            WritableKeyMapStream.Flush();
         }
 
         public uint GetKey(ulong keyHash)
@@ -119,18 +119,7 @@ namespace Sir.Store
 
         public WriteSession CreateWriteSession(ulong collectionId)
         {
-            return new WriteSession(_dir, collectionId, this)
-            {
-                ValueStream = _writableValueStream,
-                KeyStream = CreateAppendStream(string.Format("{0}.key", collectionId)),
-                DocStream = CreateAppendStream(string.Format("{0}.docs", collectionId)),
-                ValueIndexStream = _writableValueIndexStream,
-                KeyIndexStream = CreateAppendStream(string.Format("{0}.kix", collectionId)),
-                DocIndexStream = CreateAppendStream(string.Format("{0}.dix", collectionId)),
-                PostingsStream = CreateReadWriteStream(string.Format("{0}.pos", collectionId)),
-                VectorStream = CreateAppendStream(string.Format("{0}.vec", collectionId)),
-                Index = GetIndex(collectionId)
-            };
+            return new WriteSession(_dir, collectionId, this);
         }
 
         public ReadSession CreateReadSession(ulong collectionId)

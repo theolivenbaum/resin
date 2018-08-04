@@ -3,10 +3,11 @@ using System.Globalization;
 
 namespace Sir.Store
 {
-    public class Tokenizer : ITokenizer
+    public class LatinTokenizer : ITokenizer
     {
         private static char[] _delimiters = new char[] {
-                            '.', ',', ';', ':', '?', '!',
+                            '.', ',', '?', '!',
+                            ':', ';', '\\', '/',
                             '\n', '\r', '\t',
                             '(', ')', '[', ']',
                             '"', '`', '´'

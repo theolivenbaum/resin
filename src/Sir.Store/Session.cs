@@ -8,17 +8,17 @@ namespace Sir.Store
     {
         protected readonly string Dir;
 
-        public SessionFactory SessionFactory { get; private set; }
-        public ulong CollectionId { get; }
-        public SortedList<uint, VectorNode> Index { get; set; }
-        public Stream ValueStream { get; set; }
-        public Stream KeyStream { get; set; }
-        public Stream DocStream { get; set; }
-        public Stream ValueIndexStream { get; set; }
-        public Stream KeyIndexStream { get; set; }
-        public Stream DocIndexStream { get; set; }
-        public Stream PostingsStream { get; set; }
-        public Stream VectorStream { get; set; }
+        protected SessionFactory SessionFactory { get; private set; }
+        protected ulong CollectionId { get; }
+        protected SortedList<uint, VectorNode> Index { get; set; }
+        protected Stream ValueStream { get; set; }
+        protected Stream KeyStream { get; set; }
+        protected Stream DocStream { get; set; }
+        protected Stream ValueIndexStream { get; set; }
+        protected Stream KeyIndexStream { get; set; }
+        protected Stream DocIndexStream { get; set; }
+        protected Stream PostingsStream { get; set; }
+        protected Stream VectorStream { get; set; }
 
         public Session(string directory, ulong collectionId, SessionFactory sessionFactory)
         {
