@@ -1,54 +1,63 @@
-﻿namespace Sir.Store
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Sir.Store
 {
+    /// <summary>
+    /// Parses key:value clauses that are separated by a newline characters into <see cref="Sir.Term"/>s . 
+    /// Clauses may be appended with a + sign (meaning AND), a - sign (meaning NOT) or 
+    /// a space (meaning OR).
+    /// </summary>
     public class BooleanKeyValueQueryParser : IQueryParser
     {
         public string ContentType => "*";
 
         public Query Parse(string query)
         {
-            var tokens = query.Split(new[] { ':' });
-            if (tokens.Length > 1)
+            Query root = null;
+            var clauses = query.Split('\n');
+
+            foreach (var clause in clauses)
             {
+                var tokens = clause.Split(':');
                 var key = tokens[0];
                 var val = tokens[1];
-                var q = new Query { Term = new Term(key, val) };
-                Parse(q, tokens);
-                return q;
-            }
-            return null;
-        }
+                var and = root == null || key[0] == '+';
+                var not = key[0] == '-';
 
-        private void Parse(Query query, string[] tokens)
-        {
-            for (int i = 2; i < tokens.Length; i++)
-            {
-                var key = tokens[i];
-                var val = tokens[++i];
-                var next = new Query
+                if (root != null)
                 {
-                    Term = new Term(key, val)
-                };
-
-                var strVal = (string)next.Term.Value;
-                if (strVal.StartsWith('-'))
-                {
-                    next.Term.Value = strVal.Substring(1, strVal.Length - 1);
-                    query.Not = next;
+                    key = key.Substring(1);
                 }
-                else if (strVal.StartsWith('+'))
+                var q = new Query { Term = new Term(key, val) };
+
+                if (root == null)
                 {
-                    next.Term.Value = strVal.Substring(1, strVal.Length - 1);
-                    query.And = next;
+                    q.And = true;
+                    root = q;
                 }
                 else
                 {
-                    query.Or = next;
+                    if (and)
+                    {
+                        q.And = true;
+                    }
+                    else if (not)
+                    {
+                        root.Not = true;
+                    }
+                    else
+                    {
+                        root.Or = true;
+                    }
+                    root.Next = q;
                 }
-
-                query = next;
             }
+            
+            return root;
         }
-
+        
         public void Dispose()
         {
         }

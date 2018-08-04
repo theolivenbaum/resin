@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Sir.Store
 {
@@ -29,12 +30,11 @@ namespace Sir.Store
             {
                 using (var session = _sessionFactory.CreateReadSession(query.CollectionId))
                 {
-                    foreach(var model in session.Read(query))
-                    {
-                        yield return model;
-                    }
+                    return session.Read(query).ToList();
                 }
             }
+
+            return Enumerable.Empty<IDictionary>();
         }
     }
 }

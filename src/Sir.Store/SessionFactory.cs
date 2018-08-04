@@ -17,13 +17,17 @@ namespace Sir.Store
         private readonly Stream _valueStream;
         private readonly Stream _valueIndexStream;
 
+        public Stream ValueStream => _valueStream;
+
+        public Stream ValueIndexStream => _valueIndexStream;
+
         public void Dispose()
         {
             _writableValueStream.Dispose();
-            _valueIndexStream.Dispose();
+            ValueIndexStream.Dispose();
             _writableValueIndexStream.Dispose();
             _writableKeyMapStream.Dispose();
-            _valueStream.Dispose();
+            ValueStream.Dispose();
         }
 
         public SessionFactory(string dir)
@@ -38,7 +42,7 @@ namespace Sir.Store
             _writableKeyMapStream = new FileStream(Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         }
 
-        private static SortedList<ulong, uint> LoadKeyMap(string dir)
+        public static SortedList<ulong, uint> LoadKeyMap(string dir)
         {
             var keys = new SortedList<ulong, uint>();
 
@@ -59,7 +63,7 @@ namespace Sir.Store
             return keys;
         }
 
-        private static VectorTree DeserializeTree(string dir)
+        public static VectorTree DeserializeTree(string dir)
         {
             var ix = new SortedList<ulong, SortedList<uint, VectorNode>>();
 
@@ -131,33 +135,20 @@ namespace Sir.Store
 
         public ReadSession CreateReadSession(ulong collectionId)
         {
-            var sess = new ReadSession(_dir, collectionId, this)
-            {
-                ValueStream = _valueStream,
-                KeyStream = CreateReadStream(string.Format("{0}.key", collectionId)),
-                DocStream = CreateReadStream(string.Format("{0}.docs", collectionId)),
-                ValueIndexStream = _valueIndexStream,
-                KeyIndexStream = CreateReadStream(string.Format("{0}.kix", collectionId)),
-                DocIndexStream = CreateReadStream(string.Format("{0}.dix", collectionId)),
-                PostingsStream = CreateReadStream(string.Format("{0}.pos", collectionId)),
-                VectorStream = CreateReadStream(string.Format("{0}.vec", collectionId)),
-                Index = GetIndex(collectionId)
-            };
-
-            return sess;
+            return new ReadSession(_dir, collectionId, this);
         }
 
-        protected SortedList<uint, VectorNode> GetIndex(ulong collectionId)
+        public SortedList<uint, VectorNode> GetIndex(ulong collectionId)
         {
             return _index.GetOrCreateIndex(collectionId);
         }
 
-        protected Stream CreateReadWriteStream(string fileName)
+        public Stream CreateReadWriteStream(string fileName)
         {
             return new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
         }
 
-        protected Stream CreateAppendStream(string fileName)
+        public Stream CreateAppendStream(string fileName)
         {
             // https://stackoverflow.com/questions/122362/how-to-empty-flush-windows-read-disk-cache-in-c
             //const FileOptions FileFlagNoBuffering = (FileOptions)0x20000000;
@@ -167,7 +158,7 @@ namespace Sir.Store
             return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         }
 
-        protected Stream CreateReadStream(string fileName)
+        public Stream CreateReadStream(string fileName)
         {
             if (File.Exists(fileName))
             {

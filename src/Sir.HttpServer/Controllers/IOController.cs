@@ -86,7 +86,7 @@ namespace Sir.HttpServer.Controllers
             var parsedQuery = queryParser.Parse(query);
             parsedQuery.CollectionId = collectionId.ToHash();
 
-            var payload = reader.Read(parsedQuery);
+            var payload = reader.Read(parsedQuery).ToList();
             return new ObjectResult(payload);
         }
     }
