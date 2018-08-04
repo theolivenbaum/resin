@@ -12,6 +12,8 @@ On disk and in-memory this model is represented as a binary tree ([VectorNode](s
 
 Each node carries as their payload a list of document references.
 
+This model works well with fuzzy/prefix/suffix queries.
+
 ### API
 
 #### API write
