@@ -1,0 +1,25 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+</head>
+<body>
+    <style>
+        input[type="text"] {
+            width: 300px;
+        }
+    </style>
+    @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
+    {
+        <div>
+            <input type="text" id="q" name="q" placeholder="Ask anything." />
+            <input type="submit" value="Search" alt="A yes/no answer will be provided if your search phrase is a (binary) question." />
+        </div>
+    }
+    <div>
+        @RenderBody()
+    </div>
+</body>
+</html>

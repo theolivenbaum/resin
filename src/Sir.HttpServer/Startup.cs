@@ -36,7 +36,10 @@ namespace Sir.HttpServer
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseMvc();
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute("default", "{controller}/{action}", new { controller = "Home", action = "Index" });
+            });
         }
 
         private void OnShutdown()
@@ -48,27 +51,6 @@ namespace Sir.HttpServer
 
             var plugins = ServiceProvider.GetService<PluginsCollection>();
             plugins.Dispose();
-
-            //foreach(var plugin in ServiceProvider.GetServices<IWriter>())
-            //{
-            //    plugin.Dispose();
-            //}
-            //foreach (var plugin in ServiceProvider.GetServices<IReader>())
-            //{
-            //    plugin.Dispose();
-            //}
-            //foreach (var plugin in ServiceProvider.GetServices<IModelFormatter>())
-            //{
-            //    plugin.Dispose();
-            //}
-            //foreach (var plugin in ServiceProvider.GetServices<IModelBinder>())
-            //{
-            //    plugin.Dispose();
-            //}
-            //foreach (var plugin in ServiceProvider.GetServices<IQueryParser>())
-            //{
-            //    plugin.Dispose();
-            //}
         }
     }
 }

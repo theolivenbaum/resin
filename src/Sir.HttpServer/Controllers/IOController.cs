@@ -64,8 +64,7 @@ namespace Sir.HttpServer.Controllers
         {
             //TODO: add pagination
 
-            var contentType = Request.ContentType;
-            var accepts = Request.Headers["Accept"];
+            var mediaType = Request.ContentType ?? string.Empty;
 
             if (query == null)
             {
@@ -75,11 +74,11 @@ namespace Sir.HttpServer.Controllers
                 }
             }
 
-            var queryParser = _plugins.Get<IQueryParser>(contentType);
+            var queryParser = _plugins.Get<IQueryParser>(mediaType);
             var reader = _plugins.Get<IReader>();
-            var tokenizer = _plugins.Get<ITokenizer>(contentType);
+            var tokenizer = _plugins.Get<ITokenizer>(mediaType);
 
-            if (queryParser == null || reader == null)
+            if (queryParser == null || reader == null || tokenizer == null)
             {
                 throw new NotSupportedException();
             }
