@@ -5,6 +5,10 @@ using System.Text;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Binary tree where the data is a sparse vector (a word embedding).
+    /// The tree is balanced according to their angle to their immediate neighbour.
+    /// </summary>
     public class VectorNode
     {
         public const double IdenticalAngle = 0.99d;

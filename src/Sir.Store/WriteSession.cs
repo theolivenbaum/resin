@@ -5,6 +5,9 @@ using System.IO;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Write session targetting a single collection.
+    /// </summary>
     public class WriteSession : CollectionSession
     {
         private readonly IDictionary<string, VectorNode> _dirty;

@@ -2,6 +2,9 @@
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// A tree of indexes (one per collection and key).
+    /// </summary>
     public class VectorTree
     {
         public int Count { get; private set; }

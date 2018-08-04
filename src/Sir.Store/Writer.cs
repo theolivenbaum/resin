@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Write into a document collection ("table").
+    /// </summary>
     public class Writer : IWriter
     {
         public string ContentType => "*";
