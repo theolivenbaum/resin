@@ -12,11 +12,9 @@ namespace Sir.Store
         public string ContentType => "*";
 
         private readonly SessionFactory _sessionFactory;
-        private readonly ITokenizer _tokenizer;
 
-        public Reader(SessionFactory sessionFactory, ITokenizer analyzer)
+        public Reader(SessionFactory sessionFactory)
         {
-            _tokenizer = analyzer;
             _sessionFactory = sessionFactory;
         }
 

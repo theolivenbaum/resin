@@ -8,9 +8,9 @@
 
 To provide full-text search across your documents words and phrases are mapped to a 65k dimensional vector-space that form clusters of syntactically similar "bag-of-chars". On disk and in-memory this model is represented as a binary tree ([VectorNode](src/Sir.Store/VectorNode.cs)).
 
-### HTTP API
+### API
 
-#### Write
+#### HTTP Write
 
 To create a collection (table) and add three documents:
 
@@ -45,7 +45,17 @@ Returns:
 	HTTP 201 Created
 	Location: /io/mycollection
 
-#### Read (query)
+#### API write
+
+	IEnumerable<IDictionary> data = GetData();
+	var sessionFactory = new SessionFactory(@"c:\mydir");
+
+	using (var writer = new Writer(sessionFactory, new LatinTokenizer()))
+	{
+		writer.Write("mycollection", data);
+	}
+
+#### HTTP Read/query
 
 	HTTP PUT http://localhost:54865/io/mycollection
 	Content-Type: text/plain
@@ -65,6 +75,14 @@ Returns:
 			"body": "John Rambo is released from prison by the government for a top-secret covert mission to the last place on Earth he'd want to return - the jungles of Vietnam."
 		}
 	]
+
+#### API Read/query
+
+	var queryParser = new BooleanKeyValueQueryParser();
+	var query = queryParser.Parse("title:rambo\n+title:first blood", new LatinTokenizer());
+	var sessionFactory = new SessionFactory(@"c:\mydir");
+	var reader = new Reader(sessionFactory);
+	var documents = reader.Read(query);
 
 ### Platform
 

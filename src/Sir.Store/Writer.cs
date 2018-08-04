@@ -23,9 +23,9 @@ namespace Sir.Store
 
         public void Write(string collectionId, IEnumerable<IDictionary> data)
         {
-            using (var tx = new WriteJob(collectionId.ToHash(), data))
+            using (var job = new WriteJob(collectionId.ToHash(), data))
             {
-                _writeQueue.Enqueue(tx);
+                _writeQueue.Enqueue(job);
             }
         }
 
