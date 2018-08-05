@@ -10,8 +10,13 @@
         textarea {
             float: left;
         }
+
+        a{
+            text-decoration: none;
+            color: orangered;
+        }
     </style>
-    <h1>Did you go go?</h1>
+    <a href="/"><h1>Did you go go?</h1></a>
     @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
     {
     <div>

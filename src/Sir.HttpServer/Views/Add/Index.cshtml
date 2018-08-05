@@ -3,7 +3,7 @@
     Layout = "~/Views/_Layout.cshtml";
 }
 
-@using (Html.BeginRouteForm("default", new { controller = "Add", action="Post" }, FormMethod.Post))
+@using (Html.BeginRouteForm("default", new { controller = "IO", action="AddPage", collectionId = "mycol", returnUrl = "/add/thankyou" }, FormMethod.Get))
 {
     <div>
         <p>
@@ -12,5 +12,3 @@
         </p>
     </div>
 }
-
-<a href="/">Reset</a>
