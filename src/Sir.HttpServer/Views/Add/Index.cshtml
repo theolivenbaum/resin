@@ -3,11 +3,11 @@
     Layout = "~/Views/_Layout.cshtml";
 }
 
-@using (Html.BeginRouteForm("default", new { controller = "Add", action="Add" }, FormMethod.Get))
+@using (Html.BeginRouteForm("default", new { controller = "Add", action="Post" }, FormMethod.Post))
 {
     <div>
         <p>
-            <input type="text" id="url" name="url" placeholder="yoursite.com/page.html" />
+            <label>https://</label> <input type="text" id="url" name="url" placeholder="yoursite.com/page.html" />
             <input type="submit" value="Go" />
         </p>
     </div>
