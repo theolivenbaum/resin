@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Sir.Store
 {
-    public class SessionFactory : IDisposable
+    public class LocalStorageSessionFactory : IDisposable
     {
         private readonly SortedList<ulong, long> _keys;
         private readonly object Sync = new object();
@@ -29,7 +29,7 @@ namespace Sir.Store
             ValueStream.Dispose();
         }
 
-        public SessionFactory(string dir)
+        public LocalStorageSessionFactory(string dir)
         {
             _keys = LoadKeyMap(dir);
             _index = DeserializeTree(dir);

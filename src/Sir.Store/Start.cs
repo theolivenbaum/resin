@@ -7,7 +7,7 @@ namespace Sir.Store
     {
         public void OnApplicationStartup(IServiceCollection services)
         {
-            services.AddSingleton(typeof(SessionFactory), new SessionFactory(Path.Combine(Directory.GetCurrentDirectory(), "App_Data")));
+            services.AddSingleton(typeof(LocalStorageSessionFactory), new LocalStorageSessionFactory(Path.Combine(Directory.GetCurrentDirectory(), "App_Data")));
             services.AddSingleton(typeof(ITokenizer), new LatinTokenizer());
         }
     }

@@ -11,9 +11,9 @@ namespace Sir.Store
     {
         public string ContentType => "*";
 
-        private readonly SessionFactory _sessionFactory;
+        private readonly LocalStorageSessionFactory _sessionFactory;
 
-        public Reader(SessionFactory sessionFactory)
+        public Reader(LocalStorageSessionFactory sessionFactory)
         {
             _sessionFactory = sessionFactory;
         }

@@ -7,7 +7,7 @@ namespace Sir.Store
     {
         public void OnApplicationShutdown(IServiceProvider serviceProvider)
         {
-            var sessionFactory = serviceProvider.GetService<SessionFactory>();
+            var sessionFactory = serviceProvider.GetService<LocalStorageSessionFactory>();
             sessionFactory.Dispose();
         }
     }

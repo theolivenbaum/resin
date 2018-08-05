@@ -8,7 +8,7 @@ namespace Sir.Store
     {
         protected readonly string Dir;
 
-        protected SessionFactory SessionFactory { get; private set; }
+        protected LocalStorageSessionFactory SessionFactory { get; private set; }
         protected ulong CollectionId { get; }
         protected SortedList<long, VectorNode> Index { get; set; }
         protected Stream ValueStream { get; set; }
@@ -20,7 +20,7 @@ namespace Sir.Store
         protected Stream PostingsStream { get; set; }
         protected Stream VectorStream { get; set; }
 
-        public CollectionSession(string directory, ulong collectionId, SessionFactory sessionFactory)
+        public CollectionSession(string directory, ulong collectionId, LocalStorageSessionFactory sessionFactory)
         {
             Dir = directory;
             SessionFactory = sessionFactory;

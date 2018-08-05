@@ -18,7 +18,7 @@ namespace Sir.Store
         private readonly ValueReader _valReader;
         private readonly PostingsReader _postingsReader;
 
-        public ReadSession(string directory, ulong collectionId, SessionFactory sessionFactory) 
+        public ReadSession(string directory, ulong collectionId, LocalStorageSessionFactory sessionFactory) 
             : base(directory, collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.ValueStream;

@@ -18,7 +18,7 @@ namespace Sir.Store
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
 
-        public WriteSession(string directory, ulong collectionId, SessionFactory sessionFactory) 
+        public WriteSession(string directory, ulong collectionId, LocalStorageSessionFactory sessionFactory) 
             : base(directory, collectionId, sessionFactory)
         {
             _dirty = new Dictionary<string, VectorNode>();

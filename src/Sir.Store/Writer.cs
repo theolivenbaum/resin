@@ -11,10 +11,10 @@ namespace Sir.Store
         public string ContentType => "*";
 
         private readonly ProducerConsumerQueue<WriteJob> _writeQueue;
-        private readonly SessionFactory _sessionFactory;
+        private readonly LocalStorageSessionFactory _sessionFactory;
         private readonly ITokenizer _tokenizer;
 
-        public Writer(SessionFactory sessionFactory, ITokenizer analyzer)
+        public Writer(LocalStorageSessionFactory sessionFactory, ITokenizer analyzer)
         {
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;
