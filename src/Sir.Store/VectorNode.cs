@@ -7,12 +7,12 @@ namespace Sir.Store
 {
     /// <summary>
     /// Binary tree where the data is a sparse vector (a word embedding).
-    /// The tree is balanced according to node's angles to their immediate neighbours.
+    /// The tree is balanced according to cos angles between immediate neighbouring nodes.
     /// </summary>
     public class VectorNode
     {
         public const double IdenticalAngle = 0.99d;
-        public const double TrueAngle = 0.8d;
+        public const double TrueAngle = 0.9d;
         public const double FalseAngle = 0.1;
 
         private VectorNode _right;
@@ -285,16 +285,16 @@ namespace Sir.Store
             return cursor;
         }
 
-        public void Merge(VectorNode node)
+        private void Merge(VectorNode node)
         {
             var angle = node.TermVector.CosAngle(TermVector);
 
-            if (angle < 1)
+            if (angle < IdenticalAngle)
             {
                 TermVector = TermVector.Add(node.TermVector);
             }
 
-            foreach(var id in node._docIds)
+            foreach (var id in node._docIds)
             {
                 _docIds.Add(id);
             }

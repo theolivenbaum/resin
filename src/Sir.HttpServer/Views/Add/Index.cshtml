@@ -3,12 +3,15 @@
     Layout = "~/Views/_Layout.cshtml";
 }
 
-@using (Html.BeginRouteForm("default", new { controller = "IO", action="AddPage", collectionId = "mycol", returnUrl = "/add/thankyou" }, FormMethod.Get))
+@using (Html.BeginRouteForm("default", new { controller = "Add", action="Page" }, FormMethod.Get))
 {
     <div>
         <p>
-            <label>https://</label> <input type="text" id="url" name="url" placeholder="yoursite.com/page.html" />
-            <input type="submit" value="Go" />
+            <label>Enter a URL (don't forget to write "https://"):</label>
+            <div>
+                <input type="text" id="url" name="url" placeholder="https://yoursite.com/page.html" />
+                <input type="submit" value="Go" />
+            </div>
         </p>
     </div>
 }

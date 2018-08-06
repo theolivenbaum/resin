@@ -1,10 +1,12 @@
-﻿namespace Sir
+﻿using System.Collections.Generic;
+
+namespace Sir
 {
     /// <summary>
     /// Full-text tokenizer
     /// </summary>
     public interface ITokenizer : IPlugin
     {
-        string[] Tokenize(string text);
+        IEnumerable<string> Tokenize(string text);
     }
 }

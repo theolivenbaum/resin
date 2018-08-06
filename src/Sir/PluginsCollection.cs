@@ -32,11 +32,6 @@ namespace Sir
 
         public T Get<T>(string key) where T : IPlugin
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
-
             return All<T>(key).FirstOrDefault();
         }
 
@@ -63,6 +58,8 @@ namespace Sir
 
         private IEnumerable<T> Services<T>(string key) where T : IPlugin
         {
+            if (key == null) key = string.Empty;
+
             var filter = typeof(T);
 
             IDictionary<Type, IList<IPlugin>> services;

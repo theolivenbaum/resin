@@ -55,21 +55,21 @@ namespace Sir.Store
                     var fieldIndex = GetIndex(keyHash);
                     var val = (IComparable)model[key];
                     var str = val as string;
-                    var fullTextTokens = new List<Term>();
+                    var tokens = new HashSet<string>();
                     long keyId, valId;
 
                     if (str != null) 
                     {
                         foreach (var token in tokenizer.Tokenize(str))
                         {
-                            fullTextTokens.Add(new Term(keyStr, token));
+                            tokens.Add(token);
                         }
                     }
                     else
                     {
                         //TODO: implement numeric index
 
-                        fullTextTokens.Add(new Term(keyStr, val.ToString()));
+                        tokens.Add(val.ToString());
                     }
 
                     if (fieldIndex == null)
@@ -97,12 +97,11 @@ namespace Sir.Store
                     // store refs to keys and values
                     docMap.Add((keyId, valId));
 
-                    foreach (var token in fullTextTokens)
+                    foreach (var token in tokens)
                     {
                         // add token and postings to index
-                        var strVal = (string)token.Value;
-                        var match = fieldIndex.ClosestMatch(strVal);
-                        match.Add(strVal, docId);
+                        var match = fieldIndex.ClosestMatch(token);
+                        match.Add(token, docId);
                     }
 
                     var indexName = string.Format("{0}.{1}", CollectionId, keyId);

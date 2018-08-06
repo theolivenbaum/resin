@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 
 namespace Sir.Store
 {
@@ -10,15 +12,16 @@ namespace Sir.Store
                             ':', ';', '\\', '/',
                             '\n', '\r', '\t',
                             '(', ')', '[', ']',
-                            '"', '`', '´'
+                            '"', '`', '´', '&'
                             };
 
         public string ContentType => "*";
 
-        public string[] Tokenize(string text)
+        public IEnumerable<string> Tokenize(string text)
         {
-            return text.ToLower(CultureInfo.CurrentCulture).Split(
-                _delimiters, StringSplitOptions.RemoveEmptyEntries);
+            return text.ToLower(CultureInfo.CurrentCulture)
+                .Split(_delimiters, StringSplitOptions.RemoveEmptyEntries)
+                .Where(x=>!string.IsNullOrWhiteSpace(x));
         }
 
         public void Dispose()

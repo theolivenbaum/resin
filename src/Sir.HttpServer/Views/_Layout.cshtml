@@ -11,22 +11,28 @@
             float: left;
         }
 
-        a{
+        a {
             text-decoration: none;
             color: orangered;
         }
+        a.result-link{
+            color: mediumblue;
+        }
+            a.result-link:visited {
+                color: purple;
+            }
     </style>
     <a href="/"><h1>Did you go go?</h1></a>
     @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
     {
-    <div>
-        <textarea rows="1" cols="30" id="q" name="q" placeholder="Ask anything."></textarea>
-        <input type="submit" value="Go" />
-    </div>
+        <div>
+            <input type="text" id="q" name="q" placeholder="Ask anything." />
+            <input type="submit" value="Go" />
+        </div>
     }
     <div>
         @RenderBody()
     </div>
-
+    <div><p>This is a web index. <a href="/add">Add your page.</a></p></div>
 </body>
 </html>
