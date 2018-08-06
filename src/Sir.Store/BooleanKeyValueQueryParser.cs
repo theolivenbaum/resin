@@ -21,7 +21,7 @@ namespace Sir.Store
             {
                 var tokens = clause.Split(':');
                 var key = tokens[0];
-                var val = tokens[1];
+                var val = tokens[1].ToLower();
                 var and = root == null || key[0] == '+';
                 var not = key[0] == '-';
                 var or = !and && !not;
@@ -31,33 +31,28 @@ namespace Sir.Store
                     key = key.Substring(1);
                 }
 
-                var terms = tokenizer.Tokenize(val);
+                var q = new Query { Term = new Term(key, val) };
 
-                foreach (var term in terms)
+                if (root == null)
                 {
-                    var q = new Query { Term = new Term(key, term) };
-
-                    if (root == null)
+                    q.And = true;
+                    root = q;
+                }
+                else
+                {
+                    if (and)
                     {
                         q.And = true;
-                        root = q;
+                    }
+                    else if (not)
+                    {
+                        q.Not = true;
                     }
                     else
                     {
-                        if (and)
-                        {
-                            q.And = true;
-                        }
-                        else if (not)
-                        {
-                            q.Not = true;
-                        }
-                        else
-                        {
-                            q.Or = true;
-                        }
-                        root.Next = q;
+                        q.Or = true;
                     }
+                    root.Next = q;
                 }
             }
             

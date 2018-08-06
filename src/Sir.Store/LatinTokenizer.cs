@@ -19,9 +19,22 @@ namespace Sir.Store
 
         public IEnumerable<string> Tokenize(string text)
         {
-            return text.ToLower(CultureInfo.CurrentCulture)
+            var phrases = text.ToLower(CultureInfo.CurrentCulture)
                 .Split(_delimiters, StringSplitOptions.RemoveEmptyEntries)
-                .Where(x=>!string.IsNullOrWhiteSpace(x));
+                .Where(x=>!string.IsNullOrWhiteSpace(x))
+                .ToList();
+
+            var words = phrases.SelectMany(x => x.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+
+            foreach (var phrase in phrases)
+            {
+                yield return phrase;
+            }
+
+            foreach (var word in words)
+            {
+                yield return word;
+            }
         }
 
         public void Dispose()

@@ -28,7 +28,7 @@ namespace Sir.HttpServer.Controllers
         [HttpGet("/add/page")]
         public async Task<IActionResult> Page(string url, string collectionId)
         {
-            if (url == null)
+            if (string.IsNullOrWhiteSpace(url))
             {
                 throw new ArgumentNullException(nameof(url));
             }
@@ -37,7 +37,7 @@ namespace Sir.HttpServer.Controllers
             var uri = new Uri(url);
             var document = new Dictionary<string, object>();
             var htmlDoc = _htmlParser.Load(uri);
-            var title = htmlDoc.DocumentNode.SelectNodes("//title").First().InnerText;
+            var title = WebUtility.HtmlDecode(htmlDoc.DocumentNode.SelectNodes("//title").First().InnerText);
             var root = htmlDoc.DocumentNode.SelectNodes("//body").First();
             var txtNodes = root.Descendants().Where(x => 
                 x.Name == "#text" && 
@@ -45,8 +45,8 @@ namespace Sir.HttpServer.Controllers
                 (!string.IsNullOrWhiteSpace(x.InnerText))
             ).ToList();
 
-            var txt = txtNodes.Select(x => x.InnerText);
-            var body = string.Join("\n", txt);
+            var txt = txtNodes.Select(x => WebUtility.HtmlDecode(x.InnerText));
+            var body = string.Join("\r\n", txt);
 
             System.IO.File.WriteAllText(DateTime.Now.Ticks + "_" + uri.Host + ".txt", body);
 

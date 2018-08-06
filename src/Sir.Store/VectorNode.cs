@@ -12,8 +12,8 @@ namespace Sir.Store
     public class VectorNode
     {
         public const double IdenticalAngle = 0.99d;
-        public const double TrueAngle = 0.9d;
-        public const double FalseAngle = 0.1;
+        public const double TrueAngle = 0.95d;
+        public const double FalseAngle = 0.5;
 
         private VectorNode _right;
         private VectorNode _left;

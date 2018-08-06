@@ -22,13 +22,13 @@ namespace Sir.Store
             : base(directory, collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.ValueStream;
-            KeyStream = sessionFactory.CreateReadStream(string.Format("{0}.key", collectionId));
-            DocStream = sessionFactory.CreateReadStream(string.Format("{0}.docs", collectionId));
+            KeyStream = sessionFactory.CreateReadWriteStream(string.Format("{0}.key", collectionId));
+            DocStream = sessionFactory.CreateReadWriteStream(string.Format("{0}.docs", collectionId));
             ValueIndexStream = sessionFactory.ValueIndexStream;
-            KeyIndexStream = sessionFactory.CreateReadStream(string.Format("{0}.kix", collectionId));
-            DocIndexStream = sessionFactory.CreateReadStream(string.Format("{0}.dix", collectionId));
-            PostingsStream = sessionFactory.CreateReadStream(string.Format("{0}.pos", collectionId));
-            VectorStream = sessionFactory.CreateReadStream(string.Format("{0}.vec", collectionId));
+            KeyIndexStream = sessionFactory.CreateReadWriteStream(string.Format("{0}.kix", collectionId));
+            DocIndexStream = sessionFactory.CreateReadWriteStream(string.Format("{0}.dix", collectionId));
+            PostingsStream = sessionFactory.CreateReadWriteStream(string.Format("{0}.pos", collectionId));
+            VectorStream = sessionFactory.CreateReadWriteStream(string.Format("{0}.vec", collectionId));
             Index = sessionFactory.GetIndex(collectionId);
 
             _docIx = new DocIndexReader(DocIndexStream);
@@ -50,7 +50,7 @@ namespace Sir.Store
                 var ix = GetIndex(keyHash);
                 var match = ix.ClosestMatch(query.Term.Value.ToString());
 
-                if (match.Highscore >= 0.8d)
+                if (match.Highscore >= 0.85d)
                 {
                     var docIds = _postingsReader.Read(match.PostingsOffset, match.PostingsSize)
                         .ToDictionary(x => x, y => match.Highscore);

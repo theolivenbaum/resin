@@ -146,14 +146,5 @@ namespace Sir.Store
 
             return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         }
-
-        public Stream CreateReadStream(string fileName)
-        {
-            if (File.Exists(fileName))
-            {
-                return new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            }
-            return null;
-        }
     }
 }
