@@ -10,13 +10,19 @@
 
 @if (ViewData["time_ms"] != null)
 {
-    <h2>@docs.Count results for '@ViewData["query"]' in @ViewData["collectionName"] took @ViewData["time_ms"] ms</h2>
+    <h3>Results for '@ViewData["query"]' in '@ViewData["collectionName"]' (@ViewData["time_ms"] ms)</h3>
 }
     <div>
-                @foreach (var item in docs)
-                {
-                        <div>
-                            <p><span>|@item.Document["_score"]|</span> <a class="result-link" href="@item.Document["url"].ToString()">@item.Document["title"].ToString()</a> <span>@item.Document["site"]</span></p>
-                        </div>
-                }
+        <ol>
+            @foreach (var item in docs)
+            {
+                <li>
+                    <p>
+                        <a class="result-link" href="@item.Document["url"].ToString()">@item.Document["title"].ToString()</a> 
+                        <span>@item.Document["site"]</span><br />
+                        <span>(score: @item.Document["_score"])</span>
+                    </p>
+                </li>
+            }
+        </ol>
     </div>

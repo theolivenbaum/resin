@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
@@ -25,6 +24,10 @@ namespace Sir.HttpServer.Controllers
                 return View();
             }
 
+            string collectionName = collectionId ?? "www";
+
+            ViewData["query"] = q;
+
             if (!q.Contains(":"))
             {
                 q = string.Format("title:{0}\nbody:{0}", q);
@@ -42,13 +45,13 @@ namespace Sir.HttpServer.Controllers
             }
 
             var parsedQuery = queryParser.Parse(q, tokenizer);
-            string collectionName = collectionId ?? "www";
             parsedQuery.CollectionId = collectionName.ToHash();
 
             var documents = reader.Read(parsedQuery).Select(x => new SearchResultModel { Document = x }).ToList();
-            ViewData["query"] = q;
+
             ViewData["collectionName"] = collectionName;
             ViewData["time_ms"] = _timer.ElapsedMilliseconds;
+
             return View(documents);
         }
     }
