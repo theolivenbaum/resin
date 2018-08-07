@@ -1,4 +1,4 @@
-# SIResin
+# SIR (is Resin)
 
 16-bit wide vector-space model search engine with HTTP API and programmable read/write pipelines.
 
