@@ -2,7 +2,9 @@
 
 Full-text search framework with a 16-bit vector space index. 
 
-Uses a document model for storag. 
+Uses a document storage model. 
+
+Everything is auto-indexed.
 
 A non-generic IDictionary serves as the model representation.
 
@@ -62,6 +64,8 @@ Keys and values that are not of those types will be ToStringed and seen upon as 
 ### .ix
 
 	[node][node]...
+
+See [VectorNode](src/Sir.Store/VectorNode.cs) for details.
 
 ### .vec
 
