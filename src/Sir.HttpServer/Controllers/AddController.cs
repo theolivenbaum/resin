@@ -18,6 +18,7 @@ namespace Sir.HttpServer.Controllers
         {
             _plugins = plugins;
             _htmlParser = new HtmlWeb();
+            _htmlParser.UserAgent = Request.Headers["User-Agent"].ToString();
         }
 
         public ActionResult Index()

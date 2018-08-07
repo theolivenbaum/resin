@@ -19,7 +19,7 @@ namespace Sir.Store
 
         public IEnumerable<string> Tokenize(string text)
         {
-            var phrases = text.ToLower(CultureInfo.CurrentCulture)
+            var phrases = Normalize(text)
                 .Split(_delimiters, StringSplitOptions.RemoveEmptyEntries)
                 .Where(x=>!string.IsNullOrWhiteSpace(x))
                 .ToList();
@@ -39,6 +39,11 @@ namespace Sir.Store
 
         public void Dispose()
         {
+        }
+
+        public string Normalize(string text)
+        {
+            return text.ToLower(CultureInfo.CurrentCulture);
         }
     }
 }

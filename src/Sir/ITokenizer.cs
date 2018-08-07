@@ -8,5 +8,7 @@ namespace Sir
     public interface ITokenizer : IPlugin
     {
         IEnumerable<string> Tokenize(string text);
+
+        string Normalize(string text);
     }
 }

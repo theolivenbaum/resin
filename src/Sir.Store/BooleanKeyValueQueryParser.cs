@@ -21,7 +21,7 @@ namespace Sir.Store
             {
                 var tokens = clause.Split(':');
                 var key = tokens[0];
-                var val = tokens[1].ToLower();
+                var val = tokenizer.Normalize(tokens[1]);
                 var and = root == null || key[0] == '+';
                 var not = key[0] == '-';
                 var or = !and && !not;
