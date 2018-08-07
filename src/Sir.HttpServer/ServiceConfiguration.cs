@@ -13,8 +13,6 @@ namespace Sir.HttpServer
             // get path to plugins
             var assemblyPath = Directory.GetCurrentDirectory();
 
-            //Debug info
-            System.IO.File.WriteAllText("log1.txt", assemblyPath);
 #if DEBUG
             assemblyPath = Path.Combine(Directory.GetCurrentDirectory(), "bin\\Debug\\netcoreapp2.0");
 #endif
