@@ -30,7 +30,12 @@ namespace Sir.HttpServer.Controllers
         {
             if (string.IsNullOrWhiteSpace(url))
             {
-                throw new ArgumentNullException(nameof(url));
+                return View("Index");
+            }
+
+            if (!url.StartsWith("http://") && !url.StartsWith("https://"))
+            {
+                return View("Index");
             }
 
             var collectionName = collectionId ?? "www";

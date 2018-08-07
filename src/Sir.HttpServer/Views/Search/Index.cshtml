@@ -8,22 +8,32 @@
         new Sir.HttpServer.Controllers.SearchResultModel[0].ToList() : Model.ToList();
 }
 
+@using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
+{
+    <div>
+        <input type="text" id="q" name="q" placeholder="Ask anything." />
+        <input type="submit" value="Go" />
+    </div>
+}
+
 @if (ViewData["time_ms"] != null)
 {
     <h3>Results for '@ViewData["query"]' in '@ViewData["collectionName"]' (@ViewData["time_ms"] ms)</h3>
 }
-    <div>
-        <ol>
-            @foreach (var item in docs)
-            {
-                <li>
-                    <p>
-                        <a class="result-link" href="@item.Document["url"].ToString()">@item.Document["title"].ToString()</a> 
-                        <span>@item.Document["site"]</span><br />
-                        <span>Score: @item.Document["_score"]</span><br />
-                        <span>Indexed @DateTime.FromBinary((long)item.Document["created"])</span>
-                    </p>
-                </li>
-            }
-        </ol>
-    </div>
+<div>
+    <ol>
+        @foreach (var item in docs)
+        {
+            <li>
+                <p>
+                    <a class="result-link" href="@item.Document["url"].ToString()">@item.Document["title"].ToString()</a>
+                    <span>@item.Document["site"]</span><br />
+                    <span>Score: @item.Document["_score"]</span><br />
+                    <span>Indexed @DateTime.FromBinary((long)item.Document["created"])</span>
+                </p>
+            </li>
+        }
+    </ol>
+</div>
+
+<div><p>This is a web index. <a href="/add">Submit page.</a></p></div>

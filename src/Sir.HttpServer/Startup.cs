@@ -40,6 +40,8 @@ namespace Sir.HttpServer
             {
                 routes.MapRoute("default", "{controller}/{action}", new { controller = "Home", action = "Index" });
             });
+
+            app.UseStaticFiles();
         }
 
         private void OnShutdown()

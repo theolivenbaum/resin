@@ -28,21 +28,13 @@
         }
     </style>
     <a href="/"><h1>Did you go go?</h1></a>
-    @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
-    {
-        <div>
-            <input type="text" id="q" name="q" placeholder="Ask anything." />
-            <input type="submit" value="Go" />
-        </div>
-    }
     <div>
         @RenderBody()
     </div>
-    <div><p>This is a web index. <a href="/add">Submit page.</a></p></div>
     <footer>
         <hr align="left" size="1" noshade/>
-        <p>No cookies, no javascript, no tracking.</p>
-        <p>Built on code <a href="https://github.com/kreeben/resin">hosted on GitHub</a></p>
+        <p>A no cookies, no javascript, no tracking kind of web search.</p>
+        <p>Built on open source <a href="https://github.com/kreeben/resin">hosted on GitHub</a></p>
     </footer>
 </body>
 </html>

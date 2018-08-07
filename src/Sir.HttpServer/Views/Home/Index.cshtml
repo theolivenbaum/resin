@@ -2,3 +2,12 @@
     ViewData["Title"] = "Did you go go?";
     Layout = "~/Views/_Layout.cshtml";
 }
+
+@using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
+{
+    <div>
+        <input type="text" id="q" name="q" placeholder="Ask anything." />
+        <input type="submit" value="Go" />
+    </div>
+}
+<div><p>This is a web index. <a href="/add">Submit a page.</a></p></div>
