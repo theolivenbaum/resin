@@ -24,7 +24,14 @@ namespace Sir.HttpServer
                 options.RespectBrowserAcceptHeader = true;
             });
             ServiceProvider = ServiceConfiguration.Configure(services);
-            Directory.SetCurrentDirectory(Path.Combine(Directory.GetCurrentDirectory(), "App_Data"));
+
+            var dataDir = Path.Combine(Directory.GetCurrentDirectory(), "App_Data");
+
+            if (!Directory.Exists(dataDir))
+            {
+                Directory.CreateDirectory(dataDir);
+            }
+            Directory.SetCurrentDirectory(dataDir);
         }
 
         public void Configure(IApplicationBuilder app, IApplicationLifetime applicationLifetime, IHostingEnvironment env)

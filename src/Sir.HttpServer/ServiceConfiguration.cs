@@ -11,7 +11,10 @@ namespace Sir.HttpServer
         public static IServiceProvider Configure(IServiceCollection services)
         {
             // get path to plugins
-            var assemblyPath = Path.Combine(Directory.GetCurrentDirectory(), "bin\\Release\\netcoreapp2.0");
+            var assemblyPath = Directory.GetCurrentDirectory();
+
+            //Debug info
+            System.IO.File.WriteAllText("log1.txt", assemblyPath);
 #if DEBUG
             assemblyPath = Path.Combine(Directory.GetCurrentDirectory(), "bin\\Debug\\netcoreapp2.0");
 #endif

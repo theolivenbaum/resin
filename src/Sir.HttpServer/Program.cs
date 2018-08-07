@@ -22,9 +22,9 @@ namespace Sir.HttpServer
 
         public static IWebHost BuildWebHost(string[] args)
         {
-            //return new WebHostBuilder()
-            //.UseKestrel()
-            //.UseContentRoot(Directory.GetCurrentDirectory())
+            return new WebHostBuilder()
+            .UseKestrel()
+            .UseContentRoot(Directory.GetCurrentDirectory())
             //.ConfigureAppConfiguration((builderContext, config) =>
             //{
             //    IHostingEnvironment env = builderContext.HostingEnvironment;
@@ -32,17 +32,19 @@ namespace Sir.HttpServer
             //    config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             //        .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
             //})
-            //.UseIISIntegration()
-            //.UseStartup<Startup>()
-            //.Build();
-
-
-
-
-
-            return WebHost.CreateDefaultBuilder(args)
+            .UseIISIntegration()
+            .UseSetting("detailedErrors", "true")
+            .CaptureStartupErrors(true)
             .UseStartup<Startup>()
             .Build();
+
+
+
+
+
+            //return WebHost.CreateDefaultBuilder(args)
+            //.UseStartup<Startup>()
+            //.Build();
         }
     }
 }

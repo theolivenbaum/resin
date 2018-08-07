@@ -27,7 +27,8 @@ namespace Sir.HttpServer.Controllers
 
             string collectionName = collectionId ?? "www";
 
-            ViewData["query"] = q;
+            var htmlEncodedQuery = WebUtility.HtmlEncode(q);
+            ViewData["q"] = htmlEncodedQuery;
 
             if (!q.Contains(":"))
             {
@@ -49,12 +50,10 @@ namespace Sir.HttpServer.Controllers
             parsedQuery.CollectionId = collectionName.ToHash();
 
             var documents = reader.Read(parsedQuery).Select(x => new SearchResultModel { Document = x }).ToList();
-            var htmlEncodedQuery = WebUtility.HtmlEncode(q);
 
             ViewData["collectionName"] = collectionName;
             ViewData["time_ms"] = _timer.ElapsedMilliseconds;
             ViewBag.Title = htmlEncodedQuery + "Did you gogo?";
-            ViewData["q"] = htmlEncodedQuery;
 
             return View(documents);
         }
