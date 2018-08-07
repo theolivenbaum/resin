@@ -7,3 +7,4 @@ bin
 obj
 packages
 .vs
+src/Sir.HttpServer/Properties/PublishProfiles
