@@ -21,7 +21,7 @@ namespace Sir.HttpServer.Controllers
         {
             if (string.IsNullOrWhiteSpace(q))
             {
-                return View();
+                return View("MultilineQuery");
             }
 
             string collectionName = collectionId ?? "www";

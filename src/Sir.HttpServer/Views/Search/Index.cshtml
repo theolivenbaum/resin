@@ -7,18 +7,15 @@
     IList<Sir.HttpServer.Controllers.SearchResultModel> docs = Model == null ?
         new Sir.HttpServer.Controllers.SearchResultModel[0].ToList() : Model.ToList();
 }
-
 @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
 {
-    <div>
-        <input type="text" id="q" name="q" placeholder="Ask anything." />
-        <input type="submit" value="Go" />
-    </div>
+    <input type="text" id="q" name="q" placeholder="Ask anything." />
+    <input type="submit" value="Go" />
 }
 
 @if (ViewData["time_ms"] != null)
 {
-    <h3>Results for '@ViewData["query"]' in '@ViewData["collectionName"]' (@ViewData["time_ms"] ms)</h3>
+<h3>Results for '@ViewData["query"]' in '@ViewData["collectionName"]' (@ViewData["time_ms"] ms)</h3>
 }
 <div>
     <ol>
