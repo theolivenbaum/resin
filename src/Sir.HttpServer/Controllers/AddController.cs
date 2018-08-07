@@ -18,7 +18,6 @@ namespace Sir.HttpServer.Controllers
         {
             _plugins = plugins;
             _htmlParser = new HtmlWeb();
-            _htmlParser.UserAgent = Request.Headers["User-Agent"].ToString();
         }
 
         public ActionResult Index()
@@ -60,6 +59,7 @@ namespace Sir.HttpServer.Controllers
             document["url"] = uri.ToString();
             document["body"] = body;
             document["title"] = title;
+            document["created"] = DateTime.Now.ToBinary();
 
             var writers = _plugins.All<IWriter>(Request.ContentType).ToList();
 
