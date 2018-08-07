@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Sir.HttpServer.Controllers
@@ -48,9 +49,12 @@ namespace Sir.HttpServer.Controllers
             parsedQuery.CollectionId = collectionName.ToHash();
 
             var documents = reader.Read(parsedQuery).Select(x => new SearchResultModel { Document = x }).ToList();
+            var htmlEncodedQuery = WebUtility.HtmlEncode(q);
 
             ViewData["collectionName"] = collectionName;
             ViewData["time_ms"] = _timer.ElapsedMilliseconds;
+            ViewBag.Title = htmlEncodedQuery + "Did you gogo?";
+            ViewData["q"] = htmlEncodedQuery;
 
             return View(documents);
         }
