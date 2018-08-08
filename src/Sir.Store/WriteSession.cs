@@ -51,7 +51,6 @@ namespace Sir.Store
             foreach (var model in data)
             {
                 var docId = (ulong)model["_docid"];
-                var docMap = new List<(long keyId, long valId)>();
 
                 foreach (var key in model.Keys)
                 {
@@ -78,10 +77,8 @@ namespace Sir.Store
 
                     if (fieldIndex == null)
                     {
-                        throw new InvalidDataException();
+                        continue;
                     }
-
-                    var blankId = BitConverter.GetBytes((ulong)0);
 
                     foreach (var token in tokens)
                     {

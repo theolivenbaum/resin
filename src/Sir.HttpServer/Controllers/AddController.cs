@@ -44,59 +44,60 @@ namespace Sir.HttpServer.Controllers
             {
                 var uri = new Uri(url);
                 var document = new Dictionary<string, object>();
-                var htmlDoc = _htmlParser.Load(uri);
-                var title = WebUtility.HtmlDecode(htmlDoc.DocumentNode.SelectNodes("//title").First().InnerText);
-                var root = htmlDoc.DocumentNode.SelectNodes("//body").First();
-                var txtNodes = root.Descendants().Where(x =>
-                    x.Name == "#text" &&
-                    (x.ParentNode.Name != "script") &&
-                    (!string.IsNullOrWhiteSpace(x.InnerText))
-                ).ToList();
-
-                var txt = txtNodes.Select(x => WebUtility.HtmlDecode(x.InnerText));
-                var body = string.Join("\r\n", txt);
-
-                System.IO.File.WriteAllText(DateTime.Now.Ticks + "_" + uri.Host + ".txt", body);
-
-                if (string.IsNullOrWhiteSpace(title))
-                {
-                    title = string.Join(string.Empty, txt.Take(3));
-                }
+                var parsed = GetHtml(uri);
 
                 document["site"] = uri.Host;
                 document["url"] = uri.ToString();
-                document["body"] = body;
-                document["title"] = title;
+                document["body"] = parsed.body;
+                document["title"] = parsed.title;
                 document["created"] = DateTime.Now.ToBinary();
 
                 var writers = _plugins.All<IWriter>(Request.ContentType).ToList();
+                var reader = _plugins.Get<IReader>();
+                var remover = _plugins.Get<IRemover>();
 
                 if (writers == null || writers.Count == 0)
                 {
                     return StatusCode(415); // Media type not supported
                 }
 
+                remover.Remove(
+                    new Query { CollectionId = collectionName.ToHash(), Term = new Term("url", uri.ToString()) },
+                    reader);
+
                 foreach (var writer in writers)
                 {
-                    try
+                    await Task.Run(() =>
                     {
-                        await Task.Run(() =>
-                        {
-                            writer.Write(collectionName, new[] { document });
-                        });
-                    }
-                    catch (Exception ew)
-                    {
-                        throw ew;
-                    }
+                        writer.Write(collectionName, new[] { document });
+                    });
                 }
-
+                
                 return Redirect("/add/thankyou");
             }
             catch
             {
                 return View("Error");
             }
+        }
+
+        private (string title, string body) GetHtml(Uri uri)
+        {
+            var htmlDoc = _htmlParser.Load(uri);
+            var title = WebUtility.HtmlDecode(htmlDoc.DocumentNode.SelectNodes("//title").First().InnerText);
+            var root = htmlDoc.DocumentNode.SelectNodes("//body").First();
+            var txtNodes = root.Descendants().Where(x =>
+                x.Name == "#text" &&
+                (x.ParentNode.Name != "script") &&
+                (!string.IsNullOrWhiteSpace(x.InnerText))
+            ).ToList();
+
+            var txt = txtNodes.Select(x => WebUtility.HtmlDecode(x.InnerText));
+            var body = string.Join("\r\n", txt);
+
+            System.IO.File.WriteAllText(DateTime.Now.Ticks + "_" + uri.Host + ".txt", body);
+
+            return (title, body);
         }
 
         private static string GetWebString(Uri uri)

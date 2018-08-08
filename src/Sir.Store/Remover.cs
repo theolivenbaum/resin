@@ -1,4 +1,6 @@
-﻿namespace Sir.Store
+﻿using System.Linq;
+
+namespace Sir.Store
 {
     /// <summary>
     /// Delete documents from a collection.
@@ -20,9 +22,9 @@
 
         public void Remove(Query query, IReader reader)
         {
-            var data = reader.Read(query);
+            var data = reader.Read(query).ToList();
 
-            using (var job = new WriteJob(query.CollectionId, data))
+            using (var job = new WriteJob(query.CollectionId, data, nonBlocking:false))
             {
                 _writeQueue.Enqueue(job);
             }

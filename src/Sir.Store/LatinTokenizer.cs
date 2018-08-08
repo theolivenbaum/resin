@@ -31,10 +31,10 @@ namespace Sir.Store
                 yield return phrase;
             }
 
-            foreach (var word in words)
-            {
-                yield return word;
-            }
+            //foreach (var word in words)
+            //{
+            //    yield return word;
+            //}
         }
 
         public void Dispose()
