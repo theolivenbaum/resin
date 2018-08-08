@@ -39,58 +39,64 @@ namespace Sir.HttpServer.Controllers
             }
 
             var collectionName = collectionId ?? "www";
-            var uri = new Uri(url);
-            var document = new Dictionary<string, object>();
-            var htmlDoc = _htmlParser.Load(uri);
-            var title = WebUtility.HtmlDecode(htmlDoc.DocumentNode.SelectNodes("//title").First().InnerText);
-            var root = htmlDoc.DocumentNode.SelectNodes("//body").First();
-            var txtNodes = root.Descendants().Where(x => 
-                x.Name == "#text" && 
-                (x.ParentNode.Name != "script") && 
-                (!string.IsNullOrWhiteSpace(x.InnerText))
-            ).ToList();
 
-            var txt = txtNodes.Select(x => WebUtility.HtmlDecode(x.InnerText));
-            var body = string.Join("\r\n", txt);
-
-            System.IO.File.WriteAllText(DateTime.Now.Ticks + "_" + uri.Host + ".txt", body);
-
-            if (string.IsNullOrWhiteSpace(title))
+            try
             {
-                title = string.Join(string.Empty, txt.Take(3));
-            }
+                var uri = new Uri(url);
+                var document = new Dictionary<string, object>();
+                var htmlDoc = _htmlParser.Load(uri);
+                var title = WebUtility.HtmlDecode(htmlDoc.DocumentNode.SelectNodes("//title").First().InnerText);
+                var root = htmlDoc.DocumentNode.SelectNodes("//body").First();
+                var txtNodes = root.Descendants().Where(x =>
+                    x.Name == "#text" &&
+                    (x.ParentNode.Name != "script") &&
+                    (!string.IsNullOrWhiteSpace(x.InnerText))
+                ).ToList();
 
-            document["site"] = uri.Host;
-            document["url"] = uri.ToString();
-            document["body"] = body;
-            document["title"] = title;
-            document["created"] = DateTime.Now.ToBinary();
+                var txt = txtNodes.Select(x => WebUtility.HtmlDecode(x.InnerText));
+                var body = string.Join("\r\n", txt);
 
-            var writers = _plugins.All<IWriter>(Request.ContentType).ToList();
+                System.IO.File.WriteAllText(DateTime.Now.Ticks + "_" + uri.Host + ".txt", body);
 
-            if (writers == null || writers.Count == 0)
-            {
-                return StatusCode(415); // Media type not supported
-            }
-
-            foreach (var writer in writers)
-            {
-                try
+                if (string.IsNullOrWhiteSpace(title))
                 {
-                    await Task.Run(() =>
+                    title = string.Join(string.Empty, txt.Take(3));
+                }
+
+                document["site"] = uri.Host;
+                document["url"] = uri.ToString();
+                document["body"] = body;
+                document["title"] = title;
+                document["created"] = DateTime.Now.ToBinary();
+
+                var writers = _plugins.All<IWriter>(Request.ContentType).ToList();
+
+                if (writers == null || writers.Count == 0)
+                {
+                    return StatusCode(415); // Media type not supported
+                }
+
+                foreach (var writer in writers)
+                {
+                    try
                     {
-                        writer.Write(collectionName, new[] { document });
-                    });
+                        await Task.Run(() =>
+                        {
+                            writer.Write(collectionName, new[] { document });
+                        });
+                    }
+                    catch (Exception ew)
+                    {
+                        throw ew;
+                    }
                 }
-                catch (Exception ew)
-                {
-                    throw ew;
-                }
+
+                return Redirect("/add/thankyou");
             }
-
-            return Redirect("/add/thankyou");
-
-            //return StatusCode(201); // Created
+            catch
+            {
+                return View("Error");
+            }
         }
 
         private static string GetWebString(Uri uri)
