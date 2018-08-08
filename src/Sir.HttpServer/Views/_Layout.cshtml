@@ -11,27 +11,39 @@
             text-decoration: none;
             color: orangered;
         }
-        a.result-link{
-            color: mediumblue;
-        }
-        a.result-link:visited {
-            color: purple;
-        }
-        input[type=text]{
+
+            a.result-link {
+                color: mediumblue;
+            }
+
+                a.result-link:visited {
+                    color: purple;
+                }
+
+        input[type=text] {
             width: 260px;
         }
+
         textarea {
             width: 260px;
             height: 150px;
         }
+        footer {
+            padding-top: 10px;
+        }
+        footer span{
+            border-top: 1px solid black;
+            padding-top: 10px;
+        }
     </style>
     <a href="/"><h1>Did you go go?</h1></a>
+    <p>A no cookies, no javascript, no tracking kind of web search.</p>
     <div>
         @RenderBody()
     </div>
     <footer>
-        <p>A no cookies, no javascript, no tracking kind of web search.</p>
-        <p>Built on open source <a href="https://github.com/kreeben/resin">hosted on GitHub</a></p>
+        <div><span>Built on open source <a href="https://github.com/kreeben/resin">hosted on GitHub</a></span></div>
+        <div><p>By using this service you agree to a non-tracking, cookie-free and privacy-respecting web search experience.</p></div>
     </footer>
 </body>
 </html>

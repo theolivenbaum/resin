@@ -50,7 +50,7 @@ namespace Sir.Store
                 var ix = GetIndex(keyHash);
                 var match = ix.ClosestMatch(query.Term.Value.ToString());
 
-                if (match.Highscore >= 0.85d)
+                if (match.Highscore >= VectorNode.TrueAngle)
                 {
                     var docIds = _postingsReader.Read(match.PostingsOffset, match.PostingsSize)
                         .ToDictionary(x => x, y => match.Highscore);

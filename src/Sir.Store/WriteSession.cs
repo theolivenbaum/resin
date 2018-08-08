@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Sir.Store
 {
@@ -60,7 +61,8 @@ namespace Sir.Store
 
                     if (str != null) 
                     {
-                        foreach (var token in tokenizer.Tokenize(str))
+                        var tokenlist = tokenizer.Tokenize(str).ToList();
+                        foreach (var token in tokenlist)
                         {
                             tokens.Add(token);
                         }

@@ -19,4 +19,10 @@
     <ProjectReference Include="..\Sir\Sir.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="Views\Add\Error.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+  </ItemGroup>
+
 </Project>
