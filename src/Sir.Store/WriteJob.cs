@@ -9,16 +9,22 @@ namespace Sir.Store
     {
         public ulong CollectionId { get; }
         public IEnumerable<IDictionary> Data { get; private set; }
+
+        private readonly bool _nonBlocking;
+
         public bool Executed { get; set; }
 
-        public WriteJob(ulong collectionId, IEnumerable<IDictionary> data)
+        public WriteJob(ulong collectionId, IEnumerable<IDictionary> data, bool nonBlocking = true)
         {
             CollectionId = collectionId;
             Data = data;
+            _nonBlocking = nonBlocking;
         }
 
         public void Dispose()
         {
+            if (_nonBlocking) return;
+
             while (!Executed)
             {
                 Thread.Sleep(10);

@@ -62,6 +62,10 @@ namespace Sir.HttpServer
             {
                 plugins.Add(service.ContentType, service);
             }
+            foreach (var service in serviceProvider.GetServices<IRemover>())
+            {
+                plugins.Add(service.ContentType, service);
+            }
             foreach (var service in serviceProvider.GetServices<IQueryParser>())
             {
                 plugins.Add(service.ContentType, service);

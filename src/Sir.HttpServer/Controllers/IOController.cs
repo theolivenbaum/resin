@@ -19,6 +19,28 @@ namespace Sir.HttpServer.Controllers
             _plugins = plugins;
         }
 
+        [HttpDelete("{*collectionId}")]
+        public ActionResult Delete(string collectionId, string q)
+        {
+            var mediaType = Request.ContentType ?? string.Empty;
+            var queryParser = _plugins.Get<IQueryParser>(mediaType);
+            var reader = _plugins.Get<IReader>();
+            var remover = _plugins.Get<IRemover>();
+            var tokenizer = _plugins.Get<ITokenizer>(mediaType);
+
+            if (queryParser == null || remover == null || tokenizer == null)
+            {
+                throw new NotSupportedException();
+            }
+
+            var parsedQuery = queryParser.Parse(q, tokenizer);
+            parsedQuery.CollectionId = collectionId.ToHash();
+
+            remover.Remove(parsedQuery, reader);
+
+            return StatusCode(202); // marked for deletion
+        }
+
         [HttpPost("{*collectionId}")]
         public async Task<IActionResult> Post(string collectionId, [FromBody]IEnumerable<IDictionary> payload)
         {
@@ -61,17 +83,17 @@ namespace Sir.HttpServer.Controllers
 
         [HttpGet("{*collectionId}")]
         [HttpPut("{*collectionId}")]
-        public ObjectResult Get(string collectionId, string query)
+        public ObjectResult Get(string collectionId, string q)
         {
             //TODO: add pagination
 
             var mediaType = Request.ContentType ?? string.Empty;
 
-            if (query == null)
+            if (q == null)
             {
                 using (var r = new StreamReader(Request.Body))
                 {
-                    query = r.ReadToEnd();
+                    q = r.ReadToEnd();
                 }
             }
 
@@ -84,7 +106,7 @@ namespace Sir.HttpServer.Controllers
                 throw new NotSupportedException();
             }
 
-            var parsedQuery = queryParser.Parse(query, tokenizer);
+            var parsedQuery = queryParser.Parse(q, tokenizer);
             parsedQuery.CollectionId = collectionId.ToHash();
 
             var payload = reader.Read(parsedQuery).ToList();

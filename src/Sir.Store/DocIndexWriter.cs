@@ -22,7 +22,7 @@ namespace Sir.Store
         /// <returns>The next auto-incrementing doc id</returns>
         public ulong GetNextDocId()
         {
-            return _stream.Position == 0 ? 0 : (ulong)_stream.Position / (ulong)_blockSize;
+            return _stream.Position == 0 ? 1 : ((ulong)_stream.Position / (ulong)_blockSize) + 1;
         }
 
         /// <summary>

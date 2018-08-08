@@ -114,6 +114,7 @@ namespace Sir.Store
                     doc[key] = val;
                 }
 
+                doc["_docid"] = d.Key;
                 doc["_score"] = d.Value;
 
                 yield return doc;

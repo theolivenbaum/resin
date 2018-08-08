@@ -1,12 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-
-namespace Sir.Store
+﻿namespace Sir.Store
 {
     /// <summary>
-    /// Write into a document collection ("table").
+    /// Delete documents from a collection.
     /// </summary>
-    public class Writer : IWriter
+    public class Remover : IRemover
     {
         public string ContentType => "*";
 
@@ -14,17 +11,18 @@ namespace Sir.Store
         private readonly LocalStorageSessionFactory _sessionFactory;
         private readonly ITokenizer _tokenizer;
 
-        public Writer(LocalStorageSessionFactory sessionFactory, ITokenizer analyzer)
+        public Remover(LocalStorageSessionFactory sessionFactory, ITokenizer analyzer)
         {
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;
             _writeQueue = new ProducerConsumerQueue<WriteJob>(Commit);
         }
 
-        public void Write(string collectionId, IEnumerable<IDictionary> data)
+        public void Remove(Query query, IReader reader)
         {
-            var hash = collectionId.ToHash();
-            using (var job = new WriteJob(hash, data))
+            var data = reader.Read(query);
+
+            using (var job = new WriteJob(query.CollectionId, data))
             {
                 _writeQueue.Enqueue(job);
             }
@@ -34,7 +32,7 @@ namespace Sir.Store
         {
             using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
             {
-                session.Write(job.Data, _tokenizer);                
+                session.Remove(job.Data, _tokenizer);                
             }
             job.Executed = true;
         }

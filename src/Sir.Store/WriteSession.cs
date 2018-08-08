@@ -18,6 +18,7 @@ namespace Sir.Store
         private readonly ValueIndexWriter _valIx;
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
+        private readonly PostingsReader _postingsReader;
 
         public WriteSession(string directory, ulong collectionId, LocalStorageSessionFactory sessionFactory) 
             : base(directory, collectionId, sessionFactory)
@@ -40,6 +41,72 @@ namespace Sir.Store
             _valIx = new ValueIndexWriter(ValueIndexStream);
             _keyIx = new ValueIndexWriter(KeyIndexStream);
             _docIx = new DocIndexWriter(DocIndexStream);
+            _postingsReader = new PostingsReader(PostingsStream);
+        }
+
+        public void Remove(IEnumerable<IDictionary> data, ITokenizer tokenizer)
+        {
+            foreach (var model in data)
+            {
+                var docId = (ulong)model["_docid"];
+                var docMap = new List<(long keyId, long valId)>();
+
+                foreach (var key in model.Keys)
+                {
+                    var keyStr = key.ToString();
+                    var keyHash = keyStr.ToHash();
+                    var fieldIndex = GetIndex(keyHash);
+                    var val = (IComparable)model[key];
+                    var str = val as string;
+                    var tokens = new HashSet<string>();
+
+                    if (str != null)
+                    {
+                        var tokenlist = tokenizer.Tokenize(str).ToList();
+
+                        foreach (var token in tokenlist)
+                        {
+                            tokens.Add(token);
+                        }
+                    }
+                    else
+                    {
+                        tokens.Add(val.ToString());
+                    }
+
+                    if (fieldIndex == null)
+                    {
+                        throw new InvalidDataException();
+                    }
+
+                    var blankId = BitConverter.GetBytes((ulong)0);
+
+                    foreach (var token in tokens)
+                    {
+                        // 1. find node
+                        // 2. get postings list
+                        // 3. find docid, replace the id with a zero
+
+                        var match = fieldIndex.ClosestMatch(token);
+                        var postings = _postingsReader.Read(match.PostingsOffset, match.PostingsSize).ToList();
+
+                        PostingsStream.Seek(match.PostingsOffset, SeekOrigin.Begin);
+
+                        foreach (var posting in postings)
+                        {
+                            if (posting == docId)
+                            {
+                                PostingsStream.Write(blankId, 0, sizeof(ulong));
+                            }
+                            else
+                            {
+                                PostingsStream.Write(BitConverter.GetBytes(posting), 0, sizeof(ulong));
+                            }
+                        }
+                        PostingsStream.Write(blankId, 0, sizeof(ulong));
+                    }
+                }
+            }
         }
 
         public void Write(IEnumerable<IDictionary> data, ITokenizer tokenizer)
