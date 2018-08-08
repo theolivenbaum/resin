@@ -46,6 +46,8 @@ namespace Sir.Store
 
         public void Remove(IEnumerable<IDictionary> data, ITokenizer tokenizer)
         {
+            var postingsWriter = new PostingsWriter(PostingsStream);
+
             foreach (var model in data)
             {
                 var docId = (ulong)model["_docid"];
@@ -89,21 +91,16 @@ namespace Sir.Store
 
                         var match = fieldIndex.ClosestMatch(token);
                         var postings = _postingsReader.Read(match.PostingsOffset, match.PostingsSize).ToList();
-
-                        PostingsStream.Seek(match.PostingsOffset, SeekOrigin.Begin);
+                        var offset = match.PostingsOffset;
 
                         foreach (var posting in postings)
                         {
                             if (posting == docId)
                             {
-                                PostingsStream.Write(blankId, 0, sizeof(ulong));
+                                postingsWriter.FlagAsDeleted(offset);
                             }
-                            else
-                            {
-                                PostingsStream.Write(BitConverter.GetBytes(posting), 0, sizeof(ulong));
-                            }
+                            offset += PostingsWriter.BlockSize;
                         }
-                        PostingsStream.Write(blankId, 0, sizeof(ulong));
                     }
                 }
             }

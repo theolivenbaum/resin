@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,7 +18,7 @@ namespace Sir.HttpServer.Controllers
             _plugins = plugins;
         }
 
-        [HttpDelete("{*collectionId}")]
+        [HttpDelete("delete/{*collectionId}")]
         public ActionResult Delete(string collectionId, string q)
         {
             var mediaType = Request.ContentType ?? string.Empty;

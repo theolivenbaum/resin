@@ -91,14 +91,11 @@ namespace Sir.Store
         public void Serialize(Stream indexStream, Stream vectorStream, Stream postingsStream)
         {
             PostingsOffset = postingsStream.Position;
-            PostingsSize = _docIds.Count * sizeof(ulong);
+            PostingsSize = _docIds.Count * PostingsWriter.BlockSize;
             _vecOffset = TermVector.Serialize(vectorStream);
 
-            foreach (var docId in _docIds)
-            {
-                var posting = BitConverter.GetBytes(docId);
-                postingsStream.Write(posting, 0, sizeof(ulong));
-            }
+            var postingsWriter = new PostingsWriter(postingsStream);
+            postingsWriter.Write(_docIds);
 
             foreach (var buf in ToStream())
             {
@@ -109,6 +106,7 @@ namespace Sir.Store
             {
                 Left.Serialize(indexStream, vectorStream, postingsStream);
             }
+
             if (Right != null)
             {
                 Right.Serialize(indexStream, vectorStream, postingsStream);
