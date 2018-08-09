@@ -44,7 +44,7 @@ namespace Sir.HttpServer.Controllers
             {
                 var uri = new Uri(url);
                 var document = new Dictionary<string, object>();
-                var parsed = GetHtml(uri);
+                var parsed = GetWebString(uri);
 
                 document["site"] = uri.Host;
                 document["url"] = uri.ToString();
@@ -75,8 +75,10 @@ namespace Sir.HttpServer.Controllers
                 
                 return Redirect("/add/thankyou");
             }
-            catch
+            catch (Exception ex)
             {
+                // TODO: log
+
                 return View("Error");
             }
         }
@@ -84,8 +86,27 @@ namespace Sir.HttpServer.Controllers
         private (string title, string body) GetHtml(Uri uri)
         {
             var htmlDoc = _htmlParser.Load(uri);
-            var title = WebUtility.HtmlDecode(htmlDoc.DocumentNode.SelectNodes("//title").First().InnerText);
-            var root = htmlDoc.DocumentNode.SelectNodes("//body").First();
+            return Parse(htmlDoc);
+        }
+
+        private (string title, string body) GetWebString(Uri uri)
+        {
+            var webRequest = WebRequest.Create(uri);
+            using (var response = webRequest.GetResponse())
+            using (var content = response.GetResponseStream())
+            using (var reader = new StreamReader(content))
+            {
+                var str = reader.ReadToEnd();
+                var htmlDoc = new HtmlDocument();
+                htmlDoc.LoadHtml(str);
+                return Parse(htmlDoc);
+            }
+        }
+
+        private static (string title, string body) Parse(HtmlDocument htmlDocument)
+        {
+            var title = WebUtility.HtmlDecode(htmlDocument.DocumentNode.SelectNodes("//title").First().InnerText);
+            var root = htmlDocument.DocumentNode.SelectNodes("//body").First();
             var txtNodes = root.Descendants().Where(x =>
                 x.Name == "#text" &&
                 (x.ParentNode.Name != "script") &&
@@ -95,20 +116,7 @@ namespace Sir.HttpServer.Controllers
             var txt = txtNodes.Select(x => WebUtility.HtmlDecode(x.InnerText));
             var body = string.Join("\r\n", txt);
 
-            System.IO.File.WriteAllText(DateTime.Now.Ticks + "_" + uri.Host + ".txt", body);
-
             return (title, body);
-        }
-
-        private static string GetWebString(Uri uri)
-        {
-            var webRequest = WebRequest.Create(uri);
-            using (var response = webRequest.GetResponse())
-            using (var content = response.GetResponseStream())
-            using (var reader = new StreamReader(content))
-            {
-                return reader.ReadToEnd();
-            }
         }
 
         public ActionResult Thankyou()

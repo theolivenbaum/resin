@@ -96,6 +96,7 @@ namespace Sir.Store
 
             var postingsWriter = new PostingsWriter(postingsStream);
             postingsWriter.Write(_docIds);
+            _docIds.Clear();
 
             foreach (var buf in ToStream())
             {

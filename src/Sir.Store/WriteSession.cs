@@ -57,10 +57,16 @@ namespace Sir.Store
                     var keyStr = key.ToString();
                     var keyHash = keyStr.ToHash();
                     var fieldIndex = GetIndex(keyHash);
+
+                    if (fieldIndex == null)
+                    {
+                        continue;
+                    }
+
                     var val = (IComparable)model[key];
                     var str = val as string;
                     var tokens = new HashSet<string>();
-
+                    
                     if (str != null)
                     {
                         var tokenlist = tokenizer.Tokenize(str).ToList();
@@ -75,16 +81,12 @@ namespace Sir.Store
                         tokens.Add(val.ToString());
                     }
 
-                    if (fieldIndex == null)
-                    {
-                        continue;
-                    }
-
                     foreach (var token in tokens)
                     {
                         // 1. find node
                         // 2. get postings list
-                        // 3. find docid, replace the id with a zero
+                        // 3. find docId offset
+                        // 2. flag document as deleted
 
                         var match = fieldIndex.ClosestMatch(token);
                         var postings = _postingsReader.Read(match.PostingsOffset, match.PostingsSize).ToList();
