@@ -17,10 +17,6 @@ namespace Sir.HttpServer
             assemblyPath = Path.Combine(Directory.GetCurrentDirectory(), "bin\\Debug\\netcoreapp2.0");
 #endif
 
-            var files = Directory.GetFiles(assemblyPath, "*.plugin.dll");
-            System.IO.File.WriteAllText(string.Format("_startup_{0}.log", DateTime.Now.ToBinary()), string.Join("\n", files));
-
-
             foreach (var assembly in Directory.GetFiles(assemblyPath, "*.plugin.dll")
                 .Select(file=> AssemblyLoadContext.Default.LoadFromAssemblyPath(file)))
             {
