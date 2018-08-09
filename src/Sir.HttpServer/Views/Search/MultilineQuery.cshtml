@@ -10,7 +10,7 @@
 <div>
     @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
 {
-    <textarea style="float:left;" id="q" name="q" placeholder="@("title:Rambo\r\n-title:First Blood")" value="@ViewData["q"]"></textarea>
+    <textarea style="float:left;" id="q" name="q" placeholder="@("title:Rambo\r\n-body:first blood")" value="@ViewData["q"]"></textarea>
     <input type="submit" value="Go" />}
 </div>
 
