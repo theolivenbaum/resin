@@ -56,7 +56,7 @@ namespace Sir.HttpServer.Controllers
                 var reader = _plugins.Get<IReader>();
                 var remover = _plugins.Get<IRemover>();
 
-                if (writers == null || writers.Count == 0)
+                if (writers == null || reader == null || remover == null)
                 {
                     return StatusCode(415); // Media type not supported
                 }
@@ -77,7 +77,8 @@ namespace Sir.HttpServer.Controllers
             }
             catch (Exception ex)
             {
-                // TODO: log
+                // TODO: add logging framework
+                System.IO.File.WriteAllText(string.Format("_{0}_{1}.log", DateTime.Now.ToBinary(), WebUtility.UrlEncode(url)), ex.ToString());
 
                 return View("Error");
             }
