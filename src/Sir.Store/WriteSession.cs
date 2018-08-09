@@ -26,13 +26,13 @@ namespace Sir.Store
             _dirty = new Dictionary<string, VectorNode>();
 
             ValueStream = sessionFactory.WritableValueStream;
-            KeyStream = sessionFactory.CreateAppendStream(string.Format("{0}.key", collectionId));
-            DocStream = sessionFactory.CreateAppendStream(string.Format("{0}.docs", collectionId));
+            KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));
+            DocStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", collectionId)));
             ValueIndexStream = sessionFactory.WritableValueIndexStream;
-            KeyIndexStream = sessionFactory.CreateAppendStream(string.Format("{0}.kix", collectionId));
-            DocIndexStream = sessionFactory.CreateAppendStream(string.Format("{0}.dix", collectionId));
-            PostingsStream = sessionFactory.CreateReadWriteStream(string.Format("{0}.pos", collectionId));
-            VectorStream = sessionFactory.CreateAppendStream(string.Format("{0}.vec", collectionId));
+            KeyIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collectionId)));
+            DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collectionId)));
+            PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collectionId)));
+            VectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId)));
             Index = sessionFactory.GetIndex(collectionId);
 
             _vals = new ValueWriter(ValueStream);

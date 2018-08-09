@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Sir.Store
@@ -22,13 +23,13 @@ namespace Sir.Store
             : base(directory, collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.ValueStream;
-            KeyStream = sessionFactory.CreateReadWriteStream(string.Format("{0}.key", collectionId));
-            DocStream = sessionFactory.CreateReadWriteStream(string.Format("{0}.docs", collectionId));
+            KeyStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));
+            DocStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", collectionId)));
             ValueIndexStream = sessionFactory.ValueIndexStream;
-            KeyIndexStream = sessionFactory.CreateReadWriteStream(string.Format("{0}.kix", collectionId));
-            DocIndexStream = sessionFactory.CreateReadWriteStream(string.Format("{0}.dix", collectionId));
-            PostingsStream = sessionFactory.CreateReadWriteStream(string.Format("{0}.pos", collectionId));
-            VectorStream = sessionFactory.CreateReadWriteStream(string.Format("{0}.vec", collectionId));
+            KeyIndexStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collectionId)));
+            DocIndexStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collectionId)));
+            PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collectionId)));
+            VectorStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId)));
             Index = sessionFactory.GetIndex(collectionId);
 
             _docIx = new DocIndexReader(DocIndexStream);

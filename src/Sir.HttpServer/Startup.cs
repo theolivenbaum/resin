@@ -23,7 +23,6 @@ namespace Sir.HttpServer
             {
                 options.RespectBrowserAcceptHeader = true;
             });
-            ServiceProvider = ServiceConfiguration.Configure(services);
 
             var dataDir = Path.Combine(Directory.GetCurrentDirectory(), "App_Data");
 
@@ -31,7 +30,8 @@ namespace Sir.HttpServer
             {
                 Directory.CreateDirectory(dataDir);
             }
-            Directory.SetCurrentDirectory(dataDir);
+
+            ServiceProvider = ServiceConfiguration.Configure(services);
         }
 
         public void Configure(IApplicationBuilder app, IApplicationLifetime applicationLifetime, IHostingEnvironment env)

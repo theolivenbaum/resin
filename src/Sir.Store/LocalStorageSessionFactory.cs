@@ -9,7 +9,6 @@ namespace Sir.Store
         private readonly SortedList<ulong, long> _keys;
         private readonly object Sync = new object();
         private readonly VectorTree _index;
-        private readonly string _dir;
 
         public Stream ValueStream { get; }
 
@@ -19,6 +18,8 @@ namespace Sir.Store
         public Stream WritableKeyMapStream { get; }
 
         public Stream WritableValueIndexStream { get; }
+
+        public string Dir { get; }
 
         public void Dispose()
         {
@@ -33,7 +34,7 @@ namespace Sir.Store
         {
             _keys = LoadKeyMap(dir);
             _index = DeserializeTree(dir);
-            _dir = dir;
+            Dir = dir;
 
             ValueStream = CreateReadWriteStream(Path.Combine(dir, "_.val"));
             WritableValueStream = CreateAppendStream(Path.Combine(dir, "_.val"));
@@ -119,12 +120,12 @@ namespace Sir.Store
 
         public WriteSession CreateWriteSession(ulong collectionId)
         {
-            return new WriteSession(_dir, collectionId, this);
+            return new WriteSession(Dir, collectionId, this);
         }
 
         public ReadSession CreateReadSession(ulong collectionId)
         {
-            return new ReadSession(_dir, collectionId, this);
+            return new ReadSession(Dir, collectionId, this);
         }
 
         public SortedList<long, VectorNode> GetIndex(ulong collectionId)
