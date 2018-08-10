@@ -33,7 +33,7 @@ namespace Sir.Store
         public LocalStorageSessionFactory(string dir)
         {
             _keys = LoadKeyMap(dir);
-            _index = DeserializeTree(dir);
+            _index = DeserializeIndexes(dir);
             Dir = dir;
 
             ValueStream = CreateReadWriteStream(Path.Combine(dir, "_.val"));
@@ -41,6 +41,11 @@ namespace Sir.Store
             ValueIndexStream = CreateReadWriteStream(Path.Combine(dir, "_.vix"));
             WritableValueIndexStream = CreateAppendStream(Path.Combine(dir, "_.vix"));
             WritableKeyMapStream = new FileStream(Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+        }
+
+        public void RefreshIndex(ulong collectionId, long key, VectorNode index)
+        {
+            _index.Replace(collectionId, key, index);
         }
 
         public static SortedList<ulong, long> LoadKeyMap(string dir)
@@ -64,33 +69,38 @@ namespace Sir.Store
             return keys;
         }
 
-        public static VectorTree DeserializeTree(string dir)
+        public VectorTree DeserializeIndexes(string dir)
         {
             var ix = new SortedList<ulong, SortedList<long, VectorNode>>();
 
             foreach (var ixFileName in Directory.GetFiles(dir, "*.ix"))
             {
                 var name = Path.GetFileNameWithoutExtension(ixFileName).Split(".", StringSplitOptions.RemoveEmptyEntries);
-                var colHash = ulong.Parse(name[0]);
+                var collectionHash = ulong.Parse(name[0]);
                 var keyId = long.Parse(name[1]);
                 SortedList<long, VectorNode> colIx;
+                var vecFileName = Path.Combine(dir, string.Format("{0}.vec", collectionHash));
 
-                if (!ix.TryGetValue(colHash, out colIx))
+                if (!ix.TryGetValue(collectionHash, out colIx))
                 {
                     colIx = new SortedList<long, VectorNode>();
-                    ix.Add(colHash, colIx);
+                    ix.Add(collectionHash, colIx);
                 }
 
-                using (var treeStream = File.OpenRead(ixFileName))
-                using (var vecStream = File.OpenRead(Path.Combine(dir, string.Format("{0}.vec", colHash))))
-                {
-                    var root = VectorNode.Deserialize(treeStream, vecStream);
-
-                    ix[colHash].Add(keyId, root);
-                }
+                var root = DeserializeIndex(ixFileName, vecFileName);
+                ix[collectionHash].Add(keyId, root);
             }
 
             return new VectorTree(ix);
+        }
+
+        public VectorNode DeserializeIndex(string ixFileName, string vecFileName)
+        {
+            using (var treeStream = new FileStream(ixFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var vecStream = new FileStream(vecFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                return VectorNode.Deserialize(treeStream, vecStream);
+            }
         }
 
         public void AddKey(ulong keyHash, long keyId)
@@ -120,12 +130,12 @@ namespace Sir.Store
 
         public WriteSession CreateWriteSession(ulong collectionId)
         {
-            return new WriteSession(Dir, collectionId, this);
+            return new WriteSession(collectionId, this);
         }
 
         public ReadSession CreateReadSession(ulong collectionId)
         {
-            return new ReadSession(Dir, collectionId, this);
+            return new ReadSession(collectionId, this);
         }
 
         public SortedList<long, VectorNode> GetIndex(ulong collectionId)

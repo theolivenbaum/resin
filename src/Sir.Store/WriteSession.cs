@@ -20,8 +20,8 @@ namespace Sir.Store
         private readonly DocIndexWriter _docIx;
         private readonly PostingsReader _postingsReader;
 
-        public WriteSession(string directory, ulong collectionId, LocalStorageSessionFactory sessionFactory) 
-            : base(directory, collectionId, sessionFactory)
+        public WriteSession(ulong collectionId, LocalStorageSessionFactory sessionFactory) 
+            : base(collectionId, sessionFactory)
         {
             _dirty = new Dictionary<string, VectorNode>();
 
@@ -116,7 +116,7 @@ namespace Sir.Store
                 {
                     var keyStr = key.ToString();
                     var keyHash = keyStr.ToHash();
-                    var fieldIndex = GetIndex(keyHash);
+                    var fieldIndex = CloneIndex(keyHash);
                     var val = (IComparable)model[key];
                     var str = val as string;
                     var tokens = new HashSet<string>();
@@ -165,8 +165,7 @@ namespace Sir.Store
                     foreach (var token in tokens)
                     {
                         // add token and postings to index
-                        var match = fieldIndex.ClosestMatch(token);
-                        match.Add(token, docId);
+                        fieldIndex.Add(token, docId);
                     }
 
                     var indexName = string.Format("{0}.{1}", CollectionId, keyId);
@@ -185,13 +184,19 @@ namespace Sir.Store
         {
             foreach (var node in _dirty)
             {
-                var fn = Path.Combine(Dir, node.Key + ".ix");
-                var fileMode = File.Exists(fn) ? FileMode.Truncate : FileMode.Append;
+                var ixFileName = Path.Combine(SessionFactory.Dir, node.Key + ".ix");
+                var tmpFileName = string.Format("{0}.tmp_ix", Path.GetFileNameWithoutExtension(ixFileName));
 
-                using (var stream = new FileStream(fn, fileMode, FileAccess.Write, FileShare.None))
+                using (var indexStream = new FileStream(
+                    tmpFileName, FileMode.Append, FileAccess.Write, FileShare.None))
                 {
-                    node.Value.Serialize(stream, VectorStream, PostingsStream);
+                    node.Value.Serialize(indexStream, VectorStream, PostingsStream);
                 }
+
+                SessionFactory.RefreshIndex(CollectionId, long.Parse(node.Key.Split('.')[0]), node.Value);
+
+                File.Copy(tmpFileName, ixFileName, overwrite:true);
+                File.Delete(tmpFileName);
             }
 
             ValueStream.Flush();

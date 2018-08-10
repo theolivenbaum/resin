@@ -1,34 +1,33 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace Sir.Store
 {
-    public class WriteJob : IDisposable
+    public class WriteJob
     {
         public ulong CollectionId { get; }
         public IEnumerable<IDictionary> Data { get; private set; }
+        public IEnumerable<IDictionary> Remove { get; private set; }
 
-        private readonly bool _nonBlocking;
+        public WriteJob(ulong collectionId, IEnumerable<IDictionary> data, bool delete = false)
+        {
+            CollectionId = collectionId;
 
-        public bool Executed { get; set; }
+            if (delete)
+            {
+                Remove = data;
+            }
+            else
+            {
+                Data = data;
+            }
+        }
 
-        public WriteJob(ulong collectionId, IEnumerable<IDictionary> data, bool nonBlocking = true)
+        public WriteJob(ulong collectionId, IEnumerable<IDictionary> data, IEnumerable<IDictionary> remove)
         {
             CollectionId = collectionId;
             Data = data;
-            _nonBlocking = nonBlocking;
-        }
-
-        public void Dispose()
-        {
-            if (_nonBlocking) return;
-
-            while (!Executed)
-            {
-                Thread.Sleep(10);
-            }
+            Remove = remove;
         }
     }
 }

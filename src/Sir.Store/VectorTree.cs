@@ -19,6 +19,11 @@ namespace Sir.Store
             _ix = ix;
         }
 
+        public void Replace(ulong collectionId, long key, VectorNode index)
+        {
+            _ix[collectionId][key] = index;
+        }
+
         public SortedList<long, VectorNode> GetOrCreateIndex(ulong collectionId)
         {
             SortedList<long, VectorNode> ix;
@@ -50,11 +55,6 @@ namespace Sir.Store
             }
 
             return (depth, width);
-        }
-
-        public VectorNode Find(ulong colId, long keyId, string pattern)
-        {
-            return GetNode(colId, keyId).ClosestMatch(pattern);
         }
 
         public VectorNode GetNode(ulong colId, long keyId)

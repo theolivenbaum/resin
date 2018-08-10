@@ -54,22 +54,25 @@ namespace Sir.HttpServer.Controllers
 
                 var writers = _plugins.All<IWriter>(Request.ContentType).ToList();
                 var reader = _plugins.Get<IReader>();
-                var remover = _plugins.Get<IRemover>();
+                var mediaType = Request.ContentType ?? string.Empty;
+                var queryParser = _plugins.Get<IQueryParser>(mediaType);
+                var tokenizer = _plugins.Get<ITokenizer>(mediaType);
 
-                if (writers == null || reader == null || remover == null)
+                if (writers == null || reader == null || queryParser == null || tokenizer == null)
                 {
                     return StatusCode(415); // Media type not supported
                 }
 
-                remover.Remove(
-                    new Query { CollectionId = collectionName.ToHash(), Term = new Term("url", uri.ToString()) },
-                    reader);
+                var deleteQuery = queryParser.Parse(string.Format("url:{0}", uri.ToString()), tokenizer);
+                deleteQuery.CollectionId = collectionName.ToHash();
+
+                var oldData = reader.Read(deleteQuery).ToList();
 
                 foreach (var writer in writers)
                 {
                     await Task.Run(() =>
                     {
-                        writer.Write(collectionName, new[] { document });
+                        writer.Update(collectionName, new[] { document }, oldData);
                     });
                 }
                 
@@ -92,8 +95,11 @@ namespace Sir.HttpServer.Controllers
 
         private (string title, string body) GetWebString(Uri uri)
         {
-            var webRequest = WebRequest.Create(uri);
-            using (var response = webRequest.GetResponse())
+            var req = WebRequest.Create(uri);
+            req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36");
+            req.Headers.Add("Accept", "text/html,application/xhtml+xml,application/xml;");
+
+            using (var response = req.GetResponse())
             using (var content = response.GetResponseStream())
             using (var reader = new StreamReader(content))
             {

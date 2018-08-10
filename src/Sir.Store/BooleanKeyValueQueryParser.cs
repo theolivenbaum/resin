@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Sir.Store
 {
@@ -15,13 +16,25 @@ namespace Sir.Store
         public Query Parse(string query, ITokenizer tokenizer)
         {
             Query root = null;
+            Query previous = null;
             var clauses = query.Split('\n');
 
             foreach (var clause in clauses)
             {
                 var tokens = clause.Split(':');
                 var key = tokens[0];
-                var val = tokenizer.Normalize(tokens[1]);
+                string v;
+
+                if (tokens.Length > 2)
+                {
+                    v = string.Join(" ", tokens.Skip(1));
+                }
+                else
+                {
+                    v = tokens[1];
+                }
+
+                var vals = tokenizer.Tokenize(v);
                 var and = root == null || key[0] == '+';
                 var not = key[0] == '-';
                 var or = !and && !not;
@@ -31,28 +44,33 @@ namespace Sir.Store
                     key = key.Substring(1);
                 }
 
-                var q = new Query { Term = new Term(key, val) };
+                foreach(var val in vals)
+                {
+                    var q = new Query { Term = new Term(key, val) };
 
-                if (root == null)
-                {
-                    q.And = true;
-                    root = q;
-                }
-                else
-                {
-                    if (and)
+                    if (previous == null)
                     {
                         q.And = true;
-                    }
-                    else if (not)
-                    {
-                        q.Not = true;
+                        root = q;
+                        previous = q;
                     }
                     else
                     {
-                        q.Or = true;
+                        if (and)
+                        {
+                            q.And = true;
+                        }
+                        else if (not)
+                        {
+                            q.Not = true;
+                        }
+                        else
+                        {
+                            q.Or = true;
+                        }
+                        previous.Next = q;
+                        previous = q;
                     }
-                    root.Next = q;
                 }
             }
             

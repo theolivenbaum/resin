@@ -10,7 +10,7 @@ namespace Sir.Store
         private static char[] _delimiters = new char[] {
                             '.', ',', '?', '!',
                             ':', ';', '\\', '/',
-                            '\n', '\r', '\t',
+                            '\n', '\r', '\t', ' ',
                             '(', ')', '[', ']',
                             '"', '`', '´', '&'
                             };
@@ -19,17 +19,10 @@ namespace Sir.Store
 
         public IEnumerable<string> Tokenize(string text)
         {
-            var phrases = Normalize(text)
+            var words = Normalize(text)
                 .Split(_delimiters, StringSplitOptions.RemoveEmptyEntries)
                 .Where(x=>!string.IsNullOrWhiteSpace(x))
                 .ToList();
-
-            var words = phrases.SelectMany(x => x.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-
-            foreach (var phrase in phrases)
-            {
-                yield return phrase;
-            }
 
             foreach (var word in words)
             {

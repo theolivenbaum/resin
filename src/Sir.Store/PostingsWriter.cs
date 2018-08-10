@@ -23,6 +23,8 @@ namespace Sir.Store
 
         public void Write(IEnumerable<ulong> docIds)
         {
+            _stream.Seek(0, SeekOrigin.End);
+
             foreach (var docId in docIds)
             {
                 _stream.Write(BitConverter.GetBytes(docId), 0, sizeof(ulong));

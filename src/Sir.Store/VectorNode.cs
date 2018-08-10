@@ -59,8 +59,10 @@ namespace Sir.Store
             TermVector = wordVector;
         }
 
-        private IEnumerable<byte[]> ToStream()
+        private byte[][] ToStream()
         {
+            var block = new byte[6][];
+
             byte[] terminator = new byte[1];
 
             if (Left == null && Right == null)
@@ -80,12 +82,14 @@ namespace Sir.Store
                 terminator[0] = 0;
             }
 
-            yield return BitConverter.GetBytes(Angle);
-            yield return BitConverter.GetBytes(_vecOffset);
-            yield return BitConverter.GetBytes(PostingsOffset);
-            yield return BitConverter.GetBytes(PostingsSize);
-            yield return BitConverter.GetBytes(TermVector.Count);
-            yield return terminator;
+            block[0] = BitConverter.GetBytes(Angle);
+            block[1] = BitConverter.GetBytes(_vecOffset);
+            block[2] = BitConverter.GetBytes(PostingsOffset);
+            block[3] = BitConverter.GetBytes(PostingsSize);
+            block[4] = BitConverter.GetBytes(TermVector.Count);
+            block[5] = terminator;
+
+            return block;
         }
 
         public void Serialize(Stream indexStream, Stream vectorStream, Stream postingsStream)
@@ -124,27 +128,27 @@ namespace Sir.Store
 
             if (read < nodeSize)
             {
-                throw new Exception("data is corrupt");
+                throw new InvalidDataException();
             }
             
             var angle = BitConverter.ToDouble(buf, 0);
             var vecOffset = BitConverter.ToInt64(buf,       sizeof(double));
             var postingsOffset = BitConverter.ToInt64(buf,  sizeof(double) + sizeof(long));
             var postingsSize = BitConverter.ToInt32(buf,    sizeof(double) + sizeof(long) + sizeof(long));
-            var listCount = BitConverter.ToInt32(buf,       sizeof(double) + sizeof(long) + sizeof(long) + sizeof(int));
+            var vectorCount = BitConverter.ToInt32(buf,       sizeof(double) + sizeof(long) + sizeof(long) + sizeof(int));
             var terminator = buf[nodeSize - 1];
             var vec = new SortedList<char, double>();
-            var listBuf = new byte[listCount * kvpSize];
+            var vecBuf = new byte[vectorCount * kvpSize];
 
             vectorStream.Seek(vecOffset, SeekOrigin.Begin);
-            vectorStream.Read(listBuf, 0, listBuf.Length);
+            vectorStream.Read(vecBuf, 0, vecBuf.Length);
 
             var offs = 0;
 
-            for (int i = 0; i < listCount; i++)
+            for (int i = 0; i < vectorCount; i++)
             {
-                var key = BitConverter.ToChar(listBuf, offs);
-                var val = BitConverter.ToDouble(listBuf, offs + sizeof(char));
+                var key = BitConverter.ToChar(vecBuf, offs);
+                var val = BitConverter.ToDouble(vecBuf, offs + sizeof(char));
                 vec.Add(key, val);
 
                 offs += kvpSize;
@@ -288,10 +292,10 @@ namespace Sir.Store
         {
             var angle = node.TermVector.CosAngle(TermVector);
 
-            if (angle < IdenticalAngle)
-            {
-                TermVector = TermVector.Add(node.TermVector);
-            }
+            //if (angle < IdenticalAngle)
+            //{
+            //    TermVector = TermVector.Add(node.TermVector);
+            //}
 
             foreach (var id in node._docIds)
             {

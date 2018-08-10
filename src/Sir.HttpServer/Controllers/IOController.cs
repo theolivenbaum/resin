@@ -19,23 +19,30 @@ namespace Sir.HttpServer.Controllers
         }
 
         [HttpDelete("delete/{*collectionId}")]
-        public ActionResult Delete(string collectionId, string q)
+        public async Task<IActionResult> Delete(string collectionId, string q)
         {
             var mediaType = Request.ContentType ?? string.Empty;
             var queryParser = _plugins.Get<IQueryParser>(mediaType);
             var reader = _plugins.Get<IReader>();
-            var remover = _plugins.Get<IRemover>();
+            var writers = _plugins.All<IWriter>(mediaType).ToList();
             var tokenizer = _plugins.Get<ITokenizer>(mediaType);
 
-            if (queryParser == null || remover == null || tokenizer == null)
+            if (queryParser == null || writers == null || writers.Count == 0 || tokenizer == null)
             {
                 throw new NotSupportedException();
             }
 
             var parsedQuery = queryParser.Parse(q, tokenizer);
             parsedQuery.CollectionId = collectionId.ToHash();
+            var oldData = reader.Read(parsedQuery).ToList();
 
-            remover.Remove(parsedQuery, reader);
+            foreach (var writer in writers)
+            {
+                await Task.Run(() =>
+                {
+                    writer.Remove(collectionId, oldData);
+                });
+            }
 
             return StatusCode(202); // marked for deletion
         }

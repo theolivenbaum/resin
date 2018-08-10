@@ -19,8 +19,8 @@ namespace Sir.Store
         private readonly ValueReader _valReader;
         private readonly PostingsReader _postingsReader;
 
-        public ReadSession(string directory, ulong collectionId, LocalStorageSessionFactory sessionFactory) 
-            : base(directory, collectionId, sessionFactory)
+        public ReadSession(ulong collectionId, LocalStorageSessionFactory sessionFactory) 
+            : base(collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.ValueStream;
             KeyStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));
@@ -49,43 +49,47 @@ namespace Sir.Store
             {
                 var keyHash = query.Term.Key.ToString().ToHash();
                 var ix = GetIndex(keyHash);
-                var match = ix.ClosestMatch(query.Term.Value.ToString());
 
-                if (match.Highscore > VectorNode.FalseAngle)
+                if (ix != null)
                 {
-                    var docIds = _postingsReader.Read(match.PostingsOffset, match.PostingsSize)
-                        .ToDictionary(x => x, y => match.Highscore);
+                    var match = ix.ClosestMatch(query.Term.Value.ToString());
 
-                    if (result == null)
+                    if (match.Highscore >= VectorNode.TrueAngle)
                     {
-                        result = docIds;
-                    }
-                    else
-                    {
-                        if (query.And)
+                        var docIds = _postingsReader.Read(match.PostingsOffset, match.PostingsSize)
+                            .ToDictionary(x => x, y => match.Highscore);
+
+                        if (result == null)
                         {
-                            result = (from doc in result
-                                      join x in docIds on doc.Key equals x.Key
-                                      select doc).ToDictionary(x=>x.Key, y=>y.Value);
-
+                            result = docIds;
                         }
-                        else if (query.Not)
+                        else
                         {
-                            foreach (var id in docIds)
+                            if (query.And)
                             {
-                                result.Remove(id);
+                                result = (from doc in result
+                                          join x in docIds on doc.Key equals x.Key
+                                          select doc).ToDictionary(x => x.Key, y => y.Value);
+
+                            }
+                            else if (query.Not)
+                            {
+                                foreach (var id in docIds)
+                                {
+                                    result.Remove(id);
+                                }
+                            }
+                            else // Or
+                            {
+                                foreach (var id in docIds)
+                                {
+                                    result[id.Key] = id.Value;
+                                }
                             }
                         }
-                        else // Or
-                        {
-                            foreach (var id in docIds)
-                            {
-                                result[id.Key] = id.Value; 
-                            }
-                        }
                     }
+                    query = query.Next;
                 }
-                query = query.Next;
             }
 
             if (result == null)
