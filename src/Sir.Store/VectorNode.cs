@@ -17,7 +17,7 @@ namespace Sir.Store
 
         private VectorNode _right;
         private VectorNode _left;
-        private long _vecOffset;
+        public long VecOffset { get; set; }
         private HashSet<ulong> _docIds;
 
         public long PostingsOffset { get; set; }
@@ -83,7 +83,7 @@ namespace Sir.Store
             }
 
             block[0] = BitConverter.GetBytes(Angle);
-            block[1] = BitConverter.GetBytes(_vecOffset);
+            block[1] = BitConverter.GetBytes(VecOffset);
             block[2] = BitConverter.GetBytes(PostingsOffset);
             block[3] = BitConverter.GetBytes(PostingsSize);
             block[4] = BitConverter.GetBytes(TermVector.Count);
@@ -94,12 +94,14 @@ namespace Sir.Store
 
         public void Serialize(Stream indexStream, Stream vectorStream, Stream postingsStream)
         {
-            PostingsOffset = postingsStream.Position;
-            PostingsSize = _docIds.Count * PostingsWriter.BlockSize;
-            _vecOffset = TermVector.Serialize(vectorStream);
+            VecOffset = TermVector.Serialize(vectorStream);
 
             var postingsWriter = new PostingsWriter(postingsStream);
-            postingsWriter.Write(_docIds);
+            var posInfo = postingsWriter.Write(_docIds);
+
+            PostingsOffset = posInfo.offset;
+            PostingsSize = posInfo.length;
+
             _docIds.Clear();
 
             foreach (var buf in ToStream())

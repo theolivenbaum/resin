@@ -21,8 +21,10 @@ namespace Sir.Store
             _dead[0] = 0;
         }
 
-        public void Write(IEnumerable<ulong> docIds)
+        public (long offset, int length) Write(IEnumerable<ulong> docIds)
         {
+            var offset = _stream.Position;
+
             _stream.Seek(0, SeekOrigin.End);
 
             foreach (var docId in docIds)
@@ -30,6 +32,8 @@ namespace Sir.Store
                 _stream.Write(BitConverter.GetBytes(docId), 0, sizeof(ulong));
                 _stream.Write(_alive, 0, sizeof(byte));
             }
+
+            return (offset, Convert.ToInt32(_stream.Position - offset));
         }
 
         public void FlagAsDeleted(long offset)

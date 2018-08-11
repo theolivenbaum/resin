@@ -14,6 +14,12 @@ namespace Sir.Store
         public DocIndexWriter(Stream stream)
         {
             _stream = stream;
+
+            if (_stream.Position == 0)
+            {
+                // Don't emmit zero as docid as that is the signal for "no data" for the postings reader.
+                _stream.Write(new byte[_blockSize], 0, _blockSize);
+            }
         }
 
         /// <summary>
