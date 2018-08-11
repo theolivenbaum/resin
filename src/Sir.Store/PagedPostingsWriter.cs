@@ -13,13 +13,17 @@ namespace Sir.Store
         private readonly Stream _stream;
         private readonly byte[] _pageBuf;
         private readonly byte[] _aliveStatus;
+        private readonly byte[] _deadStatus;
 
         public PagedPostingsWriter(Stream stream)
         {
             _stream = stream;
             _pageBuf = new byte[PAGE_SIZE];
             _aliveStatus = new byte[1];
+            _deadStatus = new byte[1];
+
             _aliveStatus[0] = 1;
+            _deadStatus[0] = 0;
         }
 
         public long AllocatePage()
@@ -33,6 +37,56 @@ namespace Sir.Store
             return pos;
         }
 
+        public void FlagAsDeleted(long pageOffset, ulong docId)
+        {
+            if (_stream.Position != pageOffset)
+            {
+                _stream.Seek(pageOffset, SeekOrigin.Begin);
+            }
+
+            _stream.Read(_pageBuf, 0, PAGE_SIZE);
+
+            var blockBuf = new byte[BLOCK_SIZE];
+            int pos = 0;
+            ulong id = 0;
+
+            while (pos < SLOTS_PER_PAGE)
+            {
+                id = BitConverter.ToUInt64(_pageBuf, pos * (BLOCK_SIZE));
+
+                if (id == 0 || id == docId)
+                {
+                    break;
+                }
+                else
+                {
+                    pos++;
+                }
+            }
+
+            if (id != docId)
+            {
+                return;
+            }
+
+            if (pos == SLOTS_PER_PAGE)
+            {
+                // Page is full but luckily the last word 
+                // is the offset for the next page.
+                // Jump to that location and continue writing there.
+
+                long nextOffset = Convert.ToInt64(id);
+                FlagAsDeleted(nextOffset, docId);
+            }
+            else
+            {
+                var offsetToFlag = (pos * (BLOCK_SIZE)) + sizeof(ulong);
+
+                _stream.Seek(offsetToFlag, SeekOrigin.Begin);
+                _stream.Write(_deadStatus, 0, sizeof(byte));
+            }
+        }
+
         public void Write(long offset, IList<ulong> docIds, int index = 0)
         {
             if (_stream.Position != offset)
@@ -44,13 +98,13 @@ namespace Sir.Store
 
             var blockBuf = new byte[BLOCK_SIZE];
             int pos = 0;
-            ulong docId = 0;
+            ulong id = 0;
 
             while (pos < SLOTS_PER_PAGE)
             {
-                docId = BitConverter.ToUInt64(_pageBuf, pos * (BLOCK_SIZE));
+                id = BitConverter.ToUInt64(_pageBuf, pos * (BLOCK_SIZE));
 
-                if (docId == 0)
+                if (id == 0)
                 {
                     // Zero means "no data". We can start writing into the page at the current position.
                     break;
@@ -67,7 +121,7 @@ namespace Sir.Store
                 // is the offset for the next page.
                 // Jump to that location and continue writing there.
 
-                long nextOffset = Convert.ToInt64(docId);
+                long nextOffset = Convert.ToInt64(id);
                 Write(nextOffset, docIds, index);
             }
             else if (pos == SLOTS_PER_PAGE - 2)

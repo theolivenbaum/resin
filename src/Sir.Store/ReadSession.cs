@@ -17,7 +17,7 @@ namespace Sir.Store
         private readonly ValueIndexReader _valIx;
         private readonly ValueReader _keyReader;
         private readonly ValueReader _valReader;
-        private readonly PostingsReader _postingsReader;
+        private readonly PagedPostingsReader _postingsReader;
 
         public ReadSession(ulong collectionId, LocalStorageSessionFactory sessionFactory) 
             : base(collectionId, sessionFactory)
@@ -38,7 +38,7 @@ namespace Sir.Store
             _valIx = new ValueIndexReader(ValueIndexStream);
             _keyReader = new ValueReader(KeyStream);
             _valReader = new ValueReader(ValueStream);
-            _postingsReader = new PostingsReader(PostingsStream);
+            _postingsReader = new PagedPostingsReader(PostingsStream);
         }
 
         public IEnumerable<IDictionary> Read(Query query)
@@ -56,7 +56,7 @@ namespace Sir.Store
 
                     if (match.Highscore >= VectorNode.TrueAngle)
                     {
-                        var docIds = _postingsReader.Read(match.PostingsOffset, match.PostingsSize)
+                        var docIds = _postingsReader.Read(match.PostingsOffset)
                             .ToDictionary(x => x, y => match.Highscore);
 
                         if (result == null)

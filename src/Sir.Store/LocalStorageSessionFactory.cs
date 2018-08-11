@@ -4,6 +4,7 @@ using System.IO;
 
 namespace Sir.Store
 {
+    //TODO: extract interface
     public class LocalStorageSessionFactory : IDisposable
     {
         private readonly SortedList<ulong, long> _keys;
@@ -141,6 +142,11 @@ namespace Sir.Store
         public SortedList<long, VectorNode> GetIndex(ulong collectionId)
         {
             return _index.GetOrCreateIndex(collectionId);
+        }
+
+        public Stream CreateWriteStream(string fileName)
+        {
+            return new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite);
         }
 
         public Stream CreateReadWriteStream(string fileName)

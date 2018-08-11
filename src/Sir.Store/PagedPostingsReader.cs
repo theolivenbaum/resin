@@ -19,7 +19,7 @@ namespace Sir.Store
             _pageBuf = new byte[PAGE_SIZE];
         }
 
-        public IEnumerable<ulong> Read(long offset)
+        public IList<ulong> Read(long offset)
         {
             var result = new List<ulong>();
             Read(offset, result);

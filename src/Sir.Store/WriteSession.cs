@@ -18,7 +18,7 @@ namespace Sir.Store
         private readonly ValueIndexWriter _valIx;
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
-        private readonly PostingsReader _postingsReader;
+        private readonly PagedPostingsReader _postingsReader;
 
         public WriteSession(ulong collectionId, LocalStorageSessionFactory sessionFactory) 
             : base(collectionId, sessionFactory)
@@ -41,12 +41,12 @@ namespace Sir.Store
             _valIx = new ValueIndexWriter(ValueIndexStream);
             _keyIx = new ValueIndexWriter(KeyIndexStream);
             _docIx = new DocIndexWriter(DocIndexStream);
-            _postingsReader = new PostingsReader(PostingsStream);
+            _postingsReader = new PagedPostingsReader(PostingsStream);
         }
 
         public void Remove(IEnumerable<IDictionary> data, ITokenizer tokenizer)
         {
-            var postingsWriter = new PostingsWriter(PostingsStream);
+            var postingsWriter = new PagedPostingsWriter(PostingsStream);
 
             foreach (var model in data)
             {
@@ -89,16 +89,17 @@ namespace Sir.Store
                         // 2. flag document as deleted
 
                         var match = fieldIndex.ClosestMatch(token);
-                        var postings = _postingsReader.Read(match.PostingsOffset, match.PostingsSize).ToList();
-                        var offset = match.PostingsOffset;
+                        var postings = _postingsReader.Read(match.PostingsOffset);
+                        long offset = 0;
 
                         foreach (var posting in postings)
                         {
                             if (posting == docId)
                             {
-                                postingsWriter.FlagAsDeleted(offset);
+                                postingsWriter.FlagAsDeleted(offset, docId);
+                                break;
                             }
-                            offset += PostingsWriter.BlockSize;
+                            offset += PagedPostingsWriter.BLOCK_SIZE;
                         }
                     }
                 }

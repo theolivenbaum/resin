@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Sir.Store
@@ -21,7 +22,6 @@ namespace Sir.Store
         private HashSet<ulong> _docIds;
 
         public long PostingsOffset { get; set; }
-        public int PostingsSize { get; set; }
         public double Angle { get; set; }
         public double Highscore { get; set; }
         public SortedList<char, double> TermVector { get; private set; }
@@ -85,9 +85,8 @@ namespace Sir.Store
             block[0] = BitConverter.GetBytes(Angle);
             block[1] = BitConverter.GetBytes(VecOffset);
             block[2] = BitConverter.GetBytes(PostingsOffset);
-            block[3] = BitConverter.GetBytes(PostingsSize);
-            block[4] = BitConverter.GetBytes(TermVector.Count);
-            block[5] = terminator;
+            block[3] = BitConverter.GetBytes(TermVector.Count);
+            block[4] = terminator;
 
             return block;
         }
@@ -96,12 +95,8 @@ namespace Sir.Store
         {
             VecOffset = TermVector.Serialize(vectorStream);
 
-            var postingsWriter = new PostingsWriter(postingsStream);
-            var posInfo = postingsWriter.Write(_docIds);
-
-            PostingsOffset = posInfo.offset;
-            PostingsSize = posInfo.length;
-
+            var postingsWriter = new PagedPostingsWriter(postingsStream);
+            PostingsOffset = postingsWriter.Write(_docIds.ToList());
             _docIds.Clear();
 
             foreach (var buf in ToStream())
@@ -122,7 +117,7 @@ namespace Sir.Store
 
         public static VectorNode Deserialize(Stream treeStream, Stream vectorStream)
         {
-            const int nodeSize = sizeof(double) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
+            const int nodeSize = sizeof(double) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(byte);
             const int kvpSize = sizeof(char) + sizeof(double);
 
             var buf = new byte[nodeSize];
@@ -133,12 +128,14 @@ namespace Sir.Store
                 throw new InvalidDataException();
             }
             
+            // Deserialize node
             var angle = BitConverter.ToDouble(buf, 0);
             var vecOffset = BitConverter.ToInt64(buf,       sizeof(double));
             var postingsOffset = BitConverter.ToInt64(buf,  sizeof(double) + sizeof(long));
-            var postingsSize = BitConverter.ToInt32(buf,    sizeof(double) + sizeof(long) + sizeof(long));
-            var vectorCount = BitConverter.ToInt32(buf,       sizeof(double) + sizeof(long) + sizeof(long) + sizeof(int));
+            var vectorCount = BitConverter.ToInt32(buf,       sizeof(double) + sizeof(long) + sizeof(long));
             var terminator = buf[nodeSize - 1];
+
+            // Deserialize term vector
             var vec = new SortedList<char, double>();
             var vecBuf = new byte[vectorCount * kvpSize];
 
@@ -159,7 +156,6 @@ namespace Sir.Store
             var node = new VectorNode(vec);
             node.Angle = angle;
             node.PostingsOffset = postingsOffset;
-            node.PostingsSize = postingsSize;
 
             if (terminator == 0)
             {
