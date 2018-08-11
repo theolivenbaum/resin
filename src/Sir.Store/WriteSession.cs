@@ -11,7 +11,7 @@ namespace Sir.Store
     /// </summary>
     public class WriteSession : CollectionSession
     {
-        private readonly IDictionary<string, VectorNode> _dirty;
+        private readonly IDictionary<long, VectorNode> _dirty;
         private readonly ValueWriter _vals;
         private readonly ValueWriter _keys;
         private readonly DocWriter _docs;
@@ -23,7 +23,7 @@ namespace Sir.Store
         public WriteSession(ulong collectionId, LocalStorageSessionFactory sessionFactory) 
             : base(collectionId, sessionFactory)
         {
-            _dirty = new Dictionary<string, VectorNode>();
+            _dirty = new Dictionary<long, VectorNode>();
 
             ValueStream = sessionFactory.WritableValueStream;
             KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));
@@ -106,6 +106,27 @@ namespace Sir.Store
             }
         }
 
+        public VectorNode CloneIndex(ulong keyHash)
+        {
+            long keyId;
+
+            if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
+            {
+                return null;
+            }
+
+            VectorNode dirty;
+            if (_dirty.TryGetValue(keyId, out dirty))
+            {
+                return dirty;
+            }
+
+            var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
+            var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId));
+
+            return SessionFactory.DeserializeIndex(ixFileName, vecFileName);
+        }
+
         public void Write(IEnumerable<IDictionary> data, ITokenizer tokenizer)
         {
             foreach (var model in data)
@@ -149,7 +170,7 @@ namespace Sir.Store
 
                         // add new index to global in-memory tree
                         fieldIndex = new VectorNode();
-                        Index.Add(keyId, fieldIndex);
+                        //Index.Add(keyId, fieldIndex);
                     }
                     else
                     {
@@ -169,10 +190,9 @@ namespace Sir.Store
                         fieldIndex.Add(token, docId);
                     }
 
-                    var indexName = string.Format("{0}.{1}", CollectionId, keyId);
-                    if (!_dirty.ContainsKey(indexName))
+                    if (!_dirty.ContainsKey(keyId))
                     {
-                        _dirty.Add(indexName, fieldIndex);
+                        _dirty.Add(keyId, fieldIndex);
                     }
                 }
 
@@ -185,7 +205,7 @@ namespace Sir.Store
         {
             foreach (var node in _dirty)
             {
-                var ixFileName = Path.Combine(SessionFactory.Dir, node.Key + ".ix");
+                var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, node.Key));
                 var tmpFileName = string.Format("{0}.tmp_ix", Path.GetFileNameWithoutExtension(ixFileName));
 
                 using (var indexStream = new FileStream(
@@ -194,7 +214,7 @@ namespace Sir.Store
                     node.Value.Serialize(indexStream, VectorStream, PostingsStream);
                 }
 
-                SessionFactory.RefreshIndex(CollectionId, long.Parse(node.Key.Split('.')[0]), node.Value);
+                SessionFactory.RefreshIndex(CollectionId, node.Key, node.Value);
 
                 File.Copy(tmpFileName, ixFileName, overwrite:true);
                 File.Delete(tmpFileName);

@@ -44,9 +44,9 @@ namespace Sir.Store
             WritableKeyMapStream = new FileStream(Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         }
 
-        public void RefreshIndex(ulong collectionId, long key, VectorNode index)
+        public void RefreshIndex(ulong collectionId, long keyId, VectorNode index)
         {
-            _index.Replace(collectionId, key, index);
+            _index.Replace(collectionId, keyId, index);
         }
 
         public static SortedList<ulong, long> LoadKeyMap(string dir)
@@ -119,9 +119,9 @@ namespace Sir.Store
             return _keys[keyHash];
         }
 
-        public bool TryGetKeyId(ulong key, out long keyId)
+        public bool TryGetKeyId(ulong keyHash, out long keyId)
         {
-            if (!_keys.TryGetValue(key, out keyId))
+            if (!_keys.TryGetValue(keyHash, out keyId))
             {
                 keyId = 0;
                 return false;

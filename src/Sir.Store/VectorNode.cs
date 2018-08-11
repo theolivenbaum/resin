@@ -57,11 +57,12 @@ namespace Sir.Store
         {
             _docIds = new HashSet<ulong>();
             TermVector = wordVector;
+            PostingsOffset = -1;
         }
 
         private byte[][] ToStream()
         {
-            var block = new byte[6][];
+            var block = new byte[5][];
 
             byte[] terminator = new byte[1];
 
@@ -84,7 +85,7 @@ namespace Sir.Store
 
             block[0] = BitConverter.GetBytes(Angle);
             block[1] = BitConverter.GetBytes(VecOffset);
-            block[2] = BitConverter.GetBytes(PostingsOffset);
+            block[2] = BitConverter.GetBytes(PostingsOffset > -1 ? PostingsOffset : (long)-1);
             block[3] = BitConverter.GetBytes(TermVector.Count);
             block[4] = terminator;
 
@@ -96,10 +97,23 @@ namespace Sir.Store
             VecOffset = TermVector.Serialize(vectorStream);
 
             var postingsWriter = new PagedPostingsWriter(postingsStream);
-            PostingsOffset = postingsWriter.Write(_docIds.ToList());
-            _docIds.Clear();
 
-            foreach (var buf in ToStream())
+            if (_docIds.Count > 0)
+            {
+                if (PostingsOffset > -1)
+                {
+                    postingsWriter.Write(PostingsOffset, _docIds.ToList());
+                }
+                else
+                {
+                    PostingsOffset = postingsWriter.Write(_docIds.ToList());
+                }               
+                _docIds.Clear();
+            }
+
+            var serialized = ToStream();
+
+            foreach (var buf in serialized)
             {
                 indexStream.Write(buf, 0, buf.Length);
             }
