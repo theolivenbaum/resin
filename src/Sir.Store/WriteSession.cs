@@ -69,7 +69,7 @@ namespace Sir.Store
                     
                     if (str != null)
                     {
-                        var tokenlist = tokenizer.Tokenize(str).ToList();
+                        var tokenlist = tokenizer.Tokenize(str);
 
                         foreach (var token in tokenlist)
                         {

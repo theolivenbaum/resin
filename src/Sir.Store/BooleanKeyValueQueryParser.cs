@@ -46,28 +46,15 @@ namespace Sir.Store
 
                 foreach(var val in vals)
                 {
-                    var q = new Query { Term = new Term(key, val) };
+                    var q = new Query { Term = new Term(key, val), Or = true };
 
                     if (previous == null)
                     {
-                        q.And = true;
                         root = q;
                         previous = q;
                     }
                     else
                     {
-                        if (and)
-                        {
-                            q.And = true;
-                        }
-                        else if (not)
-                        {
-                            q.Not = true;
-                        }
-                        else
-                        {
-                            q.Or = true;
-                        }
                         previous.Next = q;
                         previous = q;
                     }
