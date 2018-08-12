@@ -1,6 +1,8 @@
-# SIR (is Resin)
+# SIR
 
 16-bit wide vector-space model search engine with HTTP API and programmable read/write pipelines.
+
+Demo: [Demo](http://didyougogo.com)
 
 ## What is this?
 
