@@ -96,7 +96,7 @@ namespace Sir.HttpServer.Controllers
         private (string title, string body) GetWebString(Uri uri)
         {
             var req = WebRequest.Create(uri);
-            req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36");
+            req.Headers.Add("User-Agent", "gogorobot - didyougogo.com");
             req.Headers.Add("Accept", "text/html,application/xhtml+xml,application/xml;");
 
             using (var response = req.GetResponse())
