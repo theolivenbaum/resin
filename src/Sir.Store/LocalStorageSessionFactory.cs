@@ -22,13 +22,24 @@ namespace Sir.Store
 
         public string Dir { get; }
 
+        private bool _disposed;
+
         public void Dispose()
         {
+            if (_disposed) return;
+
             WritableValueStream.Dispose();
             ValueIndexStream.Dispose();
             WritableValueIndexStream.Dispose();
             WritableKeyMapStream.Dispose();
             ValueStream.Dispose();
+
+            _disposed = true;
+        }
+
+        ~LocalStorageSessionFactory()
+        {
+            Dispose();
         }
 
         public LocalStorageSessionFactory(string dir)
