@@ -12,12 +12,9 @@ namespace Sir.Store
         private readonly VectorTree _index;
 
         public Stream ValueStream { get; }
-
         public Stream ValueIndexStream { get; }
         public Stream WritableValueStream { get; }
-
         public Stream WritableKeyMapStream { get; }
-
         public Stream WritableValueIndexStream { get; }
 
         public string Dir { get; }
@@ -55,8 +52,13 @@ namespace Sir.Store
             WritableKeyMapStream = new FileStream(Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         }
 
-        public void RefreshIndex(ulong collectionId, long keyId, VectorNode index)
+        public void RefreshIndex(ulong collectionId, long keyId)
         {
+            var ixFileName = Path.Combine(Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
+            var vecFileName = Path.Combine(Dir, string.Format("{0}.vec", collectionId));
+
+            var index = DeserializeIndex(ixFileName, vecFileName);
+
             _index.Replace(collectionId, keyId, index);
         }
 

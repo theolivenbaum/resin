@@ -47,7 +47,7 @@ namespace Sir.HttpServer.Controllers
                 var parsed = GetWebString(uri);
 
                 document["site"] = uri.Host;
-                document["url"] = uri.ToString();
+                document["_url"] = uri.ToString();
                 document["body"] = parsed.body;
                 document["title"] = parsed.title;
                 document["created"] = DateTime.Now.ToBinary();
@@ -63,7 +63,7 @@ namespace Sir.HttpServer.Controllers
                     return StatusCode(415); // Media type not supported
                 }
 
-                var deleteQuery = queryParser.Parse(string.Format("url:{0}", uri.ToString()), tokenizer);
+                var deleteQuery = queryParser.Parse(string.Format("_url:{0}", uri.ToString()), tokenizer);
                 deleteQuery.CollectionId = collectionName.ToHash();
 
                 var oldData = reader.Read(deleteQuery).ToList();

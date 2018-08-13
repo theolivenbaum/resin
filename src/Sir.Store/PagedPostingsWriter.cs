@@ -49,12 +49,18 @@ namespace Sir.Store
             var blockBuf = new byte[BLOCK_SIZE];
             int pos = 0;
             ulong id = 0;
+            bool notFound = false;
 
             while (pos < SLOTS_PER_PAGE)
             {
                 id = BitConverter.ToUInt64(_pageBuf, pos * (BLOCK_SIZE));
 
-                if (id == 0 || id == docId)
+                if (id == 0)
+                {
+                    notFound = true;
+                    break;
+                }
+                else if (id == docId)
                 {
                     break;
                 }
@@ -64,26 +70,27 @@ namespace Sir.Store
                 }
             }
 
-            if (id != docId)
+            if (notFound)
             {
-                return;
-            }
+                if (pos == SLOTS_PER_PAGE)
+                {
+                    // Page is full but luckily the last word 
+                    // is the offset for the next page.
+                    // Jump to that location and continue reading there.
 
-            if (pos == SLOTS_PER_PAGE)
-            {
-                // Page is full but luckily the last word 
-                // is the offset for the next page.
-                // Jump to that location and continue writing there.
-
-                long nextOffset = Convert.ToInt64(id);
-                FlagAsDeleted(nextOffset, docId);
+                    long nextOffset = Convert.ToInt64(id);
+                    FlagAsDeleted(nextOffset, docId);
+                }
             }
             else
             {
-                var offsetToFlag = (pos * (BLOCK_SIZE)) + sizeof(ulong);
+                var offsetToFlag = pageOffset + (pos * (BLOCK_SIZE)) + sizeof(ulong);
 
                 _stream.Seek(offsetToFlag, SeekOrigin.Begin);
                 _stream.Write(_deadStatus, 0, sizeof(byte));
+
+                _stream.Seek(pageOffset, SeekOrigin.Begin);
+                _stream.Read(_pageBuf, 0, PAGE_SIZE);
             }
         }
 
@@ -132,19 +139,28 @@ namespace Sir.Store
                 // store the offset of the new page
                 // in the last slot.
 
-                _stream.Write(BitConverter.GetBytes(docIds[index++]), 0, sizeof(ulong));
+                _stream.Seek(offset + (pos * BLOCK_SIZE), SeekOrigin.Begin);
+                _stream.Write(BitConverter.GetBytes(docIds[index]), 0, sizeof(ulong));
                 _stream.Write(_aliveStatus, 0, sizeof(byte));
 
                 var nextOffset = AllocatePage();
+
                 _stream.Write(BitConverter.GetBytes(nextOffset), 0, sizeof(long));
             }
             else
             {
                 // There was a vacant slot in the page.
 
-                _stream.Seek(offset + (pos * BLOCK_SIZE), SeekOrigin.Begin);
-                _stream.Write(BitConverter.GetBytes(docIds[index++]), 0, sizeof(ulong));
+                var o = offset + (pos * BLOCK_SIZE);
+
+                _stream.Seek(o, SeekOrigin.Begin);
+                _stream.Write(BitConverter.GetBytes(docIds[index]), 0, sizeof(ulong));
                 _stream.Write(_aliveStatus, 0, sizeof(byte));
+            }
+
+            if (index < docIds.Count - 1)
+            {
+                Write(offset, docIds, ++index);
             }
         }
 

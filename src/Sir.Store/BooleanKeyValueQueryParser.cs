@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 
 namespace Sir.Store
 {
@@ -34,7 +33,9 @@ namespace Sir.Store
                     v = tokens[1];
                 }
 
-                var vals = tokenizer.Tokenize(v);
+                var vals = (key[0] == '_' || tokenizer == null) ? 
+                    new[] { tokenizer.Normalize(v) } : tokenizer.Tokenize(v);
+
                 var and = root == null || key[0] == '+';
                 var not = key[0] == '-';
                 var or = !and && !not;
@@ -44,7 +45,7 @@ namespace Sir.Store
                     key = key.Substring(1);
                 }
 
-                foreach(var val in vals)
+                foreach (var val in vals)
                 {
                     var q = new Query { Term = new Term(key, val), Or = true };
 

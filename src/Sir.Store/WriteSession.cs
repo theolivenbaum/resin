@@ -66,19 +66,19 @@ namespace Sir.Store
                     var val = (IComparable)model[key];
                     var str = val as string;
                     var tokens = new HashSet<string>();
-                    
-                    if (str != null)
-                    {
-                        var tokenlist = tokenizer.Tokenize(str);
 
+                    if (str == null || keyStr[0] == '_')
+                    {
+                        tokens.Add(tokenizer.Normalize(val.ToString()));
+
+                    }
+                    else
+                    {
+                        var tokenlist = tokenizer.Tokenize(str).ToList();
                         foreach (var token in tokenlist)
                         {
                             tokens.Add(token);
                         }
-                    }
-                    else
-                    {
-                        tokens.Add(val.ToString());
                     }
 
                     foreach (var token in tokens)
@@ -89,17 +89,21 @@ namespace Sir.Store
                         // 2. flag document as deleted
 
                         var match = fieldIndex.ClosestMatch(token);
+
+                        if (match.Highscore < VectorNode.TrueAngle)
+                        {
+                            continue;
+                        }
+
                         var postings = _postingsReader.Read(match.PostingsOffset);
-                        long offset = 0;
 
                         foreach (var posting in postings)
                         {
                             if (posting == docId)
                             {
-                                postingsWriter.FlagAsDeleted(offset, docId);
+                                postingsWriter.FlagAsDeleted(match.PostingsOffset, docId);
                                 break;
                             }
-                            offset += PagedPostingsWriter.BLOCK_SIZE;
                         }
                     }
                 }
@@ -144,19 +148,18 @@ namespace Sir.Store
                     var tokens = new HashSet<string>();
                     long keyId, valId;
 
-                    if (str != null) 
+                    if (str == null || keyStr[0] == '_') 
+                    {
+                        tokens.Add(tokenizer.Normalize(val.ToString()));
+
+                    }
+                    else
                     {
                         var tokenlist = tokenizer.Tokenize(str).ToList();
                         foreach (var token in tokenlist)
                         {
                             tokens.Add(token);
                         }
-                    }
-                    else
-                    {
-                        //TODO: implement numeric index
-
-                        tokens.Add(val.ToString());
                     }
 
                     if (fieldIndex == null)
@@ -213,11 +216,6 @@ namespace Sir.Store
                 {
                     node.Value.Serialize(indexStream, VectorStream, PostingsStream);
                 }
-
-                SessionFactory.RefreshIndex(CollectionId, node.Key, node.Value);
-
-                File.Copy(tmpFileName, ixFileName, overwrite:true);
-                File.Delete(tmpFileName);
             }
 
             ValueStream.Flush();
@@ -228,6 +226,17 @@ namespace Sir.Store
             DocIndexStream.Flush();
             PostingsStream.Flush();
             VectorStream.Flush();
+
+            foreach (var node in _dirty)
+            {
+                var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, node.Key));
+                var tmpFileName = string.Format("{0}.tmp_ix", Path.GetFileNameWithoutExtension(ixFileName));
+
+                File.Copy(tmpFileName, ixFileName, overwrite: true);
+                File.Delete(tmpFileName);
+
+                SessionFactory.RefreshIndex(CollectionId, node.Key);
+            }
 
             base.Dispose();
         }

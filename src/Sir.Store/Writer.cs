@@ -43,19 +43,28 @@ namespace Sir.Store
 
         private void Commit(WriteJob job)
         {
-            using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
+            if (job.Remove == null && job.Data != null)
             {
-                if (job.Remove == null && job.Data != null)
+                using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
                 {
                     session.Write(job.Data, _tokenizer);
                 }
-                else if (job.Data == null && job.Remove != null)
+            }
+            else if (job.Data == null && job.Remove != null)
+            {
+                using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
                 {
                     session.Remove(job.Remove, _tokenizer);
                 }
-                else
+            }
+            else
+            {
+                using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
                 {
                     session.Remove(job.Remove, _tokenizer);
+                }
+                using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
+                {
                     session.Write(job.Data, _tokenizer);
                 }
             }
