@@ -24,8 +24,8 @@ namespace Sir.HttpServer.Controllers
                 return View("MultilineQuery");
             }
 
+            var isMultiline = q.Contains('\n');
             string collectionId = cid ?? "www";
-
             string htmlEncodedQuery = WebUtility.HtmlEncode(q);
 
             ViewData["q"] = htmlEncodedQuery;
@@ -55,9 +55,8 @@ namespace Sir.HttpServer.Controllers
 
             ViewData["collectionName"] = collectionId;
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
-            ViewBag.Title = htmlEncodedQuery + " - Did you go go?";
 
-            return View(documents);
+            return isMultiline ? View("MultilineQuery", documents) : View(documents);
         }
     }
 
