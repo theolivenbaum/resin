@@ -16,25 +16,16 @@ namespace Sir.Store
         {
             Query root = null;
             Query previous = null;
-            var clauses = query.Split('\n');
+            var lines = query.Split('\n');
 
-            foreach (var clause in clauses)
+            foreach (var line in lines)
             {
-                var tokens = clause.Split(':');
-                var key = tokens[0];
-                string v;
+                var parts = line.Split(':');
+                var key = parts[0];
+                var value = parts[1];
 
-                if (tokens.Length > 2)
-                {
-                    v = string.Join(" ", tokens.Skip(1));
-                }
-                else
-                {
-                    v = tokens[1];
-                }
-
-                var vals = (key[0] == '_' || tokenizer == null) ? 
-                    new[] { tokenizer.Normalize(v) } : tokenizer.Tokenize(v);
+                var values = (key[0] == '_' || tokenizer == null) ?
+                    new[] { tokenizer.Normalize(value) } : tokenizer.Tokenize(value);
 
                 var and = root == null || key[0] == '+';
                 var not = key[0] == '-';
@@ -45,9 +36,9 @@ namespace Sir.Store
                     key = key.Substring(1);
                 }
 
-                foreach (var val in vals)
+                foreach (var val in values)
                 {
-                    var q = new Query { Term = new Term(key, val), Or = true };
+                    var q = new Query { Term = new Term(key, val), And = and, Not = not, Or = or };
 
                     if (previous == null)
                     {

@@ -9,7 +9,6 @@ namespace Sir.HttpServer.Controllers
     public class SearchController : Controller
     {
         private PluginsCollection _plugins;
-        private Stopwatch _timer = new Stopwatch();
 
         public SearchController(PluginsCollection plugins)
         {
@@ -18,16 +17,17 @@ namespace Sir.HttpServer.Controllers
 
         [HttpGet("/search/")]
         [HttpPost("/search/")]
-        public ActionResult Index(string q, string collectionId)
+        public ActionResult Index(string q, string cid)
         {
             if (string.IsNullOrWhiteSpace(q))
             {
                 return View("MultilineQuery");
             }
 
-            string collectionName = collectionId ?? "www";
+            string collectionId = cid ?? "www";
 
-            var htmlEncodedQuery = WebUtility.HtmlEncode(q);
+            string htmlEncodedQuery = WebUtility.HtmlEncode(q);
+
             ViewData["q"] = htmlEncodedQuery;
 
             if (!q.Contains(":"))
@@ -35,7 +35,8 @@ namespace Sir.HttpServer.Controllers
                 q = string.Format("title:{0}\nbody:{0}", q);
             }
 
-            _timer.Restart();
+            var timer = new Stopwatch();
+            timer.Start();
 
             var queryParser = _plugins.Get<IQueryParser>();
             var reader = _plugins.Get<IReader>();
@@ -47,13 +48,14 @@ namespace Sir.HttpServer.Controllers
             }
 
             var parsedQuery = queryParser.Parse(q, tokenizer);
-            parsedQuery.CollectionId = collectionName.ToHash();
+            parsedQuery.CollectionId = collectionId.ToHash();
 
-            var documents = reader.Read(parsedQuery).Select(x => new SearchResultModel { Document = x }).ToList();
+            var documents = reader.Read(parsedQuery)
+                .Select(x => new SearchResultModel { Document = x }).ToList();
 
-            ViewData["collectionName"] = collectionName;
-            ViewData["time_ms"] = _timer.ElapsedMilliseconds;
-            ViewBag.Title = htmlEncodedQuery + "Did you gogo?";
+            ViewData["collectionName"] = collectionId;
+            ViewData["time_ms"] = timer.ElapsedMilliseconds;
+            ViewBag.Title = htmlEncodedQuery + " - Did you go go?";
 
             return View(documents);
         }

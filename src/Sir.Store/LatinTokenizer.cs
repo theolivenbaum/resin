@@ -27,10 +27,10 @@ namespace Sir.Store
             {
                 yield return phrase;
 
-                foreach (var word in phrase.Split(_wordDelimiters, StringSplitOptions.RemoveEmptyEntries))
-                {
-                    yield return word;
-                }
+                //foreach (var word in phrase.Split(_wordDelimiters, StringSplitOptions.RemoveEmptyEntries))
+                //{
+                //    yield return word;
+                //}
             }
         }
 
