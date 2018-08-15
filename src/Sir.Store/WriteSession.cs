@@ -209,7 +209,7 @@ namespace Sir.Store
             foreach (var node in _dirty)
             {
                 var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, node.Key));
-                var tmpFileName = string.Format("{0}.tmp_ix", Path.GetFileNameWithoutExtension(ixFileName));
+                var tmpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.tmp_ix", CollectionId, node.Key));
 
                 using (var indexStream = new FileStream(
                     tmpFileName, FileMode.Append, FileAccess.Write, FileShare.None))
@@ -230,7 +230,7 @@ namespace Sir.Store
             foreach (var node in _dirty)
             {
                 var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, node.Key));
-                var tmpFileName = string.Format("{0}.tmp_ix", Path.GetFileNameWithoutExtension(ixFileName));
+                var tmpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.tmp_ix", CollectionId, node.Key));
 
                 File.Copy(tmpFileName, ixFileName, overwrite: true);
                 File.Delete(tmpFileName);
