@@ -90,7 +90,7 @@ namespace Sir.Store
 
                         var match = fieldIndex.ClosestMatch(token);
 
-                        if (match.Highscore < VectorNode.TrueAngle)
+                        if (match.Highscore < VectorNode.MergeAngle)
                         {
                             continue;
                         }
@@ -156,6 +156,7 @@ namespace Sir.Store
                     else
                     {
                         var tokenlist = tokenizer.Tokenize(str).ToList();
+
                         foreach (var token in tokenlist)
                         {
                             tokens.Add(token);

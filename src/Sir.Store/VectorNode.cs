@@ -12,8 +12,8 @@ namespace Sir.Store
     /// </summary>
     public class VectorNode
     {
-        public const double IdenticalAngle = 0.99d;
-        public const double TrueAngle = 0.95d;
+        public const double IdenticalAngle = 0.99;
+        public const double MergeAngle = 0.9;
         public const double FalseAngle = 0.5;
 
         private VectorNode _right;
@@ -215,7 +215,8 @@ namespace Sir.Store
             while (cursor != null)
             {
                 var angle = cursor.TermVector.CosAngle(node.TermVector);
-                if (angle >= TrueAngle)
+
+                if (angle >= IdenticalAngle)
                 {
                     cursor.Highscore = angle;
                     return cursor;
@@ -239,6 +240,32 @@ namespace Sir.Store
             return best;
         }
 
+        public virtual IEnumerable<VectorNode> Match(string word)
+        {
+            return Match(new VectorNode(word));
+        }
+
+        public virtual IEnumerable<VectorNode> Match(VectorNode node)
+        {
+            var cursor = this;
+            
+            while (cursor != null)
+            {
+                var angle = cursor.TermVector.CosAngle(node.TermVector);
+
+                if (angle > FalseAngle)
+                {
+                    cursor.Highscore = angle;
+                    yield return cursor;
+                    cursor = cursor.Left;
+                }
+                else
+                {
+                    cursor = cursor.Right;
+                }
+            }
+        }
+
         /// <summary>
         /// Add word to index.
         /// </summary>
@@ -258,7 +285,7 @@ namespace Sir.Store
         {
             node.Angle = node.TermVector.CosAngle(TermVector);
 
-            if (node.Angle >= TrueAngle)
+            if (node.Angle >= MergeAngle)
             {
                 Merge(node);
                 return false;
