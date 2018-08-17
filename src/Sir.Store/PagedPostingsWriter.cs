@@ -156,6 +156,9 @@ namespace Sir.Store
                 _stream.Seek(o, SeekOrigin.Begin);
                 _stream.Write(BitConverter.GetBytes(docIds[index]), 0, sizeof(ulong));
                 _stream.Write(_aliveStatus, 0, sizeof(byte));
+
+                _stream.Seek(offset, SeekOrigin.Begin);
+                _stream.Read(_pageBuf, 0, PAGE_SIZE);
             }
 
             if (index < docIds.Count - 1)

@@ -46,11 +46,11 @@ namespace Sir.HttpServer.Controllers
                 var document = new Dictionary<string, object>();
                 var parsed = GetWebString(uri);
 
-                document["site"] = uri.Host;
+                document["_site"] = uri.Host;
                 document["_url"] = uri.ToString();
                 document["body"] = parsed.body;
                 document["title"] = parsed.title;
-                document["created"] = DateTime.Now.ToBinary();
+                document["_created"] = DateTime.Now.ToBinary();
 
                 var writers = _plugins.All<IWriter>(Request.ContentType).ToList();
                 var reader = _plugins.Get<IReader>();

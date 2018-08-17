@@ -13,8 +13,8 @@ namespace Sir.Store
     public class VectorNode
     {
         public const double IdenticalAngle = 0.99;
-        public const double MergeAngle = 0.9;
-        public const double FalseAngle = 0.5;
+        public const double MergeAngle = 0.95;
+        public const double FalseAngle = 0.4;
 
         private VectorNode _right;
         private VectorNode _left;
@@ -85,7 +85,7 @@ namespace Sir.Store
 
             block[0] = BitConverter.GetBytes(Angle);
             block[1] = BitConverter.GetBytes(VecOffset);
-            block[2] = BitConverter.GetBytes(PostingsOffset > -1 ? PostingsOffset : (long)-1);
+            block[2] = BitConverter.GetBytes(PostingsOffset);
             block[3] = BitConverter.GetBytes(TermVector.Count);
             block[4] = terminator;
 
@@ -111,9 +111,7 @@ namespace Sir.Store
                 _docIds.Clear();
             }
 
-            var serialized = ToStream();
-
-            foreach (var buf in serialized)
+            foreach (var buf in ToStream())
             {
                 indexStream.Write(buf, 0, buf.Length);
             }
@@ -146,7 +144,7 @@ namespace Sir.Store
             var angle = BitConverter.ToDouble(buf, 0);
             var vecOffset = BitConverter.ToInt64(buf,       sizeof(double));
             var postingsOffset = BitConverter.ToInt64(buf,  sizeof(double) + sizeof(long));
-            var vectorCount = BitConverter.ToInt32(buf,       sizeof(double) + sizeof(long) + sizeof(long));
+            var vectorCount = BitConverter.ToInt32(buf,     sizeof(double) + sizeof(long) + sizeof(long));
             var terminator = buf[nodeSize - 1];
 
             // Deserialize term vector
@@ -162,6 +160,7 @@ namespace Sir.Store
             {
                 var key = BitConverter.ToChar(vecBuf, offs);
                 var val = BitConverter.ToDouble(vecBuf, offs + sizeof(char));
+
                 vec.Add(key, val);
 
                 offs += kvpSize;
@@ -192,6 +191,7 @@ namespace Sir.Store
         {
             var count = 0;
             var node = Left;
+
             while (node != null)
             {
                 count++;
@@ -331,10 +331,10 @@ namespace Sir.Store
         {
             var angle = node.TermVector.CosAngle(TermVector);
 
-            //if (angle < IdenticalAngle)
-            //{
-            //    TermVector = TermVector.Add(node.TermVector);
-            //}
+            if (angle < IdenticalAngle)
+            {
+                TermVector = TermVector.Add(node.TermVector);
+            }
 
             foreach (var id in node._docIds)
             {

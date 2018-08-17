@@ -25,12 +25,12 @@ namespace Sir.Store
         {
             foreach (var phrase in Normalize(text).Split(_phraseDelimiters, StringSplitOptions.RemoveEmptyEntries))
             {
-                yield return phrase;
+                //yield return phrase;
 
-                //foreach (var word in phrase.Split(_wordDelimiters, StringSplitOptions.RemoveEmptyEntries))
-                //{
-                //    yield return word;
-                //}
+                foreach (var word in phrase.Split(_wordDelimiters, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    yield return word;
+                }
             }
         }
 
