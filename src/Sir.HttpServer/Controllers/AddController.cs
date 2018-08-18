@@ -63,16 +63,16 @@ namespace Sir.HttpServer.Controllers
                     return StatusCode(415); // Media type not supported
                 }
 
-                var deleteQuery = queryParser.Parse(string.Format("_url:{0}", uri.ToString()), tokenizer);
-                deleteQuery.CollectionId = collectionName.ToHash();
+                //var deleteQuery = queryParser.Parse(string.Format("_url:{0}", uri.ToString()), tokenizer);
+                //deleteQuery.CollectionId = collectionName.ToHash();
 
-                var oldData = reader.Read(deleteQuery).ToList();
+                //var oldData = reader.Read(deleteQuery).ToList();
 
                 foreach (var writer in writers)
                 {
                     await Task.Run(() =>
                     {
-                        writer.Update(collectionName, new[] { document }, oldData);
+                        writer.Write(collectionName, new[] { document });
                     });
                 }
                 

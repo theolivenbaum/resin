@@ -9,28 +9,28 @@
 }
 @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
 {
-<input type="text" id="q" name="q" placeholder="Ask anything." value="@ViewData["q"]" />
-<input type="submit" value="Go" />
+    <input type="text" id="q" name="q" placeholder="Ask anything." value="@ViewData["q"]" />
+    <input type="submit" value="Go" />
 }
 
 @if (ViewData["time_ms"] != null)
 {
- <h3>@docs.Count results for '@ViewData["q"]' in '@ViewData["collectionName"]' (@ViewData["time_ms"] ms)</h3>
+    <h3>@docs.Count results for '@ViewData["q"]' in '@ViewData["collectionName"]' (@ViewData["time_ms"] ms)</h3>
 
-<div>
-    <ol>
-        @foreach (var item in docs)
-        {
-            <li>
-                <p>
-                    <a class="result-link" href="@item.Document["_url"].ToString()">@item.Document["title"].ToString()</a>
-                    <span>@item.Document["_site"]</span><br />
-                    <span>Score: @item.Document["_score"]</span><br />
-                    <span>Indexed @DateTime.FromBinary((long)(item.Document["_created"]))</span>
-                </p>
-            </li>
-        }
-    </ol>
-</div>
+    <div>
+        <ol>
+            @foreach (var item in docs)
+            {
+                <li>
+                    <p>
+                        <a class="result-link" href="@item.Document["_url"].ToString()">@item.Document["title"].ToString()</a>
+                        <span>@item.Document["_site"]</span><br />
+                        <span>Score: @item.Document["_score"]</span><br />
+                        <span>Indexed @DateTime.FromBinary((long)(item.Document["_created"]))</span>
+                    </p>
+                </li>
+            }
+        </ol>
+    </div>
 }
 <div><p><a href="/add">Submit page</a> to the public "www" index.</p></div>

@@ -23,33 +23,6 @@ namespace Sir.Store
             return pos;
         }
 
-        public static byte[] Concat(this byte[] buf1, byte[] buf2)
-        {
-            byte[] result = new byte[buf1.Length + buf2.Length];
-            Buffer.BlockCopy(buf1, 0, result, 0, buf1.Length);
-            Buffer.BlockCopy(buf2, 0, result, buf1.Length, buf2.Length);
-            return result;
-        }
-
-        public static byte[] Concat(this byte[] buf1, byte[] buf2, byte[] buf3)
-        {
-            byte[] result = new byte[buf1.Length + buf2.Length + buf3.Length];
-            Buffer.BlockCopy(buf1, 0, result, 0, buf1.Length);
-            Buffer.BlockCopy(buf2, 0, result, buf1.Length, buf2.Length);
-            Buffer.BlockCopy(buf3, 0, result, buf1.Length + buf2.Length, buf3.Length);
-            return result;
-        }
-
-        public static byte[] Concat(this byte[] buf1, byte[] buf2, byte[] buf3, byte[] buf4)
-        {
-            byte[] result = new byte[buf1.Length + buf2.Length + buf3.Length + buf4.Length];
-            Buffer.BlockCopy(buf1, 0, result, 0, buf1.Length);
-            Buffer.BlockCopy(buf2, 0, result, buf1.Length, buf2.Length);
-            Buffer.BlockCopy(buf3, 0, result, buf1.Length + buf2.Length, buf3.Length);
-            Buffer.BlockCopy(buf4, 0, result, buf1.Length + buf2.Length + buf3.Length, buf4.Length);
-            return result;
-        }
-
         public static double CosAngle(this SortedList<char, double> vec1, SortedList<char, double> vec2)
         {
             var dotProduct = Dot(vec1, vec2);

@@ -43,7 +43,7 @@ namespace Sir.Store
 
         public IEnumerable<IDictionary> Read(Query query)
         {
-            IDictionary<ulong, double> result = null;
+            SortedList<ulong, double> result = null;
 
             while (query != null)
             {
@@ -52,42 +52,57 @@ namespace Sir.Store
 
                 if (ix != null)
                 {
-                    var match = ix.ClosestMatch(query.Term.Value.ToString());
+                    var matches = ix.Match(query.Term.Value.ToString()).ToList();
 
-                    if (match.Highscore > VectorNode.FalseAngle)
+                    foreach (var match in matches)
                     {
-                        var docIds = _postingsReader.Read(match.PostingsOffset)
-                            .ToDictionary(x => x, y => match.Highscore);
+                        if (match.Highscore > VectorNode.FalseAngle)
+                        {
+                            var docIds = _postingsReader.Read(match.PostingsOffset)
+                                .ToDictionary(x => x, y => match.Highscore);
 
-                        if (result == null)
-                        {
-                            result = docIds;
-                        }
-                        else
-                        {
-                            if (query.And)
+                            if (result == null)
                             {
-                                result = (from doc in result
-                                          join x in docIds on doc.Key equals x.Key
-                                          select doc).ToDictionary(x => x.Key, y => y.Value);
-
+                                result = new SortedList<ulong, double>(docIds);
                             }
-                            else if (query.Not)
+                            else
                             {
-                                foreach (var id in docIds)
+                                if (query.And)
                                 {
-                                    result.Remove(id);
+                                    var subset = (from doc in result
+                                                  join x in docIds on doc.Key equals x.Key
+                                                  select doc).ToDictionary(x => x.Key, y => y.Value);
+
+                                    result = new SortedList<ulong, double>(subset);
+
                                 }
-                            }
-                            else // Or
-                            {
-                                foreach (var id in docIds)
+                                else if (query.Not)
                                 {
-                                    result[id.Key] = id.Value;
+                                    foreach (var id in docIds.Keys)
+                                    {
+                                        result.Remove(id);
+                                    }
+                                }
+                                else // Or
+                                {
+                                    foreach (var id in docIds)
+                                    {
+                                        double score;
+
+                                        if (result.TryGetValue(id.Key, out score))
+                                        {
+                                            result[id.Key] = Math.Max(score, id.Value) + ((score+id.Value)/2);
+                                        }
+                                        else
+                                        {
+                                            result.Add(id.Key, id.Value);
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
+                    
                     query = query.Next;
                 }
             }
@@ -96,8 +111,35 @@ namespace Sir.Store
             {
                 return Enumerable.Empty<IDictionary>();
             }
+            else
+            {
+                return ReadDocs(result).OrderByDescending(d => d["_score"]);
+            }
+        }
 
-            return ReadDocs(result);
+        private IEnumerable<IDictionary> ReadDocs(IEnumerable<ulong> docIds)
+        {
+            foreach (var id in docIds)
+            {
+                var docInfo = _docIx.Read(id);
+                var docMap = _docs.Read(docInfo.offset, docInfo.length);
+                var doc = new Dictionary<IComparable, IComparable>();
+
+                for (int i = 0; i < docMap.Count; i++)
+                {
+                    var kvp = docMap[i];
+                    var kInfo = _keyIx.Read(kvp.keyId);
+                    var vInfo = _valIx.Read(kvp.valId);
+                    var key = _keyReader.Read(kInfo.offset, kInfo.len, kInfo.dataType);
+                    var val = _valReader.Read(vInfo.offset, vInfo.len, vInfo.dataType);
+
+                    doc[key] = val;
+                }
+
+                doc["_docid"] = id;
+
+                yield return doc;
+            }
         }
 
         private IEnumerable<IDictionary> ReadDocs(IDictionary<ulong, double> docs)

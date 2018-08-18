@@ -69,7 +69,7 @@ namespace Sir.Store
 
                     if (str == null || keyStr[0] == '_')
                     {
-                        tokens.Add(tokenizer.Normalize(val.ToString()));
+                        tokens.Add(val.ToString());
 
                     }
                     else
@@ -90,7 +90,7 @@ namespace Sir.Store
 
                         var match = fieldIndex.ClosestMatch(token);
 
-                        if (match.Highscore < VectorNode.MergeAngle)
+                        if (match.Highscore < VectorNode.IdenticalAngle)
                         {
                             continue;
                         }
@@ -110,7 +110,25 @@ namespace Sir.Store
             }
         }
 
-        public VectorNode CloneIndex(ulong keyHash)
+        private VectorNode GetDirtyOrClonedIndex(ulong keyHash)
+        {
+            long keyId;
+
+            if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
+            {
+                return null;
+            }
+
+            VectorNode dirty;
+            if (_dirty.TryGetValue(keyId, out dirty))
+            {
+                return dirty;
+            }
+
+            return CloneIndex(keyHash);
+        }
+
+        private VectorNode CloneIndex(ulong keyHash)
         {
             long keyId;
 
@@ -142,7 +160,7 @@ namespace Sir.Store
                 {
                     var keyStr = key.ToString();
                     var keyHash = keyStr.ToHash();
-                    var fieldIndex = CloneIndex(keyHash);
+                    var fieldIndex = GetDirtyOrClonedIndex(keyHash);
                     var val = (IComparable)model[key];
                     var str = val as string;
                     var tokens = new HashSet<string>();
@@ -150,8 +168,7 @@ namespace Sir.Store
 
                     if (str == null || keyStr[0] == '_') 
                     {
-                        tokens.Add(tokenizer.Normalize(val.ToString()));
-
+                        tokens.Add(val.ToString());
                     }
                     else
                     {
@@ -172,9 +189,8 @@ namespace Sir.Store
                         keyId = _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
                         SessionFactory.AddKey(keyHash, keyId);
 
-                        // add new index to global in-memory tree
+                        // create new index
                         fieldIndex = new VectorNode();
-                        //Index.Add(keyId, fieldIndex);
                     }
                     else
                     {
@@ -209,7 +225,6 @@ namespace Sir.Store
         {
             foreach (var node in _dirty)
             {
-                var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, node.Key));
                 var tmpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.tmp_ix", CollectionId, node.Key));
 
                 using (var indexStream = new FileStream(
