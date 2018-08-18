@@ -52,9 +52,9 @@ namespace Sir.Store
 
                 if (ix != null)
                 {
-                    var matches = ix.Match(query.Term.Value.ToString()).ToList();
+                    var nodes = ix.Match(query.Term.Value.ToString()).ToList();
 
-                    foreach (var match in matches)
+                    foreach (var match in nodes)
                     {
                         if (match.Highscore > VectorNode.FalseAngle)
                         {
@@ -91,7 +91,7 @@ namespace Sir.Store
 
                                         if (result.TryGetValue(id.Key, out score))
                                         {
-                                            result[id.Key] = Math.Max(score, id.Value) + ((score+id.Value)/2);
+                                            result[id.Key] = (Math.Max(score, id.Value) + Math.Sqrt((score+id.Value)/2)) / 2;
                                         }
                                         else
                                         {

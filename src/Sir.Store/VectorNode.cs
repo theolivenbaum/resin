@@ -13,7 +13,7 @@ namespace Sir.Store
     public class VectorNode
     {
         public const double IdenticalAngle = 0.99;
-        public const double FalseAngle = 0.75;
+        public const double FalseAngle = 0.7;
 
         private VectorNode _right;
         private VectorNode _left;
@@ -106,22 +106,50 @@ namespace Sir.Store
 
         public virtual IEnumerable<VectorNode> Match(VectorNode node)
         {
-            var cursor = this;
-            
+            var match = ClosestMatch(node);
+
+            if (match.Highscore > FalseAngle) yield return match;
+
+            var cursor = match.Ancestor;
+
             while (cursor != null)
             {
-                var angle = cursor.TermVector.CosAngle(node.TermVector);
+                var angle = node.TermVector.CosAngle(cursor.TermVector);
 
                 if (angle > FalseAngle)
                 {
                     cursor.Highscore = angle;
                     yield return cursor;
-                    cursor = cursor.Left;
                 }
-                else
+                cursor = cursor.Ancestor;
+            }
+
+            cursor = match.Left;
+
+            while (cursor != null)
+            {
+                var angle = node.TermVector.CosAngle(cursor.TermVector);
+
+                if (angle > FalseAngle)
                 {
-                    cursor = cursor.Right;
+                    cursor.Highscore = angle;
+                    yield return cursor;
                 }
+                cursor = cursor.Left;
+            }
+
+            cursor = match.Right;
+
+            while (cursor != null)
+            {
+                var angle = node.TermVector.CosAngle(cursor.TermVector);
+
+                if (angle > FalseAngle)
+                {
+                    cursor.Highscore = angle;
+                    yield return cursor;
+                }
+                cursor = cursor.Right;
             }
         }
 
