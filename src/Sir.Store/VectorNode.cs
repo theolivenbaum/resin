@@ -13,7 +13,7 @@ namespace Sir.Store
     public class VectorNode
     {
         public const double IdenticalAngle = 0.99;
-        public const double FalseAngle = 0.7;
+        public const double FalseAngle = 0.5;
 
         private VectorNode _right;
         private VectorNode _left;
@@ -108,7 +108,10 @@ namespace Sir.Store
         {
             var match = ClosestMatch(node);
 
-            if (match.Highscore > FalseAngle) yield return match;
+            if (match.Highscore > FalseAngle)
+            {
+                yield return match;
+            }
 
             var cursor = match.Ancestor;
 
