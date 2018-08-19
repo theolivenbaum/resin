@@ -1,10 +1,14 @@
-# SIR
+# Sir
 
-16-bit wide vector-space model search engine with HTTP API and programmable read/write pipelines.
+_Search is resin_
 
-[Demo](http://didyougogo.com)
+## Demo
+
+[A web search engine](https://didyougogo.com)
 
 ## What is this?
+
+A 16-bit wide vector-space model search engine with HTTP API and programmable read/write pipelines.
 
 ### Vector-space model
 
