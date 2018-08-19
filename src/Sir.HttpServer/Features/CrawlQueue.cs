@@ -20,7 +20,8 @@ namespace Sir.HttpServer.Features
             _queue = new ProducerConsumerQueue<Uri>(Submit, 1000);
             _plugins = plugins;
             _history = new HashSet<string>();
-            _log = new StreamWriter(File.OpenWrite("crawlqueue.log"));
+            _log = new StreamWriter(
+                File.Open("crawlqueue.log", FileMode.Append, FileAccess.Write, FileShare.Read));
         }
 
         public void Enqueue(Uri uri)
