@@ -83,12 +83,11 @@ namespace Sir.Store
 
                             if (subResult.TryGetValue(id, out score))
                             {
-                                var newScore = (score + node.Highscore) / 2;
-                                subResult[id] = newScore;
+                                subResult[id] = Math.Max(score, node.Highscore);
                             }
                             else
                             {
-                                subResult.Add(id, node.Highscore / 2);
+                                subResult.Add(id, node.Highscore);
                             }
                         }
                     }
@@ -109,7 +108,7 @@ namespace Sir.Store
 
                                 if (subResult.TryGetValue(doc.Key, out score))
                                 {
-                                    reduced[doc.Key] = (score + doc.Value) / 2;
+                                    reduced[doc.Key] = Math.Max(score, doc.Value);
                                 }
                             }
 
@@ -130,12 +129,11 @@ namespace Sir.Store
 
                                 if (result.TryGetValue(id.Key, out score))
                                 {
-                                    var newScore = (score + id.Value) / 2;
-                                    result[id.Key] = newScore;
+                                    result[id.Key] = Math.Max(score, id.Value);
                                 }
                                 else
                                 {
-                                    result.Add(id.Key, id.Value / 2);
+                                    result.Add(id.Key, id.Value);
                                 }
                             }
                         }
