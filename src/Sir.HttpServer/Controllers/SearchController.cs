@@ -3,22 +3,28 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
+using Sir.HttpServer.Features;
 
 namespace Sir.HttpServer.Controllers
 {
     public class SearchController : UIController
     {
-        private PluginsCollection _plugins;
+        private readonly PluginsCollection _plugins;
+        private readonly CrawlQueue _crawlQueue;
 
-        public SearchController(PluginsCollection plugins)
+        public SearchController(PluginsCollection plugins, CrawlQueue crawlQueue)
         {
             _plugins = plugins;
+            _crawlQueue = crawlQueue;
         }
 
         [HttpGet("/search/")]
         [HttpPost("/search/")]
         public ActionResult Index(string q, string cid)
         {
+            ViewData["last_processed_url"] = _crawlQueue.LastProcessed.uri;
+            ViewData["last_processed_title"] = _crawlQueue.LastProcessed.title;
+
             if (string.IsNullOrWhiteSpace(q))
             {
                 return View("MultilineQuery");

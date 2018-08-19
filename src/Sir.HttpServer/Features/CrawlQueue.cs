@@ -15,6 +15,8 @@ namespace Sir.HttpServer.Features
         private HashSet<string> _history;
         private StreamWriter _log;
 
+        public (Uri uri, string title) LastProcessed { get; private set; }
+
         public CrawlQueue(PluginsCollection plugins)
         {
             _queue = new ProducerConsumerQueue<Uri>(Submit, 1000);
@@ -70,6 +72,8 @@ namespace Sir.HttpServer.Features
                         writer.Write("www", new[] { document });
                     }
                 }
+
+                LastProcessed = (uri, (string)document["title"]);
             }
             catch (Exception ex)
             {
