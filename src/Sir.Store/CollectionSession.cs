@@ -41,6 +41,14 @@ namespace Sir.Store
 
         public virtual void Dispose()
         {
+            ValueStream.Dispose();
+            KeyStream.Dispose();
+            DocStream.Dispose();
+            ValueIndexStream.Dispose();
+            KeyIndexStream.Dispose();
+            DocIndexStream.Dispose();
+            PostingsStream.Dispose();
+            VectorStream.Dispose();
         }
     }
 }

@@ -5,39 +5,15 @@ using System.IO;
 namespace Sir.Store
 {
     //TODO: extract interface
-    public class LocalStorageSessionFactory : IDisposable
+    public class LocalStorageSessionFactory
     {
         private readonly SortedList<ulong, long> _keys;
         private readonly object Sync = new object();
         private readonly VectorTree _index;
 
-        public Stream ValueStream { get; }
-        public Stream ValueIndexStream { get; }
-        public Stream WritableValueStream { get; }
         public Stream WritableKeyMapStream { get; }
-        public Stream WritableValueIndexStream { get; }
 
         public string Dir { get; }
-
-        private bool _disposed;
-
-        public void Dispose()
-        {
-            if (_disposed) return;
-
-            WritableValueStream.Dispose();
-            ValueIndexStream.Dispose();
-            WritableValueIndexStream.Dispose();
-            WritableKeyMapStream.Dispose();
-            ValueStream.Dispose();
-
-            _disposed = true;
-        }
-
-        ~LocalStorageSessionFactory()
-        {
-            Dispose();
-        }
 
         public LocalStorageSessionFactory(string dir)
         {
@@ -45,10 +21,6 @@ namespace Sir.Store
             _index = DeserializeIndexes(dir);
             Dir = dir;
 
-            ValueStream = CreateReadWriteStream(Path.Combine(dir, "_.val"));
-            WritableValueStream = CreateAppendStream(Path.Combine(dir, "_.val"));
-            ValueIndexStream = CreateReadWriteStream(Path.Combine(dir, "_.vix"));
-            WritableValueIndexStream = CreateAppendStream(Path.Combine(dir, "_.vix"));
             WritableKeyMapStream = new FileStream(Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         }
 

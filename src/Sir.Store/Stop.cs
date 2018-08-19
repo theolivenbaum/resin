@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 
 namespace Sir.Store
 {
@@ -7,8 +6,6 @@ namespace Sir.Store
     {
         public void OnApplicationShutdown(IServiceProvider serviceProvider)
         {
-            var sessionFactory = serviceProvider.GetService<LocalStorageSessionFactory>();
-            sessionFactory.Dispose();
         }
     }
 }

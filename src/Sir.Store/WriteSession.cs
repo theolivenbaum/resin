@@ -25,10 +25,10 @@ namespace Sir.Store
         {
             _dirty = new Dictionary<long, VectorNode>();
 
-            ValueStream = sessionFactory.WritableValueStream;
+            ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)));
             KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));
             DocStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", collectionId)));
-            ValueIndexStream = sessionFactory.WritableValueIndexStream;
+            ValueIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collectionId)));
             KeyIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collectionId)));
             DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collectionId)));
             PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collectionId)));
@@ -231,17 +231,11 @@ namespace Sir.Store
                     tmpFileName, FileMode.Append, FileAccess.Write, FileShare.None))
                 {
                     node.Value.Serialize(indexStream, VectorStream, PostingsStream);
+                    indexStream.Flush();
+                    VectorStream.Flush();
+                    PostingsStream.Flush();
                 }
             }
-
-            ValueStream.Flush();
-            KeyStream.Flush();
-            DocStream.Flush();
-            ValueIndexStream.Flush();
-            KeyIndexStream.Flush();
-            DocIndexStream.Flush();
-            PostingsStream.Flush();
-            VectorStream.Flush();
 
             foreach (var node in _dirty)
             {
