@@ -12,8 +12,8 @@ namespace Sir.Store
     /// </summary>
     public class VectorNode
     {
-        public const double IdenticalAngle = 0.99;
-        public const double FalseAngle = 0.5;
+        public const double IdenticalAngle = 0.98;
+        public const double FalseAngle = 0.68;
 
         private VectorNode _right;
         private VectorNode _left;
@@ -73,7 +73,7 @@ namespace Sir.Store
 
             while (cursor != null)
             {
-                var angle = cursor.TermVector.CosAngle(node.TermVector);
+                var angle = node.TermVector.CosAngle(cursor.TermVector);
 
                 if (angle >= IdenticalAngle)
                 {
@@ -111,48 +111,34 @@ namespace Sir.Store
             if (match.Highscore > FalseAngle)
             {
                 yield return match;
-            }
 
-            var cursor = match.Ancestor;
+                var cursor = match.Left;
 
-            while (cursor != null)
-            {
-                var angle = node.TermVector.CosAngle(cursor.TermVector);
-
-                if (angle > FalseAngle)
+                while (cursor != null)
                 {
-                    cursor.Highscore = angle;
-                    yield return cursor;
+                    var angle = node.TermVector.CosAngle(cursor.TermVector);
+
+                    if (angle > FalseAngle)
+                    {
+                        cursor.Highscore = angle;
+                        yield return cursor;
+                    }
+                    cursor = cursor.Left;
                 }
-                cursor = cursor.Ancestor;
-            }
 
-            cursor = match.Left;
+                cursor = match.Right;
 
-            while (cursor != null)
-            {
-                var angle = node.TermVector.CosAngle(cursor.TermVector);
-
-                if (angle > FalseAngle)
+                while (cursor != null)
                 {
-                    cursor.Highscore = angle;
-                    yield return cursor;
+                    var angle = node.TermVector.CosAngle(cursor.TermVector);
+
+                    if (angle > FalseAngle)
+                    {
+                        cursor.Highscore = angle;
+                        yield return cursor;
+                    }
+                    cursor = cursor.Right;
                 }
-                cursor = cursor.Left;
-            }
-
-            cursor = match.Right;
-
-            while (cursor != null)
-            {
-                var angle = node.TermVector.CosAngle(cursor.TermVector);
-
-                if (angle > FalseAngle)
-                {
-                    cursor.Highscore = angle;
-                    yield return cursor;
-                }
-                cursor = cursor.Right;
             }
         }
 
@@ -228,7 +214,7 @@ namespace Sir.Store
 
         private void Merge(VectorNode node)
         {
-            var angle = node.TermVector.CosAngle(TermVector);
+            //var angle = node.TermVector.CosAngle(TermVector);
 
             //if (angle < IdenticalAngle)
             //{

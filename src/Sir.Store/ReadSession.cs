@@ -52,57 +52,94 @@ namespace Sir.Store
 
                 if (ix != null)
                 {
-                    var nodes = ix.Match(query.Term.Value.ToString()).ToList();
+                    var matchingNodes = ix.Match(query.Term.Value.ToString())
+                        .OrderByDescending(x => x.Highscore).ToList();
 
-                    foreach (var match in nodes)
+                    IList<VectorNode> nodes = null;
+
+                    if (matchingNodes.Count > 1 && matchingNodes[0].Highscore >= VectorNode.IdenticalAngle)
                     {
-                        if (match.Highscore > VectorNode.FalseAngle)
-                        {
-                            var docIds = _postingsReader.Read(match.PostingsOffset)
-                                .ToDictionary(x => x, y => match.Highscore);
+                        nodes = new[] { matchingNodes[0] };
+                    }
+                    else
+                    {
+                        nodes = matchingNodes;
+                    }
 
-                            if (result == null)
+                    var subResult = new SortedList<ulong, double>();
+
+                    foreach (var node in nodes)
+                    {
+                        if (node.Highscore <= VectorNode.FalseAngle)
+                        {
+                            break;
+                        }
+
+                        var docIds = _postingsReader.Read(node.PostingsOffset);
+
+                        foreach (var id in docIds)
+                        {
+                            double score;
+
+                            if (subResult.TryGetValue(id, out score))
                             {
-                                result = new SortedList<ulong, double>(docIds);
+                                var newScore = (score + node.Highscore) / 2;
+                                subResult[id] = newScore;
                             }
                             else
                             {
-                                if (query.And)
+                                subResult.Add(id, node.Highscore / 2);
+                            }
+                        }
+                    }
+
+                    if (result == null)
+                    {
+                        result = subResult;
+                    }
+                    else
+                    {
+                        if (query.And)
+                        {
+                            var reduced = new Dictionary<ulong, double>();
+
+                            foreach (var doc in result)
+                            {
+                                double score;
+
+                                if (subResult.TryGetValue(doc.Key, out score))
                                 {
-                                    var subset = (from doc in result
-                                                  join x in docIds on doc.Key equals x.Key
-                                                  select doc).ToDictionary(x => x.Key, y => y.Value);
-
-                                    result = new SortedList<ulong, double>(subset);
-
+                                    reduced[doc.Key] = (score + doc.Value) / 2;
                                 }
-                                else if (query.Not)
-                                {
-                                    foreach (var id in docIds.Keys)
-                                    {
-                                        result.Remove(id);
-                                    }
-                                }
-                                else // Or
-                                {
-                                    foreach (var id in docIds)
-                                    {
-                                        double score;
+                            }
 
-                                        if (result.TryGetValue(id.Key, out score))
-                                        {
-                                            result[id.Key] = (Math.Max(score, id.Value) + Math.Sqrt((score+id.Value)/2)) / 2;
-                                        }
-                                        else
-                                        {
-                                            result.Add(id.Key, id.Value);
-                                        }
-                                    }
+                            result = new SortedList<ulong, double>(reduced);
+                        }
+                        else if (query.Not)
+                        {
+                            foreach (var id in subResult.Keys)
+                            {
+                                result.Remove(id);
+                            }
+                        }
+                        else // Or
+                        {
+                            foreach (var id in subResult)
+                            {
+                                double score;
+
+                                if (result.TryGetValue(id.Key, out score))
+                                {
+                                    var newScore = (score + id.Value) / 2;
+                                    result[id.Key] = newScore;
+                                }
+                                else
+                                {
+                                    result.Add(id.Key, id.Value / 2);
                                 }
                             }
                         }
                     }
-                    
                     query = query.Next;
                 }
             }
@@ -116,32 +153,7 @@ namespace Sir.Store
                 return ReadDocs(result).OrderByDescending(d => d["_score"]);
             }
         }
-
-        private IEnumerable<IDictionary> ReadDocs(IEnumerable<ulong> docIds)
-        {
-            foreach (var id in docIds)
-            {
-                var docInfo = _docIx.Read(id);
-                var docMap = _docs.Read(docInfo.offset, docInfo.length);
-                var doc = new Dictionary<IComparable, IComparable>();
-
-                for (int i = 0; i < docMap.Count; i++)
-                {
-                    var kvp = docMap[i];
-                    var kInfo = _keyIx.Read(kvp.keyId);
-                    var vInfo = _valIx.Read(kvp.valId);
-                    var key = _keyReader.Read(kInfo.offset, kInfo.len, kInfo.dataType);
-                    var val = _valReader.Read(vInfo.offset, vInfo.len, vInfo.dataType);
-
-                    doc[key] = val;
-                }
-
-                doc["_docid"] = id;
-
-                yield return doc;
-            }
-        }
-
+        
         private IEnumerable<IDictionary> ReadDocs(IDictionary<ulong, double> docs)
         {
             foreach (var d in docs)

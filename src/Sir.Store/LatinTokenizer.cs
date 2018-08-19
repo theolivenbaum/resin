@@ -20,18 +20,19 @@ namespace Sir.Store
         public IEnumerable<string> Tokenize(string text)
         {
             var words = Normalize(text).Split(_wordDelimiters, StringSplitOptions.RemoveEmptyEntries);
+            return words;
 
-            for (int i = 0; i < words.Length; i++)
-            {
-                yield return words[i];
+            //for (int i = 0; i < words.Length; i++)
+            //{
+            //    yield return words[i];
 
-                var next = i + 1;
+            //    var next = i + 1;
 
-                if (next <= words.Length - 1)
-                {
-                    yield return string.Join(' ', words[i], words[next]);
-                }
-            }
+            //    if (next <= words.Length - 1)
+            //    {
+            //        yield return string.Join(' ', words[i], words[next]);
+            //    }
+            //}
 
             //var phrase = new List<string>();
 

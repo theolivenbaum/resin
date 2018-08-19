@@ -14,6 +14,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.HttpServer", "Sir.HttpS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Store", "Sir.Store\Sir.Store.csproj", "{24E80BBF-27D7-49AB-9C1E-B9EAA2453D38}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sir.StringCompare", "Sir.StringCompare\Sir.StringCompare.csproj", "{610237D4-15E5-4C9F-9BAE-ACB24F634D2F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{24E80BBF-27D7-49AB-9C1E-B9EAA2453D38}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24E80BBF-27D7-49AB-9C1E-B9EAA2453D38}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24E80BBF-27D7-49AB-9C1E-B9EAA2453D38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{610237D4-15E5-4C9F-9BAE-ACB24F634D2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{610237D4-15E5-4C9F-9BAE-ACB24F634D2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{610237D4-15E5-4C9F-9BAE-ACB24F634D2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{610237D4-15E5-4C9F-9BAE-ACB24F634D2F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
