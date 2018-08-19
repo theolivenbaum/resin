@@ -47,7 +47,7 @@ namespace Sir.HttpServer.Controllers
                 var parsed = GetWebString(uri);
 
                 document["_site"] = uri.Host;
-                document["_url"] = uri.ToString();
+                document["_url"] = uri.ToString().Replace(uri.Scheme + "://", string.Empty);
                 document["body"] = parsed.body;
                 document["title"] = parsed.title;
                 document["_created"] = DateTime.Now.ToBinary();
