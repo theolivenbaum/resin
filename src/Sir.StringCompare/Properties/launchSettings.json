@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Sir.StringCompare": {
+      "commandName": "Project",
+      "commandLineArgs": "\"first\" \"rambo first blood part ii\""
+    }
+  }
+}
