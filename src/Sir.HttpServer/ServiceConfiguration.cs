@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Sir.HttpServer.Features;
 using System;
 using System.IO;
 using System.Linq;
@@ -70,6 +71,11 @@ namespace Sir.HttpServer
             {
                 plugins.Add(service.ContentType, service);
             }
+
+            // register crawler as singleton
+            services.Add(new ServiceDescriptor(typeof(CrawlQueue), 
+                new CrawlQueue(serviceProvider.GetService<PluginsCollection>())));
+
             return serviceProvider;
         }
     }

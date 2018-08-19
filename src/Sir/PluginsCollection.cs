@@ -50,9 +50,12 @@ namespace Sir
                 }
             }
             
-            foreach (var s in Services<T>(key))
+            if (key != "*")
             {
-                yield return (T)s;
+                foreach (var s in Services<T>(key))
+                {
+                    yield return (T)s;
+                }
             }
         }
 

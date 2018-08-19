@@ -2,7 +2,7 @@
 
 namespace Sir.HttpServer.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : UIController
     {
         public ActionResult Index()
         {

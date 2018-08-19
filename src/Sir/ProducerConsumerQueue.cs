@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Sir.Store
+namespace Sir.Core
 {
     /// <summary>
     /// Enque items and run a single consumer thread.
@@ -12,10 +12,12 @@ namespace Sir.Store
     public class ProducerConsumerQueue<T> : IDisposable where T : class
     {
         private readonly BlockingCollection<T> _queue;
+        private readonly int? _pause;
 
-        public ProducerConsumerQueue(Action<T> consumingAction)
+        public ProducerConsumerQueue(Action<T> consumingAction, int? pauseMs = null)
         {
             _queue = new BlockingCollection<T>();
+            _pause = pauseMs;
 
             Task.Run(() =>
             {
@@ -30,6 +32,8 @@ namespace Sir.Store
 
                     if (item != null)
                     {
+                        if (_pause != null) Thread.Sleep(_pause.Value);
+
                         consumingAction(item);
                     }
                 }

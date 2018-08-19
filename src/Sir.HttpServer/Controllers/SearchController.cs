@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Sir.HttpServer.Controllers
 {
-    public class SearchController : Controller
+    public class SearchController : UIController
     {
         private PluginsCollection _plugins;
 
@@ -51,6 +51,8 @@ namespace Sir.HttpServer.Controllers
             parsedQuery.CollectionId = collectionId.ToHash();
 
             var documents = reader.Read(parsedQuery)
+                .GroupBy(x => x["_url"])
+                .SelectMany(x => x.OrderByDescending(y=>y["_created"]).Take(1))
                 .Select(x => new SearchResultModel { Document = x }).ToList();
 
             ViewData["collectionName"] = collectionId;
