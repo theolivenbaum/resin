@@ -12,7 +12,7 @@ namespace Sir.HttpServer.Controllers
             string fileName = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "6604389855880847730.docs");
             if (System.IO.File.Exists(fileName))
             {
-                docCount = new FileInfo(fileName).Length/9 - 1;
+                docCount = new FileInfo(fileName).Length/75;
             }
             ViewData["doc_count"] = docCount;
             base.OnActionExecuted(context);
