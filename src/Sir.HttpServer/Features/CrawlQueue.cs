@@ -8,12 +8,12 @@ using Sir.Core;
 
 namespace Sir.HttpServer.Features
 {
-    public class CrawlQueue
+    public class CrawlQueue : IDisposable
     {
         private readonly ProducerConsumerQueue<Uri> _queue;
         private readonly PluginsCollection _plugins;
-        private HashSet<string> _history;
-        private StreamWriter _log;
+        private readonly HashSet<string> _history;
+        private readonly StreamWriter _log;
 
         public (Uri uri, string title) LastProcessed { get; private set; }
 
@@ -38,39 +38,59 @@ namespace Sir.HttpServer.Features
                 return;
             }
 
+            var robotTxt = GetWebString(new Uri(string.Format("{0}://{1}/robots.txt", uri.Scheme, uri.Host)));
+            var allowed = true; ;
+
+            if (robotTxt != null)
+            {
+                var robotRules = GetForbiddenUrls(robotTxt);
+                var uriStr = uri.ToString();
+
+                foreach (var rule in robotRules)
+                {
+                    if (uriStr.Contains(rule))
+                    {
+                        allowed = false;
+                        break;
+                    }
+                }
+            }
+
+            if (!allowed)
+            {
+                _log.Log(string.Format("url forbidden by robot.txt {0}", uri));
+
+                return;
+            }
+
+            var str = GetWebString(uri);
+
+            if (str == null)
+            {
+                return;
+            }
+
             try
             {
-                var req = WebRequest.Create(uri);
-                req.Headers.Add("User-Agent", "gogorobot,didyougogo.com");
-                req.Headers.Add("Accept", "text/html,application/xhtml+xml,application/xml;");
+                var html = new HtmlDocument();
+
+                html.LoadHtml(str);
+
+                var doc = Parse(html, uri);
 
                 var document = new Dictionary<string, object>();
 
-                using (var response = req.GetResponse())
-                using (var content = response.GetResponseStream())
-                using (var reader = new StreamReader(content))
+                document["_site"] = uri.Host;
+                document["_url"] = uri.ToString().Replace(uri.Scheme + "://", string.Empty);
+                document["body"] = doc.body;
+                document["title"] = doc.title;
+                document["_created"] = DateTime.Now.ToBinary();
+
+                var writers = _plugins.All<IWriter>("*").ToList();
+
+                foreach (var writer in writers)
                 {
-                    _log.Log(string.Format("requested {0}", uri));
-
-                    var str = reader.ReadToEnd();
-                    var htmlDoc = new HtmlDocument();
-
-                    htmlDoc.LoadHtml(str);
-
-                    var doc = Parse(htmlDoc, uri);
-
-                    document["_site"] = uri.Host;
-                    document["_url"] = uri.ToString().Replace(uri.Scheme + "://", string.Empty);
-                    document["body"] = doc.body;
-                    document["title"] = doc.title;
-                    document["_created"] = DateTime.Now.ToBinary();
-
-                    var writers = _plugins.All<IWriter>("*").ToList();
-
-                    foreach (var writer in writers)
-                    {
-                        writer.Write("www", new[] { document });
-                    }
+                    writer.Write("www", new[] { document });
                 }
 
                 LastProcessed = (uri, (string)document["title"]);
@@ -79,6 +99,58 @@ namespace Sir.HttpServer.Features
             {
                 _log.Log(string.Format("error processing {0} {1}", uri, ex));
             }
+        }
+
+        private string GetWebString(Uri uri)
+        {
+            try
+            {
+                var req = (HttpWebRequest)WebRequest.Create(uri);
+                req.Headers.Add("User-Agent", "gogorobot/didyougogo.com");
+                req.Headers.Add("Accept", "text/html,application/xhtml+xml,application/xml;");
+
+                using (var response = (HttpWebResponse)req.GetResponse())
+                using (var content = response.GetResponseStream())
+                using (var reader = new StreamReader(content))
+                {
+                    if (response.StatusCode != HttpStatusCode.OK)
+                    {
+                        _log.Log(string.Format("bad request: {0} response: {1}", uri, response.StatusCode));
+
+                        return null;
+                    }
+
+                    _log.Log(string.Format("requested: {0}", uri));
+
+                    return reader.ReadToEnd();
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Log(string.Format("request failed: {0} {1}", uri, ex));
+
+                return null;
+            }
+        }
+
+        private static HashSet<string> GetForbiddenUrls(string robotTxt)
+        {
+            var result = new HashSet<string>();
+
+            foreach (var line in robotTxt.Split('\r', '\n'))
+            {
+                var parts = line.ToLower().Split(':');
+
+                if (parts[0].Trim() == "disallow")
+                {
+                    var rule = parts[1].Trim(' ', '?').Replace("/*", string.Empty);
+
+                    if (rule!="/")
+                        result.Add(rule);
+                }
+            }
+
+            return result;
         }
 
         private (string title, string body) Parse(HtmlDocument htmlDocument, Uri owner)
@@ -106,14 +178,11 @@ namespace Sir.HttpServer.Features
 
             return (title, body);
         }
-    }
 
-    public static class LoggingExtensions
-    {
-        public static void Log(this StreamWriter writer, string message)
+        public void Dispose()
         {
-            writer.WriteLine(string.Format("{0} {1}", DateTime.Now, message));
-            writer.Flush();
+            _queue.Dispose();
+            _log.Dispose();
         }
     }
 }

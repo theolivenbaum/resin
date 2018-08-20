@@ -8,7 +8,6 @@ namespace Sir.Store
     public class LocalStorageSessionFactory
     {
         private readonly SortedList<ulong, long> _keys;
-        private readonly object Sync = new object();
         private readonly VectorTree _index;
 
         public Stream WritableKeyMapStream { get; }
@@ -26,15 +25,12 @@ namespace Sir.Store
 
         public void RefreshIndex(ulong collectionId, long keyId)
         {
-            lock (Sync)
-            {
-                var ixFileName = Path.Combine(Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
-                var vecFileName = Path.Combine(Dir, string.Format("{0}.vec", collectionId));
+            var ixFileName = Path.Combine(Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
+            var vecFileName = Path.Combine(Dir, string.Format("{0}.vec", collectionId));
 
-                var index = DeserializeIndex(ixFileName, vecFileName);
+            var index = DeserializeIndex(ixFileName, vecFileName);
 
-                _index.Replace(collectionId, keyId, index);
-            }
+            _index.Replace(collectionId, keyId, index);
         }
 
         public static SortedList<ulong, long> LoadKeyMap(string dir)
@@ -129,10 +125,7 @@ namespace Sir.Store
 
         public SortedList<long, VectorNode> GetIndex(ulong collectionId)
         {
-            lock (Sync)
-            {
-                return _index.GetOrCreateIndex(collectionId);
-            }
+            return _index.GetOrCreateIndex(collectionId);
         }
 
         public Stream CreateWriteStream(string fileName)

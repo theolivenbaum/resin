@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Sir.HttpServer.Features;
 using System;
 using System.IO;
 
@@ -53,13 +54,16 @@ namespace Sir.HttpServer
 
         private void OnShutdown()
         {
+            var crawlQueue = ServiceProvider.GetService<CrawlQueue>();
+            crawlQueue.Dispose();
+
+            var plugins = ServiceProvider.GetService<PluginsCollection>();
+            plugins.Dispose();
+
             foreach (var stopper in ServiceProvider.GetServices<IPluginStop>())
             {
                 stopper.OnApplicationShutdown(ServiceProvider);
             }
-
-            var plugins = ServiceProvider.GetService<PluginsCollection>();
-            plugins.Dispose();
         }
     }
 }

@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using Sir.Core;
 
 namespace Sir.Store
@@ -14,12 +16,15 @@ namespace Sir.Store
         private readonly ProducerConsumerQueue<WriteJob> _writeQueue;
         private readonly LocalStorageSessionFactory _sessionFactory;
         private readonly ITokenizer _tokenizer;
+        private readonly StreamWriter _log;
 
         public Writer(LocalStorageSessionFactory sessionFactory, ITokenizer analyzer)
         {
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;
             _writeQueue = new ProducerConsumerQueue<WriteJob>(Commit);
+            _log = new StreamWriter(
+                File.Open("writer.log", FileMode.Append, FileAccess.Write, FileShare.Read));
         }
 
         public void Update(string collectionName, IEnumerable<IDictionary> data, IEnumerable<IDictionary> old)
@@ -29,51 +34,88 @@ namespace Sir.Store
                 old = null;
             }
 
-            _writeQueue.Enqueue(new WriteJob(collectionName.ToHash(), data, old));
+            try
+            {
+                _writeQueue.Enqueue(new WriteJob(collectionName.ToHash(), data, old));
+            }
+            catch (Exception ex)
+            {
+                _log.Log(string.Format("update failed: {0}", ex));
+
+                throw;
+            }
         }
 
         public void Write(string collectionName, IEnumerable<IDictionary> data)
         {
-            _writeQueue.Enqueue(new WriteJob(collectionName.ToHash(), data));
+            try
+            {
+                _writeQueue.Enqueue(new WriteJob(collectionName.ToHash(), data));
+            }
+            catch (Exception ex)
+            {
+                _log.Log(string.Format("write failed: {0}", ex));
+
+                throw;
+            }
         }
 
         public void Remove(string collectionName, IEnumerable<IDictionary> data)
         {
-            _writeQueue.Enqueue(new WriteJob(collectionName.ToHash(), data, delete:true));
+            try
+            {
+                _writeQueue.Enqueue(new WriteJob(collectionName.ToHash(), data, delete:true));
+            }
+            catch (Exception ex)
+            {
+                _log.Log(string.Format("remove failed: {0}", ex));
+
+                throw;
+            }
         }
 
         private void Commit(WriteJob job)
         {
-            if (job.Remove == null && job.Data != null)
+            try
             {
-                using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
+                if (job.Remove == null && job.Data != null)
                 {
-                    session.Write(job.Data, _tokenizer);
+                    using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
+                    {
+                        session.Write(job.Data, _tokenizer);
+                    }
+                }
+                else if (job.Data == null && job.Remove != null)
+                {
+                    using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
+                    {
+                        session.Remove(job.Remove, _tokenizer);
+                    }
+                }
+                else
+                {
+                    using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
+                    {
+                        session.Remove(job.Remove, _tokenizer);
+                    }
+                    using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
+                    {
+                        session.Write(job.Data, _tokenizer);
+                    }
                 }
             }
-            else if (job.Data == null && job.Remove != null)
+            catch (Exception ex)
             {
-                using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
-                {
-                    session.Remove(job.Remove, _tokenizer);
-                }
-            }
-            else
-            {
-                using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
-                {
-                    session.Remove(job.Remove, _tokenizer);
-                }
-                using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
-                {
-                    session.Write(job.Data, _tokenizer);
-                }
+                _log.Log(string.Format("commit failed: {0}", ex));
+
+                throw;
             }
         }
 
         public void Dispose()
         {
             _writeQueue.Dispose();
+            _log.Dispose();
         }
     }
 }
