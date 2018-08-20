@@ -19,7 +19,7 @@ namespace Sir.HttpServer.Features
 
         public CrawlQueue(PluginsCollection plugins)
         {
-            _queue = new ProducerConsumerQueue<Uri>(Submit, 1000);
+            _queue = new ProducerConsumerQueue<Uri>(Submit, 100);
             _plugins = plugins;
             _history = new HashSet<string>();
             _log = new StreamWriter(
