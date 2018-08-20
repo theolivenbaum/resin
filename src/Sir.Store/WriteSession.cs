@@ -223,29 +223,31 @@ namespace Sir.Store
 
         public override void Dispose()
         {
-            foreach (var node in _dirty)
+            try
             {
-                var tmpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.tmp_ix", CollectionId, node.Key));
-
-                using (var indexStream = new FileStream(
-                    tmpFileName, FileMode.Append, FileAccess.Write, FileShare.None))
+                foreach (var node in _dirty)
                 {
-                    node.Value.Serialize(indexStream, VectorStream, PostingsStream);
-                    indexStream.Flush();
-                    VectorStream.Flush();
-                    PostingsStream.Flush();
+                    var tmpIndexFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.tmp_ix", CollectionId, node.Key));
+
+                    using (var indexStream = new FileStream(tmpIndexFileName, FileMode.Append, FileAccess.Write, FileShare.None))
+                    {
+                        node.Value.Serialize(indexStream, VectorStream, PostingsStream);
+                    }
+                }
+
+                PostingsStream.Flush();
+                VectorStream.Flush();
+
+                foreach (var node in _dirty)
+                {
+                    SessionFactory.RefreshIndex(CollectionId, node.Key);
                 }
             }
-
-            foreach (var node in _dirty)
+            catch (Exception ex)
             {
-                var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, node.Key));
-                var tmpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.tmp_ix", CollectionId, node.Key));
+                File.WriteAllText("writesession_" + Guid.NewGuid() + ".log", ex.ToString());
 
-                File.Copy(tmpFileName, ixFileName, overwrite: true);
-                File.Delete(tmpFileName);
-
-                SessionFactory.RefreshIndex(CollectionId, node.Key);
+                throw;
             }
 
             base.Dispose();

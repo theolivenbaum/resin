@@ -38,7 +38,7 @@ namespace Sir.HttpServer.Controllers
 
             if (!q.Contains(":"))
             {
-                q = string.Format("title:{0}\nbody:{0}", q);
+                q = string.Format("title:{0}\nbody:{0}\nurl:{0}", q);
             }
 
             var timer = new Stopwatch();

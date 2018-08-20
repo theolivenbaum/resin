@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 
 namespace Sir.Store
 {
@@ -8,7 +9,6 @@ namespace Sir.Store
     public class VectorTree
     {
         public int Count { get; private set; }
-        public int MergeCount { get; private set; }
 
         private SortedList<ulong, SortedList<long, VectorNode>> _ix;
 
@@ -19,19 +19,27 @@ namespace Sir.Store
             _ix = ix;
         }
 
-        public void Replace(ulong collectionId, long key, VectorNode index)
+        public void Replace(string directory, ulong collectionId, long keyId, VectorNode index)
         {
-            _ix[collectionId][key] = index;
+            var tmpIndexFileName = Path.Combine(directory, string.Format("{0}.{1}.tmp_ix", collectionId, keyId));
+            var ixFileName = Path.Combine(directory, string.Format("{0}.{1}.ix", collectionId, keyId));
+
+            File.Copy(tmpIndexFileName, ixFileName, overwrite: true);
+            File.Delete(tmpIndexFileName);
+
+            _ix[collectionId][keyId] = index;
         }
 
         public SortedList<long, VectorNode> GetOrCreateIndex(ulong collectionId)
         {
             SortedList<long, VectorNode> ix;
-            if(!_ix.TryGetValue(collectionId, out ix))
+
+            if (!_ix.TryGetValue(collectionId, out ix))
             {
                 ix = new SortedList<long, VectorNode>();
                 _ix.Add(collectionId, ix);
             }
+
             return ix;
         }
 
@@ -56,26 +64,5 @@ namespace Sir.Store
 
             return (depth, width);
         }
-
-        public VectorNode GetNode(ulong colId, long keyId)
-        {
-            SortedList<long,VectorNode> nodes;
-            if (!_ix.TryGetValue(colId, out nodes))
-            {
-                return null;
-            }
-            VectorNode node;
-            if(!nodes.TryGetValue(keyId, out node))
-            {
-                return null;
-            }
-            return node;
-        }
-
-        public string Visualize(ulong collectionId, long keyId)
-        {
-            return _ix[collectionId][keyId].Visualize();
-        }
-
     }
 }

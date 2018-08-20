@@ -25,12 +25,12 @@ namespace Sir.Store
 
         public void RefreshIndex(ulong collectionId, long keyId)
         {
-            var ixFileName = Path.Combine(Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
-            var vecFileName = Path.Combine(Dir, string.Format("{0}.vec", collectionId));
+            var tmpIndexFileName = Path.Combine(Dir, string.Format("{0}.{1}.tmp_ix", collectionId, keyId));
+            var vectorFileName = Path.Combine(Dir, string.Format("{0}.vec", collectionId));
 
-            var index = DeserializeIndex(ixFileName, vecFileName);
+            var freshIndex = DeserializeIndex(tmpIndexFileName, vectorFileName);
 
-            _index.Replace(collectionId, keyId, index);
+            _index.Replace(Dir, collectionId, keyId, freshIndex);
         }
 
         public static SortedList<ulong, long> LoadKeyMap(string dir)

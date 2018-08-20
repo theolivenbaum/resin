@@ -19,7 +19,7 @@ namespace Sir.HttpServer.Features
 
         public CrawlQueue(PluginsCollection plugins)
         {
-            _queue = new ProducerConsumerQueue<Uri>(Submit, 100);
+            _queue = new ProducerConsumerQueue<Uri>(Submit);
             _plugins = plugins;
             _history = new HashSet<string>();
             _log = new StreamWriter(
@@ -77,11 +77,12 @@ namespace Sir.HttpServer.Features
                 html.LoadHtml(str);
 
                 var doc = Parse(html, uri);
-
+                var url = uri.ToString().Replace(uri.Scheme + "://", string.Empty);
                 var document = new Dictionary<string, object>();
 
                 document["_site"] = uri.Host;
-                document["_url"] = uri.ToString().Replace(uri.Scheme + "://", string.Empty);
+                document["_url"] = url;
+                document["url"] = url;
                 document["body"] = doc.body;
                 document["title"] = doc.title;
                 document["_created"] = DateTime.Now.ToBinary();
