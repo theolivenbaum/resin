@@ -7,20 +7,30 @@ namespace Sir.Store
     public class LatinTokenizer : ITokenizer
     {
         private static char[] _wordDelimiters = new char[] {
+                            ' '
+                            };
+
+        private static char[] _phraseDelimiters = new char[] {
                             '.', ',', '?', '!',
                             ':', ';', '\\', '/',
                             '\n', '\r', '\t',
                             '(', ')', '[', ']',
-                            '"', '`', '´', '-',
-                            ' '
+                            '"', '`', '´', '-'
                             };
 
         public string ContentType => "*";
 
         public IEnumerable<string> Tokenize(string text)
         {
-            var words = Normalize(text).Split(_wordDelimiters, StringSplitOptions.RemoveEmptyEntries);
-            return words;
+            foreach (var phrase in Normalize(text).Split(_phraseDelimiters, StringSplitOptions.RemoveEmptyEntries))
+            {
+                yield return phrase;
+
+                foreach (var word in phrase.Split(_wordDelimiters, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    yield return word;
+                }
+            }
 
             //for (int i = 0; i < words.Length; i++)
             //{
