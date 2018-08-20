@@ -3,9 +3,9 @@
 namespace Sir.Store
 {
     /// <summary>
-    /// Parses key:value clauses where keys are separated from values by a ':' and
-    /// clauses are separated by newline characters. 
-    /// Clauses may be appended with a + sign (meaning AND), a - sign (meaning NOT) or nothing (meaning OR).
+    /// Parses terms (key:value). Keys are separated from values by a ':' and
+    /// terms are separated by newline characters. 
+    /// Terms may be appended with a + sign (meaning AND), a - sign (meaning NOT) or nothing (meaning OR).
     /// </summary>
     public class BooleanKeyValueQueryParser : IQueryParser
     {
@@ -22,7 +22,10 @@ namespace Sir.Store
             {
                 var parts = line.Split(':');
                 var key = parts[0];
-                var value = tokenizer.Normalize(parts[1]);
+                var value = parts[1];
+
+                var values = (key[0] == '_' || tokenizer == null) ?
+                    new[] { value } : tokenizer.Tokenize(value);
 
                 var and = root == null || key[0] == '+';
                 var not = key[0] == '-';
@@ -33,20 +36,23 @@ namespace Sir.Store
                     key = key.Substring(1);
                 }
 
-                var q = new Query { Term = new Term(key, value), And = and, Not = not, Or = or };
+                foreach (var val in values)
+                {
+                    var q = new Query { Term = new Term(key, val), And = and, Not = not, Or = or };
 
-                if (previous == null)
-                {
-                    root = q;
-                    previous = q;
-                }
-                else
-                {
-                    previous.Next = q;
-                    previous = q;
+                    if (previous == null)
+                    {
+                        root = q;
+                        previous = q;
+                    }
+                    else
+                    {
+                        previous.Next = q;
+                        previous = q;
+                    }
                 }
             }
-            
+
             return root;
         }
         

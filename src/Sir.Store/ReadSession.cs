@@ -43,7 +43,7 @@ namespace Sir.Store
 
         public IEnumerable<IDictionary> Read(Query query)
         {
-            SortedList<ulong, double> result = null;
+            IDictionary<ulong, double> result = null;
 
             while (query != null)
             {
@@ -52,94 +52,62 @@ namespace Sir.Store
 
                 if (ix != null)
                 {
-                    var matchingNodes = ix.Match(query.Term.Value.ToString())
-                        .OrderByDescending(x => x.Highscore).ToList();
+                    var match = ix.ClosestMatch(query.Term.Value.ToString());
 
-                    IList<VectorNode> nodes = null;
-
-                    if (matchingNodes.Count > 1 && matchingNodes[0].Highscore >= VectorNode.IdenticalAngle)
+                    if (match.Highscore > VectorNode.FalseAngle)
                     {
-                        nodes = new[] { matchingNodes[0] };
-                    }
-                    else
-                    {
-                        nodes = matchingNodes;
-                    }
+                        var docIds = _postingsReader.Read(match.PostingsOffset)
+                            .ToDictionary(x => x, y => match.Highscore);
 
-                    var subResult = new SortedList<ulong, double>();
-
-                    foreach (var node in nodes)
-                    {
-                        if (node.Highscore <= VectorNode.FalseAngle)
+                        if (result == null)
                         {
-                            break;
+                            result = docIds;
                         }
-
-                        var docIds = _postingsReader.Read(node.PostingsOffset);
-
-                        foreach (var id in docIds)
+                        else
                         {
-                            double score;
-
-                            if (subResult.TryGetValue(id, out score))
+                            if (query.And)
                             {
-                                subResult[id] = Math.Max(score, node.Highscore);
-                            }
-                            else
-                            {
-                                subResult.Add(id, node.Highscore);
-                            }
-                        }
-                    }
+                                var reduced = new Dictionary<ulong, double>();
 
-                    if (result == null)
-                    {
-                        result = subResult;
-                    }
-                    else
-                    {
-                        if (query.And)
-                        {
-                            var reduced = new Dictionary<ulong, double>();
-
-                            foreach (var doc in result)
-                            {
-                                double score;
-
-                                if (subResult.TryGetValue(doc.Key, out score))
+                                foreach (var doc in result)
                                 {
-                                    reduced[doc.Key] = Math.Max(score, doc.Value);
+                                    double score;
+
+                                    if (docIds.TryGetValue(doc.Key, out score))
+                                    {
+                                        reduced[doc.Key] = score + doc.Value;
+                                    }
+                                }
+
+                                result = new SortedList<ulong, double>(reduced);
+                            }
+                            else if (query.Not)
+                            {
+                                foreach (var id in docIds.Keys)
+                                {
+                                    result.Remove(id);
                                 }
                             }
-
-                            result = new SortedList<ulong, double>(reduced);
-                        }
-                        else if (query.Not)
-                        {
-                            foreach (var id in subResult.Keys)
+                            else // Or
                             {
-                                result.Remove(id);
-                            }
-                        }
-                        else // Or
-                        {
-                            foreach (var id in subResult)
-                            {
-                                double score;
+                                foreach (var id in docIds)
+                                {
+                                    double score;
 
-                                if (result.TryGetValue(id.Key, out score))
-                                {
-                                    result[id.Key] = Math.Max(score, id.Value);
-                                }
-                                else
-                                {
-                                    result.Add(id.Key, id.Value);
+                                    if (result.TryGetValue(id.Key, out score))
+                                    {
+                                        result[id.Key] = score + id.Value;
+                                    }
+                                    else
+                                    {
+                                        result.Add(id.Key, id.Value);
+                                    }
                                 }
                             }
                         }
                     }
-                    query = query.Next;
                 }
+                query = query.Next;
             }
 
             if (result == null)
