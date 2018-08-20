@@ -28,7 +28,7 @@ namespace Sir.Store
         /// <returns>The next auto-incrementing doc id</returns>
         public ulong GetNextDocId()
         {
-            return _stream.Position == 0 ? 0 : ((ulong)_stream.Position / (ulong)_blockSize);
+            return Convert.ToUInt64(_stream.Position) / Convert.ToUInt64(_blockSize);
         }
 
         /// <summary>

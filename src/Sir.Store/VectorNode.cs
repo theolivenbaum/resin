@@ -394,20 +394,6 @@ namespace Sir.Store
                     root.Add(node);
                 }
 
-                //if (terminator == 0)
-                //{
-                //    node.Left = Deserialize(treeStream, vectorStream);
-                //    node.Right = Deserialize(treeStream, vectorStream);
-                //}
-                //else if (terminator == 1)
-                //{
-                //    node.Left = Deserialize(treeStream, vectorStream);
-                //}
-                //else if (terminator == 2)
-                //{
-                //    node.Right = Deserialize(treeStream, vectorStream);
-                //}
-
                 read = treeStream.Read(buf, 0, buf.Length);
             }
 
