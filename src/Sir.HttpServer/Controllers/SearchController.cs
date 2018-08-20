@@ -34,7 +34,7 @@ namespace Sir.HttpServer.Controllers
             string collectionId = cid ?? "www";
             string htmlEncodedQuery = WebUtility.HtmlEncode(q);
 
-            ViewData["q"] = htmlEncodedQuery;
+            ViewData["q"] = q;
 
             if (!q.Contains(":"))
             {
