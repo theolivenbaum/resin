@@ -351,57 +351,67 @@ namespace Sir.Store
 
             var buf = new byte[nodeSize];
             var read = treeStream.Read(buf, 0, buf.Length);
+            VectorNode root = null;
 
-            if (read < nodeSize)
+            while (read > 0)
             {
-                throw new InvalidDataException();
+                // Deserialize node
+                var angle = BitConverter.ToDouble(buf, 0);
+                var vecOffset = BitConverter.ToInt64(buf, sizeof(double));
+                var postingsOffset = BitConverter.ToInt64(buf, sizeof(double) + sizeof(long));
+                var vectorCount = BitConverter.ToInt32(buf, sizeof(double) + sizeof(long) + sizeof(long));
+                var terminator = buf[nodeSize - 1];
+
+                // Deserialize term vector
+                var vec = new SortedList<char, double>();
+                var vecBuf = new byte[vectorCount * kvpSize];
+
+                vectorStream.Seek(vecOffset, SeekOrigin.Begin);
+                vectorStream.Read(vecBuf, 0, vecBuf.Length);
+
+                var offs = 0;
+
+                for (int i = 0; i < vectorCount; i++)
+                {
+                    var key = BitConverter.ToChar(vecBuf, offs);
+                    var val = BitConverter.ToDouble(vecBuf, offs + sizeof(char));
+
+                    vec.Add(key, val);
+
+                    offs += kvpSize;
+                }
+
+                var node = new VectorNode(vec);
+                node.Angle = angle;
+                node.PostingsOffset = postingsOffset;
+
+                if (root == null)
+                {
+                    root = node;
+                }
+                else
+                {
+                    root.Add(node);
+                }
+
+                //if (terminator == 0)
+                //{
+                //    node.Left = Deserialize(treeStream, vectorStream);
+                //    node.Right = Deserialize(treeStream, vectorStream);
+                //}
+                //else if (terminator == 1)
+                //{
+                //    node.Left = Deserialize(treeStream, vectorStream);
+                //}
+                //else if (terminator == 2)
+                //{
+                //    node.Right = Deserialize(treeStream, vectorStream);
+                //}
+
+                read = treeStream.Read(buf, 0, buf.Length);
             }
 
-            // Deserialize node
-            var angle = BitConverter.ToDouble(buf, 0);
-            var vecOffset = BitConverter.ToInt64(buf, sizeof(double));
-            var postingsOffset = BitConverter.ToInt64(buf, sizeof(double) + sizeof(long));
-            var vectorCount = BitConverter.ToInt32(buf, sizeof(double) + sizeof(long) + sizeof(long));
-            var terminator = buf[nodeSize - 1];
-
-            // Deserialize term vector
-            var vec = new SortedList<char, double>();
-            var vecBuf = new byte[vectorCount * kvpSize];
-
-            vectorStream.Seek(vecOffset, SeekOrigin.Begin);
-            vectorStream.Read(vecBuf, 0, vecBuf.Length);
-
-            var offs = 0;
-
-            for (int i = 0; i < vectorCount; i++)
-            {
-                var key = BitConverter.ToChar(vecBuf, offs);
-                var val = BitConverter.ToDouble(vecBuf, offs + sizeof(char));
-
-                vec.Add(key, val);
-
-                offs += kvpSize;
-            }
-
-            var node = new VectorNode(vec);
-            node.Angle = angle;
-            node.PostingsOffset = postingsOffset;
-
-            if (terminator == 0)
-            {
-                node.Left = Deserialize(treeStream, vectorStream);
-                node.Right = Deserialize(treeStream, vectorStream);
-            }
-            else if (terminator == 1)
-            {
-                node.Left = Deserialize(treeStream, vectorStream);
-            }
-            else if (terminator == 2)
-            {
-                node.Right = Deserialize(treeStream, vectorStream);
-            }
-
-            return node;
+            return root;
         }
 
         public int Depth()
