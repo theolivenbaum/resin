@@ -29,13 +29,13 @@ namespace Sir.Store
 
         public void Update(string collectionName, IEnumerable<IDictionary> data, IEnumerable<IDictionary> old)
         {
-            if (((IList)old).Count == 0)
-            {
-                old = null;
-            }
-
             try
             {
+                if (((IList)old).Count == 0)
+                {
+                    old = null;
+                }
+
                 _writeQueue.Enqueue(new WriteJob(collectionName.ToHash(), data, old));
             }
             catch (Exception ex)

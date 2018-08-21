@@ -19,15 +19,9 @@ namespace Sir.Store
             _ix = ix;
         }
 
-        public void Replace(string directory, ulong collectionId, long keyId, VectorNode index)
+        public void Add(ulong collectionId, long keyId, VectorNode index)
         {
-            var tmpIndexFileName = Path.Combine(directory, string.Format("{0}.{1}.tmp_ix", collectionId, keyId));
-            var ixFileName = Path.Combine(directory, string.Format("{0}.{1}.ix", collectionId, keyId));
-
-            File.Copy(tmpIndexFileName, ixFileName, overwrite: true);
-            File.Delete(tmpIndexFileName);
-
-            _ix[collectionId][keyId] = index;
+            _ix[collectionId].Add(keyId, index);
         }
 
         public SortedList<long, VectorNode> GetOrCreateIndex(ulong collectionId)

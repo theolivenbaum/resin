@@ -23,14 +23,9 @@ namespace Sir.Store
             WritableKeyMapStream = new FileStream(Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         }
 
-        public void RefreshIndex(ulong collectionId, long keyId)
+        public void Add(ulong collectionId, long keyId, VectorNode index)
         {
-            var tmpIndexFileName = Path.Combine(Dir, string.Format("{0}.{1}.tmp_ix", collectionId, keyId));
-            var vectorFileName = Path.Combine(Dir, string.Format("{0}.vec", collectionId));
-
-            var freshIndex = DeserializeIndex(tmpIndexFileName, vectorFileName);
-
-            _index.Replace(Dir, collectionId, keyId, freshIndex);
+            _index.Add(collectionId, keyId, index);
         }
 
         public static SortedList<ulong, long> LoadKeyMap(string dir)

@@ -48,13 +48,13 @@ namespace Sir.Store
             while (query != null)
             {
                 var keyHash = query.Term.Key.ToString().ToHash();
-                var ix = GetIndex(keyHash);
+                var ix = GetInMemoryIndex(keyHash);
 
                 if (ix != null)
                 {
                     var match = ix.ClosestMatch(query.Term.Value.ToString());
 
-                    if (match.Highscore > VectorNode.FalseAngle)
+                    if (match.Highscore > VectorNode.FalseAngle && match.PostingsOffset > -1)
                     {
                         var docIds = _postingsReader.Read(match.PostingsOffset)
                             .ToDictionary(x => x, y => match.Highscore);
@@ -75,7 +75,7 @@ namespace Sir.Store
 
                                     if (docIds.TryGetValue(doc.Key, out score))
                                     {
-                                        reduced[doc.Key] = score + doc.Value;
+                                        reduced[doc.Key] = 2 * (score + doc.Value);
                                     }
                                 }
 
@@ -125,6 +125,12 @@ namespace Sir.Store
             foreach (var d in docs)
             {
                 var docInfo = _docIx.Read(d.Key);
+
+                if (docInfo.offset < 0)
+                {
+                    continue;
+                }
+
                 var docMap = _docs.Read(docInfo.offset, docInfo.length);
                 var doc = new Dictionary<IComparable, IComparable>();
 

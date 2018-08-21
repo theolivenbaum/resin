@@ -24,14 +24,16 @@ namespace Sir.Store
             CollectionId = collectionId;
         }
 
-        public VectorNode GetIndex(ulong key)
+        public VectorNode GetInMemoryIndex(ulong key)
         {
             long keyId;
             if (!SessionFactory.TryGetKeyId(key, out keyId))
             {
                 return null;
             }
+            
             VectorNode root;
+
             if (!Index.TryGetValue(keyId, out root))
             {
                 return null;

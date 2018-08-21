@@ -94,7 +94,7 @@ namespace Sir.Store
             }
         }
 
-        public void Write(long offset, IList<ulong> docIds, int index = 0)
+        public void Write(long offset, ulong docId)
         {
             if (_stream.Position != offset)
             {
@@ -129,7 +129,7 @@ namespace Sir.Store
                 // Jump to that location and continue writing there.
 
                 long nextOffset = Convert.ToInt64(id);
-                Write(nextOffset, docIds, index);
+                Write(nextOffset, docId);
             }
             else if (pos == SLOTS_PER_PAGE - 2)
             {
@@ -140,7 +140,7 @@ namespace Sir.Store
                 // in the last slot.
 
                 _stream.Seek(offset + (pos * BLOCK_SIZE), SeekOrigin.Begin);
-                _stream.Write(BitConverter.GetBytes(docIds[index]), 0, sizeof(ulong));
+                _stream.Write(BitConverter.GetBytes(docId), 0, sizeof(ulong));
                 _stream.Write(_aliveStatus, 0, sizeof(byte));
 
                 var nextOffset = AllocatePage();
@@ -154,16 +154,19 @@ namespace Sir.Store
                 var o = offset + (pos * BLOCK_SIZE);
 
                 _stream.Seek(o, SeekOrigin.Begin);
-                _stream.Write(BitConverter.GetBytes(docIds[index]), 0, sizeof(ulong));
+                _stream.Write(BitConverter.GetBytes(docId), 0, sizeof(ulong));
                 _stream.Write(_aliveStatus, 0, sizeof(byte));
 
                 _stream.Seek(offset, SeekOrigin.Begin);
                 _stream.Read(_pageBuf, 0, PAGE_SIZE);
             }
+        }
 
-            if (index < docIds.Count - 1)
+        public void Write(long offset, IList<ulong> docIds)
+        {
+            foreach (var docId in docIds)
             {
-                Write(offset, docIds, ++index);
+                Write(offset, docId);
             }
         }
 

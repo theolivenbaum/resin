@@ -13,7 +13,7 @@ namespace Sir.Store
     public class VectorNode
     {
         public const double IdenticalAngle = 0.98;
-        public const double FalseAngle = 0.3;
+        public const double FalseAngle = 0.7;
 
         private VectorNode _right;
         private VectorNode _left;
@@ -56,6 +56,13 @@ namespace Sir.Store
         {
             _docIds = new HashSet<ulong>();
             TermVector = wordVector;
+            PostingsOffset = -1;
+        }
+
+        public VectorNode(string s, ulong docId)
+        {
+            _docIds = new HashSet<ulong> { docId };
+            TermVector = s.ToVector();
             PostingsOffset = -1;
         }
 

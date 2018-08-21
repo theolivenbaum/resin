@@ -33,45 +33,40 @@ namespace Sir.HttpServer.Features
 
         private void Submit(Uri uri)
         {
-            if (!_history.Add(uri.Host))
-            {
-                return;
-            }
-
-            var robotTxt = GetWebString(new Uri(string.Format("{0}://{1}/robots.txt", uri.Scheme, uri.Host)));
-            var allowed = true; ;
-
-            if (robotTxt != null)
-            {
-                var robotRules = GetForbiddenUrls(robotTxt);
-                var uriStr = uri.ToString();
-
-                foreach (var rule in robotRules)
-                {
-                    if (uriStr.Contains(rule))
-                    {
-                        allowed = false;
-                        break;
-                    }
-                }
-            }
-
-            if (!allowed)
-            {
-                _log.Log(string.Format("url forbidden by robot.txt {0}", uri));
-
-                return;
-            }
-
-            var str = GetWebString(uri);
-
-            if (str == null)
-            {
-                return;
-            }
-
             try
             {
+                var robotTxt = GetWebString(new Uri(string.Format("{0}://{1}/robots.txt", uri.Scheme, uri.Host)));
+                var allowed = true; ;
+
+                if (robotTxt != null)
+                {
+                    var robotRules = GetForbiddenUrls(robotTxt);
+                    var uriStr = uri.ToString();
+
+                    foreach (var rule in robotRules)
+                    {
+                        if (uriStr.Contains(rule))
+                        {
+                            allowed = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (!allowed)
+                {
+                    _log.Log(string.Format("url forbidden by robot.txt {0}", uri));
+
+                    return;
+                }
+
+                var str = GetWebString(uri);
+
+                if (str == null)
+                {
+                    return;
+                }
+
                 var html = new HtmlDocument();
 
                 html.LoadHtml(str);
@@ -102,18 +97,28 @@ namespace Sir.HttpServer.Features
             }
         }
 
+        //private List<string> _unlawful = new List<string> { ".exe", ".pdf", ".zip", ".gz" };
+
         private string GetWebString(Uri uri)
         {
+            var urlStr = uri.ToString();
+
             try
             {
                 var req = (HttpWebRequest)WebRequest.Create(uri);
+                req.ReadWriteTimeout = 10 * 1000;
                 req.Headers.Add("User-Agent", "gogorobot/didyougogo.com");
-                req.Headers.Add("Accept", "text/html,application/xhtml+xml,application/xml;");
+                req.Headers.Add("Accept", "text/html");
 
                 using (var response = (HttpWebResponse)req.GetResponse())
                 using (var content = response.GetResponseStream())
                 using (var reader = new StreamReader(content))
                 {
+                    if (!response.GetResponseHeader("Content-Type").Contains("text/html"))
+                    {
+                        return null;
+                    }
+
                     if (response.StatusCode != HttpStatusCode.OK)
                     {
                         _log.Log(string.Format("bad request: {0} response: {1}", uri, response.StatusCode));
@@ -167,15 +172,20 @@ namespace Sir.HttpServer.Features
             var ownerUrl = owner.Host;
             var txt = txtNodes.Select(x => WebUtility.HtmlDecode(x.InnerText));
             var body = string.Join("\r\n", txt);
-            var links = htmlDocument.DocumentNode.SelectNodes("//a[@href]")
-                .Select(x => x.Attributes["href"] == null ? null : x.Attributes["href"].Value)
-                .Where(x => (x != null && x.StartsWith("https://") && (!x.Contains(ownerUrl))))
-                .ToList();
 
-            foreach (var url in links)
-            {
-                _queue.Enqueue(new Uri(url));
-            }
+            //if (_history.Add(owner.Host))
+            //{
+            //    var links = htmlDocument.DocumentNode.SelectNodes("//a[@href]")
+            //    .Select(x => x.Attributes["href"] == null ? null : x.Attributes["href"].Value)
+            //    .Where(x => (x != null && x.StartsWith("https://") && (!x.Contains(ownerUrl))))
+            //    .ToList();
+
+            //    foreach (var url in links)
+            //    {
+            //        _queue.Enqueue(new Uri(url));
+            //    }
+            //}
+            
 
             return (title, body);
         }

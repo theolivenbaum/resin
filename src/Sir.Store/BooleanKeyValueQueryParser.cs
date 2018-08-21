@@ -38,7 +38,7 @@ namespace Sir.Store
 
                 foreach (var val in values)
                 {
-                    var q = new Query { Term = new Term(key, val), And = and, Not = not, Or = or };
+                    var q = new Query { Term = new Term(key, val), Or = true };
 
                     if (previous == null)
                     {

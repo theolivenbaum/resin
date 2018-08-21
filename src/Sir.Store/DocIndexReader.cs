@@ -32,8 +32,7 @@ namespace Sir.Store
 
             if (read == 0)
             {
-                throw new ArgumentException(
-                    string.Format("document record {0} does not exist", docId), nameof(docId));
+                return (-1, -1); // return "nothing" if the docId has not yet been flushed.
             }
 
             return (BitConverter.ToInt64(buf, 0), BitConverter.ToInt32(buf, sizeof(long)));

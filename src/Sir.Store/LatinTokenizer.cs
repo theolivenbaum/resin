@@ -18,31 +18,42 @@ namespace Sir.Store
                             '"', '`', '´', '-'
                             };
 
+        private static char[] _delims = new char[] {
+                            '.', ',', '?', '!',
+                            ':', ';', '\\', '/',
+                            '\n', '\r', '\t',
+                            '(', ')', '[', ']',
+                            '"', '`', '´', '-',
+                            ' '
+                            };
+
         public string ContentType => "*";
 
         public IEnumerable<string> Tokenize(string text)
         {
-            foreach (var phrase in Normalize(text).Split(_phraseDelimiters, StringSplitOptions.RemoveEmptyEntries))
-            {
-                yield return phrase;
-
-                foreach (var word in phrase.Split(_wordDelimiters, StringSplitOptions.RemoveEmptyEntries))
-                {
-                    yield return word;
-                }
-            }
-
-            //for (int i = 0; i < words.Length; i++)
+            //foreach (var phrase in Normalize(text).Split(_phraseDelimiters, StringSplitOptions.RemoveEmptyEntries))
             //{
-            //    yield return words[i];
+            //    yield return phrase;
 
-            //    var next = i + 1;
-
-            //    if (next <= words.Length - 1)
+            //    foreach (var word in phrase.Split(_wordDelimiters, StringSplitOptions.RemoveEmptyEntries))
             //    {
-            //        yield return string.Join(' ', words[i], words[next]);
+            //        yield return word;
             //    }
             //}
+
+            var words = Normalize(text).Split(_delims, StringSplitOptions.RemoveEmptyEntries);
+
+            for (int i = 0; i < words.Length; i++)
+            {
+                yield return words[i];
+
+                var next = i + 1;
+
+                if (next <= words.Length - 1)
+                {
+                    yield return string.Join(' ', words[i], words[next]);
+                }
+            }
 
             //var phrase = new List<string>();
 

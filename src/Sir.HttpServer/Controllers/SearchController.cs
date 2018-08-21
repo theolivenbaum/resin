@@ -58,7 +58,8 @@ namespace Sir.HttpServer.Controllers
 
             var documents = reader.Read(parsedQuery)
                 .GroupBy(x => x["_url"])
-                .SelectMany(x => x.OrderByDescending(y=>y["_created"]).Take(1))
+                .SelectMany(x => x.OrderByDescending(y => y["_created"]).Take(1))
+                .Take(10)
                 .Select(x => new SearchResultModel { Document = x }).ToList();
 
             ViewData["collectionName"] = collectionId;

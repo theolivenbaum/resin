@@ -56,7 +56,7 @@ namespace Sir.Store
                 {
                     var keyStr = key.ToString();
                     var keyHash = keyStr.ToHash();
-                    var fieldIndex = GetIndex(keyHash);
+                    var fieldIndex = GetInMemoryIndex(keyHash);
 
                     if (fieldIndex == null)
                     {
@@ -110,45 +110,6 @@ namespace Sir.Store
             }
         }
 
-        private VectorNode GetDirtyOrClonedIndex(ulong keyHash)
-        {
-            long keyId;
-
-            if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
-            {
-                return null;
-            }
-
-            VectorNode dirty;
-            if (_dirty.TryGetValue(keyId, out dirty))
-            {
-                return dirty;
-            }
-
-            return CloneIndex(keyHash);
-        }
-
-        private VectorNode CloneIndex(ulong keyHash)
-        {
-            long keyId;
-
-            if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
-            {
-                return null;
-            }
-
-            VectorNode dirty;
-            if (_dirty.TryGetValue(keyId, out dirty))
-            {
-                return dirty;
-            }
-
-            var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
-            var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId));
-
-            return SessionFactory.DeserializeIndex(ixFileName, vecFileName);
-        }
-
         public void Write(IEnumerable<IDictionary> data, ITokenizer tokenizer)
         {
             foreach (var model in data)
@@ -160,7 +121,7 @@ namespace Sir.Store
                 {
                     var keyStr = key.ToString();
                     var keyHash = keyStr.ToHash();
-                    var fieldIndex = GetDirtyOrClonedIndex(keyHash);
+                    var fieldIndex = GetDirtyOrFreshIndexFromMemory(keyHash);
                     var val = (IComparable)model[key];
                     var str = val as string;
                     var tokens = new HashSet<string>();
@@ -191,11 +152,15 @@ namespace Sir.Store
 
                         // create new index
                         fieldIndex = new VectorNode();
+
+                        SessionFactory.Add(CollectionId, keyId, fieldIndex);
                     }
                     else
                     {
                         keyId = SessionFactory.GetKey(keyHash);
                     }
+
+                    if (!_dirty.ContainsKey(keyId)) _dirty.Add(keyId, fieldIndex);
 
                     // store value
                     var valInfo = _vals.Append(val);
@@ -206,51 +171,44 @@ namespace Sir.Store
 
                     foreach (var token in tokens)
                     {
-                        // add token and postings to index
-                        fieldIndex.Add(token, docId);
-                    }
-
-                    if (!_dirty.ContainsKey(keyId))
-                    {
-                        _dirty.Add(keyId, fieldIndex);
+                        // add nodes to in-memory index
+                        fieldIndex.Add(new VectorNode(token, docId));
                     }
                 }
 
                 var docMeta = _docs.Append(docMap);
                 _docIx.Append(docMeta.offset, docMeta.length);
             }
+
+            // add nodes to disk-based index
+            foreach (var node in _dirty)
+            {
+                var keyId = node.Key;
+                var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
+
+                using (var ixStream = new FileStream(ixFileName, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    node.Value.Serialize(ixStream, VectorStream, PostingsStream);
+                }
+            }
         }
 
-        public override void Dispose()
+        private VectorNode GetDirtyOrFreshIndexFromMemory(ulong keyHash)
         {
-            try
+            long keyId;
+
+            if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
             {
-                foreach (var node in _dirty)
-                {
-                    var tmpIndexFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.tmp_ix", CollectionId, node.Key));
-
-                    using (var indexStream = new FileStream(tmpIndexFileName, FileMode.Append, FileAccess.Write, FileShare.None))
-                    {
-                        node.Value.Serialize(indexStream, VectorStream, PostingsStream);
-                    }
-                }
-
-                PostingsStream.Flush();
-                VectorStream.Flush();
-
-                foreach (var node in _dirty)
-                {
-                    SessionFactory.RefreshIndex(CollectionId, node.Key);
-                }
-            }
-            catch (Exception ex)
-            {
-                File.WriteAllText("writesession_" + Guid.NewGuid() + ".log", ex.ToString());
-
-                throw;
+                return null;
             }
 
-            base.Dispose();
+            VectorNode dirty;
+            if (_dirty.TryGetValue(keyId, out dirty))
+            {
+                return dirty;
+            }
+
+            return GetInMemoryIndex(keyHash);
         }
     }
 }
