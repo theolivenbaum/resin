@@ -36,7 +36,7 @@ namespace Sir.HttpServer.Features
             try
             {
                 var robotTxt = GetWebString(new Uri(string.Format("{0}://{1}/robots.txt", uri.Scheme, uri.Host)));
-                var allowed = true; ;
+                var allowed = true;
 
                 if (robotTxt != null)
                 {
@@ -72,6 +72,13 @@ namespace Sir.HttpServer.Features
                 html.LoadHtml(str);
 
                 var doc = Parse(html, uri);
+
+                if (doc.title == null)
+                {
+                    _log.Log(string.Format("error processing {0} (no title)", uri));
+                    return;
+                }
+
                 var url = uri.ToString().Replace(uri.Scheme + "://", string.Empty);
                 var document = new Dictionary<string, object>();
 
@@ -96,8 +103,6 @@ namespace Sir.HttpServer.Features
                 _log.Log(string.Format("error processing {0} {1}", uri, ex));
             }
         }
-
-        //private List<string> _unlawful = new List<string> { ".exe", ".pdf", ".zip", ".gz" };
 
         private string GetWebString(Uri uri)
         {
@@ -161,7 +166,15 @@ namespace Sir.HttpServer.Features
 
         private (string title, string body) Parse(HtmlDocument htmlDocument, Uri owner)
         {
-            var title = WebUtility.HtmlDecode(htmlDocument.DocumentNode.SelectNodes("//title").First().InnerText);
+            var titleNodes = htmlDocument.DocumentNode.SelectNodes("//title");
+
+            if (titleNodes == null) return (null, null);
+
+            var titleNode = titleNodes.FirstOrDefault();
+
+            if (titleNode == null) return (null, null);
+
+            var title = WebUtility.HtmlDecode(titleNode.InnerText);
             var root = htmlDocument.DocumentNode.SelectNodes("//body").First();
             var txtNodes = root.Descendants().Where(x =>
                 x.Name == "#text" &&
@@ -175,17 +188,22 @@ namespace Sir.HttpServer.Features
 
             //if (_history.Add(owner.Host))
             //{
-            //    var links = htmlDocument.DocumentNode.SelectNodes("//a[@href]")
-            //    .Select(x => x.Attributes["href"] == null ? null : x.Attributes["href"].Value)
-            //    .Where(x => (x != null && x.StartsWith("https://") && (!x.Contains(ownerUrl))))
-            //    .ToList();
+            //    var linkNodes = htmlDocument.DocumentNode.SelectNodes("//a[@href]");
 
-            //    foreach (var url in links)
+            //    if (linkNodes != null)
             //    {
-            //        _queue.Enqueue(new Uri(url));
+            //        var links = linkNodes.Select(x => x.Attributes["href"])
+            //            .Where(x => x != null)
+            //            .Select(x => x.Value)
+            //            .Where(x => x.StartsWith("https://") && (!x.Contains(ownerUrl)))
+            //            .ToList();
+
+            //        foreach (var url in links)
+            //        {
+            //            _queue.Enqueue(new Uri(url));
+            //        }
             //    }
             //}
-            
 
             return (title, body);
         }

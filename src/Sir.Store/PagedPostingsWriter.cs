@@ -8,7 +8,7 @@ namespace Sir.Store
     {
         public static int PAGE_SIZE = 4096;
         public static int BLOCK_SIZE = sizeof(ulong) + sizeof(byte);
-        public static int SLOTS_PER_PAGE = (PAGE_SIZE / BLOCK_SIZE) - 1;
+        public static int SLOTS_PER_PAGE = (PAGE_SIZE / BLOCK_SIZE);
 
         private readonly Stream _stream;
         private readonly byte[] _pageBuf;
@@ -103,7 +103,6 @@ namespace Sir.Store
 
             _stream.Read(_pageBuf, 0, PAGE_SIZE);
 
-            var blockBuf = new byte[BLOCK_SIZE];
             int pos = 0;
             ulong id = 0;
 
@@ -116,10 +115,8 @@ namespace Sir.Store
                     // Zero means "no data". We can start writing into the page at the current position.
                     break;
                 }
-                else
-                {
-                    pos++;
-                }
+
+                pos++;
             }
 
             if (pos == SLOTS_PER_PAGE)
@@ -139,11 +136,16 @@ namespace Sir.Store
                 // store the offset of the new page
                 // in the last slot.
 
-                _stream.Seek(offset + (pos * BLOCK_SIZE), SeekOrigin.Begin);
+                var posOfPenultimate = offset + (pos * BLOCK_SIZE);
+
+                _stream.Seek(posOfPenultimate, SeekOrigin.Begin);
                 _stream.Write(BitConverter.GetBytes(docId), 0, sizeof(ulong));
                 _stream.Write(_aliveStatus, 0, sizeof(byte));
 
                 var nextOffset = AllocatePage();
+                var posOfUltimate = posOfPenultimate + BLOCK_SIZE;
+
+                _stream.Seek(posOfUltimate, SeekOrigin.Begin);
 
                 _stream.Write(BitConverter.GetBytes(nextOffset), 0, sizeof(long));
             }
@@ -156,9 +158,6 @@ namespace Sir.Store
                 _stream.Seek(o, SeekOrigin.Begin);
                 _stream.Write(BitConverter.GetBytes(docId), 0, sizeof(ulong));
                 _stream.Write(_aliveStatus, 0, sizeof(byte));
-
-                _stream.Seek(offset, SeekOrigin.Begin);
-                _stream.Read(_pageBuf, 0, PAGE_SIZE);
             }
         }
 

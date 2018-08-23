@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sir.HttpServer.Features;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Sir.HttpServer
 {
@@ -37,6 +39,8 @@ namespace Sir.HttpServer
 
         public void Configure(IApplicationBuilder app, IApplicationLifetime applicationLifetime, IHostingEnvironment env)
         {
+            app.UseMiddleware<ErrorLoggingMiddleware>();
+
             applicationLifetime.ApplicationStopping.Register(OnShutdown);
 
             if (env.IsDevelopment())
@@ -63,6 +67,29 @@ namespace Sir.HttpServer
             foreach (var stopper in ServiceProvider.GetServices<IPluginStop>())
             {
                 stopper.OnApplicationShutdown(ServiceProvider);
+            }
+        }
+    }
+
+    public class ErrorLoggingMiddleware
+    {
+        private readonly RequestDelegate _next;
+
+        public ErrorLoggingMiddleware(RequestDelegate next)
+        {
+            _next = next;
+        }
+
+        public async Task Invoke(HttpContext context)
+        {
+            try
+            {
+                await _next(context);
+            }
+            catch (Exception e)
+            {
+                File.AppendAllText("sir.httpserver.log.txt", e.ToString());
+                throw;
             }
         }
     }
