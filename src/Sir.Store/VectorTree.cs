@@ -21,7 +21,19 @@ namespace Sir.Store
 
         public void Add(ulong collectionId, long keyId, VectorNode index)
         {
-            _ix[collectionId].Add(keyId, index);
+            VectorNode online;
+
+            if (_ix[collectionId].TryGetValue(keyId, out online))
+            {
+                foreach (var node in index.Right.All())
+                {
+                    online.Add(node);
+                }
+            }
+            else
+            {
+                _ix[collectionId].Add(keyId, index);
+            }
         }
 
         public SortedList<long, VectorNode> GetOrCreateIndex(ulong collectionId)

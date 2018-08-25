@@ -13,7 +13,7 @@ namespace Sir.Store
     public class VectorNode
     {
         public const double IdenticalAngle = 0.98;
-        public const double FalseAngle = 0.6;
+        public const double FoldAngle = 0.5;
 
         private VectorNode _right;
         private VectorNode _left;
@@ -87,7 +87,7 @@ namespace Sir.Store
                     cursor.Highscore = angle;
                     return cursor;
                 }
-                else if (angle > FalseAngle)
+                else if (angle > FoldAngle)
                 {
                     if (angle > highscore)
                     {
@@ -98,68 +98,17 @@ namespace Sir.Store
                 }
                 else
                 {
+                    if (angle > highscore)
+                    {
+                        highscore = angle;
+                        best = cursor;
+                    }
                     cursor = cursor.Right;
                 }
             }
 
             best.Highscore = highscore;
             return best;
-        }
-
-        public virtual IEnumerable<VectorNode> Match(string word)
-        {
-            return Match(new VectorNode(word));
-        }
-
-        public virtual IEnumerable<VectorNode> Match(VectorNode node)
-        {
-            var match = ClosestMatch(node);
-
-            if (match.Highscore > FalseAngle)
-            {
-                yield return match;
-
-                var cursor = match.Left;
-
-                while (cursor != null)
-                {
-                    var angle = node.TermVector.CosAngle(cursor.TermVector);
-
-                    if (angle > FalseAngle)
-                    {
-                        cursor.Highscore = angle;
-                        yield return cursor;
-                    }
-                    cursor = cursor.Left;
-                }
-
-                cursor = match.Right;
-
-                while (cursor != null)
-                {
-                    var angle = node.TermVector.CosAngle(cursor.TermVector);
-
-                    if (angle > FalseAngle)
-                    {
-                        cursor.Highscore = angle;
-                        yield return cursor;
-                    }
-                    cursor = cursor.Right;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Add word to index.
-        /// </summary>
-        /// <returns>True if word is unique, false if it's a duplicate.</returns>
-        public bool Add(string word, ulong docId)
-        {
-            var node = new VectorNode(word);
-
-            node._docIds.Add(docId);
-
-            return Add(node);
         }
 
         /// <summary>
@@ -178,7 +127,7 @@ namespace Sir.Store
 
                 return false;
             }
-            else if (angle <= FalseAngle)
+            else if (angle <= FoldAngle)
             {
                 if (Right == null)
                 {
@@ -231,6 +180,27 @@ namespace Sir.Store
             foreach (var id in node._docIds)
             {
                 _docIds.Add(id);
+            }
+        }
+
+        public IEnumerable<VectorNode> All()
+        {
+            yield return this;
+
+            if (Left != null)
+            {
+                foreach (var n in Left.All())
+                {
+                    yield return n;
+                }
+            }
+
+            if (Right != null)
+            {
+                foreach (var n in Right.All())
+                {
+                    yield return n;
+                }
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Sir.Store
@@ -8,7 +9,7 @@ namespace Sir.Store
         public ulong CollectionId { get; }
         public IEnumerable<IDictionary> Data { get; private set; }
         public IEnumerable<IDictionary> Remove { get; private set; }
-
+        public Guid Id { get; private set; }
         public WriteJob(ulong collectionId, IEnumerable<IDictionary> data, bool delete = false)
         {
             CollectionId = collectionId;
@@ -21,6 +22,7 @@ namespace Sir.Store
             {
                 Data = data;
             }
+            Id = Guid.NewGuid();
         }
 
         public WriteJob(ulong collectionId, IEnumerable<IDictionary> data, IEnumerable<IDictionary> remove)
@@ -28,6 +30,7 @@ namespace Sir.Store
             CollectionId = collectionId;
             Data = data;
             Remove = remove;
+            Id = Guid.NewGuid();
         }
     }
 }

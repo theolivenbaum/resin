@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -171,7 +172,7 @@ namespace Sir.Store
 
                     foreach (var token in tokens)
                     {
-                        // add nodes to in-memory index
+                        // add nodes to index
                         fieldIndex.Add(new VectorNode(token, docId));
                     }
                 }
@@ -180,7 +181,7 @@ namespace Sir.Store
                 _docIx.Append(docMeta.offset, docMeta.length);
             }
 
-            // add nodes to disk-based index
+            // persist nodes in disk-based index file
             foreach (var node in _dirty)
             {
                 var keyId = node.Key;
@@ -190,6 +191,10 @@ namespace Sir.Store
                 {
                     node.Value.Serialize(ixStream, VectorStream, PostingsStream);
                 }
+
+                var size = node.Value.Size();
+
+                Debug.WriteLine("key_id:{0} w:{1} d:{2}", keyId, size.width, size.depth);
             }
         }
 
@@ -209,6 +214,24 @@ namespace Sir.Store
             }
 
             return GetInMemoryIndex(keyHash);
+        }
+
+        private VectorNode GetDirtyIndex(ulong keyHash)
+        {
+            long keyId;
+
+            if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
+            {
+                return null;
+            }
+
+            VectorNode dirty;
+            if (_dirty.TryGetValue(keyId, out dirty))
+            {
+                return dirty;
+            }
+
+            return null;
         }
     }
 }

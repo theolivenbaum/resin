@@ -54,7 +54,7 @@ namespace Sir.Store
                 {
                     var match = ix.ClosestMatch(query.Term.Value.ToString());
 
-                    if (match.Highscore > VectorNode.FalseAngle && match.PostingsOffset > -1)
+                    if (match.Highscore > 0.2 && match.PostingsOffset > -1)
                     {
                         var docIds = _postingsReader.Read(match.PostingsOffset)
                             .ToDictionary(x => x, y => match.Highscore);

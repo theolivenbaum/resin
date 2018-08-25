@@ -41,6 +41,16 @@ namespace Sir.Store
             return root;
         }
 
+        public bool IndexExists(ulong key)
+        {
+            long keyId;
+            if (!SessionFactory.TryGetKeyId(key, out keyId))
+            {
+                return false;
+            }
+            return true;
+        }
+
         public virtual void Dispose()
         {
             ValueStream.Dispose();
