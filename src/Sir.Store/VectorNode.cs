@@ -57,6 +57,7 @@ namespace Sir.Store
             _docIds = new HashSet<ulong>();
             TermVector = wordVector;
             PostingsOffset = -1;
+            VecOffset = -1;
         }
 
         public VectorNode(string s, ulong docId)
@@ -64,6 +65,7 @@ namespace Sir.Store
             _docIds = new HashSet<ulong> { docId };
             TermVector = s.ToVector();
             PostingsOffset = -1;
+            VecOffset = -1;
         }
 
         public VectorNode ClosestMatch(string word)
@@ -170,13 +172,6 @@ namespace Sir.Store
 
         private void Merge(VectorNode node)
         {
-            //var angle = node.TermVector.CosAngle(TermVector);
-
-            //if (angle < IdenticalAngle)
-            //{
-            //    TermVector = TermVector.Add(node.TermVector);
-            //}
-
             foreach (var id in node._docIds)
             {
                 _docIds.Add(id);
@@ -323,7 +318,10 @@ namespace Sir.Store
 
         public void Serialize(Stream vectorStream, Stream postingsStream)
         {
-            VecOffset = TermVector.Serialize(vectorStream);
+            if (VecOffset < 0)
+            {
+                VecOffset = TermVector.Serialize(vectorStream);
+            }
 
             var postingsWriter = new PagedPostingsWriter(postingsStream);
 
