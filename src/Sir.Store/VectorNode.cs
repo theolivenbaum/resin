@@ -20,6 +20,7 @@ namespace Sir.Store
         public long VecOffset { get; set; }
         private HashSet<ulong> _docIds;
 
+        public IEnumerable<ulong> DocIds { get => _docIds; }
         public long PostingsOffset { get; set; }
         public double Angle { get; set; }
         public double Highscore { get; set; }

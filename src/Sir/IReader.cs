@@ -5,6 +5,6 @@ namespace Sir
 {
     public interface IReader : IPlugin
     {
-        IEnumerable<IDictionary> Read(Query query);
+        IEnumerable<IDictionary> Read(Query query, int take);
     }
 }

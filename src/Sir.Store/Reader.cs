@@ -28,7 +28,7 @@ namespace Sir.Store
             _log.Dispose();
         }
 
-        public IEnumerable<IDictionary> Read(Query query)
+        public IEnumerable<IDictionary> Read(Query query, int take)
         {
             try
             {
@@ -39,7 +39,7 @@ namespace Sir.Store
                 {
                     using (var session = _sessionFactory.CreateReadSession(query.CollectionId))
                     {
-                        return session.Read(query).ToList();
+                        return session.Read(query, take).ToList();
                     }
                 }
 

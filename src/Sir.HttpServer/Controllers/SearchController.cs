@@ -22,23 +22,17 @@ namespace Sir.HttpServer.Controllers
         [HttpPost("/search/")]
         public ActionResult Index(string q, string cid)
         {
-            ViewData["last_processed_url"] = _crawlQueue.LastProcessed.uri;
-            ViewData["last_processed_title"] = _crawlQueue.LastProcessed.title;
+            if (string.IsNullOrWhiteSpace(q)) return View();
 
-            if (string.IsNullOrWhiteSpace(q))
-            {
-                return View("MultilineQuery");
-            }
-
-            var isMultiline = q.Contains('\n');
+            string query = q.Trim();
             string collectionId = cid ?? "www";
-            string htmlEncodedQuery = WebUtility.HtmlEncode(q);
+            string htmlEncodedQuery = WebUtility.HtmlEncode(query);
 
-            ViewData["q"] = q;
+            ViewData["q"] = query;
 
-            if (!q.Contains(":"))
+            if (!query.Contains(":"))
             {
-                q = string.Format("title:{0}\nbody:{0}\nurl:{0}", q);
+                query = string.Format("title:{0}\nbody:{0}\nurl:{0}", query);
             }
 
             var timer = new Stopwatch();
@@ -53,19 +47,20 @@ namespace Sir.HttpServer.Controllers
                 throw new System.NotSupportedException();
             }
 
-            var parsedQuery = queryParser.Parse(q, tokenizer);
+            var parsedQuery = queryParser.Parse(query, tokenizer);
             parsedQuery.CollectionId = collectionId.ToHash();
 
-            var documents = reader.Read(parsedQuery)
+            var documents = reader.Read(parsedQuery, 10)
                 .GroupBy(x => x["_url"])
                 .SelectMany(x => x.OrderByDescending(y => y["_created"]).Take(1))
-                .Take(10)
                 .Select(x => new SearchResultModel { Document = x }).ToList();
 
             ViewData["collectionName"] = collectionId;
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
+            ViewData["last_processed_url"] = _crawlQueue.LastProcessed.uri;
+            ViewData["last_processed_title"] = _crawlQueue.LastProcessed.title;
 
-            return isMultiline ? View("MultilineQuery", documents) : View(documents);
+            return View(documents);
         }
     }
 

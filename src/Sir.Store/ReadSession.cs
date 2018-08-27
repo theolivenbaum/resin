@@ -41,7 +41,7 @@ namespace Sir.Store
             _postingsReader = new PagedPostingsReader(PostingsStream);
         }
 
-        public IEnumerable<IDictionary> Read(Query query)
+        public IEnumerable<IDictionary> Read(Query query, int take)
         {
             IDictionary<ulong, double> result = null;
 
@@ -54,9 +54,9 @@ namespace Sir.Store
                 {
                     var match = ix.ClosestMatch(query.Term.Value.ToString());
 
-                    if (match.Highscore > 0.2 && match.PostingsOffset > -1)
+                    if (match.Highscore > 0)
                     {
-                        var docIds = _postingsReader.Read(match.PostingsOffset)
+                        var docIds = match.DocIds
                             .ToDictionary(x => x, y => match.Highscore);
 
                         if (result == null)
@@ -79,7 +79,7 @@ namespace Sir.Store
                                     }
                                 }
 
-                                result = new SortedList<ulong, double>(reduced);
+                                result = reduced;
                             }
                             else if (query.Not)
                             {
@@ -116,7 +116,11 @@ namespace Sir.Store
             }
             else
             {
-                return ReadDocs(result).OrderByDescending(d => d["_score"]);
+                var scoped = result.OrderByDescending(x => x.Value)
+                    .Take(take)
+                    .ToDictionary(x => x.Key, x => x.Value);
+
+                return ReadDocs(scoped);
             }
         }
         

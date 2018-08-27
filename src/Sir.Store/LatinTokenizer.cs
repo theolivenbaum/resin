@@ -34,44 +34,11 @@ namespace Sir.Store
 
         public IEnumerable<string> Tokenize(string text)
         {
-            var term = new StringBuilder();
-            var phrase = new StringBuilder();
-            const int optimalPhraseSize = 3;
-            int phraseCount = 0;
-
-            foreach (var c in Normalize(text))
+            foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Where(x => x.Length > 2))
             {
-                if (c == ' ')
-                {
-                    if (phraseCount == optimalPhraseSize)
-                    {
-                        if (phrase.Length > 0) yield return phrase.ToString();
-
-                        phrase.Clear();
-                        phraseCount = 0;
-                    }
-
-                    if (term.Length > 0)
-                    {
-                        var w = term.ToString();
-                        term.Clear();
-
-                        phrase.Append(w);
-                        phrase.Append(' ');
-                        phraseCount++;
-
-                        yield return w;
-                    }
-                }
-                else
-                {
-                    term.Append(c);
-                }
+                yield return word;
             }
-
-            if (phrase.Length > 0) yield return phrase.ToString();
-            if (term.Length > 0) yield return term.ToString();
-            
         }
 
         public string Normalize(string text)

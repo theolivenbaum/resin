@@ -219,29 +219,30 @@ namespace Sir.Store
 
         public bool CommitToIndex()
         {
-            try
-            {
-                foreach (var node in _dirty)
-                {
-                    var keyId = node.Key;
-                    //var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
+            return true;
+            //try
+            //{
+            //    foreach (var node in _dirty)
+            //    {
+            //        var keyId = node.Key;
+            //        //var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
 
-                    node.Value.Serialize(VectorStream, PostingsStream);
+            //        node.Value.Serialize(VectorStream, PostingsStream);
 
-                    var size = node.Value.Size();
+            //        var size = node.Value.Size();
 
-                    _log.Log(string.Format("serialized index. col: {0} key_id:{1} w:{2} d:{3}", 
-                        CollectionId, keyId, size.width, size.depth));
-                }
+            //        _log.Log(string.Format("serialized index. col: {0} key_id:{1} w:{2} d:{3}", 
+            //            CollectionId, keyId, size.width, size.depth));
+            //    }
 
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _log.Log(ex.ToString());
+            //    return true;
+            //}
+            //catch (Exception ex)
+            //{
+            //    _log.Log(ex.ToString());
 
-                return false;
-            }
+            //    return false;
+            //}
         }
 
         private bool _disposed;
