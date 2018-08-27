@@ -24,7 +24,7 @@ namespace Sir.Store
             CollectionId = collectionId;
         }
 
-        public VectorNode GetInMemoryIndex(ulong key)
+        public VectorNode GetIndex(ulong key)
         {
             long keyId;
             if (!SessionFactory.TryGetKeyId(key, out keyId))
@@ -36,8 +36,9 @@ namespace Sir.Store
 
             if (!Index.TryGetValue(keyId, out root))
             {
-                return null;
+                throw new InvalidDataException();
             }
+
             return root;
         }
 

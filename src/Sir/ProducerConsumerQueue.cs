@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,13 +13,14 @@ namespace Sir.Core
     {
         private readonly BlockingCollection<T> _queue;
         private readonly int? _pause;
+        private Task _consumer;
 
         public ProducerConsumerQueue(Action<T> consumingAction, int? pauseMs = null)
         {
             _queue = new BlockingCollection<T>();
             _pause = pauseMs;
 
-            Task.Run(() =>
+            _consumer = Task.Run(() =>
             {
                 while (!_queue.IsCompleted)
                 {
@@ -30,7 +30,7 @@ namespace Sir.Core
                         item = _queue.Take();
                     }
                     catch (InvalidOperationException) { }
-
+                    
                     if (item != null)
                     {
                         if (_pause != null) Thread.Sleep(_pause.Value);
@@ -50,10 +50,7 @@ namespace Sir.Core
         {
             _queue.CompleteAdding();
 
-            while (!_queue.IsCompleted)
-            {
-                Thread.Sleep(10);
-            }
+            _consumer.Wait();
 
             _queue.Dispose();
         }

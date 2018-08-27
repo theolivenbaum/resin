@@ -18,34 +18,34 @@ namespace Sir.HttpServer.Controllers
             _plugins = plugins;
         }
 
-        [HttpDelete("delete/{*collectionId}")]
-        public async Task<IActionResult> Delete(string collectionId, string q)
-        {
-            var mediaType = Request.ContentType ?? string.Empty;
-            var queryParser = _plugins.Get<IQueryParser>(mediaType);
-            var reader = _plugins.Get<IReader>();
-            var writers = _plugins.All<IWriter>(mediaType).ToList();
-            var tokenizer = _plugins.Get<ITokenizer>(mediaType);
+        //[HttpDelete("delete/{*collectionId}")]
+        //public async Task<IActionResult> Delete(string collectionId, string q)
+        //{
+        //    var mediaType = Request.ContentType ?? string.Empty;
+        //    var queryParser = _plugins.Get<IQueryParser>(mediaType);
+        //    var reader = _plugins.Get<IReader>();
+        //    var writers = _plugins.All<IWriter>(mediaType).ToList();
+        //    var tokenizer = _plugins.Get<ITokenizer>(mediaType);
 
-            if (queryParser == null || writers == null || writers.Count == 0 || tokenizer == null)
-            {
-                throw new NotSupportedException();
-            }
+        //    if (queryParser == null || writers == null || writers.Count == 0 || tokenizer == null)
+        //    {
+        //        throw new NotSupportedException();
+        //    }
 
-            var parsedQuery = queryParser.Parse(q, tokenizer);
-            parsedQuery.CollectionId = collectionId.ToHash();
-            var oldData = reader.Read(parsedQuery).ToList();
+        //    var parsedQuery = queryParser.Parse(q, tokenizer);
+        //    parsedQuery.CollectionId = collectionId.ToHash();
+        //    var oldData = reader.Read(parsedQuery).ToList();
 
-            foreach (var writer in writers)
-            {
-                await Task.Run(() =>
-                {
-                    writer.Remove(collectionId, oldData);
-                });
-            }
+        //    foreach (var writer in writers)
+        //    {
+        //        await Task.Run(() =>
+        //        {
+        //            writer.Remove(collectionId, oldData);
+        //        });
+        //    }
 
-            return StatusCode(202); // marked for deletion
-        }
+        //    return StatusCode(202); // marked for deletion
+        //}
 
         [HttpPost("{*collectionId}")]
         public async Task<IActionResult> Post(string collectionId, [FromBody]IEnumerable<IDictionary> payload)

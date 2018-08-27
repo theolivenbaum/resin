@@ -19,8 +19,8 @@ namespace Sir.Store
         public Reader(LocalStorageSessionFactory sessionFactory)
         {
             _sessionFactory = sessionFactory;
-            _log = new StreamWriter(
-                File.Open("reader.log", FileMode.Append, FileAccess.Write, FileShare.Read));
+            _log = Logging.CreateLogWriter("reader");
+
         }
 
         public void Dispose()

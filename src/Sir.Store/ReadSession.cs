@@ -48,7 +48,7 @@ namespace Sir.Store
             while (query != null)
             {
                 var keyHash = query.Term.Key.ToString().ToHash();
-                var ix = GetInMemoryIndex(keyHash);
+                var ix = GetIndex(keyHash);
 
                 if (ix != null)
                 {

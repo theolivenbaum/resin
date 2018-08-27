@@ -296,7 +296,7 @@ namespace Sir.Store
             {
                 if (PostingsOffset > -1)
                 {
-                    postingsWriter.Write(PostingsOffset, _docIds.ToList());
+                    postingsWriter.Write(PostingsOffset, _docIds.ToList(), 0);
                 }
                 else
                 {
@@ -318,6 +318,36 @@ namespace Sir.Store
             if (Right != null)
             {
                 Right.Serialize(indexStream, vectorStream, postingsStream);
+            }
+        }
+
+        public void Serialize(Stream vectorStream, Stream postingsStream)
+        {
+            VecOffset = TermVector.Serialize(vectorStream);
+
+            var postingsWriter = new PagedPostingsWriter(postingsStream);
+
+            if (_docIds.Count > 0)
+            {
+                if (PostingsOffset > -1)
+                {
+                    postingsWriter.Write(PostingsOffset, _docIds.ToList(), 0);
+                }
+                else
+                {
+                    PostingsOffset = postingsWriter.Write(_docIds.ToList());
+                }
+                _docIds.Clear();
+            }
+
+            if (Left != null)
+            {
+                Left.Serialize(vectorStream, postingsStream);
+            }
+
+            if (Right != null)
+            {
+                Right.Serialize(vectorStream, postingsStream);
             }
         }
 

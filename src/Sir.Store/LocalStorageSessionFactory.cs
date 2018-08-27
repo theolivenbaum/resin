@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Sir.Core;
 
 namespace Sir.Store
 {
@@ -23,7 +24,7 @@ namespace Sir.Store
             WritableKeyMapStream = new FileStream(Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         }
 
-        public void Add(ulong collectionId, long keyId, VectorNode index)
+        public void AddIndex(ulong collectionId, long keyId, VectorNode index)
         {
             _index.Add(collectionId, keyId, index);
         }
@@ -93,7 +94,7 @@ namespace Sir.Store
             WritableKeyMapStream.Flush();
         }
 
-        public long GetKey(ulong keyHash)
+        public long GetKeyId(ulong keyHash)
         {
             return _keys[keyHash];
         }
@@ -108,9 +109,10 @@ namespace Sir.Store
             return true;
         }
 
-        public WriteSession CreateWriteSession(ulong collectionId)
+        public WriteSession CreateWriteSession(
+            ulong collectionId, ITokenizer tokenizer)
         {
-            return new WriteSession(collectionId, this);
+            return new WriteSession(collectionId, this, tokenizer);
         }
 
         public ReadSession CreateReadSession(ulong collectionId)
