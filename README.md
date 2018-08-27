@@ -1,6 +1,4 @@
-# Sir
-
-_Search is resin_
+# Resin
 
 ## Demo
 
