@@ -81,7 +81,7 @@ namespace Sir.Store
                     session.Write(job.Documents);
                 }
 
-                _log.Log(string.Format("persisted job {0} in {1}",  job.Id, _itemTimer.Elapsed));
+                _log.Log(string.Format("wrote job {0} in {1}",  job.Id, _itemTimer.Elapsed));
             }
             catch (Exception ex)
             {

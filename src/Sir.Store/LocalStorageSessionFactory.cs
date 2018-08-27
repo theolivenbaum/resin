@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Sir.Core;
 
 namespace Sir.Store
 {
@@ -21,7 +20,8 @@ namespace Sir.Store
             _index = DeserializeIndexes(dir);
             Dir = dir;
 
-            WritableKeyMapStream = new FileStream(Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+            WritableKeyMapStream = new FileStream(
+                Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         }
 
         public void AddIndex(ulong collectionId, long keyId, VectorNode index)
@@ -33,7 +33,8 @@ namespace Sir.Store
         {
             var keys = new SortedList<ulong, long>();
 
-            using (var stream = new FileStream(Path.Combine(dir, "_.kmap"), FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
+            using (var stream = new FileStream(
+                Path.Combine(dir, "_.kmap"), FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
             {
                 long i = 0;
                 var buf = new byte[sizeof(ulong)];
@@ -56,11 +57,14 @@ namespace Sir.Store
 
             foreach (var ixFileName in Directory.GetFiles(dir, "*.ix"))
             {
-                var name = Path.GetFileNameWithoutExtension(ixFileName).Split(".", StringSplitOptions.RemoveEmptyEntries);
+                var name = Path.GetFileNameWithoutExtension(ixFileName)
+                    .Split(".", StringSplitOptions.RemoveEmptyEntries);
+
                 var collectionHash = ulong.Parse(name[0]);
                 var keyId = long.Parse(name[1]);
-                SortedList<long, VectorNode> colIx;
                 var vecFileName = Path.Combine(dir, string.Format("{0}.vec", collectionHash));
+
+                SortedList<long, VectorNode> colIx;
 
                 if (!ix.TryGetValue(collectionHash, out colIx))
                 {
