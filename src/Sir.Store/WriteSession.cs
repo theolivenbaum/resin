@@ -172,50 +172,62 @@ namespace Sir.Store
 
         private void Write(IndexJob job)
         {
-            foreach (var doc in job.Documents)
+            try
             {
-                foreach (var key in doc.Keys)
+                foreach (var doc in job.Documents)
                 {
-                    var keyStr = key.ToString();
-
-                    if (keyStr.StartsWith("__")) continue;
-
-                    var keyHash = keyStr.ToHash();
-                    var keyId = SessionFactory.GetKeyId(keyHash);
-                    VectorNode ix;
-
-                    if (!_dirty.TryGetValue(keyId, out ix))
+                    foreach (var key in doc.Keys)
                     {
-                        ix = GetIndex(keyHash) ?? new VectorNode();
-                        _dirty.Add(keyId, ix);
-                    }
+                        var keyStr = key.ToString();
 
-                    var val = (IComparable)doc[key];
-                    var str = val as string;
-                    var tokens = new HashSet<string>();
+                        if (keyStr.StartsWith("__")) continue;
 
-                    if (str == null || keyStr[0] == '_')
-                    {
-                        tokens.Add(val.ToString());
-                    }
-                    else
-                    {
-                        var tokenlist = _tokenizer.Tokenize(str);
+                        var keyHash = keyStr.ToHash();
+                        var keyId = SessionFactory.GetKeyId(keyHash);
+                        VectorNode ix;
 
-                        foreach (var token in tokenlist)
+                        if (!_dirty.TryGetValue(keyId, out ix))
                         {
-                            tokens.Add(token);
+                            ix = GetIndex(keyHash) ?? new VectorNode();
+                            _dirty.Add(keyId, ix);
+                        }
+
+                        var val = (IComparable)doc[key];
+                        var str = val as string;
+                        var tokens = new HashSet<string>();
+
+                        if (str == null || keyStr[0] == '_')
+                        {
+                            tokens.Add(val.ToString());
+                        }
+                        else
+                        {
+                            var tokenlist = _tokenizer.Tokenize(str);
+
+                            foreach (var token in tokenlist)
+                            {
+                                tokens.Add(token);
+                            }
+                        }
+
+                        var docId = (ulong)doc["__docid"];
+
+                        foreach (var token in tokens)
+                        {
+                            ix.Add(new VectorNode(token, docId));
                         }
                     }
-
-                    var docId = (ulong)doc["__docid"];
-
-                    foreach (var token in tokens)
-                    {
-                        ix.Add(new VectorNode(token, docId));
-                    }
                 }
+
+                _log.Log(string.Format("processed {0} index job", job.CollectionId));
             }
+            catch (Exception ex)
+            {
+                _log.Log(ex.ToString());
+
+                throw;
+            }
+            
         }
 
         public bool CommitToIndex()
@@ -237,17 +249,17 @@ namespace Sir.Store
                     //    node.Value.Serialize(ixStream, VectorStream, PostingsStream);
                     //}
 
-                    node.Value.Serialize(PostingsStream);
+                    //node.Value.Serialize(PostingsStream);
 
                     var size = node.Value.Size();
 
-                    _log.Log(string.Format("serialized index. col: {0} key_id:{1} w:{2} d:{3}",
-                        CollectionId, keyId, size.width, size.depth));
+                    //_log.Log(string.Format("serialized index. col: {0} key_id:{1} w:{2} d:{3}",
+                    //    CollectionId, keyId, size.width, size.depth));
 
                     SessionFactory.AddIndex(CollectionId, keyId, node.Value);
 
-                    _log.Log(string.Format("added index {0} key_id {1} to in-memory index.",
-                        CollectionId, keyId));
+                    _log.Log(string.Format("refreshed index col: {0} key_id:{1} w:{2} d:{3}",
+                        CollectionId, keyId, size.width, size.depth));
                 }
 
                 if (_dirty.Count > 0)
@@ -261,7 +273,7 @@ namespace Sir.Store
             {
                 _log.Log(ex.ToString());
 
-                return false;
+                throw;
             }
         }
 

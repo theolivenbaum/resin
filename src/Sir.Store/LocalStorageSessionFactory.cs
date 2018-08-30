@@ -98,6 +98,7 @@ namespace Sir.Store
         //    catch (Exception ex)
         //    {
         //        _log.Log(ex.ToString());
+        //        throw;
         //    }
 
         //}
