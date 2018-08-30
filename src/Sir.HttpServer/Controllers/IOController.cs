@@ -127,19 +127,19 @@ namespace Sir.HttpServer.Controllers
         }
 
         [HttpGet("load/{*collectionId}")]
-        public ObjectResult Load(string collectionId, int batchSize)
+        public ObjectResult Load(string collectionId)
         {
             if (string.IsNullOrWhiteSpace(collectionId))
             {
                 return new ObjectResult("missing input: collectionId");
             }
 
-            Task.Run(()=> LoadIndex(_sessionFactory.Dir, collectionId.ToHash(), batchSize));
+            Task.Run(()=> LoadIndex(_sessionFactory.Dir, collectionId.ToHash()));
 
             return new ObjectResult("refreshing index. watch log.");
         }
 
-        private void LoadIndex(string dir, ulong collection, int batchSize)
+        private void LoadIndex(string dir, ulong collection)
         {
             var timer = new Stopwatch();
             var batchTimer = new Stopwatch();
@@ -160,19 +160,17 @@ namespace Sir.HttpServer.Controllers
                 {
                     using (var readSession = new DocumentReadSession(collectionId, _sessionFactory))
                     {
-                        foreach (var batch in readSession.ReadDocs().Batch(batchSize))
+                        var docs = readSession.ReadDocs();
+                        var job = new IndexJob(collectionId, docs);
+
+                        using (var writeSession = _sessionFactory.CreateWriteSession(collectionId))
                         {
-                            batchTimer.Restart();
-
-                            using (var writeSession = _sessionFactory.CreateWriteSession(collectionId))
-                            {
-                                var job = new IndexJob(collectionId, batch);
-
-                                writeSession.WriteToIndex(job);
-                            }
-                            _log.Log(string.Format("wrote batch of {0} to {1} in {2}",
-                                batchSize, collectionId, batchTimer.Elapsed));
+                            writeSession.WriteToIndex(job);
                         }
+
+                        _log.Log(string.Format("loaded batch into {0} in {1}",
+                                collectionId, batchTimer.Elapsed));
+
                     }
                     break;
                 }

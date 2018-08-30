@@ -36,12 +36,12 @@ namespace Sir.Store
         public IEnumerable<IDictionary> ReadDocs()
         {
             var numOfDocs = _docIx.NumOfDocs;
-            var docIds = Enumerable.Range(1, numOfDocs).ToDictionary(x => (ulong)x, y => (double)0);
+            var docIds = Enumerable.Range(1, numOfDocs).ToDictionary(x => (ulong)x, y => (float)0);
 
             return ReadDocs(docIds);
         }
 
-        public IEnumerable<IDictionary> ReadDocs(IDictionary<ulong, double> docs)
+        public IEnumerable<IDictionary> ReadDocs(IDictionary<ulong, float> docs)
         {
             foreach (var d in docs)
             {

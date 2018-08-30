@@ -8,10 +8,6 @@ namespace Sir.Store
 {
     public class LatinTokenizer : ITokenizer
     {
-        private static char[] _wordDelimiters = new char[] {
-                            ' '
-                            };
-
         private static char[] _phraseDelimiters = new char[] {
                             '.', ',', '?', '!',
                             ':', ';', '\\', '/',
@@ -34,10 +30,20 @@ namespace Sir.Store
 
         public IEnumerable<string> Tokenize(string text)
         {
-            foreach (var words in Normalize(text).Split(_delims, StringSplitOptions.RemoveEmptyEntries)
-                .Batch(3))
+            //foreach (var words in Normalize(text).Split(_delims, StringSplitOptions.RemoveEmptyEntries)
+            //    .Batch(3))
+            //{
+            //    yield return string.Join(' ', words);
+            //}
+
+            foreach (var phrase in Normalize(text).Split(_phraseDelimiters, StringSplitOptions.RemoveEmptyEntries))
             {
-                yield return string.Join(' ', words);
+                yield return phrase;
+
+                foreach (var word in phrase.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    yield return word;
+                }
             }
         }
 

@@ -12,8 +12,8 @@ namespace Sir.Store
     /// </summary>
     public class VectorNode
     {
-        public const double IdenticalAngle = 0.98;
-        public const double FoldAngle = 0.5;
+        public const float IdenticalAngle = 0.98f;
+        public const float FoldAngle = 0.5f;
 
         private VectorNode _right;
         private VectorNode _left;
@@ -22,9 +22,9 @@ namespace Sir.Store
 
         public IEnumerable<ulong> DocIds { get => _docIds; }
         public long PostingsOffset { get; set; }
-        public double Angle { get; set; }
-        public double Highscore { get; set; }
-        public SortedList<char, double> TermVector { get; private set; }
+        public float Angle { get; set; }
+        public float Highscore { get; set; }
+        public SortedList<char, float> TermVector { get; private set; }
         public VectorNode Ancestor { get; set; }
         public VectorNode Right
         {
@@ -53,7 +53,7 @@ namespace Sir.Store
         {
         }
 
-        public VectorNode(SortedList<char, double> wordVector)
+        public VectorNode(SortedList<char, float> wordVector)
         {
             _docIds = new HashSet<ulong>();
             TermVector = wordVector;
@@ -79,7 +79,7 @@ namespace Sir.Store
         {
             var best = this;
             var cursor = this;
-            double highscore = 0;
+            float highscore = 0;
 
             while (cursor != null)
             {
@@ -211,7 +211,7 @@ namespace Sir.Store
         {
             if (node == null) return;
 
-            double angle = 0;
+            float angle = 0;
 
             if (node.Ancestor != null)
             {
@@ -383,8 +383,8 @@ namespace Sir.Store
 
         public static VectorNode Deserialize(Stream treeStream, Stream vectorStream)
         {
-            const int nodeSize = sizeof(double) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(byte);
-            const int kvpSize = sizeof(char) + sizeof(double);
+            const int nodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(byte);
+            const int kvpSize = sizeof(char) + sizeof(float);
 
             var buf = new byte[nodeSize];
             var read = treeStream.Read(buf, 0, buf.Length);
@@ -395,14 +395,14 @@ namespace Sir.Store
             }
 
             // Deserialize node
-            var angle = BitConverter.ToDouble(buf, 0);
-            var vecOffset = BitConverter.ToInt64(buf, sizeof(double));
-            var postingsOffset = BitConverter.ToInt64(buf, sizeof(double) + sizeof(long));
-            var vectorCount = BitConverter.ToInt32(buf, sizeof(double) + sizeof(long) + sizeof(long));
+            var angle = BitConverter.ToSingle(buf, 0);
+            var vecOffset = BitConverter.ToInt64(buf, sizeof(float));
+            var postingsOffset = BitConverter.ToInt64(buf, sizeof(float) + sizeof(long));
+            var vectorCount = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long));
             var terminator = buf[nodeSize - 1];
 
             // Deserialize term vector
-            var vec = new SortedList<char, double>();
+            var vec = new SortedList<char, float>();
             var vecBuf = new byte[vectorCount * kvpSize];
 
             vectorStream.Seek(vecOffset, SeekOrigin.Begin);
@@ -413,7 +413,7 @@ namespace Sir.Store
             for (int i = 0; i < vectorCount; i++)
             {
                 var key = BitConverter.ToChar(vecBuf, offs);
-                var val = BitConverter.ToDouble(vecBuf, offs + sizeof(char));
+                var val = BitConverter.ToSingle(vecBuf, offs + sizeof(char));
 
                 vec.Add(key, val);
 

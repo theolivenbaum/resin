@@ -6,7 +6,7 @@ namespace Sir.Store
 {
     public static class VectorOperations
     {
-        public static long Serialize(this SortedList<char, double> vec, Stream stream)
+        public static long Serialize(this SortedList<char, float> vec, Stream stream)
         {
             var pos = stream.Position;
 
@@ -23,17 +23,17 @@ namespace Sir.Store
             return pos;
         }
 
-        public static double CosAngle(this SortedList<char, double> vec1, SortedList<char, double> vec2)
+        public static float CosAngle(this SortedList<char, float> vec1, SortedList<char, float> vec2)
         {
             var dotProduct = Dot(vec1, vec2);
             var dotSelf1 = Dot(vec1, vec1);
             var dotSelf2 = Dot(vec2, vec2);
-            return dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2));
+            return (float) (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
         }
 
-        public static double Dot(this SortedList<char, double> vec1, SortedList<char, double> vec2)
+        public static float Dot(this SortedList<char, float> vec1, SortedList<char, float> vec2)
         {
-            double product = 0;
+            float product = 0;
             var cursor1 = 0;
             var cursor2 = 0;
 
@@ -60,9 +60,9 @@ namespace Sir.Store
             return product;
         }
 
-        public static double Dot(this double[] vec1, double[] vec2)
+        public static float Dot(this float[] vec1, float[] vec2)
         {
-            double product = 0;
+            float product = 0;
 
             for (int i = 0; i < vec1.Length; i++)
             {
@@ -72,12 +72,13 @@ namespace Sir.Store
             return product;
         }
 
-        public static SortedList<char, double> Add(this SortedList<char, double> vec1, SortedList<char, double> vec2)
+        public static SortedList<char, float> Add(this SortedList<char, float> vec1, SortedList<char, float> vec2)
         {
-            var result = new SortedList<char, double>();
+            var result = new SortedList<char, float>();
+
             foreach (var x in vec1)
             {
-                double val;
+                float val;
                 if (vec2.TryGetValue(x.Key, out val))
                 {
                     result[x.Key] = val + x.Value;
@@ -87,6 +88,7 @@ namespace Sir.Store
                     result[x.Key] = x.Value;
                 }
             }
+
             foreach (var x in vec2)
             {
                 if (!vec1.ContainsKey(x.Key))
@@ -121,7 +123,7 @@ namespace Sir.Store
             return result;
         }
 
-        public static SortedList<char, double> ToVector(this string word)
+        public static SortedList<char, float> ToVector(this string word)
         {
             if (word.Length == 0) throw new ArgumentException();
 
@@ -142,9 +144,9 @@ namespace Sir.Store
             return result;
         }
 
-        public static SortedList<char, double> ToCharVector(this string word)
+        public static SortedList<char, float> ToCharVector(this string word)
         {
-            var vec = new SortedList<char, double>();
+            var vec = new SortedList<char, float>();
 
             for (int i = 0; i < word.Length; i++)
             {
@@ -161,9 +163,9 @@ namespace Sir.Store
             return vec;
         }
 
-        public static double Length(this SortedList<char, double> vector)
+        public static float Length(this SortedList<char, float> vector)
         {
-            return Math.Sqrt(Dot(vector, vector));
+            return (float) Math.Sqrt(Dot(vector, vector));
         }
 
         public static ulong Dot(char[] sparse1, char[] sparse2)

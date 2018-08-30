@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Sir.Core;
 
 namespace Sir.Store
@@ -174,15 +175,19 @@ namespace Sir.Store
         {
             try
             {
+                var count = 0;
+                var timer = new Stopwatch();
+                timer.Start();
+
                 foreach (var doc in job.Documents)
                 {
-                    foreach (var key in doc.Keys)
+                    var keys = doc.Keys
+                        .Cast<string>()
+                        .Where(x => !x.StartsWith("__"));
+
+                    foreach(var key in keys)
                     {
-                        var keyStr = key.ToString();
-
-                        if (keyStr.StartsWith("__")) continue;
-
-                        var keyHash = keyStr.ToHash();
+                        var keyHash = key.ToHash();
                         var keyId = SessionFactory.GetKeyId(keyHash);
                         VectorNode ix;
 
@@ -191,12 +196,19 @@ namespace Sir.Store
                             ix = GetIndex(keyHash) ?? new VectorNode();
                             _dirty.Add(keyId, ix);
                         }
+                    }
+
+                    Parallel.ForEach(keys, (key) =>
+                    {
+                        var keyHash = key.ToHash();
+                        var keyId = SessionFactory.GetKeyId(keyHash);
+                        VectorNode ix = _dirty[keyId];
 
                         var val = (IComparable)doc[key];
                         var str = val as string;
                         var tokens = new HashSet<string>();
 
-                        if (str == null || keyStr[0] == '_')
+                        if (str == null || key[0] == '_')
                         {
                             tokens.Add(val.ToString());
                         }
@@ -216,10 +228,17 @@ namespace Sir.Store
                         {
                             ix.Add(new VectorNode(token, docId));
                         }
+                    });
+
+                    if (++count == 100)
+                    {
+                        _log.Log(string.Format("processed doc {0}", doc["__docid"]));
+                        count = 0;
                     }
                 }
 
-                _log.Log(string.Format("processed {0} index job", job.CollectionId));
+                _log.Log(string.Format("processed {0} index job in {1}", 
+                    job.CollectionId, timer.Elapsed));
             }
             catch (Exception ex)
             {
@@ -251,15 +270,15 @@ namespace Sir.Store
 
                     //node.Value.Serialize(PostingsStream);
 
-                    var size = node.Value.Size();
+                    //var size = node.Value.Size();
 
                     //_log.Log(string.Format("serialized index. col: {0} key_id:{1} w:{2} d:{3}",
                     //    CollectionId, keyId, size.width, size.depth));
 
                     SessionFactory.AddIndex(CollectionId, keyId, node.Value);
 
-                    _log.Log(string.Format("refreshed index col: {0} key_id:{1} w:{2} d:{3}",
-                        CollectionId, keyId, size.width, size.depth));
+                    _log.Log(string.Format("refreshed index col: {0} key_id:{1}",
+                        CollectionId, keyId));
                 }
 
                 if (_dirty.Count > 0)

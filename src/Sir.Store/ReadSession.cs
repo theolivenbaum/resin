@@ -43,7 +43,7 @@ namespace Sir.Store
 
         public IEnumerable<IDictionary> Read(Query query, int take)
         {
-            IDictionary<ulong, double> result = null;
+            IDictionary<ulong, float> result = null;
 
             while (query != null)
             {
@@ -70,11 +70,11 @@ namespace Sir.Store
                         {
                             if (query.And)
                             {
-                                var reduced = new Dictionary<ulong, double>();
+                                var reduced = new Dictionary<ulong, float>();
 
                                 foreach (var doc in result)
                                 {
-                                    double score;
+                                    float score;
 
                                     if (docIds.TryGetValue(doc.Key, out score))
                                     {
@@ -95,7 +95,7 @@ namespace Sir.Store
                             {
                                 foreach (var id in docIds)
                                 {
-                                    double score;
+                                    float score;
 
                                     if (result.TryGetValue(id.Key, out score))
                                     {
@@ -127,7 +127,7 @@ namespace Sir.Store
             }
         }
         
-        public IEnumerable<IDictionary> ReadDocs(IDictionary<ulong, double> docs)
+        public IEnumerable<IDictionary> ReadDocs(IDictionary<ulong, float> docs)
         {
             foreach (var d in docs)
             {
