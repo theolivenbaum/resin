@@ -25,7 +25,7 @@
                     <p>
                         <a class="result-link" href="https://@item.Document["_url"].ToString()">@item.Document["title"].ToString()</a>
                         <span>@item.Document["_site"]</span><br />
-                        <span>Score: @item.Document["_score"]</span><br />
+                        <span>Score: @item.Document["__score"]</span><br />
                         <span>Indexed @DateTime.FromBinary((long)(item.Document["_created"]))</span>
                     </p>
                 </li>

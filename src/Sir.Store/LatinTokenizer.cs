@@ -34,10 +34,10 @@ namespace Sir.Store
 
         public IEnumerable<string> Tokenize(string text)
         {
-            foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                .Where(x => x.Length > 2))
+            foreach (var words in Normalize(text).Split(_delims, StringSplitOptions.RemoveEmptyEntries)
+                .Batch(3))
             {
-                yield return word;
+                yield return string.Join(' ', words);
             }
         }
 

@@ -1,21 +1,27 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Sir.Store;
 
 namespace Sir.HttpServer.Controllers
 {
     [Route("io")]
     public class IOController : Controller
     {
-        private PluginsCollection _plugins;
+        private readonly PluginsCollection _plugins;
+        private readonly LocalStorageSessionFactory _sessionFactory;
+        private readonly StreamWriter _log;
 
-        public IOController(PluginsCollection plugins)
+        public IOController(PluginsCollection plugins, LocalStorageSessionFactory sessionFactory)
         {
             _plugins = plugins;
+            _sessionFactory = sessionFactory;
+            _log = Logging.CreateLogWriter("iocontroller");
         }
 
         //[HttpDelete("delete/{*collectionId}")]
@@ -118,6 +124,61 @@ namespace Sir.HttpServer.Controllers
             var payload = reader.Read(parsedQuery, int.MaxValue).ToList();
 
             return new ObjectResult(payload);
+        }
+
+        [HttpGet("load/{*collectionId}")]
+        public ObjectResult Load(string collectionId, int batchSize)
+        {
+            if (string.IsNullOrWhiteSpace(collectionId))
+            {
+                return new ObjectResult("missing input: collectionId");
+            }
+
+            Task.Run(()=> LoadIndex(_sessionFactory.Dir, collectionId.ToHash(), batchSize));
+
+            return new ObjectResult("refreshing index. watch log.");
+        }
+
+        private void LoadIndex(string dir, ulong collection, int batchSize)
+        {
+            var timer = new Stopwatch();
+            var batchTimer = new Stopwatch();
+            timer.Start();
+
+            var files = Directory.GetFiles(dir, "*.docs");
+
+            _log.Log(string.Format("index scan found {0} document files", files.Length));
+
+            foreach (var docFileName in files)
+            {
+                var name = Path.GetFileNameWithoutExtension(docFileName)
+                    .Split(".", StringSplitOptions.RemoveEmptyEntries);
+
+                var collectionId = ulong.Parse(name[0]);
+
+                if (collectionId == collection)
+                {
+                    using (var readSession = new DocumentReadSession(collectionId, _sessionFactory))
+                    {
+                        foreach (var batch in readSession.ReadDocs().Batch(batchSize))
+                        {
+                            batchTimer.Restart();
+
+                            using (var writeSession = _sessionFactory.CreateWriteSession(collectionId))
+                            {
+                                var job = new IndexJob(collectionId, batch);
+
+                                writeSession.WriteToIndex(job);
+                            }
+                            _log.Log(string.Format("wrote batch of {0} to {1} in {2}",
+                                batchSize, collectionId, batchTimer.Elapsed));
+                        }
+                    }
+                    break;
+                }
+            }
+
+            _log.Log(string.Format("loaded {0} indexes in {1}", files.Length, timer.Elapsed));
         }
     }
 }

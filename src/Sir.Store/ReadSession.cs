@@ -30,7 +30,7 @@ namespace Sir.Store
             DocIndexStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collectionId)));
             PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collectionId)));
             VectorStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId)));
-            Index = sessionFactory.GetIndex(collectionId);
+            Index = sessionFactory.GetCollectionIndex(collectionId);
 
             _docIx = new DocIndexReader(DocIndexStream);
             _docs = new DocReader(DocStream);
@@ -56,7 +56,7 @@ namespace Sir.Store
 
                     if (match.Highscore > 0)
                     {
-                        var docIds = match.DocIds
+                        var docIds = _postingsReader.Read(match.PostingsOffset)
                             .ToDictionary(x => x, y => match.Highscore);
 
                         if (result == null)
@@ -124,7 +124,7 @@ namespace Sir.Store
             }
         }
         
-        private IEnumerable<IDictionary> ReadDocs(IDictionary<ulong, double> docs)
+        public IEnumerable<IDictionary> ReadDocs(IDictionary<ulong, double> docs)
         {
             foreach (var d in docs)
             {
@@ -149,8 +149,8 @@ namespace Sir.Store
                     doc[key] = val;
                 }
 
-                doc["_docid"] = d.Key;
-                doc["_score"] = d.Value;
+                doc["__docid"] = d.Key;
+                doc["__score"] = d.Value;
 
                 yield return doc;
             }

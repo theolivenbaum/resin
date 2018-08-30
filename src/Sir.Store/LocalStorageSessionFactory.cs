@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace Sir.Store
@@ -7,18 +8,23 @@ namespace Sir.Store
     //TODO: extract interface
     public class LocalStorageSessionFactory
     {
+        private readonly ITokenizer _tokenizer;
         private readonly SortedList<ulong, long> _keys;
-        private readonly VectorTree _index;
+        private VectorTree _index;
+        private readonly StreamWriter _log;
 
         public Stream WritableKeyMapStream { get; }
 
         public string Dir { get; }
 
-        public LocalStorageSessionFactory(string dir)
+        public LocalStorageSessionFactory(string dir, ITokenizer tokenizer)
         {
-            _keys = LoadKeyMap(dir);
-            _index = DeserializeIndexes(dir);
             Dir = dir;
+            _log = Logging.CreateLogWriter("localsessionfactory");
+            _keys = LoadKeyMap();
+            _tokenizer = tokenizer;
+                
+            LoadIndex();
 
             WritableKeyMapStream = new FileStream(
                 Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
@@ -29,12 +35,12 @@ namespace Sir.Store
             _index.Add(collectionId, keyId, index);
         }
 
-        public static SortedList<ulong, long> LoadKeyMap(string dir)
+        private SortedList<ulong, long> LoadKeyMap()
         {
             var keys = new SortedList<ulong, long>();
 
             using (var stream = new FileStream(
-                Path.Combine(dir, "_.kmap"), FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
+                Path.Combine(Dir, "_.kmap"), FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
             {
                 long i = 0;
                 var buf = new byte[sizeof(ulong)];
@@ -47,22 +53,67 @@ namespace Sir.Store
                     read = stream.Read(buf, 0, buf.Length);
                 }
             }
-
             return keys;
         }
 
-        public VectorTree DeserializeIndexes(string dir)
+        //private void RebuildIndexes()
+        //{
+        //    try
+        //    {
+        //        var timer = new Stopwatch();
+        //        var batchTimer = new Stopwatch();
+
+        //        timer.Start();
+
+        //        var files = Directory.GetFiles(Dir, "*.docs");
+
+        //        _log.Log(string.Format("re-indexing process found {0} document files", files.Length));
+
+        //        foreach (var docFileName in files)
+        //        {
+        //            var name = Path.GetFileNameWithoutExtension(docFileName)
+        //                .Split(".", StringSplitOptions.RemoveEmptyEntries);
+
+        //            var collectionId = ulong.Parse(name[0]);
+
+        //            using (var readSession = new DocumentReadSession(collectionId, this))
+        //            {
+        //                foreach (var batch in readSession.ReadDocs().Batch(1000))
+        //                {
+        //                    batchTimer.Restart();
+
+        //                    using (var writeSession = new LocalStorageSessionFactory(Dir, new LatinTokenizer()).CreateWriteSession(collectionId))
+        //                    {
+        //                        var job = new IndexJob(collectionId, batch);
+
+        //                        writeSession.WriteToIndex(job);
+        //                    }
+        //                    Console.WriteLine("wrote batch to index {0} in {1}", collectionId, batchTimer.Elapsed);
+        //                }
+        //            }
+        //        }
+
+        //        _log.Log(string.Format("rebuilt {0} indexes in {1}", files.Length, timer.Elapsed));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _log.Log(ex.ToString());
+        //    }
+
+        //}
+
+        public void LoadIndex()
         {
             var ix = new SortedList<ulong, SortedList<long, VectorNode>>();
 
-            foreach (var ixFileName in Directory.GetFiles(dir, "*.ix"))
+            foreach (var ixFileName in Directory.GetFiles(Dir, "*.ix"))
             {
                 var name = Path.GetFileNameWithoutExtension(ixFileName)
                     .Split(".", StringSplitOptions.RemoveEmptyEntries);
 
                 var collectionHash = ulong.Parse(name[0]);
                 var keyId = long.Parse(name[1]);
-                var vecFileName = Path.Combine(dir, string.Format("{0}.vec", collectionHash));
+                var vecFileName = Path.Combine(Dir, string.Format("{0}.vec", collectionHash));
 
                 SortedList<long, VectorNode> colIx;
 
@@ -76,7 +127,7 @@ namespace Sir.Store
                 ix[collectionHash].Add(keyId, root);
             }
 
-            return new VectorTree(ix);
+            _index = new VectorTree(ix);
         }
 
         public VectorNode DeserializeIndex(string ixFileName, string vecFileName)
@@ -88,7 +139,7 @@ namespace Sir.Store
             }
         }
 
-        public void AddKey(ulong keyHash, long keyId)
+        public void PersistKeyMapping(ulong keyHash, long keyId)
         {
             _keys.Add(keyHash, keyId);
 
@@ -103,30 +154,43 @@ namespace Sir.Store
             return _keys[keyHash];
         }
 
+        public bool TryGetIndex(ulong collectionId, long keyId, out VectorNode index)
+        {
+            var colIndex = _index.GetIndex(collectionId);
+
+            if (colIndex != null)
+            {
+                return colIndex.TryGetValue(keyId, out index);
+            }
+
+            index = null;
+
+            return false;
+        }
+
         public bool TryGetKeyId(ulong keyHash, out long keyId)
         {
             if (!_keys.TryGetValue(keyHash, out keyId))
             {
-                keyId = 0;
+                keyId = -1;
                 return false;
             }
             return true;
         }
 
-        public WriteSession CreateWriteSession(
-            ulong collectionId, ITokenizer tokenizer)
+        public SortedList<long, VectorNode> GetCollectionIndex(ulong collectionId)
         {
-            return new WriteSession(collectionId, this, tokenizer);
+            return _index.GetIndex(collectionId) ?? new SortedList<long, VectorNode>();
+        }
+
+        public WriteSession CreateWriteSession(ulong collectionId)
+        {
+            return new WriteSession(collectionId, this, _tokenizer);
         }
 
         public ReadSession CreateReadSession(ulong collectionId)
         {
             return new ReadSession(collectionId, this);
-        }
-
-        public SortedList<long, VectorNode> GetIndex(ulong collectionId)
-        {
-            return _index.GetOrCreateIndex(collectionId);
         }
 
         public Stream CreateWriteStream(string fileName)

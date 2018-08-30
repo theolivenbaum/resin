@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Sir.DbUtil": {
+      "commandName": "Project",
+      "commandLineArgs": "reindex C:\\projects\\resin\\src\\Sir.HttpServer\\App_Data 100"
+    }
+  }
+}

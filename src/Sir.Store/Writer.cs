@@ -76,7 +76,7 @@ namespace Sir.Store
             {
                 _itemTimer.Restart();
 
-                using (var session = _sessionFactory.CreateWriteSession(job.CollectionId, _tokenizer))
+                using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
                 {
                     session.Write(job.Documents);
                 }

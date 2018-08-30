@@ -42,7 +42,7 @@ namespace Sir.Store
             DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collectionId)));
             PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collectionId)));
             VectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId)));
-            Index = sessionFactory.GetIndex(collectionId);
+            Index = sessionFactory.GetCollectionIndex(collectionId);
 
             _vals = new ValueWriter(ValueStream);
             _keys = new ValueWriter(KeyStream);
@@ -60,7 +60,7 @@ namespace Sir.Store
 
             foreach (var model in data)
             {
-                var docId = (ulong)model["_docid"];
+                var docId = (ulong)model["__docid"];
 
                 foreach (var key in model.Keys)
                 {
@@ -120,7 +120,7 @@ namespace Sir.Store
             }
         }
 
-        public void Write(IEnumerable<IDictionary> models)
+        public void Write(IEnumerable<IDictionary> models, bool writeToIndex = false)
         {
             foreach (var model in models)
             {
@@ -134,7 +134,6 @@ namespace Sir.Store
                     var val = (IComparable)model[key];
                     var str = val as string;
                     long keyId, valId;
-                    VectorNode ix;
 
                     if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
                     {
@@ -143,20 +142,7 @@ namespace Sir.Store
                         // store key
                         var keyInfo = _keys.Append(keyStr);
                         keyId = _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
-                        SessionFactory.AddKey(keyHash, keyId);
-
-                        // create new index
-                        ix = new VectorNode();
-                        SessionFactory.AddIndex(CollectionId, keyId, ix);
-                    }
-                    else
-                    {
-                        ix = GetIndex(keyHash);
-                    }
-
-                    if (!_dirty.ContainsKey(keyId))
-                    {
-                        _dirty.Add(keyId, ix);
+                        SessionFactory.PersistKeyMapping(keyHash, keyId);
                     }
 
                     // store value
@@ -170,10 +156,18 @@ namespace Sir.Store
                 var docMeta = _docs.Append(docMap);
                 _docIx.Append(docMeta.offset, docMeta.length);
 
-                model.Add("__docId", docId);
+                model.Add("__docid", docId);
             }
 
-            _indexQueue.Enqueue(new IndexJob(CollectionId, models));
+            if (writeToIndex)
+            {
+                WriteToIndex(new IndexJob(CollectionId, models));
+            }
+        }
+
+        public void WriteToIndex(IndexJob job)
+        {
+            _indexQueue.Enqueue(job);
         }
 
         private void Write(IndexJob job)
@@ -188,7 +182,14 @@ namespace Sir.Store
 
                     var keyHash = keyStr.ToHash();
                     var keyId = SessionFactory.GetKeyId(keyHash);
-                    var ix = _dirty[keyId];
+                    VectorNode ix;
+
+                    if (!_dirty.TryGetValue(keyId, out ix))
+                    {
+                        ix = GetIndex(keyHash) ?? new VectorNode();
+                        _dirty.Add(keyId, ix);
+                    }
+
                     var val = (IComparable)doc[key];
                     var str = val as string;
                     var tokens = new HashSet<string>();
@@ -207,7 +208,7 @@ namespace Sir.Store
                         }
                     }
 
-                    var docId = (ulong)doc["__docId"];
+                    var docId = (ulong)doc["__docid"];
 
                     foreach (var token in tokens)
                     {
@@ -219,30 +220,49 @@ namespace Sir.Store
 
         public bool CommitToIndex()
         {
-            return true;
-            //try
-            //{
-            //    foreach (var node in _dirty)
-            //    {
-            //        var keyId = node.Key;
-            //        //var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
+            try
+            {
+                if (_dirty.Count > 0)
+                {
+                    _log.Log(string.Format("committing {0} indexes to {1}", _dirty.Count, CollectionId));
+                }
 
-            //        node.Value.Serialize(VectorStream, PostingsStream);
+                foreach (var node in _dirty)
+                {
+                    var keyId = node.Key;
+                    //var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
 
-            //        var size = node.Value.Size();
+                    //using (var ixStream = new FileStream(ixFileName, FileMode.Create, FileAccess.Write, FileShare.None))
+                    //{
+                    //    node.Value.Serialize(ixStream, VectorStream, PostingsStream);
+                    //}
 
-            //        _log.Log(string.Format("serialized index. col: {0} key_id:{1} w:{2} d:{3}", 
-            //            CollectionId, keyId, size.width, size.depth));
-            //    }
+                    node.Value.Serialize(PostingsStream);
 
-            //    return true;
-            //}
-            //catch (Exception ex)
-            //{
-            //    _log.Log(ex.ToString());
+                    var size = node.Value.Size();
 
-            //    return false;
-            //}
+                    _log.Log(string.Format("serialized index. col: {0} key_id:{1} w:{2} d:{3}",
+                        CollectionId, keyId, size.width, size.depth));
+
+                    SessionFactory.AddIndex(CollectionId, keyId, node.Value);
+
+                    _log.Log(string.Format("added index {0} key_id {1} to in-memory index.",
+                        CollectionId, keyId));
+                }
+
+                if (_dirty.Count > 0)
+                {
+                    _log.Log(string.Format("committed {0} indexes to {1}", _dirty.Count, CollectionId));
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _log.Log(ex.ToString());
+
+                return false;
+            }
         }
 
         private bool _disposed;

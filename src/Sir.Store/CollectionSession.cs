@@ -36,7 +36,7 @@ namespace Sir.Store
 
             if (!Index.TryGetValue(keyId, out root))
             {
-                throw new InvalidDataException();
+                return null;
             }
 
             return root;
@@ -60,8 +60,9 @@ namespace Sir.Store
             ValueIndexStream.Dispose();
             KeyIndexStream.Dispose();
             DocIndexStream.Dispose();
-            PostingsStream.Dispose();
-            VectorStream.Dispose();
+
+            if (PostingsStream != null) PostingsStream.Dispose();
+            if (VectorStream != null) VectorStream.Dispose();
         }
     }
 }

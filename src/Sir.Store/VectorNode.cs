@@ -130,21 +130,7 @@ namespace Sir.Store
 
                 return false;
             }
-            else if (angle <= FoldAngle)
-            {
-                if (Right == null)
-                {
-                    node.Angle = angle;
-                    Right = node;
-
-                    return true;
-                }
-                else
-                {
-                    return Right.ClosestMatch(node).Add(node);
-                }
-            }
-            else
+            else if (angle > FoldAngle)
             {
                 if (Left == null)
                 {
@@ -155,7 +141,21 @@ namespace Sir.Store
                 }
                 else
                 {
-                    return Left.ClosestMatch(node).Add(node);
+                    return Left.Add(node);
+                }
+            }
+            else
+            {
+                if (Right == null)
+                {
+                    node.Angle = angle;
+                    Right = node;
+
+                    return true;
+                }
+                else
+                {
+                    return Right.Add(node);
                 }
             }
         }
@@ -284,7 +284,10 @@ namespace Sir.Store
 
         public void Serialize(Stream indexStream, Stream vectorStream, Stream postingsStream)
         {
-            VecOffset = TermVector.Serialize(vectorStream);
+            if (VecOffset < 0)
+            {
+                VecOffset = TermVector.Serialize(vectorStream);
+            }
 
             var postingsWriter = new PagedPostingsWriter(postingsStream);
 
@@ -347,6 +350,34 @@ namespace Sir.Store
             if (Right != null)
             {
                 Right.Serialize(vectorStream, postingsStream);
+            }
+        }
+
+        public void Serialize(Stream postingsStream)
+        {
+            var postingsWriter = new PagedPostingsWriter(postingsStream);
+
+            if (_docIds.Count > 0)
+            {
+                if (PostingsOffset > -1)
+                {
+                    postingsWriter.Write(PostingsOffset, _docIds.ToList(), 0);
+                }
+                else
+                {
+                    PostingsOffset = postingsWriter.Write(_docIds.ToList());
+                }
+                _docIds.Clear();
+            }
+
+            if (Left != null)
+            {
+                Left.Serialize(postingsStream);
+            }
+
+            if (Right != null)
+            {
+                Right.Serialize(postingsStream);
             }
         }
 
@@ -432,12 +463,5 @@ namespace Sir.Store
             }
             return w.ToString();
         }
-    }
-
-    public enum NodeType
-    {
-        Collection = 0,
-        Key = 1,
-        Word = 2
     }
 }

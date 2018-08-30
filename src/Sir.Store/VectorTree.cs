@@ -11,6 +11,7 @@ namespace Sir.Store
         public int Count { get; private set; }
 
         private SortedList<ulong, SortedList<long, VectorNode>> _ix;
+        private object _sync = new object();
 
         public VectorTree() : this(new SortedList<ulong, SortedList<long, VectorNode>>()) { }
 
@@ -21,54 +22,42 @@ namespace Sir.Store
 
         public void Add(ulong collectionId, long keyId, VectorNode index)
         {
-            VectorNode online;
+            SortedList<long, VectorNode> ix;
 
-            if (_ix[collectionId].TryGetValue(keyId, out online))
+            if (!_ix.TryGetValue(collectionId, out ix))
             {
-                foreach (var node in index.Right.All())
+                lock (_sync)
                 {
-                    online.Add(node);
+                    if (!_ix.TryGetValue(collectionId, out ix))
+                    {
+                        ix = new SortedList<long, VectorNode>();
+                        _ix.Add(collectionId, ix);
+                    }
                 }
             }
-            else
+
+            if (!ix.ContainsKey(keyId))
             {
-                _ix[collectionId].Add(keyId, index);
+                lock (_sync)
+                {
+                    if (!ix.ContainsKey(keyId))
+                    {
+                        ix.Add(keyId, index);
+                    }
+                }
             }
         }
 
-        public SortedList<long, VectorNode> GetOrCreateIndex(ulong collectionId)
+        public SortedList<long, VectorNode> GetIndex(ulong collectionId)
         {
             SortedList<long, VectorNode> ix;
 
             if (!_ix.TryGetValue(collectionId, out ix))
             {
-                ix = new SortedList<long, VectorNode>();
-                _ix.Add(collectionId, ix);
+                return null;
             }
 
             return ix;
-        }
-
-        public (int depth, int width) Size(ulong collectionId, long keyId)
-        {
-            var root = _ix[collectionId][keyId];
-
-            var width = 0;
-            var depth = 0;
-            var node = root.Right;
-
-            while (node != null)
-            {
-                var d = node.Depth();
-                if (d > depth)
-                {
-                    depth = d;
-                }
-                width++;
-                node = node.Right;
-            }
-
-            return (depth, width);
         }
     }
 }

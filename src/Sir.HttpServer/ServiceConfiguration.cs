@@ -28,17 +28,12 @@ namespace Sir.HttpServer
                     {
                         var interfaces = type.GetInterfaces();
 
-                        if (interfaces.Contains(typeof(IPluginStart)))
-                        {
-                            // invoke plugin's startup proc
-                            ((IPluginStart)Activator.CreateInstance(type))
-                                .OnApplicationStartup(services);
-                        }
-                        else if (interfaces.Contains(typeof(IPluginStop)) || 
+                        if (interfaces.Contains(typeof(IPluginStop)) || 
+                            interfaces.Contains(typeof(IPluginStart)) ||
                             interfaces.Contains(typeof(IPlugin)))
                         {
                             // register plugins and teardown procs
-                            foreach(var contract in interfaces)
+                            foreach(var contract in interfaces.Where(t => t != typeof(IDisposable)))
                             {
                                 services.Add(new ServiceDescriptor(
                                     contract, type, ServiceLifetime.Singleton));
@@ -48,26 +43,36 @@ namespace Sir.HttpServer
                 }
             }
             services.Add(new ServiceDescriptor(typeof(PluginsCollection), new PluginsCollection()));
-
             var serviceProvider = services.BuildServiceProvider();
+
+            // initiate plugins
+            foreach (var service in serviceProvider.GetServices<IPluginStart>())
+            {
+                service.OnApplicationStartup(services);
+            }
+
+            serviceProvider = services.BuildServiceProvider();
+
             var plugins = serviceProvider.GetService<PluginsCollection>();
 
             // Create one instances each of all plugins and register them with the PluginCollection,
             // so that they can be fetched at runtime by Content-Type and System.Type.
 
-            foreach (var service in serviceProvider.GetServices<IWriter>())
-            {
-                plugins.Add(service.ContentType, service);
-            }
-            foreach (var service in serviceProvider.GetServices<IReader>())
-            {
-                plugins.Add(service.ContentType, service);
-            }
             foreach (var service in serviceProvider.GetServices<IQueryParser>())
             {
                 plugins.Add(service.ContentType, service);
             }
             foreach (var service in serviceProvider.GetServices<ITokenizer>())
+            {
+                plugins.Add(service.ContentType, service);
+            }
+
+            foreach (var service in serviceProvider.GetServices<IReader>())
+            {
+                plugins.Add(service.ContentType, service);
+            }
+
+            foreach (var service in serviceProvider.GetServices<IWriter>())
             {
                 plugins.Add(service.ContentType, service);
             }
