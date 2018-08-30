@@ -23,6 +23,7 @@ namespace Sir.Store
         private readonly PagedPostingsReader _postingsReader;
         private readonly Dictionary<long, VectorNode> _dirty;
         private readonly ProducerConsumerQueue<IndexJob> _indexQueue;
+        private readonly ProducerConsumerQueue<BuildJob> _buildQueue;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
 
@@ -34,6 +35,7 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _log = Logging.CreateLogWriter("writesession");
             _indexQueue = new ProducerConsumerQueue<IndexJob>(Write);
+            _buildQueue = new ProducerConsumerQueue<BuildJob>(Write);
 
             ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)));
             KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));
@@ -171,16 +173,51 @@ namespace Sir.Store
             _indexQueue.Enqueue(job);
         }
 
+        private class BuildJob
+        {
+            public ulong CollectionId { get; }
+            public ulong DocId { get; }
+            public IEnumerable<string> Tokens { get; }
+            public VectorNode Index { get; }
+
+            public BuildJob(ulong collectionId, ulong docId, IEnumerable<string> tokens, VectorNode index)
+            {
+                CollectionId = collectionId;
+                DocId = docId;
+                Tokens = tokens;
+                Index = index;
+            }
+        }
+
+        private void Write(BuildJob job)
+        {
+            try
+            {
+                foreach (var token in job.Tokens)
+                {
+                    job.Index.Add(new VectorNode(token, job.DocId));
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Log(ex.ToString());
+
+                throw;
+            }
+        }
+
         private void Write(IndexJob job)
         {
             try
             {
-                var count = 0;
+                var docCount = 0;
                 var timer = new Stopwatch();
                 timer.Start();
 
                 foreach (var doc in job.Documents)
                 {
+                    var docId = (ulong)doc["__docid"];
+
                     var keys = doc.Keys
                         .Cast<string>()
                         .Where(x => !x.StartsWith("__"));
@@ -196,13 +233,6 @@ namespace Sir.Store
                             ix = GetIndex(keyHash) ?? new VectorNode();
                             _dirty.Add(keyId, ix);
                         }
-                    }
-
-                    Parallel.ForEach(keys, (key) =>
-                    {
-                        var keyHash = key.ToHash();
-                        var keyId = SessionFactory.GetKeyId(keyHash);
-                        VectorNode ix = _dirty[keyId];
 
                         var val = (IComparable)doc[key];
                         var str = val as string;
@@ -222,22 +252,17 @@ namespace Sir.Store
                             }
                         }
 
-                        var docId = (ulong)doc["__docid"];
+                        _buildQueue.Enqueue(new BuildJob(CollectionId, docId, tokens, ix));
+                    }
 
-                        foreach (var token in tokens)
-                        {
-                            ix.Add(new VectorNode(token, docId));
-                        }
-                    });
-
-                    if (++count == 100)
+                    if (++docCount == 100)
                     {
-                        _log.Log(string.Format("processed doc {0}", doc["__docid"]));
-                        count = 0;
+                        _log.Log(string.Format("analyzed doc {0}", doc["__docid"]));
+                        docCount = 0;
                     }
                 }
 
-                _log.Log(string.Format("processed {0} index job in {1}", 
+                _log.Log(string.Format("executed {0} analyze job in {1}", 
                     job.CollectionId, timer.Elapsed));
             }
             catch (Exception ex)
@@ -246,7 +271,6 @@ namespace Sir.Store
 
                 throw;
             }
-            
         }
 
         public bool CommitToIndex()

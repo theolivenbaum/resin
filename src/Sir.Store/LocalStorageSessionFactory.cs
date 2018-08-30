@@ -28,6 +28,8 @@ namespace Sir.Store
 
             WritableKeyMapStream = new FileStream(
                 Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+
+            _log.Log("initialized");
         }
 
         public void AddIndex(ulong collectionId, long keyId, VectorNode index)
