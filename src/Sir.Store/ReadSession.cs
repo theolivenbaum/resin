@@ -56,11 +56,11 @@ namespace Sir.Store
 
                     if (match.Highscore > 0)
                     {
-                        //var docIds = _postingsReader.Read(match.PostingsOffset)
-                        //    .ToDictionary(x => x, y => match.Highscore);
-
-                        var docIds = match.DocIds
+                        var docIds = _postingsReader.Read(match.PostingsOffset)
                             .ToDictionary(x => x, y => match.Highscore);
+
+                        //var docIds = match.DocIds
+                        //    .ToDictionary(x => x, y => match.Highscore);
 
                         if (result == null)
                         {

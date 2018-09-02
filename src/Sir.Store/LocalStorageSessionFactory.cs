@@ -23,7 +23,7 @@ namespace Sir.Store
             _log = Logging.CreateLogWriter("localsessionfactory");
             _keys = LoadKeyMap();
             _tokenizer = tokenizer;
-                
+            
             LoadIndex();
 
             WritableKeyMapStream = new FileStream(
@@ -105,32 +105,64 @@ namespace Sir.Store
 
         //}
 
+        public void SerializeIndex()
+        {
+            try
+            {
+                _log.Log("begin serializing index");
+
+                _index.Serialize(Dir);
+
+                _log.Log("serialized index");
+            }
+            catch (Exception ex)
+            {
+                _log.Log(ex.ToString());
+
+                throw;
+            }
+        }
+
         public void LoadIndex()
         {
-            var ix = new SortedList<ulong, SortedList<long, VectorNode>>();
-
-            foreach (var ixFileName in Directory.GetFiles(Dir, "*.ix"))
+            try
             {
-                var name = Path.GetFileNameWithoutExtension(ixFileName)
-                    .Split(".", StringSplitOptions.RemoveEmptyEntries);
+                _log.Log("begin loading index into memory");
 
-                var collectionHash = ulong.Parse(name[0]);
-                var keyId = long.Parse(name[1]);
-                var vecFileName = Path.Combine(Dir, string.Format("{0}.vec", collectionHash));
+                var ix = new SortedList<ulong, SortedList<long, VectorNode>>();
 
-                SortedList<long, VectorNode> colIx;
-
-                if (!ix.TryGetValue(collectionHash, out colIx))
+                foreach (var ixFileName in Directory.GetFiles(Dir, "*.ix"))
                 {
-                    colIx = new SortedList<long, VectorNode>();
-                    ix.Add(collectionHash, colIx);
+                    var name = Path.GetFileNameWithoutExtension(ixFileName)
+                        .Split(".", StringSplitOptions.RemoveEmptyEntries);
+
+                    var collectionHash = ulong.Parse(name[0]);
+                    var keyId = long.Parse(name[1]);
+                    var vecFileName = Path.Combine(Dir, string.Format("{0}.vec", collectionHash));
+
+                    SortedList<long, VectorNode> colIx;
+
+                    if (!ix.TryGetValue(collectionHash, out colIx))
+                    {
+                        colIx = new SortedList<long, VectorNode>();
+                        ix.Add(collectionHash, colIx);
+                    }
+
+                    var root = DeserializeIndex(ixFileName, vecFileName);
+                    ix[collectionHash].Add(keyId, root);
                 }
 
-                var root = DeserializeIndex(ixFileName, vecFileName);
-                ix[collectionHash].Add(keyId, root);
-            }
+                _index = new VectorTree(ix);
 
-            _index = new VectorTree(ix);
+                _log.Log("deserialized index");
+            }
+            catch (Exception ex)
+            {
+                _log.Log(ex.ToString());
+
+                throw;
+            }
+            
         }
 
         public VectorNode DeserializeIndex(string ixFileName, string vecFileName)

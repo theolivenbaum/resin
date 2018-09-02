@@ -127,19 +127,32 @@ namespace Sir.HttpServer.Controllers
         }
 
         [HttpGet("load/{*collectionId}")]
-        public ObjectResult Load(string collectionId)
+        public ObjectResult Load(string collectionId, int take)
         {
             if (string.IsNullOrWhiteSpace(collectionId))
             {
                 return new ObjectResult("missing input: collectionId");
             }
 
-            Task.Run(()=> LoadIndex(_sessionFactory.Dir, collectionId.ToHash()));
+            Task.Run(()=> LoadIndex(_sessionFactory.Dir, collectionId.ToHash(), take));
 
             return new ObjectResult("refreshing index. watch log.");
         }
 
-        private void LoadIndex(string dir, ulong collection)
+        [HttpGet("serialize")]
+        public ObjectResult SerializeIndex()
+        {
+            Task.Run(() => SerializeIndex(_sessionFactory.Dir));
+
+            return new ObjectResult("serializing index. watch log.");
+        }
+
+        private void SerializeIndex(string dir)
+        {
+            _sessionFactory.SerializeIndex();
+        }
+
+        private void LoadIndex(string dir, ulong collection, int take)
         {
             var timer = new Stopwatch();
             var batchTimer = new Stopwatch();
@@ -161,6 +174,12 @@ namespace Sir.HttpServer.Controllers
                     using (var readSession = new DocumentReadSession(collectionId, _sessionFactory))
                     {
                         var docs = readSession.ReadDocs();
+
+                        if (take > 0)
+                        {
+                            docs = docs.Take(take);
+                        }
+
                         var job = new IndexJob(collectionId, docs);
 
                         using (var writeSession = _sessionFactory.CreateWriteSession(collectionId))
