@@ -49,7 +49,7 @@ namespace Sir.DbUtil
                         {
                             var job = new IndexJob(collectionId, batch);
 
-                            writeSession.WriteToIndex(job);
+                            writeSession.WriteToInMemoryIndex(job);
                         }
                         Console.WriteLine("wrote batch to {0} in {1}", collectionId, batchTimer.Elapsed);
                     }

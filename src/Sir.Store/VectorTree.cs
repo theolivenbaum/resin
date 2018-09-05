@@ -27,8 +27,8 @@ namespace Sir.Store
                 var vecFn = Path.Combine(dir, string.Format("{0}.vec", index.Key));
                 var posFn = Path.Combine(dir, string.Format("{0}.pos", index.Key));
 
-                using (var vectorStream = new FileStream(vecFn, FileMode.Create, FileAccess.Write, FileShare.None))
-                using (var postingsStream = new FileStream(posFn, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+                using (var vectorStream = new FileStream(vecFn, FileMode.Append, FileAccess.Write, FileShare.None))
+                using (var postingsStream = new FileStream(posFn, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
                 {
                     foreach (var key in index.Value)
                     {
@@ -36,7 +36,7 @@ namespace Sir.Store
 
                         using (var ixStream = new FileStream(ixFileName, FileMode.Create, FileAccess.Write, FileShare.None))
                         {
-                            key.Value.Serialize(ixStream, vectorStream, postingsStream);
+                            key.Value.Serialize(ixStream, vectorStream, new PagedPostingsWriter(postingsStream));
                         }
                     }
                 }

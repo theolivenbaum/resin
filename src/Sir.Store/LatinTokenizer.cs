@@ -14,6 +14,7 @@ namespace Sir.Store
                             '\n', '\r', '\t',
                             '(', ')', '[', ']',
                             '"', '`', '´', '-',
+                            '=', '&',
                             '\''
                             };
 
@@ -23,6 +24,7 @@ namespace Sir.Store
                             '\n', '\r', '\t',
                             '(', ')', '[', ']',
                             '"', '`', '´', '-',
+                            '=', '&',
                             '\'', ' '
                             };
 
@@ -30,21 +32,24 @@ namespace Sir.Store
 
         public IEnumerable<string> Tokenize(string text)
         {
-            //foreach (var words in Normalize(text).Split(_delims, StringSplitOptions.RemoveEmptyEntries)
-            //    .Batch(3))
-            //{
-            //    yield return string.Join(' ', words);
-            //}
-
-            foreach (var phrase in Normalize(text).Split(_phraseDelimiters, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var words in Normalize(text)
+                .Split(_delims, StringSplitOptions.RemoveEmptyEntries)
+                .Batch(3))
             {
-                yield return phrase;
+                yield return string.Join(' ', words);
 
-                foreach (var word in phrase.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                foreach(var word in words)
                 {
                     yield return word;
                 }
             }
+
+            //foreach (var words in Normalize(text)
+            //    .Split(_delims, StringSplitOptions.RemoveEmptyEntries)
+            //    .ToBiGrams())
+            //{
+            //    yield return string.Join(' ', words);
+            //}
         }
 
         public string Normalize(string text)

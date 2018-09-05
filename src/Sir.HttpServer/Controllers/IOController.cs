@@ -127,14 +127,14 @@ namespace Sir.HttpServer.Controllers
         }
 
         [HttpGet("load/{*collectionId}")]
-        public ObjectResult Load(string collectionId, int take)
+        public ObjectResult Load(string collectionId, int skip, int take)
         {
             if (string.IsNullOrWhiteSpace(collectionId))
             {
                 return new ObjectResult("missing input: collectionId");
             }
 
-            Task.Run(()=> LoadIndex(_sessionFactory.Dir, collectionId.ToHash(), take));
+            Task.Run(()=> WriteToInMemoryIndex(_sessionFactory.Dir, collectionId.ToHash(), skip, take));
 
             return new ObjectResult("refreshing index. watch log.");
         }
@@ -152,18 +152,17 @@ namespace Sir.HttpServer.Controllers
             _sessionFactory.SerializeIndex();
         }
 
-        private void LoadIndex(string dir, ulong collection, int take)
+        private void WriteToInMemoryIndex(string dir, ulong collection, int skip, int take)
         {
             var timer = new Stopwatch();
-            var batchTimer = new Stopwatch();
             timer.Start();
 
             var files = Directory.GetFiles(dir, "*.docs");
 
-            _log.Log(string.Format("index scan found {0} document files", files.Length));
-
             foreach (var docFileName in files)
             {
+                _log.Log(string.Format("reading from {0}", docFileName));
+
                 var name = Path.GetFileNameWithoutExtension(docFileName)
                     .Split(".", StringSplitOptions.RemoveEmptyEntries);
 
@@ -175,6 +174,11 @@ namespace Sir.HttpServer.Controllers
                     {
                         var docs = readSession.ReadDocs();
 
+                        if (skip > 0)
+                        {
+                            docs = docs.Skip(skip);
+                        }
+
                         if (take > 0)
                         {
                             docs = docs.Take(take);
@@ -184,18 +188,14 @@ namespace Sir.HttpServer.Controllers
 
                         using (var writeSession = _sessionFactory.CreateWriteSession(collectionId))
                         {
-                            writeSession.WriteToIndex(job);
+                            writeSession.WriteToInMemoryIndex(job);
                         }
-
-                        _log.Log(string.Format("loaded batch into {0} in {1}",
-                                collectionId, batchTimer.Elapsed));
-
                     }
                     break;
                 }
             }
 
-            _log.Log(string.Format("loaded {0} indexes in {1}", files.Length, timer.Elapsed));
+            _log.Log(string.Format("loaded data into memory index in {0}", timer.Elapsed));
         }
     }
 }

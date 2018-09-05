@@ -161,7 +161,7 @@ namespace Sir.Store
             }
         }
 
-        public void Write(long offset, IList<ulong> docIds, int docIndex)
+        public void Write(long offset, IList<ulong> docIds, int docIndex = 0)
         {
             if (_stream.Position != offset)
             {

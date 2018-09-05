@@ -43,8 +43,8 @@ namespace Sir.Store
             ValueIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collectionId)));
             KeyIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collectionId)));
             DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collectionId)));
-            PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collectionId)));
-            VectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId)));
+            //PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collectionId)));
+            //VectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId)));
             Index = sessionFactory.GetCollectionIndex(collectionId);
 
             _vals = new ValueWriter(ValueStream);
@@ -164,11 +164,11 @@ namespace Sir.Store
 
             if (writeToIndex)
             {
-                WriteToIndex(new IndexJob(CollectionId, models));
+                WriteToInMemoryIndex(new IndexJob(CollectionId, models));
             }
         }
 
-        public void WriteToIndex(IndexJob job)
+        public void WriteToInMemoryIndex(IndexJob job)
         {
             _indexQueue.Enqueue(job);
         }
@@ -200,7 +200,7 @@ namespace Sir.Store
             }
             catch (Exception ex)
             {
-                _log.Log(ex.ToString());
+                _log.Log(ex);
 
                 throw;
             }
@@ -255,7 +255,7 @@ namespace Sir.Store
                         _buildQueue.Enqueue(new BuildJob(CollectionId, docId, tokens, ix));
                     }
 
-                    if (++docCount == 100)
+                    if (++docCount == 1000)
                     {
                         _log.Log(string.Format("analyzed doc {0}", doc["__docid"]));
                         docCount = 0;
@@ -267,7 +267,7 @@ namespace Sir.Store
             }
             catch (Exception ex)
             {
-                _log.Log(ex.ToString());
+                _log.Log(ex);
 
                 throw;
             }
@@ -301,7 +301,7 @@ namespace Sir.Store
 
                     SessionFactory.AddIndex(CollectionId, keyId, node.Value);
 
-                    _log.Log(string.Format("refreshed index col: {0} key_id:{1}",
+                    _log.Log(string.Format("refreshed index {0}.{1}",
                         CollectionId, keyId));
                 }
 
@@ -314,7 +314,7 @@ namespace Sir.Store
             }
             catch (Exception ex)
             {
-                _log.Log(ex.ToString());
+                _log.Log(ex);
 
                 throw;
             }

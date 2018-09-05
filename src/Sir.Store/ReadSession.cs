@@ -18,6 +18,7 @@ namespace Sir.Store
         private readonly ValueReader _keyReader;
         private readonly ValueReader _valReader;
         private readonly PagedPostingsReader _postingsReader;
+        private readonly StreamWriter _log;
 
         public ReadSession(ulong collectionId, LocalStorageSessionFactory sessionFactory) 
             : base(collectionId, sessionFactory)
@@ -39,79 +40,96 @@ namespace Sir.Store
             _keyReader = new ValueReader(KeyStream);
             _valReader = new ValueReader(ValueStream);
             _postingsReader = new PagedPostingsReader(PostingsStream);
+
+            _log = Logging.CreateLogWriter("readsession");
         }
 
         public IEnumerable<IDictionary> Read(Query query, int take)
         {
             IDictionary<ulong, float> result = null;
 
-            while (query != null)
+            try
             {
-                var keyHash = query.Term.Key.ToString().ToHash();
-                var ix = GetIndex(keyHash);
-
-                if (ix != null)
+                while (query != null)
                 {
-                    var match = ix.ClosestMatch(query.Term.Value.ToString());
+                    _log.Log("executing query {0}", query.Term);
 
-                    if (match.Highscore > 0)
+                    var keyHash = query.Term.Key.ToString().ToHash();
+                    var ix = GetIndex(keyHash);
+
+                    if (ix != null)
                     {
-                        var docIds = _postingsReader.Read(match.PostingsOffset)
-                            .ToDictionary(x => x, y => match.Highscore);
+                        var match = ix.ClosestMatch(query.Term.Value.ToString());
 
-                        //var docIds = match.DocIds
-                        //    .ToDictionary(x => x, y => match.Highscore);
-
-                        if (result == null)
+                        if (match.Highscore > 0)
                         {
-                            result = docIds;
-                        }
-                        else
-                        {
-                            if (query.And)
+                            if (match.PostingsOffset < 0)
                             {
-                                var reduced = new Dictionary<ulong, float>();
+                                throw new InvalidOperationException(match.ToString());
+                            }
 
-                                foreach (var doc in result)
+                            var docIds = _postingsReader.Read(match.PostingsOffset)
+                                .ToDictionary(x => x, y => match.Highscore);
+
+                            //var docIds = match.DocIds
+                            //    .ToDictionary(x => x, y => match.Highscore);
+
+                            if (result == null)
+                            {
+                                result = docIds;
+                            }
+                            else
+                            {
+                                if (query.And)
                                 {
-                                    float score;
+                                    var reduced = new Dictionary<ulong, float>();
 
-                                    if (docIds.TryGetValue(doc.Key, out score))
+                                    foreach (var doc in result)
                                     {
-                                        reduced[doc.Key] = 2 * (score + doc.Value);
+                                        float score;
+
+                                        if (docIds.TryGetValue(doc.Key, out score))
+                                        {
+                                            reduced[doc.Key] = 2 * (score + doc.Value);
+                                        }
+                                    }
+
+                                    result = reduced;
+                                }
+                                else if (query.Not)
+                                {
+                                    foreach (var id in docIds.Keys)
+                                    {
+                                        result.Remove(id);
                                     }
                                 }
-
-                                result = reduced;
-                            }
-                            else if (query.Not)
-                            {
-                                foreach (var id in docIds.Keys)
+                                else // Or
                                 {
-                                    result.Remove(id);
-                                }
-                            }
-                            else // Or
-                            {
-                                foreach (var id in docIds)
-                                {
-                                    float score;
+                                    foreach (var id in docIds)
+                                    {
+                                        float score;
 
-                                    if (result.TryGetValue(id.Key, out score))
-                                    {
-                                        result[id.Key] = score + id.Value;
-                                    }
-                                    else
-                                    {
-                                        result.Add(id.Key, id.Value);
+                                        if (result.TryGetValue(id.Key, out score))
+                                        {
+                                            result[id.Key] = score + id.Value;
+                                        }
+                                        else
+                                        {
+                                            result.Add(id.Key, id.Value);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    query = query.Next;
                 }
-                query = query.Next;
             }
+            catch (Exception ex)
+            {
+                _log.Log(ex);
+            }
+            
 
             if (result == null)
             {

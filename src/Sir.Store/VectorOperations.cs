@@ -144,6 +144,28 @@ namespace Sir.Store
             return result;
         }
 
+        public static IEnumerable<string> ToBiGrams(this IEnumerable<string> words)
+        {
+            string w = null;
+            var count = 0;
+
+            foreach (var word in words)
+            {
+                if (w == null)
+                {
+                    w = word;
+                }
+                else
+                {
+                    yield return string.Join(' ', w, word);
+                    w = word;
+                }
+                count++;
+            }
+
+            if (count == 1) yield return w;
+        }
+
         public static SortedList<char, float> ToCharVector(this string word)
         {
             var vec = new SortedList<char, float>();

@@ -117,7 +117,7 @@ namespace Sir.Store
             }
             catch (Exception ex)
             {
-                _log.Log(ex.ToString());
+                _log.Log(ex);
 
                 throw;
             }
@@ -130,8 +130,9 @@ namespace Sir.Store
                 _log.Log("begin loading index into memory");
 
                 var ix = new SortedList<ulong, SortedList<long, VectorNode>>();
+                var indexFiles = Directory.GetFiles(Dir, "*.ix");
 
-                foreach (var ixFileName in Directory.GetFiles(Dir, "*.ix"))
+                foreach (var ixFileName in indexFiles)
                 {
                     var name = Path.GetFileNameWithoutExtension(ixFileName)
                         .Split(".", StringSplitOptions.RemoveEmptyEntries);
@@ -154,15 +155,21 @@ namespace Sir.Store
 
                 _index = new VectorTree(ix);
 
-                _log.Log("deserialized index");
+                if (indexFiles.Length == 0)
+                {
+                    _log.Log("found no index files in {0}. index is empty.", Dir);
+                }
+                else
+                {
+                    _log.Log("deserialized {0} index files", indexFiles.Length);
+                }
             }
             catch (Exception ex)
             {
-                _log.Log(ex.ToString());
+                _log.Log(ex);
 
                 throw;
             }
-            
         }
 
         public VectorNode DeserializeIndex(string ixFileName, string vecFileName)

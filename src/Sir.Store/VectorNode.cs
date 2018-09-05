@@ -282,20 +282,18 @@ namespace Sir.Store
             return block;
         }
 
-        public void Serialize(Stream indexStream, Stream vectorStream, Stream postingsStream)
+        public void Serialize(Stream indexStream, Stream vectorStream, PagedPostingsWriter postingsWriter)
         {
             if (VecOffset < 0)
             {
                 VecOffset = TermVector.Serialize(vectorStream);
             }
 
-            var postingsWriter = new PagedPostingsWriter(postingsStream);
-
             if (_docIds.Count > 0)
             {
                 if (PostingsOffset > -1)
                 {
-                    postingsWriter.Write(PostingsOffset, _docIds.ToList(), 0);
+                    postingsWriter.Write(PostingsOffset, _docIds.ToList());
                 }
                 else
                 {
@@ -311,83 +309,22 @@ namespace Sir.Store
 
             if (Left != null)
             {
-                Left.Serialize(indexStream, vectorStream, postingsStream);
+                Left.Serialize(indexStream, vectorStream, postingsWriter);
             }
 
             if (Right != null)
             {
-                Right.Serialize(indexStream, vectorStream, postingsStream);
+                Right.Serialize(indexStream, vectorStream, postingsWriter);
             }
         }
 
-        public void Serialize(Stream vectorStream, Stream postingsStream)
-        {
-            if (VecOffset < 0)
-            {
-                VecOffset = TermVector.Serialize(vectorStream);
-            }
-
-            var postingsWriter = new PagedPostingsWriter(postingsStream);
-
-            if (_docIds.Count > 0)
-            {
-                if (PostingsOffset > -1)
-                {
-                    postingsWriter.Write(PostingsOffset, _docIds.ToList(), 0);
-                }
-                else
-                {
-                    PostingsOffset = postingsWriter.Write(_docIds.ToList());
-                }
-                _docIds.Clear();
-            }
-
-            if (Left != null)
-            {
-                Left.Serialize(vectorStream, postingsStream);
-            }
-
-            if (Right != null)
-            {
-                Right.Serialize(vectorStream, postingsStream);
-            }
-        }
-
-        public void Serialize(Stream postingsStream)
-        {
-            var postingsWriter = new PagedPostingsWriter(postingsStream);
-
-            if (_docIds.Count > 0)
-            {
-                if (PostingsOffset > -1)
-                {
-                    postingsWriter.Write(PostingsOffset, _docIds.ToList(), 0);
-                }
-                else
-                {
-                    PostingsOffset = postingsWriter.Write(_docIds.ToList());
-                }
-                _docIds.Clear();
-            }
-
-            if (Left != null)
-            {
-                Left.Serialize(postingsStream);
-            }
-
-            if (Right != null)
-            {
-                Right.Serialize(postingsStream);
-            }
-        }
-
-        public static VectorNode Deserialize(Stream treeStream, Stream vectorStream)
+        public static VectorNode Deserialize(Stream indexStream, Stream vectorStream)
         {
             const int nodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(byte);
             const int kvpSize = sizeof(char) + sizeof(float);
 
             var buf = new byte[nodeSize];
-            var read = treeStream.Read(buf, 0, buf.Length);
+            var read = indexStream.Read(buf, 0, buf.Length);
 
             if (read < nodeSize)
             {
@@ -426,16 +363,16 @@ namespace Sir.Store
 
             if (terminator == 0)
             {
-                node.Left = Deserialize(treeStream, vectorStream);
-                node.Right = Deserialize(treeStream, vectorStream);
+                node.Left = Deserialize(indexStream, vectorStream);
+                node.Right = Deserialize(indexStream, vectorStream);
             }
             else if (terminator == 1)
             {
-                node.Left = Deserialize(treeStream, vectorStream);
+                node.Left = Deserialize(indexStream, vectorStream);
             }
             else if (terminator == 2)
             {
-                node.Right = Deserialize(treeStream, vectorStream);
+                node.Right = Deserialize(indexStream, vectorStream);
             }
 
             return node;
