@@ -14,8 +14,7 @@ namespace Sir.Store
                             '\n', '\r', '\t',
                             '(', ')', '[', ']',
                             '"', '`', '´', '-',
-                            '=', '&',
-                            '\''
+                            '=', '&', '\''
                             };
 
         private static char[] _delims = new char[] {
@@ -24,32 +23,16 @@ namespace Sir.Store
                             '\n', '\r', '\t',
                             '(', ')', '[', ']',
                             '"', '`', '´', '-',
-                            '=', '&',
-                            '\'', ' '
+                            '=', '&', '\'', ' '
                             };
 
         public string ContentType => "*";
 
         public IEnumerable<string> Tokenize(string text)
         {
-            foreach (var words in Normalize(text)
+            return Normalize(text)
                 .Split(_delims, StringSplitOptions.RemoveEmptyEntries)
-                .Batch(3))
-            {
-                yield return string.Join(' ', words);
-
-                foreach(var word in words)
-                {
-                    yield return word;
-                }
-            }
-
-            //foreach (var words in Normalize(text)
-            //    .Split(_delims, StringSplitOptions.RemoveEmptyEntries)
-            //    .ToBiGrams())
-            //{
-            //    yield return string.Join(' ', words);
-            //}
+                .Where(x => x.Length > 1);
         }
 
         public string Normalize(string text)

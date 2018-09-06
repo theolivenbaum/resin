@@ -85,12 +85,7 @@ namespace Sir.Store
             {
                 var angle = node.TermVector.CosAngle(cursor.TermVector);
 
-                if (angle >= IdenticalAngle)
-                {
-                    cursor.Highscore = angle;
-                    return cursor;
-                }
-                else if (angle > FoldAngle)
+                if (angle > FoldAngle)
                 {
                     if (angle > highscore)
                     {

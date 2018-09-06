@@ -44,7 +44,7 @@ namespace Sir.Store
             _log = Logging.CreateLogWriter("readsession");
         }
 
-        public IEnumerable<IDictionary> Read(Query query, int take)
+        public IEnumerable<IDictionary> Read(Query query, int take, out long total)
         {
             IDictionary<ulong, float> result = null;
 
@@ -133,11 +133,16 @@ namespace Sir.Store
 
             if (result == null)
             {
+                total = 0;
                 return Enumerable.Empty<IDictionary>();
             }
             else
             {
-                var scoped = result.OrderByDescending(x => x.Value)
+                var all = result.OrderByDescending(x => x.Value).ToList();
+
+                total = all.Count;
+
+                var scoped = all
                     .Take(take)
                     .ToDictionary(x => x.Key, x => x.Value);
 

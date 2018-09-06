@@ -121,7 +121,7 @@ namespace Sir.HttpServer.Controllers
             var parsedQuery = queryParser.Parse(q, tokenizer);
             parsedQuery.CollectionId = collectionId.ToHash();
 
-            var payload = reader.Read(parsedQuery, int.MaxValue).ToList();
+            var payload = reader.Read(parsedQuery, int.MaxValue, out _).ToList();
 
             return new ObjectResult(payload);
         }

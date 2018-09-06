@@ -50,15 +50,15 @@ namespace Sir.HttpServer.Controllers
             var parsedQuery = queryParser.Parse(query, tokenizer);
             parsedQuery.CollectionId = collectionId.ToHash();
 
-            var documents = reader.Read(parsedQuery, 10)
-                .GroupBy(x => x["_url"])
-                .SelectMany(x => x.OrderByDescending(y => y["_created"]).Take(1))
-                .Select(x => new SearchResultModel { Document = x }).ToList();
+            long total;
+            var documents = reader.Read(parsedQuery, 10, out total)
+                .Select(x => new SearchResultModel { Document = x });
 
             ViewData["collectionName"] = collectionId;
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
             ViewData["last_processed_url"] = _crawlQueue.LastProcessed.uri;
             ViewData["last_processed_title"] = _crawlQueue.LastProcessed.title;
+            ViewData["total"] = total;
 
             return View(documents);
         }
