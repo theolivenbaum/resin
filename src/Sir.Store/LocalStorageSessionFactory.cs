@@ -20,7 +20,7 @@ namespace Sir.Store
         public LocalStorageSessionFactory(string dir, ITokenizer tokenizer)
         {
             Dir = dir;
-            _log = Logging.CreateLogWriter("localsessionfactory");
+            _log = Logging.CreateWriter("localsessionfactory");
             _keys = LoadKeyMap();
             _tokenizer = tokenizer;
             

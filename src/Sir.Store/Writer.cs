@@ -26,7 +26,7 @@ namespace Sir.Store
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;
             _writeQueue = new ProducerConsumerQueue<WriteJob>(ExecuteWrite);
-            _log = Logging.CreateLogWriter("writer");
+            _log = Logging.CreateWriter("writer");
             _itemTimer = new Stopwatch();
             _batchTimer = new Stopwatch();
         }

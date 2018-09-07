@@ -7,7 +7,7 @@ namespace Sir
     {
         public static void Log(this StreamWriter writer, object message)
         {
-            writer.WriteLine("{0} {1}", DateTime.Now, message);
+            writer.WriteLine("{0}\t{1}", DateTime.Now, message);
             writer.Flush();
         }
 
@@ -17,7 +17,7 @@ namespace Sir
             writer.Flush();
         }
 
-        public static StreamWriter CreateLogWriter(string name)
+        public static StreamWriter CreateWriter(string name)
         {
             return new StreamWriter(File.Open(name + ".log", FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
         }

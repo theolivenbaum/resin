@@ -19,7 +19,7 @@ namespace Sir.Store
         public Reader(LocalStorageSessionFactory sessionFactory)
         {
             _sessionFactory = sessionFactory;
-            _log = Logging.CreateLogWriter("reader");
+            _log = Logging.CreateWriter("reader");
 
         }
 

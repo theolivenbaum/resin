@@ -41,7 +41,7 @@ namespace Sir.Store
             _valReader = new ValueReader(ValueStream);
             _postingsReader = new PagedPostingsReader(PostingsStream);
 
-            _log = Logging.CreateLogWriter("readsession");
+            _log = Logging.CreateWriter("readsession");
         }
 
         public IEnumerable<IDictionary> Read(Query query, int take, out long total)

@@ -21,7 +21,7 @@ namespace Sir.HttpServer.Controllers
         {
             _plugins = plugins;
             _sessionFactory = sessionFactory;
-            _log = Logging.CreateLogWriter("iocontroller");
+            _log = Logging.CreateWriter("iocontroller");
         }
 
         //[HttpDelete("delete/{*collectionId}")]
@@ -142,7 +142,9 @@ namespace Sir.HttpServer.Controllers
         [HttpGet("serialize")]
         public ObjectResult SerializeIndex()
         {
-            Task.Run(() => SerializeIndex(_sessionFactory.Dir));
+            SerializeIndex(_sessionFactory.Dir);
+
+            //Task.Run(() => SerializeIndex(_sessionFactory.Dir));
 
             return new ObjectResult("serializing index. watch log.");
         }

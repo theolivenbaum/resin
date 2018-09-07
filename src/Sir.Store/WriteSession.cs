@@ -33,7 +33,7 @@ namespace Sir.Store
             ITokenizer tokenizer) : base(collectionId, sessionFactory)
         {
             _tokenizer = tokenizer;
-            _log = Logging.CreateLogWriter("writesession");
+            _log = Logging.CreateWriter("writesession");
             _indexQueue = new ProducerConsumerQueue<IndexJob>(Write);
             _buildQueue = new ProducerConsumerQueue<BuildJob>(Write);
 
@@ -273,10 +273,12 @@ namespace Sir.Store
             }
         }
 
-        public bool CommitToIndex()
+        public void FlushToMemory()
         {
             try
             {
+                _indexQueue.Dispose();
+
                 if (_dirty.Count > 0)
                 {
                     _log.Log(string.Format("committing {0} indexes to {1}", _dirty.Count, CollectionId));
@@ -310,7 +312,7 @@ namespace Sir.Store
                     _log.Log(string.Format("committed {0} indexes to {1}", _dirty.Count, CollectionId));
                 }
 
-                return true;
+                _flushed = true;
             }
             catch (Exception ex)
             {
@@ -320,21 +322,14 @@ namespace Sir.Store
             }
         }
 
-        private bool _disposed;
-        private bool _committed;
+        private bool _flushed;
 
         public override void Dispose()
         {
-            if (!_disposed)
+            if (!_flushed)
             {
-                _indexQueue.Dispose();
-                _disposed = true;
-            }
-
-            if (!_committed)
-            {
-                CommitToIndex();
-                _committed = true;
+                FlushToMemory();
+                _flushed = true;
             }
 
             base.Dispose();
