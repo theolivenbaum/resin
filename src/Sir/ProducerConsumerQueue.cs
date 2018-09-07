@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 namespace Sir.Core
 {
     /// <summary>
-    /// Enque items and run a single consumer thread.
+    /// Enque items and forget about it. They will be consumed by another thread.
+    /// Call ProducerConsumerQueue.Dispose() to have consumer thread join main.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class ProducerConsumerQueue<T> : IDisposable where T : class
@@ -46,13 +47,23 @@ namespace Sir.Core
             _queue.Add(item);
         }
 
-        public void Dispose()
+        private bool _completed;
+
+        public void Complete()
         {
             _queue.CompleteAdding();
-
             _consumer.Wait();
-
             _queue.Dispose();
+
+            _completed = true;
+        }
+
+        public void Dispose()
+        {
+            if (!_completed)
+            {
+                Complete();
+            }
         }
     }
 }
