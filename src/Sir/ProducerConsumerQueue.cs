@@ -13,13 +13,12 @@ namespace Sir.Core
     public class ProducerConsumerQueue<T> : IDisposable where T : class
     {
         private readonly BlockingCollection<T> _queue;
-        private readonly int? _pause;
         private Task _consumer;
+        private bool _completed;
 
-        public ProducerConsumerQueue(Action<T> consumingAction, int? pauseMs = null)
+        public ProducerConsumerQueue(Action<T> consumingAction)
         {
             _queue = new BlockingCollection<T>();
-            _pause = pauseMs;
 
             _consumer = Task.Run(() =>
             {
@@ -34,8 +33,6 @@ namespace Sir.Core
                     
                     if (item != null)
                     {
-                        if (_pause != null) Thread.Sleep(_pause.Value);
-
                         consumingAction(item);
                     }
                 }
@@ -46,8 +43,6 @@ namespace Sir.Core
         {
             _queue.Add(item);
         }
-
-        private bool _completed;
 
         public void Complete()
         {
