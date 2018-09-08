@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Sir.Core;
 
 namespace Sir.Store
 {
     /// <summary>
-    /// Write session targetting a single collection.
+    /// Indexing session targeting a single collection.
     /// </summary>
     public class IndexSession : CollectionSession
     {
@@ -22,7 +20,7 @@ namespace Sir.Store
         private readonly DocIndexWriter _docIx;
         private readonly PagedPostingsReader _postingsReader;
         private readonly Dictionary<long, VectorNode> _dirty;
-        private readonly ProducerConsumerQueue<AnalyzeJob> _indexQueue;
+        private readonly ProducerConsumerQueue<AnalyzeJob> _analyzeQueue;
         private readonly ProducerConsumerQueue<BuildJob> _buildQueue;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
@@ -33,8 +31,8 @@ namespace Sir.Store
             ITokenizer tokenizer) : base(collectionId, sessionFactory)
         {
             _tokenizer = tokenizer;
-            _log = Logging.CreateWriter("writesession");
-            _indexQueue = new ProducerConsumerQueue<AnalyzeJob>(Consume);
+            _log = Logging.CreateWriter("session");
+            _analyzeQueue = new ProducerConsumerQueue<AnalyzeJob>(Consume);
             _buildQueue = new ProducerConsumerQueue<BuildJob>(Consume);
 
             ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)));
@@ -57,31 +55,9 @@ namespace Sir.Store
             _dirty = new Dictionary<long, VectorNode>();
         }
 
-        private void Consume(BuildJob job)
-        {
-            foreach (var token in job.Tokens)
-            {
-                job.Index.Add(new VectorNode(token, job.DocId));
-            }
-        }
-
         public void Write(AnalyzeJob job)
         {
-            _indexQueue.Enqueue(job);
-        }
-
-        private class BuildJob
-        {
-            public ulong DocId { get; }
-            public IEnumerable<string> Tokens { get; }
-            public VectorNode Index { get; }
-
-            public BuildJob(ulong docId, IEnumerable<string> tokens, VectorNode index)
-            {
-                DocId = docId;
-                Tokens = tokens;
-                Index = index;
-            }
+            _analyzeQueue.Enqueue(job);
         }
 
         private void Consume(AnalyzeJob job)
@@ -150,17 +126,37 @@ namespace Sir.Store
                 throw;
             }
         }
+        private void Consume(BuildJob job)
+        {
+            var timer = new Stopwatch();
+            timer.Start();
+
+            foreach (var token in job.Tokens)
+            {
+                job.Index.Add(new VectorNode(token, job.DocId));
+            }
+
+            _log.Log(string.Format("executed index build job in {0}", timer.Elapsed));
+        }
 
         public void FlushToMemory()
         {
             try
             {
-                _indexQueue.Dispose();
+                var timer = new Stopwatch();
+                timer.Start();
+
+                _analyzeQueue.Dispose();
+
+                _log.Log("finished analyzing. waiting for index tree to be built");
+
                 _buildQueue.Dispose();
+
+                _log.Log("finished building index tree");
 
                 if (_dirty.Count > 0)
                 {
-                    _log.Log(string.Format("loading {0} indexes to {1}", _dirty.Count, CollectionId));
+                    _log.Log(string.Format("loading {0} indexes", _dirty.Count));
                 }
 
                 foreach (var node in _dirty)
@@ -182,16 +178,17 @@ namespace Sir.Store
 
                     SessionFactory.AddIndex(CollectionId, keyId, node.Value);
 
-                    _log.Log(string.Format("refreshed index {0}.{1}",
-                        CollectionId, keyId));
+                    _log.Log(string.Format("refreshed index {0}.{1}", CollectionId, keyId));
                 }
 
                 if (_dirty.Count > 0)
                 {
-                    _log.Log(string.Format("loaded {0} indexes to {1}", _dirty.Count, CollectionId));
+                    _log.Log(string.Format("loaded {0} indexes", _dirty.Count));
                 }
 
                 _flushed = true;
+
+                _log.Log(string.Format("flushing took {0}", timer.Elapsed));
             }
             catch (Exception ex)
             {
@@ -212,6 +209,20 @@ namespace Sir.Store
             }
 
             base.Dispose();
+        }
+
+        private class BuildJob
+        {
+            public ulong DocId { get; }
+            public IEnumerable<string> Tokens { get; }
+            public VectorNode Index { get; }
+
+            public BuildJob(ulong docId, IEnumerable<string> tokens, VectorNode index)
+            {
+                DocId = docId;
+                Tokens = tokens;
+                Index = index;
+            }
         }
     }
 }

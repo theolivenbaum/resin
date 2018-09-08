@@ -6,7 +6,7 @@ using System.IO;
 namespace Sir.Store
 {
     /// <summary>
-    /// Write session targetting a single collection.
+    /// Write session targeting a single collection.
     /// </summary>
     public class WriteSession : CollectionSession
     {
@@ -27,7 +27,7 @@ namespace Sir.Store
             ITokenizer tokenizer) : base(collectionId, sessionFactory)
         {
             _tokenizer = tokenizer;
-            _log = Logging.CreateWriter("writesession");
+            _log = Logging.CreateWriter("session");
 
             ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)));
             KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));

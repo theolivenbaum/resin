@@ -7,7 +7,7 @@ using System.Linq;
 namespace Sir.Store
 {
     /// <summary>
-    /// Create a read session targetting a single collection ("table").
+    /// Read session targeting a single collection.
     /// </summary>
     public class ReadSession : CollectionSession
     {
@@ -41,7 +41,7 @@ namespace Sir.Store
             _valReader = new ValueReader(ValueStream);
             _postingsReader = new PagedPostingsReader(PostingsStream);
 
-            _log = Logging.CreateWriter("readsession");
+            _log = Logging.CreateWriter("session");
         }
 
         public IEnumerable<IDictionary> Read(Query query, int take, out long total)

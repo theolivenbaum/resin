@@ -7,7 +7,7 @@ using System.Linq;
 namespace Sir.Store
 {
     /// <summary>
-    /// Write session targetting a single collection.
+    /// Remove session targeting a single collection.
     /// </summary>
     public class RemoveSession : CollectionSession
     {
