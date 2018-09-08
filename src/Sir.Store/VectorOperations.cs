@@ -6,15 +6,14 @@ namespace Sir.Store
 {
     public static class VectorOperations
     {
-        public static long Serialize(this SortedList<char, float> vec, Stream stream)
+        public static long Serialize(this SortedList<char, byte> vec, Stream stream)
         {
             var pos = stream.Position;
 
-            for (int i = 0; i < vec.Count; i++)
+            foreach (var kvp in vec)
             {
-                var c = vec.Keys[i];
-                var key = BitConverter.GetBytes(c);
-                var val = BitConverter.GetBytes(vec[c]);
+                var key = BitConverter.GetBytes(kvp.Key);
+                var val = new byte[] { kvp.Value };
 
                 stream.Write(key, 0, key.Length);
                 stream.Write(val, 0, val.Length);
@@ -23,19 +22,20 @@ namespace Sir.Store
             return pos;
         }
 
-        public static float CosAngle(this SortedList<char, float> vec1, SortedList<char, float> vec2)
+        public static float CosAngle(this SortedList<char, byte> vec1, SortedList<char, byte> vec2)
         {
-            var dotProduct = Dot(vec1, vec2);
-            var dotSelf1 = Dot(vec1, vec1);
-            var dotSelf2 = Dot(vec2, vec2);
+            int dotProduct = Dot(vec1, vec2);
+            int dotSelf1 = vec1.DotSelf();
+            int dotSelf2 = vec2.DotSelf();
+
             return (float) (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
         }
 
-        public static float Dot(this SortedList<char, float> vec1, SortedList<char, float> vec2)
+        public static int Dot(this SortedList<char, byte> vec1, SortedList<char, byte> vec2)
         {
-            float product = 0;
-            var cursor1 = 0;
-            var cursor2 = 0;
+            int product = 0;
+            int cursor1 = 0;
+            int cursor2 = 0;
 
             while (cursor1 < vec1.Count && cursor2 < vec2.Count)
             {
@@ -60,9 +60,20 @@ namespace Sir.Store
             return product;
         }
 
-        public static float Dot(this float[] vec1, float[] vec2)
+        public static int DotSelf(this SortedList<char, byte> vec)
         {
-            float product = 0;
+            int product = 0;
+
+            foreach (var kvp in vec)
+            {
+                product += (kvp.Value * kvp.Value);
+            }
+            return product;
+        }
+
+        public static int Dot(this byte[] vec1, byte[] vec2)
+        {
+            int product = 0;
 
             for (int i = 0; i < vec1.Length; i++)
             {
@@ -72,16 +83,17 @@ namespace Sir.Store
             return product;
         }
 
-        public static SortedList<char, float> Add(this SortedList<char, float> vec1, SortedList<char, float> vec2)
+        public static SortedList<char, byte> Add(this SortedList<char, byte> vec1, SortedList<char, byte> vec2)
         {
-            var result = new SortedList<char, float>();
+            var result = new SortedList<char, byte>();
 
             foreach (var x in vec1)
             {
-                float val;
+                byte val;
                 if (vec2.TryGetValue(x.Key, out val))
                 {
-                    result[x.Key] = val + x.Value;
+                    int p = Math.Min(byte.MaxValue, (val + x.Value));
+                    result[x.Key] = Convert.ToByte(p);
                 }
                 else
                 {
@@ -99,31 +111,7 @@ namespace Sir.Store
             return result;
         }
 
-        public static SortedList<char, int> Subtract(this SortedList<char, int> vec1, SortedList<char, int> vec2)
-        {
-            var result = new SortedList<char, int>();
-            foreach (var x in vec1)
-            {
-                if (vec2.ContainsKey(x.Key))
-                {
-                    result[x.Key] = x.Value - vec2[x.Key];
-                }
-                else
-                {
-                    result[x.Key] = x.Value;
-                }
-            }
-            foreach (var x in vec2)
-            {
-                if (!vec1.ContainsKey(x.Key))
-                {
-                    result[x.Key] = 0 - x.Value;
-                }
-            }
-            return result;
-        }
-
-        public static SortedList<char, float> ToVector(this string word)
+        public static SortedList<char, byte> ToVector(this string word)
         {
             if (word.Length == 0) throw new ArgumentException();
 
@@ -166,9 +154,9 @@ namespace Sir.Store
             if (count == 1) yield return w;
         }
 
-        public static SortedList<char, float> ToCharVector(this string word)
+        public static SortedList<char, byte> ToCharVector(this string word)
         {
-            var vec = new SortedList<char, float>();
+            var vec = new SortedList<char, byte>();
 
             for (int i = 0; i < word.Length; i++)
             {
@@ -185,7 +173,7 @@ namespace Sir.Store
             return vec;
         }
 
-        public static float Length(this SortedList<char, float> vector)
+        public static float Length(this SortedList<char, byte> vector)
         {
             return (float) Math.Sqrt(Dot(vector, vector));
         }

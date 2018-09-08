@@ -30,7 +30,7 @@ namespace Sir.Store
 
         public IEnumerable<string> Tokenize(string text)
         {
-            return Normalize(text).Split(_delims, StringSplitOptions.RemoveEmptyEntries);
+            return Normalize(text).Split(_delims, StringSplitOptions.None);
             //return Normalize(text).Split(_phraseDelimiters, StringSplitOptions.RemoveEmptyEntries);
         }
 

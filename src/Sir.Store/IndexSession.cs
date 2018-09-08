@@ -20,11 +20,11 @@ namespace Sir.Store
         private readonly DocIndexWriter _docIx;
         private readonly PagedPostingsReader _postingsReader;
         private readonly Dictionary<long, VectorNode> _dirty;
+        private readonly Stopwatch _timer;
         private readonly ProducerConsumerQueue<AnalyzeJob> _analyzeQueue;
-        private readonly ProducerConsumerQueue<BuildJob> _buildQueue;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
-        private ulong _docCount = 0;
+        private int _docCount;
 
         public IndexSession(
             ulong collectionId, 
@@ -34,7 +34,6 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("session");
             _analyzeQueue = new ProducerConsumerQueue<AnalyzeJob>(Consume);
-            _buildQueue = new ProducerConsumerQueue<BuildJob>(Consume);
 
             ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)));
             KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));
@@ -54,6 +53,7 @@ namespace Sir.Store
             _docIx = new DocIndexWriter(DocIndexStream);
             _postingsReader = new PagedPostingsReader(PostingsStream);
             _dirty = new Dictionary<long, VectorNode>();
+            _timer = new Stopwatch();
         }
 
         public void Write(AnalyzeJob job)
@@ -93,18 +93,25 @@ namespace Sir.Store
                         var val = (IComparable)doc[key];
                         var str = val as string;
 
-                        IEnumerable<string> tokens;
-
                         if (str == null || key[0] == '_')
                         {
-                            tokens = new[] { val.ToString() };
+                            var v = val.ToString();
+
+                            if (!string.IsNullOrWhiteSpace(v))
+                            {
+                                ix.Add(new VectorNode(v, docId));
+                            }
                         }
                         else
                         {
-                            tokens = _tokenizer.Tokenize(str);
+                            foreach (var x in _tokenizer.Tokenize(str))
+                            {
+                                if (!string.IsNullOrWhiteSpace(x))
+                                {
+                                    ix.Add(new VectorNode(x, docId));
+                                }
+                            }
                         }
-
-                        _buildQueue.Enqueue(new BuildJob(docId, keyId, tokens, ix));
                     }
 
                     if (++docCount == 1000)
@@ -114,8 +121,7 @@ namespace Sir.Store
                     }
                 }
 
-                _log.Log(string.Format("executed {0} analyze job in {1}", 
-                    job.CollectionId, timer.Elapsed));
+                _log.Log(string.Format("executed {0} analyze job in {1}", job.CollectionId, timer.Elapsed));
             }
             catch (Exception ex)
             {
@@ -126,17 +132,26 @@ namespace Sir.Store
         }
         private void Consume(BuildJob job)
         {
-            var timer = new Stopwatch();
-            timer.Start();
+            _timer.Restart();
 
-            foreach (var token in job.Tokens)
+            foreach (var kvp in job.Tokens)
             {
-                job.Index.Add(new VectorNode(token, job.DocId));
+                var ix = _dirty[kvp.Key];
+
+                foreach (var token in kvp.Value)
+                {
+                    if (!string.IsNullOrWhiteSpace(token))
+                    {
+                        var node = new VectorNode(token, job.DocId);
+
+                        ix.Add(node);
+                    }
+                }
             }
 
-            if (++_docCount >= 1000)
+            if (++_docCount == 1000)
             {
-                _log.Log(string.Format("executed index build job for doc {0}.{1} in {2}", job.DocId, job.KeyId, timer.Elapsed));
+                _log.Log(string.Format("processed doc {0} in {1}", job.DocId, _timer.Elapsed));
                 _docCount = 0;
             }
         }
@@ -150,11 +165,7 @@ namespace Sir.Store
 
                 _analyzeQueue.Dispose();
 
-                _log.Log("finished analyzing. waiting for index tree to be built");
-
-                _buildQueue.Dispose();
-
-                _log.Log("finished building index tree");
+                _log.Log("finished analyzing.");
 
                 if (_dirty.Count > 0)
                 {
@@ -164,19 +175,6 @@ namespace Sir.Store
                 foreach (var node in _dirty)
                 {
                     var keyId = node.Key;
-                    //var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
-
-                    //using (var ixStream = new FileStream(ixFileName, FileMode.Create, FileAccess.Write, FileShare.None))
-                    //{
-                    //    node.Value.Serialize(ixStream, VectorStream, PostingsStream);
-                    //}
-
-                    //node.Value.Serialize(PostingsStream);
-
-                    //var size = node.Value.Size();
-
-                    //_log.Log(string.Format("serialized index. col: {0} key_id:{1} w:{2} d:{3}",
-                    //    CollectionId, keyId, size.width, size.depth));
 
                     SessionFactory.AddIndex(CollectionId, keyId, node.Value);
 
@@ -216,16 +214,12 @@ namespace Sir.Store
         private class BuildJob
         {
             public ulong DocId { get; }
-            public IEnumerable<string> Tokens { get; }
-            public VectorNode Index { get; }
-            public long KeyId { get; }
+            public IDictionary<long, HashSet<string>> Tokens { get; }
 
-            public BuildJob(ulong docId, long keyId, IEnumerable<string> tokens, VectorNode index)
+            public BuildJob(ulong docId, IDictionary<long, HashSet<string>> tokens)
             {
                 DocId = docId;
-                KeyId = keyId;
                 Tokens = tokens;
-                Index = index;
             }
         }
     }
