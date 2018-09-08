@@ -6,7 +6,7 @@
 @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
 {
     <div>
-        <input type="text" id="q" name="q" placeholder="Ask anything." />
+        <input type="text" id="q" name="q" placeholder="Ask anything." autofocus />
         <input type="submit" value="Go" />
     </div>
 }

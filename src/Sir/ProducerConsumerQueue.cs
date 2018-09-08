@@ -10,7 +10,7 @@ namespace Sir.Core
     /// Call ProducerConsumerQueue.Dispose() to have consumer thread join main.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ProducerConsumerQueue<T> : IDisposable where T : class
+    public class ProducerConsumerQueue<T> : IDisposable
     {
         private readonly BlockingCollection<T> _queue;
         private Task _consumer;
@@ -24,17 +24,13 @@ namespace Sir.Core
             {
                 while (!_queue.IsCompleted)
                 {
-                    T item = null;
                     try
                     {
-                        item = _queue.Take();
-                    }
-                    catch (InvalidOperationException) { }
-                    
-                    if (item != null)
-                    {
+                        var item = _queue.Take();
+
                         consumingAction(item);
                     }
+                    catch (InvalidOperationException) { }
                 }
             });
         }

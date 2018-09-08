@@ -47,7 +47,7 @@ namespace Sir.DbUtil
 
                         using (var writeSession = new LocalStorageSessionFactory(dir, new LatinTokenizer()).CreateIndexSession(collectionId))
                         {
-                            var job = new IndexJob(collectionId, batch);
+                            var job = new AnalyzeJob(collectionId, batch);
 
                             writeSession.Write(job);
                         }

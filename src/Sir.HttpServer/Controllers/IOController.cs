@@ -142,9 +142,7 @@ namespace Sir.HttpServer.Controllers
         [HttpGet("serialize")]
         public ObjectResult SerializeIndex()
         {
-            SerializeIndex(_sessionFactory.Dir);
-
-            //Task.Run(() => SerializeIndex(_sessionFactory.Dir));
+            Task.Run(() => SerializeIndex(_sessionFactory.Dir));
 
             return new ObjectResult("serializing index. watch log.");
         }
@@ -186,7 +184,7 @@ namespace Sir.HttpServer.Controllers
                             docs = docs.Take(take);
                         }
 
-                        var job = new IndexJob(collectionId, docs);
+                        var job = new AnalyzeJob(collectionId, docs);
 
                         using (var writeSession = _sessionFactory.CreateIndexSession(collectionId))
                         {

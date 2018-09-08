@@ -22,7 +22,7 @@ namespace Sir.Store
         private readonly DocIndexWriter _docIx;
         private readonly PagedPostingsReader _postingsReader;
         private readonly Dictionary<long, VectorNode> _dirty;
-        private readonly ProducerConsumerQueue<IndexJob> _indexQueue;
+        private readonly ProducerConsumerQueue<AnalyzeJob> _indexQueue;
         private readonly ProducerConsumerQueue<BuildJob> _buildQueue;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
@@ -34,7 +34,7 @@ namespace Sir.Store
         {
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("writesession");
-            _indexQueue = new ProducerConsumerQueue<IndexJob>(Consume);
+            _indexQueue = new ProducerConsumerQueue<AnalyzeJob>(Consume);
             _buildQueue = new ProducerConsumerQueue<BuildJob>(Consume);
 
             ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)));
@@ -57,45 +57,34 @@ namespace Sir.Store
             _dirty = new Dictionary<long, VectorNode>();
         }
 
-        public void Write(IndexJob job)
+        private void Consume(BuildJob job)
+        {
+            foreach (var token in job.Tokens)
+            {
+                job.Index.Add(new VectorNode(token, job.DocId));
+            }
+        }
+
+        public void Write(AnalyzeJob job)
         {
             _indexQueue.Enqueue(job);
         }
 
         private class BuildJob
         {
-            public ulong CollectionId { get; }
             public ulong DocId { get; }
             public IEnumerable<string> Tokens { get; }
             public VectorNode Index { get; }
 
-            public BuildJob(ulong collectionId, ulong docId, IEnumerable<string> tokens, VectorNode index)
+            public BuildJob(ulong docId, IEnumerable<string> tokens, VectorNode index)
             {
-                CollectionId = collectionId;
                 DocId = docId;
                 Tokens = tokens;
                 Index = index;
             }
         }
 
-        private void Consume(BuildJob job)
-        {
-            try
-            {
-                foreach (var token in job.Tokens)
-                {
-                    job.Index.Add(new VectorNode(token, job.DocId));
-                }
-            }
-            catch (Exception ex)
-            {
-                _log.Log(ex);
-
-                throw;
-            }
-        }
-
-        private void Consume(IndexJob job)
+        private void Consume(AnalyzeJob job)
         {
             try
             {
@@ -111,7 +100,7 @@ namespace Sir.Store
                         .Cast<string>()
                         .Where(x => !x.StartsWith("__"));
 
-                    foreach(var key in keys)
+                    foreach (var key in keys)
                     {
                         var keyHash = key.ToHash();
                         var keyId = SessionFactory.GetKeyId(keyHash);
@@ -141,7 +130,7 @@ namespace Sir.Store
                             }
                         }
 
-                        _buildQueue.Enqueue(new BuildJob(CollectionId, docId, tokens, ix));
+                        _buildQueue.Enqueue(new BuildJob(docId, tokens, ix));
                     }
 
                     if (++docCount == 1000)
@@ -171,7 +160,7 @@ namespace Sir.Store
 
                 if (_dirty.Count > 0)
                 {
-                    _log.Log(string.Format("committing {0} indexes to {1}", _dirty.Count, CollectionId));
+                    _log.Log(string.Format("loading {0} indexes to {1}", _dirty.Count, CollectionId));
                 }
 
                 foreach (var node in _dirty)
@@ -199,7 +188,7 @@ namespace Sir.Store
 
                 if (_dirty.Count > 0)
                 {
-                    _log.Log(string.Format("committed {0} indexes to {1}", _dirty.Count, CollectionId));
+                    _log.Log(string.Format("loaded {0} indexes to {1}", _dirty.Count, CollectionId));
                 }
 
                 _flushed = true;
