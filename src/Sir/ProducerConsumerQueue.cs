@@ -1,38 +1,45 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Core
 {
     /// <summary>
-    /// Enque items and forget about it. They will be consumed by another thread.
-    /// Call ProducerConsumerQueue.Dispose() to have consumer thread join main.
+    /// Enque items and forget about it. They will be consumed by other threads.
+    /// Call ProducerConsumerQueue.Complete() to have consumer threads join main.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class ProducerConsumerQueue<T> : IDisposable
     {
         private readonly BlockingCollection<T> _queue;
-        private Task _consumer;
+        private IList<Task> _consumers;
         private bool _completed;
 
-        public ProducerConsumerQueue(Action<T> consumingAction)
+        public ProducerConsumerQueue(Action<T> consumingAction) : this(consumingAction, 1) { }
+
+        public ProducerConsumerQueue(Action<T> consumingAction, int numOfConsumers)
         {
             _queue = new BlockingCollection<T>();
+            _consumers = new List<Task>();
 
-            _consumer = Task.Run(() =>
+            for (int i = 0; i < numOfConsumers; i++)
             {
-                while (!_queue.IsCompleted)
+                _consumers.Add(Task.Run(() =>
                 {
-                    try
+                    while (!_queue.IsCompleted)
                     {
-                        var item = _queue.Take();
+                        try
+                        {
+                            var item = _queue.Take();
 
-                        consumingAction(item);
+                            consumingAction(item);
+                        }
+                        catch (InvalidOperationException) { }
                     }
-                    catch (InvalidOperationException) { }
-                }
-            });
+                }));
+            }
         }
 
         public void Enqueue(T item)
@@ -43,7 +50,12 @@ namespace Sir.Core
         public void Complete()
         {
             _queue.CompleteAdding();
-            _consumer.Wait();
+
+            foreach (var consumer in _consumers)
+            {
+                consumer.Wait();
+            }
+
             _queue.Dispose();
 
             _completed = true;

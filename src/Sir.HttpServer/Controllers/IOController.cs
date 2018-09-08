@@ -195,7 +195,7 @@ namespace Sir.HttpServer.Controllers
                 }
             }
 
-            _log.Log(string.Format("loaded data into memory index in {0}", timer.Elapsed));
+            _log.Log(string.Format("writing to memory index took {0}", timer.Elapsed));
         }
     }
 }

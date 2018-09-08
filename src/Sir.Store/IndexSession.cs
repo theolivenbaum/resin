@@ -24,6 +24,7 @@ namespace Sir.Store
         private readonly ProducerConsumerQueue<BuildJob> _buildQueue;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
+        private ulong _docCount = 0;
 
         public IndexSession(
             ulong collectionId, 
@@ -64,9 +65,10 @@ namespace Sir.Store
         {
             try
             {
-                var docCount = 0;
                 var timer = new Stopwatch();
                 timer.Start();
+
+                var docCount = 0;
 
                 foreach (var doc in job.Documents)
                 {
@@ -90,23 +92,19 @@ namespace Sir.Store
 
                         var val = (IComparable)doc[key];
                         var str = val as string;
-                        var tokens = new HashSet<string>();
+
+                        IEnumerable<string> tokens;
 
                         if (str == null || key[0] == '_')
                         {
-                            tokens.Add(val.ToString());
+                            tokens = new[] { val.ToString() };
                         }
                         else
                         {
-                            var tokenlist = _tokenizer.Tokenize(str);
-
-                            foreach (var token in tokenlist)
-                            {
-                                tokens.Add(token);
-                            }
+                            tokens = _tokenizer.Tokenize(str);
                         }
 
-                        _buildQueue.Enqueue(new BuildJob(docId, tokens, ix));
+                        _buildQueue.Enqueue(new BuildJob(docId, keyId, tokens, ix));
                     }
 
                     if (++docCount == 1000)
@@ -136,7 +134,11 @@ namespace Sir.Store
                 job.Index.Add(new VectorNode(token, job.DocId));
             }
 
-            _log.Log(string.Format("executed index build job in {0}", timer.Elapsed));
+            if (++_docCount >= 1000)
+            {
+                _log.Log(string.Format("executed index build job for doc {0}.{1} in {2}", job.DocId, job.KeyId, timer.Elapsed));
+                _docCount = 0;
+            }
         }
 
         public void FlushToMemory()
@@ -216,10 +218,12 @@ namespace Sir.Store
             public ulong DocId { get; }
             public IEnumerable<string> Tokens { get; }
             public VectorNode Index { get; }
+            public long KeyId { get; }
 
-            public BuildJob(ulong docId, IEnumerable<string> tokens, VectorNode index)
+            public BuildJob(ulong docId, long keyId, IEnumerable<string> tokens, VectorNode index)
             {
                 DocId = docId;
+                KeyId = keyId;
                 Tokens = tokens;
                 Index = index;
             }
