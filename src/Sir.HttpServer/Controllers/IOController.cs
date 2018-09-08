@@ -188,9 +188,9 @@ namespace Sir.HttpServer.Controllers
 
                         var job = new IndexJob(collectionId, docs);
 
-                        using (var writeSession = _sessionFactory.CreateWriteSession(collectionId))
+                        using (var writeSession = _sessionFactory.CreateIndexSession(collectionId))
                         {
-                            writeSession.WriteToInMemoryIndex(job);
+                            writeSession.Write(job);
                         }
                     }
                     break;

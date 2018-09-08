@@ -230,6 +230,11 @@ namespace Sir.Store
             return new WriteSession(collectionId, this, _tokenizer);
         }
 
+        public IndexSession CreateIndexSession(ulong collectionId)
+        {
+            return new IndexSession(collectionId, this, _tokenizer);
+        }
+
         public ReadSession CreateReadSession(ulong collectionId)
         {
             return new ReadSession(collectionId, this);

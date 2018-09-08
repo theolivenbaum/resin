@@ -45,11 +45,11 @@ namespace Sir.DbUtil
                     {
                         batchTimer.Restart();
 
-                        using (var writeSession = new LocalStorageSessionFactory(dir, new LatinTokenizer()).CreateWriteSession(collectionId))
+                        using (var writeSession = new LocalStorageSessionFactory(dir, new LatinTokenizer()).CreateIndexSession(collectionId))
                         {
                             var job = new IndexJob(collectionId, batch);
 
-                            writeSession.WriteToInMemoryIndex(job);
+                            writeSession.Write(job);
                         }
                         Console.WriteLine("wrote batch to {0} in {1}", collectionId, batchTimer.Elapsed);
                     }

@@ -2,13 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Sir.Store
 {
     /// <summary>
     /// Write session targetting a single collection.
     /// </summary>
-    public class WriteSession : CollectionSession
+    public class RemoveSession : CollectionSession
     {
         private readonly ValueWriter _vals;
         private readonly ValueWriter _keys;
@@ -21,13 +22,13 @@ namespace Sir.Store
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
 
-        public WriteSession(
+        public RemoveSession(
             ulong collectionId, 
             LocalStorageSessionFactory sessionFactory, 
             ITokenizer tokenizer) : base(collectionId, sessionFactory)
         {
             _tokenizer = tokenizer;
-            _log = Logging.CreateWriter("writesession");
+            _log = Logging.CreateWriter("removesession");
 
             ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)));
             KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));
@@ -49,43 +50,69 @@ namespace Sir.Store
             _dirty = new Dictionary<long, VectorNode>();
         }
 
-        public void Write(IEnumerable<IDictionary> models, bool writeToIndex = false)
+        public void Remove(IEnumerable<IDictionary> data)
         {
-            foreach (var model in models)
+            var postingsWriter = new PagedPostingsWriter(PostingsStream);
+
+            foreach (var model in data)
             {
-                var docId = _docIx.GetNextDocId();
-                var docMap = new List<(long keyId, long valId)>();
+                var docId = (ulong)model["__docid"];
 
                 foreach (var key in model.Keys)
                 {
                     var keyStr = key.ToString();
                     var keyHash = keyStr.ToHash();
-                    var val = (IComparable)model[key];
-                    var str = val as string;
-                    long keyId, valId;
+                    var fieldIndex = GetIndex(keyHash);
 
-                    if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
+                    if (fieldIndex == null)
                     {
-                        // We have a new key!
-
-                        // store key
-                        var keyInfo = _keys.Append(keyStr);
-                        keyId = _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
-                        SessionFactory.PersistKeyMapping(keyHash, keyId);
+                        continue;
                     }
 
-                    // store value
-                    var valInfo = _vals.Append(val);
-                    valId = _valIx.Append(valInfo.offset, valInfo.len, valInfo.dataType);
+                    var val = (IComparable)model[key];
+                    var str = val as string;
+                    var tokens = new HashSet<string>();
 
-                    // store refs to keys and values
-                    docMap.Add((keyId, valId));
+                    if (str == null || keyStr[0] == '_')
+                    {
+                        tokens.Add(val.ToString());
+
+                    }
+                    else
+                    {
+                        var tokenlist = _tokenizer.Tokenize(str).ToList();
+                        foreach (var token in tokenlist)
+                        {
+                            tokens.Add(token);
+                        }
+                    }
+
+                    foreach (var token in tokens)
+                    {
+                        // 1. find node
+                        // 2. get postings list
+                        // 3. find docId offset
+                        // 2. flag document as deleted
+
+                        var match = fieldIndex.ClosestMatch(token);
+
+                        if (match.Highscore < VectorNode.IdenticalAngle)
+                        {
+                            continue;
+                        }
+
+                        var postings = _postingsReader.Read(match.PostingsOffset);
+
+                        foreach (var posting in postings)
+                        {
+                            if (posting == docId)
+                            {
+                                postingsWriter.FlagAsDeleted(match.PostingsOffset, docId);
+                                break;
+                            }
+                        }
+                    }
                 }
-
-                var docMeta = _docs.Append(docMap);
-                _docIx.Append(docMeta.offset, docMeta.length);
-
-                model.Add("__docid", docId);
             }
         }
     }
