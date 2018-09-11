@@ -109,7 +109,7 @@ namespace Sir.Store
             {
                 _log.Log("begin serializing index");
 
-                _index.Serialize(Dir);
+                _index.SerializeTree(Dir);
 
                 _log.Log("serialized index");
             }
@@ -125,6 +125,9 @@ namespace Sir.Store
         {
             try
             {
+                var timer = new Stopwatch();
+                timer.Start();
+
                 _log.Log("begin loading index into memory");
 
                 var ix = new SortedList<ulong, SortedList<long, VectorNode>>();
@@ -149,6 +152,9 @@ namespace Sir.Store
 
                     var root = DeserializeIndex(ixFileName, vecFileName);
                     ix[collectionHash].Add(keyId, root);
+
+                    _log.Log(string.Format("loaded {0}.{1}. {2}",
+                        collectionHash, keyId, root.Size()));
                 }
 
                 _index = new VectorTree(ix);
@@ -159,7 +165,7 @@ namespace Sir.Store
                 }
                 else
                 {
-                    _log.Log("deserialized {0} index files", indexFiles.Length);
+                    _log.Log("deserialized {0} index files in {1}", indexFiles.Length, timer.Elapsed);
                 }
             }
             catch (Exception ex)

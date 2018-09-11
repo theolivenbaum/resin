@@ -127,16 +127,16 @@ namespace Sir.HttpServer.Controllers
         }
 
         [HttpGet("load/{*collectionId}")]
-        public ObjectResult Load(string collectionId, int skip, int take)
+        public ObjectResult Load(string collectionId, int skip, int take, int batchSize)
         {
             if (string.IsNullOrWhiteSpace(collectionId))
             {
                 return new ObjectResult("missing input: collectionId");
             }
 
-            Task.Run(()=> WriteToInMemoryIndex(_sessionFactory.Dir, collectionId.ToHash(), skip, take));
+            Task.Run(()=> LoadIndex(_sessionFactory.Dir, collectionId.ToHash(), skip, take, batchSize));
 
-            return new ObjectResult("refreshing index. watch log.");
+            return new ObjectResult("loading index. watch log.");
         }
 
         [HttpGet("serialize")]
@@ -152,7 +152,7 @@ namespace Sir.HttpServer.Controllers
             _sessionFactory.SerializeIndex();
         }
 
-        private void WriteToInMemoryIndex(string dir, ulong collection, int skip, int take)
+        private void LoadIndex(string dir, ulong collection, int skip, int take, int batchSize)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -184,18 +184,24 @@ namespace Sir.HttpServer.Controllers
                             docs = docs.Take(take);
                         }
 
-                        var job = new AnalyzeJob(collectionId, docs);
+                        if (batchSize == 0)
+                            batchSize = 10000;
 
-                        using (var writeSession = _sessionFactory.CreateIndexSession(collectionId))
+                        using (var indexSession = _sessionFactory.CreateIndexSession(collectionId))
+                        foreach (var batch in docs.Batch(batchSize))
                         {
-                            writeSession.Write(job);
+                            var job = new AnalyzeJob(collectionId, batch);
+
+                            indexSession.Write(job);
+
+                            _log.Log(string.Format("enqueued batch of {0} docs", batchSize));
                         }
                     }
                     break;
                 }
             }
 
-            _log.Log(string.Format("writing to memory index took {0}", timer.Elapsed));
+            _log.Log(string.Format("loading index took {0}", timer.Elapsed));
         }
     }
 }

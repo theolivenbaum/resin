@@ -16,8 +16,6 @@ namespace Sir.Store
         private readonly ValueIndexWriter _valIx;
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
-        private readonly PagedPostingsReader _postingsReader;
-        private readonly Dictionary<long, VectorNode> _dirty;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
 
@@ -45,8 +43,6 @@ namespace Sir.Store
             _valIx = new ValueIndexWriter(ValueIndexStream);
             _keyIx = new ValueIndexWriter(KeyIndexStream);
             _docIx = new DocIndexWriter(DocIndexStream);
-            _postingsReader = new PagedPostingsReader(PostingsStream);
-            _dirty = new Dictionary<long, VectorNode>();
         }
 
         public void Write(IEnumerable<IDictionary> models, bool writeToIndex = false)

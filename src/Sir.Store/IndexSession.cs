@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Sir.Core;
 
 namespace Sir.Store
@@ -18,13 +19,13 @@ namespace Sir.Store
         private readonly ValueIndexWriter _valIx;
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
-        private readonly PagedPostingsReader _postingsReader;
-        private readonly Dictionary<long, VectorNode> _dirty;
+        private readonly PagedPostingsWriter _postingsWriter;
         private readonly Stopwatch _timer;
-        private readonly ProducerConsumerQueue<AnalyzeJob> _analyzeQueue;
+        private readonly ProducerConsumerQueue<(long keyId, VectorNode index, IList<VectorNode> nodes)> _buildQueue;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
-        private int _docCount;
+        private readonly Dictionary<long, VectorNode> _dirty;
+        private bool _completed;
 
         public IndexSession(
             ulong collectionId, 
@@ -33,7 +34,8 @@ namespace Sir.Store
         {
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("session");
-            _analyzeQueue = new ProducerConsumerQueue<AnalyzeJob>(Consume);
+            _buildQueue = new ProducerConsumerQueue<(long keyId, VectorNode index, IList<VectorNode> nodes)>(Build);
+            _dirty = new Dictionary<long, VectorNode>();
 
             ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)));
             KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));
@@ -41,8 +43,8 @@ namespace Sir.Store
             ValueIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collectionId)));
             KeyIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collectionId)));
             DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collectionId)));
-            //PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collectionId)));
-            //VectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId)));
+            PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collectionId)));
+            VectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId)));
             Index = sessionFactory.GetCollectionIndex(collectionId);
 
             _vals = new ValueWriter(ValueStream);
@@ -51,17 +53,11 @@ namespace Sir.Store
             _valIx = new ValueIndexWriter(ValueIndexStream);
             _keyIx = new ValueIndexWriter(KeyIndexStream);
             _docIx = new DocIndexWriter(DocIndexStream);
-            _postingsReader = new PagedPostingsReader(PostingsStream);
-            _dirty = new Dictionary<long, VectorNode>();
+            _postingsWriter = new PagedPostingsWriter(PostingsStream);
             _timer = new Stopwatch();
         }
 
         public void Write(AnalyzeJob job)
-        {
-            _analyzeQueue.Enqueue(job);
-        }
-
-        private void Consume(AnalyzeJob job)
         {
             try
             {
@@ -69,28 +65,32 @@ namespace Sir.Store
                 timer.Start();
 
                 var docCount = 0;
+                var columns = new Dictionary<long, HashSet<VectorNode>>();
 
-                foreach (var doc in job.Documents)
+                foreach(var doc in job.Documents)
                 {
+                    docCount++;
+
                     var docId = (ulong)doc["__docid"];
 
-                    var keys = doc.Keys
-                        .Cast<string>()
-                        .Where(x => !x.StartsWith("__"));
-
-                    foreach (var key in keys)
+                    foreach (var obj in doc.Keys)
                     {
+                        var key = (string)obj;
+
+                        if (key.StartsWith("__"))
+                            continue;
+
                         var keyHash = key.ToHash();
                         var keyId = SessionFactory.GetKeyId(keyHash);
-                        VectorNode ix;
 
-                        if (!_dirty.TryGetValue(keyId, out ix))
+                        HashSet<VectorNode> column;
+                        if (!columns.TryGetValue(keyId, out column))
                         {
-                            ix = GetIndex(keyHash) ?? new VectorNode();
-                            _dirty.Add(keyId, ix);
+                            column = new HashSet<VectorNode>();
+                            columns.Add(keyId, column);
                         }
 
-                        var val = (IComparable)doc[key];
+                        var val = (IComparable)doc[obj];
                         var str = val as string;
 
                         if (str == null || key[0] == '_')
@@ -99,29 +99,54 @@ namespace Sir.Store
 
                             if (!string.IsNullOrWhiteSpace(v))
                             {
-                                ix.Add(new VectorNode(v, docId));
+                                var node = new VectorNode(v, docId);
+                                column.Add(node);
                             }
                         }
                         else
                         {
-                            foreach (var x in _tokenizer.Tokenize(str))
+                            foreach (var token in _tokenizer.Tokenize(str))
                             {
-                                if (!string.IsNullOrWhiteSpace(x))
+                                if (!string.IsNullOrWhiteSpace(token))
                                 {
-                                    ix.Add(new VectorNode(x, docId));
+                                    var node = new VectorNode(token, docId);
+                                    column.Add(node);
                                 }
                             }
                         }
                     }
+                }
 
-                    if (++docCount == 1000)
+                _log.Log(string.Format("analyzed {0} docs in {1}", docCount, timer.Elapsed));
+
+                timer.Restart();
+
+                foreach (var column in columns)
+                {
+                    var keyId = column.Key;
+
+                    VectorNode ix;
+                    if (!_dirty.TryGetValue(keyId, out ix))
                     {
-                        _log.Log(string.Format("analyzed doc {0}", doc["__docid"]));
-                        docCount = 0;
+                        ix = GetIndex(keyId);
+
+                        if (ix == null)
+                        {
+                            ix = new VectorNode();
+                            SessionFactory.AddIndex(CollectionId, keyId, ix);
+                        }
+                        _dirty.Add(keyId, ix);
                     }
                 }
 
-                _log.Log(string.Format("executed {0} analyze job in {1}", job.CollectionId, timer.Elapsed));
+                Parallel.ForEach(columns, column =>
+                {
+                    var keyId = column.Key;
+                    var nodes = column.Value.ToArray();
+                    var ix = _dirty[keyId];
+
+                    Build(keyId, ix, nodes);
+                });
             }
             catch (Exception ex)
             {
@@ -130,65 +155,43 @@ namespace Sir.Store
                 throw;
             }
         }
-        private void Consume(BuildJob job)
+
+        private void Build((long keyId, VectorNode index, IList<VectorNode> nodes) job)
         {
-            _timer.Restart();
-
-            foreach (var kvp in job.Tokens)
-            {
-                var ix = _dirty[kvp.Key];
-
-                foreach (var token in kvp.Value)
-                {
-                    if (!string.IsNullOrWhiteSpace(token))
-                    {
-                        var node = new VectorNode(token, job.DocId);
-
-                        ix.Add(node);
-                    }
-                }
-            }
-
-            if (++_docCount == 1000)
-            {
-                _log.Log(string.Format("processed doc {0} in {1}", job.DocId, _timer.Elapsed));
-                _docCount = 0;
-            }
+            Build(job.keyId, job.index, job.nodes);
         }
 
-        public void FlushToMemory()
+        private void Build(long keyId, VectorNode index, IList<VectorNode> nodes)
+        {
+            var timer = new Stopwatch();
+            timer.Start();
+
+            foreach (var node in nodes)
+            {
+                index.Add(node);
+            }
+
+            _log.Log(string.Format("added {0} nodes to column {1}.{2} in {3}. {4}",
+                nodes.Count, CollectionId, keyId, timer.Elapsed, index.Size()));
+        }
+
+        private void Serialize((long keyId, VectorNode node) job)
+        {
+            Serialize(job.keyId, job.node);
+        }
+
+        private void Serialize(long keyId, VectorNode node)
         {
             try
             {
-                var timer = new Stopwatch();
-                timer.Start();
-
-                _analyzeQueue.Dispose();
-
-                _log.Log("finished analyzing.");
-
-                if (_dirty.Count > 0)
+                using (var ixFile = CreateIndexStream(keyId))
                 {
-                    _log.Log(string.Format("loading {0} indexes", _dirty.Count));
+                    node.SerializeTreeAndPayload(
+                                            ixFile,
+                                            VectorStream,
+                                            _postingsWriter);
                 }
-
-                foreach (var node in _dirty)
-                {
-                    var keyId = node.Key;
-
-                    SessionFactory.AddIndex(CollectionId, keyId, node.Value);
-
-                    _log.Log(string.Format("refreshed index {0}.{1}", CollectionId, keyId));
-                }
-
-                if (_dirty.Count > 0)
-                {
-                    _log.Log(string.Format("loaded {0} indexes", _dirty.Count));
-                }
-
-                _flushed = true;
-
-                _log.Log(string.Format("flushing took {0}", timer.Elapsed));
+                _log.Log(string.Format("serialized column {0}", keyId));
             }
             catch (Exception ex)
             {
@@ -198,29 +201,49 @@ namespace Sir.Store
             }
         }
 
-        private bool _flushed;
+        private Stream CreateIndexStream(long keyId)
+        {
+            var fileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
+            return new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+        }
+
+        public void Serialize()
+        {
+            if (_completed)
+                return;
+
+            try
+            {
+                _buildQueue.Dispose();
+
+                _log.Log("build queue completed.");
+
+                foreach (var x in _dirty)
+                {
+                    Serialize(x.Key, x.Value);
+                }
+
+                _log.Log("serialization completed.");
+
+                _completed = true;
+            }
+            catch (Exception ex)
+            {
+                _log.Log(ex);
+
+                throw;
+            }
+        }
 
         public override void Dispose()
         {
-            if (!_flushed)
+            if (!_completed)
             {
-                FlushToMemory();
-                _flushed = true;
+                Serialize();
+                _completed = true;
             }
 
             base.Dispose();
-        }
-
-        private class BuildJob
-        {
-            public ulong DocId { get; }
-            public IDictionary<long, HashSet<string>> Tokens { get; }
-
-            public BuildJob(ulong docId, IDictionary<long, HashSet<string>> tokens)
-            {
-                DocId = docId;
-                Tokens = tokens;
-            }
         }
     }
 }

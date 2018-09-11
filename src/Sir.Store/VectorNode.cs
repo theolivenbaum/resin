@@ -17,9 +17,10 @@ namespace Sir.Store
 
         private VectorNode _right;
         private VectorNode _left;
-        public long VecOffset { get; set; }
         private HashSet<ulong> _docIds;
+        private readonly bool _isRoot;
 
+        public long VecOffset { get; set; }
         public IEnumerable<ulong> DocIds { get => _docIds; }
         public long PostingsOffset { get; set; }
         public float Angle { get; set; }
@@ -46,7 +47,10 @@ namespace Sir.Store
         }
 
         public VectorNode() 
-            : this('\0'.ToString()) { }
+            : this('\0'.ToString())
+        {
+            _isRoot = true;
+        }
 
         public VectorNode(string s) 
             : this(s.ToVector())
@@ -111,11 +115,7 @@ namespace Sir.Store
             return best;
         }
 
-        /// <summary>
-        /// Add node to tree.
-        /// </summary>
-        /// <returns>True if node is unique, false if it's a duplicate.</returns>
-        public bool Add(VectorNode node)
+        public VectorNode Add(VectorNode node)
         {
             var angle = node.TermVector.CosAngle(TermVector);
 
@@ -125,7 +125,7 @@ namespace Sir.Store
 
                 Merge(node);
 
-                return false;
+                return this;
             }
             else if (angle > FoldAngle)
             {
@@ -134,7 +134,7 @@ namespace Sir.Store
                     node.Angle = angle;
                     Left = node;
 
-                    return true;
+                    return node;
                 }
                 return Left.Add(node);
             }
@@ -145,7 +145,7 @@ namespace Sir.Store
                     node.Angle = angle;
                     Right = node;
 
-                    return true;
+                    return node;
                 }
                 return Right.Add(node);
             }
@@ -273,24 +273,41 @@ namespace Sir.Store
             return block;
         }
 
-        public void Serialize(Stream indexStream, Stream vectorStream, PagedPostingsWriter postingsWriter)
+        public void SerializeTreeAndPayload(Stream indexStream, Stream vectorStream, PagedPostingsWriter postingsWriter)
         {
             if (VecOffset < 0)
             {
-                VecOffset = TermVector.Serialize(vectorStream);
-            }
-
-            if (_docIds.Count > 0)
-            {
-                if (PostingsOffset > -1)
+                if (_isRoot)
                 {
-                    postingsWriter.Write(PostingsOffset, _docIds.ToList());
+                    PostingsOffset = postingsWriter.AllocatePage();
                 }
                 else
                 {
-                    PostingsOffset = postingsWriter.Write(_docIds.ToList());
+                    if (_docIds.Count == 0)
+                    {
+                        throw new InvalidDataException();
+                    }
+
+                    var ids = _docIds.ToArray();
+                    _docIds.Clear();
+
+                    PostingsOffset = postingsWriter.Write(ids);
                 }
-                _docIds.Clear();
+
+                VecOffset = TermVector.Serialize(vectorStream);
+            }
+            else
+            {
+                if (!_isRoot)
+                {
+                    if (_docIds.Count > 0)
+                    {
+                        var ids = _docIds.ToArray();
+                        _docIds.Clear();
+
+                        postingsWriter.Write(PostingsOffset, ids);
+                    }
+                }
             }
 
             foreach (var buf in ToStream())
@@ -300,12 +317,30 @@ namespace Sir.Store
 
             if (Left != null)
             {
-                Left.Serialize(indexStream, vectorStream, postingsWriter);
+                Left.SerializeTreeAndPayload(indexStream, vectorStream, postingsWriter);
             }
 
             if (Right != null)
             {
-                Right.Serialize(indexStream, vectorStream, postingsWriter);
+                Right.SerializeTreeAndPayload(indexStream, vectorStream, postingsWriter);
+            }
+        }
+
+        public void SerializeTree(Stream indexStream)
+        {
+            foreach (var buf in ToStream())
+            {
+                indexStream.Write(buf, 0, buf.Length);
+            }
+
+            if (Left != null)
+            {
+                Left.SerializeTree(indexStream);
+            }
+
+            if (Right != null)
+            {
+                Right.SerializeTree(indexStream);
             }
         }
 

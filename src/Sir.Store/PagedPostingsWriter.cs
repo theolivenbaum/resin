@@ -28,11 +28,16 @@ namespace Sir.Store
 
         public long AllocatePage()
         {
+            return Allocate(PAGE_SIZE);
+        }
+
+        public long Allocate(int amount)
+        {
             _stream.Seek(0, SeekOrigin.End);
 
             var pos = _stream.Position;
 
-            _stream.SetLength(_stream.Position + PAGE_SIZE);
+            _stream.SetLength(_stream.Position + amount);
 
             return pos;
         }
@@ -206,7 +211,11 @@ namespace Sir.Store
 
                 var posOfPenultimate = offset + (pos * BLOCK_SIZE);
 
-                _stream.Seek(posOfPenultimate, SeekOrigin.Begin);
+                if (_stream.Position != posOfPenultimate)
+                {
+                    _stream.Seek(posOfPenultimate, SeekOrigin.Begin);
+                }
+
                 _stream.Write(BitConverter.GetBytes(docIds[docIndex++]), 0, sizeof(ulong));
                 _stream.Write(_aliveStatus, 0, sizeof(byte));
 
@@ -231,7 +240,11 @@ namespace Sir.Store
                 {
                     if (docIndex == docIds.Count) break;
 
-                    _stream.Seek(offs, SeekOrigin.Begin);
+                    if (_stream.Position != offs)
+                    {
+                        _stream.Seek(offs, SeekOrigin.Begin);
+                    }
+
                     _stream.Write(BitConverter.GetBytes(docIds[docIndex++]), 0, sizeof(ulong));
                     _stream.Write(_aliveStatus, 0, sizeof(byte));
 
@@ -254,5 +267,35 @@ namespace Sir.Store
             return offset;
 
         }
+
+        //public long Write(IList<ulong> docIds)
+        //{
+        //    double sizeOfPayload = docIds.Count * BLOCK_SIZE;
+        //    double numOfPages = sizeOfPayload / PAGE_SIZE;
+        //    int num = Convert.ToInt32(numOfPages);
+
+        //    if (num < numOfPages)
+        //    {
+        //        num++;
+        //    }
+
+        //    long offset;
+        //    for (int i = 0; i < num; i++)
+        //    {
+        //        if (i == 0)
+        //        {
+        //            offset = AllocatePage();
+        //        }
+        //        else
+        //        {
+        //            AllocatePage();
+        //        }
+        //    }
+
+        //    WriteOnAllocated(offset, docIds, 0);
+
+        //    return offset;
+
+        //}
     }
 }

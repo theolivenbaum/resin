@@ -24,14 +24,19 @@ namespace Sir.Store
             CollectionId = collectionId;
         }
 
-        public VectorNode GetIndex(ulong key)
+        public VectorNode GetIndex(ulong keyHash)
         {
             long keyId;
-            if (!SessionFactory.TryGetKeyId(key, out keyId))
+            if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
             {
                 return null;
             }
-            
+
+            return GetIndex(keyId);
+        }
+
+        public VectorNode GetIndex(long keyId)
+        {
             VectorNode root;
 
             if (!Index.TryGetValue(keyId, out root))
@@ -42,10 +47,10 @@ namespace Sir.Store
             return root;
         }
 
-        public bool IndexExists(ulong key)
+        public bool KeyExists(ulong keyHash)
         {
             long keyId;
-            if (!SessionFactory.TryGetKeyId(key, out keyId))
+            if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
             {
                 return false;
             }

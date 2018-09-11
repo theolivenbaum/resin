@@ -14,19 +14,36 @@ namespace Sir.Core
     public class ProducerConsumerQueue<T> : IDisposable
     {
         private readonly BlockingCollection<T> _queue;
-        private IList<Task> _consumers;
+        private readonly int _numOfConsumers;
+        private readonly Action<T> _consumingAction;
+        private Task[] _consumers;
         private bool _completed;
+        private bool _started;
 
         public ProducerConsumerQueue(Action<T> consumingAction) : this(consumingAction, 1) { }
 
-        public ProducerConsumerQueue(Action<T> consumingAction, int numOfConsumers)
+        public ProducerConsumerQueue(Action<T> consumingAction, int numOfConsumers, bool startConsumingImmediately = true)
         {
             _queue = new BlockingCollection<T>();
-            _consumers = new List<Task>();
+            _numOfConsumers = numOfConsumers;
+            _consumingAction = consumingAction;
 
-            for (int i = 0; i < numOfConsumers; i++)
+            if (startConsumingImmediately)
             {
-                _consumers.Add(Task.Run(() =>
+                Start();
+            }
+        }
+
+        public void Start()
+        {
+            if (_started)
+                return;
+
+            _consumers = new Task[_numOfConsumers];
+
+            for (int i = 0; i < _numOfConsumers; i++)
+            {
+                _consumers[i] = Task.Run(() =>
                 {
                     while (!_queue.IsCompleted)
                     {
@@ -34,12 +51,14 @@ namespace Sir.Core
                         {
                             var item = _queue.Take();
 
-                            consumingAction(item);
+                            _consumingAction(item);
                         }
                         catch (InvalidOperationException) { }
                     }
-                }));
+                });
             }
+
+            _started = true;
         }
 
         public void Enqueue(T item)
@@ -47,14 +66,17 @@ namespace Sir.Core
             _queue.Add(item);
         }
 
-        public void Complete()
+        public void Join()
         {
+            if (!_started)
+                return;
+
+            if (_completed)
+                return;
+
             _queue.CompleteAdding();
 
-            foreach (var consumer in _consumers)
-            {
-                consumer.Wait();
-            }
+            Task.WaitAll(_consumers);
 
             _queue.Dispose();
 
@@ -65,7 +87,7 @@ namespace Sir.Core
         {
             if (!_completed)
             {
-                Complete();
+                Join();
             }
         }
     }

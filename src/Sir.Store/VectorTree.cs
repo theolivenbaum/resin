@@ -20,24 +20,17 @@ namespace Sir.Store
             _ix = ix;
         }
 
-        public void Serialize(string dir)
+        public void SerializeTree(string dir)
         {
             foreach (var index in _ix)
             {
-                var vecFn = Path.Combine(dir, string.Format("{0}.vec", index.Key));
-                var posFn = Path.Combine(dir, string.Format("{0}.pos", index.Key));
-
-                using (var vectorStream = new FileStream(vecFn, FileMode.Append, FileAccess.Write, FileShare.None))
-                using (var postingsStream = new FileStream(posFn, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+                foreach (var key in index.Value)
                 {
-                    foreach (var key in index.Value)
-                    {
-                        var ixFileName = Path.Combine(dir, string.Format("{0}.{1}.ix", index.Key, key.Key));
+                    var ixFileName = Path.Combine(dir, string.Format("{0}.{1}.ix", index.Key, key.Key));
 
-                        using (var ixStream = new FileStream(ixFileName, FileMode.Create, FileAccess.Write, FileShare.None))
-                        {
-                            key.Value.Serialize(ixStream, vectorStream, new PagedPostingsWriter(postingsStream));
-                        }
+                    using (var ixStream = new FileStream(ixFileName, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        key.Value.SerializeTree(ixStream);
                     }
                 }
             }
@@ -45,28 +38,36 @@ namespace Sir.Store
 
         public void Add(ulong collectionId, long keyId, VectorNode index)
         {
-            SortedList<long, VectorNode> ix;
+            SortedList<long, VectorNode> collection;
 
-            if (!_ix.TryGetValue(collectionId, out ix))
+            if (!_ix.TryGetValue(collectionId, out collection))
             {
                 lock (_sync)
                 {
-                    if (!_ix.TryGetValue(collectionId, out ix))
+                    if (!_ix.TryGetValue(collectionId, out collection))
                     {
-                        ix = new SortedList<long, VectorNode>();
-                        _ix.Add(collectionId, ix);
+                        collection = new SortedList<long, VectorNode>();
+                        collection.Add(keyId, index);
+
+                        _ix.Add(collectionId, collection);
                     }
                 }
             }
-
-            if (!ix.ContainsKey(keyId))
+            else
             {
-                lock (_sync)
+                if (!collection.ContainsKey(keyId))
                 {
-                    if (!ix.ContainsKey(keyId))
+                    lock (_sync)
                     {
-                        ix.Add(keyId, index);
+                        if (!collection.ContainsKey(keyId))
+                        {
+                            collection.Add(keyId, index);
+                        }
                     }
+                }
+                else
+                {
+                    collection[keyId] = index;
                 }
             }
         }

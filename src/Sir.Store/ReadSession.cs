@@ -65,7 +65,7 @@ namespace Sir.Store
                         {
                             if (match.PostingsOffset < 0)
                             {
-                                throw new InvalidOperationException(match.ToString());
+                                throw new InvalidDataException(match.ToString());
                             }
 
                             var docIds = _postingsReader.Read(match.PostingsOffset)
