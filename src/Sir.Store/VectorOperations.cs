@@ -114,7 +114,7 @@ namespace Sir.Store
 
         public static SortedList<int, byte> ToVector(this string word)
         {
-            if (word.Length == 0) throw new ArgumentException();
+            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException();
 
             var vec = word.ToCharVector();
             return vec;

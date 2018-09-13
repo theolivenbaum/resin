@@ -18,14 +18,13 @@ namespace Sir.Store
         private VectorNode _right;
         private VectorNode _left;
         private HashSet<ulong> _docIds;
-        private readonly bool _isRoot;
 
-        public long VecOffset { get; set; }
+        public long VecOffset { get; private set; }
         public IEnumerable<ulong> DocIds { get => _docIds; }
-        public long PostingsOffset { get; set; }
-        public float Angle { get; set; }
-        public float Highscore { get; set; }
-        public SortedList<int, byte> TermVector { get; private set; }
+        public long PostingsOffset { get; private set; }
+        public float Angle { get; private set; }
+        public float Highscore { get; private set; }
+        public SortedList<int, byte> TermVector { get; }
         public VectorNode Ancestor { get; set; }
         public VectorNode Right
         {
@@ -36,6 +35,7 @@ namespace Sir.Store
                 _right.Ancestor = this;
             }
         }
+
         public VectorNode Left
         {
             get => _left;
@@ -49,7 +49,6 @@ namespace Sir.Store
         public VectorNode() 
             : this('\0'.ToString())
         {
-            _isRoot = true;
         }
 
         public VectorNode(string s) 
@@ -277,36 +276,29 @@ namespace Sir.Store
         {
             if (VecOffset < 0)
             {
-                if (_isRoot)
-                {
-                    PostingsOffset = postingsWriter.AllocatePage();
-                }
-                else
-                {
-                    if (_docIds.Count == 0)
-                    {
-                        throw new InvalidDataException();
-                    }
+                // this node has never been persisted
 
-                    var ids = _docIds.ToArray();
-                    _docIds.Clear();
-
-                    PostingsOffset = postingsWriter.Write(ids);
+                if (_docIds.Count == 0 && Ancestor != null)
+                {
+                    throw new InvalidDataException();
                 }
 
+                var ids = _docIds.ToArray();
+                _docIds.Clear();
+
+                PostingsOffset = postingsWriter.Write(ids);
                 VecOffset = TermVector.Serialize(vectorStream);
             }
             else
             {
-                if (!_isRoot)
+                if (_docIds.Count > 0)
                 {
-                    if (_docIds.Count > 0)
-                    {
-                        var ids = _docIds.ToArray();
-                        _docIds.Clear();
+                    // this node is dirty
 
-                        postingsWriter.Write(PostingsOffset, ids);
-                    }
+                    var ids = _docIds.ToArray();
+                    _docIds.Clear();
+
+                    postingsWriter.Write(PostingsOffset, ids);
                 }
             }
 
@@ -385,6 +377,7 @@ namespace Sir.Store
             var node = new VectorNode(vec);
             node.Angle = angle;
             node.PostingsOffset = postingsOffset;
+            node.VecOffset = vecOffset;
 
             if (terminator == 0)
             {
