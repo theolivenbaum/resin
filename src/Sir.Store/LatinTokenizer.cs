@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 
 namespace Sir.Store
 {
@@ -30,8 +29,8 @@ namespace Sir.Store
 
         public IEnumerable<string> Tokenize(string text)
         {
-            return Normalize(text).Split(_delims, StringSplitOptions.None);
-            //return Normalize(text).Split(_phraseDelimiters, StringSplitOptions.RemoveEmptyEntries);
+            return Normalize(text).Split(_delims, StringSplitOptions.None)
+                .Where(x => !string.IsNullOrWhiteSpace(x));
         }
 
         public string Normalize(string text)

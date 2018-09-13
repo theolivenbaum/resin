@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Sir.Core;
 
@@ -21,7 +20,7 @@ namespace Sir.Store
         private readonly DocIndexWriter _docIx;
         private readonly PagedPostingsWriter _postingsWriter;
         private readonly Stopwatch _timer;
-        private readonly ProducerConsumerQueue<(long keyId, VectorNode index, IList<VectorNode> nodes)> _buildQueue;
+        private readonly ProducerConsumerQueue<(long keyId, VectorNode index, IEnumerable<(ulong, string)> tokens)> _buildQueue;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
         private readonly Dictionary<long, VectorNode> _dirty;
@@ -34,7 +33,7 @@ namespace Sir.Store
         {
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("session");
-            _buildQueue = new ProducerConsumerQueue<(long keyId, VectorNode index, IList<VectorNode> nodes)>(Build);
+            _buildQueue = new ProducerConsumerQueue<(long keyId, VectorNode index, IEnumerable<(ulong, string)> tokens)>(Build);
             _dirty = new Dictionary<long, VectorNode>();
 
             ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)));
@@ -65,7 +64,7 @@ namespace Sir.Store
                 timer.Start();
 
                 var docCount = 0;
-                var columns = new Dictionary<long, HashSet<VectorNode>>();
+                var columns = new Dictionary<long, HashSet<(ulong docId, string token)>>();
 
                 foreach(var doc in job.Documents)
                 {
@@ -83,10 +82,10 @@ namespace Sir.Store
                         var keyHash = key.ToHash();
                         var keyId = SessionFactory.GetKeyId(keyHash);
 
-                        HashSet<VectorNode> column;
+                        HashSet<(ulong docId, string token)> column;
                         if (!columns.TryGetValue(keyId, out column))
                         {
-                            column = new HashSet<VectorNode>();
+                            column = new HashSet<(ulong docId, string token)>();
                             columns.Add(keyId, column);
                         }
 
@@ -99,19 +98,14 @@ namespace Sir.Store
 
                             if (!string.IsNullOrWhiteSpace(v))
                             {
-                                var node = new VectorNode(v, docId);
-                                column.Add(node);
+                                column.Add((docId, v));
                             }
                         }
                         else
                         {
                             foreach (var token in _tokenizer.Tokenize(str))
                             {
-                                if (!string.IsNullOrWhiteSpace(token))
-                                {
-                                    var node = new VectorNode(token, docId);
-                                    column.Add(node);
-                                }
+                                column.Add((docId, token));
                             }
                         }
                     }
@@ -133,7 +127,7 @@ namespace Sir.Store
                         if (ix == null)
                         {
                             ix = new VectorNode();
-                            SessionFactory.AddIndex(CollectionId, keyId, ix);
+                            //SessionFactory.AddIndex(CollectionId, keyId, ix);
                         }
                         _dirty.Add(keyId, ix);
                     }
@@ -142,10 +136,10 @@ namespace Sir.Store
                 Parallel.ForEach(columns, column =>
                 {
                     var keyId = column.Key;
-                    var nodes = column.Value.ToArray();
+                    var tokens = column.Value;
                     var ix = _dirty[keyId];
 
-                    Build(keyId, ix, nodes);
+                    Build(keyId, ix, tokens);
                 });
             }
             catch (Exception ex)
@@ -156,29 +150,32 @@ namespace Sir.Store
             }
         }
 
-        private void Build((long keyId, VectorNode index, IList<VectorNode> nodes) job)
+        private void Build((long keyId, VectorNode index, IEnumerable<(ulong docId, string token)> tokens) job)
         {
-            Build(job.keyId, job.index, job.nodes);
+            Build(job.keyId, job.index, job.tokens);
         }
 
-        private void Build(long keyId, VectorNode index, IList<VectorNode> nodes)
+        private void Build(long keyId, VectorNode index, IEnumerable<(ulong docId, string token)> tokens)
         {
             var timer = new Stopwatch();
             timer.Start();
 
-            foreach (var node in nodes)
+            var count = 0;
+
+            foreach (var token in tokens)
             {
-                index.Add(node);
+                index.Add(new VectorNode(token.token, token.docId));
+                count++;
             }
 
             _log.Log(string.Format("added {0} nodes to column {1}.{2} in {3}. {4}",
-                nodes.Count, CollectionId, keyId, timer.Elapsed, index.Size()));
+                count, CollectionId, keyId, timer.Elapsed, index.Size()));
         }
 
-        private void Serialize((long keyId, VectorNode node) job)
-        {
-            Serialize(job.keyId, job.node);
-        }
+        //private void Serialize((long keyId, VectorNode node) job)
+        //{
+        //    Serialize(job.keyId, job.node);
+        //}
 
         private void Serialize(long keyId, VectorNode node)
         {

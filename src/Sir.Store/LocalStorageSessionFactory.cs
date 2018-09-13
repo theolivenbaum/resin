@@ -56,53 +56,6 @@ namespace Sir.Store
             return keys;
         }
 
-        //private void RebuildIndexes()
-        //{
-        //    try
-        //    {
-        //        var timer = new Stopwatch();
-        //        var batchTimer = new Stopwatch();
-
-        //        timer.Start();
-
-        //        var files = Directory.GetFiles(Dir, "*.docs");
-
-        //        _log.Log(string.Format("re-indexing process found {0} document files", files.Length));
-
-        //        foreach (var docFileName in files)
-        //        {
-        //            var name = Path.GetFileNameWithoutExtension(docFileName)
-        //                .Split(".", StringSplitOptions.RemoveEmptyEntries);
-
-        //            var collectionId = ulong.Parse(name[0]);
-
-        //            using (var readSession = new DocumentReadSession(collectionId, this))
-        //            {
-        //                foreach (var batch in readSession.ReadDocs().Batch(1000))
-        //                {
-        //                    batchTimer.Restart();
-
-        //                    using (var writeSession = new LocalStorageSessionFactory(Dir, new LatinTokenizer()).CreateWriteSession(collectionId))
-        //                    {
-        //                        var job = new IndexJob(collectionId, batch);
-
-        //                        writeSession.WriteToIndex(job);
-        //                    }
-        //                    Console.WriteLine("wrote batch to index {0} in {1}", collectionId, batchTimer.Elapsed);
-        //                }
-        //            }
-        //        }
-
-        //        _log.Log(string.Format("rebuilt {0} indexes in {1}", files.Length, timer.Elapsed));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _log.Log(ex.ToString());
-        //        throw;
-        //    }
-
-        //}
-
         public void SerializeIndex()
         {
             try

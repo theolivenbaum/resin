@@ -25,7 +25,7 @@ namespace Sir.Store
         public long PostingsOffset { get; set; }
         public float Angle { get; set; }
         public float Highscore { get; set; }
-        public SortedList<char, byte> TermVector { get; private set; }
+        public SortedList<int, byte> TermVector { get; private set; }
         public VectorNode Ancestor { get; set; }
         public VectorNode Right
         {
@@ -57,7 +57,7 @@ namespace Sir.Store
         {
         }
 
-        public VectorNode(SortedList<char, byte> wordVector)
+        public VectorNode(SortedList<int, byte> wordVector)
         {
             _docIds = new HashSet<ulong>();
             TermVector = wordVector;
@@ -347,8 +347,6 @@ namespace Sir.Store
         public static VectorNode Deserialize(Stream indexStream, Stream vectorStream)
         {
             const int nodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(byte);
-            const int kvpSize = sizeof(char) + sizeof(byte);
-
             var buf = new byte[nodeSize];
             var read = indexStream.Read(buf, 0, buf.Length);
 
@@ -365,7 +363,8 @@ namespace Sir.Store
             var terminator = buf[nodeSize - 1];
 
             // Deserialize term vector
-            var vec = new SortedList<char, byte>();
+            const int kvpSize = sizeof(int) + sizeof(byte);
+            var vec = new SortedList<int, byte>();
             var vecBuf = new byte[vectorCount * kvpSize];
 
             vectorStream.Seek(vecOffset, SeekOrigin.Begin);
@@ -376,7 +375,7 @@ namespace Sir.Store
             for (int i = 0; i < vectorCount; i++)
             {
                 var key = BitConverter.ToChar(vecBuf, offs);
-                var val = vecBuf[offs + sizeof(char)];
+                var val = vecBuf[offs + sizeof(int)];
 
                 vec.Add(key, val);
 

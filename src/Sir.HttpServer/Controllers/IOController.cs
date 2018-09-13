@@ -185,23 +185,27 @@ namespace Sir.HttpServer.Controllers
                         }
 
                         if (batchSize == 0)
-                            batchSize = 10000;
+                            batchSize = 1000;
 
-                        using (var indexSession = _sessionFactory.CreateIndexSession(collectionId))
                         foreach (var batch in docs.Batch(batchSize))
                         {
                             var job = new AnalyzeJob(collectionId, batch);
 
-                            indexSession.Write(job);
+                            using (var indexSession = _sessionFactory.CreateIndexSession(collectionId))
+                            {
+                                indexSession.Write(job);
+                            }
 
-                            _log.Log(string.Format("enqueued batch of {0} docs", batchSize));
+                            _log.Log(string.Format("indexed batch of {0} docs", batchSize));
                         }
                     }
                     break;
                 }
             }
 
-            _log.Log(string.Format("loading index took {0}", timer.Elapsed));
+            _log.Log(string.Format("writing index took {0}", timer.Elapsed));
+
+            _sessionFactory.LoadIndex();
         }
     }
 }
