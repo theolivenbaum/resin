@@ -23,7 +23,3 @@ Included in the box is
 - support for JSON/XML
 - a query parser
 - an auto-indexing document database with full-text search
-
-## Platform
-
-.NET Core 2.0.

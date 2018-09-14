@@ -49,7 +49,3 @@ See [VectorNode](src/Sir.Store/VectorNode.cs) for details.
 ### .vec
 
 	[char][int][char][int]...
-
-## Platform
-
-.NET Core 2.0.

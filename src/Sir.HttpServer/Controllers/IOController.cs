@@ -197,15 +197,15 @@ namespace Sir.HttpServer.Controllers
                             }
 
                             _log.Log(string.Format("indexed batch of {0} docs", batchSize));
+
+                            _sessionFactory.LoadIndex();
                         }
                     }
                     break;
                 }
             }
 
-            _log.Log(string.Format("writing index took {0}", timer.Elapsed));
-
-            _sessionFactory.LoadIndex();
+            _log.Log(string.Format("writing and reloading index took {0}", timer.Elapsed));
         }
     }
 }

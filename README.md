@@ -125,7 +125,3 @@ Body:
 Response:
 
 	HTTP 202 Marked for deletion
-
-### Platform
-
-.NET Core 2.0.

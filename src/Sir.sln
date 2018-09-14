@@ -16,7 +16,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Store", "Sir.Store\Sir.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.StringCompare", "Sir.StringCompare\Sir.StringCompare.csproj", "{610237D4-15E5-4C9F-9BAE-ACB24F634D2F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sir.DbUtil", "Sir.DbUtil\Sir.DbUtil.csproj", "{D267D6FB-6DA5-444F-A628-FC0C3B1C6662}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.DbUtil", "Sir.DbUtil\Sir.DbUtil.csproj", "{D267D6FB-6DA5-444F-A628-FC0C3B1C6662}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

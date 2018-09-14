@@ -15,7 +15,7 @@ namespace Sir.HttpServer
             var assemblyPath = Directory.GetCurrentDirectory();
 
 #if DEBUG
-            assemblyPath = Path.Combine(Directory.GetCurrentDirectory(), "bin\\Debug\\netcoreapp2.0");
+            assemblyPath = Path.Combine(Directory.GetCurrentDirectory(), "bin\\Debug\\netcoreapp2.1");
 #endif
 
             var files = Directory.GetFiles(assemblyPath, "*.plugin.dll");
