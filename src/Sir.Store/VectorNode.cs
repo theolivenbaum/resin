@@ -88,6 +88,9 @@ namespace Sir.Store
 
             while (cursor != null)
             {
+                if (cursor.PostingsOffset < 0)
+                    break;
+
                 var angle = node.TermVector.CosAngle(cursor.TermVector);
 
                 if (angle > FoldAngle)

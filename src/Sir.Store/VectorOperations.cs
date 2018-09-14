@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -13,11 +14,8 @@ namespace Sir.Store
 
             foreach (var kvp in vec)
             {
-                var key = BitConverter.GetBytes(kvp.Key);
-                var val = new byte[] { kvp.Value };
-
-                stream.Write(key, 0, key.Length);
-                stream.Write(val, 0, val.Length);
+                stream.Write(BitConverter.GetBytes(kvp.Key), 0, sizeof(int));
+                stream.WriteByte(kvp.Value);
             }
 
             return pos;
@@ -116,60 +114,31 @@ namespace Sir.Store
         {
             if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException();
 
-            var vec = word.ToCharVector();
-            return vec;
-        }
-
-        public static string[] ToTriGrams(this string word)
-        {
-            if (word.Length == 0) throw new ArgumentException();
-            if (word.Length < 3) return new string[] { word };
-
-            var result = new string[word.Length - 1];
-            for (int i = 1; i < word.Length; i++)
-            {
-                result[i - 1] = new string(new[] { word[0], word[i] });
-            }
-            return result;
-        }
-
-        public static IEnumerable<string> ToBiGrams(this IEnumerable<string> words)
-        {
-            string w = null;
-            var count = 0;
-
-            foreach (var word in words)
-            {
-                if (w == null)
-                {
-                    w = word;
-                }
-                else
-                {
-                    yield return string.Join(' ', w, word);
-                    w = word;
-                }
-                count++;
-            }
-
-            if (count == 1) yield return w;
+           return word.ToCharVector();
         }
 
         public static SortedList<int, byte> ToCharVector(this string word)
         {
             var vec = new SortedList<int, byte>();
-            var unicodeChars = word.ToCharArray();
+            TextElementEnumerator charEnum = StringInfo.GetTextElementEnumerator(word);
 
-            for (int i = 0; i < unicodeChars.Length; i++)
+            while (charEnum.MoveNext())
             {
-                var c = Convert.ToInt32(unicodeChars[i]);
-                if (vec.ContainsKey(c))
+                var element = charEnum.GetTextElement().ToCharArray();
+                int codePoint = 0;
+
+                foreach (var c in element)
                 {
-                    vec[c] += 1;
+                    codePoint += c;
+                }
+
+                if (vec.ContainsKey(codePoint))
+                {
+                    vec[codePoint] += 1;
                 }
                 else
                 {
-                    vec[c] = 1;
+                    vec[codePoint] = 1;
                 }
             }
             return vec;

@@ -32,7 +32,7 @@ namespace Sir.HttpServer.Controllers
 
             if (!query.Contains(":"))
             {
-                query = string.Format("title:{0}\nbody:{0}\nurl:{0}", query);
+                query = string.Format("title:{0}\nbody:{0}", query);
             }
 
             var timer = new Stopwatch();
