@@ -18,6 +18,10 @@ Each node carries as their payload a list of document references.
 
 This model works excellent with fuzzy/prefix/suffix queries and especially well with phrases that appromixate each other.
 
+### Fast reader, slow eater
+
+Compared to other full-text search indexes, Resin is a very fast reader but a slow writer.
+
 ### API
 
 #### API write
