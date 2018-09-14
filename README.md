@@ -6,17 +6,17 @@
 
 ## What is this?
 
-A 16-bit wide vector-space model search engine with HTTP API and programmable read/write pipelines.
+A 32-bit wide vector-space model search engine with HTTP API and programmable read/write pipelines.
 
 ### Vector-space model
 
-To provide full-text search words and phrases extracted from documents are mapped to a 65k dimensional vector-space that form clusters of syntactically similar "bag-of-chars". 
+To provide full-text search words and phrases extracted from documents are mapped to a 2 billion dimensional vector-space that form clusters of syntactically similar "bag-of-chars". 
 
 On disk and in-memory this model is represented as a binary tree ([VectorNode](src/Sir.Store/VectorNode.cs)).
 
 Each node carries as their payload a list of document references.
 
-This model works well with fuzzy/prefix/suffix queries and with phrases that appromixate each other.
+This model works excellent with fuzzy/prefix/suffix queries and especially well with phrases that appromixate each other.
 
 ### API
 
