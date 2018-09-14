@@ -10,7 +10,7 @@ A 32-bit wide vector-space model search engine with HTTP API and programmable re
 
 ### Vector-space model
 
-To provide full-text search words and phrases extracted from documents are mapped to a 2 billion dimensional vector-space that form clusters of syntactically similar "bag-of-chars". 
+To provide full-text search words and phrases are extracted from documents and mapped to a 2 billion dimensional vector-space that form clusters of syntactically similar "bag-of-chars", a language model. 
 
 On disk and in-memory this model is represented as a binary tree ([VectorNode](src/Sir.Store/VectorNode.cs)).
 
