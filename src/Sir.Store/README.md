@@ -1,6 +1,6 @@
 # Sir.Store
 
-Full-text search framework with a 16-bit vector space index. 
+Full-text search framework with 32-bit vector space indexing. 
 
 Uses a document storage model. 
 
