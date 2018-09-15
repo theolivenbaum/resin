@@ -9,7 +9,7 @@ namespace Sir
         private static object Sync = new object();
         private static ProducerConsumerQueue<(StreamWriter w, string s)> _queue = new ProducerConsumerQueue<(StreamWriter w, string s)>(Consume);
 
-        private static long FileTimeStamp { get; }
+        private static long FileTimeStamp { get; } = DateTime.Now.ToBinary();
 
         private static void Consume((StreamWriter w, string s) obj)
         {
@@ -42,11 +42,6 @@ namespace Sir
 
                 return new StreamWriter(File.Open(fn, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
             }
-        }
-
-        static Logging()
-        {
-            FileTimeStamp = DateTime.Now.ToBinary();
         }
     }
 }
