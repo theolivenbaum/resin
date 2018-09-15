@@ -2,7 +2,7 @@
   "profiles": {
     "Sir.DbUtil": {
       "commandName": "Project",
-      "commandLineArgs": "reindex C:\\projects\\resin\\src\\Sir.HttpServer\\App_Data 100"
+      "commandLineArgs": "load C:\\projects\\resin\\src\\Sir.HttpServer\\App_Data www 0 20000 20000"
     }
   }
 }

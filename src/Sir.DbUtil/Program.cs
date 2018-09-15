@@ -10,27 +10,34 @@ namespace Sir.DbUtil
 {
     class Program
     {
+        private static StreamWriter _log;
+
         static void Main(string[] args)
         {
+            Console.WriteLine("parsing command: {0}", args);
+
+            _log = Logging.CreateWriter("dbutil");
+
+            Logging.SendToConsole = true;
+
             var command = args[0].ToLower();
 
-            if (command == "reindex")
+            if (command == "load")
             {
-                Reindex(args[1], int.Parse(args[2]));
+                Load(args[1], args[2], int.Parse(args[3]), int.Parse(args[4]), int.Parse(args[5]));
             }
             Console.WriteLine("done");
             Console.Read();
         }
 
-        private static void Reindex(string dir, int batchSize)
+        private static void Load(string dir, string collection, int skip, int take, int batchSize)
         {
             var timer = new Stopwatch();
-            var batchTimer = new Stopwatch();
             timer.Start();
 
             var files = Directory.GetFiles(dir, "*.docs");
-
-            Console.WriteLine("re-indexing process found {0} document files", files.Length);
+            var sessionFactory = new LocalStorageSessionFactory(dir, new LatinTokenizer());
+            var colId = collection.ToHash();
 
             foreach (var docFileName in files)
             {
@@ -39,23 +46,44 @@ namespace Sir.DbUtil
 
                 var collectionId = ulong.Parse(name[0]);
 
-                using (var readSession = new DocumentReadSession(collectionId, new LocalStorageSessionFactory(dir, new LatinTokenizer())))
+                if (collectionId == colId)
                 {
-                    foreach (var batch in readSession.ReadDocs().Batch(batchSize))
+                    using (var readSession = new DocumentReadSession(collectionId, sessionFactory))
                     {
-                        batchTimer.Restart();
+                        var docs = readSession.ReadDocs();
 
-                        using (var writeSession = new LocalStorageSessionFactory(dir, new LatinTokenizer()).CreateIndexSession(collectionId))
+                        if (skip > 0)
                         {
+                            docs = docs.Skip(skip);
+                        }
+
+                        if (take > 0)
+                        {
+                            docs = docs.Take(take);
+                        }
+
+                        var writeTimer = new Stopwatch();
+                        foreach (var batch in docs.Batch(batchSize))
+                        {
+                            writeTimer.Restart();
+
                             var job = new AnalyzeJob(collectionId, batch);
 
-                            writeSession.Write(job);
+                            using (var indexSession = sessionFactory.CreateIndexSession(collectionId))
+                            {
+                                indexSession.Write(job);
+                            }
+
+                            _log.Log(string.Format("indexed {0} docs in {1}", batchSize, writeTimer.Elapsed));
+
+                            sessionFactory.LoadIndex();
                         }
-                        Console.WriteLine("wrote batch to {0} in {1}", collectionId, batchTimer.Elapsed);
                     }
+                    break;
                 }
             }
-            Console.WriteLine("rebuilt {0} indexes in {1}", files.Length, timer.Elapsed);
+
+            _log.Log(string.Format("writing index took {0}", timer.Elapsed));
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -56,6 +57,92 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
+        private void Write(IDictionary doc, Dictionary<long, HashSet<(ulong docId, string token)>> columns)
+        {
+            var docId = (ulong)doc["__docid"];
+
+            foreach (var obj in doc.Keys)
+            {
+                var key = (string)obj;
+
+                if (key.StartsWith("__"))
+                    continue;
+
+                var keyHash = key.ToHash();
+                var keyId = SessionFactory.GetKeyId(keyHash);
+
+                HashSet<(ulong docId, string token)> column;
+                if (!columns.TryGetValue(keyId, out column))
+                {
+                    column = new HashSet<(ulong docId, string token)>();
+                    columns.Add(keyId, column);
+                }
+
+                var val = (IComparable)doc[obj];
+                var str = val as string;
+
+                if (str == null || key[0] == '_')
+                {
+                    var v = val.ToString();
+
+                    if (!string.IsNullOrWhiteSpace(v))
+                    {
+                        column.Add((docId, v));
+                    }
+                }
+                else
+                {
+                    foreach (var token in _tokenizer.Tokenize(str))
+                    {
+                        column.Add((docId, token));
+                    }
+                }
+            }
+        }
+
+        public void Write(IDictionary doc)
+        {
+            try
+            {
+                var columns = new Dictionary<long, HashSet<(ulong docId, string token)>>();
+
+                Write(doc, columns);
+
+                foreach (var column in columns)
+                {
+                    var keyId = column.Key;
+
+                    VectorNode ix;
+                    if (!_dirty.TryGetValue(keyId, out ix))
+                    {
+                        ix = GetIndex(keyId);
+
+                        if (ix == null)
+                        {
+                            ix = new VectorNode();
+                            //SessionFactory.AddIndex(CollectionId, keyId, ix);
+                        }
+                        _dirty.Add(keyId, ix);
+                    }
+                }
+
+                Parallel.ForEach(columns, column =>
+                {
+                    var keyId = column.Key;
+                    var tokens = column.Value;
+                    var ix = _dirty[keyId];
+
+                    Build(keyId, ix, tokens);
+                });
+            }
+            catch (Exception ex)
+            {
+                _log.Log(ex);
+
+                throw;
+            }
+        }
+
         public void Write(AnalyzeJob job)
         {
             try
@@ -70,45 +157,7 @@ namespace Sir.Store
                 {
                     docCount++;
 
-                    var docId = (ulong)doc["__docid"];
-
-                    foreach (var obj in doc.Keys)
-                    {
-                        var key = (string)obj;
-
-                        if (key.StartsWith("__"))
-                            continue;
-
-                        var keyHash = key.ToHash();
-                        var keyId = SessionFactory.GetKeyId(keyHash);
-
-                        HashSet<(ulong docId, string token)> column;
-                        if (!columns.TryGetValue(keyId, out column))
-                        {
-                            column = new HashSet<(ulong docId, string token)>();
-                            columns.Add(keyId, column);
-                        }
-
-                        var val = (IComparable)doc[obj];
-                        var str = val as string;
-
-                        if (str == null || key[0] == '_')
-                        {
-                            var v = val.ToString();
-
-                            if (!string.IsNullOrWhiteSpace(v))
-                            {
-                                column.Add((docId, v));
-                            }
-                        }
-                        else
-                        {
-                            foreach (var token in _tokenizer.Tokenize(str))
-                            {
-                                column.Add((docId, token));
-                            }
-                        }
-                    }
+                    Write(doc, columns);
                 }
 
                 _log.Log(string.Format("analyzed {0} docs in {1}", docCount, timer.Elapsed));
@@ -171,11 +220,6 @@ namespace Sir.Store
             _log.Log(string.Format("added {0} nodes to column {1}.{2} in {3}. {4}",
                 count, CollectionId, keyId, timer.Elapsed, index.Size()));
         }
-
-        //private void Serialize((long keyId, VectorNode node) job)
-        //{
-        //    Serialize(job.keyId, job.node);
-        //}
 
         private void Serialize(long keyId, VectorNode node)
         {

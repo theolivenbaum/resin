@@ -9,12 +9,17 @@ namespace Sir
         private static object Sync = new object();
         private static ProducerConsumerQueue<(StreamWriter w, string s)> _queue = new ProducerConsumerQueue<(StreamWriter w, string s)>(Consume);
 
-        private static long FileTimeStamp { get; } = DateTime.Now.ToBinary();
+        public static bool SendToConsole { get; set; }
 
         private static void Consume((StreamWriter w, string s) obj)
         {
             obj.w.WriteLine(obj.s);
             obj.w.Flush();
+
+            if (SendToConsole)
+            {
+                Console.WriteLine(obj.s);
+            }
         }
 
         public static void Log(this StreamWriter writer, object message)
@@ -38,7 +43,7 @@ namespace Sir
                     Directory.CreateDirectory(logDir);
                 }
 
-                var fn = Path.Combine(logDir, string.Format("{0}{1}.log", name, FileTimeStamp));
+                var fn = Path.Combine(logDir, string.Format("{0}.log", name));
 
                 return new StreamWriter(File.Open(fn, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
             }
