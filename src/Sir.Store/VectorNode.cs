@@ -342,61 +342,79 @@ namespace Sir.Store
         public static VectorNode Deserialize(Stream indexStream, Stream vectorStream)
         {
             const int nodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(byte);
-            var buf = new byte[nodeSize];
-            var read = indexStream.Read(buf, 0, buf.Length);
-
-            if (read < nodeSize)
-            {
-                throw new InvalidDataException();
-            }
-
-            // Deserialize node
-            var angle = BitConverter.ToSingle(buf, 0);
-            var vecOffset = BitConverter.ToInt64(buf, sizeof(float));
-            var postingsOffset = BitConverter.ToInt64(buf, sizeof(float) + sizeof(long));
-            var vectorCount = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long));
-            var terminator = buf[nodeSize - 1];
-
-            // Deserialize term vector
             const int kvpSize = sizeof(int) + sizeof(byte);
-            var vec = new SortedList<int, byte>();
-            var vecBuf = new byte[vectorCount * kvpSize];
 
-            vectorStream.Seek(vecOffset, SeekOrigin.Begin);
-            vectorStream.Read(vecBuf, 0, vecBuf.Length);
+            var buf = new byte[nodeSize];
+            int read = 0;
+            VectorNode root = null;
+            VectorNode cursor = null;
+            var tail = new Stack<VectorNode>();
+            Byte terminator = Byte.MaxValue;
 
-            var offs = 0;
-
-            for (int i = 0; i < vectorCount; i++)
+            while ((read = indexStream.Read(buf, 0, nodeSize)) == nodeSize)
             {
-                var key = BitConverter.ToChar(vecBuf, offs);
-                var val = vecBuf[offs + sizeof(int)];
+                // Deserialize node
+                var angle = BitConverter.ToSingle(buf, 0);
+                var vecOffset = BitConverter.ToInt64(buf, sizeof(float));
+                var postingsOffset = BitConverter.ToInt64(buf, sizeof(float) + sizeof(long));
+                var vectorCount = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long));
 
-                vec.Add(key, val);
+                // Deserialize term vector
+                var vec = new SortedList<int, byte>();
+                var vecBuf = new byte[vectorCount * kvpSize];
 
-                offs += kvpSize;
+                vectorStream.Seek(vecOffset, SeekOrigin.Begin);
+                vectorStream.Read(vecBuf, 0, vecBuf.Length);
+
+                var offs = 0;
+
+                for (int i = 0; i < vectorCount; i++)
+                {
+                    var key = BitConverter.ToInt32(vecBuf, offs);
+                    var val = vecBuf[offs + sizeof(int)];
+
+                    vec.Add(key, val);
+
+                    offs += kvpSize;
+                }
+
+                // Create node
+                var node = new VectorNode(vec);
+                node.Angle = angle;
+                node.PostingsOffset = postingsOffset;
+                node.VecOffset = vecOffset;
+
+                if (root == null)
+                {
+                    root = node;
+                    cursor = node;
+                }
+                else
+                {
+                    if (terminator == 0)
+                    {
+                        cursor.Left = node;
+                        tail.Push(cursor);
+                    }
+                    else if (terminator == 1)
+                    {
+                        cursor.Left = node;
+                    }
+                    else if (terminator == 2)
+                    {
+                        cursor.Right = node;
+                    }
+                    else
+                    {
+                        tail.Pop().Right = node;
+                    }
+                }
+
+                cursor = node;
+                terminator = buf[nodeSize - 1];
             }
 
-            var node = new VectorNode(vec);
-            node.Angle = angle;
-            node.PostingsOffset = postingsOffset;
-            node.VecOffset = vecOffset;
-
-            if (terminator == 0)
-            {
-                node.Left = Deserialize(indexStream, vectorStream);
-                node.Right = Deserialize(indexStream, vectorStream);
-            }
-            else if (terminator == 1)
-            {
-                node.Left = Deserialize(indexStream, vectorStream);
-            }
-            else if (terminator == 2)
-            {
-                node.Right = Deserialize(indexStream, vectorStream);
-            }
-
-            return node;
+            return root;
         }
 
         public int Depth()

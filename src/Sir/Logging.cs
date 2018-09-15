@@ -6,8 +6,10 @@ namespace Sir
 {
     public static class Logging
     {
-        private static object _sync = new object();
+        private static object Sync = new object();
         private static ProducerConsumerQueue<(StreamWriter w, string s)> _queue = new ProducerConsumerQueue<(StreamWriter w, string s)>(Consume);
+
+        private static long FileTimeStamp { get; }
 
         private static void Consume((StreamWriter w, string s) obj)
         {
@@ -27,22 +29,24 @@ namespace Sir
 
         public static StreamWriter CreateWriter(string name)
         {
-            lock (_sync)
+            lock (Sync)
             {
-                return new StreamWriter(File.Open(name + ".log", FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
+                var logDir = Path.Combine(Directory.GetCurrentDirectory(), "log");
+
+                if (!Directory.Exists(logDir))
+                {
+                    Directory.CreateDirectory(logDir);
+                }
+
+                var fn = Path.Combine(logDir, string.Format("{0}{1}.log", name, FileTimeStamp));
+
+                return new StreamWriter(File.Open(fn, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
             }
         }
 
         static Logging()
         {
-            foreach (var file in Directory.GetFiles(Directory.GetCurrentDirectory(), "*.log"))
-            {
-                try
-                {
-                    File.Delete(file);
-                }
-                catch { }
-            }
+            FileTimeStamp = DateTime.Now.ToBinary();
         }
     }
 }
