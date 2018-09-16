@@ -56,23 +56,23 @@ namespace Sir.Store
             return keys;
         }
 
-        public void SerializeIndex()
-        {
-            try
-            {
-                _log.Log("begin serializing index");
+        //public void SerializeIndex()
+        //{
+        //    try
+        //    {
+        //        _log.Log("begin serializing index");
 
-                _index.SerializeTree(Dir);
+        //        _index.SerializeTree(Dir);
 
-                _log.Log("serialized index");
-            }
-            catch (Exception ex)
-            {
-                _log.Log(ex);
+        //        _log.Log("serialized index");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _log.Log(ex);
 
-                throw;
-            }
-        }
+        //        throw;
+        //    }
+        //}
 
         public void LoadIndex()
         {

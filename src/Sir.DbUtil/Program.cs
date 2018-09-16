@@ -38,6 +38,7 @@ namespace Sir.DbUtil
             var files = Directory.GetFiles(dir, "*.docs");
             var sessionFactory = new LocalStorageSessionFactory(dir, new LatinTokenizer());
             var colId = collection.ToHash();
+            var batchNo = 0;
 
             foreach (var docFileName in files)
             {
@@ -74,7 +75,7 @@ namespace Sir.DbUtil
                                 indexSession.Write(job);
                             }
 
-                            _log.Log(string.Format("indexed {0} docs in {1}", batchSize, writeTimer.Elapsed));
+                            _log.Log(string.Format("batch {0} done in {1}", batchNo++, writeTimer.Elapsed));
 
                             sessionFactory.LoadIndex();
                         }

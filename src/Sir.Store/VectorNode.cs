@@ -277,67 +277,76 @@ namespace Sir.Store
 
         public void SerializeTreeAndPayload(Stream indexStream, Stream vectorStream, PagedPostingsWriter postingsWriter)
         {
-            if (VecOffset < 0)
+            foreach (var cursor in All())
             {
-                // this node has never been persisted
-
-                if (_docIds.Count == 0 && Ancestor != null)
+                if (cursor.VecOffset < 0)
                 {
-                    throw new InvalidDataException();
+                    // this node has never been persisted
+
+                    if (cursor._docIds.Count == 0 && cursor.Ancestor != null)
+                    {
+                        throw new InvalidDataException();
+                    }
+
+                    var ids = cursor._docIds.ToArray();
+                    cursor._docIds.Clear();
+
+                    cursor.PostingsOffset = postingsWriter.Write(ids);
+                    cursor.VecOffset = cursor.TermVector.Serialize(vectorStream);
+                }
+                else
+                {
+                    if (cursor._docIds.Count > 0)
+                    {
+                        // this node is dirty
+
+                        var ids = cursor._docIds.ToArray();
+                        cursor._docIds.Clear();
+
+                        postingsWriter.Write(cursor.PostingsOffset, ids);
+                    }
                 }
 
-                var ids = _docIds.ToArray();
-                _docIds.Clear();
-
-                PostingsOffset = postingsWriter.Write(ids);
-                VecOffset = TermVector.Serialize(vectorStream);
-            }
-            else
-            {
-                if (_docIds.Count > 0)
+                foreach (var buf in cursor.ToStream())
                 {
-                    // this node is dirty
-
-                    var ids = _docIds.ToArray();
-                    _docIds.Clear();
-
-                    postingsWriter.Write(PostingsOffset, ids);
+                    indexStream.Write(buf, 0, buf.Length);
                 }
-            }
 
-            foreach (var buf in ToStream())
-            {
-                indexStream.Write(buf, 0, buf.Length);
-            }
+                //if (cursor.Left != null)
+                //{
+                //    cursor = cursor.Left;
+                //}
 
-            if (Left != null)
-            {
-                Left.SerializeTreeAndPayload(indexStream, vectorStream, postingsWriter);
-            }
+                //if (cursor.Right != null)
+                //{
+                //    stack.Push(cursor.Right);
+                //}
 
-            if (Right != null)
-            {
-                Right.SerializeTreeAndPayload(indexStream, vectorStream, postingsWriter);
+                //else
+                //{
+                //    if (stack.Count > 0)
+                //        cursor = stack.Pop();
+                //}
             }
         }
 
-        public void SerializeTree(Stream indexStream)
-        {
-            foreach (var buf in ToStream())
-            {
-                indexStream.Write(buf, 0, buf.Length);
-            }
+        //public void SerializeTree(Stream indexStream)
+        //{
+        //    foreach (var buf in ToStream())
+        //    {
+        //        indexStream.Write(buf, 0, buf.Length);
+        //    }
 
-            if (Left != null)
-            {
-                Left.SerializeTree(indexStream);
-            }
+        //    if (Left != null)
+        //    {
+        //        Left.SerializeTree(indexStream);
+        //    }
 
-            if (Right != null)
-            {
-                Right.SerializeTree(indexStream);
-            }
-        }
+        //    if (Right != null)
+        //    {
+        //        Right.SerializeTree(indexStream);
+        //    }
+        //}
 
         public static VectorNode Deserialize(Stream indexStream, Stream vectorStream)
         {
