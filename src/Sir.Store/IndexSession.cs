@@ -74,7 +74,7 @@ namespace Sir.Store
                 HashSet<(ulong docId, string token)> column;
                 if (!columns.TryGetValue(keyId, out column))
                 {
-                    column = new HashSet<(ulong docId, string token)>();
+                    column = new HashSet<(ulong docId, string token)>(new TokenComparer());
                     columns.Add(keyId, column);
                 }
 
@@ -285,6 +285,27 @@ namespace Sir.Store
             }
 
             base.Dispose();
+        }
+    }
+
+    internal class TokenComparer : IEqualityComparer<(ulong, string)>
+    {
+        public bool Equals((ulong, string) x, (ulong, string) y)
+        {
+            if (ReferenceEquals(x, y)) return true;
+
+            return x.Item1 == y.Item1 && x.Item2 == y.Item2;
+        }
+
+        public int GetHashCode((ulong, string) obj)
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = 17;
+                hash = hash * 23 + obj.Item1.GetHashCode();
+                hash = hash * 23 + obj.Item2.GetHashCode();
+                return hash;
+            }
         }
     }
 }
