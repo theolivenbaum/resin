@@ -277,76 +277,58 @@ namespace Sir.Store
 
         public void SerializeTreeAndPayload(Stream indexStream, Stream vectorStream, PagedPostingsWriter postingsWriter)
         {
-            foreach (var cursor in All())
+            var node = this;
+            var stack = new Stack<VectorNode>();
+
+            while (node != null)
             {
-                if (cursor.VecOffset < 0)
+                if (node.VecOffset < 0)
                 {
                     // this node has never been persisted
 
-                    if (cursor._docIds.Count == 0 && cursor.Ancestor != null)
+                    if (node._docIds.Count == 0 && node.Ancestor != null)
                     {
                         throw new InvalidDataException();
                     }
 
-                    var ids = cursor._docIds.ToArray();
-                    cursor._docIds.Clear();
+                    var ids = node._docIds.ToArray();
+                    node._docIds.Clear();
 
-                    cursor.PostingsOffset = postingsWriter.Write(ids);
-                    cursor.VecOffset = cursor.TermVector.Serialize(vectorStream);
+                    node.PostingsOffset = postingsWriter.Write(ids);
+                    node.VecOffset = node.TermVector.Serialize(vectorStream);
                 }
                 else
                 {
-                    if (cursor._docIds.Count > 0)
+                    if (node._docIds.Count > 0)
                     {
                         // this node is dirty
 
-                        var ids = cursor._docIds.ToArray();
-                        cursor._docIds.Clear();
+                        var ids = node._docIds.ToArray();
+                        node._docIds.Clear();
 
-                        postingsWriter.Write(cursor.PostingsOffset, ids);
+                        postingsWriter.Write(node.PostingsOffset, ids);
                     }
                 }
 
-                foreach (var buf in cursor.ToStream())
+                foreach (var buf in node.ToStream())
                 {
                     indexStream.Write(buf, 0, buf.Length);
                 }
 
-                //if (cursor.Left != null)
-                //{
-                //    cursor = cursor.Left;
-                //}
+                if (node.Right != null)
+                {
+                    stack.Push(node.Right);
+                }
 
-                //if (cursor.Right != null)
-                //{
-                //    stack.Push(cursor.Right);
-                //}
+                node = node.Left;
 
-                //else
-                //{
-                //    if (stack.Count > 0)
-                //        cursor = stack.Pop();
-                //}
+                if (node == null)
+                {
+                    if (stack.Count > 0)
+                        node = stack.Pop();
+                }
             }
         }
-
-        //public void SerializeTree(Stream indexStream)
-        //{
-        //    foreach (var buf in ToStream())
-        //    {
-        //        indexStream.Write(buf, 0, buf.Length);
-        //    }
-
-        //    if (Left != null)
-        //    {
-        //        Left.SerializeTree(indexStream);
-        //    }
-
-        //    if (Right != null)
-        //    {
-        //        Right.SerializeTree(indexStream);
-        //    }
-        //}
 
         public static VectorNode Deserialize(Stream indexStream, Stream vectorStream)
         {
