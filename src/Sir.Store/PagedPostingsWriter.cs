@@ -99,73 +99,6 @@ namespace Sir.Store
             }
         }
 
-        private void Write(long offset, ulong docId)
-        {
-            if (_stream.Position != offset)
-            {
-                _stream.Seek(offset, SeekOrigin.Begin);
-            }
-
-            _stream.Read(_pageBuf, 0, PAGE_SIZE);
-
-            int pos = 0;
-            ulong id = 0;
-
-            while (pos < SLOTS_PER_PAGE)
-            {
-                id = BitConverter.ToUInt64(_pageBuf, pos * (BLOCK_SIZE));
-
-                if (id == 0)
-                {
-                    // Zero means "no data". We can start writing into the page at the current position.
-                    break;
-                }
-
-                pos++;
-            }
-
-            if (pos == SLOTS_PER_PAGE)
-            {
-                // Page is full but luckily the last word 
-                // is the offset for the next page.
-                // Jump to that location and continue writing there.
-
-                long nextOffset = Convert.ToInt64(id);
-                Write(nextOffset, docId);
-            }
-            else if (pos == SLOTS_PER_PAGE - 2)
-            {
-                // Only two slots left in the page.
-                // Fill the penultimate with a docId, 
-                // allocate a new page and
-                // store the offset of the new page
-                // in the last slot.
-
-                var posOfPenultimate = offset + (pos * BLOCK_SIZE);
-
-                _stream.Seek(posOfPenultimate, SeekOrigin.Begin);
-                _stream.Write(BitConverter.GetBytes(docId), 0, sizeof(ulong));
-                _stream.Write(_aliveStatus, 0, sizeof(byte));
-
-                var nextOffset = AllocatePage();
-                var posOfUltimate = posOfPenultimate + BLOCK_SIZE;
-
-                _stream.Seek(posOfUltimate, SeekOrigin.Begin);
-
-                _stream.Write(BitConverter.GetBytes(nextOffset), 0, sizeof(long));
-            }
-            else
-            {
-                // There was a vacant slot in the page.
-
-                var o = offset + (pos * BLOCK_SIZE);
-
-                _stream.Seek(o, SeekOrigin.Begin);
-                _stream.Write(BitConverter.GetBytes(docId), 0, sizeof(ulong));
-                _stream.Write(_aliveStatus, 0, sizeof(byte));
-            }
-        }
-
         public void Write(long offset, IList<ulong> docIds, int docIndex = 0)
         {
             if (_stream.Position != offset)
@@ -267,35 +200,5 @@ namespace Sir.Store
             return offset;
 
         }
-
-        //public long Write(IList<ulong> docIds)
-        //{
-        //    double sizeOfPayload = docIds.Count * BLOCK_SIZE;
-        //    double numOfPages = sizeOfPayload / PAGE_SIZE;
-        //    int num = Convert.ToInt32(numOfPages);
-
-        //    if (num < numOfPages)
-        //    {
-        //        num++;
-        //    }
-
-        //    long offset;
-        //    for (int i = 0; i < num; i++)
-        //    {
-        //        if (i == 0)
-        //        {
-        //            offset = AllocatePage();
-        //        }
-        //        else
-        //        {
-        //            AllocatePage();
-        //        }
-        //    }
-
-        //    WriteOnAllocated(offset, docIds, 0);
-
-        //    return offset;
-
-        //}
     }
 }
