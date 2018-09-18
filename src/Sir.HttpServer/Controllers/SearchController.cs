@@ -24,16 +24,13 @@ namespace Sir.HttpServer.Controllers
         {
             if (string.IsNullOrWhiteSpace(q)) return View();
 
-            string query = q.Trim();
+            string query = q.Trim().Replace(":", string.Empty);
             string collectionId = cid ?? "www";
             string htmlEncodedQuery = WebUtility.HtmlEncode(query);
 
             ViewData["q"] = query;
 
-            if (!query.Contains(":"))
-            {
-                query = string.Format("title:{0}\nbody:{0}", query);
-            }
+            var expandedQuery = string.Format("title:{0}\nbody:{0}", query);
 
             var timer = new Stopwatch();
             timer.Start();
@@ -47,12 +44,15 @@ namespace Sir.HttpServer.Controllers
                 throw new System.NotSupportedException();
             }
 
-            var parsedQuery = queryParser.Parse(query, tokenizer);
+            var parsedQuery = queryParser.Parse(expandedQuery, tokenizer);
             parsedQuery.CollectionId = collectionId.ToHash();
 
             long total;
-            var documents = reader.Read(parsedQuery, 10, out total)
-                .Select(x => new SearchResultModel { Document = x });
+            var documents = reader.Read(parsedQuery, out total)
+                .Select(x => new SearchResultModel { Document = x })
+                .Take(100);
+
+
 
             ViewData["collectionName"] = collectionId;
             ViewData["time_ms"] = timer.ElapsedMilliseconds;

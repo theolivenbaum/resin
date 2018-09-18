@@ -6,5 +6,6 @@ namespace Sir
     public interface IReader : IPlugin
     {
         IEnumerable<IDictionary> Read(Query query, int take, out long total);
+        IEnumerable<IDictionary> Read(Query query, out long total);
     }
 }

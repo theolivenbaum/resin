@@ -7,7 +7,7 @@ using System.Linq;
 namespace Sir.Store
 {
     /// <summary>
-    /// Read from the document store.
+    /// Query a document collection.
     /// </summary>
     public class Reader : IReader
     {
@@ -53,7 +53,32 @@ namespace Sir.Store
 
                 throw;
             }
-            
+        }
+
+        public IEnumerable<IDictionary> Read(Query query, out long total)
+        {
+            try
+            {
+                ulong keyHash = query.Term.Key.ToString().ToHash();
+                long keyId;
+
+                if (_sessionFactory.TryGetKeyId(keyHash, out keyId))
+                {
+                    using (var session = _sessionFactory.CreateReadSession(query.CollectionId))
+                    {
+                        return session.Read(query, out total).ToList();
+                    }
+                }
+
+                total = 0;
+                return Enumerable.Empty<IDictionary>();
+            }
+            catch (Exception ex)
+            {
+                _log.Log(string.Format("read failed: {0} {1}", query, ex));
+
+                throw;
+            }
         }
     }
 }
