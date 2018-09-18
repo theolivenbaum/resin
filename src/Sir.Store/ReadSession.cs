@@ -46,74 +46,20 @@ namespace Sir.Store
 
         public IEnumerable<IDictionary> Read(Query query, int take, out long total)
         {
-            IDictionary<ulong, float> result = DoRead(query);
+            IDictionary<ulong, float> result = null;
 
-            if (result == null)
-            {
-                total = 0;
-                return Enumerable.Empty<IDictionary>();
-            }
-            else
-            {
-                var all = result.OrderByDescending(x => x.Value).ToList();
-
-                total = all.Count;
-
-                var scope = all
-                    .Take(take)
-                    .ToDictionary(x => x.Key, x => x.Value);
-
-                return ReadDocs(scope);
-            }
-        }
-
-        public IEnumerable<IDictionary> Read(Query query, out long total)
-        {
-            // Get doc IDs and their score
-            IDictionary<ulong, float> result = DoRead(query);
-
-            if (result == null)
-            {
-                total = 0;
-                return Enumerable.Empty<IDictionary>();
-            }
-            else
-            {
-                var all = result.OrderByDescending(x => x.Value).ToList();
-
-                total = all.Count;
-
-                var topScore = all[0].Value;
-                var scope = new List<KeyValuePair<ulong, float>>();
-
-                foreach (var doc in all)
-                {
-                    if (doc.Value == topScore)
-                    {
-                        scope.Add(doc);
-                    }
-                }
-
-                return ReadDocs(scope);
-            }
-        }
-
-        public IDictionary<ulong, float> DoRead(Query query)
-        {
             try
             {
-                IDictionary<ulong, float> result = null;
-
-                var cursor = query;
-
-                while (cursor != null)
+                while (query != null)
                 {
-                    var keyHash = cursor.Term.Key.ToString().ToHash();
+                    _log.Log("executing query {0}", query.Term);
+
+                    var keyHash = query.Term.Key.ToString().ToHash();
                     var ix = GetIndex(keyHash);
 
                     if (ix != null)
                     {
-                        var match = ix.ClosestMatch(cursor.Term.Value.ToString());
+                        var match = ix.ClosestMatch(query.Term.Value.ToString());
 
                         if (match.Highscore > 0)
                         {
@@ -125,13 +71,16 @@ namespace Sir.Store
                             var docIds = _postingsReader.Read(match.PostingsOffset)
                                 .ToDictionary(x => x, y => match.Highscore);
 
+                            //var docIds = match.DocIds
+                            //    .ToDictionary(x => x, y => match.Highscore);
+
                             if (result == null)
                             {
                                 result = docIds;
                             }
                             else
                             {
-                                if (cursor.And)
+                                if (query.And)
                                 {
                                     var reduced = new Dictionary<ulong, float>();
 
@@ -147,7 +96,7 @@ namespace Sir.Store
 
                                     result = reduced;
                                 }
-                                else if (cursor.Not)
+                                else if (query.Not)
                                 {
                                     foreach (var id in docIds.Keys)
                                     {
@@ -173,20 +122,35 @@ namespace Sir.Store
                             }
                         }
                     }
-                    cursor = cursor.Next;
+                    query = query.Next;
                 }
-                _log.Log("query {0} matched {1} docs", query.Term, result == null ? 0 : result.Count);
-
-                return result;
             }
             catch (Exception ex)
             {
                 _log.Log(ex);
-                throw;
+            }
+            
+
+            if (result == null)
+            {
+                total = 0;
+                return Enumerable.Empty<IDictionary>();
+            }
+            else
+            {
+                var all = result.OrderByDescending(x => x.Value).ToList();
+
+                total = all.Count;
+
+                var scoped = all
+                    .Take(take)
+                    .ToDictionary(x => x.Key, x => x.Value);
+
+                return ReadDocs(scoped);
             }
         }
-
-        public IEnumerable<IDictionary> ReadDocs(IEnumerable<KeyValuePair<ulong, float>> docs)
+        
+        public IEnumerable<IDictionary> ReadDocs(IDictionary<ulong, float> docs)
         {
             foreach (var d in docs)
             {

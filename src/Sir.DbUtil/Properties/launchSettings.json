@@ -2,7 +2,7 @@
   "profiles": {
     "Sir.DbUtil": {
       "commandName": "Project",
-      "commandLineArgs": "load C:\\projects\\resin\\src\\Sir.HttpServer\\App_Data www 0 10000 10000"
+      "commandLineArgs": "load C:\\projects\\resin\\src\\Sir.HttpServer\\App_Data www 0 2000 1000"
     }
   }
 }
