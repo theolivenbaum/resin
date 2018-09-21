@@ -2,12 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace Sir.Store
 {
     /// <summary>
-    /// Read from the document store.
+    /// Query a document collection.
     /// </summary>
     public class Reader : IReader
     {
@@ -28,7 +27,7 @@ namespace Sir.Store
             _log.Dispose();
         }
 
-        public IEnumerable<IDictionary> Read(Query query, int take, out long total)
+        public IList<IDictionary> Read(Query query, int take, out long total)
         {
             try
             {
@@ -39,12 +38,12 @@ namespace Sir.Store
                 {
                     using (var session = _sessionFactory.CreateReadSession(query.CollectionId))
                     {
-                        return session.Read(query, take, out total).ToList();
+                        return session.Read(query, take, out total);
                     }
                 }
 
                 total = 0;
-                return Enumerable.Empty<IDictionary>();
+                return new IDictionary[0];
 
             }
             catch (Exception ex)
@@ -53,7 +52,32 @@ namespace Sir.Store
 
                 throw;
             }
-            
+        }
+
+        public IList<IDictionary> Read(Query query, out long total)
+        {
+            try
+            {
+                ulong keyHash = query.Term.Key.ToString().ToHash();
+                long keyId;
+
+                if (_sessionFactory.TryGetKeyId(keyHash, out keyId))
+                {
+                    using (var session = _sessionFactory.CreateReadSession(query.CollectionId))
+                    {
+                        return session.Read(query, out total);
+                    }
+                }
+
+                total = 0;
+                return new IDictionary[0];
+            }
+            catch (Exception ex)
+            {
+                _log.Log(string.Format("read failed: {0} {1}", query, ex));
+
+                throw;
+            }
         }
     }
 }

@@ -74,13 +74,13 @@ namespace Sir.Store
             VecOffset = -1;
         }
 
-        public VectorNode ClosestMatch(string word)
+        public VectorNode ClosestMatch(string word, bool skipDirtyNodes = true)
         {
             var node = new VectorNode(word);
-            return ClosestMatch(node);
+            return ClosestMatch(node, skipDirtyNodes);
         }
 
-        public virtual VectorNode ClosestMatch(VectorNode node)
+        public virtual VectorNode ClosestMatch(VectorNode node, bool skipDirtyNodes = true)
         {
             var best = this;
             var cursor = this;
@@ -88,7 +88,7 @@ namespace Sir.Store
 
             while (cursor != null)
             {
-                if (cursor.PostingsOffset < 0)
+                if (skipDirtyNodes && cursor.PostingsOffset < 0)
                     break;
 
                 var angle = node.TermVector.CosAngle(cursor.TermVector);
