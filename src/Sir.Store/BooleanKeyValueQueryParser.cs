@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace Sir.Store
 {
@@ -20,6 +21,11 @@ namespace Sir.Store
 
             foreach (var line in lines)
             {
+                if (line.IndexOf(':', 0, line.Length) < 0)
+                {
+                    throw new ArgumentException("Query is not formatted correctly. A query must define both a key and a value separated by a colon.", nameof(query));
+                }
+
                 var parts = line.Split(':');
                 var key = parts[0];
                 var value = parts[1];

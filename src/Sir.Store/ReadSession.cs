@@ -136,8 +136,6 @@ namespace Sir.Store
         {
             try
             {
-                var timer = new Stopwatch();
-
                 IDictionary<ulong, float> result = null;
 
                 var cursor = query;
@@ -158,54 +156,51 @@ namespace Sir.Store
                                 throw new InvalidDataException(match.ToString());
                             }
 
-                            timer.Restart();
-
-                            var docIds = _postingsReader.Read(match.PostingsOffset);
-
-                            _log.Log("read {0} postings into memory in {1}", docIds.Count, timer.Elapsed);
+                            var docIds = _postingsReader.Read(match.PostingsOffset)
+                                .ToDictionary(x => x, y => match.Highscore);
 
                             if (result == null)
                             {
-                                result = docIds.ToDictionary(x => x, y => match.Highscore);
+                                result = docIds;
                             }
                             else
                             {
                                 if (cursor.And)
                                 {
-                                    var reduced = new Dictionary<ulong, float>();
+                                    var aggregatedResult = new Dictionary<ulong, float>();
 
-                                    foreach (var docId in docIds)
+                                    foreach (var doc in result)
                                     {
                                         float score;
 
-                                        if (result.TryGetValue(docId, out score))
+                                        if (docIds.TryGetValue(doc.Key, out score))
                                         {
-                                            reduced[docId] = score + match.Highscore;
+                                            aggregatedResult[doc.Key] = score + doc.Value;
                                         }
                                     }
 
-                                    result = reduced;
+                                    result = aggregatedResult;
                                 }
                                 else if (cursor.Not)
                                 {
-                                    foreach (var id in docIds)
+                                    foreach (var id in docIds.Keys)
                                     {
                                         result.Remove(id);
                                     }
                                 }
                                 else // Or
                                 {
-                                    foreach (var docId in docIds)
+                                    foreach (var id in docIds)
                                     {
                                         float score;
 
-                                        if (result.TryGetValue(docId, out score))
+                                        if (result.TryGetValue(id.Key, out score))
                                         {
-                                            result[docId] = score + match.Highscore;
+                                            result[id.Key] = score + id.Value;
                                         }
                                         else
                                         {
-                                            result.Add(docId, match.Highscore);
+                                            result.Add(id.Key, id.Value);
                                         }
                                     }
                                 }
@@ -214,7 +209,7 @@ namespace Sir.Store
                     }
                     cursor = cursor.Next;
                 }
-                _log.Log("reduced query {0} to {1} matching docs", query.Term, result == null ? 0 : result.Count);
+                _log.Log("query {0} matched {1} docs", query.Term, result == null ? 0 : result.Count);
 
                 return result;
             }

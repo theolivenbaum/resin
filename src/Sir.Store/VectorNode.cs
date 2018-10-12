@@ -13,7 +13,7 @@ namespace Sir.Store
     public class VectorNode
     {
         public const float IdenticalAngle = 0.98f;
-        public const float FoldAngle = 0.5f;
+        public const float FoldAngle = 0.7f;
 
         private VectorNode _right;
         private VectorNode _left;
@@ -426,7 +426,7 @@ namespace Sir.Store
             var w = new StringBuilder();
             foreach (var c in TermVector)
             {
-                w.Append(c.Key);
+                w.Append((char)c.Key);
             }
             return w.ToString();
         }

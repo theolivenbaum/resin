@@ -14,7 +14,7 @@ namespace Sir.DbUtil
 
         static void Main(string[] args)
         {
-            Console.WriteLine("parsing command: {0}", args);
+            Console.WriteLine("processing command: {0}", string.Join(" ", args));
 
             _log = Logging.CreateWriter("dbutil");
 
@@ -22,15 +22,63 @@ namespace Sir.DbUtil
 
             var command = args[0].ToLower();
 
-            if (command == "load")
+            if (command == "build" && args.Length == 6)
             {
-                Load(args[1], args[2], int.Parse(args[3]), int.Parse(args[4]), int.Parse(args[5]));
+                // example: build C:\projects\resin\src\Sir.HttpServer\App_Data www 0 10000 1000
+
+                BuildIndex(
+                    dir: args[1], 
+                    collection: args[2], 
+                    skip: int.Parse(args[3]), 
+                    take: int.Parse(args[4]), 
+                    batchSize: int.Parse(args[5]));
             }
-            Console.WriteLine("done");
-            Console.Read();
+            else if (command == "query" && args.Length == 3)
+            {
+                // example: query C:\projects\resin\src\Sir.HttpServer\App_Data www
+
+                Query(dir: args[1], collection: args[2]);
+            }
         }
 
-        private static void Load(string dir, string collection, int skip, int take, int batchSize)
+        private static void Query(string dir, string collection)
+        {
+            var tokenizer = new LatinTokenizer();
+            var qp = new BooleanKeyValueQueryParser();
+            var sessionFactory = new LocalStorageSessionFactory(dir, tokenizer);
+
+            while (true)
+            {
+                Console.Write("query>");
+
+                var input = Console.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(input) || input == "q" || input == "quit")
+                {
+                    break;
+                }
+
+                var q = qp.Parse(input, tokenizer);
+
+                using (var session = sessionFactory.CreateReadSession(collection.ToHash()))
+                {
+                    long total;
+                    var docs = session.Read(q, out total);
+
+                    if (docs.Count > 0)
+                    {
+                        var index = 0;
+
+                        foreach (var doc in docs.Take(10))
+                        {
+                            Console.WriteLine("{0} {1} {2}", index++, doc["__score"], doc["title"]);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void BuildIndex(string dir, string collection, int skip, int take, int batchSize)
         {
             var timer = new Stopwatch();
             timer.Start();

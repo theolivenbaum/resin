@@ -72,6 +72,7 @@ namespace Sir.Store
                 var keyId = SessionFactory.GetKeyId(keyHash);
 
                 HashSet<(ulong docId, string token)> column;
+
                 if (!columns.TryGetValue(keyId, out column))
                 {
                     column = new HashSet<(ulong docId, string token)>(new TokenComparer());
@@ -92,7 +93,9 @@ namespace Sir.Store
                 }
                 else
                 {
-                    foreach (var token in _tokenizer.Tokenize(str))
+                    var tokens = _tokenizer.Tokenize(str);
+
+                    foreach (var token in tokens)
                     {
                         column.Add((docId, token));
                     }
@@ -182,14 +185,14 @@ namespace Sir.Store
                     }
                 }
 
-                Parallel.ForEach(columns, column =>
+                foreach(var column in columns)
                 {
                     var keyId = column.Key;
                     var tokens = column.Value;
                     var ix = _dirty[keyId];
 
                     Build(keyId, ix, tokens);
-                });
+                }
             }
             catch (Exception ex)
             {

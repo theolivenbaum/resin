@@ -27,9 +27,44 @@ namespace Sir.Store
 
         public string ContentType => "*";
 
+
+        public IEnumerable<string> TokenizeIntoBigrams(string text)
+        {
+            string item1 = null;
+            string item2 = null;
+
+            foreach (var word in Normalize(text).Split(_delims, StringSplitOptions.None)
+                .Where(x => !string.IsNullOrWhiteSpace(x)))
+            {
+                if (item1 != null && item2 != null)
+                {
+                    yield return string.Join(' ', item1, item2);
+                    item1 = item2;
+                    item2 = word;
+                }
+                else if (item1 == null)
+                {
+                    item1 = word;
+                }
+                else if (item2 == null)
+                {
+                    item2 = word;
+                }
+            }
+
+            if (item1 != null && item2 != null)
+            {
+                yield return string.Join(' ', item1, item2);
+            }
+            else if (item1 != null)
+            {
+                yield return item1;
+            }
+        }
+
         public IEnumerable<string> Tokenize(string text)
         {
-            return Normalize(text).Split(_delims, StringSplitOptions.None)
+            return Normalize(text).Split(_delims, StringSplitOptions.RemoveEmptyEntries)
                 .Where(x => !string.IsNullOrWhiteSpace(x));
         }
 
