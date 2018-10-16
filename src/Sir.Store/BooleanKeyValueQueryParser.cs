@@ -8,9 +8,8 @@ namespace Sir.Store
     /// terms are separated by newline characters. 
     /// Terms may be appended with a + sign (meaning AND), a - sign (meaning NOT) or nothing (meaning OR).
     /// </summary>
-    public class BooleanKeyValueQueryParser : IQueryParser
+    public class BooleanKeyValueQueryParser
     {
-        public string ContentType => "*";
         private static  char[] Operators = new char[] { ' ', '+', '-' };
 
         public Query Parse(string query, ITokenizer tokenizer)
@@ -60,10 +59,6 @@ namespace Sir.Store
             }
 
             return root;
-        }
-        
-        public void Dispose()
-        {
         }
     }
 }

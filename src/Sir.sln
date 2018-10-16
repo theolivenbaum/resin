@@ -18,6 +18,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.StringCompare", "Sir.St
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.DbUtil", "Sir.DbUtil\Sir.DbUtil.csproj", "{D267D6FB-6DA5-444F-A628-FC0C3B1C6662}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sir.Postings", "Sir.Postings\Sir.Postings.csproj", "{5514C8B0-01D2-489C-8632-A30944E51948}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{D267D6FB-6DA5-444F-A628-FC0C3B1C6662}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D267D6FB-6DA5-444F-A628-FC0C3B1C6662}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D267D6FB-6DA5-444F-A628-FC0C3B1C6662}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5514C8B0-01D2-489C-8632-A30944E51948}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5514C8B0-01D2-489C-8632-A30944E51948}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5514C8B0-01D2-489C-8632-A30944E51948}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5514C8B0-01D2-489C-8632-A30944E51948}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

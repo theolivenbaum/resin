@@ -37,7 +37,7 @@ namespace Sir
 
         public T Get<T>() where T : IPlugin
         {
-            return Services<T>("*").FirstOrDefault();
+            return All<T>("*").FirstOrDefault();
         }
 
         public IEnumerable<T> All<T>(string key, bool includeWildcardServices = true) where T : IPlugin

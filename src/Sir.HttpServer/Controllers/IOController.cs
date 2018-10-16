@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,92 +20,65 @@ namespace Sir.HttpServer.Controllers
             _log = Logging.CreateWriter("iocontroller");
         }
 
-        //[HttpDelete("delete/{*collectionId}")]
-        //public async Task<IActionResult> Delete(string collectionId, string q)
-        //{
-        //    var mediaType = Request.ContentType ?? string.Empty;
-        //    var queryParser = _plugins.Get<IQueryParser>(mediaType);
-        //    var reader = _plugins.Get<IReader>();
-        //    var writers = _plugins.All<IWriter>(mediaType).ToList();
-        //    var tokenizer = _plugins.Get<ITokenizer>(mediaType);
-
-        //    if (queryParser == null || writers == null || writers.Count == 0 || tokenizer == null)
-        //    {
-        //        throw new NotSupportedException();
-        //    }
-
-        //    var parsedQuery = queryParser.Parse(q, tokenizer);
-        //    parsedQuery.CollectionId = collectionId.ToHash();
-        //    var oldData = reader.Read(parsedQuery).ToList();
-
-        //    foreach (var writer in writers)
-        //    {
-        //        await Task.Run(() =>
-        //        {
-        //            writer.Remove(collectionId, oldData);
-        //        });
-        //    }
-
-        //    return StatusCode(202); // marked for deletion
-        //}
+        [HttpDelete("delete/{*collectionId}")]
+        public async Task<IActionResult> Delete(string collectionId, string q)
+        {
+            throw new NotImplementedException();
+        }
 
         [HttpPost("{*collectionId}")]
-        public async Task<IActionResult> Post(string collectionId, [FromBody]IEnumerable<IDictionary> payload)
+        public async Task<IActionResult> Post(string collectionId, string id)
         {
             if (collectionId == null)
             {
                 throw new ArgumentNullException(nameof(collectionId));
             }
 
-            if (payload == null)
-            {
-                throw new ArgumentNullException(nameof(collectionId));
-            }
+            var collection = collectionId.ToHash();
+            var writer = _plugins.Get<IWriter>(Request.ContentType);
 
-            var writers = _plugins.All<IWriter>(Request.ContentType).ToList();
-
-            if (writers == null || writers.Count == 0)
+            if (writer == null)
             {
                 return StatusCode(415); // Media type not supported
             }
 
-            foreach (var writer in writers)
+            var payload = Request.Body;
+            long recordId;
+
+            try
             {
-                try
+                var mem = new MemoryStream();
+
+                await payload.CopyToAsync(mem);
+
+                if (id == null)
                 {
-                    await Task.Run(() =>
-                    {
-                        writer.Write(collectionId, payload);
-                    });
+                    recordId = await writer.Write(collection, mem);
                 }
-                catch (Exception ew)
+                else
                 {
-                    throw ew;
+                    recordId = long.Parse(id);
+
+                    writer.Append(collection, recordId, mem);
                 }
             }
+            catch (Exception ew)
+            {
+                throw ew;
+            }
+
             Response.Headers.Add(
-                "Location", new Microsoft.Extensions.Primitives.StringValues(string.Format("/io/{0}", collectionId)));
+                "Location", new Microsoft.Extensions.Primitives.StringValues(string.Format("{0}/io/{1}?id={2}", Request.Host, collectionId, recordId)));
 
             return StatusCode(201); // Created
         }
 
         [HttpGet("{*collectionId}")]
         [HttpPut("{*collectionId}")]
-        public ObjectResult Get(string collectionId, string q)
+        public HttpResponseMessage Get(string collectionId)
         {
-            //TODO: add pagination
-
             var mediaType = Request.ContentType ?? string.Empty;
-
-            if (q == null)
-            {
-                using (var r = new StreamReader(Request.Body))
-                {
-                    q = r.ReadToEnd();
-                }
-            }
-
-            var queryParser = _plugins.Get<IQueryParser>(mediaType);
+            var queryParser = _plugins.Get<IHttpQueryParser>(mediaType);
             var reader = _plugins.Get<IReader>();
             var tokenizer = _plugins.Get<ITokenizer>(mediaType);
 
@@ -114,12 +87,14 @@ namespace Sir.HttpServer.Controllers
                 throw new NotSupportedException();
             }
 
-            var parsedQuery = queryParser.Parse(q, tokenizer);
-            parsedQuery.CollectionId = collectionId.ToHash();
+            var query = queryParser.Parse(collectionId, Request, tokenizer);
+            var result = reader.Read(query);
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
 
-            var payload = reader.Read(parsedQuery, int.MaxValue, out _).ToList();
+            response.Content = new StreamContent(result.Data);
+            response.Content.Headers.ContentType = new MediaTypeHeaderValue(result.MediaType);
 
-            return new ObjectResult(payload);
+            return response;
         }
     }
 }

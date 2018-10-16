@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 
 namespace Sir.Store
 {
@@ -199,6 +200,67 @@ namespace Sir.Store
 
             return offset;
 
+        }
+    }
+
+    public class RemotePostingsWriter
+    {
+        public long Write(IList<ulong> docIds)
+        {
+            var payload = ToStream(docIds);
+            var id = WriteRemote(payload);
+
+            return id;
+        }
+
+        public void Write(long offset, IList<ulong> docIds, int docIndex = 0)
+        {
+            var payload = ToStream(docIds);
+
+            AppendRemote(payload, offset);
+        }
+
+        private void AppendRemote(byte[] payload, long offset)
+        {
+            var request = (HttpWebRequest)WebRequest.Create("https://...");
+            request.ContentType = "application/postings";
+            request.Method = "POST";
+
+            var requestBody = request.GetRequestStream();
+            requestBody.Write(payload, 0, payload.Length);
+
+            request.GetResponse();
+        }
+
+        private long WriteRemote(byte[] payload)
+        {
+            var request = (HttpWebRequest)WebRequest.Create("https://...");
+            request.ContentType = "application/postings";
+            request.Method = "POST";
+
+            var requestBody = request.GetRequestStream();
+            requestBody.Write(payload, 0, payload.Length);
+
+            var response = (HttpWebResponse)request.GetResponse();
+            var locationUri = new Uri(response.Headers["Location"]);
+            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(locationUri.Query);
+            var id = long.Parse(query["id"].ToArray()[0]);
+
+            return id;
+        }
+
+        private byte[] ToStream(IList<ulong> docIds)
+        {
+            var payload = new MemoryStream();
+
+            foreach (var id in docIds)
+            {
+                var buf = BitConverter.GetBytes(id);
+
+                payload.Write(buf, 0, sizeof(ulong));
+            }
+
+            return payload.ToArray();
         }
     }
 }

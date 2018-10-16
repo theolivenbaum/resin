@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace Sir.Store
 {
@@ -27,30 +29,55 @@ namespace Sir.Store
             _log.Dispose();
         }
 
-        public IList<IDictionary> Read(Query query, int take, out long total)
+        public Result Read(Query query)
         {
             try
             {
                 ulong keyHash = query.Term.Key.ToString().ToHash();
                 long keyId;
+                var timer = new Stopwatch();
+
+                timer.Start();
 
                 if (_sessionFactory.TryGetKeyId(keyHash, out keyId))
                 {
-                    using (var session = _sessionFactory.CreateReadSession(query.CollectionId))
+                    using (var session = _sessionFactory.CreateReadSession(query.Collection))
                     {
-                        return session.Read(query, take, out total);
+                        long total;
+                        var docs = session.Read(query, query.Take, out total);
+
+                        _log.Log(string.Format("fetched {0} docs from disk in {1}", docs.Count, timer.Elapsed));
+
+                        timer.Restart();
+
+                        var stream = new MemoryStream();
+
+                        Serialize(docs, stream);
+
+                        _log.Log(string.Format("serialized {0} docs in {1}", docs.Count, timer.Elapsed));
+
+                        return new Result { MediaType = "application/json", Data = stream, Documents = docs, Total = total };
                     }
                 }
 
-                total = 0;
-                return new IDictionary[0];
-
+                return new Result { MediaType = "application/json", Data = new MemoryStream(), Total = 0 };
             }
             catch (Exception ex)
             {
                 _log.Log(string.Format("read failed: {0} {1}", query, ex));
 
                 throw;
+            }
+        }
+
+        private void Serialize(IList<IDictionary> docs, Stream stream)
+        {
+            using (StreamWriter writer = new StreamWriter(stream))
+            using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
+            {
+                JsonSerializer ser = new JsonSerializer();
+                ser.Serialize(jsonWriter, docs);
+                jsonWriter.Flush();
             }
         }
 
@@ -63,7 +90,7 @@ namespace Sir.Store
 
                 if (_sessionFactory.TryGetKeyId(keyHash, out keyId))
                 {
-                    using (var session = _sessionFactory.CreateReadSession(query.CollectionId))
+                    using (var session = _sessionFactory.CreateReadSession(query.Collection))
                     {
                         return session.Read(query, out total);
                     }

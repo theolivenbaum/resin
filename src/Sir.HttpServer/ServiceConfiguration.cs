@@ -61,7 +61,7 @@ namespace Sir.HttpServer
             // Create one instances each of all plugins and register them with the PluginCollection,
             // so that they can be fetched at runtime by Content-Type and System.Type.
 
-            foreach (var service in serviceProvider.GetServices<IQueryParser>())
+            foreach (var service in serviceProvider.GetServices<IHttpQueryParser>())
             {
                 plugins.Add(service.ContentType, service);
             }

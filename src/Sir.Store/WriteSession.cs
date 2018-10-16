@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -45,8 +47,14 @@ namespace Sir.Store
             _docIx = new DocIndexWriter(DocIndexStream);
         }
 
-        public void Write(IEnumerable<IDictionary> models, bool writeToIndex = false)
+        public async Task<ulong> Write(IEnumerable<IDictionary> models)
         {
+            ulong lastProcessedDocId = 0;
+            var docCount = 0;
+            var timer = new Stopwatch();
+
+            timer.Start();
+
             foreach (var model in models)
             {
                 var docId = _docIx.GetNextDocId();
@@ -82,7 +90,14 @@ namespace Sir.Store
                 _docIx.Append(docMeta.offset, docMeta.length);
 
                 model.Add("__docid", docId);
+
+                lastProcessedDocId = docId;
+                docCount++;
             }
+
+            _log.Log(string.Format("processed {0} documents in {1}", docCount, timer.Elapsed));
+
+            return lastProcessedDocId;
         }
     }
 }

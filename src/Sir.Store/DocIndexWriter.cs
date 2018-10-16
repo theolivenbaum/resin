@@ -23,7 +23,7 @@ namespace Sir.Store
         }
 
         /// <summary>
-        /// Get the next auto-incrementing doc id (peeks are allowed)
+        /// Get the next auto-incrementing doc id (peeking is allowed)
         /// </summary>
         /// <returns>The next auto-incrementing doc id</returns>
         public ulong GetNextDocId()

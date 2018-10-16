@@ -3,7 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using Sir.Core;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Sir.Store
 {
@@ -14,86 +15,84 @@ namespace Sir.Store
     {
         public string ContentType => "*";
 
-        private readonly ProducerConsumerQueue<WriteJob> _writeQueue;
         private readonly LocalStorageSessionFactory _sessionFactory;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
-        private readonly Stopwatch _itemTimer;
-        private readonly Stopwatch _batchTimer;
+        private readonly Stopwatch _timer;
 
         public Writer(LocalStorageSessionFactory sessionFactory, ITokenizer analyzer)
         {
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;
-            _writeQueue = new ProducerConsumerQueue<WriteJob>(ExecuteWrite);
             _log = Logging.CreateWriter("writer");
-            _itemTimer = new Stopwatch();
-            _batchTimer = new Stopwatch();
+            _timer = new Stopwatch();
         }
 
-        public void Write(string collectionName, IEnumerable<IDictionary> data)
+        public async Task<long> Write(ulong collectionId, Stream payload)
         {
             try
             {
-                var collectionId = collectionName.ToHash();
+                _timer.Restart();
+
+                var data = Deserialize<IEnumerable<IDictionary>>(payload);
                 var job = new WriteJob(collectionId, data);
 
-                _writeQueue.Enqueue(job);
+                _log.Log(string.Format("deserialized write job {0} for collection {1} in {2}", job.Id, collectionId, _timer.Elapsed));
 
-                _log.Log(string.Format("enqueued job {0} to be written to {1}", job.Id, collectionName));
+                return await ExecuteWrite(job);
             }
             catch (Exception ex)
             {
-                _log.Log(string.Format("enqueue failed: {0}", ex));
+                _log.Log(string.Format("write failed: {0}", ex));
 
                 throw;
             }
         }
 
-        public void Remove(string collectionName, IEnumerable<IDictionary> data)
+        public async void Append(ulong collectionId, long id, Stream payload)
         {
-            //try
-            //{
-            //    var collectionId = collectionName.ToHash();
-            //    var job = new WriteJob(collectionId, data, delete: true);
-
-            //    _writeQueue.Enqueue(job);
-
-            //    _log.Log(string.Format("enqueued job {0} targetting collection {1} ({2})",
-            //        job.Id, collectionId, collectionName));
-            //}
-            //catch (Exception ex)
-            //{
-            //    _log.Log(string.Format("remove failed: {0}", ex));
-
-            //    throw;
-            //}
+            throw new NotImplementedException();
         }
 
-        private void ExecuteWrite(WriteJob job)
+        private async Task<long> ExecuteWrite(WriteJob job)
         {
             try
             {
-                _itemTimer.Restart();
+                _timer.Restart();
+
+                Task<ulong> lastProcessedDocId;
 
                 using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
                 {
-                    session.Write(job.Documents);
+                    lastProcessedDocId = session.Write(job.Documents);
                 }
 
-                _log.Log(string.Format("wrote job {0} in {1}",  job.Id, _itemTimer.Elapsed));
+                _log.Log(string.Format("executed write job {0} in {1}", job.Id, _timer.Elapsed));
+
+                var id = await lastProcessedDocId;
+
+                return Convert.ToInt64(id);
             }
             catch (Exception ex)
             {
-                _log.Log(string.Format("failed to execute job {0}: {1}", job.Id, ex));
+                _log.Log(string.Format("failed to write job {0}: {1}", job.Id, ex));
 
                 throw;
+            }
+        }
+
+        private static T Deserialize<T>(Stream s)
+        {
+            using (StreamReader reader = new StreamReader(s))
+            using (JsonTextReader jsonReader = new JsonTextReader(reader))
+            {
+                JsonSerializer ser = new JsonSerializer();
+                return ser.Deserialize<T>(jsonReader);
             }
         }
 
         public void Dispose()
         {
-            _writeQueue.Dispose();
             _log.Dispose();
         }
     }

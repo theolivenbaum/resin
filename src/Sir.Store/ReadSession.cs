@@ -68,7 +68,10 @@ namespace Sir.Store
 
                 timer.Restart();
 
-                var sorted = result.OrderByDescending(x => x.Value).Take(take).ToList();
+                IEnumerable<KeyValuePair<ulong, float>> sorted = result.OrderByDescending(x => x.Value);
+                
+                if (take > 0)
+                    sorted = sorted.Take(take);
 
                 _log.Log("sorted {0} postings for query {1} in {2}",
                     result.Count, query, timer.Elapsed);

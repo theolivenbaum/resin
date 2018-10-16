@@ -88,12 +88,7 @@ namespace Sir.HttpServer.Features
                 document["title"] = doc.title;
                 document["_created"] = DateTime.Now.ToBinary();
 
-                var writers = _plugins.All<IWriter>("*").ToList();
-
-                foreach (var writer in writers)
-                {
-                    writer.Write("www", new[] { document });
-                }
+                //TODO: implement write to store + write to index
 
                 LastProcessed = (uri, (string)document["title"]);
             }

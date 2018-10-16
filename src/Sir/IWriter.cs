@@ -1,12 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.IO;
+using System.Threading.Tasks;
 
 namespace Sir
 {
     public interface IWriter : IPlugin
     {
-        void Write(string collectionId, IEnumerable<IDictionary> data);
-        //void Update(string collectionId, IEnumerable<IDictionary> data, IEnumerable<IDictionary> old);
-        //void Remove(string collectionId, IEnumerable<IDictionary> data);
+        Task<long> Write(ulong collectionId, Stream payload);
+
+        void Append(ulong collectionId, long id, Stream payload);
     }
 }
