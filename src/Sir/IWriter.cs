@@ -7,6 +7,6 @@ namespace Sir
     {
         Task<long> Write(ulong collectionId, Stream payload);
 
-        void Append(ulong collectionId, long id, Stream payload);
+        Task Write(ulong collectionId, long id, Stream payload);
     }
 }

@@ -61,7 +61,7 @@ namespace Sir.HttpServer.Controllers
                 {
                     recordId = long.Parse(id);
 
-                    writer.Append(collection, recordId, copy);
+                    await writer.Write(collection, recordId, copy);
                 }
             }
             catch (Exception ew)
@@ -77,20 +77,17 @@ namespace Sir.HttpServer.Controllers
 
         [HttpGet("{*collectionId}")]
         [HttpPut("{*collectionId}")]
-        public HttpResponseMessage Get(string collectionId)
+        public async Task<HttpResponseMessage> Get(string collectionId)
         {
             var mediaType = Request.ContentType ?? string.Empty;
-            var queryParser = _plugins.Get<IHttpQueryParser>(mediaType);
             var reader = _plugins.Get<IReader>();
-            var tokenizer = _plugins.Get<ITokenizer>(mediaType);
 
-            if (queryParser == null || reader == null || tokenizer == null)
+            if (reader == null)
             {
                 throw new NotSupportedException();
             }
 
-            var query = queryParser.Parse(collectionId, Request, tokenizer);
-            var result = reader.Read(query);
+            var result = await reader.Read(collectionId.ToHash(), Request);
             var response = new HttpResponseMessage(HttpStatusCode.OK);
 
             response.Content = new StreamContent(result.Data);

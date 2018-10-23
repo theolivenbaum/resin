@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sir
+namespace Sir.Store
 {
     public class Query
     {

@@ -1,9 +1,9 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Sir.HttpServer.Features;
 
 namespace Sir.HttpServer.Controllers
 {
@@ -18,7 +18,7 @@ namespace Sir.HttpServer.Controllers
 
         [HttpGet("/search/")]
         [HttpPost("/search/")]
-        public ActionResult Index(string q, string cid)
+        public async Task<IActionResult> Index(string q, string cid)
         {
             if (string.IsNullOrWhiteSpace(q)) return View();
 
@@ -33,26 +33,28 @@ namespace Sir.HttpServer.Controllers
             var timer = new Stopwatch();
             timer.Start();
 
-            var queryParser = _plugins.Get<IHttpQueryParser>();
             var reader = _plugins.Get<IReader>();
-            var tokenizer = _plugins.Get<ITokenizer>();
 
-            if (queryParser == null || reader == null || tokenizer == null)
+            if (reader == null)
             {
                 throw new System.NotSupportedException();
             }
 
-            var parsedQuery = queryParser.Parse(collectionId, Request, tokenizer);
-            var result = reader.Read(parsedQuery);
-            var documents = (IEnumerable<IDictionary>)result.Data;
+            var result = await reader.Read(collectionId.ToHash(), Request);
+            var documents = result.Documents
+                .Select(x => new SearchResultModel { Document = x })
+                .Take(100);
 
             ViewData["collectionName"] = collectionId;
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
-            ViewData["last_processed_url"] = _crawlQueue.LastProcessed.uri;
-            ViewData["last_processed_title"] = _crawlQueue.LastProcessed.title;
             ViewData["total"] = result.Total;
 
             return View(documents);
         }
+    }
+
+    public class SearchResultModel
+    {
+        public IDictionary Document { get; set; }
     }
 }

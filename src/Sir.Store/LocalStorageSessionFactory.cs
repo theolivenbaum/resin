@@ -5,7 +5,6 @@ using System.IO;
 
 namespace Sir.Store
 {
-    //TODO: extract interface
     public class LocalStorageSessionFactory
     {
         private readonly ITokenizer _tokenizer;
@@ -55,24 +54,6 @@ namespace Sir.Store
             }
             return keys;
         }
-
-        //public void SerializeIndex()
-        //{
-        //    try
-        //    {
-        //        _log.Log("begin serializing index");
-
-        //        _index.SerializeTree(Dir);
-
-        //        _log.Log("serialized index");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _log.Log(ex);
-
-        //        throw;
-        //    }
-        //}
 
         public void LoadIndex()
         {

@@ -49,7 +49,7 @@ namespace Sir.Store
             }
         }
 
-        public async void Append(ulong collectionId, long id, Stream payload)
+        public async Task Write(ulong collectionId, long id, Stream payload)
         {
             throw new NotImplementedException();
         }

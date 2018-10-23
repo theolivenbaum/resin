@@ -1,26 +1,24 @@
-﻿using System;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 
 namespace Sir.Store
 {
-    public class HttpQueryParser : IHttpQueryParser
+    public class HttpQueryParser
     {
-        public string ContentType => "*";
+        private readonly BooleanKeyValueQueryParser _queryParser;
 
-        public void Dispose()
+        public HttpQueryParser(BooleanKeyValueQueryParser queryParser)
         {
-            throw new NotImplementedException();
+            _queryParser = queryParser;
         }
 
-        public Query Parse(string collectionId, HttpRequest request, ITokenizer tokenizer)
+        public Query Parse(ulong collectionId, HttpRequest request, ITokenizer tokenizer)
         {
-            var parser = new BooleanKeyValueQueryParser();
             Query query = null;
 
             if (!string.IsNullOrWhiteSpace(request.Query["q"]))
             {
-                query = parser.Parse(request.Query["q"], tokenizer);
-                query.Collection = collectionId.ToHash();
+                query = _queryParser.Parse(request.Query["q"], tokenizer);
+                query.Collection = collectionId;
 
                 if (request.Query.ContainsKey("take"))
                     query.Take = int.Parse(request.Query["take"]);
@@ -28,7 +26,7 @@ namespace Sir.Store
             else if (!string.IsNullOrWhiteSpace(request.Query["id"]))
             {
                 query = new Query("__docid", (string)request.Query["id"]);
-                query.Collection = collectionId.ToHash();
+                query.Collection = collectionId;
             }
 
             return query;

@@ -1,7 +1,10 @@
-﻿namespace Sir
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+
+namespace Sir
 {
     public interface IReader : IPlugin
     {
-       Result Read(Query query);
+       Task<Result> Read(ulong collectionId, HttpRequest request);
     }
 }

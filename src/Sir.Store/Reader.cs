@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
 namespace Sir.Store
@@ -16,12 +18,15 @@ namespace Sir.Store
 
         private readonly LocalStorageSessionFactory _sessionFactory;
         private readonly StreamWriter _log;
+        private readonly HttpQueryParser _httpQueryParser;
+        private readonly ITokenizer _tokenizer;
 
-        public Reader(LocalStorageSessionFactory sessionFactory)
+        public Reader(LocalStorageSessionFactory sessionFactory, HttpQueryParser httpQueryParser, ITokenizer tokenizer)
         {
             _sessionFactory = sessionFactory;
             _log = Logging.CreateWriter("reader");
-
+            _httpQueryParser = httpQueryParser;
+            _tokenizer = tokenizer;
         }
 
         public void Dispose()
@@ -29,10 +34,12 @@ namespace Sir.Store
             _log.Dispose();
         }
 
-        public Result Read(Query query)
+        public async Task<Result> Read(ulong collectionId, HttpRequest request)
         {
+            Query query = null;
             try
             {
+                query = _httpQueryParser.Parse(collectionId, request, _tokenizer);
                 ulong keyHash = query.Term.Key.ToString().ToHash();
                 long keyId;
                 var timer = new Stopwatch();
@@ -64,7 +71,7 @@ namespace Sir.Store
             }
             catch (Exception ex)
             {
-                _log.Log(string.Format("read failed: {0} {1}", query, ex));
+                _log.Log(string.Format("read failed for query: {0} {1}", query.ToString() ?? "unknown", ex));
 
                 throw;
             }
