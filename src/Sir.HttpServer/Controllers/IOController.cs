@@ -47,19 +47,21 @@ namespace Sir.HttpServer.Controllers
 
             try
             {
-                var mem = new MemoryStream();
+                var copy = new MemoryStream();
 
-                await payload.CopyToAsync(mem);
+                await payload.CopyToAsync(copy);
+
+                copy.Position = 0;
 
                 if (id == null)
                 {
-                    recordId = await writer.Write(collection, mem);
+                    recordId = await writer.Write(collection, copy);
                 }
                 else
                 {
                     recordId = long.Parse(id);
 
-                    writer.Append(collection, recordId, mem);
+                    writer.Append(collection, recordId, copy);
                 }
             }
             catch (Exception ew)

@@ -18,12 +18,12 @@ namespace Sir.Postings
 
         public async Task<long> Write(ulong collectionId, Stream payload)
         {
-            return await _data.Write(payload);
+            return await _data.Write(collectionId, (MemoryStream)payload);
         }
 
         public async void Append(ulong collectionId, long id, Stream payload)
         {
-            await _data.Write(payload);
+            await _data.Write(collectionId, (MemoryStream)payload, id);
         }
 
         public void Dispose()
@@ -74,38 +74,94 @@ namespace Sir.Postings
         }
     }
 
-    public class StreamRepository : IDisposable
+    public class StreamRepository
     {
-        public IDictionary<ulong, IList<(long, long)>> Index { get; set; }
-        public Stream Data { get; set; }
+        private IDictionary<ulong, IDictionary<long, IList<(long, long)>>> _index { get; set; }
 
-        private const string FileName = "postings.pos";
+        private const string FileNameFormat = "{0}.pos";
 
         public StreamRepository()
         {
-            Index = new Dictionary<ulong, IList<(long, long)>>();
-            Data = new FileStream(FileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true);
+            _index = new Dictionary<ulong, IDictionary<long, IList<(long, long)>>>();
         }
 
-        public async Task<long> Write(Stream payload)
+        public async Task<MemoryStream> Read(ulong collectionId, long id)
         {
-            var mem = new MemoryStream();
+            IDictionary<long, IList<(long, long)>> collectionIndex;
 
-            await payload.CopyToAsync(mem);
+            if (!_index.TryGetValue(collectionId, out collectionIndex))
+            {
+                throw new ArgumentException(nameof(collectionId));
+            }
 
-            var buf = mem.ToArray();
-            var pos = Data.Position;
-
-            await Data.WriteAsync(buf);
-
-            var len = Data.Position - pos;
             IList<(long, long)> ix;
 
-            if (!Index.TryGetValue(pos, out ix))
+            if (!collectionIndex.TryGetValue(id, out ix))
+            {
+                throw new ArgumentException(nameof(id));
+            }
+
+            var fileName = string.Format(FileNameFormat, collectionId);
+            var result = new MemoryStream();
+
+            using (var file = new FileStream(
+                fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
+            {
+                foreach (var loc in ix)
+                {
+                    var pos = loc.Item1;
+                    var len = loc.Item2;
+
+                    file.Seek(pos, SeekOrigin.Begin);
+
+                    var buf = new byte[len];
+                    var read = await file.ReadAsync(buf);
+
+                    if (read != len)
+                    {
+                        throw new InvalidDataException();
+                    }
+
+                    await result.WriteAsync(buf);
+                }
+            }
+
+            return result;
+        }
+
+        public async Task<long> Write(ulong collectionId, MemoryStream payload)
+        {
+            IDictionary<long, IList<(long, long)>> collectionIndex;
+
+            if (!_index.TryGetValue(collectionId, out collectionIndex))
+            {
+                collectionIndex = new Dictionary<long, IList<(long, long)>>();
+                _index.Add(collectionId, collectionIndex);
+            }
+
+            var buf = payload.ToArray();
+            var fileName = string.Format(FileNameFormat, collectionId);
+            long pos;
+            long len;
+
+            using (var file = new FileStream(
+                fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true))
+            {
+                pos = file.Position;
+
+                await file.WriteAsync(buf);
+
+                len = file.Position - pos;
+            }
+
+
+            IList<(long, long)> ix;
+
+            if (!collectionIndex.TryGetValue(pos, out ix))
             {
                 ix = new List<(long, long)>();
 
-                Index.Add(id, ix);
+                collectionIndex.Add(pos, ix);
             }
 
             ix.Add((pos, len));
@@ -113,37 +169,41 @@ namespace Sir.Postings
             return pos;
         }
 
-
-        public async Task<long> Write(long id, Stream payload)
+        public async Task<long> Write(ulong collectionId, MemoryStream payload, long id)
         {
-            var mem = new MemoryStream();
+            IDictionary<long, IList<(long, long)>> collectionIndex;
 
-            await payload.CopyToAsync(mem);
+            if (!_index.TryGetValue(collectionId, out collectionIndex))
+            {
+                collectionIndex = new Dictionary<long, IList<(long, long)>>();
+                _index.Add(collectionId, collectionIndex);
+            }
 
-            var buf = mem.ToArray();
-            var pos = Data.Position;
-
-            await Data.WriteAsync(buf);
-
-            var len = Data.Position - pos;
             IList<(long, long)> ix;
 
-            if (!Index.TryGetValue(id, out ix))
+            if (!collectionIndex.TryGetValue(id, out ix))
             {
-                ix = new List<(long, long)>();
+                throw new ArgumentException(nameof(id));
+            }
 
-                Index.Add(id, ix);
+            var buf = payload.ToArray();
+            var fileName = string.Format(FileNameFormat, collectionId);
+            long pos;
+            long len;
+
+            using (var file = new FileStream(
+                fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true))
+            {
+                pos = file.Position;
+
+                await file.WriteAsync(buf);
+
+                len = file.Position - pos;
             }
 
             ix.Add((pos, len));
 
-            return Convert.ToUInt64(pos);
-        }
-
-        public void Dispose()
-        {
-            if (Data != null)
-                Data.Dispose();
+            return pos;
         }
     }
 }
