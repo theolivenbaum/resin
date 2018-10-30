@@ -5,8 +5,8 @@ namespace Sir
 {
     public interface IWriter : IPlugin
     {
-        Task<long> Write(ulong collectionId, Stream payload);
+        Task<long> Write(string collectionId, Stream payload);
 
-        Task Write(ulong collectionId, long id, Stream payload);
+        Task Write(string collectionId, long id, Stream payload);
     }
 }

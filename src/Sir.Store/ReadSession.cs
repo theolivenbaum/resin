@@ -21,7 +21,7 @@ namespace Sir.Store
         private readonly PagedPostingsReader _postingsReader;
         private readonly StreamWriter _log;
 
-        public ReadSession(ulong collectionId, LocalStorageSessionFactory sessionFactory) 
+        public ReadSession(string collectionId, LocalStorageSessionFactory sessionFactory) 
             : base(collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)));
@@ -32,7 +32,7 @@ namespace Sir.Store
             DocIndexStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collectionId)));
             PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collectionId)));
             VectorStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId)));
-            Index = sessionFactory.GetCollectionIndex(collectionId);
+            Index = sessionFactory.GetCollectionIndex(collectionId.ToHash());
 
             _docIx = new DocIndexReader(DocIndexStream);
             _docs = new DocReader(DocStream);

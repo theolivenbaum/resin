@@ -15,7 +15,7 @@ namespace Sir.Store
         private readonly ValueReader _keyReader;
         private readonly ValueReader _valReader;
 
-        public DocumentReadSession(ulong collectionId, LocalStorageSessionFactory sessionFactory) 
+        public DocumentReadSession(string collectionId, LocalStorageSessionFactory sessionFactory) 
             : base(collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)));

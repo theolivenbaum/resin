@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Sir.HttpServer.Features;
 using System;
 using System.IO;
 using System.Linq;
@@ -45,18 +44,22 @@ namespace Sir.HttpServer
                     }
                 }
             }
-            services.Add(new ServiceDescriptor(typeof(PluginsCollection), new PluginsCollection()));
+
+            var plugins = new PluginsCollection();
+
+            services.Add(new ServiceDescriptor(typeof(PluginsCollection), plugins));
+
+            // register config
+            services.Add(new ServiceDescriptor(typeof(IniConfiguration),
+                new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini"))));
+
             var serviceProvider = services.BuildServiceProvider();
 
             // initiate plugins
             foreach (var service in serviceProvider.GetServices<IPluginStart>())
             {
-                service.OnApplicationStartup(services);
+                service.OnApplicationStartup(services, serviceProvider);
             }
-
-            serviceProvider = services.BuildServiceProvider();
-
-            var plugins = serviceProvider.GetService<PluginsCollection>();
 
             // Create one instances each of all plugins and register them with the PluginCollection,
             // so that they can be fetched at runtime by Content-Type and System.Type.
@@ -76,11 +79,7 @@ namespace Sir.HttpServer
                 plugins.Add(service.ContentType, service);
             }
 
-            // register crawler as singleton
-            services.Add(new ServiceDescriptor(typeof(CrawlQueue), 
-                new CrawlQueue(serviceProvider.GetService<PluginsCollection>())));
-
-            return serviceProvider;
+            return services.BuildServiceProvider();
         }
     }
 }

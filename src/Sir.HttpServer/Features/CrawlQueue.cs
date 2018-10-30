@@ -12,7 +12,6 @@ namespace Sir.HttpServer.Features
     {
         private readonly ProducerConsumerQueue<Uri> _queue;
         private readonly PluginsCollection _plugins;
-        private readonly HashSet<string> _history;
         private readonly StreamWriter _log;
 
         public (Uri uri, string title) LastProcessed { get; private set; }
@@ -21,7 +20,6 @@ namespace Sir.HttpServer.Features
         {
             _queue = new ProducerConsumerQueue<Uri>(Submit);
             _plugins = plugins;
-            _history = new HashSet<string>();
             _log = Logging.CreateWriter("crawlqueue");
         }
 
@@ -179,25 +177,6 @@ namespace Sir.HttpServer.Features
             var ownerUrl = owner.Host;
             var txt = txtNodes.Select(x => WebUtility.HtmlDecode(x.InnerText));
             var body = string.Join("\r\n", txt);
-
-            //if (_history.Add(owner.Host))
-            //{
-            //    var linkNodes = htmlDocument.DocumentNode.SelectNodes("//a[@href]");
-
-            //    if (linkNodes != null)
-            //    {
-            //        var links = linkNodes.Select(x => x.Attributes["href"])
-            //            .Where(x => x != null)
-            //            .Select(x => x.Value)
-            //            .Where(x => x.StartsWith("https://") && (!x.Contains(ownerUrl)))
-            //            .ToList();
-
-            //        foreach (var url in links)
-            //        {
-            //            _queue.Enqueue(new Uri(url));
-            //        }
-            //    }
-            //}
 
             return (title, body);
         }

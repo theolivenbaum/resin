@@ -4,7 +4,7 @@ namespace Sir.Postings
 {
     public class Start : IPluginStart
     {
-        public void OnApplicationStartup(IServiceCollection services)
+        public void OnApplicationStartup(IServiceCollection services, ServiceProvider serviceProvider)
         {
             services.AddSingleton(typeof(StreamRepository), new StreamRepository());
         }

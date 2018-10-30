@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -205,48 +206,63 @@ namespace Sir.Store
 
     public class RemotePostingsWriter
     {
-        public long Write(IList<ulong> docIds)
+        private IConfiguration _config;
+
+        public RemotePostingsWriter(IConfiguration config)
+        {
+            _config = config;
+        }
+
+        public long Write(string collectionId, IList<ulong> docIds)
         {
             var payload = ToStream(docIds);
-            var id = WriteRemote(payload);
+
+            var id = WriteRemotely(collectionId, payload);
 
             return id;
         }
 
-        public void Write(long offset, IList<ulong> docIds, int docIndex = 0)
+        public void Write(string collectionId, long offset, IList<ulong> docIds)
         {
             var payload = ToStream(docIds);
 
-            AppendRemote(payload, offset);
+            WriteRemotely(collectionId, payload, offset);
         }
 
-        private void AppendRemote(byte[] payload, long offset)
+        private long WriteRemotely(string collectionId, byte[] payload)
         {
-            var request = (HttpWebRequest)WebRequest.Create("https://...");
+            var endpoint = _config.Get("postings_endpoint");
+            var request = (HttpWebRequest)WebRequest.Create(endpoint);
             request.ContentType = "application/postings";
-            request.Method = "POST";
+            request.Method = WebRequestMethods.Http.Post;
 
             var requestBody = request.GetRequestStream();
-            requestBody.Write(payload, 0, payload.Length);
 
-            request.GetResponse();
-        }
-
-        private long WriteRemote(byte[] payload)
-        {
-            var request = (HttpWebRequest)WebRequest.Create("https://...");
-            request.ContentType = "application/postings";
-            request.Method = "POST";
-
-            var requestBody = request.GetRequestStream();
             requestBody.Write(payload, 0, payload.Length);
 
             var response = (HttpWebResponse)request.GetResponse();
-            var locationUri = new Uri(response.Headers["Location"]);
-            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(locationUri.Query);
+            var location = new Uri(response.Headers["Location"]);
+
+            response.Close();
+
+            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(location.Query);
             var id = long.Parse(query["id"].ToArray()[0]);
 
             return id;
+        }
+
+        private void WriteRemotely(string collectionId, byte[] payload, long offset)
+        {
+            var request = (HttpWebRequest)WebRequest.Create("https://...");
+            request.ContentType = "application/postings";
+            request.Method = WebRequestMethods.Http.Post;
+
+            var requestBody = request.GetRequestStream();
+
+            requestBody.Write(payload, 0, payload.Length);
+
+            var response = request.GetResponse();
+            response.Close();
         }
 
         private byte[] ToStream(IList<ulong> docIds)
@@ -257,7 +273,7 @@ namespace Sir.Store
             {
                 var buf = BitConverter.GetBytes(id);
 
-                payload.Write(buf, 0, sizeof(ulong));
+                payload.Write(buf, 0, buf.Length);
             }
 
             return payload.ToArray();

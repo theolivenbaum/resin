@@ -40,7 +40,7 @@ namespace Sir.HttpServer.Controllers
                 throw new System.NotSupportedException();
             }
 
-            var result = await reader.Read(collectionId.ToHash(), Request);
+            var result = await reader.Read(collectionId, Request);
             var documents = result.Documents
                 .Select(x => new SearchResultModel { Document = x })
                 .Take(100);

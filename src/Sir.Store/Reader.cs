@@ -34,7 +34,7 @@ namespace Sir.Store
             _log.Dispose();
         }
 
-        public async Task<Result> Read(ulong collectionId, HttpRequest request)
+        public async Task<Result> Read(string collectionId, HttpRequest request)
         {
             Query query = null;
             try
@@ -48,7 +48,7 @@ namespace Sir.Store
 
                 if (_sessionFactory.TryGetKeyId(keyHash, out keyId))
                 {
-                    using (var session = _sessionFactory.CreateReadSession(query.Collection))
+                    using (var session = _sessionFactory.CreateReadSession(collectionId))
                     {
                         long total;
                         var docs = session.Read(query, query.Take, out total);
@@ -85,32 +85,6 @@ namespace Sir.Store
                 JsonSerializer ser = new JsonSerializer();
                 ser.Serialize(jsonWriter, docs);
                 jsonWriter.Flush();
-            }
-        }
-
-        public IList<IDictionary> Read(Query query, out long total)
-        {
-            try
-            {
-                ulong keyHash = query.Term.Key.ToString().ToHash();
-                long keyId;
-
-                if (_sessionFactory.TryGetKeyId(keyHash, out keyId))
-                {
-                    using (var session = _sessionFactory.CreateReadSession(query.Collection))
-                    {
-                        return session.Read(query, out total);
-                    }
-                }
-
-                total = 0;
-                return new IDictionary[0];
-            }
-            catch (Exception ex)
-            {
-                _log.Log(string.Format("read failed: {0} {1}", query, ex));
-
-                throw;
             }
         }
     }

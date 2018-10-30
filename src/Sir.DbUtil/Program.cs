@@ -37,15 +37,18 @@ namespace Sir.DbUtil
             {
                 // example: query C:\projects\resin\src\Sir.HttpServer\App_Data www
 
-                Query(dir: args[1], collection: args[2]);
+                Query(dir: args[1], collectionId: args[2]);
             }
         }
 
-        private static void Query(string dir, string collection)
+        private static void Query(string dir, string collectionId)
         {
             var tokenizer = new LatinTokenizer();
             var qp = new BooleanKeyValueQueryParser();
-            var sessionFactory = new LocalStorageSessionFactory(dir, tokenizer);
+            var sessionFactory = new LocalStorageSessionFactory(
+                dir, 
+                tokenizer, 
+                new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini")));
 
             while (true)
             {
@@ -60,7 +63,7 @@ namespace Sir.DbUtil
 
                 var q = qp.Parse(input, tokenizer);
 
-                using (var session = sessionFactory.CreateReadSession(collection.ToHash()))
+                using (var session = sessionFactory.CreateReadSession(collectionId))
                 {
                     long total;
                     var docs = session.Read(q, out total);
@@ -84,8 +87,10 @@ namespace Sir.DbUtil
             timer.Start();
 
             var files = Directory.GetFiles(dir, "*.docs");
-            var sessionFactory = new LocalStorageSessionFactory(dir, new LatinTokenizer());
-            var colId = collection.ToHash();
+            var sessionFactory = new LocalStorageSessionFactory(
+                dir,
+                new LatinTokenizer(),
+                new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini")));
             var batchNo = 0;
 
             foreach (var docFileName in files)
@@ -93,11 +98,11 @@ namespace Sir.DbUtil
                 var name = Path.GetFileNameWithoutExtension(docFileName)
                     .Split(".", StringSplitOptions.RemoveEmptyEntries);
 
-                var collectionId = ulong.Parse(name[0]);
+                var collectionId = name[0];
 
-                if (collectionId == colId)
+                if (collectionId == collection)
                 {
-                    using (var readSession = new DocumentReadSession(collectionId, sessionFactory))
+                    using (var readSession = new DocumentReadSession(collection, sessionFactory))
                     {
                         var docs = readSession.ReadDocs();
 
@@ -116,9 +121,9 @@ namespace Sir.DbUtil
                         {
                             writeTimer.Restart();
 
-                            var job = new AnalyzeJob(collectionId, batch);
+                            var job = new AnalyzeJob(collection, batch);
 
-                            using (var indexSession = sessionFactory.CreateIndexSession(collectionId))
+                            using (var indexSession = sessionFactory.CreateIndexSession(collection))
                             {
                                 indexSession.Write(job);
                             }

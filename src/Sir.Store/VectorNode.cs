@@ -275,7 +275,7 @@ namespace Sir.Store
             return block;
         }
 
-        public void SerializeTreeAndPayload(Stream indexStream, Stream vectorStream, PagedPostingsWriter postingsWriter)
+        public void SerializeTreeAndPayload(string collectionId, Stream indexStream, Stream vectorStream, RemotePostingsWriter postingsWriter)
         {
             var node = this;
             var stack = new Stack<VectorNode>();
@@ -292,22 +292,21 @@ namespace Sir.Store
                     }
 
                     var ids = node._docIds.ToArray();
+
                     node._docIds.Clear();
 
-                    node.PostingsOffset = postingsWriter.Write(ids);
+                    node.PostingsOffset = postingsWriter.Write(collectionId, ids);
                     node.VecOffset = node.TermVector.Serialize(vectorStream);
                 }
-                else
+                else if (node._docIds.Count > 0)
                 {
-                    if (node._docIds.Count > 0)
-                    {
-                        // this node is dirty
+                    // this node is dirty
 
-                        var ids = node._docIds.ToArray();
-                        node._docIds.Clear();
+                    var ids = node._docIds.ToArray();
 
-                        postingsWriter.Write(node.PostingsOffset, ids);
-                    }
+                    node._docIds.Clear();
+
+                    postingsWriter.Write(collectionId, node.PostingsOffset, ids);
                 }
 
                 foreach (var buf in node.ToStream())

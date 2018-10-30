@@ -14,10 +14,10 @@ namespace Sir.Postings
             _data = data;
         }
 
-        public async Task<Result> Read(ulong collectionId, HttpRequest request)
+        public async Task<Result> Read(string collectionId, HttpRequest request)
         {
             var id = long.Parse(request.Query["id"]);
-            var result = await _data.Read(collectionId, id);
+            var result = await _data.Read(collectionId.ToHash(), id);
 
             return new Result { Data = result, MediaType = "application/octet-stream" };
         }

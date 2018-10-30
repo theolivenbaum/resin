@@ -5,6 +5,6 @@ namespace Sir
 {
     public interface IReader : IPlugin
     {
-       Task<Result> Read(ulong collectionId, HttpRequest request);
+       Task<Result> Read(string collectionId, HttpRequest request);
     }
 }

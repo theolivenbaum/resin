@@ -28,7 +28,7 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
-        public async Task<long> Write(ulong collectionId, Stream payload)
+        public async Task<long> Write(string collectionId, Stream payload)
         {
             try
             {
@@ -49,7 +49,7 @@ namespace Sir.Store
             }
         }
 
-        public async Task Write(ulong collectionId, long id, Stream payload)
+        public async Task Write(string collectionId, long id, Stream payload)
         {
             throw new NotImplementedException();
         }

@@ -11,14 +11,14 @@ namespace Sir.Store
             _queryParser = queryParser;
         }
 
-        public Query Parse(ulong collectionId, HttpRequest request, ITokenizer tokenizer)
+        public Query Parse(string collectionId, HttpRequest request, ITokenizer tokenizer)
         {
             Query query = null;
 
             if (!string.IsNullOrWhiteSpace(request.Query["q"]))
             {
                 query = _queryParser.Parse(request.Query["q"], tokenizer);
-                query.Collection = collectionId;
+                query.Collection = collectionId.ToHash();
 
                 if (request.Query.ContainsKey("take"))
                     query.Take = int.Parse(request.Query["take"]);
@@ -26,7 +26,7 @@ namespace Sir.Store
             else if (!string.IsNullOrWhiteSpace(request.Query["id"]))
             {
                 query = new Query("__docid", (string)request.Query["id"]);
-                query.Collection = collectionId;
+                query.Collection = collectionId.ToHash();
             }
 
             return query;

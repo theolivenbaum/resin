@@ -5,7 +5,7 @@ namespace Sir
 {
     public interface IPluginStart
     {
-        void OnApplicationStartup(IServiceCollection services);
+        void OnApplicationStartup(IServiceCollection services, ServiceProvider serviceProvider);
     }
 
     public interface IPluginStop

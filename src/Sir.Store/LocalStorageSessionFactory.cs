@@ -8,6 +8,7 @@ namespace Sir.Store
     public class LocalStorageSessionFactory
     {
         private readonly ITokenizer _tokenizer;
+        private readonly IConfiguration _config;
         private readonly SortedList<ulong, long> _keys;
         private VectorTree _index;
         private readonly StreamWriter _log;
@@ -16,13 +17,14 @@ namespace Sir.Store
 
         public string Dir { get; }
 
-        public LocalStorageSessionFactory(string dir, ITokenizer tokenizer)
+        public LocalStorageSessionFactory(string dir, ITokenizer tokenizer, IConfiguration config)
         {
             Dir = dir;
             _log = Logging.CreateWriter("localsessionfactory");
             _keys = LoadKeyMap();
             _tokenizer = tokenizer;
-            
+            _config = config;
+
             LoadIndex();
 
             WritableKeyMapStream = new FileStream(
@@ -163,17 +165,17 @@ namespace Sir.Store
             return _index.GetIndex(collectionId) ?? new SortedList<long, VectorNode>();
         }
 
-        public WriteSession CreateWriteSession(ulong collectionId)
+        public WriteSession CreateWriteSession(string collectionId)
         {
             return new WriteSession(collectionId, this, _tokenizer);
         }
 
-        public IndexSession CreateIndexSession(ulong collectionId)
+        public IndexingSession CreateIndexSession(string collectionId)
         {
-            return new IndexSession(collectionId, this, _tokenizer);
+            return new IndexingSession(collectionId, this, _tokenizer, _config);
         }
 
-        public ReadSession CreateReadSession(ulong collectionId)
+        public ReadSession CreateReadSession(string collectionId)
         {
             return new ReadSession(collectionId, this);
         }

@@ -11,7 +11,7 @@ namespace Sir.Store
     /// <summary>
     /// Indexing session targeting a single collection.
     /// </summary>
-    public class IndexSession : CollectionSession
+    public class IndexingSession : CollectionSession
     {
         private readonly ValueWriter _vals;
         private readonly ValueWriter _keys;
@@ -19,7 +19,7 @@ namespace Sir.Store
         private readonly ValueIndexWriter _valIx;
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
-        private readonly PagedPostingsWriter _postingsWriter;
+        private readonly RemotePostingsWriter _postingsWriter;
         private readonly Stopwatch _timer;
         private readonly ProducerConsumerQueue<(long keyId, VectorNode index, IEnumerable<(ulong, string)> tokens)> _buildQueue;
         private readonly ITokenizer _tokenizer;
@@ -27,10 +27,11 @@ namespace Sir.Store
         private readonly Dictionary<long, VectorNode> _dirty;
         private bool _completed;
 
-        public IndexSession(
-            ulong collectionId, 
+        public IndexingSession(
+            string collectionId, 
             LocalStorageSessionFactory sessionFactory, 
-            ITokenizer tokenizer) : base(collectionId, sessionFactory)
+            ITokenizer tokenizer,
+            IConfiguration config) : base(collectionId, sessionFactory)
         {
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("session");
@@ -43,9 +44,9 @@ namespace Sir.Store
             ValueIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collectionId)));
             KeyIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collectionId)));
             DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collectionId)));
-            PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collectionId)));
+            //PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collectionId)));
             VectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId)));
-            Index = sessionFactory.GetCollectionIndex(collectionId);
+            Index = sessionFactory.GetCollectionIndex(collectionId.ToHash());
 
             _vals = new ValueWriter(ValueStream);
             _keys = new ValueWriter(KeyStream);
@@ -53,7 +54,7 @@ namespace Sir.Store
             _valIx = new ValueIndexWriter(ValueIndexStream);
             _keyIx = new ValueIndexWriter(KeyIndexStream);
             _docIx = new DocIndexWriter(DocIndexStream);
-            _postingsWriter = new PagedPostingsWriter(PostingsStream);
+            _postingsWriter = new RemotePostingsWriter(config);
             _timer = new Stopwatch();
         }
 
@@ -231,9 +232,10 @@ namespace Sir.Store
                 using (var ixFile = CreateIndexStream(keyId))
                 {
                     node.SerializeTreeAndPayload(
-                                            ixFile,
-                                            VectorStream,
-                                            _postingsWriter);
+                        CollectionId,
+                        ixFile,
+                        VectorStream,
+                        _postingsWriter);
                 }
                 _log.Log(string.Format("serialized column {0}", keyId));
             }

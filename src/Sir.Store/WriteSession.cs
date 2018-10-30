@@ -22,7 +22,7 @@ namespace Sir.Store
         private readonly StreamWriter _log;
 
         public WriteSession(
-            ulong collectionId, 
+            string collectionId, 
             LocalStorageSessionFactory sessionFactory, 
             ITokenizer tokenizer) : base(collectionId, sessionFactory)
         {
@@ -37,7 +37,7 @@ namespace Sir.Store
             DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collectionId)));
             //PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collectionId)));
             //VectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId)));
-            Index = sessionFactory.GetCollectionIndex(collectionId);
+            Index = sessionFactory.GetCollectionIndex(collectionId.ToHash());
 
             _vals = new ValueWriter(ValueStream);
             _keys = new ValueWriter(KeyStream);

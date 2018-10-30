@@ -34,7 +34,6 @@ namespace Sir.HttpServer.Controllers
                 throw new ArgumentNullException(nameof(collectionId));
             }
 
-            var collection = collectionId.ToHash();
             var writer = _plugins.Get<IWriter>(Request.ContentType);
 
             if (writer == null)
@@ -55,13 +54,13 @@ namespace Sir.HttpServer.Controllers
 
                 if (id == null)
                 {
-                    recordId = await writer.Write(collection, copy);
+                    recordId = await writer.Write(collectionId, copy);
                 }
                 else
                 {
                     recordId = long.Parse(id);
 
-                    await writer.Write(collection, recordId, copy);
+                    await writer.Write(collectionId, recordId, copy);
                 }
             }
             catch (Exception ew)
@@ -87,7 +86,7 @@ namespace Sir.HttpServer.Controllers
                 throw new NotSupportedException();
             }
 
-            var result = await reader.Read(collectionId.ToHash(), Request);
+            var result = await reader.Read(collectionId, Request);
             var response = new HttpResponseMessage(HttpStatusCode.OK);
 
             response.Content = new StreamContent(result.Data);
