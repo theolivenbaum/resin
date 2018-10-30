@@ -282,21 +282,26 @@ namespace Sir.Store
 
             while (node != null)
             {
-                if (node.VecOffset < 0)
+                if (node.VecOffset < 0 )
                 {
                     // this node has never been persisted
 
-                    if (node._docIds.Count == 0 && node.Ancestor != null)
+                    if (node.Ancestor != null && node._docIds.Count == 0)
                     {
                         throw new InvalidDataException();
                     }
+                    else
+                    {
+                        var ids = node._docIds.ToArray();
 
-                    var ids = node._docIds.ToArray();
+                        node._docIds.Clear();
 
-                    node._docIds.Clear();
-
-                    node.PostingsOffset = postingsWriter.Write(collectionId, ids);
-                    node.VecOffset = node.TermVector.Serialize(vectorStream);
+                        if (ids.Length > 0)
+                        {
+                            node.PostingsOffset = postingsWriter.Write(collectionId, ids);
+                        }
+                        node.VecOffset = node.TermVector.Serialize(vectorStream);
+                    }
                 }
                 else if (node._docIds.Count > 0)
                 {

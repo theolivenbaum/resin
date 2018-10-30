@@ -1,1 +1,4 @@
-dotnet src\Sir.DbUtil\bin\Debug\netcoreapp2.1\Sir.DbUtil.dll %*
+setlocal
+cd src\Sir.DbUtil\bin\Debug\netcoreapp2.1\
+dotnet Sir.DbUtil.dll %*
+endlocal

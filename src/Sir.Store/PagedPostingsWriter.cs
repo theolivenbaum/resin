@@ -232,7 +232,7 @@ namespace Sir.Store
         private long WriteRemotely(string collectionId, byte[] payload)
         {
             var endpoint = _config.Get("postings_endpoint");
-            var request = (HttpWebRequest)WebRequest.Create(endpoint);
+            var request = (HttpWebRequest)WebRequest.Create(endpoint + collectionId);
             request.ContentType = "application/postings";
             request.Method = WebRequestMethods.Http.Post;
 

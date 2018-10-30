@@ -25,7 +25,7 @@ namespace Sir.Store
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
         private readonly Dictionary<long, VectorNode> _dirty;
-        private bool _completed;
+        private bool _serialized;
 
         public IndexingSession(
             string collectionId, 
@@ -38,14 +38,15 @@ namespace Sir.Store
             _buildQueue = new ProducerConsumerQueue<(long keyId, VectorNode index, IEnumerable<(ulong, string)> tokens)>(Build);
             _dirty = new Dictionary<long, VectorNode>();
 
-            ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)));
-            KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));
-            DocStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", collectionId)));
-            ValueIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collectionId)));
-            KeyIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collectionId)));
-            DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collectionId)));
-            //PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collectionId)));
-            VectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId)));
+            var collection = collectionId.ToHash();
+
+            ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collection)));
+            KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collection)));
+            DocStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", collection)));
+            ValueIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collection)));
+            KeyIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collection)));
+            DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collection)));
+            VectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collection)));
             Index = sessionFactory.GetCollectionIndex(collectionId.ToHash());
 
             _vals = new ValueWriter(ValueStream);
@@ -249,13 +250,13 @@ namespace Sir.Store
 
         private Stream CreateIndexStream(long keyId)
         {
-            var fileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
+            var fileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId.ToHash(), keyId));
             return new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
         }
 
         public void Serialize()
         {
-            if (_completed)
+            if (_serialized)
                 return;
 
             try
@@ -271,7 +272,7 @@ namespace Sir.Store
 
                 _log.Log("serialization completed.");
 
-                _completed = true;
+                _serialized = true;
             }
             catch (Exception ex)
             {
@@ -283,10 +284,10 @@ namespace Sir.Store
 
         public override void Dispose()
         {
-            if (!_completed)
+            if (!_serialized)
             {
                 Serialize();
-                _completed = true;
+                _serialized = true;
             }
 
             base.Dispose();

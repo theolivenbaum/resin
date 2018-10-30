@@ -6,6 +6,8 @@ _ReSharper.*
 bin
 obj
 packages
-.vs
+*.vs
 src/Sir.HttpServer/Properties/PublishProfiles
 *.log
+*.pos
+*.json

@@ -20,22 +20,6 @@ namespace Sir.Store
             _ix = ix;
         }
 
-        //public void SerializeTree(string dir)
-        //{
-        //    foreach (var index in _ix)
-        //    {
-        //        foreach (var key in index.Value)
-        //        {
-        //            var ixFileName = Path.Combine(dir, string.Format("{0}.{1}.ix", index.Key, key.Key));
-
-        //            using (var ixStream = new FileStream(ixFileName, FileMode.Create, FileAccess.Write, FileShare.None))
-        //            {
-        //                key.Value.SerializeTree(ixStream);
-        //            }
-        //        }
-        //    }
-        //}
-
         public void Add(ulong collectionId, long keyId, VectorNode index)
         {
             SortedList<long, VectorNode> collection;
