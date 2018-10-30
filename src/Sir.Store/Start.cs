@@ -8,7 +8,7 @@ namespace Sir.Store
         public void OnApplicationStartup(IServiceCollection services, ServiceProvider serviceProvider)
         {
             var tokenizer = new LatinTokenizer();
-            var config = serviceProvider.GetService<IConfiguration>();
+            var config = serviceProvider.GetService<IConfigurationService>();
 
             services.AddSingleton(typeof(LocalStorageSessionFactory), 
                 new LocalStorageSessionFactory(

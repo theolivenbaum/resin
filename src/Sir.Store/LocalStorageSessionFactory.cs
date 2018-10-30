@@ -8,7 +8,7 @@ namespace Sir.Store
     public class LocalStorageSessionFactory
     {
         private readonly ITokenizer _tokenizer;
-        private readonly IConfiguration _config;
+        private readonly IConfigurationService _config;
         private readonly SortedList<ulong, long> _keys;
         private VectorTree _index;
         private readonly StreamWriter _log;
@@ -17,7 +17,7 @@ namespace Sir.Store
 
         public string Dir { get; }
 
-        public LocalStorageSessionFactory(string dir, ITokenizer tokenizer, IConfiguration config)
+        public LocalStorageSessionFactory(string dir, ITokenizer tokenizer, IConfigurationService config)
         {
             Dir = dir;
             _log = Logging.CreateWriter("localsessionfactory");
@@ -177,7 +177,7 @@ namespace Sir.Store
 
         public ReadSession CreateReadSession(string collectionId)
         {
-            return new ReadSession(collectionId, this);
+            return new ReadSession(collectionId, this, _config);
         }
 
         public Stream CreateWriteStream(string fileName)

@@ -10,7 +10,11 @@ namespace Sir.HttpServer
     {
         public static IServiceProvider Configure(IServiceCollection services)
         {
-            // get path to plugins
+            // register config
+            services.Add(new ServiceDescriptor(typeof(IniConfiguration),
+                new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini"))));
+
+            // register plugins
             var assemblyPath = Directory.GetCurrentDirectory();
 
 #if DEBUG
@@ -25,7 +29,7 @@ namespace Sir.HttpServer
             {
                 foreach (var type in assembly.GetTypes())
                 {
-                    // we're looking for concrete implementations
+                    // search for concrete implementations
                     if (!type.IsInterface)
                     {
                         var interfaces = type.GetInterfaces();
@@ -34,7 +38,7 @@ namespace Sir.HttpServer
                             interfaces.Contains(typeof(IPluginStart)) ||
                             interfaces.Contains(typeof(IPlugin)))
                         {
-                            // register plugins and teardown procs
+                            // register plugins, startup and teardown services
                             foreach(var contract in interfaces.Where(t => t != typeof(IDisposable)))
                             {
                                 services.Add(new ServiceDescriptor(
@@ -49,10 +53,6 @@ namespace Sir.HttpServer
 
             services.Add(new ServiceDescriptor(typeof(PluginsCollection), plugins));
 
-            // register config
-            services.Add(new ServiceDescriptor(typeof(IniConfiguration),
-                new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini"))));
-
             var serviceProvider = services.BuildServiceProvider();
 
             // initiate plugins
@@ -64,17 +64,17 @@ namespace Sir.HttpServer
             // Create one instances each of all plugins and register them with the PluginCollection,
             // so that they can be fetched at runtime by Content-Type and System.Type.
 
-            foreach (var service in serviceProvider.GetServices<ITokenizer>())
+            foreach (var service in services.BuildServiceProvider().GetServices<ITokenizer>())
             {
                 plugins.Add(service.ContentType, service);
             }
 
-            foreach (var service in serviceProvider.GetServices<IReader>())
+            foreach (var service in services.BuildServiceProvider().GetServices<IReader>())
             {
                 plugins.Add(service.ContentType, service);
             }
 
-            foreach (var service in serviceProvider.GetServices<IWriter>())
+            foreach (var service in services.BuildServiceProvider().GetServices<IWriter>())
             {
                 plugins.Add(service.ContentType, service);
             }

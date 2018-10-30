@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Sir
+﻿namespace Sir
 {
-    public interface IConfiguration
+    public interface IConfigurationService
     {
         string Get(string key);
     }

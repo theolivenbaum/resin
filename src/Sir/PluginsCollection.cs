@@ -28,7 +28,7 @@ namespace Sir
             list.Add(service);
         }
 
-        public IEnumerable<string> Keys { get { return _services.Keys; } }
+        public IDictionary<string, IDictionary<Type, IList<IPlugin>>> ServicesByKey { get { return _services; } }
 
         public T Get<T>(string key) where T : IPlugin
         {
@@ -59,7 +59,7 @@ namespace Sir
             }
         }
 
-        private IEnumerable<T> Services<T>(string key) where T : IPlugin
+        public IEnumerable<T> Services<T>(string key) where T : IPlugin
         {
             if (key == null) key = string.Empty;
 

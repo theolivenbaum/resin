@@ -8,28 +8,45 @@ namespace Sir.HttpServer.Controllers
     [Route("plugins")]
     public class PluginsController : Controller
     {
-        private PluginsCollection _writeActions;
+        private PluginsCollection _plugins;
 
         public PluginsController(PluginsCollection writeActions)
         {
-            _writeActions = writeActions;
+            _plugins = writeActions;
         }
 
         [HttpGet]
         public IEnumerable<PluginModel> Get()
         {
-            return _writeActions.Keys.Select(s => new PluginModel
+            return _plugins.ServicesByKey.Select(p => new PluginModel
             {
-                ContentType = s,
-                Actions = _writeActions.All<IPlugin>(s, includeWildcardServices:false)
-                    .Select(a=>a.GetType().ToString())
+                Name = p.Key,
+                Services = p.Value.Select(s => new PluginServiceModel
+                {
+                    Name = s.Key.ToString(),
+                    Services = s.Value.Select(x => new PluginServiceModel
+                    {
+                        Name = x.GetType().ToString(),
+                        ContentType = x.ContentType
+                    })
+                })
             });
         }
 
         public class PluginModel
         {
+            public string Name { get; set; }
+
+            public IEnumerable<PluginServiceModel> Services { get; set; }
+        }
+
+        public class PluginServiceModel
+        {
+            public string Name { get; set; }
+
             public string ContentType { get; set; }
-            public IEnumerable<string> Actions { get; set; }
+
+            public IEnumerable<PluginServiceModel> Services { get; set; }
         }
     }
 

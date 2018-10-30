@@ -100,7 +100,7 @@ namespace Sir.DbUtil
 
                 var collectionId = name[0];
 
-                if (collectionId == collection)
+                if (collectionId == collection.ToHash().ToString())
                 {
                     using (var readSession = new DocumentReadSession(collection, sessionFactory))
                     {

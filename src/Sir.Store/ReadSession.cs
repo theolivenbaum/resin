@@ -18,10 +18,12 @@ namespace Sir.Store
         private readonly ValueIndexReader _valIx;
         private readonly ValueReader _keyReader;
         private readonly ValueReader _valReader;
-        private readonly PagedPostingsReader _postingsReader;
+        private readonly RemotePostingsReader _postingsReader;
         private readonly StreamWriter _log;
 
-        public ReadSession(string collectionId, LocalStorageSessionFactory sessionFactory) 
+        public ReadSession(string collectionId, 
+            LocalStorageSessionFactory sessionFactory, 
+            IConfigurationService config) 
             : base(collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)));
@@ -40,7 +42,7 @@ namespace Sir.Store
             _valIx = new ValueIndexReader(ValueIndexStream);
             _keyReader = new ValueReader(KeyStream);
             _valReader = new ValueReader(ValueStream);
-            _postingsReader = new PagedPostingsReader(PostingsStream);
+            _postingsReader = new RemotePostingsReader(config);
 
             _log = Logging.CreateWriter("session");
         }
@@ -159,7 +161,7 @@ namespace Sir.Store
                                 throw new InvalidDataException(match.ToString());
                             }
 
-                            var docIds = _postingsReader.Read(match.PostingsOffset)
+                            var docIds = _postingsReader.Read(CollectionId, match.PostingsOffset)
                                 .ToDictionary(x => x, y => match.Highscore);
 
                             if (result == null)

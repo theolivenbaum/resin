@@ -72,17 +72,17 @@ namespace Sir.Store
 
     public class RemotePostingsReader
     {
-        private IConfiguration _config;
+        private IConfigurationService _config;
 
-        public RemotePostingsReader(IConfiguration config)
+        public RemotePostingsReader(IConfigurationService config)
         {
             _config = config;
         }
 
-        public IList<ulong> Read(long offset)
+        public IList<ulong> Read(string collectionId, long offset)
         {
             var endpoint = _config.Get("postings_endpoint");
-            var request = (HttpWebRequest)WebRequest.Create(endpoint);
+            var request = (HttpWebRequest)WebRequest.Create(endpoint + collectionId);
             request.ContentType = "application/postings";
             request.Method = WebRequestMethods.Http.Get;
 

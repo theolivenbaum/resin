@@ -31,7 +31,7 @@ namespace Sir.Store
             string collectionId, 
             LocalStorageSessionFactory sessionFactory, 
             ITokenizer tokenizer,
-            IConfiguration config) : base(collectionId, sessionFactory)
+            IConfigurationService config) : base(collectionId, sessionFactory)
         {
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("session");

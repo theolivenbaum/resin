@@ -18,6 +18,7 @@ namespace Sir.HttpServer
         }
 
         public IConfiguration Configuration { get; }
+
         public IServiceProvider ServiceProvider { get; private set; }
 
         public void ConfigureServices(IServiceCollection services)

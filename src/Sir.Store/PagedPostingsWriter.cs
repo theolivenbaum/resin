@@ -206,9 +206,9 @@ namespace Sir.Store
 
     public class RemotePostingsWriter
     {
-        private IConfiguration _config;
+        private IConfigurationService _config;
 
-        public RemotePostingsWriter(IConfiguration config)
+        public RemotePostingsWriter(IConfigurationService config)
         {
             _config = config;
         }
@@ -253,7 +253,8 @@ namespace Sir.Store
 
         private void WriteRemotely(string collectionId, byte[] payload, long offset)
         {
-            var request = (HttpWebRequest)WebRequest.Create("https://...");
+            var endpoint = _config.Get("postings_endpoint");
+            var request = (HttpWebRequest)WebRequest.Create(endpoint + collectionId);
             request.ContentType = "application/postings";
             request.Method = WebRequestMethods.Http.Post;
 
