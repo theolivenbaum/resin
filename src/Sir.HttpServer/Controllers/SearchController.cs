@@ -33,8 +33,7 @@ namespace Sir.HttpServer.Controllers
             var timer = new Stopwatch();
             timer.Start();
 
-            var mediaType = Request.Headers["Accept"].ToArray()[0];
-            var reader = _plugins.Get<IReader>(mediaType);
+            var reader = _plugins.Get<IReader>("application/json");
 
             if (reader == null)
             {
