@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System.IO;
 
 namespace Sir.Store
 {
@@ -12,7 +11,7 @@ namespace Sir.Store
 
             services.AddSingleton(typeof(LocalStorageSessionFactory), 
                 new LocalStorageSessionFactory(
-                    Path.Combine(Directory.GetCurrentDirectory(), "App_Data"), 
+                    config.Get("data_dir"), 
                     tokenizer,
                     config));
 

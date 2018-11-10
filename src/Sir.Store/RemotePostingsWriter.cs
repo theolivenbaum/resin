@@ -17,8 +17,10 @@ namespace Sir.Store
         public IList<long> Write(string collectionId, byte[] payload)
         {
             var positions = new List<long>();
-            var endpoint = _config.Get("postings_endpoint");
-            var request = (HttpWebRequest)WebRequest.Create(endpoint + collectionId);
+
+            var endpoint = _config.Get("postings_endpoint") + collectionId;
+
+            var request = (HttpWebRequest)WebRequest.Create(endpoint);
 
             request.ContentType = "application/postings";
             request.Method = WebRequestMethods.Http.Post;

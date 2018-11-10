@@ -6,10 +6,17 @@ namespace Sir.HttpServer.Controllers
 {
     public abstract class UIController : Controller
     {
+        private readonly IConfigurationService _config;
+
+        public UIController(IConfigurationService config)
+        {
+            _config = config;
+        }
+
         public override void OnActionExecuted(ActionExecutedContext context)
         {
             long? docCount = null;
-            string fileName = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "6604389855880847730.docs");
+            string fileName = Path.Combine(_config.Get("data_dir"), "6604389855880847730.docs");
             if (System.IO.File.Exists(fileName))
             {
                 docCount = new FileInfo(fileName).Length/111;

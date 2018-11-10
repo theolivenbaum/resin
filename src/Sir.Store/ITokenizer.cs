@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 
-namespace Sir
+namespace Sir.Store
 {
     /// <summary>
     /// Full-text tokenizer
     /// </summary>
-    public interface ITokenizer : IPlugin
+    public interface ITokenizer
     {
         IEnumerable<string> Tokenize(string text);
 

@@ -7,12 +7,15 @@ namespace Sir.Postings
 {
     public class StreamRepository
     {
+        private readonly IConfigurationService _config;
+
         private IDictionary<ulong, IDictionary<long, IList<(long, long)>>> _index { get; set; }
 
         private const string FileNameFormat = "{0}.pos";
 
-        public StreamRepository()
+        public StreamRepository(IConfigurationService config)
         {
+            _config = config;
             _index = new Dictionary<ulong, IDictionary<long, IList<(long, long)>>>();
         }
 
@@ -32,7 +35,7 @@ namespace Sir.Postings
                 throw new ArgumentException(nameof(id));
             }
 
-            var fileName = string.Format(FileNameFormat, collectionId);
+            var fileName = Path.Combine(_config.Get("data_dir"), string.Format(FileNameFormat, collectionId));
             var result = new MemoryStream();
 
             using (var file = new FileStream(
@@ -71,7 +74,7 @@ namespace Sir.Postings
             }
 
             var buf = payload.ToArray();
-            var fileName = string.Format(FileNameFormat, collectionId);
+            var fileName = Path.Combine(_config.Get("data_dir"), string.Format(FileNameFormat, collectionId));
             long pos;
             long len;
 
@@ -118,7 +121,7 @@ namespace Sir.Postings
             }
 
             var buf = payload.ToArray();
-            var fileName = string.Format(FileNameFormat, collectionId);
+            var fileName = Path.Combine(_config.Get("data_dir"), string.Format(FileNameFormat, collectionId));
             long pos;
             long len;
 

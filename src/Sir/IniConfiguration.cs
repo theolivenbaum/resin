@@ -17,7 +17,7 @@ namespace Sir
             {
                 var segs = line.Split('=');
 
-                _doc.Add(segs[0], segs[1]);
+                _doc.Add(segs[0].Trim(), segs[1].Trim());
             }
         }
 

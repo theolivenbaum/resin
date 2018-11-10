@@ -11,7 +11,7 @@ namespace Sir.HttpServer
         public static IServiceProvider Configure(IServiceCollection services)
         {
             // register config
-            services.Add(new ServiceDescriptor(typeof(IniConfiguration),
+            services.Add(new ServiceDescriptor(typeof(IConfigurationService),
                 new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini"))));
 
             // register plugins
@@ -63,11 +63,6 @@ namespace Sir.HttpServer
 
             // Create one instances each of all plugins and register them with the PluginCollection,
             // so that they can be fetched at runtime by Content-Type and System.Type.
-
-            foreach (var service in services.BuildServiceProvider().GetServices<ITokenizer>())
-            {
-                plugins.Add(service.ContentType, service);
-            }
 
             foreach (var service in services.BuildServiceProvider().GetServices<IReader>())
             {

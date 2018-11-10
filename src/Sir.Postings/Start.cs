@@ -6,7 +6,8 @@ namespace Sir.Postings
     {
         public void OnApplicationStartup(IServiceCollection services, ServiceProvider serviceProvider)
         {
-            services.AddSingleton(typeof(StreamRepository), new StreamRepository());
+            services.AddSingleton(typeof(StreamRepository), 
+                new StreamRepository(serviceProvider.GetService<IConfigurationService>()));
         }
     }
 }

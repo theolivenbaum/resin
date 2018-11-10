@@ -23,19 +23,20 @@ namespace Sir.HttpServer
 
         public void ConfigureServices(IServiceCollection services)
         {
+            ServiceProvider = ServiceConfiguration.Configure(services);
+
             services.AddMvc(options =>
             {
                 options.RespectBrowserAcceptHeader = true;
             });
 
-            var dataDir = Path.Combine(Directory.GetCurrentDirectory(), "App_Data");
+            var dataDir = ServiceProvider.GetService<IConfigurationService>().Get("data_dir");
 
             if (!Directory.Exists(dataDir))
             {
                 Directory.CreateDirectory(dataDir);
             }
 
-            ServiceProvider = ServiceConfiguration.Configure(services);
         }
 
         public void Configure(IApplicationBuilder app, IApplicationLifetime applicationLifetime, IHostingEnvironment env)

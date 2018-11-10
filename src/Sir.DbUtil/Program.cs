@@ -22,11 +22,11 @@ namespace Sir.DbUtil
 
             var command = args[0].ToLower();
 
-            if (command == "build" && args.Length == 6)
+            if (command == "index" && args.Length == 6)
             {
-                // example: build C:\projects\resin\src\Sir.HttpServer\App_Data www 0 10000 1000
+                // example: index C:\projects\resin\src\Sir.HttpServer\App_Data www 0 10000 1000
 
-                BuildIndex(
+                Index(
                     dir: args[1], 
                     collection: args[2], 
                     skip: int.Parse(args[3]), 
@@ -81,7 +81,7 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void BuildIndex(string dir, string collection, int skip, int take, int batchSize)
+        private static void Index(string dir, string collection, int skip, int take, int batchSize)
         {
             var timer = new Stopwatch();
             timer.Start();

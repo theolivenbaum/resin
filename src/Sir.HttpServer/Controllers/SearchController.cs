@@ -11,7 +11,7 @@ namespace Sir.HttpServer.Controllers
     {
         private readonly PluginsCollection _plugins;
 
-        public SearchController(PluginsCollection plugins)
+        public SearchController(PluginsCollection plugins, IConfigurationService config) : base(config)
         {
             _plugins = plugins;
         }
@@ -41,6 +41,7 @@ namespace Sir.HttpServer.Controllers
             }
 
             var result = await reader.Read(collectionId, Request);
+
             var documents = result.Documents
                 .Select(x => new SearchResultModel { Document = x })
                 .Take(100);
