@@ -19,13 +19,15 @@ namespace Sir
             {
                 _services.Add(key, new Dictionary<Type, IList<IPlugin>>());
             }
+
             var t = typeof(T);
-            if(!_services[key].ContainsKey(t))
+
+            if (!_services[key].ContainsKey(t))
             {
                 _services[key].Add(t, new List<IPlugin>());
             }
-            var list = _services[key][t];
-            list.Add(service);
+
+            _services[key][t].Add(service);
         }
 
         public IDictionary<string, IDictionary<Type, IList<IPlugin>>> ServicesByKey { get { return _services; } }
@@ -35,27 +37,20 @@ namespace Sir
             return All<T>(key).FirstOrDefault();
         }
 
-        public T Get<T>() where T : IPlugin
+        public IEnumerable<T> Get<T>() where T : IPlugin
         {
-            return All<T>("*").FirstOrDefault();
+            foreach (var s in _services.Values.SelectMany(x => x.Values.SelectMany(y => y)))
+            {
+                if (typeof(T).IsInstanceOfType(s))
+                    yield return (T)s;
+            }
         }
 
-        public IEnumerable<T> All<T>(string key, bool includeWildcardServices = true) where T : IPlugin
+        public IEnumerable<T> All<T>(string key) where T : IPlugin
         {
-            if (includeWildcardServices)
+            foreach (var s in Services<T>(key))
             {
-                foreach (var s in Services<T>("*"))
-                {
-                    yield return (T)s;
-                }
-            }
-            
-            if (key != "*")
-            {
-                foreach (var s in Services<T>(key))
-                {
-                    yield return (T)s;
-                }
+                yield return (T)s;
             }
         }
 

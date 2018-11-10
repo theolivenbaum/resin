@@ -21,7 +21,7 @@ namespace Sir.Store
 
         public long VecOffset { get; private set; }
         public IEnumerable<ulong> DocIds { get => _docIds; }
-        public long PostingsOffset { get; private set; }
+        public long PostingsOffset { get; set; }
         public float Angle { get; private set; }
         public float Highscore { get; private set; }
         public SortedList<int, byte> TermVector { get; }
@@ -275,7 +275,8 @@ namespace Sir.Store
             return block;
         }
 
-        public void SerializeTreeAndPayload(string collectionId, Stream indexStream, Stream vectorStream, RemotePostingsWriter postingsWriter)
+        public void SerializeTree(
+            string collectionId, Stream indexStream, Stream vectorStream)
         {
             var node = this;
             var stack = new Stack<VectorNode>();
@@ -292,26 +293,8 @@ namespace Sir.Store
                     }
                     else
                     {
-                        var ids = node._docIds.ToArray();
-
-                        node._docIds.Clear();
-
-                        if (ids.Length > 0)
-                        {
-                            node.PostingsOffset = postingsWriter.Write(collectionId, ids);
-                        }
                         node.VecOffset = node.TermVector.Serialize(vectorStream);
                     }
-                }
-                else if (node._docIds.Count > 0)
-                {
-                    // this node is dirty
-
-                    var ids = node._docIds.ToArray();
-
-                    node._docIds.Clear();
-
-                    postingsWriter.Write(collectionId, node.PostingsOffset, ids);
                 }
 
                 foreach (var buf in node.ToStream())
@@ -333,6 +316,42 @@ namespace Sir.Store
                 }
             }
         }
+
+        public IEnumerable<VectorNode> SerializePostings(string collectionId, Stream lengths, Stream lists)
+        {
+            var node = Right;
+            var stack = new Stack<VectorNode>();
+
+            while (node != null)
+            {
+                if (node._docIds.Count > 0)
+                {
+                    var list = node._docIds.ToArray();
+
+                    node._docIds.Clear();
+
+                    lists.Write(list.ToStream());
+                    lengths.Write(BitConverter.GetBytes((long)list.Length));
+
+                    yield return node;
+                }
+
+                if (node.Right != null)
+                {
+                    stack.Push(node.Right);
+                }
+
+                node = node.Left;
+
+                if (node == null)
+                {
+                    if (stack.Count > 0)
+                        node = stack.Pop();
+                }
+            }
+        }
+
+
 
         public static VectorNode Deserialize(Stream indexStream, Stream vectorStream)
         {
@@ -433,6 +452,23 @@ namespace Sir.Store
                 w.Append((char)c.Key);
             }
             return w.ToString();
+        }
+    }
+
+    public static class StreamHelper
+    {
+        public static byte[] ToStream(this IEnumerable<ulong> docIds)
+        {
+            var payload = new MemoryStream();
+
+            foreach (var id in docIds)
+            {
+                var buf = BitConverter.GetBytes(id);
+
+                payload.Write(buf, 0, buf.Length);
+            }
+
+            return payload.ToArray();
         }
     }
 }

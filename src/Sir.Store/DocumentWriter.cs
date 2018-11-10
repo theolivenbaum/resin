@@ -11,16 +11,16 @@ namespace Sir.Store
     /// <summary>
     /// Write into a document collection.
     /// </summary>
-    public class Writer : IWriter
+    public class DocumentWriter : IWriter
     {
-        public string ContentType => "*";
+        public string ContentType => "application/json";
 
         private readonly LocalStorageSessionFactory _sessionFactory;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
         private readonly Stopwatch _timer;
 
-        public Writer(LocalStorageSessionFactory sessionFactory, ITokenizer analyzer)
+        public DocumentWriter(LocalStorageSessionFactory sessionFactory, ITokenizer analyzer)
         {
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;

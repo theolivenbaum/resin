@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -201,83 +200,6 @@ namespace Sir.Store
 
             return offset;
 
-        }
-    }
-
-    public class RemotePostingsWriter
-    {
-        private IConfigurationService _config;
-
-        public RemotePostingsWriter(IConfigurationService config)
-        {
-            _config = config;
-        }
-
-        public long Write(string collectionId, IList<ulong> docIds)
-        {
-            var payload = ToStream(docIds);
-
-            var id = WriteRemotely(collectionId, payload);
-
-            return id;
-        }
-
-        public void Write(string collectionId, long offset, IList<ulong> docIds)
-        {
-            var payload = ToStream(docIds);
-
-            WriteRemotely(collectionId, payload, offset);
-        }
-
-        private long WriteRemotely(string collectionId, byte[] payload)
-        {
-            var endpoint = _config.Get("postings_endpoint");
-            var request = (HttpWebRequest)WebRequest.Create(endpoint + collectionId);
-            request.ContentType = "application/postings";
-            request.Method = WebRequestMethods.Http.Post;
-
-            var requestBody = request.GetRequestStream();
-
-            requestBody.Write(payload, 0, payload.Length);
-
-            var response = (HttpWebResponse)request.GetResponse();
-            var location = new Uri(response.Headers["Location"]);
-
-            response.Close();
-
-            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(location.Query);
-            var id = long.Parse(query["id"].ToArray()[0]);
-
-            return id;
-        }
-
-        private void WriteRemotely(string collectionId, byte[] payload, long offset)
-        {
-            var endpoint = _config.Get("postings_endpoint");
-            var request = (HttpWebRequest)WebRequest.Create(endpoint + collectionId);
-            request.ContentType = "application/postings";
-            request.Method = WebRequestMethods.Http.Post;
-
-            var requestBody = request.GetRequestStream();
-
-            requestBody.Write(payload, 0, payload.Length);
-
-            var response = request.GetResponse();
-            response.Close();
-        }
-
-        private byte[] ToStream(IList<ulong> docIds)
-        {
-            var payload = new MemoryStream();
-
-            foreach (var id in docIds)
-            {
-                var buf = BitConverter.GetBytes(id);
-
-                payload.Write(buf, 0, buf.Length);
-            }
-
-            return payload.ToArray();
         }
     }
 }

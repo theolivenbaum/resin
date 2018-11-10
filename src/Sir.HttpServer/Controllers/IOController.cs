@@ -41,14 +41,13 @@ namespace Sir.HttpServer.Controllers
                 return StatusCode(415); // Media type not supported
             }
 
-            var payload = Request.Body;
             long recordId;
 
             try
             {
                 var copy = new MemoryStream();
 
-                await payload.CopyToAsync(copy);
+                await Request.Body.CopyToAsync(copy);
 
                 copy.Position = 0;
 
@@ -69,7 +68,8 @@ namespace Sir.HttpServer.Controllers
             }
 
             Response.Headers.Add(
-                "Location", new Microsoft.Extensions.Primitives.StringValues(string.Format("{0}/io/{1}?id={2}", Request.Host, collectionId, recordId)));
+                "Location", new Microsoft.Extensions.Primitives.StringValues(
+                    string.Format("{0}/io/{1}?id={2}", Request.Host, collectionId, recordId)));
 
             return StatusCode(201); // Created
         }
@@ -78,8 +78,8 @@ namespace Sir.HttpServer.Controllers
         [HttpPut("{*collectionId}")]
         public async Task<HttpResponseMessage> Get(string collectionId)
         {
-            var mediaType = Request.ContentType ?? string.Empty;
-            var reader = _plugins.Get<IReader>();
+            var mediaType = Request.Headers["Accept"].ToArray()[0];
+            var reader = _plugins.Get<IReader>(mediaType);
 
             if (reader == null)
             {

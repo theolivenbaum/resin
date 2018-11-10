@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Sir.Core;
 
@@ -181,7 +182,6 @@ namespace Sir.Store
                         if (ix == null)
                         {
                             ix = new VectorNode();
-                            //SessionFactory.AddIndex(CollectionId, keyId, ix);
                         }
                         _dirty.Add(keyId, ix);
                     }
@@ -226,19 +226,70 @@ namespace Sir.Store
                 count, CollectionId, keyId, timer.Elapsed, index.Size()));
         }
 
-        private void Serialize(long keyId, VectorNode node)
+        public void Serialize()
         {
+            if (_serialized)
+                return;
+
             try
             {
-                using (var ixFile = CreateIndexStream(keyId))
+                _buildQueue.Dispose();
+
+                _log.Log("in-memory search index has been built.");
+
+                var rootNodes = _dirty.ToList();
+                var nodes = new List<VectorNode>();
+                byte[] payload;
+                var payloadCount = 0;
+
+                using (var message = new MemoryStream())
+                using (var header = new MemoryStream())
+                using (var body = new MemoryStream())
                 {
-                    node.SerializeTreeAndPayload(
-                        CollectionId,
-                        ixFile,
-                        VectorStream,
-                        _postingsWriter);
+                    foreach (var node in rootNodes)
+                    {
+                        var dirty = node.Value.SerializePostings(
+                                CollectionId,
+                                header,
+                                body)
+                                .ToList();
+
+                        payloadCount += dirty.Count;
+
+                        nodes.AddRange(dirty);
+                    }
+
+                    message.Write(BitConverter.GetBytes(payloadCount));
+
+                    header.Position = 0;
+                    header.CopyTo(message);
+
+                    body.Position = 0;
+                    body.CopyTo(message);
+
+                    payload = message.ToArray();
                 }
-                _log.Log(string.Format("serialized column {0}", keyId));
+
+                var positions = _postingsWriter.Write(CollectionId, payload);
+
+                for (int i = 0;i < nodes.Count; i++)
+                {
+                    var node = nodes[i];
+
+                    node.PostingsOffset = positions[i];
+                }
+
+                foreach (var node in rootNodes)
+                {
+                    using (var ixFile = CreateIndexStream(node.Key))
+                    {
+                        node.Value.SerializeTree(CollectionId, ixFile, VectorStream);
+                    }
+                }
+
+                _log.Log("serialization complete.");
+
+                _serialized = true;
             }
             catch (Exception ex)
             {
@@ -252,34 +303,6 @@ namespace Sir.Store
         {
             var fileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId.ToHash(), keyId));
             return new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
-        }
-
-        public void Serialize()
-        {
-            if (_serialized)
-                return;
-
-            try
-            {
-                _buildQueue.Dispose();
-
-                _log.Log("build queue completed.");
-
-                foreach (var x in _dirty)
-                {
-                    Serialize(x.Key, x.Value);
-                }
-
-                _log.Log("serialization completed.");
-
-                _serialized = true;
-            }
-            catch (Exception ex)
-            {
-                _log.Log(ex);
-
-                throw;
-            }
         }
 
         public override void Dispose()
