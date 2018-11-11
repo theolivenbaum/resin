@@ -331,7 +331,7 @@ namespace Sir.Store
                     node._docIds.Clear();
 
                     lists.Write(list.ToStream());
-                    lengths.Write(BitConverter.GetBytes((long)list.Length));
+                    lengths.Write(BitConverter.GetBytes(list.Length));
 
                     yield return node;
                 }

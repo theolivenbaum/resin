@@ -41,35 +41,21 @@ namespace Sir.HttpServer.Controllers
                 return StatusCode(415); // Media type not supported
             }
 
-            long recordId;
-
             try
             {
-                var copy = new MemoryStream();
-
-                await Request.Body.CopyToAsync(copy);
-
-                copy.Position = 0;
-
                 if (id == null)
                 {
-                    recordId = await writer.Write(collectionId, copy);
+                    await writer.Write(collectionId, Request.Body, Response.Body);
                 }
                 else
                 {
-                    recordId = long.Parse(id);
-
-                    await writer.Write(collectionId, recordId, copy);
+                    await writer.Write(collectionId, long.Parse(id), Request.Body, Response.Body);
                 }
             }
             catch (Exception ew)
             {
                 throw ew;
             }
-
-            Response.Headers.Add(
-                "Location", new Microsoft.Extensions.Primitives.StringValues(
-                    string.Format("{0}/io/{1}?id={2}", Request.Host, collectionId, recordId)));
 
             return StatusCode(201); // Created
         }

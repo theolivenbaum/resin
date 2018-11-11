@@ -14,14 +14,14 @@ namespace Sir.Postings
             _data = data;
         }
 
-        public async Task<long> Write(string collectionId, Stream payload)
+        public async Task Write(string collectionId, Stream request, Stream response)
         {
-            return await _data.Write(collectionId.ToHash(), (MemoryStream)payload);
+            await _data.Write(collectionId.ToHash(), request, response);
         }
 
-        public async Task Write(string collectionId, long id, Stream payload)
+        public async Task Write(string collectionId, long id, Stream request, Stream response)
         {
-            await _data.Write(collectionId.ToHash(), (MemoryStream)payload, id);
+            await _data.Write(collectionId.ToHash(), id, request, response);
         }
 
         public void Dispose()

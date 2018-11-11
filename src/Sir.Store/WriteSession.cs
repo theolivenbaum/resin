@@ -47,9 +47,9 @@ namespace Sir.Store
             _docIx = new DocIndexWriter(DocIndexStream);
         }
 
-        public async Task<ulong> Write(IEnumerable<IDictionary> models)
+        public async Task<IList<ulong>> Write(IEnumerable<IDictionary> models)
         {
-            ulong lastProcessedDocId = 0;
+            var docIds = new List<ulong>();
             var docCount = 0;
             var timer = new Stopwatch();
 
@@ -91,13 +91,13 @@ namespace Sir.Store
 
                 model.Add("__docid", docId);
 
-                lastProcessedDocId = docId;
+                docIds.Add(docId);
                 docCount++;
             }
 
             _log.Log(string.Format("processed {0} documents in {1}", docCount, timer.Elapsed));
 
-            return lastProcessedDocId;
+            return docIds;
         }
     }
 }

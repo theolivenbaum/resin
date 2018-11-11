@@ -28,7 +28,7 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
-        public async Task<long> Write(string collectionId, Stream payload)
+        public async Task Write(string collectionId, Stream payload, Stream response)
         {
             try
             {
@@ -39,7 +39,9 @@ namespace Sir.Store
 
                 _log.Log(string.Format("deserialized write job {0} for collection {1} in {2}", job.Id, collectionId, _timer.Elapsed));
 
-                return await ExecuteWrite(job);
+                var docIds = await ExecuteWrite(job);
+
+                Serialize(docIds, response);
             }
             catch (Exception ex)
             {
@@ -49,29 +51,37 @@ namespace Sir.Store
             }
         }
 
-        public async Task Write(string collectionId, long id, Stream payload)
+        private static void Serialize(object value, Stream s)
+        {
+            using (StreamWriter writer = new StreamWriter(s))
+            using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
+            {
+                JsonSerializer ser = new JsonSerializer();
+                ser.Serialize(jsonWriter, value);
+            }
+        }
+
+        public async Task Write(string collectionId, long id, Stream payload, Stream response)
         {
             throw new NotImplementedException();
         }
 
-        private async Task<long> ExecuteWrite(WriteJob job)
+        private async Task<IList<ulong>> ExecuteWrite(WriteJob job)
         {
             try
             {
                 _timer.Restart();
 
-                Task<ulong> lastProcessedDocId;
+                IList<ulong> docIds;
 
                 using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
                 {
-                    lastProcessedDocId = session.Write(job.Documents);
+                    docIds = await session.Write(job.Documents);
                 }
 
                 _log.Log(string.Format("executed write job {0} in {1}", job.Id, _timer.Elapsed));
 
-                var id = await lastProcessedDocId;
-
-                return Convert.ToInt64(id);
+                return docIds;
             }
             catch (Exception ex)
             {
