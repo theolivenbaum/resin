@@ -16,13 +16,14 @@ namespace Sir.Store
 
         public IList<long> Write(string collectionId, byte[] payload)
         {
-            var positions = new List<long>();
+            var result = new List<long>();
 
             var endpoint = _config.Get("postings_endpoint") + collectionId;
 
             var request = (HttpWebRequest)WebRequest.Create(endpoint);
 
             request.ContentType = "application/postings";
+            request.Accept = "application/octetstream";
             request.Method = WebRequestMethods.Http.Post;
             request.ContentLength = payload.Length;
 
@@ -38,11 +39,16 @@ namespace Sir.Store
                         responseBody.CopyTo(mem);
                         var buf = mem.ToArray();
 
+                        if (buf.Length != response.ContentLength)
+                        {
+                            throw new DataMisalignedException();
+                        }
+
                         int read = 0;
 
                         while (read < response.ContentLength)
                         {
-                            positions.Add(BitConverter.ToInt64(buf, read));
+                            result.Add(BitConverter.ToInt64(buf, read));
 
                             read += sizeof(long);
                         }
@@ -50,7 +56,7 @@ namespace Sir.Store
                 }
             }
 
-            return positions;    
+            return result;    
         }
 
         

@@ -237,6 +237,8 @@ namespace Sir.Store
 
                 _log.Log("in-memory search index has been built.");
 
+                // create postings message
+
                 var rootNodes = _dirty.ToList();
                 var nodes = new List<VectorNode>();
                 byte[] payload;
@@ -248,6 +250,7 @@ namespace Sir.Store
                 {
                     foreach (var node in rootNodes)
                     {
+                        // for all nodes: write length of word to header and word itself to body
                         var dirty = node.Value.SerializePostings(
                                 CollectionId,
                                 header,
@@ -259,11 +262,14 @@ namespace Sir.Store
                         nodes.AddRange(dirty);
                     }
 
+                    // first word of payload is: payload count
                     message.Write(BitConverter.GetBytes(payloadCount));
 
+                    // next block is header
                     header.Position = 0;
                     header.CopyTo(message);
 
+                    // last block is body
                     body.Position = 0;
                     body.CopyTo(message);
 

@@ -20,7 +20,6 @@ namespace Sir.Store
         private HashSet<ulong> _docIds;
 
         public long VecOffset { get; private set; }
-        public IEnumerable<ulong> DocIds { get => _docIds; }
         public long PostingsOffset { get; set; }
         public float Angle { get; private set; }
         public float Highscore { get; private set; }
@@ -72,12 +71,6 @@ namespace Sir.Store
             TermVector = s.ToVector();
             PostingsOffset = -1;
             VecOffset = -1;
-        }
-
-        public VectorNode ClosestMatch(string word, bool skipDirtyNodes = true)
-        {
-            var node = new VectorNode(word);
-            return ClosestMatch(node, skipDirtyNodes);
         }
 
         public virtual VectorNode ClosestMatch(VectorNode node, bool skipDirtyNodes = true)
@@ -287,14 +280,7 @@ namespace Sir.Store
                 {
                     // this node has never been persisted
 
-                    if (node.Ancestor != null && node._docIds.Count == 0)
-                    {
-                        throw new InvalidDataException();
-                    }
-                    else
-                    {
-                        node.VecOffset = node.TermVector.Serialize(vectorStream);
-                    }
+                    node.VecOffset = node.TermVector.Serialize(vectorStream);
                 }
 
                 foreach (var buf in node.ToStream())
@@ -326,6 +312,8 @@ namespace Sir.Store
             {
                 if (node._docIds.Count > 0)
                 {
+                    // dirty node
+
                     var list = node._docIds.ToArray();
 
                     node._docIds.Clear();

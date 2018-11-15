@@ -9,5 +9,7 @@ packages
 *.vs
 src/Sir.HttpServer/Properties/PublishProfiles
 *.log
+*.log.txt
+log/*.*
 *.pos
 *.json

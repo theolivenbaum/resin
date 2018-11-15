@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 
 namespace Sir.Postings
@@ -11,12 +12,43 @@ namespace Sir.Postings
 
         private IDictionary<ulong, IDictionary<long, IList<(long, long)>>> _index { get; set; }
 
-        private const string FileNameFormat = "{0}.pos";
+        private const string DataFileNameFormat = "{0}.pos";
+        private const string IndexFileName = "_.pix";
 
         public StreamRepository(IConfigurationService config)
         {
             _config = config;
-            _index = new Dictionary<ulong, IDictionary<long, IList<(long, long)>>>();
+
+            var ixfn = Path.Combine(_config.Get("data_dir"), IndexFileName);
+
+            if (File.Exists(ixfn))
+            {
+                _index = ReadIndex(ixfn);
+            }
+            else
+            {
+                _index = new Dictionary<ulong, IDictionary<long, IList<(long, long)>>>();
+            }
+        }
+
+        private IDictionary<ulong, IDictionary<long, IList<(long, long)>>> ReadIndex(string fileName)
+        {
+            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.None, 4096))
+            {
+                var formatter = new BinaryFormatter();
+                return (IDictionary<ulong, IDictionary<long, IList<(long, long)>>>)formatter.Deserialize(fs);
+            }
+        }
+
+        private void FlushIndex()
+        {
+            var fileName = Path.Combine(_config.Get("data_dir"), IndexFileName);
+
+            using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096))
+            {
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(fs, _index);
+            }
         }
 
         public async Task<MemoryStream> Read(ulong collectionId, long id)
@@ -35,7 +67,7 @@ namespace Sir.Postings
                 throw new ArgumentException(nameof(id));
             }
 
-            var fileName = Path.Combine(_config.Get("data_dir"), string.Format(FileNameFormat, collectionId));
+            var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));
             var result = new MemoryStream();
 
             using (var file = new FileStream(
@@ -63,7 +95,7 @@ namespace Sir.Postings
             return result;
         }
 
-        public async Task Write(ulong collectionId, Stream request, Stream response)
+        public async Task<MemoryStream> Write(ulong collectionId, Stream request)
         {
             IDictionary<long, IList<(long, long)>> collectionIndex;
 
@@ -74,14 +106,16 @@ namespace Sir.Postings
             }
 
             var mem = new MemoryStream();
-            request.CopyTo(mem);
+            await request.CopyToAsync(mem);
 
             var messageBuf = mem.ToArray();
             int read = 0;
-            var payloadCount = BitConverter.ToInt32(messageBuf, 0);
 
+            // read first word of payload
+            var payloadCount = BitConverter.ToInt32(messageBuf, 0);
             read = sizeof(int);
 
+            // read lengths
             var lengths = new List<int>();
 
             for (int index = 0; index < payloadCount; index++)
@@ -90,6 +124,7 @@ namespace Sir.Postings
                 read += sizeof(int);
             }
 
+            // read lists
             var lists = new List<byte[]>();
 
             for (int index = 0; index < lengths.Count; index++)
@@ -102,23 +137,16 @@ namespace Sir.Postings
 
             var positions = new List<long>();
 
-            var fileName = Path.Combine(_config.Get("data_dir"), string.Format(FileNameFormat, collectionId));
+            var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));
 
-            foreach(var list in lists)
+            using (var file = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true))
+            foreach (var list in lists)
             {
-                long pos;
-                long len;
+                long pos = file.Position;
 
-                using (var file = new FileStream(
-                    fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true))
-                {
-                    pos = file.Position;
+                await file.WriteAsync(list);
 
-                    await file.WriteAsync(messageBuf);
-
-                    len = file.Position - pos;
-                }
-
+                long len = file.Position - pos;
 
                 IList<(long, long)> ix;
 
@@ -130,49 +158,19 @@ namespace Sir.Postings
                 }
 
                 ix.Add((pos, len));
+                positions.Add(pos);
             }
-            
 
-        }
+            var res = new MemoryStream();
 
-        public async Task<long> Write(ulong collectionId, long id, Stream request, Stream response)
-        {
-            IDictionary<long, IList<(long, long)>> collectionIndex;
-
-            if (!_index.TryGetValue(collectionId, out collectionIndex))
+            for (int i = 0; i < positions.Count; i++)
             {
-                collectionIndex = new Dictionary<long, IList<(long, long)>>();
-                _index.Add(collectionId, collectionIndex);
+                await res.WriteAsync(BitConverter.GetBytes(positions[i]));
             }
 
-            IList<(long, long)> ix;
+            FlushIndex();
 
-            if (!collectionIndex.TryGetValue(id, out ix))
-            {
-                throw new ArgumentException(nameof(id));
-            }
-
-            var mem = new MemoryStream();
-            request.CopyTo(mem);
-
-            var buf = mem.ToArray();
-            var fileName = Path.Combine(_config.Get("data_dir"), string.Format(FileNameFormat, collectionId));
-            long pos;
-            long len;
-
-            using (var file = new FileStream(
-                fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true))
-            {
-                pos = file.Position;
-
-                await file.WriteAsync(buf);
-
-                len = file.Position - pos;
-            }
-
-            ix.Add((pos, len));
-
-            return pos;
+            return res;
         }
     }
 }

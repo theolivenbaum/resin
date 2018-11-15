@@ -16,8 +16,11 @@ namespace Sir.Store
 
         public IList<ulong> Read(string collectionId, long offset)
         {
-            var endpoint = _config.Get("postings_endpoint");
-            var request = (HttpWebRequest)WebRequest.Create(endpoint + collectionId);
+            var endpoint = string.Format("{0}{1}?id={2}",
+                _config.Get("postings_endpoint"), collectionId, offset);
+
+            var request = (HttpWebRequest)WebRequest.Create(endpoint);
+
             request.ContentType = "application/postings";
             request.Method = WebRequestMethods.Http.Get;
 

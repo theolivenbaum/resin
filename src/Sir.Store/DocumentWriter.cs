@@ -24,11 +24,11 @@ namespace Sir.Store
         {
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;
-            _log = Logging.CreateWriter("writer");
+            _log = Logging.CreateWriter("documentwriter");
             _timer = new Stopwatch();
         }
 
-        public async Task Write(string collectionId, Stream payload, Stream response)
+        public async Task<Result> Write(string collectionId, Stream payload)
         {
             try
             {
@@ -40,8 +40,11 @@ namespace Sir.Store
                 _log.Log(string.Format("deserialized write job {0} for collection {1} in {2}", job.Id, collectionId, _timer.Elapsed));
 
                 var docIds = await ExecuteWrite(job);
+                var response = new MemoryStream();
 
                 Serialize(docIds, response);
+
+                return new Result { Data = response, MediaType = "application/json"};
             }
             catch (Exception ex)
             {
@@ -59,11 +62,7 @@ namespace Sir.Store
                 JsonSerializer ser = new JsonSerializer();
                 ser.Serialize(jsonWriter, value);
             }
-        }
-
-        public async Task Write(string collectionId, long id, Stream payload, Stream response)
-        {
-            throw new NotImplementedException();
+            s.Position = 0;
         }
 
         private async Task<IList<ulong>> ExecuteWrite(WriteJob job)

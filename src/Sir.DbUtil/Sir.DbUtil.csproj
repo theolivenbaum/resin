@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <None Include="..\Sir.HttpServer\sir.ini" Link="sir.ini">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

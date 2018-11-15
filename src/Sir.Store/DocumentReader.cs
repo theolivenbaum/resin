@@ -24,7 +24,7 @@ namespace Sir.Store
         public DocumentReader(LocalStorageSessionFactory sessionFactory, HttpQueryParser httpQueryParser, ITokenizer tokenizer)
         {
             _sessionFactory = sessionFactory;
-            _log = Logging.CreateWriter("reader");
+            _log = Logging.CreateWriter("documentreader");
             _httpQueryParser = httpQueryParser;
             _tokenizer = tokenizer;
         }

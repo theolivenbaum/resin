@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Sir.Postings
@@ -8,20 +9,31 @@ namespace Sir.Postings
         public string ContentType => "application/postings";
 
         private readonly StreamRepository _data;
+        private readonly StreamWriter _log;
 
         public PostingsWriter(StreamRepository data)
         {
             _data = data;
+            _log = Logging.CreateWriter("postingswriter");
+
         }
 
-        public async Task Write(string collectionId, Stream request, Stream response)
+        public async Task<Result> Write(string collectionId, Stream request)
         {
-            await _data.Write(collectionId.ToHash(), request, response);
-        }
+            try
+            {
+                var stream = await _data.Write(collectionId.ToHash(), request);
 
-        public async Task Write(string collectionId, long id, Stream request, Stream response)
-        {
-            await _data.Write(collectionId.ToHash(), id, request, response);
+                stream.Position = 0;
+
+                return new Result { Data = stream, MediaType = "application/octetstream" };
+            }
+            catch (Exception ex)
+            {
+                _log.WriteLine(ex);
+
+                throw;
+            }
         }
 
         public void Dispose()

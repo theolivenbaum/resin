@@ -94,7 +94,7 @@ namespace Sir.Store
                         // 3. find docId offset
                         // 2. flag document as deleted
 
-                        var match = fieldIndex.ClosestMatch(token);
+                        var match = fieldIndex.ClosestMatch(new VectorNode(token));
 
                         if (match.Highscore < VectorNode.IdenticalAngle)
                         {

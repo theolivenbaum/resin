@@ -20,14 +20,8 @@ namespace Sir.HttpServer.Controllers
             _log = Logging.CreateWriter("iocontroller");
         }
 
-        [HttpDelete("delete/{*collectionId}")]
-        public async Task<IActionResult> Delete(string collectionId, string q)
-        {
-            throw new NotImplementedException();
-        }
-
         [HttpPost("{*collectionId}")]
-        public async Task<IActionResult> Post(string collectionId, string id)
+        public async Task<HttpResponseMessage> Post(string collectionId)
         {
             if (collectionId == null)
             {
@@ -38,26 +32,26 @@ namespace Sir.HttpServer.Controllers
 
             if (writer == null)
             {
-                return StatusCode(415); // Media type not supported
+                throw new NotSupportedException(); // Media type not supported
             }
 
             try
             {
-                if (id == null)
-                {
-                    await writer.Write(collectionId, Request.Body, Response.Body);
-                }
-                else
-                {
-                    await writer.Write(collectionId, long.Parse(id), Request.Body, Response.Body);
-                }
+                Result result = await writer.Write(collectionId, Request.Body);
+
+                var response = new HttpResponseMessage(HttpStatusCode.OK);
+
+                Response.Headers.Add("Content-Type", result.MediaType);
+                Response.Headers.Add("Content-Length", result.Data.Length.ToString());
+
+                result.Data.CopyTo(Response.Body);
+
+                return response;
             }
             catch (Exception ew)
             {
                 throw ew;
             }
-
-            return StatusCode(201); // Created
         }
 
         [HttpGet("{*collectionId}")]
@@ -68,14 +62,16 @@ namespace Sir.HttpServer.Controllers
 
             if (reader == null)
             {
-                throw new NotSupportedException();
+                throw new NotSupportedException(); // Media type not supported
             }
 
             var result = await reader.Read(collectionId, Request);
             var response = new HttpResponseMessage(HttpStatusCode.OK);
 
-            response.Content = new StreamContent(result.Data);
             response.Content.Headers.ContentType = new MediaTypeHeaderValue(result.MediaType);
+            response.Content.Headers.ContentLength = result.Data.Length;
+            response.Content.Headers.Add("x-total", result.Total.ToString());
+            response.Content = new StreamContent(result.Data);
 
             return response;
         }

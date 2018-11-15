@@ -154,13 +154,15 @@ namespace Sir.Store
 
                     if (ix != null)
                     {
-                        var match = ix.ClosestMatch(cursor.Term.Value.ToString());
+                        var queryTerm = new VectorNode(cursor.Term.Value.ToString());
+
+                        var match = ix.ClosestMatch(queryTerm);
 
                         if (match.Highscore > 0)
                         {
                             if (match.PostingsOffset < 0)
                             {
-                                throw new InvalidDataException(match.ToString());
+                                throw new InvalidDataException();
                             }
 
                             var docIds = _postingsReader.Read(CollectionId, match.PostingsOffset)

@@ -28,8 +28,6 @@ namespace Sir.HttpServer.Controllers
 
             ViewData["q"] = query;
 
-            var expandedQuery = string.Format("title:{0}\nbody:{0}", query);
-
             var timer = new Stopwatch();
             timer.Start();
 

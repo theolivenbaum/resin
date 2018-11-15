@@ -23,8 +23,6 @@ namespace Sir.HttpServer
 
             var files = Directory.GetFiles(assemblyPath, "*.plugin.dll");
 
-            File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), "serviceconfig.log"), string.Format("path: {0} files: {1}", assemblyPath, string.Join(",", files)));
-
             foreach (var assembly in files.Select(file => AssemblyLoadContext.Default.LoadFromAssemblyPath(file)))
             {
                 foreach (var type in assembly.GetTypes())

@@ -17,16 +17,13 @@ namespace Sir.Store
 
             if (!string.IsNullOrWhiteSpace(request.Query["q"]))
             {
-                query = _queryParser.Parse(request.Query["q"], tokenizer);
+                var expandedQuery = string.Format("title:{0}\nbody:{0}", request.Query["q"]);
+
+                query = _queryParser.Parse(expandedQuery, tokenizer);
                 query.Collection = collectionId.ToHash();
 
                 if (request.Query.ContainsKey("take"))
                     query.Take = int.Parse(request.Query["take"]);
-            }
-            else if (!string.IsNullOrWhiteSpace(request.Query["id"]))
-            {
-                query = new Query("__docid", (string)request.Query["id"]);
-                query.Collection = collectionId.ToHash();
             }
 
             return query;
