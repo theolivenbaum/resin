@@ -1,8 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,7 +18,7 @@ namespace Sir.HttpServer.Controllers
         }
 
         [HttpPost("{*collectionId}")]
-        public async Task<HttpResponseMessage> Post(string collectionId)
+        public async Task<IActionResult> Post(string collectionId)
         {
             if (collectionId == null)
             {
@@ -39,23 +36,17 @@ namespace Sir.HttpServer.Controllers
             {
                 Result result = await writer.Write(collectionId, Request.Body);
 
-                var response = new HttpResponseMessage(HttpStatusCode.OK);
-
-                Response.Headers.Add("Content-Type", result.MediaType);
-                Response.Headers.Add("Content-Length", result.Data.Length.ToString());
-
-                result.Data.CopyTo(Response.Body);
-
-                return response;
+                return new FileContentResult(result.Data.ToArray(), result.MediaType);
             }
             catch (Exception ew)
             {
+                _log.WriteLine(ew);
                 throw ew;
             }
         }
 
         [HttpGet("{*collectionId}")]
-        public async Task<HttpResponseMessage> Get(string collectionId)
+        public async Task<IActionResult> Get(string collectionId)
         {
             var mediaType = Request.Headers["Accept"].ToArray()[0];
             var reader = _plugins.Get<IReader>(mediaType);
@@ -65,15 +56,26 @@ namespace Sir.HttpServer.Controllers
                 throw new NotSupportedException(); // Media type not supported
             }
 
-            var result = await reader.Read(collectionId, Request);
-            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            try
+            {
+                var result = await reader.Read(collectionId, Request);
 
-            response.Content.Headers.ContentType = new MediaTypeHeaderValue(result.MediaType);
-            response.Content.Headers.ContentLength = result.Data.Length;
-            response.Content.Headers.Add("x-total", result.Total.ToString());
-            response.Content = new StreamContent(result.Data);
+                if (result.Data == null)
+                {
+                    return new FileContentResult(new byte[0], result.MediaType);
+                }
+                else
+                {
+                    Response.Headers.Add("X-Total", result.Total.ToString());
 
-            return response;
-        }
+                    return new FileContentResult(result.Data.ToArray(), result.MediaType);
+                }
+            }
+            catch (Exception ew)
+            {
+                _log.WriteLine(ew);
+                throw ew;
+            }
+}
     }
 }

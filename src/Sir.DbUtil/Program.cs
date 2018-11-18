@@ -102,7 +102,7 @@ namespace Sir.DbUtil
 
                 if (collectionId == collection.ToHash().ToString())
                 {
-                    using (var readSession = new DocumentReadSession(collection, sessionFactory))
+                    using (var readSession = new DocumentStreamSession(collection, sessionFactory))
                     {
                         var docs = readSession.ReadDocs();
 

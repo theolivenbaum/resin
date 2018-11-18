@@ -53,22 +53,17 @@ namespace Sir.Postings
 
         public async Task<MemoryStream> Read(ulong collectionId, long id)
         {
-            IDictionary<long, IList<(long, long)>> collectionIndex;
-
-            if (!_index.TryGetValue(collectionId, out collectionIndex))
-            {
-                throw new ArgumentException(nameof(collectionId));
-            }
+            var collectionIndex = GetIndex(collectionId);
+            var result = new MemoryStream();
 
             IList<(long, long)> ix;
 
             if (!collectionIndex.TryGetValue(id, out ix))
             {
-                throw new ArgumentException(nameof(id));
+                return result;
             }
 
             var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));
-            var result = new MemoryStream();
 
             using (var file = new FileStream(
                 fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
@@ -95,7 +90,7 @@ namespace Sir.Postings
             return result;
         }
 
-        public async Task<MemoryStream> Write(ulong collectionId, Stream request)
+        private IDictionary<long, IList<(long, long)>> GetIndex(ulong collectionId)
         {
             IDictionary<long, IList<(long, long)>> collectionIndex;
 
@@ -104,6 +99,13 @@ namespace Sir.Postings
                 collectionIndex = new Dictionary<long, IList<(long, long)>>();
                 _index.Add(collectionId, collectionIndex);
             }
+
+            return collectionIndex;
+        }
+
+        public async Task<MemoryStream> Write(ulong collectionId, Stream request)
+        {
+            var collectionIndex = GetIndex(collectionId);
 
             var mem = new MemoryStream();
             await request.CopyToAsync(mem);
@@ -140,25 +142,32 @@ namespace Sir.Postings
             var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));
 
             using (var file = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true))
-            foreach (var list in lists)
             {
-                long pos = file.Position;
-
-                await file.WriteAsync(list);
-
-                long len = file.Position - pos;
-
-                IList<(long, long)> ix;
-
-                if (!collectionIndex.TryGetValue(pos, out ix))
+                for (int index = 0; index < lists.Count; index++)
                 {
-                    ix = new List<(long, long)>();
+                    long pos = file.Position;
 
-                    collectionIndex.Add(pos, ix);
+                    await file.WriteAsync(lists[index]);
+
+                    long len = file.Position - pos;
+
+                    if (len != lengths[index])
+                    {
+                        throw new DataMisalignedException();
+                    }
+
+                    IList<(long, long)> ix;
+
+                    if (!collectionIndex.TryGetValue(pos, out ix))
+                    {
+                        ix = new List<(long, long)>();
+
+                        collectionIndex.Add(pos, ix);
+                    }
+
+                    ix.Add((pos, len));
+                    positions.Add(pos);
                 }
-
-                ix.Add((pos, len));
-                positions.Add(pos);
             }
 
             var res = new MemoryStream();

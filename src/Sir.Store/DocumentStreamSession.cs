@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Sir.Store
 {
-    public class DocumentReadSession : CollectionSession
+    public class DocumentStreamSession : CollectionSession
     {
         private readonly DocIndexReader _docIx;
         private readonly DocReader _docs;
@@ -15,7 +15,7 @@ namespace Sir.Store
         private readonly ValueReader _keyReader;
         private readonly ValueReader _valReader;
 
-        public DocumentReadSession(string collectionId, LocalStorageSessionFactory sessionFactory) 
+        public DocumentStreamSession(string collectionId, LocalStorageSessionFactory sessionFactory) 
             : base(collectionId, sessionFactory)
         {
             var collection = collectionId.ToHash();

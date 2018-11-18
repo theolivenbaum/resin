@@ -46,7 +46,7 @@ namespace Sir.Store
             _valReader = new ValueReader(ValueStream);
             _postingsReader = new RemotePostingsReader(config);
 
-            _log = Logging.CreateWriter("session");
+            _log = Logging.CreateWriter("readsession");
         }
 
         public IList<IDictionary> Read(Query query, int take, out long total)

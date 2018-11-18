@@ -15,7 +15,6 @@ namespace Sir.Postings
         {
             _data = data;
             _log = Logging.CreateWriter("postingswriter");
-
         }
 
         public async Task<Result> Write(string collectionId, Stream request)
@@ -26,7 +25,7 @@ namespace Sir.Postings
 
                 stream.Position = 0;
 
-                return new Result { Data = stream, MediaType = "application/octetstream" };
+                return new Result { Data = stream, MediaType = "application/octet-stream" };
             }
             catch (Exception ex)
             {

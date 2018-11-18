@@ -35,7 +35,7 @@ namespace Sir.Store
             IConfigurationService config) : base(collectionId, sessionFactory)
         {
             _tokenizer = tokenizer;
-            _log = Logging.CreateWriter("session");
+            _log = Logging.CreateWriter("indexingsession");
             _buildQueue = new ProducerConsumerQueue<(long keyId, VectorNode index, IEnumerable<(ulong, string)> tokens)>(Build);
             _dirty = new Dictionary<long, VectorNode>();
 
@@ -126,7 +126,6 @@ namespace Sir.Store
                         if (ix == null)
                         {
                             ix = new VectorNode();
-                            //SessionFactory.AddIndex(CollectionId, keyId, ix);
                         }
                         _dirty.Add(keyId, ix);
                     }
@@ -159,7 +158,7 @@ namespace Sir.Store
                 var docCount = 0;
                 var columns = new Dictionary<long, HashSet<(ulong docId, string token)>>();
 
-                foreach(var doc in job.Documents)
+                foreach (var doc in job.Documents)
                 {
                     docCount++;
 
@@ -250,19 +249,21 @@ namespace Sir.Store
                 {
                     foreach (var node in rootNodes)
                     {
-                        // for all nodes: write length of word to header and word itself to body
+                        // write length of word (i.e. list of postings) 
+                        // to header and word itself to body
                         var dirty = node.Value.SerializePostings(
                                 CollectionId,
                                 header,
                                 body)
                                 .ToList();
 
+                        // count num of words in payload
                         payloadCount += dirty.Count;
 
                         nodes.AddRange(dirty);
                     }
 
-                    // first word of payload is: payload count
+                    // first word of payload is: (int) payload count (i.e. num of words (i.e. posting lists))
                     message.Write(BitConverter.GetBytes(payloadCount));
 
                     // next block is header

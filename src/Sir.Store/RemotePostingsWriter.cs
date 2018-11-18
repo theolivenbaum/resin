@@ -23,7 +23,7 @@ namespace Sir.Store
             var request = (HttpWebRequest)WebRequest.Create(endpoint);
 
             request.ContentType = "application/postings";
-            request.Accept = "application/octetstream";
+            request.Accept = "application/octet-stream";
             request.Method = WebRequestMethods.Http.Post;
             request.ContentLength = payload.Length;
 

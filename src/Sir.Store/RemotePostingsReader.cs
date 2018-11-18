@@ -21,30 +21,32 @@ namespace Sir.Store
 
             var request = (HttpWebRequest)WebRequest.Create(endpoint);
 
-            request.ContentType = "application/postings";
+            request.Accept = "application/postings";
             request.Method = WebRequestMethods.Http.Get;
 
-            var response = (HttpWebResponse)request.GetResponse();
-            var result = new List<ulong>();
-
-            using (var body = response.GetResponseStream())
+            using (var response = (HttpWebResponse)request.GetResponse())
             {
-                var mem = new MemoryStream();
-                body.CopyTo(mem);
+                var result = new List<ulong>();
 
-                var buf = mem.ToArray();
-
-                var read = 0;
-
-                while (read < buf.Length)
+                using (var body = response.GetResponseStream())
                 {
-                    result.Add(BitConverter.ToUInt64(buf, read));
+                    var mem = new MemoryStream();
+                    body.CopyTo(mem);   
 
-                    read += sizeof(ulong);
+                    var buf = mem.ToArray();
+
+                    var read = 0;
+
+                    while (read < buf.Length)
+                    {
+                        result.Add(BitConverter.ToUInt64(buf, read));
+
+                        read += sizeof(ulong);
+                    }
                 }
-            }
 
-            return result;
+                return result;
+            }
         }
     }
 }

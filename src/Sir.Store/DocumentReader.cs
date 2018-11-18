@@ -37,9 +37,11 @@ namespace Sir.Store
         public async Task<Result> Read(string collectionId, HttpRequest request)
         {
             Query query = null;
+
             try
             {
                 query = _httpQueryParser.Parse(collectionId, request, _tokenizer);
+
                 ulong keyHash = query.Term.Key.ToString().ToHash();
                 long keyId;
                 var timer = new Stopwatch();
@@ -67,7 +69,7 @@ namespace Sir.Store
                     }
                 }
 
-                return new Result { MediaType = "application/json", Data = new MemoryStream(), Total = 0 };
+                return new Result();
             }
             catch (Exception ex)
             {

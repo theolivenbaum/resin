@@ -27,7 +27,7 @@ namespace Sir.Store
             ITokenizer tokenizer) : base(collectionId, sessionFactory)
         {
             _tokenizer = tokenizer;
-            _log = Logging.CreateWriter("session");
+            _log = Logging.CreateWriter("writesession");
 
             var collection = collectionId.ToHash();
 

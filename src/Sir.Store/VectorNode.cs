@@ -75,8 +75,8 @@ namespace Sir.Store
 
         public virtual VectorNode ClosestMatch(VectorNode node, bool skipDirtyNodes = true)
         {
-            var best = this;
-            var cursor = this;
+            var best = Right;
+            var cursor = Right;
             float highscore = 0;
 
             while (cursor != null)
@@ -319,7 +319,7 @@ namespace Sir.Store
                     node._docIds.Clear();
 
                     lists.Write(list.ToStream());
-                    lengths.Write(BitConverter.GetBytes(list.Length));
+                    lengths.Write(BitConverter.GetBytes(list.Length * sizeof(ulong)));
 
                     yield return node;
                 }
@@ -338,8 +338,6 @@ namespace Sir.Store
                 }
             }
         }
-
-
 
         public static VectorNode Deserialize(Stream indexStream, Stream vectorStream)
         {
