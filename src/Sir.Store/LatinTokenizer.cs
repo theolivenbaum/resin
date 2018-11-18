@@ -28,7 +28,7 @@ namespace Sir.Store
         public string ContentType => "*";
 
 
-        public IEnumerable<string> TokenizeIntoBigrams(string text)
+        private IEnumerable<string> TokenizeIntoBigrams(string text)
         {
             string item1 = null;
             string item2 = null;
@@ -70,7 +70,7 @@ namespace Sir.Store
 
         public string Normalize(string text)
         {
-            return text.ToLower(CultureInfo.CurrentCulture);
+            return text.ToLower(CultureInfo.InvariantCulture);
         }
 
         public void Dispose()

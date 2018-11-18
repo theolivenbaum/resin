@@ -44,11 +44,14 @@ namespace Sir.Postings
         {
             var fileName = Path.Combine(_config.Get("data_dir"), IndexFileName);
 
-            using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096))
+            Task.Run(() =>
             {
-                var formatter = new BinaryFormatter();
-                formatter.Serialize(fs, _index);
-            }
+                using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096))
+                {
+                    var formatter = new BinaryFormatter();
+                    formatter.Serialize(fs, _index);
+                }
+            });
         }
 
         public async Task<MemoryStream> Read(ulong collectionId, long id)
@@ -90,27 +93,9 @@ namespace Sir.Postings
             return result;
         }
 
-        private IDictionary<long, IList<(long, long)>> GetIndex(ulong collectionId)
-        {
-            IDictionary<long, IList<(long, long)>> collectionIndex;
-
-            if (!_index.TryGetValue(collectionId, out collectionIndex))
-            {
-                collectionIndex = new Dictionary<long, IList<(long, long)>>();
-                _index.Add(collectionId, collectionIndex);
-            }
-
-            return collectionIndex;
-        }
-
-        public async Task<MemoryStream> Write(ulong collectionId, Stream request)
+        public async Task<MemoryStream> Write(ulong collectionId, byte[] messageBuf)
         {
             var collectionIndex = GetIndex(collectionId);
-
-            var mem = new MemoryStream();
-            await request.CopyToAsync(mem);
-
-            var messageBuf = mem.ToArray();
             int read = 0;
 
             // read first word of payload
@@ -118,7 +103,7 @@ namespace Sir.Postings
             read = sizeof(int);
 
             // read lengths
-            var lengths = new List<int>();
+            var lengths = new List<int>(payloadCount);
 
             for (int index = 0; index < payloadCount; index++)
             {
@@ -127,17 +112,23 @@ namespace Sir.Postings
             }
 
             // read lists
-            var lists = new List<byte[]>();
+            var lists = new List<byte[]>(payloadCount);
 
             for (int index = 0; index < lengths.Count; index++)
             {
                 var size = lengths[index];
                 var buf = new byte[size];
                 Buffer.BlockCopy(messageBuf, read, buf, 0, size);
+                read += size;
                 lists.Add(buf);
             }
 
-            var positions = new List<long>();
+            if (lists.Count != payloadCount)
+            {
+                throw new DataMisalignedException();
+            }
+
+            var positions = new List<long>(payloadCount);
 
             var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));
 
@@ -146,8 +137,9 @@ namespace Sir.Postings
                 for (int index = 0; index < lists.Count; index++)
                 {
                     long pos = file.Position;
+                    var word = lists[index];
 
-                    await file.WriteAsync(lists[index]);
+                    await file.WriteAsync(word);
 
                     long len = file.Position - pos;
 
@@ -170,6 +162,11 @@ namespace Sir.Postings
                 }
             }
 
+            if (positions.Count != payloadCount)
+            {
+                throw new DataMisalignedException();
+            }
+
             var res = new MemoryStream();
 
             for (int i = 0; i < positions.Count; i++)
@@ -177,9 +174,25 @@ namespace Sir.Postings
                 await res.WriteAsync(BitConverter.GetBytes(positions[i]));
             }
 
+            res.Position = 0;
+
             FlushIndex();
 
             return res;
+        }
+
+
+        private IDictionary<long, IList<(long, long)>> GetIndex(ulong collectionId)
+        {
+            IDictionary<long, IList<(long, long)>> collectionIndex;
+
+            if (!_index.TryGetValue(collectionId, out collectionIndex))
+            {
+                collectionIndex = new Dictionary<long, IList<(long, long)>>();
+                _index.Add(collectionId, collectionIndex);
+            }
+
+            return collectionIndex;
         }
     }
 }

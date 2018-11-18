@@ -17,15 +17,15 @@ namespace Sir.Postings
             _log = Logging.CreateWriter("postingswriter");
         }
 
-        public async Task<Result> Write(string collectionId, Stream request)
+        public async Task<Result> Write(string collectionId, MemoryStream request)
         {
             try
             {
-                var stream = await _data.Write(collectionId.ToHash(), request);
+                var messageBuf = request.ToArray();
 
-                stream.Position = 0;
+                var responseStream = await _data.Write(collectionId.ToHash(), messageBuf);
 
-                return new Result { Data = stream, MediaType = "application/octet-stream" };
+                return new Result { Data = responseStream, MediaType = "application/octet-stream" };
             }
             catch (Exception ex)
             {

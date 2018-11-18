@@ -28,7 +28,7 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
-        public async Task<Result> Write(string collectionId, Stream payload)
+        public async Task<Result> Write(string collectionId, MemoryStream payload)
         {
             try
             {

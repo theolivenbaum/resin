@@ -34,7 +34,15 @@ namespace Sir.HttpServer.Controllers
 
             try
             {
-                Result result = await writer.Write(collectionId, Request.Body);
+                var mem = new MemoryStream();
+                await Request.Body.CopyToAsync(mem);
+
+                if (Request.ContentLength.Value != mem.Length)
+                {
+                    throw new DataMisalignedException();
+                }
+
+                Result result = await writer.Write(collectionId, mem);
 
                 return new FileContentResult(result.Data.ToArray(), result.MediaType);
             }

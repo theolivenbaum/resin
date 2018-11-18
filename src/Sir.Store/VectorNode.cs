@@ -318,8 +318,15 @@ namespace Sir.Store
 
                     node._docIds.Clear();
 
-                    lists.Write(list.ToStream());
-                    lengths.Write(BitConverter.GetBytes(list.Length * sizeof(ulong)));
+                    var buf = list.ToStream();
+
+                    if (buf.Length / sizeof(ulong) != list.Length)
+                    {
+                        throw new DataMisalignedException();
+                    }
+
+                    lists.Write(buf);
+                    lengths.Write(BitConverter.GetBytes(buf.Length));
 
                     yield return node;
                 }

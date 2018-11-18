@@ -230,80 +230,25 @@ namespace Sir.Store
             if (_serialized)
                 return;
 
-            try
+            _buildQueue.Dispose();
+
+            _log.Log("in-memory search index has been built.");
+
+            var rootNodes = _dirty.ToList();
+
+            _postingsWriter.Write(CollectionId, rootNodes);
+
+            foreach (var node in rootNodes)
             {
-                _buildQueue.Dispose();
-
-                _log.Log("in-memory search index has been built.");
-
-                // create postings message
-
-                var rootNodes = _dirty.ToList();
-                var nodes = new List<VectorNode>();
-                byte[] payload;
-                var payloadCount = 0;
-
-                using (var message = new MemoryStream())
-                using (var header = new MemoryStream())
-                using (var body = new MemoryStream())
+                using (var ixFile = CreateIndexStream(node.Key))
                 {
-                    foreach (var node in rootNodes)
-                    {
-                        // write length of word (i.e. list of postings) 
-                        // to header and word itself to body
-                        var dirty = node.Value.SerializePostings(
-                                CollectionId,
-                                header,
-                                body)
-                                .ToList();
-
-                        // count num of words in payload
-                        payloadCount += dirty.Count;
-
-                        nodes.AddRange(dirty);
-                    }
-
-                    // first word of payload is: (int) payload count (i.e. num of words (i.e. posting lists))
-                    message.Write(BitConverter.GetBytes(payloadCount));
-
-                    // next block is header
-                    header.Position = 0;
-                    header.CopyTo(message);
-
-                    // last block is body
-                    body.Position = 0;
-                    body.CopyTo(message);
-
-                    payload = message.ToArray();
+                    node.Value.SerializeTree(CollectionId, ixFile, VectorStream);
                 }
-
-                var positions = _postingsWriter.Write(CollectionId, payload);
-
-                for (int i = 0;i < nodes.Count; i++)
-                {
-                    var node = nodes[i];
-
-                    node.PostingsOffset = positions[i];
-                }
-
-                foreach (var node in rootNodes)
-                {
-                    using (var ixFile = CreateIndexStream(node.Key))
-                    {
-                        node.Value.SerializeTree(CollectionId, ixFile, VectorStream);
-                    }
-                }
-
-                _log.Log("serialization complete.");
-
-                _serialized = true;
             }
-            catch (Exception ex)
-            {
-                _log.Log(ex);
 
-                throw;
-            }
+            _log.Log("serialization complete.");
+
+            _serialized = true;
         }
 
         private Stream CreateIndexStream(long keyId)

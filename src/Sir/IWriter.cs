@@ -5,6 +5,6 @@ namespace Sir
 {
     public interface IWriter : IPlugin
     {
-        Task<Result> Write(string collectionId, Stream request);
+        Task<Result> Write(string collectionId, MemoryStream request);
     }
 }
