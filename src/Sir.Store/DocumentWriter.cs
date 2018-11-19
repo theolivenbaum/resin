@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
 namespace Sir.Store
@@ -28,11 +29,20 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
-        public async Task<Result> Write(string collectionId, MemoryStream payload)
+        public async Task<Result> Write(string collectionId, HttpRequest request)
         {
             try
             {
                 _timer.Restart();
+
+                var payload = new MemoryStream();
+
+                await request.Body.CopyToAsync(payload);
+
+                if (request.ContentLength.Value != payload.Length)
+                {
+                    throw new DataMisalignedException();
+                }
 
                 var data = Deserialize<IEnumerable<IDictionary>>(payload);
                 var job = new WriteJob(collectionId, data);

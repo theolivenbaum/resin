@@ -1,10 +1,10 @@
-﻿using System.IO;
+﻿using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 
 namespace Sir
 {
     public interface IWriter : IPlugin
     {
-        Task<Result> Write(string collectionId, MemoryStream request);
+        Task<Result> Write(string collectionId, HttpRequest request);
     }
 }

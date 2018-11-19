@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -17,11 +18,20 @@ namespace Sir.Postings
             _log = Logging.CreateWriter("postingswriter");
         }
 
-        public async Task<Result> Write(string collectionId, MemoryStream request)
+        public async Task<Result> Write(string collectionId, HttpRequest request)
         {
             try
             {
-                var messageBuf = request.ToArray();
+                var payload = new MemoryStream();
+
+                await request.Body.CopyToAsync(payload);
+
+                if (request.ContentLength.Value != payload.Length)
+                {
+                    throw new DataMisalignedException();
+                }
+
+                var messageBuf = payload.ToArray();
 
                 var responseStream = await _data.Write(collectionId.ToHash(), messageBuf);
 
