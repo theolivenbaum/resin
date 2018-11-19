@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -36,10 +37,10 @@ namespace Sir.Store
         /// </summary>
         /// <param name="offset">offset of doc map</param>
         /// <param name="len">length of doc map</param>
-        public void Append(long offset, int len)
+        public async Task Append(long offset, int len)
         {
-            _stream.Write(BitConverter.GetBytes(offset), 0, sizeof(long));
-            _stream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
+            await _stream.WriteAsync(BitConverter.GetBytes(offset), 0, sizeof(long));
+            await _stream.WriteAsync(BitConverter.GetBytes(len), 0, sizeof(int));
         }
     }
 }

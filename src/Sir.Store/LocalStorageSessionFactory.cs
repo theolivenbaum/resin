@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -25,7 +26,7 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _config = config;
 
-            LoadIndex();
+            Task.Run(() => LoadIndex()).Wait();
 
             WritableKeyMapStream = new FileStream(
                 Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
@@ -57,7 +58,7 @@ namespace Sir.Store
             return keys;
         }
 
-        public void LoadIndex()
+        public async Task LoadIndex()
         {
             try
             {
@@ -86,7 +87,7 @@ namespace Sir.Store
                         ix.Add(collectionHash, colIx);
                     }
 
-                    var root = DeserializeIndex(ixFileName, vecFileName);
+                    var root = await DeserializeIndex(ixFileName, vecFileName);
                     ix[collectionHash].Add(keyId, root);
 
                     _log.Log(string.Format("loaded {0}.{1}. {2}",
@@ -112,23 +113,24 @@ namespace Sir.Store
             }
         }
 
-        public VectorNode DeserializeIndex(string ixFileName, string vecFileName)
+        public async Task<VectorNode> DeserializeIndex(string ixFileName, string vecFileName)
         {
-            using (var treeStream = new FileStream(ixFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var vecStream = new FileStream(vecFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var treeStream = new FileStream(ixFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
+            using (var vecStream = new FileStream(vecFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
             {
-                return VectorNode.Deserialize(treeStream, vecStream);
+                return await VectorNode.Deserialize(treeStream, vecStream);
             }
         }
 
-        public void PersistKeyMapping(ulong keyHash, long keyId)
+        public async Task PersistKeyMapping(ulong keyHash, long keyId)
         {
             _keys.Add(keyHash, keyId);
 
             var buf = BitConverter.GetBytes(keyHash);
 
-            WritableKeyMapStream.Write(buf, 0, sizeof(ulong));
-            WritableKeyMapStream.Flush();
+            await WritableKeyMapStream.WriteAsync(buf, 0, sizeof(ulong));
+
+            await WritableKeyMapStream.FlushAsync();
         }
 
         public long GetKeyId(ulong keyHash)
@@ -167,7 +169,7 @@ namespace Sir.Store
 
         public WriteSession CreateWriteSession(string collectionId)
         {
-            return new WriteSession(collectionId, this, _tokenizer);
+            return new WriteSession(collectionId, this);
         }
 
         public IndexingSession CreateIndexSession(string collectionId)

@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Sir.Store;
 
 namespace Sir.DbUtil
@@ -26,22 +25,23 @@ namespace Sir.DbUtil
             {
                 // example: index C:\projects\resin\src\Sir.HttpServer\App_Data www 0 10000 1000
 
-                Index(
-                    dir: args[1], 
-                    collection: args[2], 
-                    skip: int.Parse(args[3]), 
-                    take: int.Parse(args[4]), 
-                    batchSize: int.Parse(args[5]));
+                Task.Run(() => Index(
+                    dir: args[1],
+                    collection: args[2],
+                    skip: int.Parse(args[3]),
+                    take: int.Parse(args[4]),
+                    batchSize: int.Parse(args[5])))
+                .Wait();
             }
             else if (command == "query" && args.Length == 3)
             {
                 // example: query C:\projects\resin\src\Sir.HttpServer\App_Data www
 
-                Query(dir: args[1], collectionId: args[2]);
+                Task.Run(() => Query(dir: args[1], collectionId: args[2])).Wait();
             }
         }
 
-        private static void Query(string dir, string collectionId)
+        private static async Task Query(string dir, string collectionId)
         {
             var tokenizer = new LatinTokenizer();
             var qp = new BooleanKeyValueQueryParser();
@@ -65,8 +65,8 @@ namespace Sir.DbUtil
 
                 using (var session = sessionFactory.CreateReadSession(collectionId))
                 {
-                    long total;
-                    var docs = session.Read(q, out total);
+                    var result = await session.Read(q);
+                    var docs = result.Docs;
 
                     if (docs.Count > 0)
                     {
@@ -81,7 +81,7 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void Index(string dir, string collection, int skip, int take, int batchSize)
+        private static async Task Index(string dir, string collection, int skip, int take, int batchSize)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -126,11 +126,11 @@ namespace Sir.DbUtil
                             using (var indexSession = sessionFactory.CreateIndexSession(collection))
                             {
                                 indexSession.Write(job);
+
+                                await indexSession.Serialize();
                             }
 
                             _log.Log(string.Format("batch {0} done in {1}", batchNo++, writeTimer.Elapsed));
-
-                            sessionFactory.LoadIndex();
                         }
                     }
                     break;

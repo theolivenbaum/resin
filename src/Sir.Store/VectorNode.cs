@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -13,7 +14,7 @@ namespace Sir.Store
     public class VectorNode
     {
         public const float IdenticalAngle = 0.98f;
-        public const float FoldAngle = 0.7f;
+        public const float FoldAngle = 0.5f;
 
         private VectorNode _right;
         private VectorNode _left;
@@ -346,7 +347,7 @@ namespace Sir.Store
             }
         }
 
-        public static VectorNode Deserialize(Stream indexStream, Stream vectorStream)
+        public static async Task<VectorNode> Deserialize(Stream indexStream, Stream vectorStream)
         {
             const int nodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(byte);
             const int kvpSize = sizeof(int) + sizeof(byte);
@@ -358,7 +359,7 @@ namespace Sir.Store
             var tail = new Stack<VectorNode>();
             Byte terminator = Byte.MaxValue;
 
-            while ((read = indexStream.Read(buf, 0, nodeSize)) == nodeSize)
+            while ((read = await indexStream.ReadAsync(buf, 0, nodeSize)) == nodeSize)
             {
                 // Deserialize node
                 var angle = BitConverter.ToSingle(buf, 0);
@@ -371,7 +372,8 @@ namespace Sir.Store
                 var vecBuf = new byte[vectorCount * kvpSize];
 
                 vectorStream.Seek(vecOffset, SeekOrigin.Begin);
-                vectorStream.Read(vecBuf, 0, vecBuf.Length);
+
+                await vectorStream.ReadAsync(vecBuf, 0, vecBuf.Length);
 
                 var offs = 0;
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -49,26 +50,23 @@ namespace Sir.Store
             _log = Logging.CreateWriter("readsession");
         }
 
-        public IList<IDictionary> Read(Query query, int take, out long total)
+        public async Task<ReadResult> Read(Query query, int take)
         {
             var timer = new Stopwatch();
             timer.Start();
 
-            IDictionary<ulong, float> result = DoRead(query);
+            IDictionary<ulong, float> result = await DoRead(query);
 
             if (result == null)
             {
                 _log.Log("found nothing for query {0}", query);
 
-                total = 0;
-                return new IDictionary[0];
+                return new ReadResult { Total = 0, Docs = new IDictionary[0] };
             }
             else
             {
                 _log.Log("read {0} postings for query {1} in {2}",
                     result.Count, query, timer.Elapsed);
-
-                total = result.Count;
 
                 timer.Restart();
 
@@ -80,32 +78,30 @@ namespace Sir.Store
                 _log.Log("sorted {0} postings for query {1} in {2}",
                     result.Count, query, timer.Elapsed);
 
-                return ReadDocs(sorted);
+                var docs = await ReadDocs(sorted);
+
+                return new ReadResult { Total = result.Count, Docs = docs };
             }
         }
 
-        public IList<IDictionary> Read(Query query, out long total)
+        public async Task<ReadResult> Read(Query query)
         {
             var timer = new Stopwatch();
 
             // Get doc IDs and their score
-            IDictionary<ulong, float> result = DoRead(query);
+            IDictionary<ulong, float> result = await DoRead(query);
 
             if (result == null)
             {
                 _log.Log("found nothing for query {0}", query);
 
-                total = 0;
-
-                return new IDictionary[0];
+                return new ReadResult { Total = 0, Docs = new IDictionary[0] };
             }
             else
             {
-                total = result.Count;
-
-                if (total < 101)
+                if (result.Count < 101)
                 {
-                    return ReadDocs(result);
+                    return new ReadResult { Total = result.Count, Docs = await ReadDocs(result) };
                 }
 
                 timer.Restart();
@@ -135,11 +131,11 @@ namespace Sir.Store
                 _log.Log("sorted and reduced {0} postings for query {1} in {2}",
                     result.Count, query, timer.Elapsed);
 
-                return ReadDocs(sorted);
+                return new ReadResult { Total = result.Count, Docs = await ReadDocs(sorted) };
             }
         }
 
-        public IDictionary<ulong, float> DoRead(Query query)
+        private async Task<IDictionary<ulong, float>> DoRead(Query query)
         {
             try
             {
@@ -165,7 +161,7 @@ namespace Sir.Store
                                 throw new InvalidDataException();
                             }
 
-                            var docIds = _postingsReader.Read(CollectionId, match.PostingsOffset)
+                            var docIds = (await _postingsReader.Read(CollectionId, match.PostingsOffset))
                                 .ToDictionary(x => x, y => match.Highscore);
 
                             if (result == null)
@@ -229,7 +225,7 @@ namespace Sir.Store
             }
         }
 
-        public IList<IDictionary> ReadDocs(IEnumerable<KeyValuePair<ulong, float>> docs)
+        private async Task<IList<IDictionary>> ReadDocs(IEnumerable<KeyValuePair<ulong, float>> docs)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -238,23 +234,23 @@ namespace Sir.Store
 
             foreach (var d in docs)
             {
-                var docInfo = _docIx.Read(d.Key);
+                var docInfo = await _docIx.ReadAsync(d.Key);
 
                 if (docInfo.offset < 0)
                 {
                     continue;
                 }
 
-                var docMap = _docs.Read(docInfo.offset, docInfo.length);
+                var docMap = await _docs.Read(docInfo.offset, docInfo.length);
                 var doc = new Dictionary<IComparable, IComparable>();
 
                 for (int i = 0; i < docMap.Count; i++)
                 {
                     var kvp = docMap[i];
-                    var kInfo = _keyIx.Read(kvp.keyId);
-                    var vInfo = _valIx.Read(kvp.valId);
-                    var key = _keyReader.Read(kInfo.offset, kInfo.len, kInfo.dataType);
-                    var val = _valReader.Read(vInfo.offset, vInfo.len, vInfo.dataType);
+                    var kInfo = await _keyIx.ReadAsync(kvp.keyId);
+                    var vInfo = await _valIx.ReadAsync(kvp.valId);
+                    var key = await _keyReader.ReadAsync(kInfo.offset, kInfo.len, kInfo.dataType);
+                    var val = await _valReader.ReadAsync(vInfo.offset, vInfo.len, vInfo.dataType);
 
                     doc[key] = val;
                 }
@@ -269,5 +265,11 @@ namespace Sir.Store
 
             return result;
         }
+    }
+
+    public class ReadResult
+    {
+        public long Total { get; set; }
+        public IList<IDictionary> Docs { get; set; }
     }
 }

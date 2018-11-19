@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -14,7 +15,7 @@ namespace Sir.Store
             _config = config;
         }
 
-        public IList<ulong> Read(string collectionId, long offset)
+        public async Task<IList<ulong>> Read(string collectionId, long offset)
         {
             var endpoint = string.Format("{0}{1}?id={2}",
                 _config.Get("postings_endpoint"), collectionId, offset);
@@ -24,14 +25,14 @@ namespace Sir.Store
             request.Accept = "application/postings";
             request.Method = WebRequestMethods.Http.Get;
 
-            using (var response = (HttpWebResponse)request.GetResponse())
+            using (var response = (HttpWebResponse) await request.GetResponseAsync())
             {
                 var result = new List<ulong>();
 
                 using (var body = response.GetResponseStream())
                 {
                     var mem = new MemoryStream();
-                    body.CopyTo(mem);   
+                    await body.CopyToAsync(mem);   
 
                     var buf = mem.ToArray();
 

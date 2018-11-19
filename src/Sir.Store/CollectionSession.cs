@@ -59,13 +59,12 @@ namespace Sir.Store
 
         public virtual void Dispose()
         {
-            ValueStream.Dispose();
-            KeyStream.Dispose();
-            DocStream.Dispose();
-            ValueIndexStream.Dispose();
-            KeyIndexStream.Dispose();
-            DocIndexStream.Dispose();
-
+            if (ValueStream != null) ValueStream.Dispose();
+            if (KeyStream != null) KeyStream.Dispose();
+            if (DocStream != null) DocStream.Dispose();
+            if (ValueIndexStream != null) ValueIndexStream.Dispose();
+            if (KeyIndexStream != null) KeyIndexStream.Dispose();
+            if (DocIndexStream != null) DocIndexStream.Dispose();
             if (PostingsStream != null) PostingsStream.Dispose();
             if (VectorStream != null) VectorStream.Dispose();
         }

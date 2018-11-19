@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -15,7 +16,7 @@ namespace Sir.Store
             _config = config;
         }
 
-        public IList<long> Write(string collectionId, IList<KeyValuePair<long, VectorNode>> rootNodes)
+        public async Task<IList<long>> Write(string collectionId, IList<KeyValuePair<long, VectorNode>> rootNodes)
         {
             var nodes = new List<VectorNode>();
             byte[] payload;
@@ -45,21 +46,21 @@ namespace Sir.Store
                 }
 
                 // first word of message is payload count (i.e. num of words (i.e. posting lists))
-                message.Write(BitConverter.GetBytes(nodes.Count));
+                await message.WriteAsync(BitConverter.GetBytes(nodes.Count));
 
-                // next block is header
+                // next is header
                 header.Position = 0;
-                header.CopyTo(message);
+                await header.CopyToAsync(message);
 
-                // last block is body
+                // last is body
                 body.Position = 0;
-                body.CopyTo(message);
+                await body.CopyToAsync(message);
 
                 payload = message.ToArray();
             }
 
-            // send message, recieve list of (remote) file positions
-            var positions = Send(collectionId, payload);
+            // send message and recieve list of (remote) file positions
+            var positions = await Send(collectionId, payload);
 
             if (nodes.Count != positions.Count)
             {
@@ -74,7 +75,7 @@ namespace Sir.Store
             return positions;
         }
 
-        private IList<long> Send(string collectionId, byte[] payload)
+        private async Task<IList<long>> Send(string collectionId, byte[] payload)
         {
             var result = new List<long>();
 
@@ -87,7 +88,7 @@ namespace Sir.Store
             request.Method = WebRequestMethods.Http.Post;
             request.ContentLength = payload.Length;
 
-            using (var requestBody = request.GetRequestStream())
+            using (var requestBody = await request.GetRequestStreamAsync())
             {
                 requestBody.Write(payload, 0, payload.Length);
 
@@ -96,7 +97,9 @@ namespace Sir.Store
                     using (var responseBody = response.GetResponseStream())
                     {
                         var mem = new MemoryStream();
-                        responseBody.CopyTo(mem);
+
+                        await responseBody.CopyToAsync(mem);
+
                         var buf = mem.ToArray();
 
                         if (buf.Length != response.ContentLength)
@@ -118,7 +121,5 @@ namespace Sir.Store
 
             return result;    
         }
-
-        
     }
 }

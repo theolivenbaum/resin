@@ -52,8 +52,8 @@ namespace Sir.Store
                 {
                     using (var session = _sessionFactory.CreateReadSession(collectionId))
                     {
-                        long total;
-                        var docs = session.Read(query, query.Take, out total);
+                        var result = await session.Read(query, query.Take);
+                        var docs = result.Docs;
 
                         _log.Log(string.Format("fetched {0} docs from disk in {1}", docs.Count, timer.Elapsed));
 
@@ -65,7 +65,7 @@ namespace Sir.Store
 
                         _log.Log(string.Format("serialized {0} docs in {1}", docs.Count, timer.Elapsed));
 
-                        return new Result { MediaType = "application/json", Data = stream, Documents = docs, Total = total };
+                        return new Result { MediaType = "application/json", Data = stream, Documents = docs, Total = result.Total };
                     }
                 }
 

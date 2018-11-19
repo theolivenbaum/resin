@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -13,14 +14,14 @@ namespace Sir.Store
             _stream = stream;
         }
 
-        public uint Append(long offset, int len, byte dataType)
+        public async Task<uint> Append(long offset, int len, byte dataType)
         {
             var position = _stream.Position;
             var index = (uint)position / _blockSize;
 
-            _stream.Write(BitConverter.GetBytes(offset), 0, sizeof(long));
-            _stream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
-            _stream.Write(new byte[] { dataType }, 0, sizeof(byte));
+            await _stream.WriteAsync(BitConverter.GetBytes(offset), 0, sizeof(long));
+            await _stream.WriteAsync(BitConverter.GetBytes(len), 0, sizeof(int));
+            await _stream.WriteAsync(new byte[] { dataType }, 0, sizeof(byte));
 
             return index;
         }

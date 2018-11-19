@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -38,6 +39,7 @@ namespace Sir.Store
         public IEnumerable<IDictionary> ReadDocs()
         {
             var numOfDocs = _docIx.NumOfDocs;
+
             var docIds = Enumerable.Range(1, numOfDocs).ToDictionary(x => (ulong)x, y => (float)0);
 
             return ReadDocs(docIds);
@@ -54,7 +56,7 @@ namespace Sir.Store
                     continue;
                 }
 
-                var docMap = _docs.Read(docInfo.offset, docInfo.length);
+                var docMap = _docs.Read(docInfo.offset, docInfo.length).Result;
                 var doc = new Dictionary<IComparable, IComparable>();
 
                 for (int i = 0; i < docMap.Count; i++)

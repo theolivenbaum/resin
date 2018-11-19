@@ -18,15 +18,12 @@ namespace Sir.Store
         private readonly ValueIndexWriter _valIx;
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
-        private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
 
         public WriteSession(
             string collectionId, 
-            LocalStorageSessionFactory sessionFactory, 
-            ITokenizer tokenizer) : base(collectionId, sessionFactory)
+            LocalStorageSessionFactory sessionFactory) : base(collectionId, sessionFactory)
         {
-            _tokenizer = tokenizer;
             _log = Logging.CreateWriter("writesession");
 
             var collection = collectionId.ToHash();
@@ -37,7 +34,6 @@ namespace Sir.Store
             ValueIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collection)));
             KeyIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collection)));
             DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collection)));
-            Index = sessionFactory.GetCollectionIndex(collectionId.ToHash());
 
             _vals = new ValueWriter(ValueStream);
             _keys = new ValueWriter(KeyStream);
@@ -73,21 +69,21 @@ namespace Sir.Store
                         // We have a new key!
 
                         // store key
-                        var keyInfo = _keys.Append(keyStr);
-                        keyId = _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
-                        SessionFactory.PersistKeyMapping(keyHash, keyId);
+                        var keyInfo = await _keys.Append(keyStr);
+                        keyId = await _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
+                        await SessionFactory.PersistKeyMapping(keyHash, keyId);
                     }
 
                     // store value
-                    var valInfo = _vals.Append(val);
-                    valId = _valIx.Append(valInfo.offset, valInfo.len, valInfo.dataType);
+                    var valInfo = await _vals.Append(val);
+                    valId = await _valIx.Append(valInfo.offset, valInfo.len, valInfo.dataType);
 
                     // store refs to keys and values
                     docMap.Add((keyId, valId));
                 }
 
-                var docMeta = _docs.Append(docMap);
-                _docIx.Append(docMeta.offset, docMeta.length);
+                var docMeta = await _docs.Append(docMap);
+                await _docIx.Append(docMeta.offset, docMeta.length);
 
                 model.Add("__docid", docId);
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -12,7 +13,7 @@ namespace Sir.Store
             _stream = stream;
         }
 
-        public (long offset, int len, byte dataType) Append(IComparable value)
+        public async Task<(long offset, int len, byte dataType)> Append(IComparable value)
         {
             byte[] buffer;
             byte dataType = 0;
@@ -59,7 +60,8 @@ namespace Sir.Store
             }
 
             var offset = _stream.Position;
-            _stream.Write(buffer, 0, buffer.Length);
+
+            await _stream.WriteAsync(buffer, 0, buffer.Length);
 
             return (offset, buffer.Length, dataType);
         }

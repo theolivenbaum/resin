@@ -14,15 +14,8 @@ namespace Sir.Store
     /// </summary>
     public class IndexingSession : CollectionSession
     {
-        private readonly ValueWriter _vals;
-        private readonly ValueWriter _keys;
-        private readonly DocWriter _docs;
-        private readonly ValueIndexWriter _valIx;
-        private readonly ValueIndexWriter _keyIx;
-        private readonly DocIndexWriter _docIx;
         private readonly RemotePostingsWriter _postingsWriter;
-        private readonly Stopwatch _timer;
-        private readonly ProducerConsumerQueue<(long keyId, VectorNode index, IEnumerable<(ulong, string)> tokens)> _buildQueue;
+        //private readonly ProducerConsumerQueue<(long keyId, VectorNode index, IEnumerable<(ulong, string)> tokens)> _buildQueue;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
         private readonly Dictionary<long, VectorNode> _dirty;
@@ -36,31 +29,72 @@ namespace Sir.Store
         {
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("indexingsession");
-            _buildQueue = new ProducerConsumerQueue<(long keyId, VectorNode index, IEnumerable<(ulong, string)> tokens)>(Build);
+            //_buildQueue = new ProducerConsumerQueue<(long keyId, VectorNode index, IEnumerable<(ulong, string)> tokens)>(Build);
             _dirty = new Dictionary<long, VectorNode>();
+            _postingsWriter = new RemotePostingsWriter(config);
 
             var collection = collectionId.ToHash();
 
-            ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collection)));
-            KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collection)));
-            DocStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", collection)));
-            ValueIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collection)));
-            KeyIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collection)));
-            DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collection)));
             VectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collection)));
             Index = sessionFactory.GetCollectionIndex(collectionId.ToHash());
-
-            _vals = new ValueWriter(ValueStream);
-            _keys = new ValueWriter(KeyStream);
-            _docs = new DocWriter(DocStream);
-            _valIx = new ValueIndexWriter(ValueIndexStream);
-            _keyIx = new ValueIndexWriter(KeyIndexStream);
-            _docIx = new DocIndexWriter(DocIndexStream);
-            _postingsWriter = new RemotePostingsWriter(config);
-            _timer = new Stopwatch();
         }
 
-        private void Write(IDictionary doc, Dictionary<long, HashSet<(ulong docId, string token)>> columns)
+        public void Write(AnalyzeJob job)
+        {
+            try
+            {
+                var timer = new Stopwatch();
+                timer.Start();
+
+                var docCount = 0;
+                var columns = new Dictionary<long, HashSet<(ulong docId, string token)>>();
+
+                foreach (var doc in job.Documents)
+                {
+                    docCount++;
+
+                    Analyze(doc, columns);
+                }
+
+                _log.Log(string.Format("analyzed {0} docs in {1}", docCount, timer.Elapsed));
+
+                timer.Restart();
+
+                foreach (var column in columns)
+                {
+                    var keyId = column.Key;
+
+                    VectorNode ix;
+                    if (!_dirty.TryGetValue(keyId, out ix))
+                    {
+                        ix = GetIndex(keyId);
+
+                        if (ix == null)
+                        {
+                            ix = new VectorNode();
+                        }
+                        _dirty.Add(keyId, ix);
+                    }
+                }
+
+                Parallel.ForEach(columns, column =>
+                {
+                    var keyId = column.Key;
+                    var tokens = column.Value;
+                    var ix = _dirty[keyId];
+
+                    BuildInMemoryIndex(keyId, ix, tokens);
+                });
+            }
+            catch (Exception ex)
+            {
+                _log.Log(ex);
+
+                throw;
+            }
+        }
+
+        private void Analyze(IDictionary doc, Dictionary<long, HashSet<(ulong docId, string token)>> columns)
         {
             var docId = (ulong)doc["__docid"];
 
@@ -106,109 +140,12 @@ namespace Sir.Store
             }
         }
 
-        public void Write(IDictionary doc)
-        {
-            try
-            {
-                var columns = new Dictionary<long, HashSet<(ulong docId, string token)>>();
+        //private void Build((long keyId, VectorNode index, IEnumerable<(ulong docId, string token)> tokens) job)
+        //{
+        //    Build(job.keyId, job.index, job.tokens);
+        //}
 
-                Write(doc, columns);
-
-                foreach (var column in columns)
-                {
-                    var keyId = column.Key;
-
-                    VectorNode ix;
-                    if (!_dirty.TryGetValue(keyId, out ix))
-                    {
-                        ix = GetIndex(keyId);
-
-                        if (ix == null)
-                        {
-                            ix = new VectorNode();
-                        }
-                        _dirty.Add(keyId, ix);
-                    }
-                }
-
-                Parallel.ForEach(columns, column =>
-                {
-                    var keyId = column.Key;
-                    var tokens = column.Value;
-                    var ix = _dirty[keyId];
-
-                    Build(keyId, ix, tokens);
-                });
-            }
-            catch (Exception ex)
-            {
-                _log.Log(ex);
-
-                throw;
-            }
-        }
-
-        public void Write(AnalyzeJob job)
-        {
-            try
-            {
-                var timer = new Stopwatch();
-                timer.Start();
-
-                var docCount = 0;
-                var columns = new Dictionary<long, HashSet<(ulong docId, string token)>>();
-
-                foreach (var doc in job.Documents)
-                {
-                    docCount++;
-
-                    Write(doc, columns);
-                }
-
-                _log.Log(string.Format("analyzed {0} docs in {1}", docCount, timer.Elapsed));
-
-                timer.Restart();
-
-                foreach (var column in columns)
-                {
-                    var keyId = column.Key;
-
-                    VectorNode ix;
-                    if (!_dirty.TryGetValue(keyId, out ix))
-                    {
-                        ix = GetIndex(keyId);
-
-                        if (ix == null)
-                        {
-                            ix = new VectorNode();
-                        }
-                        _dirty.Add(keyId, ix);
-                    }
-                }
-
-                foreach(var column in columns)
-                {
-                    var keyId = column.Key;
-                    var tokens = column.Value;
-                    var ix = _dirty[keyId];
-
-                    Build(keyId, ix, tokens);
-                }
-            }
-            catch (Exception ex)
-            {
-                _log.Log(ex);
-
-                throw;
-            }
-        }
-
-        private void Build((long keyId, VectorNode index, IEnumerable<(ulong docId, string token)> tokens) job)
-        {
-            Build(job.keyId, job.index, job.tokens);
-        }
-
-        private void Build(long keyId, VectorNode index, IEnumerable<(ulong docId, string token)> tokens)
+        private void BuildInMemoryIndex(long keyId, VectorNode index, IEnumerable<(ulong docId, string token)> tokens)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -225,18 +162,18 @@ namespace Sir.Store
                 count, CollectionId, keyId, timer.Elapsed, index.Size()));
         }
 
-        public void Serialize()
+        public async Task Serialize()
         {
             if (_serialized)
                 return;
 
-            _buildQueue.Dispose();
+            //_buildQueue.Dispose();
 
             _log.Log("in-memory search index has been built.");
 
             var rootNodes = _dirty.ToList();
 
-            _postingsWriter.Write(CollectionId, rootNodes);
+            await _postingsWriter.Write(CollectionId, rootNodes);
 
             foreach (var node in rootNodes)
             {
@@ -261,8 +198,7 @@ namespace Sir.Store
         {
             if (!_serialized)
             {
-                Serialize();
-                _serialized = true;
+                Task.Run(() => Serialize()).Wait();
             }
 
             base.Dispose();
