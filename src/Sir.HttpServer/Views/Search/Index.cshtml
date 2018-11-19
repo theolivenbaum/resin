@@ -21,10 +21,11 @@
         <ol>
             @foreach (var item in docs)
             {
+                var host = new Uri("https://" + item.Document["_url"].ToString()).Host.ToString();
                 <li>
                     <p>
-                        <a class="result-link" href="https://@item.Document["_url"].ToString()">@item.Document["title"].ToString()</a>
-                        <span>@item.Document["_site"]</span><br />
+                        <a class="result-link" href="https://@item.Document["_url"].ToString()">@item.Document["title"].ToString()</a><br />
+                        <span style="font-weight:bold;color:black;opacity:0.45;font-size:9pt;">@host</span><br />
                         <span>Score: @item.Document["__score"]</span><br />
                         <span>Indexed @DateTime.FromBinary((long)(item.Document["_created"]))</span>
                     </p>
