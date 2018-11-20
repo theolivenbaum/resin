@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,14 +21,9 @@ namespace Sir.HttpServer.Controllers
         {
             if (string.IsNullOrWhiteSpace(q)) return View();
 
-            string query = q.Trim().Replace(":", string.Empty);
             string collectionId = cid ?? "www";
-            string htmlEncodedQuery = WebUtility.HtmlEncode(query);
 
-            ViewData["q"] = query;
-
-            var timer = new Stopwatch();
-            timer.Start();
+            ViewData["q"] = q;
 
             var reader = _plugins.Get<IReader>("application/json");
 
@@ -38,14 +32,17 @@ namespace Sir.HttpServer.Controllers
                 throw new System.NotSupportedException();
             }
 
+            var timer = new Stopwatch();
+            timer.Start();
+
             var result = await reader.Read(collectionId, Request);
 
             var documents = result.Documents
                 .Select(x => new SearchResultModel { Document = x })
                 .Take(100);
 
-            ViewData["collectionName"] = collectionId;
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
+            ViewData["collectionName"] = collectionId;
             ViewData["total"] = result.Total;
 
             return View(documents);

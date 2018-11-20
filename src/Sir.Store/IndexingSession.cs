@@ -77,14 +77,14 @@ namespace Sir.Store
                     }
                 }
 
-                Parallel.ForEach(columns, column =>
+                foreach(var column in columns)
                 {
                     var keyId = column.Key;
                     var tokens = column.Value;
                     var ix = _dirty[keyId];
 
                     BuildInMemoryIndex(keyId, ix, tokens);
-                });
+                }
             }
             catch (Exception ex)
             {

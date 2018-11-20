@@ -7,15 +7,6 @@ namespace Sir.Store
 {
     public class LatinTokenizer : ITokenizer
     {
-        private static char[] _phraseDelimiters = new char[] {
-                            '.', ',', '?', '!',
-                            ':', ';', '\\', '/',
-                            '\n', '\r', '\t',
-                            '(', ')', '[', ']',
-                            '"', '`', '´', '-',
-                            '=', '&', '\''
-                            };
-
         private static char[] _delims = new char[] {
                             '.', ',', '?', '!',
                             ':', ';', '\\', '/',

@@ -11,33 +11,40 @@ namespace Sir.DbUtil
     {
         private static StreamWriter _log;
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            Console.WriteLine("processing command: {0}", string.Join(" ", args));
-
-            _log = Logging.CreateWriter("dbutil");
-
-            Logging.SendToConsole = true;
-
-            var command = args[0].ToLower();
-
-            if (command == "index" && args.Length == 6)
+            try
             {
-                // example: index C:\projects\resin\src\Sir.HttpServer\App_Data www 0 10000 1000
+                Console.WriteLine("processing command: {0}", string.Join(" ", args));
 
-                Task.Run(() => Index(
-                    dir: args[1],
-                    collection: args[2],
-                    skip: int.Parse(args[3]),
-                    take: int.Parse(args[4]),
-                    batchSize: int.Parse(args[5])))
-                .Wait();
+                _log = Logging.CreateWriter("dbutil");
+
+                Logging.SendToConsole = true;
+
+                var command = args[0].ToLower();
+
+                if (command == "index" && args.Length == 6)
+                {
+                    // example: index C:\projects\resin\src\Sir.HttpServer\App_Data www 0 10000 1000
+
+                    await Index(
+                        dir: args[1],
+                        collection: args[2],
+                        skip: int.Parse(args[3]),
+                        take: int.Parse(args[4]),
+                        batchSize: int.Parse(args[5]));
+                }
+                else if (command == "query" && args.Length == 3)
+                {
+                    // example: query C:\projects\resin\src\Sir.HttpServer\App_Data www
+
+                    Task.Run(() => Query(dir: args[1], collectionId: args[2])).Wait();
+                }
             }
-            else if (command == "query" && args.Length == 3)
+            catch(Exception ex)
             {
-                // example: query C:\projects\resin\src\Sir.HttpServer\App_Data www
-
-                Task.Run(() => Query(dir: args[1], collectionId: args[2])).Wait();
+                Console.WriteLine(ex.ToString());
+                Console.Read();
             }
         }
 
