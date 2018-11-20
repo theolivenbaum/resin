@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -69,21 +68,5 @@ namespace Sir.Store
 
             return (BitConverter.ToInt64(buf, 0), BitConverter.ToInt32(buf, sizeof(long)));
         }
-
-        //public IList<(long offset, int length)> ReadAll()
-        //{
-        //    _stream.Seek(0, SeekOrigin.Begin);
-
-        //    var buf = new byte[_blockSize];
-        //    var read = _stream.Read(buf, 0, _blockSize);
-        //    var result = new List<(long offset, int length)>();
-
-        //    while (read > 0)
-        //    {
-        //        result.Add((BitConverter.ToInt64(buf, 0), BitConverter.ToInt32(buf, sizeof(long))));
-        //    }
-
-        //    return result;
-        //}
     }
 }

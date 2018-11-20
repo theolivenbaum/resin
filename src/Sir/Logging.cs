@@ -7,7 +7,9 @@ namespace Sir
     public static class Logging
     {
         private static object Sync = new object();
-        private static ProducerConsumerQueue<(StreamWriter w, string s)> _queue = new ProducerConsumerQueue<(StreamWriter w, string s)>(Consume);
+
+        private static ProducerConsumerQueue<(StreamWriter w, string s)> _queue = 
+            new ProducerConsumerQueue<(StreamWriter w, string s)>(Consume);
 
         public static bool SendToConsole { get; set; }
 

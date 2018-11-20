@@ -67,7 +67,7 @@ namespace Sir.Store
 
                 _log.Log("begin loading index into memory");
 
-                var ix = new SortedList<ulong, SortedList<long, VectorNode>>();
+                var ixs = new SortedList<ulong, SortedList<long, VectorNode>>();
                 var indexFiles = Directory.GetFiles(Dir, "*.ix");
 
                 foreach (var ixFileName in indexFiles)
@@ -81,20 +81,35 @@ namespace Sir.Store
 
                     SortedList<long, VectorNode> colIx;
 
-                    if (!ix.TryGetValue(collectionHash, out colIx))
+                    if (!ixs.TryGetValue(collectionHash, out colIx))
                     {
                         colIx = new SortedList<long, VectorNode>();
-                        ix.Add(collectionHash, colIx);
+                        ixs.Add(collectionHash, colIx);
                     }
 
-                    var root = await DeserializeIndex(ixFileName, vecFileName);
-                    ix[collectionHash].Add(keyId, root);
+                    var ix = await DeserializeIndex(ixFileName, vecFileName);
+                    ixs[collectionHash].Add(keyId, ix);
 
                     _log.Log(string.Format("loaded {0}.{1}. {2}",
-                        collectionHash, keyId, root.Size()));
+                        collectionHash, keyId, ix.Size()));
+
+                    // validate
+                    //var validateFn = Path.Combine(Dir, string.Format("{0}.{1}.validate", collectionHash, keyId));
+                    //if (File.Exists(validateFn))
+                    //{
+                    //    foreach (var token in File.ReadAllLines(validateFn))
+                    //    {
+                    //        var closestMatch = ix.ClosestMatch(new VectorNode(token), skipDirtyNodes: false);
+
+                    //        if (closestMatch.Highscore < VectorNode.IdenticalAngle)
+                    //        {
+                    //            throw new DataMisalignedException();
+                    //        }
+                    //    }
+                    //}
                 }
 
-                _index = new VectorTree(ix);
+                _index = new VectorTree(ixs);
 
                 if (indexFiles.Length == 0)
                 {
