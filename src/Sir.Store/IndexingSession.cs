@@ -77,6 +77,7 @@ namespace Sir.Store
                     }
                 }
 
+                //Parallel.ForEach(columns, column =>
                 foreach(var column in columns)
                 {
                     var keyId = column.Key;
@@ -84,6 +85,21 @@ namespace Sir.Store
                     var ix = _dirty[keyId];
 
                     BuildInMemoryIndex(keyId, ix, tokens);
+
+                    // validate
+                    //File.WriteAllText(
+                    //    Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.validate", CollectionId.ToHash(), keyId)),
+                    //    string.Join('\n', tokens.Select(s=>s.token)));
+
+                    //foreach (var token in tokens)
+                    //{
+                    //    var closestMatch = ix.ClosestMatch(new VectorNode(token.token), skipDirtyNodes:false);
+
+                    //    if (closestMatch.Highscore < VectorNode.IdenticalAngle)
+                    //    {
+                    //        throw new DataMisalignedException();
+                    //    }
+                    //}
                 }
             }
             catch (Exception ex)
@@ -168,8 +184,6 @@ namespace Sir.Store
                 return;
 
             //_buildQueue.Dispose();
-
-            _log.Log("in-memory search index has been built.");
 
             var rootNodes = _dirty.ToList();
 
