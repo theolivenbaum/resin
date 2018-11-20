@@ -144,7 +144,7 @@ namespace Sir.DbUtil
                 }
             }
 
-            _log.Log(string.Format("writing index took {0}", timer.Elapsed));
+            _log.Log(string.Format("indexing took {0}", timer.Elapsed));
         }
     }
 }
