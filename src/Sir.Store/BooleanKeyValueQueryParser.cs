@@ -30,7 +30,7 @@ namespace Sir.Store
                 var value = parts[1];
 
                 var values = (key[0] == '_' || tokenizer == null) ?
-                    new[] { value } : tokenizer.Tokenize(value);
+                    new[] { value } : tokenizer.Tokenize(value).ToArray();
 
                 var and = root == null || key[0] == '+';
                 var not = key[0] == '-';
@@ -43,7 +43,7 @@ namespace Sir.Store
 
                 foreach (var val in values)
                 {
-                    var q = new Query { Term = new Term(key, val), Or = true };
+                    var q = new Query { Term = new Term(key, val), And = and, Or = or, Not = not };
 
                     if (previous == null)
                     {
