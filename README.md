@@ -6,7 +6,7 @@
 
 ## What is this?
 
-A full-text distributed search engine with HTTP API and programmable read/write pipelines, with support for any message format that can define its payload as a collection of documents, e.g. JSON, XML or custom formats.
+A full-text distributed search engine with HTTP API and programmable read/write pipelines, with support for any message format that can define its payload as a collection of documents, e.g. JSON, XML as well as custom formats.
 
 Can you define your data entries as documents? Do you need to write data in any format you want and read it also in any format you want? Then this might be for you.
 
@@ -35,7 +35,7 @@ Latest code is in `dev` branch.
 - [x] v0.3a - search service
 - [x] v0.4a - distributed search service
 - [ ] v0.5b - "Hadoop for text"
-- [ ] v0.6b - semantic runtime engine
+- [ ] v0.6b - JITT semantic runtime engine (Just-In-Time Training)
 - [ ] v0.7b - "Web search for kids"
 - [ ] v0.8 - voice-to-text
 - [ ] v0.9 - bot API
