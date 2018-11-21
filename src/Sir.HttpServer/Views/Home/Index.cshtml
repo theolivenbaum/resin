@@ -3,16 +3,9 @@
     Layout = "~/Views/_Layout.cshtml";
 }
 
-@using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
-{
+@{await Html.RenderPartialAsync("SearchForm");}
 <div>
-    <input type="text" id="q" name="q" placeholder="Ask anything." autofocus />
-    <input type="submit" value="Go" />
-    <input type="hidden" value="30" name="take" id="take" />
+    <p>
+        @*<a href="/add">Submit page</a> to the public "www" index.*@
+    </p>
 </div>
-}
-    <div>
-        <p>
-            @*<a href="/add">Submit page</a> to the public "www" index.*@
-        </p>
-    </div>

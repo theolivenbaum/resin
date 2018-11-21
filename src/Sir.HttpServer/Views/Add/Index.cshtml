@@ -5,15 +5,7 @@
 
 <div>
 
-    @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
-    {
-    <div>
-        <input type="text" id="q" name="q" placeholder="Ask anything." />
-        <input type="submit" value="Go" />
-        <input type="hidden" value="30" name="take" id="take" />
-
-    </div>
-    }
+    @{await Html.RenderPartialAsync("SearchForm");}
 
     @using (Html.BeginRouteForm("default", new { controller = "Add", action = "Page" }, FormMethod.Get))
     {

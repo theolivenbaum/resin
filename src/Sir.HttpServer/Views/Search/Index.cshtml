@@ -7,33 +7,11 @@
     IList<Sir.HttpServer.Controllers.SearchResultModel> docs = Model == null ?
         new Sir.HttpServer.Controllers.SearchResultModel[0].ToList() : Model.ToList();
 }
-@using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
-{
-    <input type="text" id="q" name="q" placeholder="Ask anything." value="@ViewData["q"]" />
-    <input type="submit" value="Go" />
-    <input type="hidden" value="30" name="take" id="take" />
-}
+@{await Html.RenderPartialAsync("SearchForm");}
 
 @if (ViewData["time_ms"] != null)
 {
-    <h3>Showing @docs.Count results of @ViewData["total"] for '@ViewData["q"]' in '@ViewData["collectionName"]' (@ViewData["time_ms"] ms)</h3>
-
-    <div>
-        <ol>
-            @foreach (var item in docs)
-            {
-                var host = new Uri("https://" + item.Document["_url"].ToString()).Host.ToString();
-                <li>
-                    <p>
-                        <a class="result-link" href="https://@item.Document["_url"].ToString()">@item.Document["title"].ToString()</a><br />
-                        <span style="font-weight:bold;color:black;opacity:0.45;font-size:9pt;">@host</span><br />
-                        <span>Score: @item.Document["__score"]</span><br />
-                        <span>Indexed @DateTime.FromBinary((long)(item.Document["_created"]))</span>
-                    </p>
-                </li>
-            }
-        </ol>
-    </div>
+    await Html.RenderPartialAsync("DocumentList", docs);
 }
 <div>
     <p>
