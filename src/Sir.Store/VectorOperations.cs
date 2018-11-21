@@ -15,7 +15,7 @@ namespace Sir.Store
             foreach (var kvp in vec)
             {
                 await stream.WriteAsync(BitConverter.GetBytes(kvp.Key), 0, sizeof(int));
-                stream.WriteByte(kvp.Value);
+                await stream.WriteAsync(new[] { kvp.Value }, 0, sizeof(byte));
             }
 
             return pos;

@@ -33,7 +33,6 @@ namespace Sir.Store
 
             var collection = collectionId.ToHash();
 
-            VectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collection)));
             Index = sessionFactory.GetCollectionIndex(collectionId.ToHash());
         }
 
@@ -84,20 +83,22 @@ namespace Sir.Store
                     await BuildInMemoryIndex(keyId, ix, tokens);
 
                     // validate
-                    //File.WriteAllText(
-                    //    Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.validate", CollectionId.ToHash(), keyId)),
-                    //    string.Join('\n', tokens.Select(s=>s.token)));
+                    foreach (var token in tokens)
+                    {
+                        var closestMatch = ix.ClosestMatch(new VectorNode(token.token), skipDirtyNodes: false);
 
-                    //foreach (var token in tokens)
-                    //{
-                    //    var closestMatch = ix.ClosestMatch(new VectorNode(token.token), skipDirtyNodes:false);
+                        if (closestMatch.Highscore < VectorNode.IdenticalAngle)
+                        {
+                            throw new DataMisalignedException();
+                        }
+                    }
+                    File.WriteAllText(
+                        Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.validate", CollectionId.ToHash(), keyId)),
+                        string.Join('\n', tokens.Select(s => s.token)));
 
-                    //    if (closestMatch.Highscore < VectorNode.IdenticalAngle)
-                    //    {
-                    //        throw new DataMisalignedException();
-                    //    }
-                    //}
                 }
+
+                await Serialize();
 
                 _log.Log(string.Format("built index in {0}", timer.Elapsed));
 
@@ -169,18 +170,21 @@ namespace Sir.Store
             timer.Start();
 
             var count = 0;
-
-            foreach (var token in tokens)
+            using (var vectorStream = SessionFactory.CreateAppendStream(
+                Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.vec", CollectionId.ToHash(), keyId))))
             {
-                await index.Add(new VectorNode(token.token, token.docId), CollectionId, VectorStream);
-                count++;
+                foreach (var token in tokens)
+                {
+                    await index.Add(new VectorNode(token.token, token.docId), vectorStream);
+                    count++;
+                }
             }
 
             _log.Log(string.Format("added {0} nodes to column {1}.{2} in {3}. {4}",
                 count, CollectionId, keyId, timer.Elapsed, index.Size()));
         }
 
-        public async Task Serialize()
+        private async Task Serialize()
         {
             if (_serialized)
                 return;
@@ -189,14 +193,14 @@ namespace Sir.Store
 
             await _postingsWriter.Write(CollectionId, rootNodes);
 
-            Parallel.ForEach(rootNodes, async node =>
-            //foreach (var node in rootNodes)
+            //Parallel.ForEach(rootNodes, async node =>
+            foreach (var node in rootNodes)
             {
                 using (var ixFile = CreateIndexStream(node.Key))
                 {
-                    await node.Value.SerializeTree(CollectionId, ixFile);
+                    await node.Value.SerializeTree(ixFile);
                 }
-            });
+            }
 
             _log.Log("serialization complete.");
 
@@ -207,16 +211,6 @@ namespace Sir.Store
         {
             var fileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId.ToHash(), keyId));
             return new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true);
-        }
-
-        public override void Dispose()
-        {
-            if (!_serialized)
-            {
-                Task.Run(() => Serialize()).Wait();
-            }
-
-            base.Dispose();
         }
     }
 

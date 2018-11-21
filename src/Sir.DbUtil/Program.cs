@@ -133,8 +133,6 @@ namespace Sir.DbUtil
                             using (var indexSession = sessionFactory.CreateIndexSession(collection))
                             {
                                 await indexSession.Write(job);
-
-                                await indexSession.Serialize();
                             }
 
                             _log.Log(string.Format("batch {0} done in {1}", batchNo++, writeTimer.Elapsed));

@@ -77,7 +77,7 @@ namespace Sir.Store
 
                     var collectionHash = ulong.Parse(name[0]);
                     var keyId = long.Parse(name[1]);
-                    var vecFileName = Path.Combine(Dir, string.Format("{0}.vec", collectionHash));
+                    var vecFileName = Path.Combine(Dir, string.Format("{0}.{1}.vec", collectionHash, keyId));
 
                     SortedList<long, VectorNode> colIx;
 
@@ -88,25 +88,25 @@ namespace Sir.Store
                     }
 
                     var ix = await DeserializeIndex(ixFileName, vecFileName);
-                    ixs[collectionHash].Add(keyId, ix);
+                    colIx.Add(keyId, ix);
 
                     _log.Log(string.Format("loaded {0}.{1}. {2}",
                         collectionHash, keyId, ix.Size()));
 
                     // validate
-                    //var validateFn = Path.Combine(Dir, string.Format("{0}.{1}.validate", collectionHash, keyId));
-                    //if (File.Exists(validateFn))
-                    //{
-                    //    foreach (var token in File.ReadAllLines(validateFn))
-                    //    {
-                    //        var closestMatch = ix.ClosestMatch(new VectorNode(token), skipDirtyNodes: false);
+                    var validateFn = Path.Combine(Dir, string.Format("{0}.{1}.validate", collectionHash, keyId));
+                    if (File.Exists(validateFn))
+                    {
+                        foreach (var token in File.ReadAllLines(validateFn))
+                        {
+                            var closestMatch = ix.ClosestMatch(new VectorNode(token), skipDirtyNodes: false);
 
-                    //        if (closestMatch.Highscore < VectorNode.IdenticalAngle)
-                    //        {
-                    //            throw new DataMisalignedException();
-                    //        }
-                    //    }
-                    //}
+                            if (closestMatch.Highscore < VectorNode.IdenticalAngle)
+                            {
+                                throw new DataMisalignedException();
+                            }
+                        }
+                    }
                 }
 
                 _index = new VectorTree(ixs);

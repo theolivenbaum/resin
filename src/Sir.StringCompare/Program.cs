@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using Sir.Store;
 
@@ -26,7 +27,7 @@ namespace Sir.StringCompare
 
                 foreach (var token in tokenizer.Tokenize(document1))
                 {
-                    await index1.Add(new VectorNode(token));
+                    await index1.Add(new VectorNode(token), new MemoryStream());
                 }
 
                 float score = 0;

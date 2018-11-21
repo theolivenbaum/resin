@@ -16,7 +16,6 @@ namespace Sir.Store
         protected Stream KeyIndexStream { get; set; }
         protected Stream DocIndexStream { get; set; }
         protected Stream PostingsStream { get; set; }
-        protected Stream VectorStream { get; set; }
 
         public CollectionSession(string collectionId, LocalStorageSessionFactory sessionFactory)
         {
@@ -66,7 +65,6 @@ namespace Sir.Store
             if (KeyIndexStream != null) KeyIndexStream.Dispose();
             if (DocIndexStream != null) DocIndexStream.Dispose();
             if (PostingsStream != null) PostingsStream.Dispose();
-            if (VectorStream != null) VectorStream.Dispose();
         }
     }
 }

@@ -112,7 +112,7 @@ namespace Sir.Store
             return best;
         }
 
-        public async Task Add(VectorNode node, string collectionId = null, Stream vectorStream = null)
+        public async Task Add(VectorNode node, Stream vectorStream)
         {
             var angle = node.TermVector.CosAngle(TermVector);
 
@@ -129,11 +129,12 @@ namespace Sir.Store
                     node.Angle = angle;
                     Left = node;
 
-                    if (vectorStream != null && collectionId != null)
-                        await node.SerializeVector(collectionId, vectorStream);
+                    await Left.SerializeVector(vectorStream);
                 }
-
-                await Left.Add(node, collectionId, vectorStream);
+                else
+                {
+                    await Left.Add(node, vectorStream);
+                }
             }
             else
             {
@@ -142,16 +143,22 @@ namespace Sir.Store
                     node.Angle = angle;
                     Right = node;
 
-                    if (vectorStream != null && collectionId != null)
-                        await node.SerializeVector(collectionId, vectorStream);
+                    await Right.SerializeVector(vectorStream);
                 }
-
-                await Right.Add(node, collectionId, vectorStream);
+                else
+                {
+                    await Right.Add(node, vectorStream);
+                }
             }
         }
 
         private void Merge(VectorNode node)
         {
+            if (VecOffset < 0)
+            {
+                throw new InvalidOperationException();
+            }
+
             foreach (var id in node._docIds)
             {
                 _docIds.Add(id);
@@ -160,6 +167,11 @@ namespace Sir.Store
 
         private byte[][] ToStream()
         {
+            if (VecOffset < 0)
+            {
+                throw new InvalidOperationException();
+            }
+
             var block = new byte[5][];
 
             byte[] terminator = new byte[1];
@@ -190,9 +202,9 @@ namespace Sir.Store
             return block;
         }
 
-        public async Task SerializeTree(string collectionId, Stream indexStream)
+        public async Task SerializeTree(Stream indexStream)
         {
-            var node = this;
+            var node = Right;
             var stack = new Stack<VectorNode>();
 
             while (node != null)
@@ -217,33 +229,9 @@ namespace Sir.Store
             }
         }
 
-        private async Task SerializeVector(string collectionId, Stream vectorStream)
+        private async Task SerializeVector(Stream vectorStream)
         {
-            var node = this;
-            var stack = new Stack<VectorNode>();
-
-            while (node != null)
-            {
-                if (node.VecOffset < 0)
-                {
-                    // this node has never been persisted
-
-                    node.VecOffset = await node.TermVector.Serialize(vectorStream);
-                }
-
-                if (node.Right != null)
-                {
-                    stack.Push(node.Right);
-                }
-
-                node = node.Left;
-
-                if (node == null)
-                {
-                    if (stack.Count > 0)
-                        node = stack.Pop();
-                }
-            }
+            VecOffset = await TermVector.Serialize(vectorStream);
         }
 
         public IEnumerable<VectorNode> SerializePostings(string collectionId, Stream lengths, Stream lists)
@@ -296,10 +284,10 @@ namespace Sir.Store
 
             var buf = new byte[nodeSize];
             int read = 0;
-            VectorNode root = null;
-            VectorNode cursor = null;
+            VectorNode root = new VectorNode();
+            VectorNode cursor = root;
             var tail = new Stack<VectorNode>();
-            Byte terminator = Byte.MaxValue;
+            Byte terminator = 2;
 
             while ((read = await indexStream.ReadAsync(buf, 0, nodeSize)) == nodeSize)
             {
@@ -335,30 +323,22 @@ namespace Sir.Store
                 node.PostingsOffset = postingsOffset;
                 node.VecOffset = vecOffset;
 
-                if (root == null)
+                if (terminator == 0)
                 {
-                    root = node;
-                    cursor = node;
+                    cursor.Left = node;
+                    tail.Push(cursor);
+                }
+                else if (terminator == 1)
+                {
+                    cursor.Left = node;
+                }
+                else if (terminator == 2)
+                {
+                    cursor.Right = node;
                 }
                 else
                 {
-                    if (terminator == 0)
-                    {
-                        cursor.Left = node;
-                        tail.Push(cursor);
-                    }
-                    else if (terminator == 1)
-                    {
-                        cursor.Left = node;
-                    }
-                    else if (terminator == 2)
-                    {
-                        cursor.Right = node;
-                    }
-                    else
-                    {
-                        tail.Pop().Right = node;
-                    }
+                    tail.Pop().Right = node;
                 }
 
                 cursor = node;
