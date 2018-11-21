@@ -6,13 +6,12 @@ namespace Sir.Store
     {
         public Query()
         {
-            And = true;
         }
 
         public Query(IComparable key, IComparable value)
         {
             Term = new Term(key, value);
-            And = true;
+            Or = true;
         }
 
         public ulong Collection { get; set; }

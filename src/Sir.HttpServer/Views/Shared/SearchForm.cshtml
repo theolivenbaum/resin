@@ -1,6 +1,8 @@
 ﻿@using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
 {
-<input type="text" id="q" name="q" placeholder="Ask anything." value="@ViewData["q"]" />
-<input type="submit" value="Go" />
-<input type="hidden" value="30" name="take" id="take" />
+    <input type="text" id="q" name="q" placeholder="Ask anything." value="@ViewData["q"]" />
+    <input type="submit" value="Go" />
+    <input type="hidden" value="30" name="take" id="take" />
+    <input type="hidden" value="title" name="fields" />
+    <input type="hidden" value="body" name="fields" />
 }

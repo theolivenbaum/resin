@@ -17,7 +17,7 @@ namespace Sir.Store
 
             services.AddSingleton(typeof(ITokenizer), tokenizer);
 
-            services.AddSingleton(typeof(HttpQueryParser), new HttpQueryParser(new BooleanKeyValueQueryParser()));
+            services.AddSingleton(typeof(HttpQueryParser), new HttpQueryParser(new KeyValueBooleanQueryParser()));
         }
     }
 }

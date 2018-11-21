@@ -37,11 +37,16 @@ namespace Sir.HttpServer.Controllers
 
             var result = await reader.Read(cid, Request);
 
-            var documents = result.Documents.Select(x => new SearchResultModel { Document = x });
-
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
             ViewData["collectionName"] = cid;
             ViewData["total"] = result.Total;
+
+            if (result.Total== 0)
+            {
+                return View(new SearchResultModel[0]);
+            }
+
+            var documents = result.Documents.Select(x => new SearchResultModel { Document = x });
 
             return View(documents);
         }

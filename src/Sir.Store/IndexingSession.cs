@@ -101,6 +101,9 @@ namespace Sir.Store
                     //    }
                     //}
                 }
+
+                _log.Log(string.Format("built index in {0}", timer.Elapsed));
+
             }
             catch (Exception ex)
             {

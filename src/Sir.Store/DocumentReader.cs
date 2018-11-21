@@ -69,7 +69,7 @@ namespace Sir.Store
                     }
                 }
 
-                return new Result();
+                return new Result { Total = 0 };
             }
             catch (Exception ex)
             {

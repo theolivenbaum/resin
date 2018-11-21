@@ -8,7 +8,7 @@ namespace Sir.Store
     /// terms are separated by newline characters. 
     /// Terms may be appended with a + sign (meaning AND), a - sign (meaning NOT) or nothing (meaning OR).
     /// </summary>
-    public class BooleanKeyValueQueryParser
+    public class KeyValueBooleanQueryParser
     {
         private static  char[] Operators = new char[] { ' ', '+', '-' };
 
@@ -22,39 +22,46 @@ namespace Sir.Store
             {
                 if (line.IndexOf(':', 0, line.Length) < 0)
                 {
-                    throw new ArgumentException("Query is not formatted correctly. A query must define both a key and a value separated by a colon.", nameof(query));
+                    throw new ArgumentException(
+                        "Query syntax error. A query must define both a key and a value separated by a colon.", nameof(query));
                 }
 
                 var parts = line.Split(':');
                 var key = parts[0];
                 var value = parts[1];
 
-                var values = (key[0] == '_' || tokenizer == null) ?
-                    new[] { value } : tokenizer.Tokenize(value).ToArray();
+                var values = key[0] == '_' ?
+                    new[] { value } : 
+                    tokenizer.Tokenize(value).ToArray();
 
-                var and = root == null || key[0] == '+';
+                var or = root == null || (key[0] != '+' && key[0] != '-');
                 var not = key[0] == '-';
-                var or = !and && !not;
+                var and = !or && !not;
 
                 if (Operators.Contains(key[0]))
                 {
                     key = key.Substring(1);
                 }
 
-                foreach (var val in values)
-                {
-                    var q = new Query { Term = new Term(key, val), And = and, Or = or, Not = not };
+                var q = new Query { Term = new Term(key, values[0]), And = and, Or = or, Not = not };
+                var qp = q;
 
-                    if (previous == null)
-                    {
-                        root = q;
-                        previous = q;
-                    }
-                    else
-                    {
-                        previous.Next = q;
-                        previous = q;
-                    }
+                for (int i = 1; i < values.Length; i++)
+                {
+                    var next = new Query { Term = new Term(key, values[i]), Or = true };
+                    qp.Next = next;
+                    qp = qp.Next;
+                }
+
+                if (previous == null)
+                {
+                    root = q;
+                    previous = q;
+                }
+                else
+                {
+                    previous.Next = q;
+                    previous = q;
                 }
             }
 

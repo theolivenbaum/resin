@@ -51,7 +51,7 @@ namespace Sir.DbUtil
         private static async Task Query(string dir, string collectionId)
         {
             var tokenizer = new LatinTokenizer();
-            var qp = new BooleanKeyValueQueryParser();
+            var qp = new KeyValueBooleanQueryParser();
             var sessionFactory = new LocalStorageSessionFactory(
                 dir, 
                 tokenizer, 
