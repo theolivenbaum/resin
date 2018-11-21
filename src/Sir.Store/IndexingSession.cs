@@ -15,7 +15,6 @@ namespace Sir.Store
     public class IndexingSession : CollectionSession
     {
         private readonly RemotePostingsWriter _postingsWriter;
-        //private readonly ProducerConsumerQueue<(long keyId, VectorNode index, IEnumerable<(ulong, string)> tokens)> _buildQueue;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
         private readonly Dictionary<long, VectorNode> _dirty;
@@ -29,7 +28,6 @@ namespace Sir.Store
         {
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("indexingsession");
-            //_buildQueue = new ProducerConsumerQueue<(long keyId, VectorNode index, IEnumerable<(ulong, string)> tokens)>(Build);
             _dirty = new Dictionary<long, VectorNode>();
             _postingsWriter = new RemotePostingsWriter(config);
 
@@ -77,7 +75,7 @@ namespace Sir.Store
                     }
                 }
 
-                foreach(var column in columns)
+                foreach (var column in columns)
                 {
                     var keyId = column.Key;
                     var tokens = column.Value;
@@ -165,11 +163,6 @@ namespace Sir.Store
             }
         }
 
-        //private void Build((long keyId, VectorNode index, IEnumerable<(ulong docId, string token)> tokens) job)
-        //{
-        //    Build(job.keyId, job.index, job.tokens);
-        //}
-
         private async Task BuildInMemoryIndex(long keyId, VectorNode index, IEnumerable<(ulong docId, string token)> tokens)
         {
             var timer = new Stopwatch();
@@ -192,19 +185,18 @@ namespace Sir.Store
             if (_serialized)
                 return;
 
-            //_buildQueue.Dispose();
-
             var rootNodes = _dirty.ToList();
 
             await _postingsWriter.Write(CollectionId, rootNodes);
 
-            foreach (var node in rootNodes)
+            Parallel.ForEach(rootNodes, async node =>
+            //foreach (var node in rootNodes)
             {
                 using (var ixFile = CreateIndexStream(node.Key))
                 {
                     await node.Value.SerializeTree(CollectionId, ixFile);
                 }
-            }
+            });
 
             _log.Log("serialization complete.");
 

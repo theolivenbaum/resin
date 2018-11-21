@@ -153,20 +153,6 @@ namespace Sir.Store
             return _keys[keyHash];
         }
 
-        public bool TryGetIndex(ulong collectionId, long keyId, out VectorNode index)
-        {
-            var colIndex = _index.GetIndex(collectionId);
-
-            if (colIndex != null)
-            {
-                return colIndex.TryGetValue(keyId, out index);
-            }
-
-            index = null;
-
-            return false;
-        }
-
         public bool TryGetKeyId(ulong keyHash, out long keyId)
         {
             if (!_keys.TryGetValue(keyHash, out keyId))
@@ -195,11 +181,6 @@ namespace Sir.Store
         public ReadSession CreateReadSession(string collectionId)
         {
             return new ReadSession(collectionId, this, _config);
-        }
-
-        public Stream CreateWriteStream(string fileName)
-        {
-            return new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite);
         }
 
         public Stream CreateReadWriteStream(string fileName)
