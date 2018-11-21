@@ -20,11 +20,9 @@ On disk this language model is represented as a bitmap, and in-memory as a binar
 
 Each node in the index tree carries as their payload a list of document references.
 
-This model is a encodes less information than e.g. word2vec. 
+This model encodes less information than e.g. word2vec. Because of the smaller information payload, training the model, i.e. generating word encodings, takes less time compared to word2vec.
 
-Because of the smaller information payload, training the model, i.e. generating word encodings, takes less time compared to word2vec.
-
-The model works excellent with approximate phrase search, which also happens to be one of the most common types of web search queries.
+The model works with approximate phrase search, one of the most common types of web search queries.
 
 ### Roadmap
 
