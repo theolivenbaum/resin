@@ -2,19 +2,19 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
     public static class VectorOperations
     {
-        public static long Serialize(this SortedList<int, byte> vec, Stream stream)
+        public static async Task<long> Serialize(this SortedList<int, byte> vec, Stream stream)
         {
             var pos = stream.Position;
 
             foreach (var kvp in vec)
             {
-                stream.Write(BitConverter.GetBytes(kvp.Key), 0, sizeof(int));
+                await stream.WriteAsync(BitConverter.GetBytes(kvp.Key), 0, sizeof(int));
                 stream.WriteByte(kvp.Value);
             }
 

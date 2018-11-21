@@ -112,7 +112,7 @@ namespace Sir.Store
             return best;
         }
 
-        public VectorNode Add(VectorNode node)
+        public async Task Add(VectorNode node, string collectionId = null, Stream vectorStream = null)
         {
             var angle = node.TermVector.CosAngle(TermVector);
 
@@ -121,8 +121,6 @@ namespace Sir.Store
                 node.Angle = angle;
 
                 Merge(node);
-
-                return this;
             }
             else if (angle > FoldAngle)
             {
@@ -131,9 +129,11 @@ namespace Sir.Store
                     node.Angle = angle;
                     Left = node;
 
-                    return node;
+                    if (vectorStream != null && collectionId != null)
+                        await node.SerializeVector(collectionId, vectorStream);
                 }
-                return Left.Add(node);
+
+                await Left.Add(node, collectionId, vectorStream);
             }
             else
             {
@@ -142,21 +142,12 @@ namespace Sir.Store
                     node.Angle = angle;
                     Right = node;
 
-                    return node;
+                    if (vectorStream != null && collectionId != null)
+                        await node.SerializeVector(collectionId, vectorStream);
                 }
-                return Right.Add(node);
-            }
-        }
 
-        public VectorNode GetRoot()
-        {
-            var cursor = this;
-            while (cursor != null)
-            {
-                if (cursor.Ancestor == null) break;
-                cursor = cursor.Ancestor;
+                await Right.Add(node, collectionId, vectorStream);
             }
-            return cursor;
         }
 
         private void Merge(VectorNode node)
@@ -165,77 +156,6 @@ namespace Sir.Store
             {
                 _docIds.Add(id);
             }
-        }
-
-        public IEnumerable<VectorNode> All()
-        {
-            yield return this;
-
-            if (Left != null)
-            {
-                foreach (var n in Left.All())
-                {
-                    yield return n;
-                }
-            }
-
-            if (Right != null)
-            {
-                foreach (var n in Right.All())
-                {
-                    yield return n;
-                }
-            }
-        }
-
-        public string Visualize()
-        {
-            StringBuilder output = new StringBuilder();
-            Visualize(this, output, 0);
-            return output.ToString();
-        }
-
-        private void Visualize(VectorNode node, StringBuilder output, int depth)
-        {
-            if (node == null) return;
-
-            float angle = 0;
-
-            if (node.Ancestor != null)
-            {
-                angle = node.Angle;
-            }
-
-            output.Append('\t', depth);
-            output.AppendFormat(".{0} ({1})", node.ToString(), angle);
-            output.AppendLine();
-
-            if (node.Left != null)
-                Visualize(node.Left, output, depth + 1);
-
-            if (node.Right != null)
-                Visualize(node.Right, output, depth);
-        }
-
-        public (int depth, int width) Size()
-        {
-            var root = this;
-            var width = 0;
-            var depth = 0;
-            var node = root.Right;
-
-            while (node != null)
-            {
-                var d = node.Depth();
-                if (d > depth)
-                {
-                    depth = d;
-                }
-                width++;
-                node = node.Right;
-            }
-
-            return (depth, width);
         }
 
         private byte[][] ToStream()
@@ -270,24 +190,45 @@ namespace Sir.Store
             return block;
         }
 
-        public void SerializeTree(
-            string collectionId, Stream indexStream, Stream vectorStream)
+        public async Task SerializeTree(string collectionId, Stream indexStream)
         {
             var node = this;
             var stack = new Stack<VectorNode>();
 
             while (node != null)
             {
-                if (node.VecOffset < 0 )
+                foreach (var buf in node.ToStream())
+                {
+                    await indexStream.WriteAsync(buf, 0, buf.Length);
+                }
+
+                if (node.Right != null)
+                {
+                    stack.Push(node.Right);
+                }
+
+                node = node.Left;
+
+                if (node == null)
+                {
+                    if (stack.Count > 0)
+                        node = stack.Pop();
+                }
+            }
+        }
+
+        private async Task SerializeVector(string collectionId, Stream vectorStream)
+        {
+            var node = this;
+            var stack = new Stack<VectorNode>();
+
+            while (node != null)
+            {
+                if (node.VecOffset < 0)
                 {
                     // this node has never been persisted
 
-                    node.VecOffset = node.TermVector.Serialize(vectorStream);
-                }
-
-                foreach (var buf in node.ToStream())
-                {
-                    indexStream.Write(buf, 0, buf.Length);
+                    node.VecOffset = await node.TermVector.Serialize(vectorStream);
                 }
 
                 if (node.Right != null)
@@ -427,6 +368,13 @@ namespace Sir.Store
             return root;
         }
 
+        public string Visualize()
+        {
+            StringBuilder output = new StringBuilder();
+            Visualize(this, output, 0);
+            return output.ToString();
+        }
+
         public int Depth()
         {
             var count = 0;
@@ -438,6 +386,81 @@ namespace Sir.Store
                 node = node.Left;
             }
             return count;
+        }
+
+        public VectorNode GetRoot()
+        {
+            var cursor = this;
+            while (cursor != null)
+            {
+                if (cursor.Ancestor == null) break;
+                cursor = cursor.Ancestor;
+            }
+            return cursor;
+        }
+
+        public IEnumerable<VectorNode> All()
+        {
+            yield return this;
+
+            if (Left != null)
+            {
+                foreach (var n in Left.All())
+                {
+                    yield return n;
+                }
+            }
+
+            if (Right != null)
+            {
+                foreach (var n in Right.All())
+                {
+                    yield return n;
+                }
+            }
+        }
+
+        private void Visualize(VectorNode node, StringBuilder output, int depth)
+        {
+            if (node == null) return;
+
+            float angle = 0;
+
+            if (node.Ancestor != null)
+            {
+                angle = node.Angle;
+            }
+
+            output.Append('\t', depth);
+            output.AppendFormat(".{0} ({1})", node.ToString(), angle);
+            output.AppendLine();
+
+            if (node.Left != null)
+                Visualize(node.Left, output, depth + 1);
+
+            if (node.Right != null)
+                Visualize(node.Right, output, depth);
+        }
+
+        public (int depth, int width) Size()
+        {
+            var root = this;
+            var width = 0;
+            var depth = 0;
+            var node = root.Right;
+
+            while (node != null)
+            {
+                var d = node.Depth();
+                if (d > depth)
+                {
+                    depth = d;
+                }
+                width++;
+                node = node.Right;
+            }
+
+            return (depth, width);
         }
 
         public override string ToString()

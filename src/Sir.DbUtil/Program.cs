@@ -132,7 +132,7 @@ namespace Sir.DbUtil
 
                             using (var indexSession = sessionFactory.CreateIndexSession(collection))
                             {
-                                indexSession.Write(job);
+                                await indexSession.Write(job);
 
                                 await indexSession.Serialize();
                             }

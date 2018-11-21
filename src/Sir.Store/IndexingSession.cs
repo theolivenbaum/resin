@@ -39,7 +39,7 @@ namespace Sir.Store
             Index = sessionFactory.GetCollectionIndex(collectionId.ToHash());
         }
 
-        public void Write(AnalyzeJob job)
+        public async Task Write(AnalyzeJob job)
         {
             try
             {
@@ -77,14 +77,13 @@ namespace Sir.Store
                     }
                 }
 
-                //Parallel.ForEach(columns, column =>
                 foreach(var column in columns)
                 {
                     var keyId = column.Key;
                     var tokens = column.Value;
                     var ix = _dirty[keyId];
 
-                    BuildInMemoryIndex(keyId, ix, tokens);
+                    await BuildInMemoryIndex(keyId, ix, tokens);
 
                     // validate
                     //File.WriteAllText(
@@ -111,6 +110,13 @@ namespace Sir.Store
 
                 throw;
             }
+        }
+
+        private void HandleBuildError(Exception ex)
+        {
+            _log.Log(ex);
+
+            throw ex;
         }
 
         private void Analyze(IDictionary doc, Dictionary<long, HashSet<(ulong docId, string token)>> columns)
@@ -164,7 +170,7 @@ namespace Sir.Store
         //    Build(job.keyId, job.index, job.tokens);
         //}
 
-        private void BuildInMemoryIndex(long keyId, VectorNode index, IEnumerable<(ulong docId, string token)> tokens)
+        private async Task BuildInMemoryIndex(long keyId, VectorNode index, IEnumerable<(ulong docId, string token)> tokens)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -173,7 +179,7 @@ namespace Sir.Store
 
             foreach (var token in tokens)
             {
-                index.Add(new VectorNode(token.token, token.docId));
+                await index.Add(new VectorNode(token.token, token.docId), CollectionId, VectorStream);
                 count++;
             }
 
@@ -196,7 +202,7 @@ namespace Sir.Store
             {
                 using (var ixFile = CreateIndexStream(node.Key))
                 {
-                    node.Value.SerializeTree(CollectionId, ixFile, VectorStream);
+                    await node.Value.SerializeTree(CollectionId, ixFile);
                 }
             }
 
@@ -208,7 +214,7 @@ namespace Sir.Store
         private Stream CreateIndexStream(long keyId)
         {
             var fileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId.ToHash(), keyId));
-            return new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+            return new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true);
         }
 
         public override void Dispose()

@@ -214,7 +214,7 @@ namespace Sir.Store
             //FileStream file = new FileStream(fileName, fileMode, fileAccess, fileShare, blockSize,
             //    FileFlagNoBuffering | FileOptions.WriteThrough | fileOptions);
 
-            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 4096, true);
         }
     }
 }

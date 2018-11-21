@@ -16,7 +16,7 @@ namespace Sir.Store
             _config = config;
         }
 
-        public async Task<IList<long>> Write(string collectionId, IList<KeyValuePair<long, VectorNode>> rootNodes)
+        public async Task Write(string collectionId, IList<KeyValuePair<long, VectorNode>> rootNodes)
         {
             var nodes = new List<VectorNode>();
             byte[] payload;
@@ -71,8 +71,6 @@ namespace Sir.Store
             {
                 nodes[i].PostingsOffset = positions[i];
             }
-
-            return positions;
         }
 
         private async Task<IList<long>> Send(string collectionId, byte[] payload)
