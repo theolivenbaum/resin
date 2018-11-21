@@ -14,7 +14,7 @@ namespace Sir.Store
     public class VectorNode
     {
         public const float IdenticalAngle = 0.98f;
-        public const float FoldAngle = 0.5f;
+        public const float FoldAngle = 0.6f;
 
         private VectorNode _right;
         private VectorNode _left;
