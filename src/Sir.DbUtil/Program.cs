@@ -136,6 +136,8 @@ namespace Sir.DbUtil
                             }
 
                             _log.Log(string.Format("batch {0} done in {1}", batchNo++, writeTimer.Elapsed));
+
+                            await sessionFactory.LoadIndex();
                         }
                     }
                     break;
