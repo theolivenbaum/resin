@@ -18,6 +18,7 @@ namespace Sir.Store
         private readonly StreamWriter _log;
         private readonly Dictionary<long, VectorNode> _dirty;
         private bool _serialized;
+        private Stopwatch _timer;
 
         public IndexingSession(
             string collectionId, 
@@ -29,8 +30,7 @@ namespace Sir.Store
             _log = Logging.CreateWriter("indexingsession");
             _dirty = new Dictionary<long, VectorNode>();
             _postingsWriter = new RemotePostingsWriter(config);
-
-            var collection = collectionId.ToHash();
+            _timer = new Stopwatch();
 
             Index = sessionFactory.GetCollectionIndex(collectionId.ToHash());
         }
@@ -43,65 +43,19 @@ namespace Sir.Store
                 timer.Start();
 
                 var docCount = 0;
-                var analyzed = new Dictionary<long, HashSet<(ulong docId, string token)>>();
 
-                // analyze
                 foreach (var doc in job.Documents)
                 {
                     docCount++;
 
-                    Analyze(doc, analyzed);
+                    await Write(doc);
                 }
 
-                _log.Log(string.Format("analyzed {0} docs in {1}", docCount, timer.Elapsed));
-
-                timer.Restart();
-
-                foreach (var column in analyzed)
-                {
-                    var keyId = column.Key;
-
-                    VectorNode ix;
-                    if (!_dirty.TryGetValue(keyId, out ix))
-                    {
-                        ix = GetIndex(keyId);
-
-                        if (ix == null)
-                        {
-                            ix = new VectorNode();
-                        }
-                        _dirty.Add(keyId, ix);
-                    }
-                }
-
-                foreach (var column in analyzed)
-                {
-                    var keyId = column.Key;
-                    var tokens = column.Value;
-                    var ix = _dirty[keyId];
-
-                    await BuildInMemoryIndex(keyId, ix, tokens);
-
-                    // validate
-                    foreach (var token in tokens)
-                    {
-                        var closestMatch = ix.ClosestMatch(new VectorNode(token.token), skipDirtyNodes: false);
-
-                        if (closestMatch.Highscore < VectorNode.IdenticalAngle)
-                        {
-                            throw new DataMisalignedException();
-                        }
-                    }
-                    File.WriteAllText(
-                        Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.validate", CollectionId.ToHash(), keyId)),
-                        string.Join('\n', tokens.Select(s => s.token)));
-
-                }
+                _log.Log(string.Format("build in-memory index from {0} docs in {1}", docCount, timer.Elapsed));
 
                 await Serialize();
 
-                _log.Log(string.Format("built index in {0}", timer.Elapsed));
-
+                _log.Log(string.Format("indexed {0} docs in {1}", docCount, timer.Elapsed));
             }
             catch (Exception ex)
             {
@@ -111,11 +65,56 @@ namespace Sir.Store
             }
         }
 
-        private void HandleBuildError(Exception ex)
+        private async Task Write(IDictionary document)
         {
-            _log.Log(ex);
+            _timer.Restart();
 
-            throw ex;
+            var analyzed = new Dictionary<long, HashSet<(ulong docId, string token)>>();
+
+            Analyze(document, analyzed);
+
+            foreach (var column in analyzed)
+            {
+                var keyId = column.Key;
+
+                VectorNode ix;
+                if (!_dirty.TryGetValue(keyId, out ix))
+                {
+                    ix = GetIndex(keyId);
+
+                    if (ix == null)
+                    {
+                        ix = new VectorNode();
+                    }
+                    _dirty.Add(keyId, ix);
+                }
+            }
+
+            foreach (var column in analyzed)
+            {
+                var keyId = column.Key;
+                var tokens = column.Value;
+                var ix = _dirty[keyId];
+
+                await BuildInMemoryIndex(keyId, ix, tokens);
+
+                // validate
+                //foreach (var token in tokens)
+                //{
+                //    var closestMatch = ix.ClosestMatch(new VectorNode(token.token), skipDirtyNodes: false);
+
+                //    if (closestMatch.Highscore < VectorNode.IdenticalAngle)
+                //    {
+                //        throw new DataMisalignedException();
+                //    }
+                //}
+                //File.WriteAllText(
+                //    Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.validate", CollectionId.ToHash(), keyId)),
+                //    string.Join('\n', tokens.Select(s => s.token)));
+
+            }
+
+            _log.Log(string.Format("indexed doc ID {0} in {1}", document["__docid"], _timer.Elapsed));
         }
 
         private void Analyze(IDictionary doc, Dictionary<long, HashSet<(ulong docId, string token)>> columns)
@@ -166,8 +165,8 @@ namespace Sir.Store
 
         private async Task BuildInMemoryIndex(long keyId, VectorNode index, IEnumerable<(ulong docId, string token)> tokens)
         {
-            var timer = new Stopwatch();
-            timer.Start();
+            //var timer = new Stopwatch();
+            //timer.Start();
 
             var count = 0;
             using (var vectorStream = SessionFactory.CreateAppendStream(
@@ -180,14 +179,17 @@ namespace Sir.Store
                 }
             }
 
-            _log.Log(string.Format("added {0} nodes to column {1}.{2} in {3}. {4}",
-                count, CollectionId, keyId, timer.Elapsed, index.Size()));
+            //_log.Log(string.Format("added {0} nodes to column {1}.{2} in {3}. {4}",
+            //    count, CollectionId, keyId, timer.Elapsed, index.Size()));
         }
 
         private async Task Serialize()
         {
             if (_serialized)
                 return;
+
+            var timer = new Stopwatch();
+            timer.Start();
 
             var rootNodes = _dirty.ToList();
 
@@ -202,6 +204,8 @@ namespace Sir.Store
             }
 
             _serialized = true;
+
+            _log.Log(string.Format("serialized index tree and postings in {0}", timer.Elapsed));
         }
 
         private Stream CreateIndexStream(long keyId)
