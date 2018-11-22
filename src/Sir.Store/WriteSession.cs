@@ -43,7 +43,7 @@ namespace Sir.Store
             _docIx = new DocIndexWriter(DocIndexStream);
         }
 
-        public async Task<IList<ulong>> Write(IEnumerable<IDictionary> models)
+        public async Task<IList<ulong>> Write(WriteJob job)
         {
             var docIds = new List<ulong>();
             var docCount = 0;
@@ -51,7 +51,7 @@ namespace Sir.Store
 
             timer.Start();
 
-            foreach (var model in models)
+            foreach (var model in job.Documents)
             {
                 var docId = _docIx.GetNextDocId();
                 var docMap = new List<(long keyId, long valId)>();

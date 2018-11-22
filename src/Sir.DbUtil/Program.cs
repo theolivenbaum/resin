@@ -128,7 +128,7 @@ namespace Sir.DbUtil
                         {
                             writeTimer.Restart();
 
-                            var job = new AnalyzeJob(collection, batch);
+                            var job = new IndexingJob(collection, batch);
 
                             using (var indexSession = sessionFactory.CreateIndexSession(collection))
                             {

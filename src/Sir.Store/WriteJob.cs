@@ -18,12 +18,12 @@ namespace Sir.Store
         }
     }
 
-    public class AnalyzeJob
+    public class IndexingJob
     {
         public string CollectionId { get; }
         public IEnumerable<IDictionary> Documents { get; }
 
-        public AnalyzeJob(string collectionId, IEnumerable<IDictionary> documents)
+        public IndexingJob(string collectionId, IEnumerable<IDictionary> documents)
         {
             CollectionId = collectionId;
             Documents = documents;

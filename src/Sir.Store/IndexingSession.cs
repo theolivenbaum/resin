@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Sir.Core;
 
 namespace Sir.Store
 {
@@ -36,7 +35,7 @@ namespace Sir.Store
             Index = sessionFactory.GetCollectionIndex(collectionId.ToHash());
         }
 
-        public async Task Write(AnalyzeJob job)
+        public async Task Write(IndexingJob job)
         {
             try
             {
@@ -44,20 +43,21 @@ namespace Sir.Store
                 timer.Start();
 
                 var docCount = 0;
-                var columns = new Dictionary<long, HashSet<(ulong docId, string token)>>();
+                var analyzed = new Dictionary<long, HashSet<(ulong docId, string token)>>();
 
+                // analyze
                 foreach (var doc in job.Documents)
                 {
                     docCount++;
 
-                    Analyze(doc, columns);
+                    Analyze(doc, analyzed);
                 }
 
                 _log.Log(string.Format("analyzed {0} docs in {1}", docCount, timer.Elapsed));
 
                 timer.Restart();
 
-                foreach (var column in columns)
+                foreach (var column in analyzed)
                 {
                     var keyId = column.Key;
 
@@ -74,7 +74,7 @@ namespace Sir.Store
                     }
                 }
 
-                foreach (var column in columns)
+                foreach (var column in analyzed)
                 {
                     var keyId = column.Key;
                     var tokens = column.Value;
@@ -193,7 +193,6 @@ namespace Sir.Store
 
             await _postingsWriter.Write(CollectionId, rootNodes);
 
-            //Parallel.ForEach(rootNodes, async node =>
             foreach (var node in rootNodes)
             {
                 using (var ixFile = CreateIndexStream(node.Key))
@@ -201,8 +200,6 @@ namespace Sir.Store
                     await node.Value.SerializeTree(ixFile);
                 }
             }
-
-            _log.Log("serialization complete.");
 
             _serialized = true;
         }

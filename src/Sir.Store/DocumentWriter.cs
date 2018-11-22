@@ -85,7 +85,7 @@ namespace Sir.Store
 
                 using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
                 {
-                    docIds = await session.Write(job.Documents);
+                    docIds = await session.Write(job);
                 }
 
                 _log.Log(string.Format("executed write job {0} in {1}", job.Id, _timer.Elapsed));
