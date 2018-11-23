@@ -9,7 +9,7 @@ namespace Sir.Store
 {
     /// <summary>
     /// Binary tree where the data is a sparse vector (a word embedding).
-    /// The tree is balanced according to cos angles between immediate neighbouring nodes.
+    /// The tree is balanced according to cos angles between the word vectors from immediate neighbouring nodes.
     /// </summary>
     public class VectorNode
     {
