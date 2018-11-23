@@ -26,10 +26,9 @@ namespace Sir
                 Console.WriteLine(message.s);
             }
 
-            if (SendToDebug)
-            {
-                Debug.WriteLine(message.s);
-            }
+#if DEBUG
+            Debug.WriteLine(message.s);
+#endif
         }
 
         public static void Log(this StreamWriter writer, object message)
