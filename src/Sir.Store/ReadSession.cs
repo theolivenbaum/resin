@@ -35,7 +35,6 @@ namespace Sir.Store
             ValueIndexStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collection)));
             KeyIndexStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collection)));
             DocIndexStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collection)));
-            PostingsStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.pos", collection)));
             Index = sessionFactory.GetCollectionIndex(collectionId.ToHash()) ?? new SortedList<long, VectorNode>();
 
             _docIx = new DocIndexReader(DocIndexStream);
