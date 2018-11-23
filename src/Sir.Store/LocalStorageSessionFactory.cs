@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -10,7 +11,7 @@ namespace Sir.Store
     {
         private readonly ITokenizer _tokenizer;
         private readonly IConfigurationService _config;
-        private readonly SortedList<ulong, long> _keys;
+        private readonly ConcurrentDictionary<ulong, long> _keys;
         private VectorTree _index;
         private readonly StreamWriter _log;
 
@@ -37,9 +38,9 @@ namespace Sir.Store
             _index.Add(collectionId, keyId, index);
         }
 
-        private SortedList<ulong, long> LoadKeyMap()
+        private ConcurrentDictionary<ulong, long> LoadKeyMap()
         {
-            var keys = new SortedList<ulong, long>();
+            var keys = new ConcurrentDictionary<ulong, long>();
 
             using (var stream = new FileStream(
                 Path.Combine(Dir, "_.kmap"), FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
@@ -50,7 +51,7 @@ namespace Sir.Store
 
                 while (read > 0)
                 {
-                    keys.Add(BitConverter.ToUInt64(buf, 0), i++);
+                    keys.GetOrAdd(BitConverter.ToUInt64(buf, 0), i++);
 
                     read = stream.Read(buf, 0, buf.Length);
                 }
@@ -94,9 +95,10 @@ namespace Sir.Store
                         collectionHash, keyId, ix.Size()));
 
                     // validate
-                    var validateFn = Path.Combine(Dir, string.Format("{0}.{1}.validate", collectionHash, keyId));
-                    if (File.Exists(validateFn))
+                    foreach (var validateFn in Directory.GetFiles(Dir, string.Format("{0}.{1}.*.validate", collectionHash, keyId)))
                     {
+                        _log.Log("validating {0}", validateFn);
+
                         foreach (var token in File.ReadAllLines(validateFn))
                         {
                             var closestMatch = ix.ClosestMatch(new VectorNode(token), skipDirtyNodes: false);
@@ -104,6 +106,10 @@ namespace Sir.Store
                             if (closestMatch.Highscore < VectorNode.IdenticalAngle)
                             {
                                 throw new DataMisalignedException();
+                            }
+                            else
+                            {
+                                File.Delete(validateFn);
                             }
                         }
                     }
@@ -139,7 +145,7 @@ namespace Sir.Store
 
         public async Task PersistKeyMapping(ulong keyHash, long keyId)
         {
-            _keys.Add(keyHash, keyId);
+            _keys.GetOrAdd(keyHash, keyId);
 
             var buf = BitConverter.GetBytes(keyHash);
 

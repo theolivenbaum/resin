@@ -126,9 +126,17 @@ namespace Sir.Store
             {
                 if (Left == null)
                 {
-                    node.Angle = angle;
-                    Left = node;
-
+                    lock (Sync)
+                    {
+                        if (Left == null)
+                        {
+                            node.Angle = angle;
+                            Left = node;
+                        }
+                    }
+                }
+                if (ReferenceEquals(Left, node))
+                {
                     await Left.SerializeVector(vectorStream);
                 }
                 else
@@ -140,9 +148,17 @@ namespace Sir.Store
             {
                 if (Right == null)
                 {
-                    node.Angle = angle;
-                    Right = node;
-
+                    lock (Sync)
+                    {
+                        if (Right == null)
+                        {
+                            node.Angle = angle;
+                            Right = node;
+                        }
+                    }
+                }
+                if (ReferenceEquals(Right, node))
+                {
                     await Right.SerializeVector(vectorStream);
                 }
                 else
@@ -151,7 +167,7 @@ namespace Sir.Store
                 }
             }
         }
-
+        private static object Sync = new object();
         private void Merge(VectorNode node)
         {
             if (VecOffset < 0)
@@ -159,9 +175,12 @@ namespace Sir.Store
                 throw new InvalidOperationException();
             }
 
-            foreach (var id in node._docIds)
+            lock (Sync)
             {
-                _docIds.Add(id);
+                foreach (var id in node._docIds)
+                {
+                    _docIds.Add(id);
+                }
             }
         }
 

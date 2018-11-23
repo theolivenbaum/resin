@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -16,9 +17,10 @@ namespace Sir.Store
         private readonly RemotePostingsWriter _postingsWriter;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
-        private readonly Dictionary<long, VectorNode> _dirty;
+        private readonly ConcurrentDictionary<long, VectorNode> _dirty;
         private bool _serialized;
         private Stopwatch _timer;
+        private bool _validate;
 
         public IndexingSession(
             string collectionId, 
@@ -28,9 +30,10 @@ namespace Sir.Store
         {
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("indexingsession");
-            _dirty = new Dictionary<long, VectorNode>();
+            _dirty = new ConcurrentDictionary<long, VectorNode>();
             _postingsWriter = new RemotePostingsWriter(config);
             _timer = new Stopwatch();
+            _validate = config.Get("create_index_validation_files") == "true";
 
             Index = sessionFactory.GetCollectionIndex(collectionId.ToHash());
         }
@@ -64,6 +67,7 @@ namespace Sir.Store
                 throw;
             }
         }
+        private static object Sync = new object();
 
         private async Task Write(IDictionary document)
         {
@@ -80,13 +84,19 @@ namespace Sir.Store
                 VectorNode ix;
                 if (!_dirty.TryGetValue(keyId, out ix))
                 {
-                    ix = GetIndex(keyId);
-
-                    if (ix == null)
+                    lock (Sync)
                     {
-                        ix = new VectorNode();
+                        if (!_dirty.TryGetValue(keyId, out ix))
+                        {
+                            ix = GetIndex(keyId);
+
+                            if (ix == null)
+                            {
+                                ix = new VectorNode();
+                            }
+                            _dirty.GetOrAdd(keyId, ix);
+                        }
                     }
-                    _dirty.Add(keyId, ix);
                 }
             }
 
@@ -99,19 +109,22 @@ namespace Sir.Store
                 await BuildInMemoryIndex(keyId, ix, tokens);
 
                 // validate
-                //foreach (var token in tokens)
-                //{
-                //    var closestMatch = ix.ClosestMatch(new VectorNode(token.token), skipDirtyNodes: false);
+                if (_validate)
+                {
+                    foreach (var token in tokens)
+                    {
+                        var closestMatch = ix.ClosestMatch(new VectorNode(token.token), skipDirtyNodes: false);
 
-                //    if (closestMatch.Highscore < VectorNode.IdenticalAngle)
-                //    {
-                //        throw new DataMisalignedException();
-                //    }
-                //}
-                //File.WriteAllText(
-                //    Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.validate", CollectionId.ToHash(), keyId)),
-                //    string.Join('\n', tokens.Select(s => s.token)));
+                        if (closestMatch.Highscore < VectorNode.IdenticalAngle)
+                        {
+                            throw new DataMisalignedException();
+                        }
+                    }
 
+                    await File.WriteAllTextAsync(
+                        Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}.validate", CollectionId.ToHash(), keyId, document["__docid"])),
+                        string.Join('\n', tokens.Select(s => s.token)));
+                }
             }
 
             _log.Log(string.Format("indexed doc ID {0} in {1}", document["__docid"], _timer.Elapsed));
