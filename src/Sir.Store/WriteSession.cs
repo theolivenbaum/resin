@@ -22,7 +22,7 @@ namespace Sir.Store
 
         public WriteSession(
             string collectionId, 
-            LocalStorageSessionFactory sessionFactory) : base(collectionId, sessionFactory)
+            SessionFactory sessionFactory) : base(collectionId, sessionFactory)
         {
             _log = Logging.CreateWriter("writesession");
 

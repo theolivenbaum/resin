@@ -52,7 +52,7 @@ namespace Sir.DbUtil
         {
             var tokenizer = new LatinTokenizer();
             var qp = new KeyValueBooleanQueryParser();
-            var sessionFactory = new LocalStorageSessionFactory(
+            var sessionFactory = new SessionFactory(
                 dir, 
                 tokenizer, 
                 new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini")));
@@ -94,7 +94,7 @@ namespace Sir.DbUtil
             timer.Start();
 
             var files = Directory.GetFiles(dir, "*.docs");
-            var sessionFactory = new LocalStorageSessionFactory(
+            var sessionFactory = new SessionFactory(
                 dir,
                 new LatinTokenizer(),
                 new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini")));

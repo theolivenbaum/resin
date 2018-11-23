@@ -16,7 +16,7 @@ namespace Sir.Store
         private readonly ValueReader _keyReader;
         private readonly ValueReader _valReader;
 
-        public DocumentStreamSession(string collectionId, LocalStorageSessionFactory sessionFactory) 
+        public DocumentStreamSession(string collectionId, SessionFactory sessionFactory) 
             : base(collectionId, sessionFactory)
         {
             var collection = collectionId.ToHash();

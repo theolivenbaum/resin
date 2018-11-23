@@ -16,12 +16,12 @@ namespace Sir.Store
     {
         public string ContentType => "application/json";
 
-        private readonly LocalStorageSessionFactory _sessionFactory;
+        private readonly SessionFactory _sessionFactory;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
         private readonly Stopwatch _timer;
 
-        public DocumentWriter(LocalStorageSessionFactory sessionFactory, ITokenizer analyzer)
+        public DocumentWriter(SessionFactory sessionFactory, ITokenizer analyzer)
         {
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;

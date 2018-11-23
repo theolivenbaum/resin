@@ -9,8 +9,8 @@ namespace Sir.Store
             var tokenizer = new LatinTokenizer();
             var config = serviceProvider.GetService<IConfigurationService>();
 
-            services.AddSingleton(typeof(LocalStorageSessionFactory), 
-                new LocalStorageSessionFactory(
+            services.AddSingleton(typeof(SessionFactory), 
+                new SessionFactory(
                     config.Get("data_dir"), 
                     tokenizer,
                     config));

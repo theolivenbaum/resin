@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
-    public class LocalStorageSessionFactory
+    public class SessionFactory
     {
         private readonly ITokenizer _tokenizer;
         private readonly IConfigurationService _config;
@@ -20,7 +20,7 @@ namespace Sir.Store
 
         public string Dir { get; }
 
-        public LocalStorageSessionFactory(string dir, ITokenizer tokenizer, IConfigurationService config)
+        public SessionFactory(string dir, ITokenizer tokenizer, IConfigurationService config)
         {
             Dir = dir;
             _log = Logging.CreateWriter("sessionfactory");

@@ -23,7 +23,7 @@ namespace Sir.Store
         private readonly StreamWriter _log;
 
         public ReadSession(string collectionId, 
-            LocalStorageSessionFactory sessionFactory, 
+            SessionFactory sessionFactory, 
             IConfigurationService config) 
             : base(collectionId, sessionFactory)
         {

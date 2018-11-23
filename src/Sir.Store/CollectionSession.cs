@@ -6,7 +6,7 @@ namespace Sir.Store
 {
     public abstract class CollectionSession : IDisposable
     {
-        protected LocalStorageSessionFactory SessionFactory { get; private set; }
+        protected SessionFactory SessionFactory { get; private set; }
         protected string CollectionId { get; }
         protected SortedList<long, VectorNode> Index { get; set; }
         protected Stream ValueStream { get; set; }
@@ -17,7 +17,7 @@ namespace Sir.Store
         protected Stream DocIndexStream { get; set; }
         protected Stream PostingsStream { get; set; }
 
-        public CollectionSession(string collectionId, LocalStorageSessionFactory sessionFactory)
+        public CollectionSession(string collectionId, SessionFactory sessionFactory)
         {
             SessionFactory = sessionFactory;
             CollectionId = collectionId;

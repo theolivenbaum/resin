@@ -24,7 +24,7 @@ namespace Sir.Store
 
         public IndexingSession(
             string collectionId, 
-            LocalStorageSessionFactory sessionFactory, 
+            SessionFactory sessionFactory, 
             ITokenizer tokenizer,
             IConfigurationService config) : base(collectionId, sessionFactory)
         {
