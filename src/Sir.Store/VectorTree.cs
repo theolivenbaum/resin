@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace Sir.Store
 {
@@ -10,12 +10,12 @@ namespace Sir.Store
     {
         public int Count { get; private set; }
 
-        private SortedList<ulong, SortedList<long, VectorNode>> _ix;
+        private ConcurrentDictionary<ulong, SortedList<long, VectorNode>> _ix;
         private object _sync = new object();
 
-        public VectorTree() : this(new SortedList<ulong, SortedList<long, VectorNode>>()) { }
+        public VectorTree() : this(new ConcurrentDictionary<ulong, SortedList<long, VectorNode>>()) { }
 
-        public VectorTree(SortedList<ulong, SortedList<long, VectorNode>> ix)
+        public VectorTree(ConcurrentDictionary<ulong, SortedList<long, VectorNode>> ix)
         {
             _ix = ix;
         }
@@ -26,28 +26,16 @@ namespace Sir.Store
 
             if (!_ix.TryGetValue(collectionId, out collection))
             {
-                lock (_sync)
-                {
-                    if (!_ix.TryGetValue(collectionId, out collection))
-                    {
-                        collection = new SortedList<long, VectorNode>();
-                        collection.Add(keyId, index);
+                collection = new SortedList<long, VectorNode>();
+                collection.Add(keyId, index);
 
-                        _ix.Add(collectionId, collection);
-                    }
-                }
+                _ix.GetOrAdd(collectionId, collection);
             }
             else
             {
                 if (!collection.ContainsKey(keyId))
                 {
-                    lock (_sync)
-                    {
-                        if (!collection.ContainsKey(keyId))
-                        {
-                            collection.Add(keyId, index);
-                        }
-                    }
+                    collection.Add(keyId, index);
                 }
                 else
                 {

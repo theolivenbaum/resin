@@ -46,16 +46,6 @@ namespace Sir.Store
             return root;
         }
 
-        public bool KeyExists(ulong keyHash)
-        {
-            long keyId;
-            if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
-            {
-                return false;
-            }
-            return true;
-        }
-
         public virtual void Dispose()
         {
             if (ValueStream != null) ValueStream.Dispose();

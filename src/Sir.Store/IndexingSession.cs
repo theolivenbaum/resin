@@ -35,7 +35,7 @@ namespace Sir.Store
             _timer = new Stopwatch();
             _validate = config.Get("create_index_validation_files") == "true";
 
-            Index = sessionFactory.GetCollectionIndex(collectionId.ToHash());
+            Index = sessionFactory.GetCollectionIndex(collectionId.ToHash()) ?? new SortedList<long, VectorNode>();
         }
 
         public async Task Write(IndexingJob job)
@@ -58,6 +58,13 @@ namespace Sir.Store
 
                 await Serialize();
 
+                var collectionId = CollectionId.ToHash();
+
+                foreach (var index in _dirty)
+                {
+                    SessionFactory.Publish(collectionId, index.Key, index.Value);
+                }
+
                 _log.Log(string.Format("indexed {0} docs in {1}", docCount, timer.Elapsed));
             }
             catch (Exception ex)
@@ -73,7 +80,7 @@ namespace Sir.Store
         {
             _timer.Restart();
 
-            var analyzed = new Dictionary<long, HashSet<(ulong docId, string token)>>();
+            var analyzed = new Dictionary<long, HashSet<string>>();
 
             Analyze(document, analyzed);
 
@@ -105,15 +112,16 @@ namespace Sir.Store
                 var keyId = column.Key;
                 var tokens = column.Value;
                 var ix = _dirty[keyId];
+                var docId = ulong.Parse(document["__docid"].ToString());
 
-                await BuildInMemoryIndex(keyId, ix, tokens);
+                BuildInMemoryIndex(docId, keyId, ix, tokens);
 
                 // validate
                 if (_validate)
                 {
                     foreach (var token in tokens)
                     {
-                        var query = new VectorNode(token.token);
+                        var query = new VectorNode(token);
                         var closestMatch = ix.ClosestMatch(query, skipDirtyNodes: false);
 
                         if (closestMatch.Score < VectorNode.IdenticalAngle)
@@ -124,14 +132,14 @@ namespace Sir.Store
 
                     await File.WriteAllTextAsync(
                         Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}.validate", CollectionId.ToHash(), keyId, document["__docid"])),
-                        string.Join('\n', tokens.Select(s => s.token)));
+                        string.Join('\n', tokens));
                 }
             }
 
             _log.Log(string.Format("indexed doc ID {0} in {1}", document["__docid"], _timer.Elapsed));
         }
 
-        private void Analyze(IDictionary doc, Dictionary<long, HashSet<(ulong docId, string token)>> columns)
+        private void Analyze(IDictionary doc, Dictionary<long, HashSet<string>> columns)
         {
             var docId = (ulong)doc["__docid"];
 
@@ -145,11 +153,11 @@ namespace Sir.Store
                 var keyHash = key.ToHash();
                 var keyId = SessionFactory.GetKeyId(keyHash);
 
-                HashSet<(ulong docId, string token)> column;
+                HashSet<string> column;
 
                 if (!columns.TryGetValue(keyId, out column))
                 {
-                    column = new HashSet<(ulong docId, string token)>(new TokenComparer());
+                    column = new HashSet<string>();
                     columns.Add(keyId, column);
                 }
 
@@ -162,7 +170,7 @@ namespace Sir.Store
 
                     if (!string.IsNullOrWhiteSpace(v))
                     {
-                        column.Add((docId, v));
+                        column.Add(v);
                     }
                 }
                 else
@@ -171,30 +179,24 @@ namespace Sir.Store
 
                     foreach (var token in tokens)
                     {
-                        column.Add((docId, token));
+                        column.Add(token);
                     }
                 }
             }
         }
 
-        private async Task BuildInMemoryIndex(long keyId, VectorNode index, IEnumerable<(ulong docId, string token)> tokens)
+        private void BuildInMemoryIndex(ulong docId, long keyId, VectorNode index, IEnumerable<string> tokens)
         {
-            //var timer = new Stopwatch();
-            //timer.Start();
-
             var count = 0;
             using (var vectorStream = SessionFactory.CreateAppendStream(
                 Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.vec", CollectionId.ToHash(), keyId))))
             {
                 foreach (var token in tokens)
                 {
-                    await index.Add(new VectorNode(token.token, token.docId), vectorStream);
+                    index.Add(new VectorNode(token, docId), vectorStream);
                     count++;
                 }
             }
-
-            //_log.Log(string.Format("added {0} nodes to column {1}.{2} in {3}. {4}",
-            //    count, CollectionId, keyId, timer.Elapsed, index.Size()));
         }
 
         private async Task Serialize()

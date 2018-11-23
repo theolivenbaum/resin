@@ -14,8 +14,9 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<ulong, long> _keys;
         private VectorTree _index;
         private readonly StreamWriter _log;
+        private readonly object _sync = new object();
 
-        public Stream WritableKeyMapStream { get; }
+        private Stream _writableKeyMapStream { get; }
 
         public string Dir { get; }
 
@@ -23,19 +24,63 @@ namespace Sir.Store
         {
             Dir = dir;
             _log = Logging.CreateWriter("sessionfactory");
+
+            var tasks = new Task[1];
+            tasks[0] = LoadIndex();
+
             _keys = LoadKeyMap();
             _tokenizer = tokenizer;
             _config = config;
 
-            Task.Run(() => LoadIndex()).Wait();
-
-            WritableKeyMapStream = new FileStream(
+            _writableKeyMapStream = new FileStream(
                 Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+
+            Task.WaitAll(tasks);
         }
 
-        public void AddIndex(ulong collectionId, long keyId, VectorNode index)
+        public void Publish(ulong collectionId, long keyId, VectorNode index)
         {
-            _index.Add(collectionId, keyId, index);
+            lock (_sync)
+            {
+                var timer = new Stopwatch();
+                timer.Start();
+
+                VectorNode clone = null;
+
+                var colIx = GetCollectionIndex(collectionId);
+
+                if (colIx == null)
+                {
+                    _index.Add(collectionId, keyId, index);
+                }
+                else
+                {
+                    if (colIx.ContainsKey(keyId))
+                    {
+                        clone = colIx[keyId].Clone();
+                    }
+                    else
+                    {
+                        colIx[keyId] = index;
+                    }
+                }
+
+                if (clone != null)
+                {
+                    using (var vectorStream = CreateAppendStream(
+                                Path.Combine(Dir, string.Format("{0}.{1}.vec", collectionId, keyId))))
+                    {
+                        foreach (var node in index.Right.All())
+                        {
+                            clone.Add(node, vectorStream);
+                        }
+                    }
+
+                    _index.Add(collectionId, keyId, clone);
+                }
+
+                _log.Log(string.Format("published {0}.{1} in {2}", collectionId, keyId, timer.Elapsed));
+            }
         }
 
         private ConcurrentDictionary<ulong, long> LoadKeyMap()
@@ -59,7 +104,7 @@ namespace Sir.Store
             return keys;
         }
 
-        public async Task LoadIndex()
+        private async Task LoadIndex()
         {
             try
             {
@@ -68,7 +113,7 @@ namespace Sir.Store
 
                 _log.Log("begin loading index into memory");
 
-                var ixs = new SortedList<ulong, SortedList<long, VectorNode>>();
+                var ixs = new ConcurrentDictionary<ulong, SortedList<long, VectorNode>>();
                 var indexFiles = Directory.GetFiles(Dir, "*.ix");
 
                 foreach (var ixFileName in indexFiles)
@@ -85,7 +130,7 @@ namespace Sir.Store
                     if (!ixs.TryGetValue(collectionHash, out colIx))
                     {
                         colIx = new SortedList<long, VectorNode>();
-                        ixs.Add(collectionHash, colIx);
+                        ixs.GetOrAdd(collectionHash, colIx);
                     }
 
                     var ix = await DeserializeIndex(ixFileName, vecFileName);
@@ -141,7 +186,7 @@ namespace Sir.Store
             }
         }
 
-        public async Task<VectorNode> DeserializeIndex(string ixFileName, string vecFileName)
+        private async Task<VectorNode> DeserializeIndex(string ixFileName, string vecFileName)
         {
             using (var treeStream = new FileStream(ixFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
             using (var vecStream = new FileStream(vecFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
@@ -152,33 +197,42 @@ namespace Sir.Store
 
         public async Task PersistKeyMapping(ulong keyHash, long keyId)
         {
-            _keys.GetOrAdd(keyHash, keyId);
+            lock (_sync)
+            {
+                _keys.GetOrAdd(keyHash, keyId);
+            }
 
             var buf = BitConverter.GetBytes(keyHash);
 
-            await WritableKeyMapStream.WriteAsync(buf, 0, sizeof(ulong));
+            await _writableKeyMapStream.WriteAsync(buf, 0, sizeof(ulong));
 
-            await WritableKeyMapStream.FlushAsync();
+            await _writableKeyMapStream.FlushAsync();
         }
 
         public long GetKeyId(ulong keyHash)
         {
-            return _keys[keyHash];
+            lock (_sync)
+            {
+                return _keys[keyHash];
+            }
         }
 
         public bool TryGetKeyId(ulong keyHash, out long keyId)
         {
-            if (!_keys.TryGetValue(keyHash, out keyId))
+            lock (_sync)
             {
-                keyId = -1;
-                return false;
+                if (!_keys.TryGetValue(keyHash, out keyId))
+                {
+                    keyId = -1;
+                    return false;
+                }
+                return true;
             }
-            return true;
         }
 
         public SortedList<long, VectorNode> GetCollectionIndex(ulong collectionId)
         {
-            return _index.GetIndex(collectionId) ?? new SortedList<long, VectorNode>();
+            return _index.GetIndex(collectionId);
         }
 
         public WriteSession CreateWriteSession(string collectionId)

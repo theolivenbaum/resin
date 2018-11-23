@@ -80,6 +80,21 @@ namespace Sir.Store
             public float Score { get; set; }
         }
 
+        public VectorNode Clone()
+        {
+            var clone = new VectorNode(TermVector);
+
+            clone._left = _left;
+            clone._right = _right;
+            clone.VecOffset = VecOffset;
+            clone.PostingsOffset = PostingsOffset;
+            clone._docIds = new HashSet<ulong>(_docIds);
+            clone.Angle = Angle;
+            clone.Ancestor = Ancestor;
+
+            return clone;
+        }
+
         public Hit ClosestMatch(VectorNode node, bool skipDirtyNodes = true)
         {
             var best = this;
@@ -116,7 +131,7 @@ namespace Sir.Store
             return new Hit { Node = best, Score = highscore };
         }
 
-        public async Task Add(VectorNode node, Stream vectorStream)
+        public void Add(VectorNode node, Stream vectorStream)
         {
             var angle = node.TermVector.CosAngle(TermVector);
 
@@ -136,7 +151,7 @@ namespace Sir.Store
                 }
                 else
                 {
-                    await Left.Add(node, vectorStream);
+                    Left.Add(node, vectorStream);
                 }
             }
             else
@@ -149,7 +164,7 @@ namespace Sir.Store
                 }
                 else
                 {
-                    await Right.Add(node, vectorStream);
+                    Right.Add(node, vectorStream);
                 }
             }
         }
@@ -388,24 +403,28 @@ namespace Sir.Store
 
         public IEnumerable<VectorNode> All()
         {
-            yield return this;
+            var node = this;
+            var stack = new Stack<VectorNode>();
 
-            if (Left != null)
+            while (node != null)
             {
-                foreach (var n in Left.All())
+                yield return node;
+
+                if (node.Right != null)
                 {
-                    yield return n;
+                    stack.Push(node.Right);
                 }
-            }
 
-            if (Right != null)
-            {
-                foreach (var n in Right.All())
+                node = node.Left;
+
+                if (node == null)
                 {
-                    yield return n;
+                    if (stack.Count > 0)
+                        node = stack.Pop();
                 }
             }
         }
+
 
         private void Visualize(VectorNode node, StringBuilder output, int depth)
         {
