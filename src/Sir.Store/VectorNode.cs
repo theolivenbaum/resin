@@ -23,9 +23,9 @@ namespace Sir.Store
         public long VecOffset { get; private set; }
         public long PostingsOffset { get; set; }
         public float Angle { get; private set; }
-        public float Highscore { get; private set; }
         public SortedList<int, byte> TermVector { get; }
-        public VectorNode Ancestor { get; set; }
+        public VectorNode Ancestor { get; private set; }
+
         public VectorNode Right
         {
             get => _right;
@@ -56,10 +56,10 @@ namespace Sir.Store
         {
         }
 
-        public VectorNode(SortedList<int, byte> wordVector)
+        public VectorNode(SortedList<int, byte> termVector)
         {
             _docIds = new HashSet<ulong>();
-            TermVector = wordVector;
+            TermVector = termVector;
             PostingsOffset = -1;
             VecOffset = -1;
         }
@@ -74,7 +74,13 @@ namespace Sir.Store
             VecOffset = -1;
         }
 
-        public VectorNode ClosestMatch(VectorNode node, bool skipDirtyNodes = true)
+        public class Hit
+        {
+            public VectorNode Node { get; set; }
+            public float Score { get; set; }
+        }
+
+        public Hit ClosestMatch(VectorNode node, bool skipDirtyNodes = true)
         {
             var best = this;
             var cursor = this;
@@ -107,9 +113,7 @@ namespace Sir.Store
                 }
             }
 
-            best.Highscore = highscore;
-
-            return best;
+            return new Hit { Node = best, Score = highscore };
         }
 
         public async Task Add(VectorNode node, Stream vectorStream)
@@ -126,18 +130,9 @@ namespace Sir.Store
             {
                 if (Left == null)
                 {
-                    lock (Sync)
-                    {
-                        if (Left == null)
-                        {
-                            node.Angle = angle;
-                            Left = node;
-                        }
-                    }
-                }
-                if (ReferenceEquals(Left, node))
-                {
-                    await Left.SerializeVector(vectorStream);
+                    node.Angle = angle;
+                    Left = node;
+                    Left.SerializeVector(vectorStream);
                 }
                 else
                 {
@@ -148,18 +143,9 @@ namespace Sir.Store
             {
                 if (Right == null)
                 {
-                    lock (Sync)
-                    {
-                        if (Right == null)
-                        {
-                            node.Angle = angle;
-                            Right = node;
-                        }
-                    }
-                }
-                if (ReferenceEquals(Right, node))
-                {
-                    await Right.SerializeVector(vectorStream);
+                    node.Angle = angle;
+                    Right = node;
+                    Right.SerializeVector(vectorStream);
                 }
                 else
                 {
@@ -167,7 +153,7 @@ namespace Sir.Store
                 }
             }
         }
-        private static object Sync = new object();
+
         private void Merge(VectorNode node)
         {
             if (VecOffset < 0)
@@ -175,12 +161,9 @@ namespace Sir.Store
                 throw new InvalidOperationException();
             }
 
-            lock (Sync)
+            foreach (var id in node._docIds)
             {
-                foreach (var id in node._docIds)
-                {
-                    _docIds.Add(id);
-                }
+                _docIds.Add(id);
             }
         }
 
@@ -248,9 +231,14 @@ namespace Sir.Store
             }
         }
 
-        private async Task SerializeVector(Stream vectorStream)
+        private async Task SerializeVectorAsync(Stream vectorStream)
         {
-            VecOffset = await TermVector.Serialize(vectorStream);
+            VecOffset = await TermVector.SerializeAsync(vectorStream);
+        }
+
+        private void SerializeVector(Stream vectorStream)
+        {
+            VecOffset = TermVector.Serialize(vectorStream);
         }
 
         public IEnumerable<VectorNode> SerializePostings(string collectionId, Stream lengths, Stream lists)

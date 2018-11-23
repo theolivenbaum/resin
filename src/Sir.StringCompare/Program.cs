@@ -37,7 +37,7 @@ namespace Sir.StringCompare
                 {
                     var node = index1.ClosestMatch(new VectorNode(token), skipDirtyNodes:false);
 
-                    score += node.Highscore;
+                    score += node.Score;
                     count++;
                 }
 

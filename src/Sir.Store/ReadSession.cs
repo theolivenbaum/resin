@@ -153,15 +153,15 @@ namespace Sir.Store
 
                         var match = ix.ClosestMatch(queryTerm);
 
-                        if (match.Highscore > 0)
+                        if (match.Score > 0)
                         {
-                            if (match.PostingsOffset < 0)
+                            if (match.Node.PostingsOffset < 0)
                             {
                                 throw new InvalidDataException();
                             }
 
-                            var docIds = (await _postingsReader.Read(CollectionId, match.PostingsOffset))
-                                .ToDictionary(x => x, y => match.Highscore);
+                            var docIds = (await _postingsReader.Read(CollectionId, match.Node.PostingsOffset))
+                                .ToDictionary(x => x, y => match.Score);
 
                             if (result == null)
                             {

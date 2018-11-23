@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using Sir.Core;
 
@@ -13,14 +14,21 @@ namespace Sir
 
         public static bool SendToConsole { get; set; }
 
-        private static void Consume((StreamWriter w, string s) obj)
+        public static bool SendToDebug => true;
+
+        private static void Consume((StreamWriter w, string s) message)
         {
-            obj.w.WriteLine(obj.s);
-            obj.w.Flush();
+            message.w.WriteLine(message.s);
+            message.w.Flush();
 
             if (SendToConsole)
             {
-                Console.WriteLine(obj.s);
+                Console.WriteLine(message.s);
+            }
+
+            if (SendToDebug)
+            {
+                Debug.WriteLine(message.s);
             }
         }
 

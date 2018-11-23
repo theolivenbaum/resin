@@ -93,26 +93,6 @@ namespace Sir.Store
 
                     _log.Log(string.Format("loaded {0}.{1}. {2}",
                         collectionHash, keyId, ix.Size()));
-
-                    // validate
-                    foreach (var validateFn in Directory.GetFiles(Dir, string.Format("{0}.{1}.*.validate", collectionHash, keyId)))
-                    {
-                        _log.Log("validating {0}", validateFn);
-
-                        foreach (var token in File.ReadAllLines(validateFn))
-                        {
-                            var closestMatch = ix.ClosestMatch(new VectorNode(token), skipDirtyNodes: false);
-
-                            if (closestMatch.Highscore < VectorNode.IdenticalAngle)
-                            {
-                                throw new DataMisalignedException();
-                            }
-                            else
-                            {
-                                File.Delete(validateFn);
-                            }
-                        }
-                    }
                 }
 
                 _index = new VectorTree(ixs);
@@ -124,6 +104,33 @@ namespace Sir.Store
                 else
                 {
                     _log.Log("deserialized {0} index files in {1}", indexFiles.Length, timer.Elapsed);
+
+                    // validate
+                    foreach (var validateFn in Directory.GetFiles(Dir, "*.validate"))
+                    {
+                        _log.Log("validating {0}", validateFn);
+
+                        var fi = new FileInfo(validateFn);
+                        var segs = Path.GetFileNameWithoutExtension(fi.Name).Split('.');
+                        var col = ulong.Parse(segs[0]);
+                        var key = long.Parse(segs[1]);
+                        var colIx = ixs[col];
+                        var ix = colIx[key];
+
+                        foreach (var token in File.ReadAllLines(validateFn))
+                        {
+                            var closestMatch = ix.ClosestMatch(new VectorNode(token), skipDirtyNodes: false);
+
+                            if (closestMatch.Score < VectorNode.IdenticalAngle)
+                            {
+                                throw new DataMisalignedException();
+                            }
+                            else
+                            {
+                                File.Delete(validateFn);
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception ex)

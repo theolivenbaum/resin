@@ -113,9 +113,10 @@ namespace Sir.Store
                 {
                     foreach (var token in tokens)
                     {
-                        var closestMatch = ix.ClosestMatch(new VectorNode(token.token), skipDirtyNodes: false);
+                        var query = new VectorNode(token.token);
+                        var closestMatch = ix.ClosestMatch(query, skipDirtyNodes: false);
 
-                        if (closestMatch.Highscore < VectorNode.IdenticalAngle)
+                        if (closestMatch.Score < VectorNode.IdenticalAngle)
                         {
                             throw new DataMisalignedException();
                         }
