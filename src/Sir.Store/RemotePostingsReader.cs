@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Read postings from HTTP endpoint.
+    /// </summary>
     public class RemotePostingsReader
     {
         private IConfigurationService _config;

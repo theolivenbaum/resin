@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Write postings to HTTTP endpoint.
+    /// </summary>
     public class RemotePostingsWriter
     {
         private IConfigurationService _config;

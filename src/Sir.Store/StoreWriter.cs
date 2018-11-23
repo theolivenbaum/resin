@@ -12,7 +12,7 @@ namespace Sir.Store
     /// <summary>
     /// Write into a document collection.
     /// </summary>
-    public class DocumentWriter : IWriter
+    public class StoreWriter : IWriter
     {
         public string ContentType => "application/json";
 
@@ -21,7 +21,7 @@ namespace Sir.Store
         private readonly StreamWriter _log;
         private readonly Stopwatch _timer;
 
-        public DocumentWriter(SessionFactory sessionFactory, ITokenizer analyzer)
+        public StoreWriter(SessionFactory sessionFactory, ITokenizer analyzer)
         {
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;

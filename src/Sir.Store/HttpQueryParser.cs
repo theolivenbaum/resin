@@ -2,6 +2,9 @@
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Parse a query from a http request message.
+    /// </summary>
     public class HttpQueryParser
     {
         private readonly KeyValueBooleanQueryParser _queryParser;

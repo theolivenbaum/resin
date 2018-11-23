@@ -12,7 +12,7 @@ namespace Sir.Store
     /// <summary>
     /// Query a document collection.
     /// </summary>
-    public class DocumentReader : IReader
+    public class StoreReader : IReader
     {
         public string ContentType => "application/json";
 
@@ -21,7 +21,7 @@ namespace Sir.Store
         private readonly HttpQueryParser _httpQueryParser;
         private readonly ITokenizer _tokenizer;
 
-        public DocumentReader(SessionFactory sessionFactory, HttpQueryParser httpQueryParser, ITokenizer tokenizer)
+        public StoreReader(SessionFactory sessionFactory, HttpQueryParser httpQueryParser, ITokenizer tokenizer)
         {
             _sessionFactory = sessionFactory;
             _log = Logging.CreateWriter("documentreader");

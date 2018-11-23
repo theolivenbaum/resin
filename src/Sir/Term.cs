@@ -2,6 +2,9 @@
 
 namespace Sir
 {
+    /// <summary>
+    /// A query term.
+    /// </summary>
     [System.Diagnostics.DebuggerDisplay("{Key}:{Value}")]
     public class Term
     {

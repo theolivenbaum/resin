@@ -2,6 +2,9 @@
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// A boolean query,
+    /// </summary>
     public class Query
     {
         public Query()

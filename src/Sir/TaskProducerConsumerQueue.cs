@@ -4,11 +4,6 @@ using System.Threading.Tasks;
 
 namespace Sir.Core
 {
-    /// <summary>
-    /// Enque items and forget about it. They will be consumed by other threads.
-    /// Call ProducerConsumerQueue.Complete() to have consumer threads join main.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
     public class TaskProducerConsumerQueue : IDisposable
     {
         private readonly BlockingCollection<Task> _queue;

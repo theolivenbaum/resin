@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Owner and manager of in-memory index. Dispatcher of sessions.
+    /// </summary>
     public class SessionFactory
     {
         private readonly ITokenizer _tokenizer;

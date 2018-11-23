@@ -4,6 +4,9 @@ using System.IO;
 
 namespace Sir
 {
+    /// <summary>
+    /// Read/write result.
+    /// </summary>
     public class Result
     {
         public IList<IDictionary> Documents { get; set; }
