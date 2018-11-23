@@ -1,19 +1,16 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 
 namespace Sir.Store
 {
-    public class WriteJob
+    public class IndexingJob
     {
         public string CollectionId { get; }
         public IEnumerable<IDictionary> Documents { get; }
-        public Guid Id { get; }
 
-        public WriteJob(string collectionId, IEnumerable<IDictionary> documents)
+        public IndexingJob(string collectionId, IEnumerable<IDictionary> documents)
         {
             CollectionId = collectionId;
-            Id = Guid.NewGuid();
             Documents = documents;
         }
     }

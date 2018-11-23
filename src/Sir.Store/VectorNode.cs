@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 namespace Sir.Store
 {
     /// <summary>
-    /// Binary tree where the data is a sparse vector (a word embedding).
-    /// The tree is balanced according to cos angles between the word vectors from immediate neighbouring nodes.
+    /// Binary tree where the data is a sparse vector, a word embedding.
+    /// The tree is balanced according to cos angles between the word vectors of the immediate neighbouring nodes.
     /// </summary>
     public class VectorNode
     {
