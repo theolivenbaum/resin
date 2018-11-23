@@ -101,6 +101,9 @@ namespace Sir.Store
                     read = stream.Read(buf, 0, buf.Length);
                 }
             }
+
+            _log.Log("loaded keys");
+
             return keys;
         }
 
