@@ -67,13 +67,9 @@ namespace Sir.Store
 
                 if (clone != null)
                 {
-                    using (var vectorStream = CreateAppendStream(
-                                Path.Combine(Dir, string.Format("{0}.{1}.vec", collectionId, keyId))))
+                    foreach (var node in index.Right.All())
                     {
-                        foreach (var node in index.Right.All())
-                        {
-                            clone.Add(node, vectorStream);
-                        }
+                        clone.Add(node);
                     }
 
                     _index.Add(collectionId, keyId, clone);

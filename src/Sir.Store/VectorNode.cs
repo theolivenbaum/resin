@@ -131,7 +131,7 @@ namespace Sir.Store
             return new Hit { Node = best, Score = highscore };
         }
 
-        public void Add(VectorNode node, Stream vectorStream)
+        public void Add(VectorNode node, Stream vectorStream = null)
         {
             var angle = node.TermVector.CosAngle(TermVector);
 
@@ -147,7 +147,9 @@ namespace Sir.Store
                 {
                     node.Angle = angle;
                     Left = node;
-                    Left.SerializeVector(vectorStream);
+
+                    if (vectorStream != null)
+                        Left.SerializeVector(vectorStream);
                 }
                 else
                 {
@@ -160,7 +162,9 @@ namespace Sir.Store
                 {
                     node.Angle = angle;
                     Right = node;
-                    Right.SerializeVector(vectorStream);
+
+                    if (vectorStream != null)
+                        Right.SerializeVector(vectorStream);
                 }
                 else
                 {

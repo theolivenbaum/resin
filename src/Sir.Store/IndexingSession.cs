@@ -187,14 +187,12 @@ namespace Sir.Store
 
         private void BuildInMemoryIndex(ulong docId, long keyId, VectorNode index, IEnumerable<string> tokens)
         {
-            var count = 0;
             using (var vectorStream = SessionFactory.CreateAppendStream(
                 Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.vec", CollectionId.ToHash(), keyId))))
             {
                 foreach (var token in tokens)
                 {
                     index.Add(new VectorNode(token, docId), vectorStream);
-                    count++;
                 }
             }
         }
