@@ -35,7 +35,7 @@ namespace Sir.Store
             ValueIndexStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collection)));
             KeyIndexStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collection)));
             DocIndexStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collection)));
-            Index = sessionFactory.GetCollectionIndex(collectionId.ToHash()) ?? new SortedList<long, VectorNode>();
+            Index = sessionFactory.GetCollectionIndex(collectionId.ToHash());
 
             _docIx = new DocIndexReader(DocIndexStream);
             _docs = new DocReader(DocStream);
@@ -131,6 +131,29 @@ namespace Sir.Store
 
                 return new ReadResult { Total = result.Count, Docs = await ReadDocs(sorted) };
             }
+        }
+
+        private VectorNode GetIndex(long keyId)
+        {
+            VectorNode node;
+
+            if (!Index.TryGetValue(keyId, out node))
+            {
+                return null;
+            }
+
+            return node;
+        }
+
+        public VectorNode GetIndex(ulong keyHash)
+        {
+            long keyId;
+            if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
+            {
+                return null;
+            }
+
+            return GetIndex(keyId);
         }
 
         private async Task<IDictionary<ulong, float>> DoRead(Query query)

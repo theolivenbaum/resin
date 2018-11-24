@@ -1,5 +1,5 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
 
 namespace Sir.Store
 {
@@ -10,24 +10,37 @@ namespace Sir.Store
     {
         public int Count { get; private set; }
 
-        private ConcurrentDictionary<ulong, SortedList<long, VectorNode>> _ix;
-        private object _sync = new object();
+        private ConcurrentDictionary<ulong, ConcurrentDictionary<long, VectorNode>> _ix;
 
-        public VectorTree() : this(new ConcurrentDictionary<ulong, SortedList<long, VectorNode>>()) { }
+        public VectorTree() : this(new ConcurrentDictionary<ulong, ConcurrentDictionary<long, VectorNode>>()) { }
 
-        public VectorTree(ConcurrentDictionary<ulong, SortedList<long, VectorNode>> ix)
+        public VectorTree(ConcurrentDictionary<ulong, ConcurrentDictionary<long, VectorNode>> ix)
         {
             _ix = ix;
         }
 
+        public void Add(ulong collectionId, ConcurrentDictionary<long, VectorNode> index)
+        {
+            ConcurrentDictionary<long, VectorNode> collection;
+
+            if (_ix.TryGetValue(collectionId, out collection))
+            {
+                throw new InvalidOperationException();
+            }
+            else
+            {
+                _ix.GetOrAdd(collectionId, index);
+            }
+        }
+
         public void Add(ulong collectionId, long keyId, VectorNode index)
         {
-            SortedList<long, VectorNode> collection;
+            ConcurrentDictionary<long, VectorNode> collection;
 
             if (!_ix.TryGetValue(collectionId, out collection))
             {
-                collection = new SortedList<long, VectorNode>();
-                collection.Add(keyId, index);
+                collection = new ConcurrentDictionary<long, VectorNode>();
+                collection.GetOrAdd(keyId, index);
 
                 _ix.GetOrAdd(collectionId, collection);
             }
@@ -35,7 +48,7 @@ namespace Sir.Store
             {
                 if (!collection.ContainsKey(keyId))
                 {
-                    collection.Add(keyId, index);
+                    collection.GetOrAdd(keyId, index);
                 }
                 else
                 {
@@ -44,9 +57,9 @@ namespace Sir.Store
             }
         }
 
-        public SortedList<long, VectorNode> GetIndex(ulong collectionId)
+        public ConcurrentDictionary<long, VectorNode> GetIndex(ulong collectionId)
         {
-            SortedList<long, VectorNode> ix;
+            ConcurrentDictionary<long, VectorNode> ix;
 
             if (!_ix.TryGetValue(collectionId, out ix))
             {

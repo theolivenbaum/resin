@@ -41,49 +41,38 @@ namespace Sir.Store
             Task.WaitAll(tasks);
         }
 
-        public void Publish(ulong collectionId, long keyId, VectorNode index)
+        public async Task Publish(string collection, RemotePostingsWriter postings)
         {
-            lock (_sync)
+            var timer = new Stopwatch();
+            timer.Start();
+
+            var collectionId = collection.ToHash();
+            var ix = GetCollectionIndex(collectionId);
+
+            foreach (var x in ix)
             {
-                var timer = new Stopwatch();
-                timer.Start();
+                await postings.Write(collection, x.Value);
 
-                VectorNode clone = null;
-
-                var colIx = GetCollectionIndex(collectionId);
-
-                if (colIx == null)
+                using (var ixStream = CreateIndexStream(collectionId, x.Key))
                 {
-                    _index.Add(collectionId, keyId, index);
+                    await x.Value.SerializeTree(ixStream);
                 }
-                else
-                {
-                    if (colIx.ContainsKey(keyId))
-                    {
-                        clone = colIx[keyId].Clone();
-                    }
-                    else
-                    {
-                        colIx[keyId] = index;
-                    }
-                }
-
-                if (clone != null)
-                {
-                    foreach (var node in index.Right.All())
-                    {
-                        clone.Add(node);
-                    }
-
-                    _index.Add(collectionId, keyId, clone);
-                }
-
-                _log.Log(string.Format("published {0}.{1} in {2}", collectionId, keyId, timer.Elapsed));
             }
+
+            _log.Log(string.Format("published index in {0}", timer.Elapsed));
+        }
+
+        private Stream CreateIndexStream(ulong collectionId, long keyId)
+        {
+            var fileName = Path.Combine(Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
+            return new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true);
         }
 
         private ConcurrentDictionary<ulong, long> LoadKeyMap()
         {
+            var timer = new Stopwatch();
+            timer.Start();
+
             var keys = new ConcurrentDictionary<ulong, long>();
 
             using (var stream = new FileStream(
@@ -101,7 +90,7 @@ namespace Sir.Store
                 }
             }
 
-            _log.Log("loaded keys");
+            _log.Log("loaded keys in {0}", timer.Elapsed);
 
             return keys;
         }
@@ -115,7 +104,7 @@ namespace Sir.Store
 
                 _log.Log("begin loading index into memory");
 
-                var ixs = new ConcurrentDictionary<ulong, SortedList<long, VectorNode>>();
+                var ixs = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, VectorNode>>();
                 var indexFiles = Directory.GetFiles(Dir, "*.ix");
 
                 foreach (var ixFileName in indexFiles)
@@ -127,16 +116,16 @@ namespace Sir.Store
                     var keyId = long.Parse(name[1]);
                     var vecFileName = Path.Combine(Dir, string.Format("{0}.{1}.vec", collectionHash, keyId));
 
-                    SortedList<long, VectorNode> colIx;
+                    ConcurrentDictionary<long, VectorNode> colIx;
 
                     if (!ixs.TryGetValue(collectionHash, out colIx))
                     {
-                        colIx = new SortedList<long, VectorNode>();
+                        colIx = new ConcurrentDictionary<long, VectorNode>();
                         ixs.GetOrAdd(collectionHash, colIx);
                     }
 
                     var ix = await DeserializeIndex(ixFileName, vecFileName);
-                    colIx.Add(keyId, ix);
+                    colIx.GetOrAdd(keyId, ix);
 
                     _log.Log(string.Format("loaded {0}.{1}. {2}",
                         collectionHash, keyId, ix.Size()));
@@ -213,28 +202,58 @@ namespace Sir.Store
 
         public long GetKeyId(ulong keyHash)
         {
-            lock (_sync)
-            {
-                return _keys[keyHash];
-            }
+            return _keys[keyHash];
         }
 
         public bool TryGetKeyId(ulong keyHash, out long keyId)
         {
-            lock (_sync)
+            if (!_keys.TryGetValue(keyHash, out keyId))
             {
-                if (!_keys.TryGetValue(keyHash, out keyId))
-                {
-                    keyId = -1;
-                    return false;
-                }
-                return true;
+                keyId = -1;
+                return false;
             }
+            return true;
         }
 
-        public SortedList<long, VectorNode> GetCollectionIndex(ulong collectionId)
+        public ConcurrentDictionary<long, VectorNode> GetCollectionIndex(ulong collectionId)
         {
-            return _index.GetIndex(collectionId);
+            var ix = _index.GetIndex(collectionId);
+
+            if (ix == null)
+            {
+                lock (_sync)
+                {
+                    ix = _index.GetIndex(collectionId);
+
+                    if (ix == null)
+                    {
+                        ix = new ConcurrentDictionary<long, VectorNode>();
+                    }
+                }
+            }
+
+            return ix;
+        }
+
+        public ConcurrentDictionary<long, VectorNode> GetOrAddCollectionIndex(ulong collectionId)
+        {
+            var ix = _index.GetIndex(collectionId);
+
+            if (ix == null)
+            {
+                lock (_sync)
+                {
+                    ix = _index.GetIndex(collectionId);
+
+                    if (ix == null)
+                    {
+                        ix = new ConcurrentDictionary<long, VectorNode>();
+                        _index.Add(collectionId, ix);
+                    }
+                }
+            }
+
+            return ix;
         }
 
         public WriteSession CreateWriteSession(string collectionId)

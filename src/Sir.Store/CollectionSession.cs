@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 
@@ -8,7 +9,7 @@ namespace Sir.Store
     {
         protected SessionFactory SessionFactory { get; private set; }
         protected string CollectionId { get; }
-        protected SortedList<long, VectorNode> Index { get; set; }
+        protected ConcurrentDictionary<long, VectorNode> Index { get; set; }
         protected Stream ValueStream { get; set; }
         protected Stream KeyStream { get; set; }
         protected Stream DocStream { get; set; }
@@ -20,29 +21,6 @@ namespace Sir.Store
         {
             SessionFactory = sessionFactory;
             CollectionId = collectionId;
-        }
-
-        public VectorNode GetIndex(ulong keyHash)
-        {
-            long keyId;
-            if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
-            {
-                return null;
-            }
-
-            return GetIndex(keyId);
-        }
-
-        public VectorNode GetIndex(long keyId)
-        {
-            VectorNode root;
-
-            if (!Index.TryGetValue(keyId, out root))
-            {
-                return null;
-            }
-
-            return root;
         }
 
         public virtual void Dispose()

@@ -44,14 +44,11 @@ namespace Sir.Postings
         {
             var fileName = Path.Combine(_config.Get("data_dir"), IndexFileName);
 
-            Task.Run(() =>
+            using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096))
             {
-                using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096))
-                {
-                    var formatter = new BinaryFormatter();
-                    formatter.Serialize(fs, _index);
-                }
-            });
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(fs, _index);
+            }
         }
 
         public async Task<MemoryStream> Read(ulong collectionId, long id)
@@ -93,7 +90,7 @@ namespace Sir.Postings
             return result;
         }
 
-        public async Task<MemoryStream> Write(ulong collectionId, byte[] messageBuf)
+        public MemoryStream Write(ulong collectionId, byte[] messageBuf)
         {
             var collectionIndex = GetIndex(collectionId);
             int read = 0;
@@ -139,7 +136,7 @@ namespace Sir.Postings
                     long pos = file.Position;
                     var word = lists[index];
 
-                    await file.WriteAsync(word);
+                    file.Write(word);
 
                     long len = file.Position - pos;
 
@@ -171,7 +168,7 @@ namespace Sir.Postings
 
             for (int i = 0; i < positions.Count; i++)
             {
-                await res.WriteAsync(BitConverter.GetBytes(positions[i]));
+                res.Write(BitConverter.GetBytes(positions[i]));
             }
 
             res.Position = 0;

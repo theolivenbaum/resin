@@ -19,7 +19,7 @@ namespace Sir.Store
             _config = config;
         }
 
-        public async Task Write(string collectionId, IList<KeyValuePair<long, VectorNode>> rootNodes)
+        public async Task Write(string collectionId, VectorNode rootNode)
         {
             var nodes = new List<VectorNode>();
             byte[] payload;
@@ -30,18 +30,12 @@ namespace Sir.Store
             using (var header = new MemoryStream())
             using (var body = new MemoryStream())
             {
-                foreach (var node in rootNodes)
-                {
-                    // write length of word (i.e. length of list of postings) to header 
-                    // and word itself to body
-                    var dirty = node.Value.SerializePostings(
-                            collectionId,
-                            header,
-                            body)
-                            .ToList();
+                // write length of word (i.e. length of list of postings) to header 
+                // and word itself to body
+                var dirty = rootNode.SerializePostings(
+                        collectionId, header, body).ToList();
 
-                    nodes.AddRange(dirty);
-                }
+                nodes.AddRange(dirty);
 
                 if (nodes.Count != header.Length / sizeof(int))
                 {

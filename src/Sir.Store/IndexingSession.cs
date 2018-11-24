@@ -17,8 +17,7 @@ namespace Sir.Store
         private readonly RemotePostingsWriter _postingsWriter;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
-        private readonly ConcurrentDictionary<long, VectorNode> _dirty;
-        private bool _serialized;
+        private bool _published;
         private Stopwatch _timer;
         private bool _validate;
 
@@ -30,12 +29,11 @@ namespace Sir.Store
         {
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("indexingsession");
-            _dirty = new ConcurrentDictionary<long, VectorNode>();
             _postingsWriter = new RemotePostingsWriter(config);
             _timer = new Stopwatch();
             _validate = config.Get("create_index_validation_files") == "true";
 
-            Index = sessionFactory.GetCollectionIndex(collectionId.ToHash()) ?? new SortedList<long, VectorNode>();
+            Index = sessionFactory.GetOrAddCollectionIndex(collectionId.ToHash());
         }
 
         public async Task Write(IndexingJob job)
@@ -54,18 +52,11 @@ namespace Sir.Store
                     await Write(doc);
                 }
 
-                _log.Log(string.Format("build in-memory index from {0} docs in {1}", docCount, timer.Elapsed));
+                _log.Log(string.Format("built in-memory index from {0} docs in {1}", docCount, timer.Elapsed));
 
-                await Serialize();
+                await Publish();
 
-                var collectionId = CollectionId.ToHash();
-
-                foreach (var index in _dirty)
-                {
-                    SessionFactory.Publish(collectionId, index.Key, index.Value);
-                }
-
-                _log.Log(string.Format("indexed {0} docs in {1}", docCount, timer.Elapsed));
+                _log.Log(string.Format("published {0} docs in {1}", docCount, timer.Elapsed));
             }
             catch (Exception ex)
             {
@@ -74,7 +65,6 @@ namespace Sir.Store
                 throw;
             }
         }
-        private static object Sync = new object();
 
         private async Task Write(IDictionary document)
         {
@@ -87,31 +77,8 @@ namespace Sir.Store
             foreach (var column in analyzed)
             {
                 var keyId = column.Key;
-
-                VectorNode ix;
-                if (!_dirty.TryGetValue(keyId, out ix))
-                {
-                    lock (Sync)
-                    {
-                        if (!_dirty.TryGetValue(keyId, out ix))
-                        {
-                            ix = GetIndex(keyId);
-
-                            if (ix == null)
-                            {
-                                ix = new VectorNode();
-                            }
-                            _dirty.GetOrAdd(keyId, ix);
-                        }
-                    }
-                }
-            }
-
-            foreach (var column in analyzed)
-            {
-                var keyId = column.Key;
                 var tokens = column.Value;
-                var ix = _dirty[keyId];
+                var ix = GetIndex(keyId);
                 var docId = ulong.Parse(document["__docid"].ToString());
 
                 BuildInMemoryIndex(docId, keyId, ix, tokens);
@@ -137,6 +104,19 @@ namespace Sir.Store
             }
 
             _log.Log(string.Format("indexed doc ID {0} in {1}", document["__docid"], _timer.Elapsed));
+        }
+
+        private VectorNode GetIndex(long keyId)
+        {
+            VectorNode root;
+
+            if (!Index.TryGetValue(keyId, out root))
+            {
+                root = new VectorNode();
+                Index.GetOrAdd(keyId, root);
+            }
+
+            return root;
         }
 
         private void Analyze(IDictionary doc, Dictionary<long, HashSet<string>> columns)
@@ -197,35 +177,19 @@ namespace Sir.Store
             }
         }
 
-        private async Task Serialize()
+        private async Task Publish()
         {
-            if (_serialized)
+            if (_published)
                 return;
 
             var timer = new Stopwatch();
             timer.Start();
 
-            var rootNodes = _dirty.ToList();
+            await SessionFactory.Publish(CollectionId, _postingsWriter);
 
-            await _postingsWriter.Write(CollectionId, rootNodes);
+            _published = true;
 
-            foreach (var node in rootNodes)
-            {
-                using (var ixFile = CreateIndexStream(node.Key))
-                {
-                    await node.Value.SerializeTree(ixFile);
-                }
-            }
-
-            _serialized = true;
-
-            _log.Log(string.Format("serialized index tree and postings in {0}", timer.Elapsed));
-        }
-
-        private Stream CreateIndexStream(long keyId)
-        {
-            var fileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId.ToHash(), keyId));
-            return new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true);
+            _log.Log(string.Format("publish took {0}", timer.Elapsed));
         }
     }
 

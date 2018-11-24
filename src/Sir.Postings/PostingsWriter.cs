@@ -11,6 +11,7 @@ namespace Sir.Postings
 
         private readonly StreamRepository _data;
         private readonly StreamWriter _log;
+        private readonly object _sync = new object();
 
         public PostingsWriter(StreamRepository data)
         {
@@ -33,9 +34,12 @@ namespace Sir.Postings
 
                 var messageBuf = payload.ToArray();
 
-                var responseStream = await _data.Write(collectionId.ToHash(), messageBuf);
+                lock (_sync)
+                {
+                    var responseStream = _data.Write(collectionId.ToHash(), messageBuf);
 
-                return new Result { Data = responseStream, MediaType = "application/octet-stream" };
+                    return new Result { Data = responseStream, MediaType = "application/octet-stream" };
+                }
             }
             catch (Exception ex)
             {
