@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -34,9 +35,17 @@ namespace Sir.HttpServer.Controllers
 
             try
             {
-                Result result = await writer.Write(collectionId, Request);
+                var timer = new Stopwatch();
+                timer.Start();
 
-                return new FileContentResult(result.Data.ToArray(), result.MediaType);
+                Result result = await writer.Write(collectionId, Request);
+                _log.Log("processed request in {0}", timer.Elapsed);
+                timer.Restart();
+
+                var buf = result.Data.ToArray();
+                _log.Log("serialized response in {0}", timer.Elapsed);
+
+                return new FileContentResult(buf, result.MediaType);
             }
             catch (Exception ew)
             {
@@ -58,7 +67,12 @@ namespace Sir.HttpServer.Controllers
 
             try
             {
+                var timer = new Stopwatch();
+                timer.Start();
+
                 var result = await reader.Read(collectionId, Request);
+
+                _log.Log("processed request in {0}", timer.Elapsed);
 
                 if (result.Data == null)
                 {
@@ -68,7 +82,11 @@ namespace Sir.HttpServer.Controllers
                 {
                     Response.Headers.Add("X-Total", result.Total.ToString());
 
-                    return new FileContentResult(result.Data.ToArray(), result.MediaType);
+                    var buf = result.Data.ToArray();
+
+                    _log.Log("serialized response in {0}", timer.Elapsed);
+
+                    return new FileContentResult(buf, result.MediaType);
                 }
             }
             catch (Exception ew)

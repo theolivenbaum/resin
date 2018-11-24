@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -13,14 +14,19 @@ namespace Sir.Store
     public class RemotePostingsWriter
     {
         private IConfigurationService _config;
+        private readonly StreamWriter _log;
 
         public RemotePostingsWriter(IConfigurationService config)
         {
             _config = config;
+            _log = Logging.CreateWriter("remotepostingswriter");
         }
 
         public async Task Write(string collectionId, VectorNode rootNode)
         {
+            var timer = new Stopwatch();
+            timer.Start();
+
             var nodes = new List<VectorNode>();
             byte[] payload;
 
@@ -56,6 +62,8 @@ namespace Sir.Store
                 payload = message.ToArray();
             }
 
+            _log.Log(string.Format("built postings message in {0}", timer.Elapsed));
+
             // send message, recieve list of (remote) file positions, save positions in index.
 
             var positions = await Send(collectionId, payload);
@@ -73,6 +81,9 @@ namespace Sir.Store
 
         private async Task<IList<long>> Send(string collectionId, byte[] payload)
         {
+            var timer = new Stopwatch();
+            timer.Start();
+
             var result = new List<long>();
 
             var endpoint = _config.Get("postings_endpoint") + collectionId;
@@ -83,6 +94,8 @@ namespace Sir.Store
             request.Accept = "application/octet-stream";
             request.Method = WebRequestMethods.Http.Post;
             request.ContentLength = payload.Length;
+
+            long responseBodyLen = 0;
 
             using (var requestBody = await request.GetRequestStreamAsync())
             {
@@ -97,6 +110,8 @@ namespace Sir.Store
                         await responseBody.CopyToAsync(mem);
 
                         var buf = mem.ToArray();
+
+                        responseBodyLen = buf.LongLength;
 
                         if (buf.Length != response.ContentLength)
                         {
@@ -114,6 +129,8 @@ namespace Sir.Store
                     }
                 }
             }
+
+            _log.Log(string.Format("sent {0} bytes and recieved {1} bytes in {2}", payload.Length, responseBodyLen, timer.Elapsed));
 
             return result;    
         }

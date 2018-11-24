@@ -9,6 +9,7 @@ namespace Sir.Postings
     public class StreamRepository
     {
         private readonly IConfigurationService _config;
+        private readonly StreamWriter _log;
 
         private IDictionary<ulong, IDictionary<long, IList<(long, long)>>> _index { get; set; }
 
@@ -18,6 +19,7 @@ namespace Sir.Postings
         public StreamRepository(IConfigurationService config)
         {
             _config = config;
+            _log = Logging.CreateWriter("streamrepository");
 
             var ixfn = Path.Combine(_config.Get("data_dir"), IndexFileName);
 
@@ -90,7 +92,7 @@ namespace Sir.Postings
             return result;
         }
 
-        public MemoryStream Write(ulong collectionId, byte[] messageBuf)
+        public async Task<MemoryStream> Write(ulong collectionId, byte[] messageBuf)
         {
             var collectionIndex = GetIndex(collectionId);
             int read = 0;
@@ -136,7 +138,7 @@ namespace Sir.Postings
                     long pos = file.Position;
                     var word = lists[index];
 
-                    file.Write(word);
+                    await file.WriteAsync(word);
 
                     long len = file.Position - pos;
 
