@@ -51,12 +51,22 @@ namespace Sir.Store
 
             foreach (var x in ix)
             {
+                var t1 = new Stopwatch();
+                t1.Start();
+
                 await postings.Write(collection, x.Value);
+
+                _log.Log(string.Format("wrote postings in {0}", t1.Elapsed));
+
+                var t2 = new Stopwatch();
+                t2.Start();
 
                 using (var ixStream = CreateIndexStream(collectionId, x.Key))
                 {
                     await x.Value.SerializeTree(ixStream);
                 }
+
+                _log.Log(string.Format("wrote tree in {0}", t2.Elapsed));
             }
 
             _log.Log(string.Format("published index in {0}", timer.Elapsed));

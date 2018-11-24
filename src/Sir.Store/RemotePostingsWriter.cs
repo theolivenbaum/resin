@@ -56,7 +56,8 @@ namespace Sir.Store
                 payload = message.ToArray();
             }
 
-            // send message and recieve list of (remote) file positions
+            // send message, recieve list of (remote) file positions, save positions in index.
+
             var positions = await Send(collectionId, payload);
 
             if (nodes.Count != positions.Count)

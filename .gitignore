@@ -7,8 +7,6 @@ bin
 obj
 packages
 *.vs
-src/Sir.HttpServer/Properties/PublishProfiles
-src/Sir.DbUtil/Properties/PublishProfiles
 src/publish
 *.log
 *.log.txt
