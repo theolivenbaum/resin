@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -22,7 +21,7 @@ namespace Sir.Store
             _log = Logging.CreateWriter("remotepostingswriter");
         }
 
-        public async Task Write(string collectionId, VectorNode rootNode)
+        public async Task Write(ulong collectionId, VectorNode rootNode)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -38,10 +37,12 @@ namespace Sir.Store
             {
                 // write length of word (i.e. length of list of postings) to header 
                 // and word itself to body
-                var dirty = rootNode.SerializePostings(
-                        collectionId, header, body).ToList();
+                var dirty = rootNode.SerializePostings(header, body);
 
                 nodes.AddRange(dirty);
+
+                if (nodes.Count == 0)
+                    return;
 
                 if (nodes.Count != header.Length / sizeof(int))
                 {
@@ -79,14 +80,14 @@ namespace Sir.Store
             }
         }
 
-        private async Task<IList<long>> Send(string collectionId, byte[] payload)
+        private async Task<IList<long>> Send(ulong collectionId, byte[] payload)
         {
             var timer = new Stopwatch();
             timer.Start();
 
             var result = new List<long>();
 
-            var endpoint = _config.Get("postings_endpoint") + collectionId;
+            var endpoint = _config.Get("postings_endpoint") + collectionId.ToString();
 
             var request = (HttpWebRequest)WebRequest.Create(endpoint);
 
@@ -101,7 +102,7 @@ namespace Sir.Store
             {
                 requestBody.Write(payload, 0, payload.Length);
 
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using (var response = (HttpWebResponse) await request.GetResponseAsync())
                 {
                     using (var responseBody = response.GetResponseStream())
                     {

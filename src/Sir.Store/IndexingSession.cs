@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -14,12 +12,11 @@ namespace Sir.Store
     /// </summary>
     public class IndexingSession : CollectionSession
     {
-        private readonly RemotePostingsWriter _postingsWriter;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
         private bool _published;
-        private Stopwatch _timer;
         private bool _validate;
+        private readonly IDictionary<long, VectorNode> _dirty;
 
         public IndexingSession(
             string collectionId, 
@@ -29,9 +26,8 @@ namespace Sir.Store
         {
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("indexingsession");
-            _postingsWriter = new RemotePostingsWriter(config);
-            _timer = new Stopwatch();
             _validate = config.Get("create_index_validation_files") == "true";
+            _dirty = new Dictionary<long, VectorNode>();
 
             Index = sessionFactory.GetOrAddCollectionIndex(collectionId.ToHash());
         }
@@ -52,11 +48,9 @@ namespace Sir.Store
                     await Write(doc);
                 }
 
+                SessionFactory.Flush(CollectionId.ToHash(), _dirty);
+
                 _log.Log(string.Format("built in-memory index from {0} docs in {1}", docCount, timer.Elapsed));
-
-                await Publish();
-
-                _log.Log(string.Format("published {0} docs in {1}", docCount, timer.Elapsed));
             }
             catch (Exception ex)
             {
@@ -68,11 +62,17 @@ namespace Sir.Store
 
         private async Task Write(IDictionary document)
         {
-            _timer.Restart();
+            var timer = new Stopwatch();
+            timer.Start();
+
+            var atime = new Stopwatch();
+            atime.Start();
 
             var analyzed = new Dictionary<long, HashSet<string>>();
 
             Analyze(document, analyzed);
+
+            atime.Stop();
 
             foreach (var column in analyzed)
             {
@@ -81,7 +81,11 @@ namespace Sir.Store
                 var ix = GetIndex(keyId);
                 var docId = ulong.Parse(document["__docid"].ToString());
 
-                BuildInMemoryIndex(docId, keyId, ix, tokens);
+                using (var vectorStream = SessionFactory.CreateAppendStream(
+                    Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.vec", CollectionId.ToHash(), keyId))))
+                {
+                    WriteIndex(docId, keyId, ix, tokens, vectorStream);
+                }
 
                 // validate
                 if (_validate)
@@ -103,7 +107,7 @@ namespace Sir.Store
                 }
             }
 
-            _log.Log(string.Format("indexed doc ID {0} in {1}", document["__docid"], _timer.Elapsed));
+            _log.Log(string.Format("indexed doc ID {0} in {1} (analyzed in {2}", document["__docid"], timer.Elapsed, atime.Elapsed));
         }
 
         private VectorNode GetIndex(long keyId)
@@ -115,6 +119,8 @@ namespace Sir.Store
                 root = new VectorNode();
                 Index.GetOrAdd(keyId, root);
             }
+
+            _dirty[keyId] = root;
 
             return root;
         }
@@ -165,31 +171,12 @@ namespace Sir.Store
             }
         }
 
-        private void BuildInMemoryIndex(ulong docId, long keyId, VectorNode index, IEnumerable<string> tokens)
+        private void WriteIndex(ulong docId, long keyId, VectorNode index, IEnumerable<string> tokens, Stream vectorStream)
         {
-            using (var vectorStream = SessionFactory.CreateAppendStream(
-                Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.vec", CollectionId.ToHash(), keyId))))
+            foreach (var token in tokens)
             {
-                foreach (var token in tokens)
-                {
-                    index.Add(new VectorNode(token, docId), vectorStream);
-                }
+                index.Add(new VectorNode(token, docId), vectorStream);
             }
-        }
-
-        private async Task Publish()
-        {
-            if (_published)
-                return;
-
-            var timer = new Stopwatch();
-            timer.Start();
-
-            await SessionFactory.Publish(CollectionId, _postingsWriter);
-
-            _published = true;
-
-            _log.Log(string.Format("publish took {0}", timer.Elapsed));
         }
     }
 }

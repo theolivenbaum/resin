@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -10,7 +11,7 @@ namespace Sir.Store
     /// <summary>
     /// Owner and manager of in-memory index. Dispatcher of sessions.
     /// </summary>
-    public class SessionFactory
+    public class SessionFactory : IDisposable
     {
         private readonly ITokenizer _tokenizer;
         private readonly IConfigurationService _config;
@@ -18,6 +19,8 @@ namespace Sir.Store
         private VectorTree _index;
         private readonly StreamWriter _log;
         private readonly object _sync = new object();
+        //private readonly Timer _timer;
+        private Task _publishTask;
 
         private Stream _writableKeyMapStream { get; }
 
@@ -38,38 +41,52 @@ namespace Sir.Store
             _writableKeyMapStream = new FileStream(
                 Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
 
+            //_timer = new Timer(Flush, null, 0, 10 * 1000);
+
             Task.WaitAll(tasks);
         }
 
-        public async Task Publish(string collection, RemotePostingsWriter postings)
+        public void Flush(ulong collectionId, IDictionary<long, VectorNode> nodes)
         {
+            lock (_sync)
+            {
+                if (_publishTask == null || _publishTask.IsCompleted)
+                {
+                    _publishTask = FlushInternal(collectionId, nodes);
+                }
+                else
+                {
+                    Task.WaitAll(new[] { _publishTask });
+                    _publishTask = FlushInternal(collectionId, nodes);
+                }
+            }
+        }
+
+        private async Task FlushInternal(ulong collectionId, IDictionary<long, VectorNode> nodes)
+        {
+            if (_index == null)
+                return;
+
             var timer = new Stopwatch();
             timer.Start();
 
-            var collectionId = collection.ToHash();
-            var ix = GetCollectionIndex(collectionId);
+            var postingsWriter = new RemotePostingsWriter(_config);
+            var didPublish = false;
 
-            foreach (var x in ix)
+            foreach (var x in nodes)
             {
-                var t1 = new Stopwatch();
-                t1.Start();
-
-                await postings.Write(collection, x.Value);
-
-                _log.Log(string.Format("wrote postings in {0}", t1.Elapsed));
-
-                var t2 = new Stopwatch();
-                t2.Start();
+                await postingsWriter.Write(collectionId, x.Value);
 
                 using (var ixStream = CreateIndexStream(collectionId, x.Key))
                 {
                     await x.Value.SerializeTree(ixStream);
                 }
 
-                _log.Log(string.Format("wrote tree in {0}", t2.Elapsed));
+                didPublish = true;
             }
 
-            _log.Log(string.Format("published index in {0}", timer.Elapsed));
+            if (didPublish)
+                _log.Log(string.Format("***FLUSHED*** index in {0}", timer.Elapsed));
         }
 
         private Stream CreateIndexStream(ulong collectionId, long keyId)
@@ -294,6 +311,19 @@ namespace Sir.Store
             //    FileFlagNoBuffering | FileOptions.WriteThrough | fileOptions);
 
             return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 4096, true);
+        }
+
+        public void Dispose()
+        {
+            //_timer.Dispose();
+
+            if (_publishTask != null)
+            {
+                if (!_publishTask.IsCompleted)
+                {
+                    Task.WaitAll(new[] { _publishTask });
+                }
+            }
         }
     }
 }

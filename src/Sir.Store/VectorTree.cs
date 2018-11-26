@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace Sir.Store
 {
@@ -17,6 +18,17 @@ namespace Sir.Store
         public VectorTree(ConcurrentDictionary<ulong, ConcurrentDictionary<long, VectorNode>> ix)
         {
             _ix = ix;
+        }
+
+        public IEnumerable<(ulong collectionId, long keyId, VectorNode index)> All()
+        {
+            foreach(var collection in _ix)
+            {
+                foreach(var column in collection.Value)
+                {
+                    yield return (collection.Key, column.Key, column.Value);
+                }
+            }
         }
 
         public void Add(ulong collectionId, ConcurrentDictionary<long, VectorNode> index)

@@ -193,6 +193,11 @@ namespace Sir.Store
                 throw new InvalidOperationException();
             }
 
+            if (PostingsOffset < 0)
+            {
+                throw new InvalidOperationException();
+            }
+
             var block = new byte[5][];
 
             byte[] terminator = new byte[1];
@@ -260,7 +265,7 @@ namespace Sir.Store
             VecOffset = TermVector.Serialize(vectorStream);
         }
 
-        public IEnumerable<VectorNode> SerializePostings(string collectionId, Stream lengths, Stream lists)
+        public IEnumerable<VectorNode> SerializePostings(Stream lengths, Stream lists)
         {
             var node = Right;
             var stack = new Stack<VectorNode>();

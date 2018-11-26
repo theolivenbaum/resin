@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Postings
 {
-    public class StreamRepository
+    public class StreamRepository : IDisposable
     {
         private readonly IConfigurationService _config;
         private readonly StreamWriter _log;
+        private readonly Timer _timer;
+        private bool _serializing;
+        private bool _isDirty;
 
         private IDictionary<ulong, IDictionary<long, IList<(long, long)>>> _index { get; set; }
 
@@ -31,6 +36,14 @@ namespace Sir.Postings
             {
                 _index = new Dictionary<ulong, IDictionary<long, IList<(long, long)>>>();
             }
+
+            _timer = new Timer(Flush, null, 60 * 1000, 60 * 1000);
+        }
+
+        private void Flush(object state)
+        {
+            if (_isDirty)
+                FlushIndex();
         }
 
         private IDictionary<ulong, IDictionary<long, IList<(long, long)>>> ReadIndex(string fileName)
@@ -44,6 +57,14 @@ namespace Sir.Postings
 
         private void FlushIndex()
         {
+            if (_serializing)
+                return;
+
+            _serializing = true;
+
+            var timer = new Stopwatch();
+            timer.Start();
+
             var fileName = Path.Combine(_config.Get("data_dir"), IndexFileName);
 
             using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096))
@@ -51,6 +72,11 @@ namespace Sir.Postings
                 var formatter = new BinaryFormatter();
                 formatter.Serialize(fs, _index);
             }
+
+            _isDirty = false;
+            _serializing = false;
+
+            _log.Log(string.Format("serialized index in {0}", timer.Elapsed));
         }
 
         public async Task<MemoryStream> Read(ulong collectionId, long id)
@@ -78,6 +104,7 @@ namespace Sir.Postings
                     file.Seek(pos, SeekOrigin.Begin);
 
                     var buf = new byte[len];
+
                     var read = await file.ReadAsync(buf);
 
                     if (read != len)
@@ -170,12 +197,14 @@ namespace Sir.Postings
 
             for (int i = 0; i < positions.Count; i++)
             {
-                res.Write(BitConverter.GetBytes(positions[i]));
+                await res.WriteAsync(BitConverter.GetBytes(positions[i]));
             }
 
             res.Position = 0;
 
             FlushIndex();
+
+            _isDirty = true;
 
             return res;
         }
@@ -192,6 +221,16 @@ namespace Sir.Postings
             }
 
             return collectionIndex;
+        }
+
+        public void Dispose()
+        {
+            _timer.Dispose();
+
+            if (_isDirty)
+            {
+                FlushIndex();
+            }
         }
     }
 }

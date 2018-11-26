@@ -94,12 +94,9 @@ namespace Sir.DbUtil
             timer.Start();
 
             var files = Directory.GetFiles(dir, "*.docs");
-            var sessionFactory = new SessionFactory(
-                dir,
-                new LatinTokenizer(),
-                new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini")));
             var batchNo = 0;
 
+            using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini"))))
             foreach (var docFileName in files)
             {
                 var name = Path.GetFileNameWithoutExtension(docFileName)
@@ -124,11 +121,12 @@ namespace Sir.DbUtil
                         }
 
                         var writeTimer = new Stopwatch();
+
                         foreach (var batch in docs.Batch(batchSize))
                         {
                             writeTimer.Restart();
 
-                            var job = new IndexingJob(collection, batch);
+                            var job = new IndexingJob(batch);
 
                             using (var indexSession = sessionFactory.CreateIndexSession(collection))
                             {

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -22,6 +23,9 @@ namespace Sir.Postings
         {
             try
             {
+                var timer = new Stopwatch();
+                timer.Start();
+
                 var payload = new MemoryStream();
 
                 await request.Body.CopyToAsync(payload);
@@ -33,7 +37,17 @@ namespace Sir.Postings
 
                 var messageBuf = payload.ToArray();
 
-                var responseStream = await _data.Write(collectionId.ToHash(), messageBuf);
+                _log.Log(string.Format("serialized {0} bytes in {1}", messageBuf.Length, timer.Elapsed));
+
+                timer.Restart();
+
+                var responseStream = await _data.Write(ulong.Parse(collectionId), messageBuf);
+
+                timer.Stop();
+
+                _log.Log(string.Format(
+                    "wrote {0} bytes in {1}: {2} bytes/ms", 
+                    messageBuf.Length, timer.Elapsed, messageBuf.Length / timer.ElapsedMilliseconds));
 
                 return new Result { Data = responseStream, MediaType = "application/octet-stream" };
             }

@@ -5,12 +5,10 @@ namespace Sir.Store
 {
     public class IndexingJob
     {
-        public string CollectionId { get; }
         public IEnumerable<IDictionary> Documents { get; }
 
-        public IndexingJob(string collectionId, IEnumerable<IDictionary> documents)
+        public IndexingJob(IEnumerable<IDictionary> documents)
         {
-            CollectionId = collectionId;
             Documents = documents;
         }
     }
