@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -19,7 +18,6 @@ namespace Sir.Store
         private VectorTree _index;
         private readonly StreamWriter _log;
         private readonly object _sync = new object();
-        //private readonly Timer _timer;
         private Task _publishTask;
 
         private Stream _writableKeyMapStream { get; }
@@ -41,7 +39,6 @@ namespace Sir.Store
             _writableKeyMapStream = new FileStream(
                 Path.Combine(dir, "_.kmap"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
 
-            //_timer = new Timer(Flush, null, 0, 10 * 1000);
 
             Task.WaitAll(tasks);
         }

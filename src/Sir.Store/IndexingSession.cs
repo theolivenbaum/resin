@@ -65,14 +65,9 @@ namespace Sir.Store
             var timer = new Stopwatch();
             timer.Start();
 
-            var atime = new Stopwatch();
-            atime.Start();
-
             var analyzed = new Dictionary<long, HashSet<string>>();
 
             Analyze(document, analyzed);
-
-            atime.Stop();
 
             foreach (var column in analyzed)
             {
@@ -81,8 +76,7 @@ namespace Sir.Store
                 var ix = GetIndex(keyId);
                 var docId = ulong.Parse(document["__docid"].ToString());
 
-                using (var vectorStream = SessionFactory.CreateAppendStream(
-                    Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.vec", CollectionId.ToHash(), keyId))))
+                using (var vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.vec", CollectionId.ToHash(), keyId))))
                 {
                     WriteIndex(docId, keyId, ix, tokens, vectorStream);
                 }
@@ -107,7 +101,7 @@ namespace Sir.Store
                 }
             }
 
-            _log.Log(string.Format("indexed doc ID {0} in {1} (analyzed in {2}", document["__docid"], timer.Elapsed, atime.Elapsed));
+            _log.Log(string.Format("indexed doc ID {0} in {1}", document["__docid"], timer.Elapsed));
         }
 
         private VectorNode GetIndex(long keyId)

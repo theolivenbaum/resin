@@ -30,7 +30,7 @@ namespace Sir.Postings
 
             if (File.Exists(ixfn))
             {
-                _index = ReadIndex(ixfn);
+                _index = DeserializeIndex(ixfn);
             }
             else
             {
@@ -42,24 +42,22 @@ namespace Sir.Postings
 
         private void Flush(object state)
         {
-            if (_isDirty)
+            if (_isDirty && !_serializing)
                 FlushIndex();
         }
 
-        private IDictionary<ulong, IDictionary<long, IList<(long, long)>>> ReadIndex(string fileName)
+        private IDictionary<ulong, IDictionary<long, IList<(long, long)>>> DeserializeIndex(string fileName)
         {
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.None, 4096))
             {
                 var formatter = new BinaryFormatter();
-                return (IDictionary<ulong, IDictionary<long, IList<(long, long)>>>)formatter.Deserialize(fs);
+                var d = (IDictionary<ulong, IDictionary<long, IList<(long, long)>>>)formatter.Deserialize(fs);
+                return new Dictionary<ulong, IDictionary<long, IList<(long, long)>>>(d);
             }
         }
 
         private void FlushIndex()
         {
-            if (_serializing)
-                return;
-
             _serializing = true;
 
             var timer = new Stopwatch();
@@ -76,7 +74,7 @@ namespace Sir.Postings
             _isDirty = false;
             _serializing = false;
 
-            _log.Log(string.Format("serialized index in {0}", timer.Elapsed));
+            _log.Log(string.Format("***serialized*** index in {0}", timer.Elapsed));
         }
 
         public async Task<MemoryStream> Read(ulong collectionId, long id)

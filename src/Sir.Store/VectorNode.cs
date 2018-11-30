@@ -235,9 +235,12 @@ namespace Sir.Store
 
             while (node != null)
             {
-                foreach (var buf in node.ToStream())
+                if (node.PostingsOffset >= 0)
                 {
-                    await indexStream.WriteAsync(buf, 0, buf.Length);
+                    foreach (var buf in node.ToStream())
+                    {
+                        await indexStream.WriteAsync(buf, 0, buf.Length);
+                    }
                 }
 
                 if (node.Right != null)
@@ -247,10 +250,9 @@ namespace Sir.Store
 
                 node = node.Left;
 
-                if (node == null)
+                if (node == null && stack.Count > 0)
                 {
-                    if (stack.Count > 0)
-                        node = stack.Pop();
+                    node = stack.Pop();
                 }
             }
         }

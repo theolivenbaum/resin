@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -37,7 +38,7 @@ namespace Sir.Store
             {
                 // write length of word (i.e. length of list of postings) to header 
                 // and word itself to body
-                var dirty = rootNode.SerializePostings(header, body);
+                var dirty = rootNode.SerializePostings(header, body).ToList();
 
                 nodes.AddRange(dirty);
 
