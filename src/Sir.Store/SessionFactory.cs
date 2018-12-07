@@ -138,7 +138,7 @@ namespace Sir.Store
 
                     var collectionHash = ulong.Parse(name[0]);
                     var keyId = long.Parse(name[1]);
-                    var vecFileName = Path.Combine(Dir, string.Format("{0}.{1}.vec", collectionHash, keyId));
+                    var vecFileName = Path.Combine(Dir, string.Format("{0}.vec", collectionHash));
 
                     ConcurrentDictionary<long, VectorNode> colIx;
 
@@ -177,17 +177,31 @@ namespace Sir.Store
                         var colIx = ixs[col];
                         var ix = colIx[key];
 
-                        foreach (var token in File.ReadAllLines(validateFn))
-                        {
-                            var closestMatch = ix.ClosestMatch(new VectorNode(token), skipDirtyNodes: false);
+                        string[] lines = null;
 
-                            if (closestMatch.Score < VectorNode.IdenticalAngle)
+                        try
+                        {
+                            lines = File.ReadAllLines(validateFn);
+                        }
+                        catch
+                        {
+                            continue;
+                        }
+
+                        if (lines!= null)
+                        {
+                            foreach (var token in File.ReadAllLines(validateFn))
                             {
-                                throw new DataMisalignedException();
-                            }
-                            else
-                            {
-                                File.Delete(validateFn);
+                                var closestMatch = ix.ClosestMatch(new VectorNode(token), skipDirtyNodes: false);
+
+                                if (closestMatch.Score < VectorNode.IdenticalAngle)
+                                {
+                                    throw new DataMisalignedException();
+                                }
+                                else
+                                {
+                                    File.Delete(validateFn);
+                                }
                             }
                         }
                     }

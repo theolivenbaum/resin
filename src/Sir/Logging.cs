@@ -14,8 +14,6 @@ namespace Sir
 
         public static bool SendToConsole { get; set; }
 
-        public static bool SendToDebug => true;
-
         private static void Consume((StreamWriter w, string s) message)
         {
             message.w.WriteLine(message.s);

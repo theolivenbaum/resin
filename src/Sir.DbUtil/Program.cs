@@ -27,7 +27,7 @@ namespace Sir.DbUtil
                 {
                     // example: index C:\projects\resin\src\Sir.HttpServer\App_Data www 0 10000 1000
 
-                    await Index(
+                    Index(
                         dir: args[1],
                         collection: args[2],
                         skip: int.Parse(args[3]),
@@ -88,7 +88,7 @@ namespace Sir.DbUtil
             }
         }
 
-        private static async Task Index(string dir, string collection, int skip, int take, int batchSize)
+        private static void Index(string dir, string collection, int skip, int take, int batchSize)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -130,7 +130,7 @@ namespace Sir.DbUtil
 
                             using (var indexSession = sessionFactory.CreateIndexSession(collection))
                             {
-                                await indexSession.Write(job);
+                                indexSession.Write(job);
                             }
 
                             _log.Log(string.Format("batch {0} done in {1}", batchNo++, writeTimer.Elapsed));

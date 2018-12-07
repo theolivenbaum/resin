@@ -23,15 +23,20 @@ namespace Sir.Store
 
         public static long Serialize(this SortedList<int, byte> vec, Stream stream)
         {
-            var pos = stream.Position;
-
-            foreach (var kvp in vec)
+            lock (stream)
             {
-                stream.Write(BitConverter.GetBytes(kvp.Key), 0, sizeof(int));
-                stream.WriteByte(kvp.Value);
-            }
+                var pos = stream.Position;
 
-            return pos;
+                foreach (var kvp in vec)
+                {
+                    stream.Write(BitConverter.GetBytes(kvp.Key), 0, sizeof(int));
+                    stream.WriteByte(kvp.Value);
+                }
+
+                stream.Flush();
+
+                return pos;
+            }
         }
 
         public static float CosAngle(this SortedList<int, byte> vec1, SortedList<int, byte> vec2)

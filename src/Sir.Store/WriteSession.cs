@@ -53,47 +53,103 @@ namespace Sir.Store
 
             foreach (var model in job.Documents)
             {
-                var docId = _docIx.GetNextDocId();
-                var docMap = new List<(long keyId, long valId)>();
-
-                foreach (var key in model.Keys)
-                {
-                    var keyStr = key.ToString();
-                    var keyHash = keyStr.ToHash();
-                    var val = (IComparable)model[key];
-                    var str = val as string;
-                    long keyId, valId;
-
-                    if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
-                    {
-                        // We have a new key!
-
-                        // store key
-                        var keyInfo = await _keys.Append(keyStr);
-                        keyId = await _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
-                        await SessionFactory.PersistKeyMapping(keyHash, keyId);
-                    }
-
-                    // store value
-                    var valInfo = await _vals.Append(val);
-                    valId = await _valIx.Append(valInfo.offset, valInfo.len, valInfo.dataType);
-
-                    // store refs to keys and values
-                    docMap.Add((keyId, valId));
-                }
-
-                var docMeta = await _docs.Append(docMap);
-                await _docIx.Append(docMeta.offset, docMeta.length);
-
-                model.Add("__docid", docId);
+                var docId = await Write(model);
 
                 docIds.Add(docId);
+
                 docCount++;
             }
 
             _log.Log(string.Format("processed {0} documents in {1}", docCount, timer.Elapsed));
 
             return docIds;
+        }
+
+        public async Task<ulong> Write(IDictionary model)
+        {
+            var timer = new Stopwatch();
+            timer.Start();
+
+            var docId = _docIx.GetNextDocId();
+            var docMap = new List<(long keyId, long valId)>();
+
+            foreach (var key in model.Keys)
+            {
+                var keyStr = key.ToString();
+                var keyHash = keyStr.ToHash();
+                var val = (IComparable)model[key];
+                var str = val as string;
+                long keyId, valId;
+
+                if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
+                {
+                    // We have a new key!
+
+                    // store key
+                    var keyInfo = await _keys.Append(keyStr);
+                    keyId = await _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
+                    await SessionFactory.PersistKeyMapping(keyHash, keyId);
+                }
+
+                // store value
+                var valInfo = await _vals.Append(val);
+                valId = await _valIx.Append(valInfo.offset, valInfo.len, valInfo.dataType);
+
+                // store refs to keys and values
+                docMap.Add((keyId, valId));
+            }
+
+            var docMeta = await _docs.Append(docMap);
+            await _docIx.Append(docMeta.offset, docMeta.length);
+
+            model.Add("__docid", docId);
+
+            _log.Log(string.Format("processed document {0} in {1}", docId, timer.Elapsed));
+
+            return docId;
+        }
+    }
+
+    public class PersistantStorage
+    {
+        public ulong GetNextDocId()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TryGetKeyId(ulong keyHash, out long keyId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<(long offset, int len, byte dataType)> AppendKey(IComparable value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<uint> AppendKeyIndexEntry(long offset, int len, byte dataType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<(long offset, int len, byte dataType)> AppendValue(IComparable value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<uint> AppendValueIndexEntry(long offset, int len, byte dataType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<(long offset, int length)> AppendDocument(IList<(long keyId, long valId)> doc)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task AppendDocumentIndexEntry(long offset, int len)
+        {
+            throw new NotImplementedException();
         }
     }
 }

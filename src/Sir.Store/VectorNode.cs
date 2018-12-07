@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,7 +18,7 @@ namespace Sir.Store
 
         private VectorNode _right;
         private VectorNode _left;
-        private HashSet<ulong> _docIds;
+        private ConcurrentBag<ulong> _docIds;
 
         public long VecOffset { get; private set; }
         public long PostingsOffset { get; set; }
@@ -58,7 +58,7 @@ namespace Sir.Store
 
         public VectorNode(SortedList<int, byte> termVector)
         {
-            _docIds = new HashSet<ulong>();
+            _docIds = new ConcurrentBag<ulong>();
             TermVector = termVector;
             PostingsOffset = -1;
             VecOffset = -1;
@@ -68,7 +68,7 @@ namespace Sir.Store
         {
             if (string.IsNullOrWhiteSpace(s)) throw new ArgumentException();
 
-            _docIds = new HashSet<ulong> { docId };
+            _docIds = new ConcurrentBag<ulong> { docId };
             TermVector = s.ToVector();
             PostingsOffset = -1;
             VecOffset = -1;
@@ -84,13 +84,14 @@ namespace Sir.Store
         {
             var clone = new VectorNode(TermVector);
 
-            clone._left = _left;
-            clone._right = _right;
             clone.VecOffset = VecOffset;
             clone.PostingsOffset = PostingsOffset;
-            clone._docIds = new HashSet<ulong>(_docIds);
+            clone._docIds = new ConcurrentBag<ulong>(_docIds);
             clone.Angle = Angle;
             clone.Ancestor = Ancestor;
+
+            clone._left = _left == null ? null : _left.Clone();
+            clone._right = _right == null ? null : _right.Clone();
 
             return clone;
         }
@@ -131,6 +132,8 @@ namespace Sir.Store
             return new Hit { Node = best, Score = highscore };
         }
 
+        private readonly object _sync = new object();
+
         public void Add(VectorNode node, Stream vectorStream = null)
         {
             var angle = node.TermVector.CosAngle(TermVector);
@@ -145,11 +148,18 @@ namespace Sir.Store
             {
                 if (Left == null)
                 {
-                    node.Angle = angle;
-                    Left = node;
+                    lock (_sync)
+                    {
+                        if (Left == null)
+                        {
+                            node.Angle = angle;
+                            Left = node;
 
-                    if (vectorStream != null)
-                        Left.SerializeVector(vectorStream);
+                            if (vectorStream != null)
+                                Left.SerializeVector(vectorStream);
+                        }
+                    }
+                    
                 }
                 else
                 {
@@ -160,11 +170,17 @@ namespace Sir.Store
             {
                 if (Right == null)
                 {
-                    node.Angle = angle;
-                    Right = node;
+                    lock (_sync)
+                    {
+                        if (Right == null)
+                        {
+                            node.Angle = angle;
+                            Right = node;
 
-                    if (vectorStream != null)
-                        Right.SerializeVector(vectorStream);
+                            if (vectorStream != null)
+                                Right.SerializeVector(vectorStream);
+                        }
+                    }
                 }
                 else
                 {

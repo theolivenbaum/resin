@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -14,9 +15,8 @@ namespace Sir.Store
     {
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
-        private bool _published;
         private bool _validate;
-        private readonly IDictionary<long, VectorNode> _dirty;
+        private readonly ConcurrentDictionary<long, VectorNode> _dirty;
 
         public IndexingSession(
             string collectionId, 
@@ -27,12 +27,12 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("indexingsession");
             _validate = config.Get("create_index_validation_files") == "true";
-            _dirty = new Dictionary<long, VectorNode>();
+            _dirty = new ConcurrentDictionary<long, VectorNode>();
 
             Index = sessionFactory.GetOrAddCollectionIndex(collectionId.ToHash());
         }
 
-        public async Task Write(IndexingJob job)
+        public void Write(IndexingJob job)
         {
             try
             {
@@ -41,11 +41,15 @@ namespace Sir.Store
 
                 var docCount = 0;
 
-                foreach (var doc in job.Documents)
+                using (var vectorStream = SessionFactory.CreateAppendStream(
+                    Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId.ToHash()))))
                 {
-                    docCount++;
+                    foreach(var doc in job.Documents)
+                    {
+                        docCount++;
 
-                    await Write(doc);
+                        Write(doc, vectorStream);
+                    }
                 }
 
                 SessionFactory.Flush(CollectionId.ToHash(), _dirty);
@@ -60,7 +64,7 @@ namespace Sir.Store
             }
         }
 
-        private async Task Write(IDictionary document)
+        private void Write(IDictionary document, Stream vectorStream)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -69,17 +73,14 @@ namespace Sir.Store
 
             Analyze(document, analyzed);
 
-            foreach (var column in analyzed)
+            Parallel.ForEach(analyzed, async column =>
             {
                 var keyId = column.Key;
                 var tokens = column.Value;
                 var ix = GetIndex(keyId);
                 var docId = ulong.Parse(document["__docid"].ToString());
 
-                using (var vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.vec", CollectionId.ToHash(), keyId))))
-                {
-                    WriteIndex(docId, keyId, ix, tokens, vectorStream);
-                }
+                WriteIndex(docId, keyId, ix, tokens, vectorStream);
 
                 // validate
                 if (_validate)
@@ -99,22 +100,33 @@ namespace Sir.Store
                         Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}.validate", CollectionId.ToHash(), keyId, document["__docid"])),
                         string.Join('\n', tokens));
                 }
-            }
+            });
 
             _log.Log(string.Format("indexed doc ID {0} in {1}", document["__docid"], timer.Elapsed));
         }
+
+        private readonly object _sync = new object();
 
         private VectorNode GetIndex(long keyId)
         {
             VectorNode root;
 
-            if (!Index.TryGetValue(keyId, out root))
+            if (!_dirty.TryGetValue(keyId, out root))
             {
-                root = new VectorNode();
-                Index.GetOrAdd(keyId, root);
-            }
+                if (!Index.TryGetValue(keyId, out root))
+                {
+                    lock (_sync)
+                    {
+                        if (!Index.TryGetValue(keyId, out root))
+                        {
+                            root = new VectorNode();
+                            Index.GetOrAdd(keyId, root);
+                        }
+                    }
+                }
 
-            _dirty[keyId] = root;
+                _dirty[keyId] = root;
+            }
 
             return root;
         }

@@ -56,6 +56,8 @@ namespace Sir.Postings
             }
         }
 
+        private readonly object _indexFileSync = new object();
+
         private void FlushIndex()
         {
             _serializing = true;
@@ -65,14 +67,17 @@ namespace Sir.Postings
 
             var fileName = Path.Combine(_config.Get("data_dir"), IndexFileName);
 
-            using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096))
+            lock (_indexFileSync)
             {
-                var formatter = new BinaryFormatter();
-                formatter.Serialize(fs, _index);
-            }
+                using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096))
+                {
+                    var formatter = new BinaryFormatter();
+                    formatter.Serialize(fs, _index);
+                }
 
-            _isDirty = false;
-            _serializing = false;
+                _isDirty = false;
+                _serializing = false;
+            }
 
             _log.Log(string.Format("***serialized*** index in {0}", timer.Elapsed));
         }
@@ -117,6 +122,8 @@ namespace Sir.Postings
             return result;
         }
 
+        private readonly object _dataFileSync = new object();
+
         public async Task<MemoryStream> Write(ulong collectionId, byte[] messageBuf)
         {
             var collectionIndex = GetIndex(collectionId);
@@ -156,33 +163,36 @@ namespace Sir.Postings
 
             var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));
 
-            using (var file = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true))
+            lock (_dataFileSync)
             {
-                for (int index = 0; index < lists.Count; index++)
+                using (var file = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true))
                 {
-                    long pos = file.Position;
-                    var word = lists[index];
-
-                    await file.WriteAsync(word);
-
-                    long len = file.Position - pos;
-
-                    if (len != lengths[index])
+                    for (int index = 0; index < lists.Count; index++)
                     {
-                        throw new DataMisalignedException();
+                        long pos = file.Position;
+                        var word = lists[index];
+
+                        file.Write(word);
+
+                        long len = file.Position - pos;
+
+                        if (len != lengths[index])
+                        {
+                            throw new DataMisalignedException();
+                        }
+
+                        IList<(long, long)> ix;
+
+                        if (!collectionIndex.TryGetValue(pos, out ix))
+                        {
+                            ix = new List<(long, long)>();
+
+                            collectionIndex.Add(pos, ix);
+                        }
+
+                        ix.Add((pos, len));
+                        positions.Add(pos);
                     }
-
-                    IList<(long, long)> ix;
-
-                    if (!collectionIndex.TryGetValue(pos, out ix))
-                    {
-                        ix = new List<(long, long)>();
-
-                        collectionIndex.Add(pos, ix);
-                    }
-
-                    ix.Add((pos, len));
-                    positions.Add(pos);
                 }
             }
 
@@ -207,6 +217,7 @@ namespace Sir.Postings
             return res;
         }
 
+        private readonly object _indexSync = new object();
 
         private IDictionary<long, IList<(long, long)>> GetIndex(ulong collectionId)
         {
@@ -214,8 +225,14 @@ namespace Sir.Postings
 
             if (!_index.TryGetValue(collectionId, out collectionIndex))
             {
-                collectionIndex = new Dictionary<long, IList<(long, long)>>();
-                _index.Add(collectionId, collectionIndex);
+                lock (_indexSync)
+                {
+                    if (!_index.TryGetValue(collectionId, out collectionIndex))
+                    {
+                        collectionIndex = new Dictionary<long, IList<(long, long)>>();
+                        _index.Add(collectionId, collectionIndex);
+                    }
+                }
             }
 
             return collectionIndex;
