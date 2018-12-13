@@ -35,7 +35,8 @@ namespace Sir.Postings
                     throw new DataMisalignedException();
                 }
 
-                var messageBuf = payload.ToArray();
+                var compressed = payload.ToArray();
+                var messageBuf = QuickLZ.decompress(compressed);
 
                 _log.Log(string.Format("serialized {0} bytes in {1}", messageBuf.Length, timer.Elapsed));
 

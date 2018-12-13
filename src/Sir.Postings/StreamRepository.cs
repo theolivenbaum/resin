@@ -12,9 +12,12 @@ namespace Sir.Postings
     {
         private readonly IConfigurationService _config;
         private readonly StreamWriter _log;
-        private readonly Timer _timer;
         private bool _serializing;
         private bool _isDirty;
+        private Task _publishTask;
+        private readonly object _sync = new object();
+        private bool _isTornDown;
+        private bool _isTearingDown;
 
         private IDictionary<ulong, IDictionary<long, IList<(long, long)>>> _index { get; set; }
 
@@ -36,14 +39,20 @@ namespace Sir.Postings
             {
                 _index = new Dictionary<ulong, IDictionary<long, IList<(long, long)>>>();
             }
-
-            _timer = new Timer(Flush, null, 60 * 1000, 60 * 1000);
         }
 
-        private void Flush(object state)
+        private void Flush()
         {
             if (_isDirty && !_serializing)
-                FlushIndex();
+            {
+                lock (_sync)
+                {
+                    if (_publishTask == null || _publishTask.IsCompleted)
+                    {
+                        _publishTask = Task.Run(() => SerializeIndex());
+                    }
+                }
+            }
         }
 
         private IDictionary<ulong, IDictionary<long, IList<(long, long)>>> DeserializeIndex(string fileName)
@@ -58,7 +67,7 @@ namespace Sir.Postings
 
         private readonly object _indexFileSync = new object();
 
-        private void FlushIndex()
+        private void SerializeIndex()
         {
             _serializing = true;
 
@@ -138,7 +147,8 @@ namespace Sir.Postings
 
             for (int index = 0; index < payloadCount; index++)
             {
-                lengths.Add(BitConverter.ToInt32(messageBuf, read));
+                var len = BitConverter.ToInt32(messageBuf, read);
+                lengths.Add(len);
                 read += sizeof(int);
             }
 
@@ -210,9 +220,9 @@ namespace Sir.Postings
 
             res.Position = 0;
 
-            FlushIndex();
-
             _isDirty = true;
+
+            Flush();
 
             return res;
         }
@@ -238,14 +248,31 @@ namespace Sir.Postings
             return collectionIndex;
         }
 
-        public void Dispose()
+        private void Teardown()
         {
-            _timer.Dispose();
+            if (_isTornDown || _isTearingDown)
+            {
+                return;
+            }
+
+            _isTearingDown = true;
 
             if (_isDirty)
             {
-                FlushIndex();
+                _log.Log("serializing index on teardown");
+
+                SerializeIndex();
             }
+
+            _log.Log("application exited successfully.");
+
+            _isTornDown = true;
+            _isTearingDown = false;
+        }
+
+        public void Dispose()
+        {
+            Teardown();
         }
     }
 }

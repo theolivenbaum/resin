@@ -61,10 +61,15 @@ namespace Sir.Store
                 body.Position = 0;
                 await body.CopyToAsync(message);
 
-                payload = message.ToArray();
+                var buf = message.ToArray();
+                var compressed = QuickLZ.compress(buf, 1);
+
+                payload = compressed;
+
+                _log.Log(string.Format("uncompressed: {0} compressed: {1}", buf.Length, compressed.Length));
             }
 
-            _log.Log(string.Format("built postings message in {0}", timer.Elapsed));
+            _log.Log(string.Format("create postings message took {0}", timer.Elapsed));
 
             // send message, recieve list of (remote) file positions, save positions in index.
 

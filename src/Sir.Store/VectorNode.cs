@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -294,7 +295,7 @@ namespace Sir.Store
                 {
                     // dirty node
 
-                    var list = node._docIds.ToArray();
+                    var list = node._docIds.Distinct().ToArray();
 
                     node._docIds.Clear();
 

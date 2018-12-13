@@ -19,6 +19,8 @@ namespace Sir.Store
         private readonly StreamWriter _log;
         private readonly object _sync = new object();
         private Task _publishTask;
+        private bool _isTornDown;
+        private bool _isTearingDown;
 
         private Stream _writableKeyMapStream { get; }
 
@@ -83,7 +85,7 @@ namespace Sir.Store
             }
 
             if (didPublish)
-                _log.Log(string.Format("***FLUSHED*** index in {0}", timer.Elapsed));
+                _log.Log(string.Format("***PUBLISHED*** index in {0}", timer.Elapsed));
         }
 
         private Stream CreateIndexStream(ulong collectionId, long keyId)
@@ -324,17 +326,34 @@ namespace Sir.Store
             return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 4096, true);
         }
 
-        public void Dispose()
+        private void Teardown()
         {
-            //_timer.Dispose();
+            if (_isTornDown || _isTearingDown)
+            {
+                return;
+            }
+
+            _isTearingDown = true;
 
             if (_publishTask != null)
             {
+                _log.Log("teardown awaiting publish task");
+
                 if (!_publishTask.IsCompleted)
                 {
-                    Task.WaitAll(new[] { _publishTask });
+                    _publishTask.Wait();
                 }
             }
+
+            _log.Log("application exited successfully.");
+
+            _isTornDown = true;
+            _isTearingDown = false;
+        }
+
+        public void Dispose()
+        {
+            Teardown();
         }
     }
 }
