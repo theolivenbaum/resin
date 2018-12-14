@@ -16,7 +16,6 @@ namespace Sir.Store
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
         private bool _validate;
-        private readonly ConcurrentDictionary<long, VectorNode> _dirty;
 
         public IndexingSession(
             string collectionId, 
@@ -27,7 +26,6 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("indexingsession");
             _validate = config.Get("create_index_validation_files") == "true";
-            _dirty = new ConcurrentDictionary<long, VectorNode>();
 
             Index = sessionFactory.GetOrAddCollectionIndex(collectionId.ToHash());
         }
@@ -52,7 +50,7 @@ namespace Sir.Store
                     }
                 }
 
-                SessionFactory.Flush(CollectionId.ToHash(), _dirty);
+                SessionFactory.Flush(CollectionId.ToHash());
 
                 _log.Log(string.Format("built in-memory index from {0} docs in {1}", docCount, timer.Elapsed));
             }
@@ -73,7 +71,7 @@ namespace Sir.Store
 
             Analyze(document, analyzed);
 
-            Parallel.ForEach(analyzed, async column =>
+            foreach(var column in analyzed)
             {
                 var keyId = column.Key;
                 var tokens = column.Value;
@@ -96,11 +94,11 @@ namespace Sir.Store
                         }
                     }
 
-                    await File.WriteAllTextAsync(
+                    File.WriteAllText(
                         Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}.validate", CollectionId.ToHash(), keyId, document["__docid"])),
                         string.Join('\n', tokens));
                 }
-            });
+            }
 
             _log.Log(string.Format("indexed doc ID {0} in {1}", document["__docid"], timer.Elapsed));
         }
@@ -111,21 +109,16 @@ namespace Sir.Store
         {
             VectorNode root;
 
-            if (!_dirty.TryGetValue(keyId, out root))
+            if (!Index.TryGetValue(keyId, out root))
             {
-                if (!Index.TryGetValue(keyId, out root))
+                lock (_sync)
                 {
-                    lock (_sync)
+                    if (!Index.TryGetValue(keyId, out root))
                     {
-                        if (!Index.TryGetValue(keyId, out root))
-                        {
-                            root = new VectorNode();
-                            Index.GetOrAdd(keyId, root);
-                        }
+                        root = new VectorNode();
+                        Index.GetOrAdd(keyId, root);
                     }
                 }
-
-                _dirty[keyId] = root;
             }
 
             return root;

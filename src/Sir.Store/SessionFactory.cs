@@ -45,23 +45,23 @@ namespace Sir.Store
             Task.WaitAll(tasks);
         }
 
-        public void Flush(ulong collectionId, IDictionary<long, VectorNode> nodes)
+        public void Flush(ulong collectionId)
         {
             lock (_sync)
             {
                 if (_publishTask == null || _publishTask.IsCompleted)
                 {
-                    _publishTask = FlushInternal(collectionId, nodes);
+                    _publishTask = DoFlush(collectionId);
                 }
                 else
                 {
                     Task.WaitAll(new[] { _publishTask });
-                    _publishTask = FlushInternal(collectionId, nodes);
+                    _publishTask = DoFlush(collectionId);
                 }
             }
         }
 
-        private async Task FlushInternal(ulong collectionId, IDictionary<long, VectorNode> nodes)
+        private async Task DoFlush(ulong collectionId)
         {
             if (_index == null)
                 return;
@@ -72,7 +72,7 @@ namespace Sir.Store
             var postingsWriter = new RemotePostingsWriter(_config);
             var didPublish = false;
 
-            foreach (var x in nodes)
+            foreach (var x in _index.GetIndex(collectionId))
             {
                 await postingsWriter.Write(collectionId, x.Value);
 

@@ -140,6 +140,8 @@ namespace Sir.DbUtil
                 }
             }
 
+            timer.Stop();
+
             _log.Log(string.Format("indexing took {0}", timer.Elapsed));
         }
     }

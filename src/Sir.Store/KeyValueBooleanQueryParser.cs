@@ -15,7 +15,7 @@ namespace Sir.Store
         public Query Parse(string query, ITokenizer tokenizer)
         {
             Query root = null;
-            Query previous = null;
+            Query cursor = null;
             var lines = query.Split('\n');
 
             foreach (var line in lines)
@@ -44,25 +44,33 @@ namespace Sir.Store
                 }
 
                 var q = new Query { Term = new Term(key, values[0]), And = and, Or = or, Not = not };
-                var qp = q;
+                var qc = q;
 
                 for (int i = 1; i < values.Length; i++)
                 {
-                    var next = new Query { Term = new Term(key, values[i]), Or = true };
-                    qp.Next = next;
-                    qp = qp.Next;
+                    qc.Next = new Query { Term = new Term(key, values[i]), Or = true };
+                    qc = qc.Next;
                 }
 
-                if (previous == null)
+                if (cursor == null)
                 {
                     root = q;
-                    previous = q;
                 }
                 else
                 {
-                    previous.Next = q;
-                    previous = q;
+                    var last = cursor;
+                    var next = last.Next;
+
+                    while (next != null)
+                    {
+                        last = next;
+                        next = last.Next;
+                    }
+
+                    last.Next = q;
                 }
+
+                cursor = q;
             }
 
             return root;

@@ -62,7 +62,7 @@ namespace Sir.Store
                 await body.CopyToAsync(message);
 
                 var buf = message.ToArray();
-                var compressed = QuickLZ.compress(buf, 1);
+                var compressed = QuickLZ.compress(buf, 3);
 
                 payload = compressed;
 
