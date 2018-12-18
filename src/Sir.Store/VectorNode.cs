@@ -135,7 +135,7 @@ namespace Sir.Store
 
         private readonly object _sync = new object();
 
-        public void Add(VectorNode node, Stream vectorStream = null)
+        public async Task Add(VectorNode node, Stream vectorStream = null)
         {
             var angle = node.TermVector.CosAngle(TermVector);
 
@@ -149,43 +149,30 @@ namespace Sir.Store
             {
                 if (Left == null)
                 {
-                    lock (_sync)
-                    {
-                        if (Left == null)
-                        {
-                            node.Angle = angle;
-                            Left = node;
+                    node.Angle = angle;
+                    Left = node;
 
-                            if (vectorStream != null)
-                                Left.SerializeVector(vectorStream);
-                        }
-                    }
-                    
+                    if (vectorStream != null)
+                        await Left.SerializeVector(vectorStream);
                 }
                 else
                 {
-                    Left.Add(node, vectorStream);
+                    await Left.Add(node, vectorStream);
                 }
             }
             else
             {
                 if (Right == null)
                 {
-                    lock (_sync)
-                    {
-                        if (Right == null)
-                        {
-                            node.Angle = angle;
-                            Right = node;
+                    node.Angle = angle;
+                    Right = node;
 
-                            if (vectorStream != null)
-                                Right.SerializeVector(vectorStream);
-                        }
-                    }
+                    if (vectorStream != null)
+                        await Right.SerializeVector(vectorStream);
                 }
                 else
                 {
-                    Right.Add(node, vectorStream);
+                    await Right.Add(node, vectorStream);
                 }
             }
         }
@@ -245,19 +232,17 @@ namespace Sir.Store
             return block;
         }
 
-        public async Task SerializeTree(Stream indexStream)
+        public async Task<(long offset, long length)> SerializeTree(Stream indexStream)
         {
             var node = Right;
             var stack = new Stack<VectorNode>();
+            var offset = indexStream.Position;
 
             while (node != null)
             {
-                if (node.PostingsOffset >= 0)
+                foreach (var buf in node.ToStream())
                 {
-                    foreach (var buf in node.ToStream())
-                    {
-                        await indexStream.WriteAsync(buf, 0, buf.Length);
-                    }
+                    await indexStream.WriteAsync(buf, 0, buf.Length);
                 }
 
                 if (node.Right != null)
@@ -272,16 +257,15 @@ namespace Sir.Store
                     node = stack.Pop();
                 }
             }
+
+            var length = indexStream.Position - offset;
+
+            return (offset, length);
         }
 
-        private async Task SerializeVectorAsync(Stream vectorStream)
+        private async Task SerializeVector(Stream vectorStream)
         {
             VecOffset = await TermVector.SerializeAsync(vectorStream);
-        }
-
-        private void SerializeVector(Stream vectorStream)
-        {
-            VecOffset = TermVector.Serialize(vectorStream);
         }
 
         public IEnumerable<VectorNode> SerializePostings(Stream lengths, Stream lists)
@@ -327,7 +311,7 @@ namespace Sir.Store
             }
         }
 
-        public static async Task<VectorNode> Deserialize(Stream indexStream, Stream vectorStream)
+        public static async Task<VectorNode> Deserialize(Stream indexStream, Stream vectorStream, long indexLength)
         {
             const int nodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(byte);
             const int kvpSize = sizeof(int) + sizeof(byte);
@@ -339,8 +323,10 @@ namespace Sir.Store
             var tail = new Stack<VectorNode>();
             Byte terminator = 2;
 
-            while ((read = await indexStream.ReadAsync(buf, 0, nodeSize)) == nodeSize)
+            while (read < indexLength)
             {
+                read += await indexStream.ReadAsync(buf, 0, nodeSize);
+
                 // Deserialize node
                 var angle = BitConverter.ToSingle(buf, 0);
                 var vecOffset = BitConverter.ToInt64(buf, sizeof(float));

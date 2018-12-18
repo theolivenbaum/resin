@@ -11,7 +11,7 @@ namespace Sir.DbUtil
     {
         private static StreamWriter _log;
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             try
             {
@@ -27,7 +27,7 @@ namespace Sir.DbUtil
                 {
                     // example: index C:\projects\resin\src\Sir.HttpServer\App_Data www 0 10000 1000
 
-                    Index(
+                    await Index(
                         dir: args[1],
                         collection: args[2],
                         skip: int.Parse(args[3]),
@@ -88,7 +88,7 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void Index(string dir, string collection, int skip, int take, int batchSize)
+        private static async Task Index(string dir, string collection, int skip, int take, int batchSize)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -130,7 +130,7 @@ namespace Sir.DbUtil
 
                             using (var indexSession = sessionFactory.CreateIndexSession(collection))
                             {
-                                indexSession.Write(job);
+                                await indexSession.Write(job);
                             }
 
                             _log.Log(string.Format("batch {0} done in {1}", batchNo++, writeTimer.Elapsed));

@@ -45,23 +45,7 @@ namespace Sir.Store
             Task.WaitAll(tasks);
         }
 
-        public void Flush(ulong collectionId)
-        {
-            lock (_sync)
-            {
-                if (_publishTask == null || _publishTask.IsCompleted)
-                {
-                    _publishTask = DoFlush(collectionId);
-                }
-                else
-                {
-                    Task.WaitAll(new[] { _publishTask });
-                    _publishTask = DoFlush(collectionId);
-                }
-            }
-        }
-
-        private async Task DoFlush(ulong collectionId)
+        public async Task Flush(ulong collectionId, IDictionary<long, VectorNode> columns)
         {
             if (_index == null)
                 return;
@@ -72,26 +56,29 @@ namespace Sir.Store
             var postingsWriter = new RemotePostingsWriter(_config);
             var didPublish = false;
 
-            foreach (var x in _index.GetIndex(collectionId))
+            foreach (var x in columns)
             {
                 await postingsWriter.Write(collectionId, x.Value);
 
+                using (var pageIndexWriter = new VariablePageIndexWriter(CreateAppendStream(Path.Combine(Dir, string.Format("{0}.{1}.ixp", collectionId, x.Key)))))
                 using (var ixStream = CreateIndexStream(collectionId, x.Key))
                 {
-                    await x.Value.SerializeTree(ixStream);
+                    var page = await x.Value.SerializeTree(ixStream);
+
+                    await pageIndexWriter.WriteAsync(page.offset, page.length);
                 }
 
                 didPublish = true;
             }
 
             if (didPublish)
-                _log.Log(string.Format("***PUBLISHED*** index in {0}", timer.Elapsed));
+                _log.Log(string.Format("***FLUSHED*** index in {0}", timer.Elapsed));
         }
 
         private Stream CreateIndexStream(ulong collectionId, long keyId)
         {
             var fileName = Path.Combine(Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
-            return new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true);
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true);
         }
 
         private ConcurrentDictionary<ulong, long> LoadKeyMap()
@@ -130,7 +117,7 @@ namespace Sir.Store
 
                 _log.Log("begin loading index into memory");
 
-                var ixs = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, VectorNode>>();
+                var ixs = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, IList<VectorNode>>>();
                 var indexFiles = Directory.GetFiles(Dir, "*.ix");
 
                 foreach (var ixFileName in indexFiles)
@@ -141,20 +128,26 @@ namespace Sir.Store
                     var collectionHash = ulong.Parse(name[0]);
                     var keyId = long.Parse(name[1]);
                     var vecFileName = Path.Combine(Dir, string.Format("{0}.vec", collectionHash));
+                    var pageIndexFileName = Path.Combine(Dir, string.Format("{0}.{1}.ixp", collectionHash, keyId));
 
-                    ConcurrentDictionary<long, VectorNode> colIx;
+                    ConcurrentDictionary<long, IList<VectorNode>> colIx;
 
                     if (!ixs.TryGetValue(collectionHash, out colIx))
                     {
-                        colIx = new ConcurrentDictionary<long, VectorNode>();
+                        colIx = new ConcurrentDictionary<long, IList<VectorNode>>();
                         ixs.GetOrAdd(collectionHash, colIx);
                     }
 
-                    var ix = await DeserializeIndex(ixFileName, vecFileName);
-                    colIx.GetOrAdd(keyId, ix);
+                    var pages = await DeserializeIndex(ixFileName, vecFileName, pageIndexFileName);
+                    colIx.GetOrAdd(keyId, pages);
 
-                    _log.Log(string.Format("loaded {0}.{1}. {2}",
-                        collectionHash, keyId, ix.Size()));
+                    var pageIndex = 0;
+                    foreach (var page in pages)
+                    {
+                        _log.Log(string.Format("loaded page {0} from {1}.{2} {3}",
+                        pageIndex++, collectionHash, keyId, page.Size()));
+                    }
+                    
                 }
 
                 _index = new VectorTree(ixs);
@@ -168,45 +161,45 @@ namespace Sir.Store
                     _log.Log("deserialized {0} index files in {1}", indexFiles.Length, timer.Elapsed);
 
                     // validate
-                    foreach (var validateFn in Directory.GetFiles(Dir, "*.validate"))
-                    {
-                        _log.Log("validating {0}", validateFn);
+                    //foreach (var validateFn in Directory.GetFiles(Dir, "*.validate"))
+                    //{
+                    //    _log.Log("validating {0}", validateFn);
 
-                        var fi = new FileInfo(validateFn);
-                        var segs = Path.GetFileNameWithoutExtension(fi.Name).Split('.');
-                        var col = ulong.Parse(segs[0]);
-                        var key = long.Parse(segs[1]);
-                        var colIx = ixs[col];
-                        var ix = colIx[key];
+                    //    var fi = new FileInfo(validateFn);
+                    //    var segs = Path.GetFileNameWithoutExtension(fi.Name).Split('.');
+                    //    var col = ulong.Parse(segs[0]);
+                    //    var key = long.Parse(segs[1]);
+                    //    var colIx = ixs[col];
+                    //    var ix = colIx[key];
 
-                        string[] lines = null;
+                    //    string[] lines = null;
 
-                        try
-                        {
-                            lines = File.ReadAllLines(validateFn);
-                        }
-                        catch
-                        {
-                            continue;
-                        }
+                    //    try
+                    //    {
+                    //        lines = File.ReadAllLines(validateFn);
+                    //    }
+                    //    catch
+                    //    {
+                    //        continue;
+                    //    }
 
-                        if (lines!= null)
-                        {
-                            foreach (var token in File.ReadAllLines(validateFn))
-                            {
-                                var closestMatch = ix.ClosestMatch(new VectorNode(token), skipDirtyNodes: false);
+                    //    if (lines!= null)
+                    //    {
+                    //        foreach (var token in File.ReadAllLines(validateFn))
+                    //        {
+                    //            var closestMatch = ix.ClosestMatch(new VectorNode(token), skipDirtyNodes: false);
 
-                                if (closestMatch.Score < VectorNode.IdenticalAngle)
-                                {
-                                    throw new DataMisalignedException();
-                                }
-                                else
-                                {
-                                    File.Delete(validateFn);
-                                }
-                            }
-                        }
-                    }
+                    //            if (closestMatch.Score < VectorNode.IdenticalAngle)
+                    //            {
+                    //                throw new DataMisalignedException();
+                    //            }
+                    //            else
+                    //            {
+                    //                File.Delete(validateFn);
+                    //            }
+                    //        }
+                    //    }
+                    //}
                 }
             }
             catch (Exception ex)
@@ -217,12 +210,28 @@ namespace Sir.Store
             }
         }
 
-        private async Task<VectorNode> DeserializeIndex(string ixFileName, string vecFileName)
+        private async Task<IList<VectorNode>> DeserializeIndex(string ixFileName, string vecFileName, string pageIndexFileName)
         {
+            IList<(long offset, long length)> pages;
+
+            using (var pageIndexStream = new FileStream(pageIndexFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
+            {
+                pages = new VariablePageIndexReader(pageIndexStream).ReadAll();
+            }
+
             using (var treeStream = new FileStream(ixFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
             using (var vecStream = new FileStream(vecFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
             {
-                return await VectorNode.Deserialize(treeStream, vecStream);
+                var result = new List<VectorNode>();
+
+                foreach (var page in pages)
+                {
+                    treeStream.Seek(page.offset, SeekOrigin.Begin);
+
+                    result.Add(await VectorNode.Deserialize(treeStream, vecStream, page.length));
+                }
+
+                return result;
             }
         }
 
@@ -255,7 +264,7 @@ namespace Sir.Store
             return true;
         }
 
-        public ConcurrentDictionary<long, VectorNode> GetCollectionIndex(ulong collectionId)
+        public ConcurrentDictionary<long, IList<VectorNode>> GetCollectionIndex(ulong collectionId)
         {
             var ix = _index.GetIndex(collectionId);
 
@@ -267,28 +276,7 @@ namespace Sir.Store
 
                     if (ix == null)
                     {
-                        ix = new ConcurrentDictionary<long, VectorNode>();
-                    }
-                }
-            }
-
-            return ix;
-        }
-
-        public ConcurrentDictionary<long, VectorNode> GetOrAddCollectionIndex(ulong collectionId)
-        {
-            var ix = _index.GetIndex(collectionId);
-
-            if (ix == null)
-            {
-                lock (_sync)
-                {
-                    ix = _index.GetIndex(collectionId);
-
-                    if (ix == null)
-                    {
-                        ix = new ConcurrentDictionary<long, VectorNode>();
-                        _index.Add(collectionId, ix);
+                        ix = new ConcurrentDictionary<long, IList<VectorNode>>();
                     }
                 }
             }
@@ -337,7 +325,7 @@ namespace Sir.Store
 
             if (_publishTask != null)
             {
-                _log.Log("teardown awaiting publish task");
+                _log.Log("***TEARDOWN*** awaiting publish task");
 
                 if (!_publishTask.IsCompleted)
                 {
@@ -345,7 +333,7 @@ namespace Sir.Store
                 }
             }
 
-            _log.Log("application exited successfully.");
+            _log.Log("application ***EXITED*** successfully.");
 
             _isTornDown = true;
             _isTearingDown = false;
@@ -354,6 +342,62 @@ namespace Sir.Store
         public void Dispose()
         {
             Teardown();
+        }
+    }
+
+    public class VariablePageIndexWriter : IDisposable
+    {
+        private readonly Stream _stream;
+
+        public VariablePageIndexWriter(Stream stream)
+        {
+            _stream = stream;
+        }
+
+        public async Task WriteAsync(long offset, long length)
+        {
+            await _stream.WriteAsync(BitConverter.GetBytes(offset));
+            await _stream.WriteAsync(BitConverter.GetBytes(length));
+        }
+
+        public void Dispose()
+        {
+            _stream.Dispose();
+        }
+    }
+
+    public class VariablePageIndexReader
+    {
+        private readonly byte[] _stream;
+
+        public VariablePageIndexReader(Stream stream)
+        {
+            var mem = new MemoryStream();
+
+            stream.CopyTo(mem);
+
+            _stream = mem.ToArray();
+        }
+
+        public IList<(long offset, long length)> ReadAll()
+        {
+            var read = 0;
+            var result = new List<(long, long)>();
+
+            while (read < _stream.Length)
+            {
+                var offset = BitConverter.ToInt64(_stream, read);
+
+                read += sizeof(long);
+
+                var length = BitConverter.ToInt64(_stream, read);
+
+                read += sizeof(long);
+
+                result.Add((offset, length));
+            }
+
+            return result;
         }
     }
 }

@@ -51,6 +51,11 @@ namespace Sir.Postings
                     {
                         _publishTask = Task.Run(() => SerializeIndex());
                     }
+                    else
+                    {
+                        Task.WaitAll(new[] { _publishTask });
+                        _publishTask = Task.Run(() => SerializeIndex());
+                    }
                 }
             }
         }

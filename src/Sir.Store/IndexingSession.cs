@@ -16,6 +16,8 @@ namespace Sir.Store
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
         private bool _validate;
+        private readonly IDictionary<long, VectorNode> _dirty;
+        private bool _flushed;
 
         public IndexingSession(
             string collectionId, 
@@ -26,11 +28,10 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("indexingsession");
             _validate = config.Get("create_index_validation_files") == "true";
-
-            Index = sessionFactory.GetOrAddCollectionIndex(collectionId.ToHash());
+            _dirty = new Dictionary<long, VectorNode>();
         }
 
-        public void Write(IndexingJob job)
+        public async Task Write(IndexingJob job)
         {
             try
             {
@@ -44,15 +45,12 @@ namespace Sir.Store
                 {
                     foreach(var doc in job.Documents)
                     {
+                        await WriteDocument(doc, vectorStream);
                         docCount++;
-
-                        Write(doc, vectorStream);
                     }
                 }
 
-                SessionFactory.Flush(CollectionId.ToHash());
-
-                _log.Log(string.Format("built in-memory index from {0} docs in {1}", docCount, timer.Elapsed));
+                _log.Log(string.Format("indexed {0} docs in {1}", docCount, timer.Elapsed));
             }
             catch (Exception ex)
             {
@@ -62,7 +60,17 @@ namespace Sir.Store
             }
         }
 
-        private void Write(IDictionary document, Stream vectorStream)
+        public async Task Flush()
+        {
+            if (_flushed)
+                return;
+
+            await SessionFactory.Flush(CollectionId.ToHash(), _dirty);
+
+            _flushed = true;
+        }
+
+        private async Task WriteDocument(IDictionary document, Stream vectorStream)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -78,7 +86,7 @@ namespace Sir.Store
                 var ix = GetIndex(keyId);
                 var docId = ulong.Parse(document["__docid"].ToString());
 
-                WriteIndex(docId, keyId, ix, tokens, vectorStream);
+                await WriteTokens(docId, keyId, ix, tokens, vectorStream);
 
                 // validate
                 if (_validate)
@@ -103,22 +111,14 @@ namespace Sir.Store
             _log.Log(string.Format("indexed doc ID {0} in {1}", document["__docid"], timer.Elapsed));
         }
 
-        private readonly object _sync = new object();
-
         private VectorNode GetIndex(long keyId)
         {
             VectorNode root;
 
-            if (!Index.TryGetValue(keyId, out root))
+            if (!_dirty.TryGetValue(keyId, out root))
             {
-                lock (_sync)
-                {
-                    if (!Index.TryGetValue(keyId, out root))
-                    {
-                        root = new VectorNode();
-                        Index.GetOrAdd(keyId, root);
-                    }
-                }
+                root = new VectorNode();
+                _dirty.Add(keyId, root);
             }
 
             return root;
@@ -170,11 +170,21 @@ namespace Sir.Store
             }
         }
 
-        private void WriteIndex(ulong docId, long keyId, VectorNode index, IEnumerable<string> tokens, Stream vectorStream)
+        private async Task WriteTokens(ulong docId, long keyId, VectorNode index, IEnumerable<string> tokens, Stream vectorStream)
         {
             foreach (var token in tokens)
             {
-                index.Add(new VectorNode(token, docId), vectorStream);
+                await index.Add(new VectorNode(token, docId), vectorStream);
+            }
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            if (!_flushed)
+            {
+                Task.WaitAll(new[] { Flush() });
             }
         }
     }

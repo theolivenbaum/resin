@@ -11,67 +11,67 @@ namespace Sir.Store
     {
         public int Count { get; private set; }
 
-        private ConcurrentDictionary<ulong, ConcurrentDictionary<long, VectorNode>> _ix;
+        private ConcurrentDictionary<ulong, ConcurrentDictionary<long, IList<VectorNode>>> _ix;
 
-        public VectorTree() : this(new ConcurrentDictionary<ulong, ConcurrentDictionary<long, VectorNode>>()) { }
+        public VectorTree() : this(new ConcurrentDictionary<ulong, ConcurrentDictionary<long, IList<VectorNode>>>()) { }
 
-        public VectorTree(ConcurrentDictionary<ulong, ConcurrentDictionary<long, VectorNode>> ix)
+        public VectorTree(ConcurrentDictionary<ulong, ConcurrentDictionary<long, IList<VectorNode>>> ix)
         {
             _ix = ix;
         }
 
-        public IEnumerable<(ulong collectionId, long keyId, VectorNode index)> All()
+        public IEnumerable<(ulong collectionId, long keyId, IList<VectorNode> index)> All()
         {
-            foreach(var collection in _ix)
+            foreach (var collection in _ix)
             {
-                foreach(var column in collection.Value)
+                foreach (var column in collection.Value)
                 {
                     yield return (collection.Key, column.Key, column.Value);
                 }
             }
         }
 
-        public void Add(ulong collectionId, ConcurrentDictionary<long, VectorNode> index)
+        //public void Add(ulong collectionId, ConcurrentDictionary<long, VectorNode> index)
+        //{
+        //    ConcurrentDictionary<long, IList<VectorNode>> collection;
+
+        //    if (_ix.TryGetValue(collectionId, out collection))
+        //    {
+        //        throw new InvalidOperationException();
+        //    }
+        //    else
+        //    {
+        //        _ix.GetOrAdd(collectionId, index);
+        //    }
+        //}
+
+        //public void Add(ulong collectionId, long keyId, VectorNode index)
+        //{
+        //    ConcurrentDictionary<long, VectorNode> collection;
+
+        //    if (!_ix.TryGetValue(collectionId, out collection))
+        //    {
+        //        collection = new ConcurrentDictionary<long, VectorNode>();
+        //        collection.GetOrAdd(keyId, index);
+
+        //        _ix.GetOrAdd(collectionId, collection);
+        //    }
+        //    else
+        //    {
+        //        if (!collection.ContainsKey(keyId))
+        //        {
+        //            collection.GetOrAdd(keyId, index);
+        //        }
+        //        else
+        //        {
+        //            collection[keyId] = index;
+        //        }
+        //    }
+        //}
+
+        public ConcurrentDictionary<long, IList<VectorNode>> GetIndex(ulong collectionId)
         {
-            ConcurrentDictionary<long, VectorNode> collection;
-
-            if (_ix.TryGetValue(collectionId, out collection))
-            {
-                throw new InvalidOperationException();
-            }
-            else
-            {
-                _ix.GetOrAdd(collectionId, index);
-            }
-        }
-
-        public void Add(ulong collectionId, long keyId, VectorNode index)
-        {
-            ConcurrentDictionary<long, VectorNode> collection;
-
-            if (!_ix.TryGetValue(collectionId, out collection))
-            {
-                collection = new ConcurrentDictionary<long, VectorNode>();
-                collection.GetOrAdd(keyId, index);
-
-                _ix.GetOrAdd(collectionId, collection);
-            }
-            else
-            {
-                if (!collection.ContainsKey(keyId))
-                {
-                    collection.GetOrAdd(keyId, index);
-                }
-                else
-                {
-                    collection[keyId] = index;
-                }
-            }
-        }
-
-        public ConcurrentDictionary<long, VectorNode> GetIndex(ulong collectionId)
-        {
-            ConcurrentDictionary<long, VectorNode> ix;
+            ConcurrentDictionary<long, IList<VectorNode>> ix;
 
             if (!_ix.TryGetValue(collectionId, out ix))
             {

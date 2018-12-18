@@ -133,9 +133,9 @@ namespace Sir.Store
             }
         }
 
-        private VectorNode GetIndex(long keyId)
+        private IList<VectorNode> GetIndex(long keyId)
         {
-            VectorNode node;
+            IList<VectorNode> node;
 
             if (!Index.TryGetValue(keyId, out node))
             {
@@ -145,7 +145,7 @@ namespace Sir.Store
             return node;
         }
 
-        public VectorNode GetIndex(ulong keyHash)
+        public IList<VectorNode> GetIndex(ulong keyHash)
         {
             long keyId;
             if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
@@ -167,74 +167,79 @@ namespace Sir.Store
                 while (cursor != null)
                 {
                     var keyHash = cursor.Term.Key.ToString().ToHash();
-                    var ix = GetIndex(keyHash);
+                    var pages = GetIndex(keyHash);
 
-                    if (ix != null)
+                    if (pages != null)
                     {
-                        var queryTerm = new VectorNode(cursor.Term.Value.ToString());
-
-                        var match = ix.ClosestMatch(queryTerm);
-
-                        if (match.Score > 0)
+                        foreach (var ix in pages)
                         {
-                            if (match.Node.PostingsOffset < 0)
-                            {
-                                throw new InvalidDataException();
-                            }
+                            var queryTerm = new VectorNode(cursor.Term.Value.ToString());
 
-                            var docIds = (await _postingsReader.Read(CollectionId, match.Node.PostingsOffset))
-                                .ToDictionary(x => x, y => match.Score);
+                            var match = ix.ClosestMatch(queryTerm);
 
-                            if (result == null)
+                            if (match.Score > 0)
                             {
-                                result = docIds;
-                            }
-                            else
-                            {
-                                if (cursor.And)
+                                if (match.Node.PostingsOffset < 0)
                                 {
-                                    var aggregatedResult = new Dictionary<ulong, float>();
+                                    throw new InvalidDataException();
+                                }
 
-                                    foreach (var doc in result)
+                                var docIds = (await _postingsReader.Read(CollectionId, match.Node.PostingsOffset))
+                                    .ToDictionary(x => x, y => match.Score);
+
+                                if (result == null)
+                                {
+                                    result = docIds;
+                                }
+                                else
+                                {
+                                    if (cursor.And)
                                     {
-                                        float score;
+                                        var aggregatedResult = new Dictionary<ulong, float>();
 
-                                        if (docIds.TryGetValue(doc.Key, out score))
+                                        foreach (var doc in result)
                                         {
-                                            aggregatedResult[doc.Key] = score + doc.Value;
+                                            float score;
+
+                                            if (docIds.TryGetValue(doc.Key, out score))
+                                            {
+                                                aggregatedResult[doc.Key] = score + doc.Value;
+                                            }
+                                        }
+
+                                        result = aggregatedResult;
+                                    }
+                                    else if (cursor.Not)
+                                    {
+                                        foreach (var id in docIds.Keys)
+                                        {
+                                            result.Remove(id);
                                         }
                                     }
-
-                                    result = aggregatedResult;
-                                }
-                                else if (cursor.Not)
-                                {
-                                    foreach (var id in docIds.Keys)
+                                    else // Or
                                     {
-                                        result.Remove(id);
-                                    }
-                                }
-                                else // Or
-                                {
-                                    foreach (var id in docIds)
-                                    {
-                                        float score;
+                                        foreach (var id in docIds)
+                                        {
+                                            float score;
 
-                                        if (result.TryGetValue(id.Key, out score))
-                                        {
-                                            result[id.Key] = score + id.Value;
-                                        }
-                                        else
-                                        {
-                                            result.Add(id.Key, id.Value);
+                                            if (result.TryGetValue(id.Key, out score))
+                                            {
+                                                result[id.Key] = score + id.Value;
+                                            }
+                                            else
+                                            {
+                                                result.Add(id.Key, id.Value);
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
+
                     cursor = cursor.Next;
                 }
+
                 _log.Log("query {0} matched {1} docs", query.Term, result == null ? 0 : result.Count);
 
                 return result;

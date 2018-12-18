@@ -1,12 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using Sir.Store;
 
 namespace Sir.StringCompare
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             var document1 = args[0];
             var document2 = args[1];
@@ -26,7 +27,7 @@ namespace Sir.StringCompare
 
                 foreach (var token in tokenizer.Tokenize(document1))
                 {
-                    index1.Add(new VectorNode(token), new MemoryStream());
+                    await index1.Add(new VectorNode(token), new MemoryStream());
                 }
 
                 float score = 0;
