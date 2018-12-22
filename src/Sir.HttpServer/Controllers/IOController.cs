@@ -72,7 +72,7 @@ namespace Sir.HttpServer.Controllers
 
                 var result = await reader.Read(collectionId, Request);
 
-                _log.Log("processed request in {0}", timer.Elapsed);
+                _log.Log("processed {0} request in {1}", mediaType, timer.Elapsed);
 
                 if (result.Data == null)
                 {
@@ -84,7 +84,7 @@ namespace Sir.HttpServer.Controllers
 
                     var buf = result.Data.ToArray();
 
-                    _log.Log("serialized response in {0}", timer.Elapsed);
+                    _log.Log("serialized {0} response in {1}", reader.GetType().ToString(), timer.Elapsed);
 
                     return new FileContentResult(buf, result.MediaType);
                 }

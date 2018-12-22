@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using static Sir.Store.VectorNode;
 
 namespace Sir.Store
 {
@@ -51,12 +50,7 @@ namespace Sir.Store
 
         public async Task<ReadResult> Read(Query query, int take)
         {
-            var timer = new Stopwatch();
-            timer.Start();
-
             IDictionary<ulong, float> result = await Reduce(query);
-
-            timer.Stop();
 
             if (result == null)
             {
@@ -66,20 +60,12 @@ namespace Sir.Store
             }
             else
             {
-                _log.Log("fetched {0} postings for query {1} in {2}",
-                    result.Count, query, timer.Elapsed);
-
                 IEnumerable<KeyValuePair<ulong, float>> sorted = result.OrderByDescending(x => x.Value);
                 
                 if (take > 0)
                     sorted = sorted.Take(take);
 
-                timer.Restart();
-
                 var docs = await ReadDocs(sorted);
-
-                _log.Log("read {0} documents from disk for query {1} in {2}",
-                    docs.Count, query, timer.Elapsed);
 
                 return new ReadResult { Total = result.Count, Docs = docs };
             }
@@ -168,19 +154,18 @@ namespace Sir.Store
         {
             try
             {
-                var runTimer = new Stopwatch();
-                runTimer.Start();
-
                 IDictionary<ulong, float> result = null;
 
                 var cursor = query;
 
                 while (cursor != null)
                 {
+                    var timer = new Stopwatch();
+                    timer.Start();
+
                     var keyHash = cursor.Term.Key.ToString().ToHash();
                     var pages = GetIndex(keyHash);
                     var matching = new List<Hit>();
-                    var docIds = new Dictionary<ulong, float>();
 
                     if (pages != null)
                     {
@@ -204,13 +189,24 @@ namespace Sir.Store
                         }
                     }
 
-                    foreach (var match in matching)
+                    _log.Log("scan found {0} matches in {1}", matching.Count, timer.Elapsed);
+
+                    timer.Restart();
+
+                    var qualifiedMatches = matching.GroupBy(x => x.Score).OrderByDescending(x => x.Key).Take(2).SelectMany(g => g).ToList();
+                    var docIds = new Dictionary<ulong, float>();
+
+                    foreach (var match in qualifiedMatches)
                     {
-                        foreach (var id in (await _postingsReader.Read(CollectionId, match.Node.PostingsOffset)))
+                        foreach (var id in await _postingsReader.Read(CollectionId, match.Node.PostingsOffset))
                         {
                             docIds.Add(id, match.Score);
                         }
                     }
+
+                    _log.Log("fetched {0} doc IDs in {1}", docIds.Count, timer.Elapsed);
+
+                    timer.Restart();
 
                     if (result == null)
                     {
@@ -259,10 +255,11 @@ namespace Sir.Store
                         }
                     }
 
+                    _log.Log("reduced {0} to {1} docs in {2}",
+                        cursor, result.Count, timer.Elapsed);
+
                     cursor = cursor.Next;
                 }
-
-                _log.Log("reduce for {0} took {1}", query, runTimer.Elapsed);
 
                 return result;
             }

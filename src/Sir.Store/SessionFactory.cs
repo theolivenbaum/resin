@@ -18,8 +18,6 @@ namespace Sir.Store
         private VectorTree _index;
         private readonly StreamWriter _log;
         private readonly object _sync = new object();
-        private bool _isTornDown;
-        private bool _isTearingDown;
 
         private Stream _writableKeyMapStream { get; }
 
@@ -146,7 +144,6 @@ namespace Sir.Store
                         _log.Log(string.Format("loaded page {0} from {1}.{2} {3}",
                         pageIndex++, collectionHash, keyId, page.Size()));
                     }
-                    
                 }
 
                 _index = new VectorTree(ixs);
@@ -158,6 +155,8 @@ namespace Sir.Store
                 else
                 {
                     _log.Log("deserialized {0} index files in {1}", indexFiles.Length, timer.Elapsed);
+
+                    _log.Log("***INITIALIZED***");
 
                     // validate
                     //foreach (var validateFn in Directory.GetFiles(Dir, "*.validate"))
