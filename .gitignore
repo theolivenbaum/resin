@@ -13,3 +13,4 @@ src/publish
 log/*.*
 *.pos
 *.json
+*.zip
