@@ -12,7 +12,7 @@ namespace Sir.HttpServer.Controllers
         private readonly HtmlWeb _htmlParser;
         private readonly CrawlQueue _crawlQueue;
 
-        public AddController(PluginsCollection plugins, CrawlQueue crawlQueue, IConfigurationService config) : base(config)
+        public AddController(PluginsCollection plugins, CrawlQueue crawlQueue, IConfigurationProvider config) : base(config)
         {
             _plugins = plugins;
             _htmlParser = new HtmlWeb();

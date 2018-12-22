@@ -25,7 +25,7 @@ namespace Sir.Store
         {
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;
-            _log = Logging.CreateWriter("documentwriter");
+            _log = Logging.CreateWriter("storewriter");
             _timer = new Stopwatch();
         }
 

@@ -39,7 +39,7 @@ namespace Sir.HttpServer.Controllers
                 timer.Start();
 
                 Result result = await writer.Write(collectionId, Request);
-                _log.Log("processed request in {0}", timer.Elapsed);
+                _log.Log("write took {0}", timer.Elapsed);
                 timer.Restart();
 
                 var buf = result.Data.ToArray();

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
@@ -24,7 +25,7 @@ namespace Sir.Store
         public StoreReader(SessionFactory sessionFactory, HttpQueryParser httpQueryParser, ITokenizer tokenizer)
         {
             _sessionFactory = sessionFactory;
-            _log = Logging.CreateWriter("documentreader");
+            _log = Logging.CreateWriter("storereader");
             _httpQueryParser = httpQueryParser;
             _tokenizer = tokenizer;
         }
@@ -55,7 +56,7 @@ namespace Sir.Store
                         var result = await session.Read(query, query.Take);
                         var docs = result.Docs;
 
-                        _log.Log(string.Format("fetched {0} docs from disk in {1}", docs.Count, timer.Elapsed));
+                        _log.Log(string.Format("executed query {0} and read {1} docs from disk in {2}", query, docs.Count, timer.Elapsed));
 
                         timer.Restart();
 
@@ -81,13 +82,17 @@ namespace Sir.Store
 
         private void Serialize(IList<IDictionary> docs, Stream stream)
         {
-            using (StreamWriter writer = new StreamWriter(stream))
-            using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
-            {
-                JsonSerializer ser = new JsonSerializer();
-                ser.Serialize(jsonWriter, docs);
-                jsonWriter.Flush();
-            }
+            var serializer = new DataContractJsonSerializer(typeof(IList<IDictionary>));
+
+            serializer.WriteObject(stream, docs);
+
+            //using (StreamWriter writer = new StreamWriter(stream))
+            //using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
+            //{
+            //    JsonSerializer ser = new JsonSerializer();
+            //    ser.Serialize(jsonWriter, docs);
+            //    jsonWriter.Flush();
+            //}
         }
     }
 }

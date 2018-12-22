@@ -41,7 +41,7 @@ namespace Sir.DbUtil
                     Task.Run(() => Query(dir: args[1], collectionId: args[2])).Wait();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
                 Console.Read();
@@ -53,8 +53,8 @@ namespace Sir.DbUtil
             var tokenizer = new LatinTokenizer();
             var qp = new KeyValueBooleanQueryParser();
             var sessionFactory = new SessionFactory(
-                dir, 
-                tokenizer, 
+                dir,
+                tokenizer,
                 new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini")));
 
             while (true)
@@ -94,7 +94,6 @@ namespace Sir.DbUtil
             timer.Start();
 
             var files = Directory.GetFiles(dir, "*.docs");
-            var batchNo = 0;
 
             using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini"))))
             foreach (var docFileName in files)
@@ -120,24 +119,21 @@ namespace Sir.DbUtil
                             docs = docs.Take(take);
                         }
 
-                        var writeTimer = new Stopwatch();
-
                         foreach (var batch in docs.Batch(batchSize))
                         {
-                            writeTimer.Restart();
-
-                            var job = new IndexingJob(batch);
-
                             using (var indexSession = sessionFactory.CreateIndexSession(collection))
                             {
-                                await indexSession.Write(job);
-                            }
+                                foreach (var doc in batch)
+                                {
+                                    await indexSession.Write(doc);
+                                }
 
-                            _log.Log(string.Format("batch {0} done in {1}", batchNo++, writeTimer.Elapsed));
+                                await indexSession.Flush();
+                            }
                         }
                     }
-                    break;
                 }
+                break;
             }
 
             timer.Stop();

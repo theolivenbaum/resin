@@ -11,7 +11,7 @@ namespace Sir.HttpServer
         public static IServiceProvider Configure(IServiceCollection services)
         {
             // register config
-            services.Add(new ServiceDescriptor(typeof(IConfigurationService),
+            services.Add(new ServiceDescriptor(typeof(IConfigurationProvider),
                 new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini"))));
 
             // register plugins

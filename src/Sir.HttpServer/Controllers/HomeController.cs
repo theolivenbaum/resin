@@ -4,9 +4,9 @@ namespace Sir.HttpServer.Controllers
 {
     public class HomeController : UIController
     {
-        private readonly IConfigurationService _config;
+        private readonly IConfigurationProvider _config;
 
-        public HomeController(IConfigurationService config) : base(config)
+        public HomeController(IConfigurationProvider config) : base(config)
         {
             _config = config;
         }

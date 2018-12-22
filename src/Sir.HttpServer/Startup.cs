@@ -30,7 +30,7 @@ namespace Sir.HttpServer
                 options.RespectBrowserAcceptHeader = true;
             });
 
-            var dataDir = ServiceProvider.GetService<IConfigurationService>().Get("data_dir");
+            var dataDir = ServiceProvider.GetService<IConfigurationProvider>().Get("data_dir");
 
             if (!Directory.Exists(dataDir))
             {

@@ -1,6 +1,6 @@
 ﻿namespace Sir
 {
-    public interface IConfigurationService
+    public interface IConfigurationProvider
     {
         string Get(string key);
     }

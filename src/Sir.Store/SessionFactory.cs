@@ -13,12 +13,11 @@ namespace Sir.Store
     public class SessionFactory : IDisposable
     {
         private readonly ITokenizer _tokenizer;
-        private readonly IConfigurationService _config;
+        private readonly IConfigurationProvider _config;
         private readonly ConcurrentDictionary<ulong, long> _keys;
         private VectorTree _index;
         private readonly StreamWriter _log;
         private readonly object _sync = new object();
-        private Task _publishTask;
         private bool _isTornDown;
         private bool _isTearingDown;
 
@@ -26,7 +25,7 @@ namespace Sir.Store
 
         public string Dir { get; }
 
-        public SessionFactory(string dir, ITokenizer tokenizer, IConfigurationService config)
+        public SessionFactory(string dir, ITokenizer tokenizer, IConfigurationProvider config)
         {
             Dir = dir;
             _log = Logging.CreateWriter("sessionfactory");
@@ -45,7 +44,7 @@ namespace Sir.Store
             Task.WaitAll(tasks);
         }
 
-        public async Task Flush(ulong collectionId, IDictionary<long, VectorNode> columns)
+        public async Task Serialize(ulong collectionId, IDictionary<long, VectorNode> columns)
         {
             if (_index == null)
                 return;
@@ -314,34 +313,8 @@ namespace Sir.Store
             return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 4096, true);
         }
 
-        private void Teardown()
-        {
-            if (_isTornDown || _isTearingDown)
-            {
-                return;
-            }
-
-            _isTearingDown = true;
-
-            if (_publishTask != null)
-            {
-                _log.Log("***TEARDOWN*** awaiting publish task");
-
-                if (!_publishTask.IsCompleted)
-                {
-                    _publishTask.Wait();
-                }
-            }
-
-            _log.Log("application ***EXITED*** successfully.");
-
-            _isTornDown = true;
-            _isTearingDown = false;
-        }
-
         public void Dispose()
         {
-            Teardown();
         }
     }
 

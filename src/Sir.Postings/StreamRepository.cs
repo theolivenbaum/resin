@@ -10,7 +10,7 @@ namespace Sir.Postings
 {
     public class StreamRepository : IDisposable
     {
-        private readonly IConfigurationService _config;
+        private readonly IConfigurationProvider _config;
         private readonly StreamWriter _log;
         private bool _serializing;
         private bool _isDirty;
@@ -24,7 +24,7 @@ namespace Sir.Postings
         private const string DataFileNameFormat = "{0}.pos";
         private const string IndexFileName = "_.pix";
 
-        public StreamRepository(IConfigurationService config)
+        public StreamRepository(IConfigurationProvider config)
         {
             _config = config;
             _log = Logging.CreateWriter("streamrepository");

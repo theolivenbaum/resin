@@ -17,40 +17,28 @@ namespace Sir.Store
         private readonly StreamWriter _log;
         private bool _validate;
         private readonly IDictionary<long, VectorNode> _dirty;
+        private readonly Stream _vectorStream;
         private bool _flushed;
 
         public IndexingSession(
             string collectionId, 
             SessionFactory sessionFactory, 
             ITokenizer tokenizer,
-            IConfigurationService config) : base(collectionId, sessionFactory)
+            IConfigurationProvider config) : base(collectionId, sessionFactory)
         {
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("indexingsession");
             _validate = config.Get("create_index_validation_files") == "true";
             _dirty = new Dictionary<long, VectorNode>();
+            _vectorStream = SessionFactory.CreateAppendStream(
+                    Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId.ToHash())));
         }
 
-        public async Task Write(IndexingJob job)
+        public async Task Write(IDictionary doc)
         {
             try
             {
-                var timer = new Stopwatch();
-                timer.Start();
-
-                var docCount = 0;
-
-                using (var vectorStream = SessionFactory.CreateAppendStream(
-                    Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId.ToHash()))))
-                {
-                    foreach(var doc in job.Documents)
-                    {
-                        await WriteDocument(doc, vectorStream);
-                        docCount++;
-                    }
-                }
-
-                _log.Log(string.Format("indexed {0} docs in {1}", docCount, timer.Elapsed));
+                await IndexDocument(doc, _vectorStream);
             }
             catch (Exception ex)
             {
@@ -65,12 +53,12 @@ namespace Sir.Store
             if (_flushed)
                 return;
 
-            await SessionFactory.Flush(CollectionId.ToHash(), _dirty);
+            await SessionFactory.Serialize(CollectionId.ToHash(), _dirty);
 
             _flushed = true;
         }
 
-        private async Task WriteDocument(IDictionary document, Stream vectorStream)
+        private async Task IndexDocument(IDictionary document, Stream vectorStream)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -79,7 +67,7 @@ namespace Sir.Store
 
             Analyze(document, analyzed);
 
-            foreach(var column in analyzed)
+            foreach (var column in analyzed)
             {
                 var keyId = column.Key;
                 var tokens = column.Value;
@@ -186,6 +174,8 @@ namespace Sir.Store
             {
                 Task.WaitAll(new[] { Flush() });
             }
+
+            _vectorStream.Dispose();
         }
     }
 }

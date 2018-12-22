@@ -10,7 +10,7 @@ namespace Sir.HttpServer.Controllers
     {
         private readonly PluginsCollection _plugins;
 
-        public SearchController(PluginsCollection plugins, IConfigurationService config) : base(config)
+        public SearchController(PluginsCollection plugins, IConfigurationProvider config) : base(config)
         {
             _plugins = plugins;
         }

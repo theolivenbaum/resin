@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Sir
 {
-    public class IniConfiguration : IConfigurationService
+    public class IniConfiguration : IConfigurationProvider
     {
         private readonly IDictionary<string, string> _doc;
 

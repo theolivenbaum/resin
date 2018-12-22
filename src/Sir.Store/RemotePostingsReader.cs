@@ -11,9 +11,9 @@ namespace Sir.Store
     /// </summary>
     public class RemotePostingsReader
     {
-        private IConfigurationService _config;
+        private IConfigurationProvider _config;
 
-        public RemotePostingsReader(IConfigurationService config)
+        public RemotePostingsReader(IConfigurationProvider config)
         {
             _config = config;
         }

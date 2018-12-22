@@ -7,7 +7,7 @@ namespace Sir.Postings
         public void OnApplicationStartup(IServiceCollection services, ServiceProvider serviceProvider)
         {
             services.AddSingleton(typeof(StreamRepository), 
-                new StreamRepository(serviceProvider.GetService<IConfigurationService>()));
+                new StreamRepository(serviceProvider.GetService<IConfigurationProvider>()));
         }
     }
 }

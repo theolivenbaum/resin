@@ -6,9 +6,9 @@ namespace Sir.HttpServer.Controllers
 {
     public abstract class UIController : Controller
     {
-        private readonly IConfigurationService _config;
+        private readonly IConfigurationProvider _config;
 
-        public UIController(IConfigurationService config)
+        public UIController(IConfigurationProvider config)
         {
             _config = config;
         }

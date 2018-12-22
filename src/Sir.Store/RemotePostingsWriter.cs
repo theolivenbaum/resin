@@ -13,10 +13,10 @@ namespace Sir.Store
     /// </summary>
     public class RemotePostingsWriter
     {
-        private IConfigurationService _config;
+        private IConfigurationProvider _config;
         private readonly StreamWriter _log;
 
-        public RemotePostingsWriter(IConfigurationService config)
+        public RemotePostingsWriter(IConfigurationProvider config)
         {
             _config = config;
             _log = Logging.CreateWriter("remotepostingswriter");
