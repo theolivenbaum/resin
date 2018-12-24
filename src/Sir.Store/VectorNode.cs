@@ -91,7 +91,7 @@ namespace Sir.Store
             return clone;
         }
 
-        public Hit ClosestMatch(VectorNode node, bool skipDirtyNodes = true)
+        public Hit ClosestMatch(VectorNode node)
         {
             var best = this;
             var cursor = this;
@@ -99,9 +99,6 @@ namespace Sir.Store
 
             while (cursor != null)
             {
-                if (skipDirtyNodes && cursor.PostingsOffset < 0 && cursor.Ancestor != null)
-                    break;
-
                 var angle = node.TermVector.CosAngle(cursor.TermVector);
 
                 if (angle > FoldAngle)

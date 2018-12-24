@@ -82,7 +82,7 @@ namespace Sir.Store
                     foreach (var token in tokens)
                     {
                         var query = new VectorNode(token);
-                        var closestMatch = ix.ClosestMatch(query, skipDirtyNodes: false);
+                        var closestMatch = ix.ClosestMatch(query);
 
                         if (closestMatch.Score < VectorNode.IdenticalAngle)
                         {
