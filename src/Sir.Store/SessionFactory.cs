@@ -57,7 +57,7 @@ namespace Sir.Store
             {
                 await postingsWriter.Write(collectionId, x.Value);
 
-                using (var pageIndexWriter = new VariablePageIndexWriter(CreateAppendStream(Path.Combine(Dir, string.Format("{0}.{1}.ixp", collectionId, x.Key)))))
+                using (var pageIndexWriter = new VariableLengthPageIndexWriter(CreateAppendStream(Path.Combine(Dir, string.Format("{0}.{1}.ixp", collectionId, x.Key)))))
                 using (var ixStream = CreateIndexStream(collectionId, x.Key))
                 {
                     var page = await x.Value.SerializeTree(ixStream);
@@ -214,7 +214,7 @@ namespace Sir.Store
 
             using (var pageIndexStream = new FileStream(pageIndexFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
             {
-                pages = new VariablePageIndexReader(pageIndexStream).ReadAll();
+                pages = new VariableLengthPageIndexReader(pageIndexStream).ReadAll();
             }
 
             using (var treeStream = new FileStream(ixFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
@@ -317,11 +317,11 @@ namespace Sir.Store
         }
     }
 
-    public class VariablePageIndexWriter : IDisposable
+    public class VariableLengthPageIndexWriter : IDisposable
     {
         private readonly Stream _stream;
 
-        public VariablePageIndexWriter(Stream stream)
+        public VariableLengthPageIndexWriter(Stream stream)
         {
             _stream = stream;
         }
@@ -338,11 +338,11 @@ namespace Sir.Store
         }
     }
 
-    public class VariablePageIndexReader
+    public class VariableLengthPageIndexReader
     {
         private readonly byte[] _stream;
 
-        public VariablePageIndexReader(Stream stream)
+        public VariableLengthPageIndexReader(Stream stream)
         {
             var mem = new MemoryStream();
 
