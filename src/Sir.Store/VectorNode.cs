@@ -53,7 +53,7 @@ namespace Sir.Store
         }
 
         public VectorNode(string s) 
-            : this(s.ToVector())
+            : this(s.ToCharVector())
         {
         }
 
@@ -70,7 +70,7 @@ namespace Sir.Store
             if (string.IsNullOrWhiteSpace(s)) throw new ArgumentException();
 
             _docIds = new ConcurrentBag<ulong> { docId };
-            TermVector = s.ToVector();
+            TermVector = s.ToCharVector();
             PostingsOffset = -1;
             VecOffset = -1;
         }
@@ -121,7 +121,7 @@ namespace Sir.Store
                 }
             }
 
-            return new Hit { Node = best, Score = highscore };
+            return new Hit { Embedding = best.TermVector, Score = highscore, PostingsOffset = best.PostingsOffset };
         }
 
         private readonly object _sync = new object();
@@ -197,19 +197,19 @@ namespace Sir.Store
 
             byte[] terminator = new byte[1];
 
-            if (Left == null && Right == null)
+            if (Left == null && Right == null) // there are no children
             {
                 terminator[0] = 3;
             }
-            else if (Left == null)
+            else if (Left == null) // there is a right but no left
             {
                 terminator[0] = 2;
             }
-            else if (Right == null)
+            else if (Right == null) // there is a left but no right
             {
                 terminator[0] = 1;
             }
-            else
+            else // there is a left and a right
             {
                 terminator[0] = 0;
             }
@@ -302,21 +302,26 @@ namespace Sir.Store
             }
         }
 
-        public static async Task<VectorNode> Deserialize(Stream indexStream, Stream vectorStream, long indexLength)
-        {
-            const int nodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(byte);
-            const int kvpSize = sizeof(int) + sizeof(byte);
+        public const int NodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(byte);
+        public const int ComponentSize = sizeof(int) + sizeof(byte);
 
-            var buf = new byte[nodeSize];
+        public static async Task<VectorNode> Deserialize(Stream indexStream, Stream vectorStream, long indexOffset, long indexLength)
+        {
+            var buf = new byte[NodeSize];
             int read = 0;
             VectorNode root = new VectorNode();
             VectorNode cursor = root;
             var tail = new Stack<VectorNode>();
             Byte terminator = 2;
 
+            if (indexStream.Position != indexOffset)
+            {
+                indexStream.Seek(indexOffset, SeekOrigin.Begin);
+            }
+
             while (read < indexLength)
             {
-                read += await indexStream.ReadAsync(buf, 0, nodeSize);
+                read += await indexStream.ReadAsync(buf, 0, NodeSize);
 
                 // Deserialize node
                 var angle = BitConverter.ToSingle(buf, 0);
@@ -326,7 +331,7 @@ namespace Sir.Store
 
                 // Deserialize term vector
                 var vec = new SortedList<int, byte>();
-                var vecBuf = new byte[vectorCount * kvpSize];
+                var vecBuf = new byte[vectorCount * ComponentSize];
 
                 vectorStream.Seek(vecOffset, SeekOrigin.Begin);
 
@@ -341,7 +346,7 @@ namespace Sir.Store
 
                     vec.Add(key, val);
 
-                    offs += kvpSize;
+                    offs += ComponentSize;
                 }
 
                 // Create node
@@ -349,27 +354,27 @@ namespace Sir.Store
                 node.Angle = angle;
                 node.PostingsOffset = postingsOffset;
                 node.VecOffset = vecOffset;
-
-                if (terminator == 0)
+                
+                if (terminator == 0) // there is both a left and a right child
                 {
                     cursor.Left = node;
                     tail.Push(cursor);
                 }
-                else if (terminator == 1)
+                else if (terminator == 1) // there is a left but no right child
                 {
                     cursor.Left = node;
                 }
-                else if (terminator == 2)
+                else if (terminator == 2) // there is a right but no left child
                 {
                     cursor.Right = node;
                 }
-                else
+                else // there are no children
                 {
                     tail.Pop().Right = node;
                 }
 
                 cursor = node;
-                terminator = buf[nodeSize - 1];
+                terminator = buf[buf.Length - 1];
             }
 
             return root;

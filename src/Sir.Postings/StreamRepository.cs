@@ -93,7 +93,7 @@ namespace Sir.Postings
                 _serializing = false;
             }
 
-            _log.Log(string.Format("***serialized*** index in {0}", timer.Elapsed));
+            _log.Log(string.Format("***serialized*** postings index in {0}", timer.Elapsed));
         }
 
         public async Task<MemoryStream> Read(ulong collectionId, long id)
@@ -264,12 +264,12 @@ namespace Sir.Postings
 
             if (_isDirty)
             {
-                _log.Log("serializing index on teardown");
+                _log.Log("serializing postings index on teardown");
 
                 SerializeIndex();
             }
 
-            _log.Log("application exited successfully.");
+            _log.Log("postings app exited successfully.");
 
             _isTornDown = true;
             _isTearingDown = false;

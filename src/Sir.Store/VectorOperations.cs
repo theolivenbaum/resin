@@ -128,13 +128,6 @@ namespace Sir.Store
             return result;
         }
 
-        public static SortedList<int, byte> ToVector(this string word)
-        {
-            if (string.IsNullOrWhiteSpace(word)) throw new ArgumentException();
-
-           return word.ToCharVector();
-        }
-
         public static SortedList<int, byte> ToCharVector(this string word)
         {
             var vec = new SortedList<int, byte>();

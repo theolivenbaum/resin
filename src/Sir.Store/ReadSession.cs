@@ -21,6 +21,7 @@ namespace Sir.Store
         private readonly ValueReader _valReader;
         private readonly RemotePostingsReader _postingsReader;
         private readonly StreamWriter _log;
+        private readonly IList<Stream> _streams;
 
         public ReadSession(string collectionId, 
             SessionFactory sessionFactory, 
@@ -29,13 +30,12 @@ namespace Sir.Store
         {
             var collection = collectionId.ToHash();
 
-            ValueStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collection)));
-            KeyStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collection)));
-            DocStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", collection)));
-            ValueIndexStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collection)));
-            KeyIndexStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collection)));
-            DocIndexStream = sessionFactory.CreateReadWriteStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collection)));
-            Index = sessionFactory.GetCollectionIndex(collectionId.ToHash());
+            ValueStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collection)));
+            KeyStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collection)));
+            DocStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", collection)));
+            ValueIndexStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collection)));
+            KeyIndexStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collection)));
+            DocIndexStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collection)));
 
             _docIx = new DocIndexReader(DocIndexStream);
             _docs = new DocReader(DocStream);
@@ -44,7 +44,7 @@ namespace Sir.Store
             _keyReader = new ValueReader(KeyStream);
             _valReader = new ValueReader(ValueStream);
             _postingsReader = new RemotePostingsReader(config);
-
+            _streams = new List<Stream>();
             _log = Logging.CreateWriter("readsession");
         }
 
@@ -127,19 +127,25 @@ namespace Sir.Store
             }
         }
 
-        private IList<VectorNode> GetIndex(long keyId)
+        private NodeReader GetIndexReader(long keyId)
         {
-            IList<VectorNode> node;
+            var cid = CollectionId.ToHash();
+            var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", cid, keyId));
+            var pageIxFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", cid, keyId));
+            var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", cid));
 
-            if (!Index.TryGetValue(keyId, out node))
-            {
-                return null;
-            }
+            var ixStream = SessionFactory.CreateAsyncReadStream(ixFileName);
+            var vecStream = SessionFactory.CreateAsyncReadStream(vecFileName);
+            var ixpStream = SessionFactory.CreateAsyncReadStream(pageIxFileName);
 
-            return node;
+            _streams.Add(ixStream);
+            _streams.Add(vecStream);
+            _streams.Add(ixpStream);
+
+            return new NodeReader(ixStream, vecStream, ixpStream);
         }
 
-        public IList<VectorNode> GetIndex(ulong keyHash)
+        public NodeReader GetIndexReader(ulong keyHash)
         {
             long keyId;
             if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
@@ -147,7 +153,7 @@ namespace Sir.Store
                 return null;
             }
 
-            return GetIndex(keyId);
+            return GetIndexReader(keyId);
         }
 
         private async Task<IDictionary<ulong, float>> Reduce(Query query)
@@ -164,28 +170,15 @@ namespace Sir.Store
                     timer.Start();
 
                     var keyHash = cursor.Term.Key.ToString().ToHash();
-                    var pages = GetIndex(keyHash);
-                    var matching = new List<Hit>();
+                    IList<Hit> matching = null;
 
-                    if (pages != null)
+                    using (var indexReader = GetIndexReader(keyHash))
                     {
-                        var term = new VectorNode(cursor.Term.Value.ToString());
-
-                        foreach (var ix in pages)
+                        if (indexReader != null)
                         {
-                            var match = ix.ClosestMatch(term);
+                            var termVector = cursor.Term.Value.ToString().ToCharVector();
 
-                            if (match.Score > 0)
-                            {
-                                if (match.Node.PostingsOffset < 0)
-                                {
-                                    throw new InvalidDataException();
-                                }
-                                else
-                                {
-                                    matching.Add(match);
-                                }
-                            }
+                            matching = await indexReader.ClosestMatch(termVector);
                         }
                     }
 
@@ -193,12 +186,13 @@ namespace Sir.Store
 
                     timer.Restart();
 
-                    var qualifiedMatches = matching.GroupBy(x => x.Score).OrderByDescending(x => x.Key).Take(2).SelectMany(g => g).ToList();
+                    var cutoff = matching[0].Score * 0.85f;
+                    var qualifiedMatches = matching.GroupBy(x => x.Score).Where(g => g.Key >= cutoff).SelectMany(g => g).ToList();
                     var docIds = new Dictionary<ulong, float>();
 
                     foreach (var match in qualifiedMatches)
                     {
-                        foreach (var id in await _postingsReader.Read(CollectionId, match.Node.PostingsOffset))
+                        foreach (var id in await _postingsReader.Read(CollectionId, match.PostingsOffset))
                         {
                             docIds.Add(id, match.Score);
                         }
@@ -309,6 +303,16 @@ namespace Sir.Store
             _log.Log("read {0} docs in {1}", result.Count, timer.Elapsed);
 
             return result;
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            foreach (var stream in _streams)
+            {
+                stream.Dispose();
+            }
         }
     }
 

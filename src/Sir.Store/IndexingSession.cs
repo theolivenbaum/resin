@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -13,6 +12,7 @@ namespace Sir.Store
     /// </summary>
     public class IndexingSession : CollectionSession
     {
+        private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
         private readonly StreamWriter _log;
         private bool _validate;
@@ -26,6 +26,7 @@ namespace Sir.Store
             ITokenizer tokenizer,
             IConfigurationProvider config) : base(collectionId, sessionFactory)
         {
+            _config = config;
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("indexingsession");
             _validate = config.Get("create_index_validation_files") == "true";
@@ -53,9 +54,44 @@ namespace Sir.Store
             if (_flushed)
                 return;
 
-            await SessionFactory.Serialize(CollectionId.ToHash(), _dirty);
+            await SerializeIndex(CollectionId.ToHash(), _dirty);
 
             _flushed = true;
+        }
+
+        private async Task SerializeIndex(ulong collectionId, IDictionary<long, VectorNode> columns)
+        {
+            var timer = new Stopwatch();
+            timer.Start();
+
+            var postingsWriter = new RemotePostingsWriter(_config);
+            var didPublish = false;
+
+            foreach (var x in columns)
+            {
+                await postingsWriter.Write(collectionId, x.Value);
+
+                var pixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", collectionId, x.Key));
+
+                using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(pixFileName)))
+                using (var ixStream = CreateIndexStream(collectionId, x.Key))
+                {
+                    var page = await x.Value.SerializeTree(ixStream);
+
+                    await pageIndexWriter.WriteAsync(page.offset, page.length);
+                }
+
+                didPublish = true;
+            }
+
+            if (didPublish)
+                _log.Log(string.Format("***FLUSHED*** index in {0}", timer.Elapsed));
+        }
+
+        private Stream CreateIndexStream(ulong collectionId, long keyId)
+        {
+            var fileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true);
         }
 
         private async Task IndexDocument(IDictionary document, Stream vectorStream)

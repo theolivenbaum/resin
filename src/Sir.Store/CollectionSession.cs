@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 
 namespace Sir.Store
@@ -9,7 +7,6 @@ namespace Sir.Store
     {
         protected SessionFactory SessionFactory { get; private set; }
         protected string CollectionId { get; }
-        protected ConcurrentDictionary<long, IList<VectorNode>> Index { get; set; }
         protected Stream ValueStream { get; set; }
         protected Stream KeyStream { get; set; }
         protected Stream DocStream { get; set; }

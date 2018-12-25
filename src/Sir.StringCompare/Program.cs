@@ -35,7 +35,7 @@ namespace Sir.StringCompare
 
                 foreach (var token in tokenizer.Tokenize(document2))
                 {
-                    var node = index1.ClosestMatch(new VectorNode(token), skipDirtyNodes:false);
+                    var node = index1.ClosestMatch(new VectorNode(token));
 
                     score += node.Score;
                     count++;
