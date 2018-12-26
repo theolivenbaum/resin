@@ -178,7 +178,7 @@ namespace Sir.Store
                         {
                             var termVector = cursor.Term.Value.ToString().ToCharVector();
 
-                            matching = await indexReader.ClosestMatch(termVector);
+                            matching = indexReader.ClosestMatch(termVector);
                         }
                     }
 

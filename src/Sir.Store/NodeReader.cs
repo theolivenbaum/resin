@@ -93,7 +93,7 @@ namespace Sir.Store
             return vec;
         }
 
-        public async Task<IList<Hit>> ClosestMatch(SortedList<int, byte> node)
+        public IList<Hit> ClosestMatch(SortedList<int, byte> node)
         {
             var toplist = new List<Hit>();
             Hit best = null;
@@ -110,8 +110,8 @@ namespace Sir.Store
                     _indexStream.Seek(page.offset, SeekOrigin.Begin);
                 }
 
-                //var hit = await ClosestMatchInPage(node);
-                var hit = VectorNode.DeserializeTree(_indexStream, _vectorStream, page.offset, page.length).ClosestMatch(term);
+                var hit = VectorNode.ScanTree(term, _indexStream, _vectorStream, page.length);
+                //var hit = VectorNode.DeserializeTree(_indexStream, _vectorStream, page.length).ClosestMatch(term);
 
                 if (hit.Score > 0)
                 {

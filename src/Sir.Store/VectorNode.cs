@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -191,14 +192,17 @@ namespace Sir.Store
 
         private byte[][] ToStream()
         {
-            if (VecOffset < 0)
+            if (Ancestor != null)
             {
-                throw new InvalidOperationException();
-            }
+                if (VecOffset < 0)
+                {
+                    throw new InvalidOperationException();
+                }
 
-            if (PostingsOffset < 0)
-            {
-                throw new InvalidOperationException();
+                if (PostingsOffset < 0)
+                {
+                    throw new InvalidOperationException();
+                }
             }
 
             var block = new byte[5][];
@@ -233,7 +237,7 @@ namespace Sir.Store
 
         public async Task<(long offset, long length)> SerializeTree(Stream indexStream)
         {
-            var node = Right;
+            var node = this;
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;
 
@@ -313,7 +317,70 @@ namespace Sir.Store
         public const int NodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(byte);
         public const int ComponentSize = sizeof(int) + sizeof(byte);
 
-        public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, long indexOffset, long indexLength)
+        public static Hit ScanTree(VectorNode term, Stream indexStream, Stream vectorStream, long indexLength)
+        {
+            var buf = new byte[NodeSize];
+
+            indexStream.Read(buf);
+
+            int read = NodeSize;
+            byte terminator = 2;
+
+            VectorNode root = DeserializeNode(buf, vectorStream, ref terminator);
+            VectorNode cursor = root;
+            var tail = new Stack<VectorNode>();
+            VectorNode best = root;
+            var highscore = 0f;
+
+            while (read < indexLength)
+            {
+                indexStream.Read(buf);
+
+                var node = DeserializeNode(buf, vectorStream, ref terminator);
+
+                var angle = node.TermVector.CosAngle(term.TermVector);
+
+                if (angle > highscore)
+                {
+                    highscore = angle;
+                    best = node;
+
+                    if (angle >= IdenticalAngle)
+                    {
+                        break;
+                    }
+                }
+
+                if (node.Terminator == 0) // there is both a left and a right child
+                {
+                    cursor.Left = node;
+
+                    tail.Push(cursor);
+                }
+                else if (node.Terminator == 1) // there is a left but no right child
+                {
+                    cursor.Left = node;
+                }
+                else if (node.Terminator == 2) // there is a right but no left child
+                {
+                    cursor.Right = node;
+                }
+                else // there are no children
+                {
+                    if (tail.Count > 0)
+                    {
+                        tail.Pop().Right = node;
+                    }
+                }
+
+                cursor = node;
+                read += NodeSize;
+            }
+
+            return new Hit { Embedding = best.TermVector, PostingsOffset = best.PostingsOffset, Score = highscore };
+        }
+
+        public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, long indexLength)
         {
             VectorNode root = new VectorNode();
             VectorNode cursor = root;
@@ -368,19 +435,26 @@ namespace Sir.Store
             var vec = new SortedList<int, byte>();
             var vecBuf = new byte[vectorCount * ComponentSize];
 
-            vectorStream.Seek(vecOffset, SeekOrigin.Begin);
-            vectorStream.Read(vecBuf, 0, vecBuf.Length);
-
-            var offs = 0;
-
-            for (int i = 0; i < vectorCount; i++)
+            if  (vecOffset < 0)
             {
-                var key = BitConverter.ToInt32(vecBuf, offs);
-                var val = vecBuf[offs + sizeof(int)];
+                vec.Add(0, 1);
+            }
+            else
+            {
+                vectorStream.Seek(vecOffset, SeekOrigin.Begin);
+                vectorStream.Read(vecBuf, 0, vecBuf.Length);
 
-                vec.Add(key, val);
+                var offs = 0;
 
-                offs += ComponentSize;
+                for (int i = 0; i < vectorCount; i++)
+                {
+                    var key = BitConverter.ToInt32(vecBuf, offs);
+                    var val = vecBuf[offs + sizeof(int)];
+
+                    vec.Add(key, val);
+
+                    offs += ComponentSize;
+                }
             }
 
             // Create node
