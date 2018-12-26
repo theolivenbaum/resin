@@ -9,47 +9,48 @@ namespace Sir.Store
     {
         private readonly Stream _indexStream;
         private readonly Stream _vectorStream;
-        private readonly byte[] _buf;
         private readonly IList<(long offset, long length)> _pages;
+        private byte _terminator = 2;
+        private byte[] _buf;
 
         public NodeReader(Stream indexStream, Stream vectorStream, Stream pageIndexStream)
         {
             _indexStream = indexStream;
             _vectorStream = vectorStream;
             _buf = new byte[VectorNode.NodeSize];
+
             _pages = new PageIndexReader(pageIndexStream).ReadAll();
             pageIndexStream.Dispose();
         }
 
-        private async Task<byte[]> ReadNode()
+        private VectorNode ReadNode()
         {
-            var read = await _indexStream.ReadAsync(_buf);
+            var read = _indexStream.Read(_buf);
 
             if (read != _buf.Length)
             {
                 return null;
             }
 
-            return _buf;
+            return VectorNode.DeserializeNode(_buf, _vectorStream, ref _terminator);
         }
 
         private async Task SkipTree()
         {
             var x = 1;
-            byte terminator;
+            var buf = new byte[VectorNode.NodeSize];
+            byte terminator = buf[buf.Length - 1];
 
             while (x > 0)
             {
-                var read = await _indexStream.ReadAsync(_buf);
+                var read = await _indexStream.ReadAsync(buf);
 
                 x--;
 
-                if (read != _buf.Length)
+                if (read != buf.Length)
                 {
                     throw new InvalidOperationException("can't do that at the end of the file");
                 }
-
-                terminator = _buf[_buf.Length - 1];
 
                 if (terminator == 0)
                 {
@@ -63,7 +64,9 @@ namespace Sir.Store
                 {
                     x--;
                 }
-            } 
+
+                terminator = buf[buf.Length - 1];
+            }
         }
 
         private async Task<SortedList<int, byte>> ReadEmbedding(long offset, int numOfComponents)
@@ -134,37 +137,31 @@ namespace Sir.Store
 
         private async Task<Hit> ClosestMatchInPage(SortedList<int, byte> node)
         {
-            var cursor = await ReadNode();
-            var best = new byte[VectorNode.NodeSize];
-            Buffer.BlockCopy(cursor, 0, best, 0, VectorNode.NodeSize);
+            var cursor = ReadNode();
+            var best = cursor.Clone();
             float highscore = 0;
-            SortedList<int, byte> bestEmbedding = null;
 
             while (cursor != null)
             {
-                var vecOffset = BitConverter.ToInt64(cursor, sizeof(float));
-                var componentCount = BitConverter.ToInt32(cursor, sizeof(float) + sizeof(long) + sizeof(long));
-                var embedding = await ReadEmbedding(vecOffset, componentCount);
-                var terminator = cursor[cursor.Length - 1];
-                var angle = embedding.CosAngle(node);
+                var angle = cursor.TermVector.CosAngle(node);
 
                 if (angle > VectorNode.FoldAngle)
                 {
                     if (angle > highscore)
                     {
                         highscore = angle;
-                        Buffer.BlockCopy(cursor, 0, best, 0, VectorNode.NodeSize);
-                        bestEmbedding = embedding;
+                        best = cursor.Clone();
                     }
 
                     // we need to determine if we can traverse further left
-                    bool canGoLeft = terminator == 0 || terminator == 1;
+                    bool canGoLeft = cursor.Terminator == 0 || cursor.Terminator == 1;
 
                     if (canGoLeft) 
                     {
                         // there is a left and a right child or simply a left child
                         // either way, next node in bitmap is the left child
-                        cursor = await ReadNode();
+
+                        cursor = ReadNode();
                     }
                     else 
                     {
@@ -177,25 +174,26 @@ namespace Sir.Store
                     if (angle > highscore)
                     {
                         highscore = angle;
-                        Buffer.BlockCopy(cursor, 0, best, 0, VectorNode.NodeSize);
-                        bestEmbedding = embedding;
+                        best = cursor.Clone();
                     }
 
                     // we need to determine if we can traverse further to the right
 
-                    if (terminator == 0) 
+                    if (cursor.Terminator == 0) 
                     {
                         // there is a left and a right child
                         // next node in bitmap is the left child 
                         // to find cursor's right child we must skip over the left tree
+
                         await SkipTree();
 
-                        cursor = await ReadNode();
+                        cursor = ReadNode();
                     }
-                    else if (terminator == 2)
+                    else if (cursor.Terminator == 2)
                     {
                         // next node in bitmap is the right child
-                        cursor = await ReadNode();
+
+                        cursor = ReadNode();
                     }
                     else
                     {
@@ -206,9 +204,9 @@ namespace Sir.Store
 
             return new Hit
             {
-                Embedding = bestEmbedding,
+                Embedding = best.TermVector,
                 Score = highscore,
-                PostingsOffset = BitConverter.ToInt64(best, sizeof(float) + sizeof(long))
+                PostingsOffset = best.PostingsOffset
             };
         }
 

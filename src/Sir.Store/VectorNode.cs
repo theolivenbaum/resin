@@ -91,6 +91,7 @@ namespace Sir.Store
             clone._docIds = new ConcurrentBag<ulong>(_docIds);
             clone.Angle = Angle;
             clone.Ancestor = Ancestor;
+            clone.Terminator = Terminator;
 
             clone._left = _left == null ? null : _left.Clone();
             clone._right = _right == null ? null : _right.Clone();
@@ -319,10 +320,13 @@ namespace Sir.Store
             var tail = new Stack<VectorNode>();
             byte terminator = 2;
             int read = 0;
+            var buf = new byte[NodeSize];
 
             while (read < indexLength)
             {
-                var node = DeserializeNode(indexStream, vectorStream, ref terminator);
+                indexStream.Read(buf);
+
+                var node = DeserializeNode(buf, vectorStream, ref terminator);
                 
                 if (node.Terminator == 0) // there is both a left and a right child
                 {
@@ -352,16 +356,8 @@ namespace Sir.Store
             return root;
         }
 
-        public static VectorNode DeserializeNode(Stream indexStream, Stream vectorStream, ref byte terminator)
+        public static VectorNode DeserializeNode(byte[] buf, Stream vectorStream, ref byte terminator)
         {
-            var buf = new byte[NodeSize];
-            int read = indexStream.Read(buf, 0, NodeSize);
-
-            if (read != NodeSize)
-            {
-                throw new InvalidOperationException();
-            }
-
             // Deserialize node
             var angle = BitConverter.ToSingle(buf, 0);
             var vecOffset = BitConverter.ToInt64(buf, sizeof(float));
