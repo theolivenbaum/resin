@@ -98,20 +98,17 @@ namespace Sir.Store
 
             foreach (var page in _pages)
             {
-                //if (_indexStream.Position > page.offset)
-                //{
-                //    throw new DataMisalignedException();
-                //}
-                //else if (_indexStream.Position < page.offset)
-                //{
-                //    _indexStream.Seek(page.offset, SeekOrigin.Begin);
-                //}
+                if (_indexStream.Position > page.offset)
+                {
+                    throw new DataMisalignedException();
+                }
+                else if (_indexStream.Position < page.offset)
+                {
+                    _indexStream.Seek(page.offset, SeekOrigin.Begin);
+                }
 
                 //var hit = await ClosestMatchInPage(node);
-
-                var tree = await VectorNode.Deserialize(_indexStream, _vectorStream, page.offset, page.length);
-
-                var hit = tree.ClosestMatch(term);
+                var hit = VectorNode.DeserializeTree(_indexStream, _vectorStream, page.offset, page.length).ClosestMatch(term);
 
                 if (hit.Score > 0)
                 {
