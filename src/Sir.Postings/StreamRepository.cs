@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Postings
@@ -12,106 +9,39 @@ namespace Sir.Postings
     {
         private readonly IConfigurationProvider _config;
         private readonly StreamWriter _log;
-        private bool _serializing;
-        private bool _isDirty;
-        private Task _publishTask;
-        private readonly object _sync = new object();
-        private bool _isTornDown;
-        private bool _isTearingDown;
-
-        private IDictionary<ulong, IDictionary<long, IList<(long, long)>>> _index { get; set; }
-
         private const string DataFileNameFormat = "{0}.pos";
-        private const string IndexFileName = "_.pix";
 
         public StreamRepository(IConfigurationProvider config)
         {
             _config = config;
             _log = Logging.CreateWriter("streamrepository");
-
-            var ixfn = Path.Combine(_config.Get("data_dir"), IndexFileName);
-
-            if (File.Exists(ixfn))
-            {
-                _index = DeserializeIndex(ixfn);
-            }
-            else
-            {
-                _index = new Dictionary<ulong, IDictionary<long, IList<(long, long)>>>();
-            }
-        }
-
-        private void Flush()
-        {
-            if (_isDirty && !_serializing)
-            {
-                lock (_sync)
-                {
-                    if (_publishTask == null || _publishTask.IsCompleted)
-                    {
-                        _publishTask = Task.Run(() => SerializeIndex());
-                    }
-                    else
-                    {
-                        Task.WaitAll(new[] { _publishTask });
-                        _publishTask = Task.Run(() => SerializeIndex());
-                    }
-                }
-            }
-        }
-
-        private IDictionary<ulong, IDictionary<long, IList<(long, long)>>> DeserializeIndex(string fileName)
-        {
-            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.None, 4096))
-            {
-                var formatter = new BinaryFormatter();
-                var d = (IDictionary<ulong, IDictionary<long, IList<(long, long)>>>)formatter.Deserialize(fs);
-                return new Dictionary<ulong, IDictionary<long, IList<(long, long)>>>(d);
-            }
-        }
-
-        private readonly object _indexFileSync = new object();
-
-        private void SerializeIndex()
-        {
-            _serializing = true;
-
-            var timer = new Stopwatch();
-            timer.Start();
-
-            var fileName = Path.Combine(_config.Get("data_dir"), IndexFileName);
-
-            lock (_indexFileSync)
-            {
-                using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 4096))
-                {
-                    var formatter = new BinaryFormatter();
-                    formatter.Serialize(fs, _index);
-                }
-
-                _isDirty = false;
-                _serializing = false;
-            }
-
-            _log.Log(string.Format("***serialized*** postings index in {0}", timer.Elapsed));
         }
 
         public async Task<MemoryStream> Read(ulong collectionId, long id)
         {
-            var collectionIndex = GetIndex(collectionId);
             var result = new MemoryStream();
 
-            IList<(long, long)> ix;
+            var ixStream = GetReadableIndexStream(collectionId, id);
 
-            if (!collectionIndex.TryGetValue(id, out ix))
+            if (ixStream == null)
             {
                 return result;
             }
 
-            var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));
+            var ix = new List<(long, long)>();
 
-            using (var file = new FileStream(
-                fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
+            using (ixStream)
+            {
+                var buf = new byte[16];
+                int read;
+
+                while ((read = await ixStream.ReadAsync(buf)) > 0)
+                {
+                    ix.Add((BitConverter.ToInt64(buf, 0), BitConverter.ToInt64(buf, sizeof(long))));
+                }
+            }
+
+            using (var file = GetReadableDataStream(collectionId))
             {
                 foreach (var loc in ix)
                 {
@@ -136,11 +66,8 @@ namespace Sir.Postings
             return result;
         }
 
-        private readonly object _dataFileSync = new object();
-
         public async Task<MemoryStream> Write(ulong collectionId, byte[] messageBuf)
         {
-            var collectionIndex = GetIndex(collectionId);
             int read = 0;
 
             // read first word of payload
@@ -176,38 +103,29 @@ namespace Sir.Postings
 
             var positions = new List<long>(payloadCount);
 
-            var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));
-
-            lock (_dataFileSync)
+            using (var file = GetWritableDataStream(collectionId))
             {
-                using (var file = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true))
+                for (int index = 0; index < lists.Count; index++)
                 {
-                    for (int index = 0; index < lists.Count; index++)
+                    long pos = file.Position;
+                    var word = lists[index];
+
+                    file.Write(word);
+
+                    long len = file.Position - pos;
+
+                    if (len != lengths[index])
                     {
-                        long pos = file.Position;
-                        var word = lists[index];
-
-                        file.Write(word);
-
-                        long len = file.Position - pos;
-
-                        if (len != lengths[index])
-                        {
-                            throw new DataMisalignedException();
-                        }
-
-                        IList<(long, long)> ix;
-
-                        if (!collectionIndex.TryGetValue(pos, out ix))
-                        {
-                            ix = new List<(long, long)>();
-
-                            collectionIndex.Add(pos, ix);
-                        }
-
-                        ix.Add((pos, len));
-                        positions.Add(pos);
+                        throw new DataMisalignedException();
                     }
+
+                    using (var ixStream = GetWritableIndexStream(collectionId, pos))
+                    {
+                        ixStream.Write(BitConverter.GetBytes(pos));
+                        ixStream.Write(BitConverter.GetBytes(len));
+                    }
+
+                    positions.Add(pos);
                 }
             }
 
@@ -225,59 +143,54 @@ namespace Sir.Postings
 
             res.Position = 0;
 
-            _isDirty = true;
-
-            Flush();
-
             return res;
         }
 
-        private readonly object _indexSync = new object();
-
-        private IDictionary<long, IList<(long, long)>> GetIndex(ulong collectionId)
+        private Stream GetWritableDataStream(ulong collectionId)
         {
-            IDictionary<long, IList<(long, long)>> collectionIndex;
+            var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));
 
-            if (!_index.TryGetValue(collectionId, out collectionIndex))
-            {
-                lock (_indexSync)
-                {
-                    if (!_index.TryGetValue(collectionId, out collectionIndex))
-                    {
-                        collectionIndex = new Dictionary<long, IList<(long, long)>>();
-                        _index.Add(collectionId, collectionIndex);
-                    }
-                }
-            }
+            var stream = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
 
-            return collectionIndex;
+            return Stream.Synchronized(stream);
         }
 
-        private void Teardown()
+        private Stream GetWritableIndexStream(ulong collectionId, long offset)
         {
-            if (_isTornDown || _isTearingDown)
+            var fileName = Path.Combine(_config.Get("data_dir"), string.Format("{0}.{1}.pix", collectionId, offset));
+            var stream = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+
+            return Stream.Synchronized(stream);
+        }
+
+        private Stream GetReadableIndexStream(ulong collectionId, long offset)
+        {
+            var fileName = Path.Combine(_config.Get("data_dir"), string.Format("{0}.{1}.pix", collectionId, offset));
+
+            if (File.Exists(fileName))
             {
-                return;
+                var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true);
+                return stream;
             }
 
-            _isTearingDown = true;
+            return null;
+        }
 
-            if (_isDirty)
+        private Stream GetReadableDataStream(ulong collectionId)
+        {
+            var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));
+
+            if (File.Exists(fileName))
             {
-                _log.Log("serializing postings index on teardown");
-
-                SerializeIndex();
+                var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true);
+                return stream;
             }
 
-            _log.Log("postings app exited successfully.");
-
-            _isTornDown = true;
-            _isTearingDown = false;
+            return null;
         }
 
         public void Dispose()
         {
-            Teardown();
         }
     }
 }
