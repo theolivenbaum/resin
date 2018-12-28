@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -50,7 +51,7 @@ namespace Sir.Store
 
         public async Task<ReadResult> Read(Query query, int take)
         {
-            IDictionary<ulong, float> result = await Reduce(query);
+            IDictionary<ulong, float> result = Reduce(query);
 
             if (result == null)
             {
@@ -76,7 +77,7 @@ namespace Sir.Store
             var timer = new Stopwatch();
 
             // Get doc IDs and their score
-            IDictionary<ulong, float> docIds = await Reduce(query);
+            IDictionary<ulong, float> docIds = Reduce(query);
 
             if (docIds == null)
             {
@@ -134,15 +135,15 @@ namespace Sir.Store
             var pageIxFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", cid, keyId));
             var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", cid));
 
-            var ixStream = SessionFactory.CreateAsyncReadStream(ixFileName);
-            var vecStream = SessionFactory.CreateAsyncReadStream(vecFileName);
+            //var ixStream = SessionFactory.CreateAsyncReadStream(ixFileName);
+            //var vecStream = SessionFactory.CreateAsyncReadStream(vecFileName);
             var ixpStream = SessionFactory.CreateAsyncReadStream(pageIxFileName);
 
-            _streams.Add(ixStream);
-            _streams.Add(vecStream);
+            //_streams.Add(ixStream);
+            //_streams.Add(vecStream);
             _streams.Add(ixpStream);
 
-            return new NodeReader(ixStream, vecStream, ixpStream);
+            return new NodeReader(ixFileName, vecFileName, ixpStream);
         }
 
         public NodeReader GetIndexReader(ulong keyHash)
@@ -156,15 +157,13 @@ namespace Sir.Store
             return GetIndexReader(keyId);
         }
 
-        private async Task<IDictionary<ulong, float>> Reduce(Query query)
+        private IDictionary<ulong, float> Reduce(Query query)
         {
             try
             {
-                IDictionary<ulong, float> result = null;
+                var result = new ConcurrentDictionary<ulong, float>();
 
-                var cursor = query;
-
-                while (cursor != null)
+                Parallel.ForEach(query.ToList(), cursor =>
                 {
                     var timer = new Stopwatch();
                     timer.Start();
@@ -186,81 +185,78 @@ namespace Sir.Store
 
                     timer.Restart();
 
-                    var cutoff = matching[0].Score * 0.85f;
-                    var qualifiedMatches = matching.GroupBy(x => x.Score).Where(g => g.Key >= cutoff).SelectMany(g => g).ToList();
-                    var docIds = new Dictionary<ulong, float>();
+                    var docIds = new ConcurrentDictionary<ulong, float>();
 
-                    foreach (var match in qualifiedMatches)
+                    if (matching.Count > 0)
                     {
-                        foreach (var id in await _postingsReader.Read(CollectionId, match.PostingsOffset))
+                        var sortedMatches = matching.OrderByDescending(x => x.Score).ToArray();
+                        var cutoff = sortedMatches[0].Score * 0.85f;
+                        var qualifiedMatches = sortedMatches.GroupBy(x => x.Score).Where(g => g.Key >= cutoff).SelectMany(g => g).ToList();
+
+                        foreach (var match in qualifiedMatches)
                         {
-                            if (docIds.ContainsKey(id))
+                            foreach (var id in _postingsReader.Read(CollectionId, match.PostingsOffset))
                             {
-                                docIds[id] += match.Score;
-                            }
-                            else
-                            {
-                                docIds.Add(id, match.Score);
-                            }
-                        }
-                    }
-
-                    _log.Log("fetched {0} doc IDs in {1}", docIds.Count, timer.Elapsed);
-
-                    timer.Restart();
-
-                    if (result == null)
-                    {
-                        result = docIds;
-                    }
-                    else
-                    {
-                        if (cursor.And)
-                        {
-                            var aggregatedResult = new Dictionary<ulong, float>();
-
-                            foreach (var doc in result)
-                            {
-                                float score;
-
-                                if (docIds.TryGetValue(doc.Key, out score))
+                                if (docIds.ContainsKey(id))
                                 {
-                                    aggregatedResult[doc.Key] = score + doc.Value;
-                                }
-                            }
-
-                            result = aggregatedResult;
-                        }
-                        else if (cursor.Not)
-                        {
-                            foreach (var id in docIds.Keys)
-                            {
-                                result.Remove(id);
-                            }
-                        }
-                        else // Or
-                        {
-                            foreach (var id in docIds)
-                            {
-                                float score;
-
-                                if (result.TryGetValue(id.Key, out score))
-                                {
-                                    result[id.Key] = score + id.Value;
+                                    docIds[id] += match.Score;
                                 }
                                 else
                                 {
-                                    result.Add(id.Key, id.Value);
+                                    docIds.GetOrAdd(id, match.Score);
                                 }
+                            }
+                        }
+
+                        _log.Log("fetched {0} doc IDs in {1}", docIds.Count, timer.Elapsed);
+                    }
+
+                    timer.Restart();
+
+                    if (cursor.And)
+                    {
+                        var aggregatedResult = new ConcurrentDictionary<ulong, float>();
+
+                        foreach (var doc in result)
+                        {
+                            float score;
+
+                            if (docIds.TryGetValue(doc.Key, out score))
+                            {
+                                aggregatedResult[doc.Key] = score + doc.Value;
+                            }
+                        }
+
+                        result = aggregatedResult;
+                    }
+                    else if (cursor.Not)
+                    {
+                        foreach (var id in docIds.Keys)
+                        {
+                            result.Remove(id, out float _);
+                        }
+                    }
+                    else // Or
+                    {
+                        foreach (var id in docIds)
+                        {
+                            float score;
+
+                            if (result.TryGetValue(id.Key, out score))
+                            {
+                                result[id.Key] = score + id.Value;
+                            }
+                            else
+                            {
+                                result.GetOrAdd(id.Key, id.Value);
                             }
                         }
                     }
 
                     _log.Log("reduced {0} to {1} docs in {2}",
                         cursor, result.Count, timer.Elapsed);
-
-                    cursor = cursor.Next;
-                }
+                });
+                
 
                 return result;
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Sir.Store
 {
@@ -30,5 +31,20 @@ namespace Sir.Store
             var op = And ? "+" : Or ? " " : "-";
             return string.Format("{0}{1}", op, Term);
         }
+
+        public IList<Query> ToList()
+        {
+            var list = new List<Query>();
+            Query q = this;
+
+            while (q != null)
+            {
+                list.Add(q);
+                q = q.Next;
+            }
+
+            return list;
+        }
+
     }
 }

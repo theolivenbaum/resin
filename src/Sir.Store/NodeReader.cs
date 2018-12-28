@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -7,129 +8,49 @@ namespace Sir.Store
 {
     public class NodeReader : IDisposable
     {
-        private readonly Stream _indexStream;
-        private readonly Stream _vectorStream;
         private readonly IList<(long offset, long length)> _pages;
-        private byte[] _buf;
+        private readonly string _ixFileName;
+        private readonly string _vecFileName;
 
-        public NodeReader(Stream indexStream, Stream vectorStream, Stream pageIndexStream)
+        public NodeReader(string ixFileName, string vecFileName, Stream pageIndexStream)
         {
-            _indexStream = indexStream;
-            _vectorStream = vectorStream;
-            _buf = new byte[VectorNode.NodeSize];
-
+            _vecFileName = vecFileName;
+            _ixFileName = ixFileName;
             _pages = new PageIndexReader(pageIndexStream).ReadAll();
+
             pageIndexStream.Dispose();
-        }
-
-        private VectorNode ReadNode(long endOfSegment)
-        {
-            if (_indexStream.Position + VectorNode.NodeSize >= endOfSegment)
-            {
-                return null;
-            }
-
-            var read = _indexStream.Read(_buf);
-            var terminator = _buf[_buf.Length - 1];
-
-            return VectorNode.DeserializeNode(_buf, _vectorStream, ref terminator);
-        }
-
-        private void SkipTree(long endOfSegment)
-        {
-            var skipsNeeded = 1;
-            var buf = new byte[VectorNode.NodeSize];
-
-            while (skipsNeeded > 0)
-            {
-                var read = _indexStream.Read(buf);
-
-                if (read == 0)
-                {
-                    throw new InvalidOperationException();
-                }
-
-                var terminator = buf[buf.Length - 1];
-
-                if (terminator == 0)
-                {
-                    skipsNeeded += 2;
-                }
-                else if (terminator < 3)
-                {
-                    skipsNeeded++;
-                }
-
-                skipsNeeded--;
-            }
-        }
-
-        private async Task<SortedList<int, byte>> ReadEmbedding(long offset, int numOfComponents)
-        {
-            var vec = new SortedList<int, byte>();
-            var vecBuf = new byte[numOfComponents * VectorNode.ComponentSize];
-
-            _vectorStream.Seek(offset, SeekOrigin.Begin);
-
-            await _vectorStream.ReadAsync(vecBuf);
-
-            var offs = 0;
-
-            for (int i = 0; i < numOfComponents; i++)
-            {
-                var key = BitConverter.ToInt32(vecBuf, offs);
-                var val = vecBuf[offs + sizeof(int)];
-
-                vec.Add(key, val);
-
-                offs += VectorNode.ComponentSize;
-            }
-
-            return vec;
         }
 
         public IList<Hit> ClosestMatch(SortedList<int, byte> node)
         {
-            var toplist = new List<Hit>();
-            Hit best = null;
+            var toplist = new ConcurrentBag<Hit>();
             var term = new VectorNode(node);
 
-            foreach (var page in _pages)
+            foreach(var page in _pages)
             {
-                if (_indexStream.Position < page.offset)
+                using (var indexStream = new FileStream(_ixFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
+                using (var vectorStream = new FileStream(_vecFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
                 {
-                    _indexStream.Seek(page.offset, SeekOrigin.Begin);
-                }
-
-                var hit = ClosestMatchInPage(node, page.offset + page.length);
-                //var hit = VectorNode.ScanTree(term, _indexStream, _vectorStream, page.length);
-                //var hit = VectorNode.DeserializeTree(_indexStream, _vectorStream, page.length).ClosestMatch(term);
-
-                if (hit.Score > 0)
-                {
-                    if (best == null)
+                    if (indexStream.Position < page.offset)
                     {
-                        best = hit;
-                        toplist.Add(best);
+                        indexStream.Seek(page.offset, SeekOrigin.Begin);
                     }
-                    else if (hit.Score > best.Score)
-                    {
-                        best = hit;
-                        toplist.Insert(0, hit);
-                    }
-                    else if (hit.Score == best.Score)
+
+                    var hit = ClosestMatchInPage(node, indexStream, page.offset + page.length, vectorStream);
+
+                    if (hit.Score > 0)
                     {
                         toplist.Add(hit);
                     }
                 }
             }
 
-            return toplist;
+            return new List<Hit>(toplist);
         }
 
-        private Hit ClosestMatchInPage(SortedList<int, byte> node, long endOfSegment)
+        private Hit ClosestMatchInPage(SortedList<int, byte> node, Stream indexStream, long endOfSegment, Stream vectorStream)
         {
-            var cursor = ReadNode(endOfSegment);
+            var cursor = ReadNode(indexStream, vectorStream, endOfSegment);
 
             if (cursor == null)
             {
@@ -159,7 +80,7 @@ namespace Sir.Store
                         // there is a left and a right child or simply a left child
                         // either way, next node in bitmap is the left child
 
-                        cursor = ReadNode(endOfSegment);
+                        cursor = ReadNode(indexStream, vectorStream, endOfSegment);
                     }
                     else 
                     {
@@ -183,15 +104,15 @@ namespace Sir.Store
                         // next node in bitmap is the left child 
                         // to find cursor's right child we must skip over the left tree
 
-                        SkipTree(endOfSegment);
+                        SkipTree(indexStream, endOfSegment);
 
-                        cursor = ReadNode(endOfSegment);
+                        cursor = ReadNode(indexStream, vectorStream, endOfSegment);
                     }
                     else if (cursor.Terminator == 2)
                     {
                         // next node in bitmap is the right child
 
-                        cursor = ReadNode(endOfSegment);
+                        cursor = ReadNode(indexStream, vectorStream, endOfSegment);
                     }
                     else
                     {
@@ -208,10 +129,75 @@ namespace Sir.Store
             };
         }
 
+        private VectorNode ReadNode(Stream indexStream, Stream vectorStream, long endOfSegment)
+        {
+            if (indexStream.Position + VectorNode.NodeSize >= endOfSegment)
+            {
+                return null;
+            }
+
+            var buf = new byte[VectorNode.NodeSize];
+            var read = indexStream.Read(buf);
+            var terminator = buf[buf.Length - 1];
+
+            return VectorNode.DeserializeNode(buf, vectorStream, ref terminator);
+        }
+
+        private void SkipTree(Stream indexStream, long endOfSegment)
+        {
+            var skipsNeeded = 1;
+            var buf = new byte[VectorNode.NodeSize];
+
+            while (skipsNeeded > 0)
+            {
+                var read = indexStream.Read(buf);
+
+                if (read == 0)
+                {
+                    throw new InvalidOperationException();
+                }
+
+                var terminator = buf[buf.Length - 1];
+
+                if (terminator == 0)
+                {
+                    skipsNeeded += 2;
+                }
+                else if (terminator < 3)
+                {
+                    skipsNeeded++;
+                }
+
+                skipsNeeded--;
+            }
+        }
+
+        private async Task<SortedList<int, byte>> ReadEmbedding(long offset, int numOfComponents, Stream vectorStream)
+        {
+            var vec = new SortedList<int, byte>();
+            var vecBuf = new byte[numOfComponents * VectorNode.ComponentSize];
+
+            vectorStream.Seek(offset, SeekOrigin.Begin);
+
+            await vectorStream.ReadAsync(vecBuf);
+
+            var offs = 0;
+
+            for (int i = 0; i < numOfComponents; i++)
+            {
+                var key = BitConverter.ToInt32(vecBuf, offs);
+                var val = vecBuf[offs + sizeof(int)];
+
+                vec.Add(key, val);
+
+                offs += VectorNode.ComponentSize;
+            }
+
+            return vec;
+        }
+
         public void Dispose()
         {
-            _indexStream.Dispose();
-            _vectorStream.Dispose();
         }
     }
 }
