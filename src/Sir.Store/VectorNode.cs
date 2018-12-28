@@ -323,13 +323,11 @@ namespace Sir.Store
 
             indexStream.Read(buf);
 
+            byte terminator = buf[buf.Length - 1];
             int read = NodeSize;
-            byte terminator = 2;
-
-            VectorNode root = DeserializeNode(buf, vectorStream, ref terminator);
-            VectorNode cursor = root;
+            VectorNode cursor = DeserializeNode(buf, vectorStream, ref terminator);
             var tail = new Stack<VectorNode>();
-            VectorNode best = root;
+            VectorNode best = cursor;
             var highscore = 0f;
 
             while (read < indexLength)
@@ -382,6 +380,16 @@ namespace Sir.Store
 
         public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, long indexLength)
         {
+            //var buf = new byte[NodeSize];
+
+            //indexStream.Read(buf);
+
+            //byte terminator = buf[buf.Length - 1];
+            //VectorNode root = DeserializeNode(buf, vectorStream, ref terminator);
+            //VectorNode cursor = root;
+            //var tail = new Stack<VectorNode>();
+            //int read = 0;
+
             VectorNode root = new VectorNode();
             VectorNode cursor = root;
             var tail = new Stack<VectorNode>();

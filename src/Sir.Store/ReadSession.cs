@@ -194,7 +194,14 @@ namespace Sir.Store
                     {
                         foreach (var id in await _postingsReader.Read(CollectionId, match.PostingsOffset))
                         {
-                            docIds.Add(id, match.Score);
+                            if (docIds.ContainsKey(id))
+                            {
+                                docIds[id] += match.Score;
+                            }
+                            else
+                            {
+                                docIds.Add(id, match.Score);
+                            }
                         }
                     }
 

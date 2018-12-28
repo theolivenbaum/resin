@@ -10,7 +10,6 @@ namespace Sir.Store
         private readonly Stream _indexStream;
         private readonly Stream _vectorStream;
         private readonly IList<(long offset, long length)> _pages;
-        private byte _terminator = 2;
         private byte[] _buf;
 
         public NodeReader(Stream indexStream, Stream vectorStream, Stream pageIndexStream)
@@ -23,49 +22,55 @@ namespace Sir.Store
             pageIndexStream.Dispose();
         }
 
-        private VectorNode ReadNode()
+        private VectorNode ReadNode(long endOfSegment)
         {
-            var read = _indexStream.Read(_buf);
-
-            if (read != _buf.Length)
+            if (_indexStream.Position + VectorNode.NodeSize >= endOfSegment)
             {
                 return null;
             }
 
-            return VectorNode.DeserializeNode(_buf, _vectorStream, ref _terminator);
+            var read = _indexStream.Read(_buf);
+            var terminator = _buf[_buf.Length - 1];
+
+            return VectorNode.DeserializeNode(_buf, _vectorStream, ref terminator);
         }
 
-        private async Task SkipTree()
+        private void SkipTree(byte terminator, long endOfSegment)
         {
-            var x = 1;
-            var buf = new byte[VectorNode.NodeSize];
-            byte terminator = buf[buf.Length - 1];
+            var skipsNeeded = 0;
 
-            while (x > 0)
+            if (terminator == 0)
             {
-                var read = await _indexStream.ReadAsync(buf);
+                skipsNeeded = 2;
+            }
+            else if (terminator < 3)
+            {
+                skipsNeeded = 1;
+            }
 
-                x--;
+            var buf = new byte[VectorNode.NodeSize];
+
+            while (skipsNeeded > 0 && _indexStream.Position + VectorNode.NodeSize > endOfSegment)
+            {
+                var read = _indexStream.Read(buf);
+
+                skipsNeeded--;
 
                 if (read != buf.Length)
                 {
                     throw new InvalidOperationException("can't do that at the end of the file");
                 }
 
+                terminator = buf[buf.Length - 1];
+
                 if (terminator == 0)
                 {
-                    x += 2;
+                    skipsNeeded += 2;
                 }
-                else if (terminator == 1 || terminator == 2)
+                else if (terminator < 3)
                 {
-                    x++;
+                    skipsNeeded++;
                 }
-                else if (terminator == 3)
-                {
-                    x--;
-                }
-
-                terminator = buf[buf.Length - 1];
             }
         }
 
@@ -101,16 +106,13 @@ namespace Sir.Store
 
             foreach (var page in _pages)
             {
-                if (_indexStream.Position > page.offset)
-                {
-                    throw new DataMisalignedException();
-                }
-                else if (_indexStream.Position < page.offset)
+                if (_indexStream.Position < page.offset)
                 {
                     _indexStream.Seek(page.offset, SeekOrigin.Begin);
                 }
 
-                var hit = VectorNode.ScanTree(term, _indexStream, _vectorStream, page.length);
+                var hit = ClosestMatchInPage(node, page.offset + page.length);
+                //var hit = VectorNode.ScanTree(term, _indexStream, _vectorStream, page.length);
                 //var hit = VectorNode.DeserializeTree(_indexStream, _vectorStream, page.length).ClosestMatch(term);
 
                 if (hit.Score > 0)
@@ -135,10 +137,16 @@ namespace Sir.Store
             return toplist;
         }
 
-        private async Task<Hit> ClosestMatchInPage(SortedList<int, byte> node)
+        private Hit ClosestMatchInPage(SortedList<int, byte> node, long endOfSegment)
         {
-            var cursor = ReadNode();
-            var best = cursor.Clone();
+            var cursor = ReadNode(endOfSegment);
+
+            if (cursor == null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            var best = cursor;
             float highscore = 0;
 
             while (cursor != null)
@@ -150,7 +158,7 @@ namespace Sir.Store
                     if (angle > highscore)
                     {
                         highscore = angle;
-                        best = cursor.Clone();
+                        best = cursor;
                     }
 
                     // we need to determine if we can traverse further left
@@ -161,7 +169,7 @@ namespace Sir.Store
                         // there is a left and a right child or simply a left child
                         // either way, next node in bitmap is the left child
 
-                        cursor = ReadNode();
+                        cursor = ReadNode(endOfSegment);
                     }
                     else 
                     {
@@ -174,7 +182,7 @@ namespace Sir.Store
                     if (angle > highscore)
                     {
                         highscore = angle;
-                        best = cursor.Clone();
+                        best = cursor;
                     }
 
                     // we need to determine if we can traverse further to the right
@@ -185,15 +193,15 @@ namespace Sir.Store
                         // next node in bitmap is the left child 
                         // to find cursor's right child we must skip over the left tree
 
-                        await SkipTree();
+                        SkipTree(cursor.Terminator, endOfSegment);
 
-                        cursor = ReadNode();
+                        cursor = ReadNode(endOfSegment);
                     }
                     else if (cursor.Terminator == 2)
                     {
                         // next node in bitmap is the right child
 
-                        cursor = ReadNode();
+                        cursor = ReadNode(endOfSegment);
                     }
                     else
                     {
