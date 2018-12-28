@@ -35,33 +35,21 @@ namespace Sir.Store
             return VectorNode.DeserializeNode(_buf, _vectorStream, ref terminator);
         }
 
-        private void SkipTree(byte terminator, long endOfSegment)
+        private void SkipTree(long endOfSegment)
         {
-            var skipsNeeded = 0;
-
-            if (terminator == 0)
-            {
-                skipsNeeded = 2;
-            }
-            else if (terminator < 3)
-            {
-                skipsNeeded = 1;
-            }
-
+            var skipsNeeded = 1;
             var buf = new byte[VectorNode.NodeSize];
 
-            while (skipsNeeded > 0 && _indexStream.Position + VectorNode.NodeSize > endOfSegment)
+            while (skipsNeeded > 0)
             {
                 var read = _indexStream.Read(buf);
 
-                skipsNeeded--;
-
-                if (read != buf.Length)
+                if (read == 0)
                 {
-                    throw new InvalidOperationException("can't do that at the end of the file");
+                    throw new InvalidOperationException();
                 }
 
-                terminator = buf[buf.Length - 1];
+                var terminator = buf[buf.Length - 1];
 
                 if (terminator == 0)
                 {
@@ -71,6 +59,8 @@ namespace Sir.Store
                 {
                     skipsNeeded++;
                 }
+
+                skipsNeeded--;
             }
         }
 
@@ -193,7 +183,7 @@ namespace Sir.Store
                         // next node in bitmap is the left child 
                         // to find cursor's right child we must skip over the left tree
 
-                        SkipTree(cursor.Terminator, endOfSegment);
+                        SkipTree(endOfSegment);
 
                         cursor = ReadNode(endOfSegment);
                     }
