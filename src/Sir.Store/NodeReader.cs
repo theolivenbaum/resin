@@ -24,9 +24,8 @@ namespace Sir.Store
         public IList<Hit> ClosestMatch(SortedList<int, byte> node)
         {
             var toplist = new ConcurrentBag<Hit>();
-            var term = new VectorNode(node);
 
-            foreach(var page in _pages)
+            Parallel.ForEach(_pages, page =>
             {
                 using (var indexStream = new FileStream(_ixFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
                 using (var vectorStream = new FileStream(_vecFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
@@ -43,7 +42,7 @@ namespace Sir.Store
                         toplist.Add(hit);
                     }
                 }
-            }
+            });
 
             return new List<Hit>(toplist);
         }
