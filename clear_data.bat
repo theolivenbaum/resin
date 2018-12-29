@@ -1,0 +1,1 @@
+del /Q /S C:\temp\App_Data\*.pix C:\temp\App_Data\*.ix C:\temp\App_Data\*.ixp C:\temp\App_Data\*.pos C:\temp\App_Data\*.vec

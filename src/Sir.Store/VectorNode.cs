@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,18 +14,36 @@ namespace Sir.Store
     /// </summary>
     public class VectorNode
     {
+        public const int NodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
+        public const int ComponentSize = sizeof(int) + sizeof(byte);
         public const float IdenticalAngle = 0.97f;
         public const float FoldAngle = 0.55f;
 
         private VectorNode _right;
         private VectorNode _left;
         private ConcurrentBag<ulong> _docIds;
+        private int _weight;
 
         public long VecOffset { get; private set; }
         public long PostingsOffset { get; set; }
         public float Angle { get; private set; }
         public SortedList<int, byte> TermVector { get; }
         public VectorNode Ancestor { get; private set; }
+        public int Weight
+        {
+            get { return _weight; }
+            set
+            {
+                var diff = value - _weight;
+
+                _weight = value;
+
+                if (Ancestor != null)
+                {
+                    Ancestor.Weight += diff;
+                }
+            }
+        }
 
         public VectorNode Right
         {
@@ -35,6 +52,7 @@ namespace Sir.Store
             {
                 _right = value;
                 _right.Ancestor = this;
+                Weight++;
             }
         }
 
@@ -45,17 +63,18 @@ namespace Sir.Store
             {
                 _left = value;
                 _left.Ancestor = this;
+                Weight++;
             }
         }
 
         public byte Terminator { get; set; }
 
-        public VectorNode() 
+        public VectorNode()
             : this('\0'.ToString())
         {
         }
 
-        public VectorNode(string s) 
+        public VectorNode(string s)
             : this(s.ToCharVector())
         {
         }
@@ -205,7 +224,7 @@ namespace Sir.Store
                 }
             }
 
-            var block = new byte[5][];
+            var block = new byte[6][];
 
             byte[] terminator = new byte[1];
 
@@ -230,7 +249,8 @@ namespace Sir.Store
             block[1] = BitConverter.GetBytes(VecOffset);
             block[2] = BitConverter.GetBytes(PostingsOffset);
             block[3] = BitConverter.GetBytes(TermVector.Count);
-            block[4] = terminator;
+            block[4] = BitConverter.GetBytes(Weight);
+            block[5] = terminator;
 
             return block;
         }
@@ -313,9 +333,6 @@ namespace Sir.Store
                 }
             }
         }
-
-        public const int NodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(byte);
-        public const int ComponentSize = sizeof(int) + sizeof(byte);
 
         public static Hit ScanTree(VectorNode term, Stream indexStream, Stream vectorStream, long indexLength)
         {
@@ -402,7 +419,7 @@ namespace Sir.Store
                 indexStream.Read(buf);
 
                 var node = DeserializeNode(buf, vectorStream, ref terminator);
-                
+
                 if (node.Terminator == 0) // there is both a left and a right child
                 {
                     cursor.Left = node;
@@ -438,12 +455,13 @@ namespace Sir.Store
             var vecOffset = BitConverter.ToInt64(buf, sizeof(float));
             var postingsOffset = BitConverter.ToInt64(buf, sizeof(float) + sizeof(long));
             var vectorCount = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long));
+            var weight = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int));
 
             // Deserialize term vector
             var vec = new SortedList<int, byte>();
             var vecBuf = new byte[vectorCount * ComponentSize];
 
-            if  (vecOffset < 0)
+            if (vecOffset < 0)
             {
                 vec.Add(0, 1);
             }
@@ -472,6 +490,7 @@ namespace Sir.Store
             node.PostingsOffset = postingsOffset;
             node.VecOffset = vecOffset;
             node.Terminator = terminator;
+            node.Weight = weight;
 
             terminator = buf[buf.Length - 1];
 
@@ -579,11 +598,15 @@ namespace Sir.Store
 
         public override string ToString()
         {
+            if (TermVector == null) return string.Empty;
+
             var w = new StringBuilder();
+
             foreach (var c in TermVector)
             {
                 w.Append((char)c.Key);
             }
+
             return w.ToString();
         }
     }

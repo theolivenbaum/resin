@@ -145,30 +145,29 @@ namespace Sir.Store
 
         private void SkipTree(Stream indexStream, long endOfSegment)
         {
-            var skipsNeeded = 1;
             var buf = new byte[VectorNode.NodeSize];
 
-            while (skipsNeeded > 0)
-            {
-                var read = indexStream.Read(buf);
+            var read = indexStream.Read(buf);
 
-                if (read == 0)
+            if (read == 0)
+            {
+                throw new InvalidOperationException();
+            }
+
+            var positionInBuffer = VectorNode.NodeSize - (sizeof(int) + sizeof(byte));
+            var weight = BitConverter.ToInt32(buf, positionInBuffer);
+            var distance = weight * VectorNode.NodeSize;
+
+            if (distance > 0)
+            {
+                if (endOfSegment - (indexStream.Position + distance) > 0)
+                {
+                    indexStream.Seek(distance, SeekOrigin.Current);
+                }
+                else
                 {
                     throw new InvalidOperationException();
                 }
-
-                var terminator = buf[buf.Length - 1];
-
-                if (terminator == 0)
-                {
-                    skipsNeeded += 2;
-                }
-                else if (terminator < 3)
-                {
-                    skipsNeeded++;
-                }
-
-                skipsNeeded--;
             }
         }
 
