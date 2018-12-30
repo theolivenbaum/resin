@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Sir.Store
 {
     /// <summary>
-    /// Write postings to HTTTP endpoint.
+    /// Write postings to HTTP endpoint.
     /// </summary>
     public class RemotePostingsWriter
     {

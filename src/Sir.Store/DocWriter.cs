@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Sir.Store
 {
     /// <summary>
-    /// Write document maps (key_id/val_id) from the document map stream.
+    /// Write document maps (key_id/val_id) to the document map stream.
     /// </summary>
     public class DocWriter
     {

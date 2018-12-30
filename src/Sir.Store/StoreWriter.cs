@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 namespace Sir.Store
 {
     /// <summary>
-    /// Write into a document collection.
+    /// Write into a collection.
     /// </summary>
     public class StoreWriter : IWriter
     {

@@ -2,6 +2,9 @@
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Initialize app.
+    /// </summary>
     public class Start : IPluginStart
     {
         public void OnApplicationStartup(IServiceCollection services, ServiceProvider serviceProvider)

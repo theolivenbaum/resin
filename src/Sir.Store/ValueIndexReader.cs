@@ -4,6 +4,9 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Find out there in the value stream a value is stored, by supplying a value ID.
+    /// </summary>
     public class ValueIndexReader
     {
         private readonly Stream _stream;

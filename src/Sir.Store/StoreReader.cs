@@ -6,12 +6,11 @@ using System.IO;
 using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 
 namespace Sir.Store
 {
     /// <summary>
-    /// Query a document collection.
+    /// Query a collection.
     /// </summary>
     public class StoreReader : IReader
     {

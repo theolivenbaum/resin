@@ -4,6 +4,9 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Index bitmap segment writer.
+    /// </summary>
     public class PageIndexWriter : IDisposable
     {
         private readonly Stream _stream;

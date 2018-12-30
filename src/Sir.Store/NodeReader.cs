@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Index bitmap reader. Each block is a <see cref="Sir.Store.VectorNode"/>.
+    /// </summary>
     public class NodeReader
     {
         private readonly IList<(long offset, long length)> _pages;

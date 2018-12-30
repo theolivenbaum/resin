@@ -4,6 +4,9 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Store the location of a value.
+    /// </summary>
     public class ValueIndexWriter
     {
         private readonly Stream _stream;

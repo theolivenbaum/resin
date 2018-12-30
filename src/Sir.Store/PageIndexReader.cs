@@ -4,6 +4,9 @@ using System.IO;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Index bitmap segment reader.
+    /// </summary>
     public class PageIndexReader
     {
         private readonly Stream _stream;

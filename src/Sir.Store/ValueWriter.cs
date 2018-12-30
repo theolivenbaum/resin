@@ -4,6 +4,9 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Store a value on the file system.
+    /// </summary>
     public class ValueWriter
     {
         private readonly Stream _stream;

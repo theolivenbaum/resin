@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Sir.Store
 {
     /// <summary>
-    /// Binary tree where the data is a sparse vector, a word embedding.
+    /// Binary tree where the data is a word embedding represented in-memory as a sparse vector.
     /// The tree is balanced according to cos angles between the word vectors of the immediate neighbouring nodes.
     /// </summary>
     public class VectorNode

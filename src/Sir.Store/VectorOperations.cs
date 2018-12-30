@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Perform calculations on sparse vectors.
+    /// </summary>
     public static class VectorOperations
     {
         public static async Task<long> SerializeAsync(this SortedList<int, byte> vec, Stream stream)

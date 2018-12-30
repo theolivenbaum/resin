@@ -4,6 +4,9 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
+    /// <summary>
+    /// Read a value by supplying an offset, length and data type.
+    /// </summary>
     public class ValueReader
     {
         private readonly Stream _stream;
