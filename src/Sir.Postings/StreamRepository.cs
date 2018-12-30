@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -19,6 +20,9 @@ namespace Sir.Postings
 
         public async Task<MemoryStream> Read(ulong collectionId, long id)
         {
+            var timer = new Stopwatch();
+            timer.Start();
+
             var result = new MemoryStream();
 
             var ixStream = GetReadableIndexStream(collectionId, id);
@@ -62,6 +66,8 @@ namespace Sir.Postings
                     await result.WriteAsync(buf);
                 }
             }
+
+            _log.Log("read {0} bytes of postings data in {1}", result.Position, timer.Elapsed);
 
             return result;
         }

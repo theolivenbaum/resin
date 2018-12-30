@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -12,10 +13,12 @@ namespace Sir.Store
     public class RemotePostingsReader
     {
         private IConfigurationProvider _config;
+        private readonly StreamWriter _log;
 
         public RemotePostingsReader(IConfigurationProvider config)
         {
             _config = config;
+            _log = Logging.CreateWriter("remotepostingsreader");
         }
 
         public IList<ulong> Read(string collectionId, long offset)
@@ -28,8 +31,15 @@ namespace Sir.Store
             request.Accept = "application/postings";
             request.Method = WebRequestMethods.Http.Get;
 
+            var timer = new Stopwatch();
+            timer.Start();
+
             using (var response = (HttpWebResponse)request.GetResponse())
             {
+                _log.Log("waited {0} for a response from postings service", timer.Elapsed);
+
+                timer.Restart();
+
                 var result = new List<ulong>();
 
                 using (var body = response.GetResponseStream())
@@ -47,6 +57,8 @@ namespace Sir.Store
 
                         read += sizeof(ulong);
                     }
+
+                    _log.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
                 }
 
                 return result;

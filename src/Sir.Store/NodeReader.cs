@@ -175,6 +175,35 @@ namespace Sir.Store
             }
         }
 
+        private void SkipTreeWithoutSeek(Stream indexStream, long endOfSegment)
+        {
+            var skipsNeeded = 1;
+            var buf = new byte[VectorNode.NodeSize];
+
+            while (skipsNeeded > 0)
+            {
+                var read = indexStream.Read(buf);
+
+                if (read == 0)
+                {
+                    throw new InvalidOperationException();
+                }
+
+                var terminator = buf[buf.Length - 1];
+
+                if (terminator == 0)
+                {
+                    skipsNeeded += 2;
+                }
+                else if (terminator < 3)
+                {
+                    skipsNeeded++;
+                }
+
+                skipsNeeded--;
+            }
+        }
+
         private async Task<SortedList<int, byte>> ReadEmbedding(long offset, int numOfComponents, Stream vectorStream)
         {
             var vec = new SortedList<int, byte>();

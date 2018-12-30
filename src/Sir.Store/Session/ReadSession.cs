@@ -22,7 +22,6 @@ namespace Sir.Store
         private readonly ValueReader _valReader;
         private readonly RemotePostingsReader _postingsReader;
         private readonly StreamWriter _log;
-        private readonly IList<Stream> _streams;
 
         public ReadSession(string collectionId, 
             SessionFactory sessionFactory, 
@@ -45,7 +44,6 @@ namespace Sir.Store
             _keyReader = new ValueReader(KeyStream);
             _valReader = new ValueReader(ValueStream);
             _postingsReader = new RemotePostingsReader(config);
-            _streams = new List<Stream>();
             _log = Logging.CreateWriter("readsession");
         }
 
@@ -128,25 +126,19 @@ namespace Sir.Store
             }
         }
 
-        private NodeReader GetIndexReader(long keyId)
+        private NodeReader CreateIndexReader(long keyId)
         {
             var cid = CollectionId.ToHash();
             var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", cid, keyId));
             var pageIxFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", cid, keyId));
             var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", cid));
 
-            //var ixStream = SessionFactory.CreateAsyncReadStream(ixFileName);
-            //var vecStream = SessionFactory.CreateAsyncReadStream(vecFileName);
             var ixpStream = SessionFactory.CreateAsyncReadStream(pageIxFileName);
-
-            //_streams.Add(ixStream);
-            //_streams.Add(vecStream);
-            _streams.Add(ixpStream);
 
             return new NodeReader(ixFileName, vecFileName, ixpStream, SessionFactory);
         }
 
-        public NodeReader GetIndexReader(ulong keyHash)
+        public NodeReader CreateIndexReader(ulong keyHash)
         {
             long keyId;
             if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
@@ -154,7 +146,7 @@ namespace Sir.Store
                 return null;
             }
 
-            return GetIndexReader(keyId);
+            return CreateIndexReader(keyId);
         }
 
         private IDictionary<ulong, float> Reduce(Query query)
@@ -170,7 +162,7 @@ namespace Sir.Store
 
                     var keyHash = cursor.Term.Key.ToString().ToHash();
                     IList<Hit> matching = null;
-                    var indexReader = GetIndexReader(keyHash);
+                    var indexReader = CreateIndexReader(keyHash);
 
                     if (indexReader != null)
                     {
@@ -205,9 +197,9 @@ namespace Sir.Store
                                 }
                             }
                         }
-
-                        _log.Log("fetched {0} doc IDs in {1}", docIds.Count, timer.Elapsed);
                     }
+
+                    _log.Log("read {0} postings in {1}", docIds.Count, timer.Elapsed);
 
                     timer.Restart();
 
@@ -305,21 +297,5 @@ namespace Sir.Store
 
             return result;
         }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-
-            foreach (var stream in _streams)
-            {
-                stream.Dispose();
-            }
-        }
-    }
-
-    public class ReadResult
-    {
-        public long Total { get; set; }
-        public IList<IDictionary> Docs { get; set; }
     }
 }

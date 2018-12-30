@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -22,10 +23,17 @@ namespace Sir.Postings
         {
             try
             {
-                var id = long.Parse(request.Query["id"]);
-                var result = await _data.Read(collectionId.ToHash(), id);
+                var timer = new Stopwatch();
+                timer.Start();
 
-                return new Result { Data = result, MediaType = "application/postings", Total = result.Length/sizeof(ulong) };
+                var id = long.Parse(request.Query["id"]);
+                var data = await _data.Read(collectionId.ToHash(), id);
+
+                var result = new Result { Data = data, MediaType = "application/postings", Total = data.Length/sizeof(ulong) };
+
+                _log.Log("created request message with {0} postings in {1}", result.Total, timer.Elapsed);
+
+                return result;
             }
             catch (Exception ex)
             {
