@@ -6,17 +6,19 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
-    public class NodeReader : IDisposable
+    public class NodeReader
     {
         private readonly IList<(long offset, long length)> _pages;
+        private readonly SessionFactory _sessionFactory;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
 
-        public NodeReader(string ixFileName, string vecFileName, Stream pageIndexStream)
+        public NodeReader(string ixFileName, string vecFileName, Stream pageIndexStream, SessionFactory sessionFactory)
         {
             _vecFileName = vecFileName;
             _ixFileName = ixFileName;
             _pages = new PageIndexReader(pageIndexStream).ReadAll();
+            _sessionFactory = sessionFactory;
 
             pageIndexStream.Dispose();
         }
@@ -27,8 +29,8 @@ namespace Sir.Store
 
             Parallel.ForEach(_pages, page =>
             {
-                using (var indexStream = new FileStream(_ixFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
-                using (var vectorStream = new FileStream(_vecFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
+                using (var indexStream = _sessionFactory.CreateAsyncReadStream(_ixFileName))
+                using (var vectorStream = _sessionFactory.CreateAsyncReadStream(_vecFileName))
                 {
                     if (indexStream.Position < page.offset)
                     {
@@ -192,10 +194,6 @@ namespace Sir.Store
             }
 
             return vec;
-        }
-
-        public void Dispose()
-        {
         }
     }
 }

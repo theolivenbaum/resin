@@ -3,31 +3,23 @@ using System.IO;
 
 namespace Sir.Store
 {
-    public abstract class CollectionSession : IDisposable
+    public abstract class KeyValueSession : CollectionSession, IDisposable
     {
-        protected SessionFactory SessionFactory { get; private set; }
-        protected string CollectionId { get; }
         protected Stream ValueStream { get; set; }
         protected Stream KeyStream { get; set; }
-        protected Stream DocStream { get; set; }
         protected Stream ValueIndexStream { get; set; }
         protected Stream KeyIndexStream { get; set; }
-        protected Stream DocIndexStream { get; set; }
 
-        public CollectionSession(string collectionId, SessionFactory sessionFactory)
+        protected KeyValueSession(string collectionId, SessionFactory sessionFactory) : base(collectionId, sessionFactory)
         {
-            SessionFactory = sessionFactory;
-            CollectionId = collectionId;
         }
 
         public virtual void Dispose()
         {
             if (ValueStream != null) ValueStream.Dispose();
             if (KeyStream != null) KeyStream.Dispose();
-            if (DocStream != null) DocStream.Dispose();
             if (ValueIndexStream != null) ValueIndexStream.Dispose();
             if (KeyIndexStream != null) KeyIndexStream.Dispose();
-            if (DocIndexStream != null) DocIndexStream.Dispose();
         }
     }
 }

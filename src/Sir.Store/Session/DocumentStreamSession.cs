@@ -3,11 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
-    public class DocumentStreamSession : CollectionSession
+    public class DocumentStreamSession : DocumentSession
     {
         private readonly DocIndexReader _docIx;
         private readonly DocReader _docs;

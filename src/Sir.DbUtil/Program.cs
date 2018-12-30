@@ -95,7 +95,7 @@ namespace Sir.DbUtil
 
             var files = Directory.GetFiles(dir, "*.docs");
 
-            using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini"))))
+            using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration(Path.Combine(dir, "sir.ini"))))
             foreach (var docFileName in files)
             {
                 var name = Path.GetFileNameWithoutExtension(docFileName)
@@ -105,7 +105,7 @@ namespace Sir.DbUtil
 
                 if (collectionId == collection.ToHash().ToString())
                 {
-                    using (var readSession = new DocumentStreamSession(collection, sessionFactory))
+                    using (var readSession = sessionFactory.CreateDocumenSession(collectionId))
                     {
                         var docs = readSession.ReadDocs();
 

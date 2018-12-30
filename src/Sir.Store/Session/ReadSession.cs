@@ -12,7 +12,7 @@ namespace Sir.Store
     /// <summary>
     /// Read session targeting a single collection.
     /// </summary>
-    public class ReadSession : CollectionSession
+    public class ReadSession : DocumentSession
     {
         private readonly DocIndexReader _docIx;
         private readonly DocReader _docs;
@@ -143,7 +143,7 @@ namespace Sir.Store
             //_streams.Add(vecStream);
             _streams.Add(ixpStream);
 
-            return new NodeReader(ixFileName, vecFileName, ixpStream);
+            return new NodeReader(ixFileName, vecFileName, ixpStream, SessionFactory);
         }
 
         public NodeReader GetIndexReader(ulong keyHash)
@@ -170,15 +170,13 @@ namespace Sir.Store
 
                     var keyHash = cursor.Term.Key.ToString().ToHash();
                     IList<Hit> matching = null;
+                    var indexReader = GetIndexReader(keyHash);
 
-                    using (var indexReader = GetIndexReader(keyHash))
+                    if (indexReader != null)
                     {
-                        if (indexReader != null)
-                        {
-                            var termVector = cursor.Term.Value.ToString().ToCharVector();
+                        var termVector = cursor.Term.Value.ToString().ToCharVector();
 
-                            matching = indexReader.ClosestMatch(termVector);
-                        }
+                        matching = indexReader.ClosestMatch(termVector);
                     }
 
                     _log.Log("scan found {0} matches in {1}", matching.Count, timer.Elapsed);

@@ -10,7 +10,7 @@ namespace Sir.Store
     /// <summary>
     /// Indexing session targeting a single collection.
     /// </summary>
-    public class IndexingSession : CollectionSession
+    public class IndexingSession : CollectionSession, IDisposable
     {
         private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
@@ -31,7 +31,7 @@ namespace Sir.Store
             _log = Logging.CreateWriter("indexingsession");
             _validate = config.Get("create_index_validation_files") == "true";
             _dirty = new Dictionary<long, VectorNode>();
-            _vectorStream = SessionFactory.CreateAppendStream(
+            _vectorStream = SessionFactory.CreateAsyncAppendStream(
                     Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId.ToHash())));
         }
 
@@ -73,7 +73,7 @@ namespace Sir.Store
 
                 var pixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", collectionId, x.Key));
 
-                using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(pixFileName)))
+                using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAsyncAppendStream(pixFileName)))
                 using (var ixStream = CreateIndexStream(collectionId, x.Key))
                 {
                     var page = await x.Value.SerializeTree(ixStream);
@@ -91,7 +91,7 @@ namespace Sir.Store
         private Stream CreateIndexStream(ulong collectionId, long keyId)
         {
             var fileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
-            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true);
+            return SessionFactory.CreateAsyncAppendStream(fileName);
         }
 
         private async Task IndexDocument(IDictionary document, Stream vectorStream)
@@ -202,10 +202,8 @@ namespace Sir.Store
             }
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
-            base.Dispose();
-
             if (!_flushed)
             {
                 Task.WaitAll(new[] { Flush() });
