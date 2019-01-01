@@ -59,9 +59,9 @@ namespace Sir.Store
 
                         var score = BitConverter.ToSingle(buf, read);
 
-                        result.Add(docId, score);
+                        read += sizeof(float);
 
-                        read += sizeof(ulong);
+                        result.Add(docId, score);
                     }
 
                     _log.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);

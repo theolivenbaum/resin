@@ -12,14 +12,15 @@ namespace Sir
         {
             PostingsOffset = -1;
             Score = -1;
+            Or = true;
         }
 
         public Query(IComparable key, IComparable value)
         {
             PostingsOffset = -1;
             Term = new Term(key, value);
-            Or = true;
             Score = -1;
+            Or = true;
         }
 
         public ulong Collection { get; set; }
@@ -78,7 +79,7 @@ namespace Sir
                     booleanOperator = 2;
                 }
 
-                var pbuf = BitConverter.GetBytes(PostingsOffset);
+                var pbuf = BitConverter.GetBytes(q.PostingsOffset);
 
                 Buffer.BlockCopy(pbuf, 0, result, offset, pbuf.Length);
 
@@ -119,6 +120,20 @@ namespace Sir
                 var query = new Query { Score = score, PostingsOffset = postingsOffset, And = booleanOperator == 1, Or = booleanOperator == 2, Not = booleanOperator == 0 };
 
                 yield return query;
+            }
+        }
+
+        public void InsertAfter(Query query)
+        {
+            if (Next == null)
+            {
+                Next = query;
+            }
+            else
+            {
+                var tmp = Next;
+                Next = query;
+                query.Next = tmp;
             }
         }
     }

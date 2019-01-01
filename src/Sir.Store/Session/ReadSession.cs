@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -133,14 +132,15 @@ namespace Sir.Store
                 var timer = new Stopwatch();
                 timer.Start();
 
-                ScanIndex(query);
+                Map(query);
 
-                var root = query;
-                var queryStream = query.ToStream();
+                _log.Log("index scan for query {0} took {1}", query, timer.Elapsed);
 
-                var docIds =  _postingsReader.Reduce(CollectionId, queryStream);
+                timer.Restart();
 
-                _log.Log("reduced {0} to {1} docs in {2}",
+                var docIds =  _postingsReader.Reduce(CollectionId, query.ToStream());
+
+                _log.Log("reducing {0} to {1} docs took {2}",
                     query, docIds.Count, timer.Elapsed);
 
                 return docIds;
@@ -152,7 +152,7 @@ namespace Sir.Store
             }
         }
 
-        private void ScanIndex(Query query)
+        private void Map(Query query)
         {
             foreach (var cursor in query.ToList())
             {
@@ -176,10 +176,19 @@ namespace Sir.Store
                 {
                     timer.Restart();
 
-                    var topHit = hits.OrderByDescending(x => x.Score).First();
+                    var topHits = hits.OrderByDescending(x => x.Score).ToList();
+                    var topHit = topHits.First();
 
                     cursor.Score = topHit.Score;
                     cursor.PostingsOffset = topHit.PostingsOffset;
+
+                    if (topHits.Count > 1)
+                    {
+                        foreach (var hit in topHits.Skip(1))
+                        {
+                            cursor.InsertAfter(new Query { Score = hit.Score, PostingsOffset = hit.PostingsOffset });
+                        }
+                    }
 
                     _log.Log("sorted and mapped term {0} in {1}", cursor, timer.Elapsed);
                 }
