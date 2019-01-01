@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -18,14 +19,81 @@ namespace Sir.Postings
             _log = Logging.CreateWriter("streamrepository");
         }
 
-        public async Task<MemoryStream> Read(ulong collectionId, long id)
+        public async Task<MemoryStream> Reduce(ulong collectionId, IList<Query> query)
+        {
+            var result = new ConcurrentDictionary<ulong, float>();
+
+            foreach (var cursor in query)
+            {
+                var timer = new Stopwatch();
+                timer.Start();
+
+                var docIdStream = await Read(collectionId, cursor.PostingsOffset);
+                var docIdList = Deserialize(docIdStream.ToArray());
+                var docIds = new ConcurrentDictionary<ulong, float>();
+
+                var keyHash = cursor.Term.Key.ToString().ToHash();
+                
+
+
+
+                _log.Log("read {0} postings in {1}", docIds.Count, timer.Elapsed);
+
+                timer.Restart();
+
+                if (cursor.And)
+                {
+                    var aggregatedResult = new ConcurrentDictionary<ulong, float>();
+
+                    foreach (var doc in result)
+                    {
+                        float score;
+
+                        if (docIds.TryGetValue(doc.Key, out score))
+                        {
+                            aggregatedResult[doc.Key] = score + doc.Value;
+                        }
+                    }
+
+                    result = aggregatedResult;
+                }
+                else if (cursor.Not)
+                {
+                    foreach (var id in docIds.Keys)
+                    {
+                        result.Remove(id, out float _);
+                    }
+                }
+                else // Or
+                {
+                    foreach (var id in docIds)
+                    {
+                        float score;
+
+                        if (result.TryGetValue(id.Key, out score))
+                        {
+                            result[id.Key] = score + id.Value;
+                        }
+                        else
+                        {
+                            result.GetOrAdd(id.Key, id.Value);
+                        }
+                    }
+                }
+
+                _log.Log("reduced {0} to {1} docs in {2}",
+                    cursor, result.Count, timer.Elapsed);
+            }
+        }
+
+        public async Task<MemoryStream> Read(ulong collectionId, long offset)
         {
             var timer = new Stopwatch();
             timer.Start();
 
             var result = new MemoryStream();
 
-            var ixStream = GetReadableIndexStream(collectionId, id);
+            var ixStream = GetReadableIndexStream(collectionId, offset);
 
             if (ixStream == null)
             {
@@ -150,6 +218,22 @@ namespace Sir.Postings
             res.Position = 0;
 
             return res;
+        }
+
+        private IList<ulong> Deserialize(byte[] buffer)
+        {
+            var result = new List<ulong>();
+
+            var read = 0;
+
+            while (read < buffer.Length)
+            {
+                result.Add(BitConverter.ToUInt64(buffer, read));
+
+                read += sizeof(ulong);
+            }
+
+            return result;
         }
 
         private Stream GetWritableDataStream(ulong collectionId)
