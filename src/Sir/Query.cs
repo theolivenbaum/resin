@@ -35,8 +35,13 @@ namespace Sir
 
         public override string ToString()
         {
-            var op = And ? "+" : Or ? " " : "-";
-            return string.Format("{0}{1}", op, Term);
+            if (Term != null)
+            {
+                var op = And ? "+" : Or ? " " : "-";
+                return string.Format("{0}{1}", op, Term);
+            }
+
+            return string.Format("{0}:{1}", Score, PostingsOffset);
         }
 
         public IList<Query> ToList()
@@ -85,7 +90,7 @@ namespace Sir
 
                 offset += sizeof(long);
 
-                var sbuf = BitConverter.GetBytes(Score);
+                var sbuf = BitConverter.GetBytes(q.Score);
 
                 Buffer.BlockCopy(sbuf, 0, result, offset, sbuf.Length);
 
