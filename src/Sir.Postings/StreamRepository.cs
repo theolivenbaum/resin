@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sir.Postings
@@ -29,13 +30,7 @@ namespace Sir.Postings
                 timer.Start();
 
                 var docIdStream = await Read(collectionId, cursor.PostingsOffset);
-                var docIdList = Deserialize(docIdStream.ToArray());
-                var docIds = new ConcurrentDictionary<ulong, float>();
-
-                var keyHash = cursor.Term.Key.ToString().ToHash();
-                
-
-
+                var docIds = Deserialize(docIdStream.ToArray()).ToDictionary(docId => docId, score => cursor.Score);
 
                 _log.Log("read {0} postings in {1}", docIds.Count, timer.Elapsed);
 
@@ -84,6 +79,8 @@ namespace Sir.Postings
                 _log.Log("reduced {0} to {1} docs in {2}",
                     cursor, result.Count, timer.Elapsed);
             }
+
+            return Serialize(result);
         }
 
         public async Task<MemoryStream> Read(ulong collectionId, long offset)
@@ -218,6 +215,19 @@ namespace Sir.Postings
             res.Position = 0;
 
             return res;
+        }
+
+        private MemoryStream Serialize(IDictionary<ulong, float> docs)
+        {
+            var result = new MemoryStream();
+
+            foreach (var doc in docs)
+            {
+                result.Write(BitConverter.GetBytes(doc.Key));
+                result.Write(BitConverter.GetBytes(doc.Value));
+            }
+
+            return result;
         }
 
         private IList<ulong> Deserialize(byte[] buffer)

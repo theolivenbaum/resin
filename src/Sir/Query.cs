@@ -11,6 +11,7 @@ namespace Sir
         public Query()
         {
             PostingsOffset = -1;
+            Score = -1;
         }
 
         public Query(IComparable key, IComparable value)
@@ -18,6 +19,7 @@ namespace Sir
             PostingsOffset = -1;
             Term = new Term(key, value);
             Or = true;
+            Score = -1;
         }
 
         public ulong Collection { get; set; }
@@ -106,11 +108,16 @@ namespace Sir
 
                 offset += sizeof(long);
 
+                var score = BitConverter.ToSingle(stream, offset);
+
+                offset += sizeof(float);
+
                 var booleanOperator = stream[offset];
 
                 offset += sizeof(byte);
 
-                var query = new Query { PostingsOffset = postingsOffset, And = booleanOperator == 1, Or = booleanOperator == 2, Not = booleanOperator == 0 };
+                var query = new Query { Score = score, PostingsOffset = postingsOffset, And = booleanOperator == 1, Or = booleanOperator == 2, Not = booleanOperator == 0 };
+
                 yield return query;
             }
         }

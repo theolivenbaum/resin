@@ -27,7 +27,6 @@ namespace Sir.Postings
                 var timer = new Stopwatch();
                 timer.Start();
 
-                var id = long.Parse(request.Query["id"]);
                 MemoryStream data;
 
                 if (request.Query.ContainsKey("query"))
@@ -37,11 +36,16 @@ namespace Sir.Postings
 
                     data = await _data.Reduce(collectionId.ToHash(), query.ToList());
                 }
-                else
+                else if (request.Query.ContainsKey("id"))
                 {
+                    var id = long.Parse(request.Query["id"]);
+
                     data = await _data.Read(collectionId.ToHash(), id);
                 }
-                
+                else
+                {
+                    throw new ArgumentException("query parameters 'query' or 'id' are missing.");
+                }
 
                 var result = new Result { Data = data, MediaType = "application/postings", Total = data.Length/sizeof(ulong) };
 
