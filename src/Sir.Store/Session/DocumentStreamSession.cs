@@ -18,7 +18,7 @@ namespace Sir.Store
         public DocumentStreamSession(string collectionId, SessionFactory sessionFactory) 
             : base(collectionId, sessionFactory)
         {
-            var collection = collectionId.ToHash();
+            var collection = ulong.Parse(collectionId);
 
             ValueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collection)));
             KeyStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collection)));

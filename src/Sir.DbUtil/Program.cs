@@ -95,7 +95,7 @@ namespace Sir.DbUtil
 
             var files = Directory.GetFiles(dir, "*.docs");
 
-            using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration(Path.Combine(dir, "sir.ini"))))
+            using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration("sir.ini")))
             foreach (var docFileName in files)
             {
                 var name = Path.GetFileNameWithoutExtension(docFileName)
