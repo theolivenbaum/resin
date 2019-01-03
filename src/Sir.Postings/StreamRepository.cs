@@ -27,15 +27,11 @@ namespace Sir.Postings
 
             foreach (var cursor in query)
             {
-                var timer = new Stopwatch();
-                timer.Start();
-
                 var docIdStream = await Read(collectionId, cursor.PostingsOffset);
                 var docIds = Deserialize(docIdStream.ToArray()).ToDictionary(docId => docId, score => cursor.Score);
 
-                _log.Log("read {0} postings in {1}", docIds.Count, timer.Elapsed);
-
-                timer.Restart();
+                var timer = new Stopwatch();
+                timer.Start();
 
                 if (cursor.And)
                 {
@@ -81,7 +77,9 @@ namespace Sir.Postings
                     cursor, result.Count, timer.Elapsed);
             }
 
-            return Serialize(result);
+            var stream = Serialize(result);
+
+            return stream;
         }
 
         public async Task<MemoryStream> Read(ulong collectionId, long offset)
@@ -98,11 +96,19 @@ namespace Sir.Postings
                 {
                     using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Read))
                     {
+                        _log.Log("open zip file took {0}", timer.Elapsed);
+
+                        timer.Restart();
+
                         var entryName = offset.ToString();
                         var entry = archive.GetEntry(entryName);
 
                         if (entry != null)
                         {
+                            _log.Log("found zip entry in {0}", timer.Elapsed);
+
+                            timer.Restart();
+
                             var ix = new List<(long, long)>();
 
                             using (var ixStream = entry.Open())
@@ -115,6 +121,10 @@ namespace Sir.Postings
                                     ix.Add((BitConverter.ToInt64(buf, 0), BitConverter.ToInt64(buf, sizeof(long))));
                                 }
                             }
+
+                            _log.Log("deserializing postings index took {0}", timer.Elapsed);
+
+                            timer.Restart();
 
                             using (var file = CreateReadableDataStream(collectionId))
                             {
@@ -137,12 +147,12 @@ namespace Sir.Postings
                                     await result.WriteAsync(buf);
                                 }
                             }
+
+                            _log.Log("deserializing postings took {0}", timer.Elapsed);
                         }
                     }
                 }
             }
-
-            _log.Log("read {0} bytes of postings data in {1}", result.Position, timer.Elapsed);
 
             return result;
         }
@@ -258,6 +268,7 @@ namespace Sir.Postings
 
         private MemoryStream Serialize(IDictionary<ulong, float> docs)
         {
+            var timer = Stopwatch.StartNew();
             var result = new MemoryStream();
 
             foreach (var doc in docs)
@@ -266,11 +277,16 @@ namespace Sir.Postings
                 result.Write(BitConverter.GetBytes(doc.Value));
             }
 
+            _log.Log("serialized result in {0}", timer.Elapsed);
+
             return result;
         }
 
         private IList<ulong> Deserialize(byte[] buffer)
         {
+            var timer = new Stopwatch();
+            timer.Start();
+
             var result = new List<ulong>();
 
             var read = 0;
@@ -281,6 +297,8 @@ namespace Sir.Postings
 
                 read += sizeof(ulong);
             }
+
+            _log.Log("deserialized {0} postings in {1}", result.Count, timer.Elapsed);
 
             return result;
         }

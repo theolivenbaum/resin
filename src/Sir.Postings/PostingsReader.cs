@@ -49,7 +49,7 @@ namespace Sir.Postings
 
                 var result = new Result { Data = data, MediaType = "application/postings", Total = data.Length/sizeof(ulong) };
 
-                _log.Log("created request message with {0} postings in {1}", result.Total, timer.Elapsed);
+                _log.Log("processed read request for {0} postings in {1}", result.Total, timer.Elapsed);
 
                 return result;
             }
