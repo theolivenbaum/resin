@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -89,46 +90,55 @@ namespace Sir.Postings
             timer.Start();
 
             var result = new MemoryStream();
+            var containerFileName = Path.Combine(_config.Get("data_dir"), string.Format("{0}.zip", collectionId));
 
-            var ixStream = GetReadableIndexStream(collectionId, offset);
-
-            if (ixStream == null)
+            if (File.Exists(containerFileName))
             {
-                return result;
-            }
-
-            var ix = new List<(long, long)>();
-
-            using (ixStream)
-            {
-                var buf = new byte[16];
-                int read;
-
-                while ((read = await ixStream.ReadAsync(buf)) > 0)
+                using (FileStream zipToOpen = new FileStream(containerFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    ix.Add((BitConverter.ToInt64(buf, 0), BitConverter.ToInt64(buf, sizeof(long))));
-                }
-            }
-
-            using (var file = GetReadableDataStream(collectionId))
-            {
-                foreach (var loc in ix)
-                {
-                    var pos = loc.Item1;
-                    var len = loc.Item2;
-
-                    file.Seek(pos, SeekOrigin.Begin);
-
-                    var buf = new byte[len];
-
-                    var read = await file.ReadAsync(buf);
-
-                    if (read != len)
+                    using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Read))
                     {
-                        throw new InvalidDataException();
-                    }
+                        var entryName = offset.ToString();
+                        var entry = archive.GetEntry(entryName);
 
-                    await result.WriteAsync(buf);
+                        if (entry != null)
+                        {
+                            var ix = new List<(long, long)>();
+
+                            using (var ixStream = entry.Open())
+                            {
+                                var buf = new byte[16];
+                                int read;
+
+                                while ((read = ixStream.Read(buf)) > 0)
+                                {
+                                    ix.Add((BitConverter.ToInt64(buf, 0), BitConverter.ToInt64(buf, sizeof(long))));
+                                }
+                            }
+
+                            using (var file = CreateReadableDataStream(collectionId))
+                            {
+                                foreach (var loc in ix)
+                                {
+                                    var pos = loc.Item1;
+                                    var len = loc.Item2;
+
+                                    file.Seek(pos, SeekOrigin.Begin);
+
+                                    var buf = new byte[len];
+
+                                    var read = await file.ReadAsync(buf);
+
+                                    if (read != len)
+                                    {
+                                        throw new InvalidDataException();
+                                    }
+
+                                    await result.WriteAsync(buf);
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -174,31 +184,58 @@ namespace Sir.Postings
 
             var positions = new List<long>(payloadCount);
 
-            using (var file = GetWritableDataStream(collectionId))
+            // Serialize data and index
+
+            var time = new Stopwatch();
+            time.Start();
+
+            using (var data = CreateAppendableDataStream(collectionId))
             {
-                for (int index = 0; index < lists.Count; index++)
+                var containerFileName = Path.Combine(_config.Get("data_dir"), string.Format("{0}.zip", collectionId));
+
+                using (FileStream zipToOpen = new FileStream(containerFileName, FileMode.OpenOrCreate))
                 {
-                    long pos = file.Position;
-                    var word = lists[index];
-
-                    file.Write(word);
-
-                    long len = file.Position - pos;
-
-                    if (len != lengths[index])
+                    using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Update))
                     {
-                        throw new DataMisalignedException();
-                    }
+                        for (int i = 0; i < lists.Count; i++)
+                        {
+                            long id = data.Position;
+                            var list = lists[i];
+                            var dataWriteTask = data.WriteAsync(list);
+                            var entryName = id.ToString();
+                            var entry = archive.GetEntry(entryName);
 
-                    using (var ixStream = GetWritableIndexStream(collectionId, pos))
-                    {
-                        ixStream.Write(BitConverter.GetBytes(pos));
-                        ixStream.Write(BitConverter.GetBytes(len));
-                    }
+                            Stream index;
 
-                    positions.Add(pos);
+                            if (entry == null)
+                            {
+                                entry = archive.CreateEntry(entryName);
+                                index = entry.Open();
+                            }
+                            else
+                            {
+                                index = entry.Open();
+                                index.Seek(0, SeekOrigin.End);
+                            }
+
+                            using (index)
+                            {
+
+                                index.Write(BitConverter.GetBytes(id));
+                                index.Write(BitConverter.GetBytes(list.Length));
+
+                                positions.Add(id);
+                            }
+
+                            await dataWriteTask;
+                        }
+                    }
                 }
             }
+
+            _log.Log("serialized data and index in {0}", time.Elapsed);
+
+            time.Restart();
 
             if (positions.Count != payloadCount)
             {
@@ -213,6 +250,8 @@ namespace Sir.Postings
             }
 
             res.Position = 0;
+
+            _log.Log("serialized response message in {0}", time.Elapsed);
 
             return res;
         }
@@ -246,7 +285,7 @@ namespace Sir.Postings
             return result;
         }
 
-        private Stream GetWritableDataStream(ulong collectionId)
+        private Stream CreateAppendableDataStream(ulong collectionId)
         {
             var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));
 
@@ -255,15 +294,17 @@ namespace Sir.Postings
             return Stream.Synchronized(stream);
         }
 
-        private Stream GetWritableIndexStream(ulong collectionId, long offset)
-        {
-            var fileName = Path.Combine(_config.Get("data_dir"), string.Format("{0}.{1}.pix", collectionId, offset));
-            var stream = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+        //private Stream CreateAppendableIndexStream(ulong collectionId, long offset)
+        //{
+        //    var fileName = Path.Combine(_config.Get("data_dir"), string.Format("{0}.{1}.pix", collectionId, offset));
 
-            return Stream.Synchronized(stream);
-        }
 
-        private Stream GetReadableIndexStream(ulong collectionId, long offset)
+        //    var stream = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+
+        //    return Stream.Synchronized(stream);
+        //}
+
+        private Stream CreateReadableIndexStream(ulong collectionId, long offset)
         {
             var fileName = Path.Combine(_config.Get("data_dir"), string.Format("{0}.{1}.pix", collectionId, offset));
 
@@ -276,7 +317,7 @@ namespace Sir.Postings
             return null;
         }
 
-        private Stream GetReadableDataStream(ulong collectionId)
+        private Stream CreateReadableDataStream(ulong collectionId)
         {
             var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));
 
