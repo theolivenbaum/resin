@@ -61,11 +61,7 @@ namespace Sir.Store
 
         private async Task SerializeIndex(ulong collectionId, IDictionary<long, VectorNode> columns)
         {
-            var timer = new Stopwatch();
-            timer.Start();
-
             var postingsWriter = new RemotePostingsWriter(_config);
-            var didPublish = false;
 
             foreach (var x in columns)
             {
@@ -76,16 +72,15 @@ namespace Sir.Store
                 using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAsyncAppendStream(pixFileName)))
                 using (var ixStream = CreateIndexStream(collectionId, x.Key))
                 {
+                    var time = Stopwatch.StartNew();
+
                     var page = await x.Value.SerializeTree(ixStream);
+
+                    _log.Log("serialized tree in {0} with size {1}", time.Elapsed, x.Value.Size());
 
                     await pageIndexWriter.WriteAsync(page.offset, page.length);
                 }
-
-                didPublish = true;
             }
-
-            if (didPublish)
-                _log.Log(string.Format("***FLUSHED*** index in {0}", timer.Elapsed));
         }
 
         private Stream CreateIndexStream(ulong collectionId, long keyId)
