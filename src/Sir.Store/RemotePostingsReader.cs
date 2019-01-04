@@ -23,7 +23,7 @@ namespace Sir.Store
 
         public IDictionary<ulong, float> Reduce(string collectionId, byte[] query)
         {
-            var b64 = Convert.ToBase64String(query);
+            var b64 = Uri.EscapeDataString(Convert.ToBase64String(query));
             var endpoint = string.Format("{0}{1}?query={2}", _config.Get("postings_endpoint"), collectionId, b64);
 
             var request = (HttpWebRequest)WebRequest.Create(endpoint);

@@ -27,7 +27,7 @@ namespace Sir.Postings
                 var timer = new Stopwatch();
                 timer.Start();
 
-                var stream = Convert.FromBase64String(request.Query["query"]);
+                var stream = Convert.FromBase64String(Uri.UnescapeDataString(request.Query["query"]));
                 var query = Query.FromStream(stream);
 
                 var data = await _data.Reduce(collectionId.ToHash(), query.ToList());
