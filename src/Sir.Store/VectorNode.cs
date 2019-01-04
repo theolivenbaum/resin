@@ -156,42 +156,53 @@ namespace Sir.Store
 
         public async Task Add(VectorNode node, Stream vectorStream = null)
         {
-            var angle = node.TermVector.CosAngle(TermVector);
+            var cursor = this;
 
-            if (angle >= IdenticalAngle)
+            while (cursor != null)
             {
-                node.Angle = angle;
+                var angle = node.TermVector.CosAngle(cursor.TermVector);
 
-                Merge(node);
-            }
-            else if (angle > FoldAngle)
-            {
-                if (Left == null)
+                if (angle >= IdenticalAngle)
                 {
                     node.Angle = angle;
-                    Left = node;
 
-                    if (vectorStream != null)
-                        await Left.SerializeVector(vectorStream);
+                    cursor.Merge(node);
+
+                    break;
+                }
+                else if (angle > FoldAngle)
+                {
+                    if (cursor.Left == null)
+                    {
+                        node.Angle = angle;
+                        cursor.Left = node;
+
+                        if (vectorStream != null)
+                            await cursor.Left.SerializeVector(vectorStream);
+
+                        break;
+                    }
+                    else
+                    {
+                        cursor = cursor.Left;
+                    }
                 }
                 else
                 {
-                    await Left.Add(node, vectorStream);
-                }
-            }
-            else
-            {
-                if (Right == null)
-                {
-                    node.Angle = angle;
-                    Right = node;
+                    if (cursor.Right == null)
+                    {
+                        node.Angle = angle;
+                        cursor.Right = node;
 
-                    if (vectorStream != null)
-                        await Right.SerializeVector(vectorStream);
-                }
-                else
-                {
-                    await Right.Add(node, vectorStream);
+                        if (vectorStream != null)
+                            await cursor.Right.SerializeVector(vectorStream);
+
+                        break;
+                    }
+                    else
+                    {
+                        cursor = cursor.Right;
+                    }
                 }
             }
         }
