@@ -23,8 +23,7 @@ namespace Sir.Postings
         {
             try
             {
-                var timer = new Stopwatch();
-                timer.Start();
+                var timer = Stopwatch.StartNew();
 
                 var payload = new MemoryStream();
 

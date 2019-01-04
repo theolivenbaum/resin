@@ -24,8 +24,7 @@ namespace Sir.Store
 
         public async Task Write(ulong collectionId, VectorNode rootNode)
         {
-            var timer = new Stopwatch();
-            timer.Start();
+            var timer = Stopwatch.StartNew();
 
             var nodes = new List<VectorNode>();
             byte[] payload;
@@ -33,40 +32,47 @@ namespace Sir.Store
             // create postings message
 
             using (var message = new MemoryStream())
-            using (var header = new MemoryStream())
+            using (var lengths = new MemoryStream())
+            using (var offsets = new MemoryStream())
             using (var body = new MemoryStream())
             {
-                // write length of word (i.e. length of list of postings) to header 
+                // write length of word (i.e. length of list of postings) to header,
+                // postings offsets to offset stream
                 // and word itself to body
-                var dirty = rootNode.SerializePostings(header, body).ToList();
+                var dirty = rootNode.SerializePostings(lengths, offsets, body).ToList();
 
                 nodes.AddRange(dirty);
 
                 if (nodes.Count == 0)
                     return;
 
-                if (nodes.Count != header.Length / sizeof(int))
+                if (nodes.Count != lengths.Length / sizeof(int))
                 {
                     throw new DataMisalignedException();
                 }
 
-                // first word of message is payload count (i.e. num of words (i.e. posting lists))
+                // first word of message is payload count (i.e. num of posting lists)
                 await message.WriteAsync(BitConverter.GetBytes(nodes.Count));
 
-                // next is header
-                header.Position = 0;
-                await header.CopyToAsync(message);
+                // next are lengths
+                lengths.Position = 0;
+                await lengths.CopyToAsync(message);
+
+                // then all of the offsets
+                offsets.Position = 0;
+                await offsets.CopyToAsync(message);
 
                 // last is body
                 body.Position = 0;
                 await body.CopyToAsync(message);
 
                 var buf = message.ToArray();
+                var ctime = Stopwatch.StartNew();
                 var compressed = QuickLZ.compress(buf, 3);
 
-                payload = compressed;
+                _log.Log(string.Format("uncompressing {0} bytes to {1} took {2}", buf.Length, compressed.Length, ctime.Elapsed));
 
-                _log.Log(string.Format("uncompressed: {0} compressed: {1}", buf.Length, compressed.Length));
+                payload = compressed;
             }
 
             _log.Log(string.Format("create postings message took {0}", timer.Elapsed));

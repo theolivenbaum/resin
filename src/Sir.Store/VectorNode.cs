@@ -291,7 +291,7 @@ namespace Sir.Store
             VecOffset = await TermVector.SerializeAsync(vectorStream);
         }
 
-        public IEnumerable<VectorNode> SerializePostings(Stream lengths, Stream lists)
+        public IEnumerable<VectorNode> SerializePostings(Stream lengths, Stream offsets, Stream lists)
         {
             var node = Right;
             var stack = new Stack<VectorNode>();
@@ -308,13 +308,9 @@ namespace Sir.Store
 
                     var buf = list.ToStream();
 
-                    if (buf.Length / sizeof(ulong) != list.Length)
-                    {
-                        throw new DataMisalignedException();
-                    }
-
                     lists.Write(buf);
                     lengths.Write(BitConverter.GetBytes(buf.Length));
+                    offsets.Write(BitConverter.GetBytes(node.PostingsOffset));
 
                     yield return node;
                 }

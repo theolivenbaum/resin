@@ -27,8 +27,8 @@ namespace Sir.Postings
 
             foreach (var cursor in query)
             {
-                var docIdStream = await Read(collectionId, cursor.PostingsOffset);
-                var docIds = Deserialize(docIdStream.ToArray()).ToDictionary(docId => docId, score => cursor.Score);
+                var docIdList = await Read(collectionId, cursor.PostingsOffset);
+                var docIds = docIdList.ToDictionary(docId => docId, score => cursor.Score);
 
                 var timer = new Stopwatch();
                 timer.Start();
@@ -82,92 +82,99 @@ namespace Sir.Postings
             return stream;
         }
 
-        public async Task<MemoryStream> Read(ulong collectionId, long offset)
+        private async Task<IList<ulong>> Read(ulong collectionId, long offset)
         {
             var timer = new Stopwatch();
             timer.Start();
 
-            var result = new MemoryStream();
-            var containerFileName = Path.Combine(_config.Get("data_dir"), string.Format("{0}.zip", collectionId));
+            var result = new HashSet<ulong>();
+            var pageCount = 0;
 
-            if (File.Exists(containerFileName))
+            using (var data = CreateReadableDataStream(collectionId))
             {
-                using (FileStream zipToOpen = new FileStream(containerFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                data.Seek(offset, SeekOrigin.Begin);
+
+                // We are now at the first page.
+                // Each page starts with a header consisting of (a) count, (b) next page offset and (c) last page offset (long, long, long).
+                // The rest of the page is data (ulong's).
+
+                var lbuf = new byte[sizeof(long)];
+
+                await data.ReadAsync(lbuf);
+
+                var count = BitConverter.ToInt64(lbuf);
+
+                await data.ReadAsync(lbuf);
+
+                var nextPageOffset = BitConverter.ToInt64(lbuf);
+
+                var pageLen = sizeof(long) + (count * sizeof(ulong));
+                var pageBuf = new byte[pageLen];
+
+                await data.ReadAsync(pageBuf);
+
+                for (int i = 0; i < count; i++)
                 {
-                    using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Read))
+                    var entryOffset = sizeof(long) + (i * sizeof(ulong));
+                    var entry = BitConverter.ToUInt64(pageBuf, entryOffset);
+
+                    if (!result.Add(entry))
                     {
-                        _log.Log("open zip file took {0}", timer.Elapsed);
+                        throw new DataMisalignedException("first page is crap");
+                    }
+                }
 
-                        timer.Restart();
+                while (nextPageOffset > -1)
+                {
+                    data.Seek(nextPageOffset, SeekOrigin.Begin);
 
-                        var entryName = offset.ToString();
-                        var entry = archive.GetEntry(entryName);
+                    await data.ReadAsync(lbuf);
 
-                        if (entry != null)
+                    count = BitConverter.ToInt64(lbuf);
+
+                    await data.ReadAsync(lbuf);
+
+                    nextPageOffset = BitConverter.ToInt64(lbuf);
+
+                    pageLen = sizeof(long) + (count * sizeof(ulong));
+                    var page = new byte[pageLen];
+
+                    await data.ReadAsync(page);
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        var entryOffset = sizeof(long) + (i * sizeof(ulong));
+                        var entry = BitConverter.ToUInt64(page, entryOffset);
+
+                        if (!result.Add(entry))
                         {
-                            _log.Log("found zip entry in {0}", timer.Elapsed);
-
-                            timer.Restart();
-
-                            var ix = new List<(long, long)>();
-
-                            using (var ixStream = entry.Open())
-                            {
-                                var buf = new byte[16];
-                                int read;
-
-                                while ((read = ixStream.Read(buf)) > 0)
-                                {
-                                    ix.Add((BitConverter.ToInt64(buf, 0), BitConverter.ToInt64(buf, sizeof(long))));
-                                }
-                            }
-
-                            _log.Log("deserializing postings index took {0}", timer.Elapsed);
-
-                            timer.Restart();
-
-                            using (var file = CreateReadableDataStream(collectionId))
-                            {
-                                foreach (var loc in ix)
-                                {
-                                    var pos = loc.Item1;
-                                    var len = loc.Item2;
-
-                                    file.Seek(pos, SeekOrigin.Begin);
-
-                                    var buf = new byte[len];
-
-                                    var read = await file.ReadAsync(buf);
-
-                                    if (read != len)
-                                    {
-                                        throw new InvalidDataException();
-                                    }
-
-                                    await result.WriteAsync(buf);
-                                }
-                            }
-
-                            _log.Log("deserializing postings took {0}", timer.Elapsed);
+                            throw new DataMisalignedException("page is crap");
                         }
                     }
+
+
+                    pageCount++;
                 }
             }
 
-            return result;
+            _log.Log("read {0} postings from {0} pages in {2}", result.Count, pageCount, timer.Elapsed);
+
+            return result.ToList();
         }
 
         public async Task<MemoryStream> Write(ulong collectionId, byte[] messageBuf)
         {
+            var time = Stopwatch.StartNew();
             int read = 0;
+            var lists = new List<byte[]>();
+            var offsets = new List<long>();
+            var lengths = new List<int>();
 
             // read first word of payload
             var payloadCount = BitConverter.ToInt32(messageBuf, 0);
             read = sizeof(int);
 
             // read lengths
-            var lengths = new List<int>(payloadCount);
-
             for (int index = 0; index < payloadCount; index++)
             {
                 var len = BitConverter.ToInt32(messageBuf, read);
@@ -175,9 +182,15 @@ namespace Sir.Postings
                 read += sizeof(int);
             }
 
-            // read lists
-            var lists = new List<byte[]>(payloadCount);
+            // read offsets
+            for (int index = 0; index < payloadCount; index++)
+            {
+                var offset = BitConverter.ToInt64(messageBuf, read);
+                offsets.Add(offset);
+                read += sizeof(long);
+            }
 
+            // read lists
             for (int index = 0; index < lengths.Count; index++)
             {
                 var size = lengths[index];
@@ -192,54 +205,85 @@ namespace Sir.Postings
                 throw new DataMisalignedException();
             }
 
-            var positions = new List<long>(payloadCount);
+            _log.Log("parsed payload in {0}", time.Elapsed);
+            time.Restart();
 
-            // Serialize data and index
+            var positions = new List<long>(lists.Count);
 
-            var time = new Stopwatch();
-            time.Start();
+            // persist payload
 
-            using (var data = CreateAppendableDataStream(collectionId))
+            using (var data = CreateReadableWritableDataStream(collectionId))
             {
-                var containerFileName = Path.Combine(_config.Get("data_dir"), string.Format("{0}.zip", collectionId));
-
-                using (FileStream zipToOpen = new FileStream(containerFileName, FileMode.OpenOrCreate))
+                for (int listIndex = 0; listIndex < lists.Count; listIndex++)
                 {
-                    using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Update))
+                    var offset = offsets[listIndex];
+                    var list = lists[listIndex];
+
+                    if (offset < 0)
                     {
-                        for (int i = 0; i < lists.Count; i++)
-                        {
-                            long id = data.Position;
-                            var list = lists[i];
-                            var dataWriteTask = data.WriteAsync(list);
-                            var entryName = id.ToString();
-                            var entry = archive.GetEntry(entryName);
+                        // we are writing a first page
+                        data.Seek(0, SeekOrigin.End);
 
-                            Stream index;
+                        // record new file location
+                        offset = data.Position;
 
-                            if (entry == null)
-                            {
-                                entry = archive.CreateEntry(entryName);
-                                index = entry.Open();
-                            }
-                            else
-                            {
-                                index = entry.Open();
-                                index.Seek(0, SeekOrigin.End);
-                            }
+                        // write count to header of this page
+                        await data.WriteAsync(BitConverter.GetBytes(Convert.ToInt64(list.Length/sizeof(ulong))));
 
-                            using (index)
-                            {
+                        // write nextPageOffset
+                        await data.WriteAsync(BitConverter.GetBytes((long)-1));
 
-                                index.Write(BitConverter.GetBytes(id));
-                                index.Write(BitConverter.GetBytes(list.Length));
+                        // write lastPageOffset
+                        await data.WriteAsync(BitConverter.GetBytes(offset));
 
-                                positions.Add(id);
-                            }
-
-                            await dataWriteTask;
-                        }
+                        // write payload
+                        await data.WriteAsync(list);
                     }
+                    else
+                    {
+                        // there is already at least one page
+
+                        var nextPageOffsetWordPosition = offset + sizeof(long);
+                        long lastPageOffsetWordPosition = offset + (2 * sizeof(long));
+                        var lbuf = new byte[sizeof(long)];
+
+                        data.Seek(lastPageOffsetWordPosition, SeekOrigin.Begin);
+
+                        await data.ReadAsync(lbuf);
+
+                        long lastPageOffset = BitConverter.ToInt64(lbuf);
+
+                        if (lastPageOffset != offset)
+                        {
+                            nextPageOffsetWordPosition = lastPageOffset + sizeof(long);
+                        }
+
+                        data.Seek(0, SeekOrigin.End);
+
+                        var newPageOffset = data.Position;
+
+                        // write count to header of this page
+                        await data.WriteAsync(BitConverter.GetBytes(Convert.ToInt64(list.Length / sizeof(ulong))));
+
+                        // write nextPageOffset
+                        await data.WriteAsync(BitConverter.GetBytes((long)-1));
+
+                        // write lastPageOffset
+                        await data.WriteAsync(BitConverter.GetBytes((long)-1));
+
+                        // write payload
+                        await data.WriteAsync(list);
+
+                        // update next page offset
+                        data.Seek(nextPageOffsetWordPosition, SeekOrigin.Begin);
+                        await data.WriteAsync(BitConverter.GetBytes(newPageOffset));
+
+                        // update last page offset
+                        data.Seek(lastPageOffsetWordPosition, SeekOrigin.Begin);
+                        await data.WriteAsync(BitConverter.GetBytes(newPageOffset));
+                    }
+
+                    positions.Add(offset);
                 }
             }
 
@@ -303,11 +347,11 @@ namespace Sir.Postings
             return result;
         }
 
-        private Stream CreateAppendableDataStream(ulong collectionId)
+        private Stream CreateReadableWritableDataStream(ulong collectionId)
         {
             var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));
 
-            var stream = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+            var stream = new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
             return Stream.Synchronized(stream);
         }

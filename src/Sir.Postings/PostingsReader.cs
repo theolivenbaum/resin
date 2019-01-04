@@ -27,25 +27,10 @@ namespace Sir.Postings
                 var timer = new Stopwatch();
                 timer.Start();
 
-                MemoryStream data;
+                var stream = Convert.FromBase64String(request.Query["query"]);
+                var query = Query.FromStream(stream);
 
-                if (request.Query.ContainsKey("query"))
-                {
-                    var stream = Convert.FromBase64String(request.Query["query"]);
-                    var query = Query.FromStream(stream);
-
-                    data = await _data.Reduce(collectionId.ToHash(), query.ToList());
-                }
-                else if (request.Query.ContainsKey("id"))
-                {
-                    var id = long.Parse(request.Query["id"]);
-
-                    data = await _data.Read(collectionId.ToHash(), id);
-                }
-                else
-                {
-                    throw new ArgumentException("query parameters 'query' or 'id' are missing.");
-                }
+                var data = await _data.Reduce(collectionId.ToHash(), query.ToList());
 
                 var result = new Result { Data = data, MediaType = "application/postings", Total = data.Length/sizeof(ulong) };
 

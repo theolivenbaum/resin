@@ -7,6 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Core", "Sir\Sir.Core.cs
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CA96B574-72B3-4954-8B51-4C961A6F6622}"
 	ProjectSection(SolutionItems) = preProject
+		..\clear_index.bat = ..\clear_index.bat
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
@@ -18,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.StringCompare", "Sir.St
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.DbUtil", "Sir.DbUtil\Sir.DbUtil.csproj", "{D267D6FB-6DA5-444F-A628-FC0C3B1C6662}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sir.Postings", "Sir.Postings\Sir.Postings.csproj", "{5514C8B0-01D2-489C-8632-A30944E51948}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Postings", "Sir.Postings\Sir.Postings.csproj", "{5514C8B0-01D2-489C-8632-A30944E51948}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
