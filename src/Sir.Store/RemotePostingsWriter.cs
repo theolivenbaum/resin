@@ -70,7 +70,7 @@ namespace Sir.Store
                 var ctime = Stopwatch.StartNew();
                 var compressed = QuickLZ.compress(buf, 3);
 
-                _log.Log(string.Format("uncompressing {0} bytes to {1} took {2}", buf.Length, compressed.Length, ctime.Elapsed));
+                _log.Log(string.Format("compressing {0} bytes to {1} took {2}", buf.Length, compressed.Length, ctime.Elapsed));
 
                 payload = compressed;
             }

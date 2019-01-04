@@ -94,6 +94,9 @@ namespace Sir.Postings
             {
                 data.Seek(offset, SeekOrigin.Begin);
 
+                _log.Log("seek took {0}", timer.Elapsed);
+                timer.Restart();
+
                 // We are now at the first page.
                 // Each page starts with a header consisting of (a) count, (b) next page offset and (c) last page offset (long, long, long).
                 // The rest of the page is data (ulong's).
@@ -124,8 +127,12 @@ namespace Sir.Postings
                     }
                 }
 
+                _log.Log("reading first page took {0}", timer.Elapsed);
+
                 while (nextPageOffset > -1)
                 {
+                    timer.Restart();
+
                     data.Seek(nextPageOffset, SeekOrigin.Begin);
 
                     await data.ReadAsync(lbuf);
@@ -152,6 +159,7 @@ namespace Sir.Postings
                         }
                     }
 
+                    _log.Log("reading next page took {0}", timer.Elapsed);
 
                     pageCount++;
                 }
