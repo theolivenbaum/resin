@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sir.Core;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,6 +20,7 @@ namespace Sir.Store
         private readonly IDictionary<long, VectorNode> _dirty;
         private readonly Stream _vectorStream;
         private bool _flushed;
+        //private readonly ProducerConsumerQueue<(ulong docId, long keyId, HashSet<string>)> _tokenWriter;
 
         public IndexingSession(
             string collectionId, 
@@ -33,13 +35,20 @@ namespace Sir.Store
             _dirty = new Dictionary<long, VectorNode>();
             _vectorStream = SessionFactory.CreateAsyncAppendStream(
                     Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId.ToHash())));
+
+            //_tokenWriter = new ProducerConsumerQueue<(ulong docId, long keyId, HashSet<string>)>(WriteTokens);
         }
 
-        public async Task Write(IDictionary doc)
+        public void Write(IDictionary document)
         {
             try
             {
-                await IndexDocument(doc, _vectorStream);
+                var timer = Stopwatch.StartNew();
+
+                IndexDocument(document);
+
+                _log.Log(string.Format("analyzed doc ID {0} in {1}", document["__docid"], timer.Elapsed));
+
             }
             catch (Exception ex)
             {
@@ -54,12 +63,53 @@ namespace Sir.Store
             if (_flushed)
                 return;
 
-            await SerializeIndex(CollectionId.ToHash(), _dirty);
+            await SerializeColumns(CollectionId.ToHash(), _dirty);
 
             _flushed = true;
+
+            _log.Log(string.Format("***FLUSHED***"));
         }
 
-        private async Task SerializeIndex(ulong collectionId, IDictionary<long, VectorNode> columns)
+        private void IndexDocument(IDictionary document)
+        {
+            var analyzed = new Dictionary<long, HashSet<string>>();
+            var docId = ulong.Parse(document["__docid"].ToString());
+
+            foreach (var column in Analyze(document))
+            {
+                var keyId = column.Key;
+                var tokens = column.Value;
+
+                EnsureIndexExists(keyId);
+
+                WriteTokens((docId, keyId, tokens));
+
+                //_tokenWriter.Enqueue((docId, keyId, tokens));
+
+                // validate
+                if (_validate)
+                {
+                    var ix = _dirty[keyId];
+
+                    foreach (var token in tokens)
+                    {
+                        var query = new VectorNode(token);
+                        var closestMatch = ix.ClosestMatch(query);
+
+                        if (closestMatch.Score < VectorNode.IdenticalAngle)
+                        {
+                            throw new DataMisalignedException();
+                        }
+                    }
+
+                    File.WriteAllText(
+                        Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}.validate", CollectionId.ToHash(), keyId, docId)),
+                        string.Join('\n', tokens));
+                }
+            }
+        }
+
+        private async Task SerializeColumns(ulong collectionId, IDictionary<long, VectorNode> columns)
         {
             var postingsWriter = new RemotePostingsWriter(_config);
 
@@ -80,7 +130,7 @@ namespace Sir.Store
 
                     var size = x.Value.Size();
 
-                    _log.Log("serialized tree in {0} with size {1},{2} (avg depth {3})", 
+                    _log.Log("serialized tree in {0} with size {1},{2} (avg depth {3})",
                         time.Elapsed, size.depth, size.width, size.avgDepth);
                 }
             }
@@ -92,48 +142,7 @@ namespace Sir.Store
             return SessionFactory.CreateAsyncAppendStream(fileName);
         }
 
-        private async Task IndexDocument(IDictionary document, Stream vectorStream)
-        {
-            var timer = new Stopwatch();
-            timer.Start();
-
-            var analyzed = new Dictionary<long, HashSet<string>>();
-
-            Analyze(document, analyzed);
-
-            foreach (var column in analyzed)
-            {
-                var keyId = column.Key;
-                var tokens = column.Value;
-                var ix = GetIndex(keyId);
-                var docId = ulong.Parse(document["__docid"].ToString());
-
-                await WriteTokens(docId, keyId, ix, tokens, vectorStream);
-
-                // validate
-                if (_validate)
-                {
-                    foreach (var token in tokens)
-                    {
-                        var query = new VectorNode(token);
-                        var closestMatch = ix.ClosestMatch(query);
-
-                        if (closestMatch.Score < VectorNode.IdenticalAngle)
-                        {
-                            throw new DataMisalignedException();
-                        }
-                    }
-
-                    File.WriteAllText(
-                        Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}.validate", CollectionId.ToHash(), keyId, document["__docid"])),
-                        string.Join('\n', tokens));
-                }
-            }
-
-            _log.Log(string.Format("indexed doc ID {0} in {1}", document["__docid"], timer.Elapsed));
-        }
-
-        private VectorNode GetIndex(long keyId)
+        private VectorNode GetOrCreateIndex(long keyId)
         {
             VectorNode root;
 
@@ -146,7 +155,12 @@ namespace Sir.Store
             return root;
         }
 
-        private void Analyze(IDictionary doc, Dictionary<long, HashSet<string>> columns)
+        private void EnsureIndexExists(long keyId)
+        {
+            GetOrCreateIndex(keyId);
+        }
+
+        private IEnumerable<KeyValuePair<long, HashSet<string>>> Analyze(IDictionary doc)
         {
             var docId = (ulong)doc["__docid"];
 
@@ -160,14 +174,7 @@ namespace Sir.Store
                 var keyHash = key.ToHash();
                 var keyId = SessionFactory.GetKeyId(keyHash);
 
-                HashSet<string> column;
-
-                if (!columns.TryGetValue(keyId, out column))
-                {
-                    column = new HashSet<string>();
-                    columns.Add(keyId, column);
-                }
-
+                var column = new HashSet<string>();
                 var val = (IComparable)doc[obj];
                 var str = val as string;
 
@@ -189,14 +196,16 @@ namespace Sir.Store
                         column.Add(token);
                     }
                 }
+
+                yield return new KeyValuePair<long, HashSet<string>>(keyId, column);
             }
         }
 
-        private async Task WriteTokens(ulong docId, long keyId, VectorNode index, IEnumerable<string> tokens, Stream vectorStream)
+        private void WriteTokens((ulong docId, long keyId, HashSet<string> tokens) item)
         {
-            foreach (var token in tokens)
+            foreach (var token in item.tokens)
             {
-                await index.Add(new VectorNode(token, docId), vectorStream);
+                _dirty[item.keyId].Add(new VectorNode(token, item.docId), _vectorStream);
             }
         }
 

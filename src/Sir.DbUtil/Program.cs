@@ -115,7 +115,7 @@ namespace Sir.DbUtil
                             {
                                 foreach (var doc in batch)
                                 {
-                                    await indexSession.Write(doc);
+                                    indexSession.Write(doc);
                                 }
 
                                 await indexSession.Flush();

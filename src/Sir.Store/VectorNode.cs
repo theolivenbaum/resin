@@ -154,7 +154,7 @@ namespace Sir.Store
 
         private readonly object _sync = new object();
 
-        public async Task Add(VectorNode node, Stream vectorStream = null)
+        public void Add(VectorNode node, Stream vectorStream = null)
         {
             var cursor = this;
 
@@ -178,7 +178,7 @@ namespace Sir.Store
                         cursor.Left = node;
 
                         if (vectorStream != null)
-                            await cursor.Left.SerializeVector(vectorStream);
+                            cursor.Left.SerializeVector(vectorStream);
 
                         break;
                     }
@@ -195,7 +195,7 @@ namespace Sir.Store
                         cursor.Right = node;
 
                         if (vectorStream != null)
-                            await cursor.Right.SerializeVector(vectorStream);
+                            cursor.Right.SerializeVector(vectorStream);
 
                         break;
                     }
@@ -297,7 +297,12 @@ namespace Sir.Store
             return (offset, length);
         }
 
-        private async Task SerializeVector(Stream vectorStream)
+        private void SerializeVector(Stream vectorStream)
+        {
+            VecOffset = TermVector.Serialize(vectorStream);
+        }
+
+        private async Task SerializeVectorAsync(Stream vectorStream)
         {
             VecOffset = await TermVector.SerializeAsync(vectorStream);
         }

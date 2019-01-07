@@ -36,8 +36,6 @@ namespace Sir.Store
                     stream.WriteByte(kvp.Value);
                 }
 
-                stream.Flush();
-
                 return pos;
             }
         }
