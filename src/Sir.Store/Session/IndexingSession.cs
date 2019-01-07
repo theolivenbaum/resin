@@ -1,6 +1,7 @@
 ﻿using Sir.Core;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -20,7 +21,7 @@ namespace Sir.Store
         private readonly IDictionary<long, VectorNode> _dirty;
         private readonly Stream _vectorStream;
         private bool _flushed;
-        //private readonly ProducerConsumerQueue<(ulong docId, long keyId, HashSet<string>)> _tokenWriter;
+        //private readonly IDictionary<long, ProducerConsumerQueue<(ulong docId, long keyId, HashSet<string>)>> _tokenWriters;
 
         public IndexingSession(
             string collectionId, 
@@ -32,11 +33,10 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _log = Logging.CreateWriter("indexingsession");
             _validate = config.Get("create_index_validation_files") == "true";
-            _dirty = new Dictionary<long, VectorNode>();
+            _dirty = new ConcurrentDictionary<long, VectorNode>();
+            //_tokenWriters = new Dictionary<long, ProducerConsumerQueue<(ulong docId, long keyId, HashSet<string>)>>();
             _vectorStream = SessionFactory.CreateAsyncAppendStream(
-                    Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId.ToHash())));
-
-            //_tokenWriter = new ProducerConsumerQueue<(ulong docId, long keyId, HashSet<string>)>(WriteTokens);
+                Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId.ToHash())));
         }
 
         public void Write(IDictionary document)
@@ -44,8 +44,38 @@ namespace Sir.Store
             try
             {
                 var timer = Stopwatch.StartNew();
+                var docId = ulong.Parse(document["__docid"].ToString());
 
-                IndexDocument(document);
+                foreach (var column in Analyze(document))
+                {
+                    var keyId = column.Key;
+                    var tokens = column.Value;
+
+                    WriteTokens((docId, keyId, tokens));
+
+                    //GetOrCreateWriter(keyId).Enqueue((docId, keyId, tokens));
+
+                    // validate
+                    if (_validate)
+                    {
+                        var ix = _dirty[keyId];
+
+                        foreach (var token in tokens)
+                        {
+                            var query = new VectorNode(token);
+                            var closestMatch = ix.ClosestMatch(query);
+
+                            if (closestMatch.Score < VectorNode.IdenticalAngle)
+                            {
+                                throw new DataMisalignedException();
+                            }
+                        }
+
+                        File.WriteAllText(
+                            Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}.validate", CollectionId.ToHash(), keyId, docId)),
+                            string.Join('\n', tokens));
+                    }
+                }
 
                 _log.Log(string.Format("analyzed doc ID {0} in {1}", document["__docid"], timer.Elapsed));
 
@@ -63,101 +93,43 @@ namespace Sir.Store
             if (_flushed)
                 return;
 
-            await SerializeColumns(CollectionId.ToHash(), _dirty);
+            _vectorStream.Flush();
+            _vectorStream.Close();
+            _vectorStream.Dispose();
+
+            foreach (var w in _dirty)
+            {
+                await SerializeColumn(w.Key, w.Value);
+            }
 
             _flushed = true;
 
             _log.Log(string.Format("***FLUSHED***"));
         }
 
-        private void IndexDocument(IDictionary document)
-        {
-            var analyzed = new Dictionary<long, HashSet<string>>();
-            var docId = ulong.Parse(document["__docid"].ToString());
-
-            foreach (var column in Analyze(document))
-            {
-                var keyId = column.Key;
-                var tokens = column.Value;
-
-                EnsureIndexExists(keyId);
-
-                WriteTokens((docId, keyId, tokens));
-
-                //_tokenWriter.Enqueue((docId, keyId, tokens));
-
-                // validate
-                if (_validate)
-                {
-                    var ix = _dirty[keyId];
-
-                    foreach (var token in tokens)
-                    {
-                        var query = new VectorNode(token);
-                        var closestMatch = ix.ClosestMatch(query);
-
-                        if (closestMatch.Score < VectorNode.IdenticalAngle)
-                        {
-                            throw new DataMisalignedException();
-                        }
-                    }
-
-                    File.WriteAllText(
-                        Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}.validate", CollectionId.ToHash(), keyId, docId)),
-                        string.Join('\n', tokens));
-                }
-            }
-        }
-
-        private async Task SerializeColumns(ulong collectionId, IDictionary<long, VectorNode> columns)
+        private async Task SerializeColumn(long keyId, VectorNode column)
         {
             var postingsWriter = new RemotePostingsWriter(_config);
+            var collectionId = CollectionId.ToHash();
 
-            foreach (var x in columns)
+            await postingsWriter.Write(collectionId, column);
+
+            var pixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", collectionId, keyId));
+
+            using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAsyncAppendStream(pixFileName)))
+            using (var ixStream = CreateIndexStream(collectionId, keyId))
             {
-                await postingsWriter.Write(collectionId, x.Value);
+                var time = Stopwatch.StartNew();
 
-                var pixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", collectionId, x.Key));
+                var page = await column.SerializeTree(ixStream);
 
-                using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAsyncAppendStream(pixFileName)))
-                using (var ixStream = CreateIndexStream(collectionId, x.Key))
-                {
-                    var time = Stopwatch.StartNew();
+                await pageIndexWriter.WriteAsync(page.offset, page.length);
 
-                    var page = await x.Value.SerializeTree(ixStream);
+                var size = column.Size();
 
-                    await pageIndexWriter.WriteAsync(page.offset, page.length);
-
-                    var size = x.Value.Size();
-
-                    _log.Log("serialized tree in {0} with size {1},{2} (avg depth {3})",
-                        time.Elapsed, size.depth, size.width, size.avgDepth);
-                }
+                _log.Log("serialized column {0} in {1} with size {2},{3} (avg depth {4})",
+                    keyId, time.Elapsed, size.depth, size.width, size.avgDepth);
             }
-        }
-
-        private Stream CreateIndexStream(ulong collectionId, long keyId)
-        {
-            var fileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
-            return SessionFactory.CreateAsyncAppendStream(fileName);
-        }
-
-        private VectorNode GetOrCreateIndex(long keyId)
-        {
-            VectorNode root;
-
-            if (!_dirty.TryGetValue(keyId, out root))
-            {
-                root = new VectorNode();
-                _dirty.Add(keyId, root);
-            }
-
-            return root;
-        }
-
-        private void EnsureIndexExists(long keyId)
-        {
-            GetOrCreateIndex(keyId);
         }
 
         private IEnumerable<KeyValuePair<long, HashSet<string>>> Analyze(IDictionary doc)
@@ -203,20 +175,39 @@ namespace Sir.Store
 
         private void WriteTokens((ulong docId, long keyId, HashSet<string> tokens) item)
         {
+            var ix = GetOrCreateIndex(item.keyId);
+
             foreach (var token in item.tokens)
             {
-                _dirty[item.keyId].Add(new VectorNode(token, item.docId), _vectorStream);
+                ix.Add(new VectorNode(token, item.docId), _vectorStream);
             }
+        }
+
+        private Stream CreateIndexStream(ulong collectionId, long keyId)
+        {
+            var fileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
+            return SessionFactory.CreateAsyncAppendStream(fileName);
+        }
+
+        private VectorNode GetOrCreateIndex(long keyId)
+        {
+            VectorNode root;
+
+            if (!_dirty.TryGetValue(keyId, out root))
+            {
+                root = new VectorNode();
+                _dirty.Add(keyId, root);
+            }
+
+            return root;
         }
 
         public void Dispose()
         {
             if (!_flushed)
             {
-                Task.WaitAll(new[] { Flush() });
+                throw new InvalidOperationException();
             }
-
-            _vectorStream.Dispose();
         }
     }
 }

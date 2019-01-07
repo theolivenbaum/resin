@@ -120,15 +120,14 @@ namespace Sir.DbUtil
 
                                 await indexSession.Flush();
                             }
+
+                            _log.Log(string.Format("indexed batch in {0}", timer.Elapsed));
                         }
                     }
+
+                    break;
                 }
-                break;
             }
-
-            timer.Stop();
-
-            _log.Log(string.Format("indexing took {0}", timer.Elapsed));
         }
     }
 }
