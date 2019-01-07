@@ -19,6 +19,8 @@ namespace Sir.Postings
             _log = Logging.CreateWriter("postingswriter");
         }
 
+        private static object Sync = new object();
+
         public async Task<Result> Write(string collectionId, HttpRequest request)
         {
             try
@@ -41,13 +43,20 @@ namespace Sir.Postings
 
                 timer.Restart();
 
-                var responseStream = await _data.Write(ulong.Parse(collectionId), messageBuf);
+                MemoryStream responseStream;
 
-                timer.Stop();
+                lock (Sync)
+                {
+                    _log.Log("waited for synchronization for {0}", timer.Elapsed);
 
-                _log.Log(string.Format(
-                    "wrote {0} bytes in {1}: {2} bytes/ms", 
-                    messageBuf.Length, timer.Elapsed, messageBuf.Length / timer.ElapsedMilliseconds));
+                    timer.Restart();
+
+                    responseStream = _data.Write(ulong.Parse(collectionId), messageBuf);
+
+                    _log.Log(string.Format(
+                        "wrote {0} bytes in {1}: {2} bytes/ms",
+                        messageBuf.Length, timer.Elapsed, messageBuf.Length / timer.ElapsedMilliseconds));
+                }
 
                 return new Result { Data = responseStream, MediaType = "application/octet-stream" };
             }
@@ -61,6 +70,7 @@ namespace Sir.Postings
 
         public void Dispose()
         {
+            _log.FlushLog();
         }
     }
 }

@@ -193,8 +193,19 @@ namespace Sir.Store
             return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 4096, true);
         }
 
+        public Stream CreateAppendStream(string fileName)
+        {
+            // https://stackoverflow.com/questions/122362/how-to-empty-flush-windows-read-disk-cache-in-c
+            //const FileOptions FileFlagNoBuffering = (FileOptions)0x20000000;
+            //FileStream file = new FileStream(fileName, fileMode, fileAccess, fileShare, blockSize,
+            //    FileFlagNoBuffering | FileOptions.WriteThrough | fileOptions);
+
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+        }
+
         public void Dispose()
         {
+            _log.FlushLog();
         }
     }
 }

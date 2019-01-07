@@ -169,7 +169,7 @@ namespace Sir.Postings
             return result.ToList();
         }
 
-        public async Task<MemoryStream> Write(ulong collectionId, byte[] messageBuf)
+        public MemoryStream Write(ulong collectionId, byte[] messageBuf)
         {
             var time = Stopwatch.StartNew();
             int read = 0;
@@ -235,16 +235,16 @@ namespace Sir.Postings
                         offset = data.Position;
 
                         // write count to header of this page
-                        await data.WriteAsync(BitConverter.GetBytes(Convert.ToInt64(list.Length/sizeof(ulong))));
+                        data.Write(BitConverter.GetBytes(Convert.ToInt64(list.Length/sizeof(ulong))));
 
                         // write nextPageOffset
-                        await data.WriteAsync(BitConverter.GetBytes((long)-1));
+                        data.Write(BitConverter.GetBytes((long)-1));
 
                         // write lastPageOffset
-                        await data.WriteAsync(BitConverter.GetBytes(offset));
+                        data.Write(BitConverter.GetBytes(offset));
 
                         // write payload
-                        await data.WriteAsync(list);
+                        data.Write(list);
                     }
                     else
                     {
@@ -256,7 +256,7 @@ namespace Sir.Postings
 
                         data.Seek(lastPageOffsetWordPosition, SeekOrigin.Begin);
 
-                        await data.ReadAsync(lbuf);
+                        data.Read(lbuf);
 
                         long lastPageOffset = BitConverter.ToInt64(lbuf);
 
@@ -270,24 +270,24 @@ namespace Sir.Postings
                         var newPageOffset = data.Position;
 
                         // write count to header of this page
-                        await data.WriteAsync(BitConverter.GetBytes(Convert.ToInt64(list.Length / sizeof(ulong))));
+                        data.Write(BitConverter.GetBytes(Convert.ToInt64(list.Length / sizeof(ulong))));
 
                         // write nextPageOffset
-                        await data.WriteAsync(BitConverter.GetBytes((long)-1));
+                        data.Write(BitConverter.GetBytes((long)-1));
 
                         // write lastPageOffset
-                        await data.WriteAsync(BitConverter.GetBytes((long)-1));
+                        data.Write(BitConverter.GetBytes((long)-1));
 
                         // write payload
-                        await data.WriteAsync(list);
+                        data.Write(list);
 
                         // update next page offset
                         data.Seek(nextPageOffsetWordPosition, SeekOrigin.Begin);
-                        await data.WriteAsync(BitConverter.GetBytes(newPageOffset));
+                        data.Write(BitConverter.GetBytes(newPageOffset));
 
                         // update last page offset
                         data.Seek(lastPageOffsetWordPosition, SeekOrigin.Begin);
-                        await data.WriteAsync(BitConverter.GetBytes(newPageOffset));
+                        data.Write(BitConverter.GetBytes(newPageOffset));
                     }
 
                     positions.Add(offset);
@@ -307,7 +307,7 @@ namespace Sir.Postings
 
             for (int i = 0; i < positions.Count; i++)
             {
-                await res.WriteAsync(BitConverter.GetBytes(positions[i]));
+                res.Write(BitConverter.GetBytes(positions[i]));
             }
 
             res.Position = 0;
@@ -401,6 +401,7 @@ namespace Sir.Postings
 
         public void Dispose()
         {
+            _log.FlushLog();
         }
     }
 }

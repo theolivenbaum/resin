@@ -94,6 +94,13 @@ namespace Sir.HttpServer.Controllers
                 _log.WriteLine(ew);
                 throw ew;
             }
-}
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            _log.FlushLog();
+        }
     }
 }

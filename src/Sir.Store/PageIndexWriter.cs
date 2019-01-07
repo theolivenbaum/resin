@@ -22,6 +22,12 @@ namespace Sir.Store
             await _stream.WriteAsync(BitConverter.GetBytes(length));
         }
 
+        public void Write(long offset, long length)
+        {
+            _stream.Write(BitConverter.GetBytes(offset));
+            _stream.Write(BitConverter.GetBytes(length));
+        }
+
         public void Dispose()
         {
             _stream.Dispose();

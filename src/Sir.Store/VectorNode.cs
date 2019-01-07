@@ -266,7 +266,7 @@ namespace Sir.Store
             return block;
         }
 
-        public async Task<(long offset, long length)> SerializeTree(Stream indexStream)
+        public (long offset, long length) SerializeTree(Stream indexStream)
         {
             var node = this;
             var stack = new Stack<VectorNode>();
@@ -276,7 +276,7 @@ namespace Sir.Store
             {
                 foreach (var buf in node.ToStream())
                 {
-                    await indexStream.WriteAsync(buf, 0, buf.Length);
+                    indexStream.Write(buf, 0, buf.Length);
                 }
 
                 if (node.Right != null)

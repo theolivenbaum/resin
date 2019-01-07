@@ -48,6 +48,7 @@ namespace Sir.Postings
 
         public void Dispose()
         {
+            _log.FlushLog();
         }
     }
 }

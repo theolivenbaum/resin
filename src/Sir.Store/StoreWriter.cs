@@ -112,7 +112,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            _log.Dispose();
+            _log.FlushLog();
         }
     }
 }

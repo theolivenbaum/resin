@@ -10,7 +10,7 @@ namespace Sir.Store
     /// <summary>
     /// Read postings from HTTP endpoint.
     /// </summary>
-    public class RemotePostingsReader
+    public class RemotePostingsReader : IDisposable
     {
         private IConfigurationProvider _config;
         private readonly StreamWriter _log;
@@ -33,6 +33,8 @@ namespace Sir.Store
 
             var timer = new Stopwatch();
             timer.Start();
+
+            _log.Log("execute request {0}", endpoint);
 
             using (var response = (HttpWebResponse)request.GetResponse())
             {
@@ -147,6 +149,11 @@ namespace Sir.Store
 
                 return result;
             }
+        }
+
+        public void Dispose()
+        {
+            _log.FlushLog();
         }
     }
 }

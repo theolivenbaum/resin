@@ -10,7 +10,7 @@ namespace Sir.Store
     /// <summary>
     /// Write postings to HTTP endpoint.
     /// </summary>
-    public class RemotePostingsWriter
+    public class RemotePostingsWriter : IDisposable
     {
         private IConfigurationProvider _config;
         private readonly StreamWriter _log;
@@ -151,6 +151,11 @@ namespace Sir.Store
             }
 
             return result;    
+        }
+
+        public void Dispose()
+        {
+            _log.FlushLog();
         }
     }
 }

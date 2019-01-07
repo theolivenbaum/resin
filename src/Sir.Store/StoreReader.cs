@@ -31,7 +31,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            _log.Dispose();
+            _log.FlushLog();
         }
 
         public async Task<Result> Read(string collectionId, HttpRequest request)
@@ -93,5 +93,6 @@ namespace Sir.Store
             //    jsonWriter.Flush();
             //}
         }
+
     }
 }

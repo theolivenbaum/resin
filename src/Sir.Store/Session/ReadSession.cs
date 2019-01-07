@@ -258,5 +258,13 @@ namespace Sir.Store
 
             return result;
         }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            _postingsReader.Dispose();
+            _log.FlushLog();
+        }
     }
 }

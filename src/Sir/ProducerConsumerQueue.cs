@@ -11,12 +11,16 @@ namespace Sir.Core
     /// <typeparam name="T"></typeparam>
     public class ProducerConsumerQueue<T> : IDisposable
     {
-        private readonly BlockingCollection<T> _queue;
+        private BlockingCollection<T> _queue;
         private readonly int _numOfConsumers;
         private readonly Action<T> _consumingAction;
         private Task[] _consumers;
         private bool _completed;
         private bool _started;
+
+        public int Count { get { return _queue.Count; } }
+
+        public bool IsCompleted { get { return _queue == null || _queue.IsCompleted; } }
 
         public ProducerConsumerQueue(Action<T> consumingAction) : this(consumingAction, 1) { }
 
@@ -77,7 +81,7 @@ namespace Sir.Core
             Task.WaitAll(_consumers);
 
             _queue.Dispose();
-
+            _queue = null;
             _completed = true;
         }
 

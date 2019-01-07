@@ -108,48 +108,12 @@ namespace Sir.Store
 
             return docId;
         }
-    }
 
-    public class PersistantStorage
-    {
-        public ulong GetNextDocId()
+        public override void Dispose()
         {
-            throw new NotImplementedException();
-        }
+            base.Dispose();
 
-        public bool TryGetKeyId(ulong keyHash, out long keyId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<(long offset, int len, byte dataType)> AppendKey(IComparable value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<uint> AppendKeyIndexEntry(long offset, int len, byte dataType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<(long offset, int len, byte dataType)> AppendValue(IComparable value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<uint> AppendValueIndexEntry(long offset, int len, byte dataType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<(long offset, int length)> AppendDocument(IList<(long keyId, long valId)> doc)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task AppendDocumentIndexEntry(long offset, int len)
-        {
-            throw new NotImplementedException();
+            _log.FlushLog();
         }
     }
 }

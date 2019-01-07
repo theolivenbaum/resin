@@ -184,7 +184,7 @@ namespace Sir.HttpServer.Features
         public void Dispose()
         {
             _queue.Dispose();
-            _log.Dispose();
+            _log.FlushLog();
         }
     }
 }
