@@ -92,10 +92,8 @@ namespace Sir.DbUtil
 
         private static void Index(string dir, string collection, int skip, int take, int batchSize)
         {
-            var timer = new Stopwatch();
-            timer.Start();
-
             var files = Directory.GetFiles(dir, "*.docs");
+            var fullTime = Stopwatch.StartNew();
 
             using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration("sir.ini")))
             foreach (var docFileName in files)
@@ -110,9 +108,12 @@ namespace Sir.DbUtil
                     using (var readSession = sessionFactory.CreateDocumenSession(collectionId))
                     {
                         var docs = readSession.ReadDocs(skip, take);
+                        var batchNo = 1;
 
                         foreach (var batch in docs.Batch(batchSize))
                         {
+                            var timer = Stopwatch.StartNew();
+
                             using (var indexSession = sessionFactory.CreateIndexSession(collection))
                             {
                                 foreach (var doc in batch)
@@ -124,7 +125,10 @@ namespace Sir.DbUtil
                             }
 
                             _log.Log(string.Format("indexed batch in {0}", timer.Elapsed));
+                            _log.Log(string.Format("{0} batches in {0}", batchNo++, fullTime.Elapsed));
+
                         }
+
                     }
 
                     break;
