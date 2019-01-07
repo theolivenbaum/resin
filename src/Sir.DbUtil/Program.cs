@@ -107,17 +107,7 @@ namespace Sir.DbUtil
                 {
                     using (var readSession = sessionFactory.CreateDocumenSession(collectionId))
                     {
-                        var docs = readSession.ReadDocs();
-
-                        if (skip > 0)
-                        {
-                            docs = docs.Skip(skip);
-                        }
-
-                        if (take > 0)
-                        {
-                            docs = docs.Take(take);
-                        }
+                        var docs = readSession.ReadDocs(skip, take);
 
                         foreach (var batch in docs.Batch(batchSize))
                         {

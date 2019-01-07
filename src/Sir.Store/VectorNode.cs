@@ -17,7 +17,7 @@ namespace Sir.Store
         public const int NodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
         public const int ComponentSize = sizeof(int) + sizeof(byte);
         public const float IdenticalAngle = 0.97f;
-        public const float FoldAngle = 0.55f;
+        public const float FoldAngle = 0.65f;
 
         private VectorNode _right;
         private VectorNode _left;
@@ -302,10 +302,11 @@ namespace Sir.Store
             VecOffset = await TermVector.SerializeAsync(vectorStream);
         }
 
-        public IEnumerable<VectorNode> SerializePostings(Stream lengths, Stream offsets, Stream lists)
+        public IList<VectorNode> SerializePostings(Stream lengths, Stream offsets, Stream lists)
         {
-            var node = Right;
+            var node = this;
             var stack = new Stack<VectorNode>();
+            var result = new List<VectorNode>();
 
             while (node != null)
             {
@@ -323,7 +324,7 @@ namespace Sir.Store
                     lengths.Write(BitConverter.GetBytes(buf.Length));
                     offsets.Write(BitConverter.GetBytes(node.PostingsOffset));
 
-                    yield return node;
+                    result.Add(node);
                 }
 
                 if (node.Right != null)
@@ -339,6 +340,8 @@ namespace Sir.Store
                         node = stack.Pop();
                 }
             }
+
+            return result;
         }
 
         public static Hit ScanTree(VectorNode term, Stream indexStream, Stream vectorStream, long indexLength)
@@ -582,12 +585,14 @@ namespace Sir.Store
                 Visualize(node.Right, output, depth);
         }
 
-        public (int depth, int width) Size()
+        public (int depth, int width, int avgDepth) Size()
         {
             var root = this;
             var width = 0;
-            var depth = 0;
+            var depth = 1;
             var node = root.Right;
+            var aggDepth = 0;
+            var count = 0;
 
             while (node != null)
             {
@@ -596,11 +601,15 @@ namespace Sir.Store
                 {
                     depth = d;
                 }
+
+                aggDepth += d;
+                count++;
                 width++;
+
                 node = node.Right;
             }
 
-            return (depth, width);
+            return (depth, width, aggDepth/count);
         }
 
         public override string ToString()

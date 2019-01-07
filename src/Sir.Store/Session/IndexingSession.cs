@@ -76,9 +76,12 @@ namespace Sir.Store
 
                     var page = await x.Value.SerializeTree(ixStream);
 
-                    _log.Log("serialized tree in {0} with size {1}", time.Elapsed, x.Value.Size());
-
                     await pageIndexWriter.WriteAsync(page.offset, page.length);
+
+                    var size = x.Value.Size();
+
+                    _log.Log("serialized tree in {0} with size {1},{2} (avg depth {3})", 
+                        time.Elapsed, size.depth, size.width, size.avgDepth);
                 }
             }
         }

@@ -26,7 +26,7 @@ namespace Sir.Store
         {
             var timer = Stopwatch.StartNew();
 
-            var nodes = new List<VectorNode>();
+            IList<VectorNode> nodes;
             byte[] payload;
 
             // create postings message
@@ -34,14 +34,12 @@ namespace Sir.Store
             using (var message = new MemoryStream())
             using (var lengths = new MemoryStream())
             using (var offsets = new MemoryStream())
-            using (var body = new MemoryStream())
+            using (var documents = new MemoryStream())
             {
-                // write length of word (i.e. length of list of postings) to header,
-                // postings offsets to offset stream
-                // and word itself to body
-                var dirty = rootNode.SerializePostings(lengths, offsets, body).ToList();
-
-                nodes.AddRange(dirty);
+                // Write length of word (i.e. length of list of postings) to header stream,
+                // postings offsets to offset stream,
+                // and word itself to documents stream.
+                nodes = rootNode.SerializePostings(lengths, offsets, documents);
 
                 if (nodes.Count == 0)
                     return;
@@ -51,7 +49,7 @@ namespace Sir.Store
                     throw new DataMisalignedException();
                 }
 
-                // first word of message is payload count (i.e. num of posting lists)
+                // first word of message is payload count (i.e. num of postings lists)
                 await message.WriteAsync(BitConverter.GetBytes(nodes.Count));
 
                 // next are lengths
@@ -62,9 +60,9 @@ namespace Sir.Store
                 offsets.Position = 0;
                 await offsets.CopyToAsync(message);
 
-                // last is body
-                body.Position = 0;
-                await body.CopyToAsync(message);
+                // last are the document IDs
+                documents.Position = 0;
+                await documents.CopyToAsync(message);
 
                 var buf = message.ToArray();
                 var ctime = Stopwatch.StartNew();
@@ -86,10 +84,15 @@ namespace Sir.Store
                 throw new DataMisalignedException();
             }
 
+            timer.Restart();
+
             for (int i = 0; i < nodes.Count; i++)
             {
                 nodes[i].PostingsOffset = positions[i];
             }
+
+            _log.Log(string.Format("record postings offsets took {0}", timer.Elapsed));
+
         }
 
         private async Task<IList<long>> Send(ulong collectionId, byte[] payload)
@@ -108,7 +111,7 @@ namespace Sir.Store
             request.Method = WebRequestMethods.Http.Post;
             request.ContentLength = payload.Length;
 
-            long responseBodyLen = 0;
+            int responseBodyLen = 0;
 
             using (var requestBody = await request.GetRequestStreamAsync())
             {
@@ -118,13 +121,16 @@ namespace Sir.Store
                 {
                     using (var responseBody = response.GetResponseStream())
                     {
+                        _log.Log(string.Format("sent {0} bytes and got a response in {1}", payload.Length, timer.Elapsed));
+                        timer.Restart();
+
                         var mem = new MemoryStream();
 
                         await responseBody.CopyToAsync(mem);
 
                         var buf = mem.ToArray();
 
-                        responseBodyLen = buf.LongLength;
+                        responseBodyLen = buf.Length;
 
                         if (buf.Length != response.ContentLength)
                         {
@@ -139,11 +145,11 @@ namespace Sir.Store
 
                             read += sizeof(long);
                         }
+
+                        _log.Log(string.Format("deserialized {0} bytes of response data in {1}", buf.Length, timer.Elapsed));
                     }
                 }
             }
-
-            _log.Log(string.Format("sent {0} bytes and recieved {1} bytes in {2}", payload.Length, responseBodyLen, timer.Elapsed));
 
             return result;    
         }

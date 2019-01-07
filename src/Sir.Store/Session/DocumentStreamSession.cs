@@ -35,13 +35,25 @@ namespace Sir.Store
             _valReader = new ValueReader(ValueStream);
         }
 
-        public IEnumerable<IDictionary> ReadDocs()
+        public IEnumerable<IDictionary> ReadDocs(int skip = 0, int take = 0)
         {
             var numOfDocs = _docIx.NumOfDocs;
 
-            var docIds = Enumerable.Range(1, numOfDocs).ToDictionary(x => (ulong)x, y => (float)0);
+            var docIds = Enumerable.Range(1, numOfDocs);
 
-            return ReadDocs(docIds);
+            if (skip > 0)
+            {
+                docIds = docIds.Skip(skip);
+            }
+
+            if (take > 0)
+            {
+                docIds = docIds.Take(take);
+            }
+
+            var dic = docIds.ToDictionary(x => (ulong)x, y => (float)0);
+
+            return ReadDocs(dic);
         }
 
         public IEnumerable<IDictionary> ReadDocs(IDictionary<ulong, float> docs)
