@@ -13,11 +13,13 @@ namespace Sir.Postings
         private readonly IConfigurationProvider _config;
         private readonly StreamWriter _log;
         private const string DataFileNameFormat = "{0}.pos";
+        private readonly IDictionary<(ulong, long), IList<ulong>> _cache;
 
         public StreamRepository(IConfigurationProvider config)
         {
             _config = config;
             _log = Logging.CreateWriter("streamrepository");
+            _cache = new ConcurrentDictionary<(ulong, long), IList<ulong>>();
         }
 
         public async Task<MemoryStream> Reduce(ulong collectionId, IList<Query> query)
@@ -82,6 +84,20 @@ namespace Sir.Postings
         }
 
         private async Task<IList<ulong>> Read(ulong collectionId, long offset)
+        {
+            var key = (collectionId, offset);
+            IList<ulong> result;
+
+            if (!_cache.TryGetValue(key, out result))
+            {
+                result = await ReadFromDisk(collectionId, offset);
+                _cache[key] = result;
+            }
+
+            return result;
+        }
+
+        private async Task<IList<ulong>> ReadFromDisk(ulong collectionId, long offset)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -225,6 +241,13 @@ namespace Sir.Postings
                 {
                     var offset = offsets[listIndex];
                     var list = lists[listIndex];
+
+                    // invalidate cache
+                    var cacheKey = (collectionId, offset);
+                    if (_cache.ContainsKey(cacheKey))
+                    {
+                        _cache.Remove(cacheKey);
+                    }
 
                     if (offset < 0)
                     {
