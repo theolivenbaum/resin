@@ -1,91 +1,73 @@
-﻿using Sir.Core;
-using System;
+﻿using System;
 using System.IO;
-using System.Threading;
 
 namespace Sir
 {
     public static class Logging
     {
+        private static StreamWriter Writer;
         private static object Sync = new object();
-
-        private static ProducerConsumerQueue<(StreamWriter w, string s)> _queue = 
-            new ProducerConsumerQueue<(StreamWriter w, string s)>(Write);
 
         public static bool SendToConsole { get; set; }
 
-        private static void Write((StreamWriter w, string s) message)
+        private static void Write(object message)
         {
-            message.w.WriteLine(message.s);
-            message.w.Flush();
+            GetWriter().WriteLine(message);
 
             if (SendToConsole)
             {
-                Console.WriteLine(message.s);
+                Console.WriteLine(message);
             }
         }
 
-        public static void Log(this StreamWriter writer, object message)
+        public static void Log(object message)
         {
-            _queue.Enqueue((writer, string.Format("{0}\t{1}", DateTime.Now, message)));
+            Write(string.Format("{0}\t{1}", DateTime.Now, message));
         }
 
-        public static void Log(this StreamWriter writer, string format, params object[] args)
+        public static void Log(string format, params object[] args)
         {
-            var message = string.Format(DateTime.Now + " " + format, args);
-
-            if (_queue == null || _queue.IsCompleted)
-            {
-                Write((writer, message));
-            }
-            else
-            {
-                _queue.Enqueue((writer, message));
-            }
+            Write(string.Format(DateTime.Now + " " + format, args));
         }
 
-        public static StreamWriter CreateWriter(string name)
+        private static StreamWriter GetWriter()
         {
-            lock (Sync)
-            {
-                var logDir = Path.Combine(Directory.GetCurrentDirectory(), "log");
-
-                if (!Directory.Exists(logDir))
-                {
-                    Directory.CreateDirectory(logDir);
-                }
-
-                var fn = Path.Combine(logDir, string.Format("{0}.log", name));
-
-                return new StreamWriter(new FileStream(fn, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
-            }
-        }
-
-        public static void FlushLog(this StreamWriter log)
-        {
-            if (_queue != null)
+            if (Writer == null)
             {
                 lock (Sync)
                 {
-                    if (_queue != null)
+                    if (Writer == null)
                     {
-                        Thread.Sleep(1000);
+                        var logDir = Path.Combine(Directory.GetCurrentDirectory(), "log");
 
-                        _queue.Join();
-
-                        while (!_queue.IsCompleted)
+                        if (!Directory.Exists(logDir))
                         {
-                            Thread.Sleep(100);
+                            Directory.CreateDirectory(logDir);
                         }
 
-                        _queue.Dispose();
-                        _queue = null;
+                        var fn = Path.Combine(logDir, "sir.log");
+                        var stream = Stream.Synchronized(new FileStream(fn, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
+                        Writer = new StreamWriter(stream);
                     }
                 }
             }
 
-            log.Close();
-            log.Dispose();
+            return Writer;
+        }
+
+        public static void Close()
+        {
+            if (Writer != null)
+            {
+                lock (Sync)
+                {
+                    if (Writer != null)
+                    {
+                        Writer.Dispose();
+                        Writer = null;
+                    }
+                }
+            }
         }
     }
 }

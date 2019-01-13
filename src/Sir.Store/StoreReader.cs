@@ -17,21 +17,19 @@ namespace Sir.Store
         public string ContentType => "application/json";
 
         private readonly SessionFactory _sessionFactory;
-        private readonly StreamWriter _log;
         private readonly HttpQueryParser _httpQueryParser;
         private readonly ITokenizer _tokenizer;
 
         public StoreReader(SessionFactory sessionFactory, HttpQueryParser httpQueryParser, ITokenizer tokenizer)
         {
             _sessionFactory = sessionFactory;
-            _log = Logging.CreateWriter("storereader");
             _httpQueryParser = httpQueryParser;
             _tokenizer = tokenizer;
         }
 
         public void Dispose()
         {
-            _log.FlushLog();
+            Logging.Close();
         }
 
         public async Task<Result> Read(string collectionId, HttpRequest request)
@@ -55,7 +53,7 @@ namespace Sir.Store
                         var result = await session.Read(query, query.Take);
                         var docs = result.Docs;
 
-                        _log.Log(string.Format("executed query {0} and read {1} docs from disk in {2}", query, docs.Count, timer.Elapsed));
+                        Logging.Log(string.Format("executed query {0} and read {1} docs from disk in {2}", query, docs.Count, timer.Elapsed));
 
                         timer.Restart();
 
@@ -63,7 +61,7 @@ namespace Sir.Store
 
                         Serialize(docs, stream);
 
-                        _log.Log(string.Format("serialized {0} docs in {1}", docs.Count, timer.Elapsed));
+                        Logging.Log(string.Format("serialized {0} docs in {1}", docs.Count, timer.Elapsed));
 
                         return new Result { MediaType = "application/json", Data = stream, Documents = docs, Total = result.Total };
                     }
@@ -73,7 +71,7 @@ namespace Sir.Store
             }
             catch (Exception ex)
             {
-                _log.Log(string.Format("read failed for query: {0} {1}", query.ToString() ?? "unknown", ex));
+                Logging.Log(string.Format("read failed for query: {0} {1}", query.ToString() ?? "unknown", ex));
 
                 throw;
             }

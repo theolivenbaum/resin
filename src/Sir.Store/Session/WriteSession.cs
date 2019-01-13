@@ -18,13 +18,11 @@ namespace Sir.Store
         private readonly ValueIndexWriter _valIx;
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
-        private readonly StreamWriter _log;
 
         public WriteSession(
             string collectionId, 
             SessionFactory sessionFactory) : base(collectionId, sessionFactory)
         {
-            _log = Logging.CreateWriter("writesession");
 
             var collection = collectionId.ToHash();
 
@@ -60,7 +58,7 @@ namespace Sir.Store
                 docCount++;
             }
 
-            _log.Log(string.Format("processed {0} documents in {1}", docCount, timer.Elapsed));
+            Logging.Log(string.Format("processed {0} documents in {1}", docCount, timer.Elapsed));
 
             return docIds;
         }
@@ -104,7 +102,7 @@ namespace Sir.Store
 
             model.Add("__docid", docId);
 
-            _log.Log(string.Format("processed document {0} in {1}", docId, timer.Elapsed));
+            Logging.Log(string.Format("processed document {0} in {1}", docId, timer.Elapsed));
 
             return docId;
         }
@@ -113,7 +111,7 @@ namespace Sir.Store
         {
             base.Dispose();
 
-            _log.FlushLog();
+            Logging.Close();
         }
     }
 }

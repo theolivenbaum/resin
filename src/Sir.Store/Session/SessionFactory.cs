@@ -15,7 +15,6 @@ namespace Sir.Store
         private readonly ITokenizer _tokenizer;
         private readonly IConfigurationProvider _config;
         private readonly ConcurrentDictionary<ulong, long> _keys;
-        private readonly StreamWriter _log;
         private readonly object _sync = new object();
 
         private Stream _writableKeyMapStream { get; }
@@ -25,7 +24,6 @@ namespace Sir.Store
         public SessionFactory(string dir, ITokenizer tokenizer, IConfigurationProvider config)
         {
             Dir = dir;
-            _log = Logging.CreateWriter("sessionfactory");
             _keys = LoadKeyMap();
             _tokenizer = tokenizer;
             _config = config;
@@ -54,7 +52,7 @@ namespace Sir.Store
                 }
             }
 
-            _log.Log("loaded keys into memory in {0}", timer.Elapsed);
+            Logging.Log("loaded keys into memory in {0}", timer.Elapsed);
 
             return keys;
         }
@@ -66,7 +64,7 @@ namespace Sir.Store
                 var timer = new Stopwatch();
                 timer.Start();
 
-                _log.Log("begin validating");
+                Logging.Log("begin validating");
 
                 var indexFiles = Directory.GetFiles(Dir, "*.ix");
 
@@ -87,7 +85,7 @@ namespace Sir.Store
                         // validate
                         foreach (var validateFn in Directory.GetFiles(Dir, string.Format("*.validate")))
                         {
-                            _log.Log("validating {0}", validateFn);
+                            Logging.Log("validating {0}", validateFn);
 
                             var fi = new FileInfo(validateFn);
                             var segs = Path.GetFileNameWithoutExtension(fi.Name).Split('.');
@@ -121,7 +119,7 @@ namespace Sir.Store
             }
             catch (Exception ex)
             {
-                _log.Log(ex);
+                Logging.Log(ex);
 
                 throw;
             }
@@ -205,7 +203,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            _log.FlushLog();
+            Logging.Close();
         }
     }
 }

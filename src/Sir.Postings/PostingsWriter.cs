@@ -11,12 +11,10 @@ namespace Sir.Postings
         public string ContentType => "application/postings";
 
         private readonly StreamRepository _data;
-        private readonly StreamWriter _log;
 
         public PostingsWriter(StreamRepository data)
         {
             _data = data;
-            _log = Logging.CreateWriter("postingswriter");
         }
 
         private static object Sync = new object();
@@ -39,7 +37,7 @@ namespace Sir.Postings
                 var compressed = payload.ToArray();
                 var messageBuf = QuickLZ.decompress(compressed);
 
-                _log.Log(string.Format("serialized {0} bytes in {1}", messageBuf.Length, timer.Elapsed));
+                Logging.Log(string.Format("serialized {0} bytes in {1}", messageBuf.Length, timer.Elapsed));
 
                 timer.Restart();
 
@@ -47,13 +45,13 @@ namespace Sir.Postings
 
                 lock (Sync)
                 {
-                    _log.Log("waited for synchronization for {0}", timer.Elapsed);
+                    Logging.Log("waited for synchronization for {0}", timer.Elapsed);
 
                     timer.Restart();
 
                     responseStream = _data.Write(ulong.Parse(collectionId), messageBuf);
 
-                    _log.Log(string.Format(
+                    Logging.Log(string.Format(
                         "wrote {0} bytes in {1}: {2} bytes/ms",
                         messageBuf.Length, timer.Elapsed, messageBuf.Length / timer.ElapsedMilliseconds));
                 }
@@ -62,7 +60,7 @@ namespace Sir.Postings
             }
             catch (Exception ex)
             {
-                _log.WriteLine(ex);
+                Logging.Log(ex);
 
                 throw;
             }
@@ -70,7 +68,7 @@ namespace Sir.Postings
 
         public void Dispose()
         {
-            _log.FlushLog();
+            Logging.Close();
         }
     }
 }

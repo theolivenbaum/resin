@@ -18,14 +18,12 @@ namespace Sir.Store
 
         private readonly SessionFactory _sessionFactory;
         private readonly ITokenizer _tokenizer;
-        private readonly StreamWriter _log;
         private readonly Stopwatch _timer;
 
         public StoreWriter(SessionFactory sessionFactory, ITokenizer analyzer)
         {
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;
-            _log = Logging.CreateWriter("storewriter");
             _timer = new Stopwatch();
         }
 
@@ -47,7 +45,7 @@ namespace Sir.Store
                 var data = Deserialize<IEnumerable<IDictionary>>(payload);
                 var job = new WriteJob(collectionId, data);
 
-                _log.Log(string.Format("deserialized write job {0} for collection {1} in {2}", job.Id, collectionId, _timer.Elapsed));
+                Logging.Log(string.Format("deserialized write job {0} for collection {1} in {2}", job.Id, collectionId, _timer.Elapsed));
 
                 var docIds = await ExecuteWrite(job);
                 var response = new MemoryStream();
@@ -58,7 +56,7 @@ namespace Sir.Store
             }
             catch (Exception ex)
             {
-                _log.Log(string.Format("write failed: {0}", ex));
+                Logging.Log(string.Format("write failed: {0}", ex));
 
                 throw;
             }
@@ -88,13 +86,13 @@ namespace Sir.Store
                     docIds = await session.Write(job);
                 }
 
-                _log.Log(string.Format("executed write job {0} in {1}", job.Id, _timer.Elapsed));
+                Logging.Log(string.Format("executed write job {0} in {1}", job.Id, _timer.Elapsed));
 
                 return docIds;
             }
             catch (Exception ex)
             {
-                _log.Log(string.Format("failed to write job {0}: {1}", job.Id, ex));
+                Logging.Log(string.Format("failed to write job {0}: {1}", job.Id, ex));
 
                 throw;
             }
@@ -112,7 +110,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            _log.FlushLog();
+            Logging.Close();
         }
     }
 }

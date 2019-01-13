@@ -12,12 +12,10 @@ namespace Sir.Postings
         public string ContentType => "application/postings";
 
         private readonly StreamRepository _data;
-        private readonly StreamWriter _log;
 
         public PostingsReader(StreamRepository data)
         {
             _data = data;
-            _log = Logging.CreateWriter("postingsreader");
         }
 
         public async Task<Result> Read(string collectionId, HttpRequest request)
@@ -34,13 +32,13 @@ namespace Sir.Postings
 
                 var result = new Result { Data = data, MediaType = "application/postings", Total = data.Length/sizeof(ulong) };
 
-                _log.Log("processed read request for {0} postings in {1}", result.Total, timer.Elapsed);
+                Logging.Log("processed read request for {0} postings in {1}", result.Total, timer.Elapsed);
 
                 return result;
             }
             catch (Exception ex)
             {
-                _log.Write(ex);
+                Logging.Log(ex);
 
                 throw;
             }
@@ -48,7 +46,7 @@ namespace Sir.Postings
 
         public void Dispose()
         {
-            _log.FlushLog();
+            Logging.Close();
         }
     }
 }

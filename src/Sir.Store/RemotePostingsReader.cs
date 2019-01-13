@@ -13,12 +13,10 @@ namespace Sir.Store
     public class RemotePostingsReader : IDisposable
     {
         private IConfigurationProvider _config;
-        private readonly StreamWriter _log;
 
         public RemotePostingsReader(IConfigurationProvider config)
         {
             _config = config;
-            _log = Logging.CreateWriter("remotepostingsreader");
         }
 
         public IDictionary<ulong, float> Reduce(string collectionId, byte[] query)
@@ -34,11 +32,11 @@ namespace Sir.Store
             var timer = new Stopwatch();
             timer.Start();
 
-            _log.Log("execute request {0}", endpoint);
+            Logging.Log("execute request {0}", endpoint);
 
             using (var response = (HttpWebResponse)request.GetResponse())
             {
-                _log.Log("waited {0} for a response from postings service", timer.Elapsed);
+                Logging.Log("waited {0} for a response from postings service", timer.Elapsed);
 
                 timer.Restart();
 
@@ -66,7 +64,7 @@ namespace Sir.Store
                         result.Add(docId, score);
                     }
 
-                    _log.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
+                    Logging.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
                 }
 
                 return result;
@@ -87,7 +85,7 @@ namespace Sir.Store
 
             using (var response = (HttpWebResponse)request.GetResponse())
             {
-                _log.Log("waited {0} for a response from postings service", timer.Elapsed);
+                Logging.Log("waited {0} for a response from postings service", timer.Elapsed);
 
                 timer.Restart();
 
@@ -109,7 +107,7 @@ namespace Sir.Store
                         read += sizeof(ulong);
                     }
 
-                    _log.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
+                    Logging.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
                 }
 
                 return result;
@@ -153,7 +151,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            _log.FlushLog();
+            Logging.Close();
         }
     }
 }

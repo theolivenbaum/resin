@@ -10,12 +10,10 @@ namespace Sir.HttpServer.Controllers
     public class IOController : Controller
     {
         private readonly PluginsCollection _plugins;
-        private readonly StreamWriter _log;
 
         public IOController(PluginsCollection plugins)
         {
             _plugins = plugins;
-            _log = Logging.CreateWriter("iocontroller");
         }
 
         [HttpPost("{*collectionId}")]
@@ -39,17 +37,17 @@ namespace Sir.HttpServer.Controllers
                 timer.Start();
 
                 Result result = await writer.Write(collectionId, Request);
-                _log.Log("write took {0}", timer.Elapsed);
+                Logging.Log("write took {0}", timer.Elapsed);
                 timer.Restart();
 
                 var buf = result.Data.ToArray();
-                _log.Log("serialized response in {0}", timer.Elapsed);
+                Logging.Log("serialized response in {0}", timer.Elapsed);
 
                 return new FileContentResult(buf, result.MediaType);
             }
             catch (Exception ew)
             {
-                _log.WriteLine(ew);
+                Logging.Log(ew);
                 throw ew;
             }
         }
@@ -72,7 +70,7 @@ namespace Sir.HttpServer.Controllers
 
                 var result = await reader.Read(collectionId, Request);
 
-                _log.Log("processed {0} request in {1}", mediaType, timer.Elapsed);
+                Logging.Log("processed {0} request in {1}", mediaType, timer.Elapsed);
 
                 if (result.Data == null)
                 {
@@ -84,14 +82,14 @@ namespace Sir.HttpServer.Controllers
 
                     var buf = result.Data.ToArray();
 
-                    _log.Log("serialized {0} response in {1}", reader.GetType().ToString(), timer.Elapsed);
+                    Logging.Log("serialized {0} response in {1}", reader.GetType().ToString(), timer.Elapsed);
 
                     return new FileContentResult(buf, result.MediaType);
                 }
             }
             catch (Exception ew)
             {
-                _log.WriteLine(ew);
+                Logging.Log(ew);
                 throw ew;
             }
         }
@@ -100,7 +98,7 @@ namespace Sir.HttpServer.Controllers
         {
             base.Dispose(disposing);
 
-            _log.FlushLog();
+            Logging.Close();
         }
     }
 }

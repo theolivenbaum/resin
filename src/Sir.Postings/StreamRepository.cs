@@ -11,14 +11,12 @@ namespace Sir.Postings
     public class StreamRepository : IDisposable
     {
         private readonly IConfigurationProvider _config;
-        private readonly StreamWriter _log;
         private const string DataFileNameFormat = "{0}.pos";
         private readonly IDictionary<(ulong, long), IList<ulong>> _cache;
 
         public StreamRepository(IConfigurationProvider config)
         {
             _config = config;
-            _log = Logging.CreateWriter("streamrepository");
             _cache = new ConcurrentDictionary<(ulong, long), IList<ulong>>();
         }
 
@@ -74,7 +72,7 @@ namespace Sir.Postings
                     }
                 }
 
-                _log.Log("reduced {0} to {1} docs in {2}",
+                Logging.Log("reduced {0} to {1} docs in {2}",
                     cursor, result.Count, timer.Elapsed);
             }
 
@@ -109,7 +107,7 @@ namespace Sir.Postings
             {
                 data.Seek(offset, SeekOrigin.Begin);
 
-                _log.Log("seek took {0}", timer.Elapsed);
+                Logging.Log("seek took {0}", timer.Elapsed);
                 timer.Restart();
 
                 // We are now at the first page.
@@ -142,7 +140,7 @@ namespace Sir.Postings
                     }
                 }
 
-                _log.Log("reading first page took {0}", timer.Elapsed);
+                Logging.Log("reading first page took {0}", timer.Elapsed);
 
                 while (nextPageOffset > -1)
                 {
@@ -174,13 +172,13 @@ namespace Sir.Postings
                         }
                     }
 
-                    _log.Log("reading next page took {0}", timer.Elapsed);
+                    Logging.Log("reading next page took {0}", timer.Elapsed);
 
                     pageCount++;
                 }
             }
 
-            _log.Log("read {0} postings from {0} pages in {2}", result.Count, pageCount, timer.Elapsed);
+            Logging.Log("read {0} postings from {0} pages in {2}", result.Count, pageCount, timer.Elapsed);
 
             return result.ToList();
         }
@@ -228,7 +226,7 @@ namespace Sir.Postings
                 throw new DataMisalignedException();
             }
 
-            _log.Log("parsed payload in {0}", time.Elapsed);
+            Logging.Log("parsed payload in {0}", time.Elapsed);
             time.Restart();
 
             var positions = new List<long>(lists.Count);
@@ -317,7 +315,7 @@ namespace Sir.Postings
                 }
             }
 
-            _log.Log("serialized data and index in {0}", time.Elapsed);
+            Logging.Log("serialized data and index in {0}", time.Elapsed);
 
             time.Restart();
 
@@ -335,7 +333,7 @@ namespace Sir.Postings
 
             res.Position = 0;
 
-            _log.Log("serialized response message in {0}", time.Elapsed);
+            Logging.Log("serialized response message in {0}", time.Elapsed);
 
             return res;
         }
@@ -351,7 +349,7 @@ namespace Sir.Postings
                 result.Write(BitConverter.GetBytes(doc.Value));
             }
 
-            _log.Log("serialized result in {0}", timer.Elapsed);
+            Logging.Log("serialized result in {0}", timer.Elapsed);
 
             return result;
         }
@@ -372,7 +370,7 @@ namespace Sir.Postings
                 read += sizeof(ulong);
             }
 
-            _log.Log("deserialized {0} postings in {1}", result.Count, timer.Elapsed);
+            Logging.Log("deserialized {0} postings in {1}", result.Count, timer.Elapsed);
 
             return result;
         }
@@ -424,7 +422,7 @@ namespace Sir.Postings
 
         public void Dispose()
         {
-            _log.FlushLog();
+            Logging.Close();
         }
     }
 }

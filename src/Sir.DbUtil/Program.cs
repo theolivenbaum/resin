@@ -9,15 +9,12 @@ namespace Sir.DbUtil
 {
     class Program
     {
-        private static StreamWriter _log;
-
         static void Main(string[] args)
         {
             try
             {
                 Console.WriteLine("processing command: {0}", string.Join(" ", args));
 
-                _log = Logging.CreateWriter("dbutil");
 
                 Logging.SendToConsole = true;
 
@@ -41,7 +38,7 @@ namespace Sir.DbUtil
                     Task.Run(() => Query(dir: args[1], collectionId: args[2])).Wait();
                 }
 
-                _log.FlushLog();
+                Logging.Close();
             }
             catch (Exception ex)
             {
@@ -94,6 +91,7 @@ namespace Sir.DbUtil
         {
             var files = Directory.GetFiles(dir, "*.docs");
             var fullTime = Stopwatch.StartNew();
+            var batchCount = 0;
 
             using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration("sir.ini")))
             foreach (var docFileName in files)
@@ -108,7 +106,6 @@ namespace Sir.DbUtil
                     using (var readSession = sessionFactory.CreateDocumenSession(collectionId))
                     {
                         var docs = readSession.ReadDocs(skip, take);
-                        var batchNo = 1;
 
                         foreach (var batch in docs.Batch(batchSize))
                         {
@@ -124,9 +121,7 @@ namespace Sir.DbUtil
                                 indexSession.Flush();
                             }
 
-                            _log.Log(string.Format("indexed batch in {0}", timer.Elapsed));
-                            _log.Log(string.Format("{0} batches in {0}", batchNo++, fullTime.Elapsed));
-
+                            Logging.Log(string.Format("indexed batch {0} in {1}", batchCount++, timer.Elapsed));
                         }
 
                     }
@@ -134,6 +129,9 @@ namespace Sir.DbUtil
                     break;
                 }
             }
+
+            Logging.Log(string.Format("indexed {0} batches in {0}", batchCount, fullTime.Elapsed));
+
         }
     }
 }

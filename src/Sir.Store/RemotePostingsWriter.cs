@@ -13,12 +13,10 @@ namespace Sir.Store
     public class RemotePostingsWriter : IDisposable
     {
         private IConfigurationProvider _config;
-        private readonly StreamWriter _log;
 
         public RemotePostingsWriter(IConfigurationProvider config)
         {
             _config = config;
-            _log = Logging.CreateWriter("remotepostingswriter");
         }
 
         public async Task Write(ulong collectionId, VectorNode rootNode)
@@ -67,12 +65,12 @@ namespace Sir.Store
                 var ctime = Stopwatch.StartNew();
                 var compressed = QuickLZ.compress(buf, 3);
 
-                _log.Log(string.Format("compressing {0} bytes to {1} took {2}", buf.Length, compressed.Length, ctime.Elapsed));
+                Logging.Log(string.Format("compressing {0} bytes to {1} took {2}", buf.Length, compressed.Length, ctime.Elapsed));
 
                 payload = compressed;
             }
 
-            _log.Log(string.Format("create postings message took {0}", timer.Elapsed));
+            Logging.Log(string.Format("create postings message took {0}", timer.Elapsed));
 
             // send message, recieve list of (remote) file positions, save positions in index.
 
@@ -90,7 +88,7 @@ namespace Sir.Store
                 nodes[i].PostingsOffset = positions[i];
             }
 
-            _log.Log(string.Format("record postings offsets took {0}", timer.Elapsed));
+            Logging.Log(string.Format("record postings offsets took {0}", timer.Elapsed));
 
         }
 
@@ -120,7 +118,7 @@ namespace Sir.Store
                 {
                     using (var responseBody = response.GetResponseStream())
                     {
-                        _log.Log(string.Format("sent {0} bytes and got a response in {1}", payload.Length, timer.Elapsed));
+                        Logging.Log(string.Format("sent {0} bytes and got a response in {1}", payload.Length, timer.Elapsed));
                         timer.Restart();
 
                         var mem = new MemoryStream();
@@ -145,7 +143,7 @@ namespace Sir.Store
                             read += sizeof(long);
                         }
 
-                        _log.Log(string.Format("deserialized {0} bytes of response data in {1}", buf.Length, timer.Elapsed));
+                        Logging.Log(string.Format("deserialized {0} bytes of response data in {1}", buf.Length, timer.Elapsed));
                     }
                 }
             }
@@ -155,7 +153,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            _log.FlushLog();
+            Logging.Close();
         }
     }
 }

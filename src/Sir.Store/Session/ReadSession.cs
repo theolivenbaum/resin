@@ -20,7 +20,6 @@ namespace Sir.Store
         private readonly ValueReader _keyReader;
         private readonly ValueReader _valReader;
         private readonly RemotePostingsReader _postingsReader;
-        private readonly StreamWriter _log;
 
         public ReadSession(string collectionId, 
             SessionFactory sessionFactory, 
@@ -43,7 +42,6 @@ namespace Sir.Store
             _keyReader = new ValueReader(KeyStream);
             _valReader = new ValueReader(ValueStream);
             _postingsReader = new RemotePostingsReader(config);
-            _log = Logging.CreateWriter("readsession");
         }
 
         public async Task<ReadResult> Read(Query query, int take)
@@ -52,7 +50,7 @@ namespace Sir.Store
 
             if (result == null)
             {
-                _log.Log("found nothing for query {0}", query);
+                Logging.Log("found nothing for query {0}", query);
 
                 return new ReadResult { Total = 0, Docs = new IDictionary[0] };
             }
@@ -78,7 +76,7 @@ namespace Sir.Store
 
             if (docIds == null)
             {
-                _log.Log("found nothing for query {0}", query);
+                Logging.Log("found nothing for query {0}", query);
 
                 return new ReadResult { Total = 0, Docs = new IDictionary[0] };
             }
@@ -113,12 +111,12 @@ namespace Sir.Store
                     }
                 }
 
-                _log.Log("sorted and reduced {0} postings for query {1} in {2}",
+                Logging.Log("sorted and reduced {0} postings for query {1} in {2}",
                     docIds.Count, query, timer.Elapsed);
 
                 var docs = await ReadDocs(sorted);
 
-                _log.Log("read {0} documents from disk for query {1} in {2}",
+                Logging.Log("read {0} documents from disk for query {1} in {2}",
                     docs.Count, query, timer.Elapsed);
 
                 return new ReadResult { Total = docIds.Count, Docs = docs };
@@ -134,20 +132,20 @@ namespace Sir.Store
 
                 Map(query);
 
-                _log.Log("index scan for query {0} took {1}", query, timer.Elapsed);
+                Logging.Log("index scan for query {0} took {1}", query, timer.Elapsed);
 
                 timer.Restart();
 
                 var docIds =  _postingsReader.Reduce(CollectionId, query.ToStream());
 
-                _log.Log("reducing {0} to {1} docs took {2}",
+                Logging.Log("reducing {0} to {1} docs took {2}",
                     query, docIds.Count, timer.Elapsed);
 
                 return docIds;
             }
             catch (Exception ex)
             {
-                _log.Log(ex);
+                Logging.Log(ex);
                 throw;
             }
         }
@@ -170,7 +168,7 @@ namespace Sir.Store
                     hits = indexReader.ClosestMatch(termVector);
                 }
 
-                _log.Log("scan found {0} matches in {1}", hits.Count, timer.Elapsed);
+                Logging.Log("scan found {0} matches in {1}", hits.Count, timer.Elapsed);
 
                 if (hits.Count > 0)
                 {
@@ -190,7 +188,7 @@ namespace Sir.Store
                         }
                     }
 
-                    _log.Log("sorted and mapped term {0} in {1}", cursor, timer.Elapsed);
+                    Logging.Log("sorted and mapped term {0} in {1}", cursor, timer.Elapsed);
                 }
             }
         }
@@ -254,7 +252,7 @@ namespace Sir.Store
                 result.Add(doc);
             }
 
-            _log.Log("read {0} docs in {1}", result.Count, timer.Elapsed);
+            Logging.Log("read {0} docs in {1}", result.Count, timer.Elapsed);
 
             return result;
         }
@@ -264,7 +262,7 @@ namespace Sir.Store
             base.Dispose();
 
             _postingsReader.Dispose();
-            _log.FlushLog();
+            Logging.Close();
         }
     }
 }

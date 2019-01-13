@@ -12,7 +12,6 @@ namespace Sir.HttpServer.Features
     {
         private readonly ProducerConsumerQueue<Uri> _queue;
         private readonly PluginsCollection _plugins;
-        private readonly StreamWriter _log;
 
         public (Uri uri, string title) LastProcessed { get; private set; }
 
@@ -20,7 +19,6 @@ namespace Sir.HttpServer.Features
         {
             _queue = new ProducerConsumerQueue<Uri>(Submit);
             _plugins = plugins;
-            _log = Logging.CreateWriter("crawlqueue");
         }
 
         public void Enqueue(Uri uri)
@@ -52,7 +50,7 @@ namespace Sir.HttpServer.Features
 
                 if (!allowed)
                 {
-                    _log.Log(string.Format("url forbidden by robot.txt {0}", uri));
+                    Logging.Log(string.Format("url forbidden by robot.txt {0}", uri));
 
                     return;
                 }
@@ -72,7 +70,7 @@ namespace Sir.HttpServer.Features
 
                 if (doc.title == null)
                 {
-                    _log.Log(string.Format("error processing {0} (no title)", uri));
+                    Logging.Log(string.Format("error processing {0} (no title)", uri));
                     return;
                 }
 
@@ -92,7 +90,7 @@ namespace Sir.HttpServer.Features
             }
             catch (Exception ex)
             {
-                _log.Log(string.Format("error processing {0} {1}", uri, ex));
+                Logging.Log(string.Format("error processing {0} {1}", uri, ex));
             }
         }
 
@@ -118,19 +116,19 @@ namespace Sir.HttpServer.Features
 
                     if (response.StatusCode != HttpStatusCode.OK)
                     {
-                        _log.Log(string.Format("bad request: {0} response: {1}", uri, response.StatusCode));
+                        Logging.Log(string.Format("bad request: {0} response: {1}", uri, response.StatusCode));
 
                         return null;
                     }
 
-                    _log.Log(string.Format("requested: {0}", uri));
+                    Logging.Log(string.Format("requested: {0}", uri));
 
                     return reader.ReadToEnd();
                 }
             }
             catch (Exception ex)
             {
-                _log.Log(string.Format("request failed: {0} {1}", uri, ex));
+                Logging.Log(string.Format("request failed: {0} {1}", uri, ex));
 
                 return null;
             }
@@ -184,7 +182,7 @@ namespace Sir.HttpServer.Features
         public void Dispose()
         {
             _queue.Dispose();
-            _log.FlushLog();
+            Logging.Close();
         }
     }
 }

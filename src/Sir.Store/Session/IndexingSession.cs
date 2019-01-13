@@ -15,7 +15,6 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
-        private readonly StreamWriter _log;
         private bool _validate;
         private readonly IDictionary<long, VectorNode> _dirty;
         private readonly Stream _vectorStream;
@@ -29,7 +28,6 @@ namespace Sir.Store
         {
             _config = config;
             _tokenizer = tokenizer;
-            _log = Logging.CreateWriter("indexingsession");
             _validate = config.Get("create_index_validation_files") == "true";
             _dirty = new ConcurrentDictionary<long, VectorNode>();
             _vectorStream = SessionFactory.CreateAppendStream(
@@ -43,8 +41,7 @@ namespace Sir.Store
                 var timer = Stopwatch.StartNew();
                 var docId = ulong.Parse(document["__docid"].ToString());
 
-                Parallel.ForEach(Analyze(document), column =>
-                //foreach (var column in Analyze(document))
+                foreach (var column in Analyze(document))
                 {
                     var keyId = column.Key;
                     var tokens = column.Value;
@@ -71,14 +68,14 @@ namespace Sir.Store
                             Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}.validate", CollectionId.ToHash(), keyId, docId)),
                             string.Join('\n', tokens));
                     }
-                });
+                }
 
-                _log.Log(string.Format("analyzed doc ID {0} in {1}", document["__docid"], timer.Elapsed));
+                Logging.Log(string.Format("added doc ID {0} to in-mem index in {1}", document["__docid"], timer.Elapsed));
 
             }
             catch (Exception ex)
             {
-                _log.Log(ex);
+                Logging.Log(ex);
 
                 throw;
             }
@@ -105,11 +102,14 @@ namespace Sir.Store
 
             _flushed = true;
 
-            _log.Log(string.Format("***FLUSHED***"));
+            Logging.Log(string.Format("***FLUSHED***"));
         }
 
         private async Task SerializeColumn(long keyId, VectorNode column)
         {
+            var time = Stopwatch.StartNew();
+            (int depth, int width, int avgDepth) size;
+
             using (var postingsWriter = new RemotePostingsWriter(_config))
             {
                 var collectionId = CollectionId.ToHash();
@@ -121,22 +121,21 @@ namespace Sir.Store
                 using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(pixFileName)))
                 using (var ixStream = CreateIndexStream(collectionId, keyId))
                 {
-                    var time = Stopwatch.StartNew();
-
                     var page = column.SerializeTree(ixStream);
 
                     pageIndexWriter.Write(page.offset, page.length);
 
-                    var size = column.Size();
-
-                    _log.Log("serialized column {0} in {1} with size {2},{3} (avg depth {4})",
-                        keyId, time.Elapsed, size.depth, size.width, size.avgDepth);
+                    size = column.Size();
                 }
             }
+
+            Logging.Log("serialized column {0} in {1} with size {2},{3} (avg depth {4})",
+                keyId, time.Elapsed, size.depth, size.width, size.avgDepth);
         }
 
-        private IEnumerable<KeyValuePair<long, HashSet<string>>> Analyze(IDictionary doc)
+        private IDictionary<long, HashSet<string>> Analyze(IDictionary doc)
         {
+            var result = new Dictionary<long, HashSet<string>>();
             var docId = (ulong)doc["__docid"];
 
             foreach (var obj in doc.Keys)
@@ -170,9 +169,11 @@ namespace Sir.Store
                         }
                     }
 
-                    yield return new KeyValuePair<long, HashSet<string>>(keyId, column);
+                    result.Add(keyId, column);
                 }
             }
+
+            return result;
         }
 
         private void WriteTokens(ulong docId, long keyId, HashSet<string> tokens)
@@ -211,7 +212,7 @@ namespace Sir.Store
                 throw new InvalidOperationException();
             }
 
-            _log.FlushLog();
+            Logging.Close();
         }
     }
 }
