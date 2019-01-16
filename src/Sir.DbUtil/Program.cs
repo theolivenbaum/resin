@@ -130,7 +130,7 @@ namespace Sir.DbUtil
                 }
             }
 
-            Logging.Log(string.Format("indexed {0} batches in {0}", batchCount, fullTime.Elapsed));
+            Logging.Log(string.Format("indexed {0} batches in {1}", batchCount, fullTime.Elapsed));
 
         }
     }
