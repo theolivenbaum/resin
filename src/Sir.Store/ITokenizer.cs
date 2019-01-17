@@ -1,14 +1,10 @@
-﻿using System.Collections.Generic;
-
-namespace Sir.Store
+﻿namespace Sir.Store
 {
     /// <summary>
-    /// Full-text tokenizer
+    /// Latin text tokenizer.
     /// </summary>
     public interface ITokenizer
     {
-        IEnumerable<string> Tokenize(string text);
-
-        string Normalize(string text);
+        AnalyzedString Tokenize(string text);
     }
 }

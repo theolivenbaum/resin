@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace Sir.Store
 {
@@ -18,84 +15,68 @@ namespace Sir.Store
 
         public string ContentType => "*";
 
-
-        private IEnumerable<string> TokenizeIntoBigrams(string text)
+        public AnalyzedString Tokenize(string text)
         {
-            string item1 = null;
-            string item2 = null;
+            var normalized = text.ToLower().ToCharArray();
+            var offset = 0;
+            bool word = false;
+            int index = 0;
+            var tokens = new List<(int, int)>();
 
-            foreach (var word in Normalize(text).Split(_delims, StringSplitOptions.None)
-                .Where(x => !string.IsNullOrWhiteSpace(x)))
+            for (; index < normalized.Length; index++)
             {
-                if (item1 != null && item2 != null)
+                char c = normalized[index];
+
+                if (word)
                 {
-                    yield return string.Join(' ', item1, item2);
-                    item1 = item2;
-                    item2 = word;
+                    if (!IsData(c))
+                    {
+                        tokens.Add((offset, index - offset));
+
+                        offset = index;
+
+                        word = false;
+                    }
                 }
-                else if (item1 == null)
+                else
                 {
-                    item1 = word;
-                }
-                else if (item2 == null)
-                {
-                    item2 = word;
+                    if (IsData(c))
+                    {
+                        word = true;
+                        offset = index;
+                    }
+                    else
+                    {
+                        offset++;
+                    }
                 }
             }
 
-            if (item1 != null && item2 != null)
+            if (word)
             {
-                yield return string.Join(' ', item1, item2);
+                tokens.Add((offset, index - offset));
             }
-            else if (item1 != null)
-            {
-                yield return item1;
-            }
+
+            return new AnalyzedString { Source = normalized, Tokens = tokens };
         }
 
-        public IEnumerable<string> Tokenize(string text)
+        private bool IsData(char c)
         {
-            return Normalize(text).Split(_delims, StringSplitOptions.RemoveEmptyEntries)
-                .Where(x => !string.IsNullOrWhiteSpace(x));
+            return char.IsLetterOrDigit(c) && !IsDelimiter(c);
         }
 
-        public string Normalize(string text)
+        private static bool IsDelimiter(char c)
         {
-            return text.ToLower(CultureInfo.InvariantCulture);
+            foreach (var d in _delims)
+            {
+                if (c == d) return true;
+            }
+
+            return false;
         }
 
         public void Dispose()
         {
-        }
-    }
-
-    public static class StringExtensions
-    {
-        public static IEnumerable<IEnumerable<T>> Batch<T>(
-        this IEnumerable<T> source, int size)
-        {
-            T[] bucket = null;
-            var count = 0;
-
-            foreach (var item in source)
-            {
-                if (bucket == null)
-                    bucket = new T[size];
-
-                bucket[count++] = item;
-
-                if (count != size)
-                    continue;
-
-                yield return bucket;
-
-                bucket = null;
-                count = 0;
-            }
-
-            // Return the last bucket with all remaining elements
-            if (bucket != null && count > 0)
-                yield return bucket.Take(count);
         }
     }
 }

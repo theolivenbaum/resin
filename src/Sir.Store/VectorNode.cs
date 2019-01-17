@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,7 +9,7 @@ namespace Sir.Store
 {
     /// <summary>
     /// Binary tree where the data is a word embedding represented in-memory as a sparse vector.
-    /// The tree is balanced according to cos angles between the word vectors of the immediate neighbouring nodes.
+    /// The tree is balanced according to cos angles between word vectors of the immediate neighbouring nodes.
     /// </summary>
     public class VectorNode
     {
@@ -21,7 +20,7 @@ namespace Sir.Store
 
         private VectorNode _right;
         private VectorNode _left;
-        private ConcurrentBag<ulong> _docIds;
+        private HashSet<ulong> _docIds;
         private int _weight;
 
         public long VecOffset { get; private set; }
@@ -81,42 +80,18 @@ namespace Sir.Store
 
         public VectorNode(SortedList<int, byte> termVector)
         {
-            _docIds = new ConcurrentBag<ulong>();
+            _docIds = new HashSet<ulong>();
             TermVector = termVector;
             PostingsOffset = -1;
             VecOffset = -1;
         }
 
-        public VectorNode(string s, ulong docId)
+        public VectorNode(SortedList<int, byte> termVector, ulong docId)
         {
-            if (string.IsNullOrWhiteSpace(s)) throw new ArgumentException();
-
-            _docIds = new ConcurrentBag<ulong> { docId };
-            TermVector = s.ToCharVector();
+            _docIds = new HashSet<ulong> { docId };
+            TermVector = termVector;
             PostingsOffset = -1;
             VecOffset = -1;
-        }
-
-        public VectorNode(byte[] buffer)
-        {
-
-        }
-
-        public VectorNode Clone()
-        {
-            var clone = new VectorNode(TermVector);
-
-            clone.VecOffset = VecOffset;
-            clone.PostingsOffset = PostingsOffset;
-            clone._docIds = new ConcurrentBag<ulong>(_docIds);
-            clone.Angle = Angle;
-            clone.Ancestor = Ancestor;
-            clone.Terminator = Terminator;
-
-            clone._left = _left == null ? null : _left.Clone();
-            clone._right = _right == null ? null : _right.Clone();
-
-            return clone;
         }
 
         public Hit ClosestMatch(VectorNode node)

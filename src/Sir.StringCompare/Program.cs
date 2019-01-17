@@ -23,18 +23,21 @@ namespace Sir.StringCompare
             {
                 var tokenizer = new LatinTokenizer();
                 var index1 = new VectorNode();
+                var tokens = tokenizer.Tokenize(document1);
 
-                foreach (var token in tokenizer.Tokenize(document1))
+                foreach (var token in tokens.Tokens)
                 {
-                    index1.Add(new VectorNode(token), new MemoryStream());
+                    var termVector = tokens.ToCharVector(token.offset, token.length);
+                    index1.Add(new VectorNode(termVector), new MemoryStream());
                 }
 
                 float score = 0;
                 var count = 0;
-
-                foreach (var token in tokenizer.Tokenize(document2))
+                var tokens2 = tokenizer.Tokenize(document2);
+                foreach (var token in tokens2.Tokens)
                 {
-                    var node = index1.ClosestMatch(new VectorNode(token));
+                    var termVector = tokens.ToCharVector(token.offset, token.length);
+                    var node = index1.ClosestMatch(new VectorNode(termVector));
 
                     score += node.Score;
                     count++;

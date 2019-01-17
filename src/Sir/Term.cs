@@ -9,18 +9,20 @@ namespace Sir
     public class Term
     {
         public IComparable Key { get; private set; }
-        public IComparable Value { get; set; }
+        public AnalyzedString TokenizedString { get; set; }
         public long KeyId { get; set; }
+        public int Index { get; set; }
 
-        public Term(IComparable key, IComparable value)
+        public Term(IComparable key, AnalyzedString tokenizedString, int index)
         {
             Key = key;
-            Value = value;
+            TokenizedString = tokenizedString;
+            Index = index;
         }
 
         public override string ToString()
         {
-            return string.Format("{0}:{1}", Key, Value);
+            return string.Format("{0}:{1}", Key, TokenizedString);
         }
     }
 }

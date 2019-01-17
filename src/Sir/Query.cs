@@ -15,14 +15,6 @@ namespace Sir
             Or = true;
         }
 
-        public Query(IComparable key, IComparable value)
-        {
-            PostingsOffset = -1;
-            Term = new Term(key, value);
-            Score = -1;
-            Or = true;
-        }
-
         public ulong Collection { get; set; }
         public bool And { get; set; }
         public bool Or { get; set; }

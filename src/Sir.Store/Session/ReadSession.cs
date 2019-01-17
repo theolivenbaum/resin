@@ -163,7 +163,7 @@ namespace Sir.Store
 
                 if (indexReader != null)
                 {
-                    var termVector = cursor.Term.Value.ToString().ToCharVector();
+                    var termVector = cursor.Term.ToCharVector();
 
                     hits = indexReader.ClosestMatch(termVector);
                 }

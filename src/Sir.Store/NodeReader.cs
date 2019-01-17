@@ -32,8 +32,8 @@ namespace Sir.Store
 
             Parallel.ForEach(_pages, page =>
             {
-                using (var indexStream = _sessionFactory.CreateAsyncReadStream(_ixFileName))
-                using (var vectorStream = _sessionFactory.CreateAsyncReadStream(_vecFileName))
+                using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
+                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
                 {
                     if (indexStream.Position < page.offset)
                     {

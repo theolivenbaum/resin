@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Sir.Store
@@ -31,8 +32,8 @@ namespace Sir.Store
                 var value = parts[1];
 
                 var values = key[0] == '_' ?
-                    new[] { value } : 
-                    tokenizer.Tokenize(value).ToArray();
+                    new AnalyzedString { Source = value.ToCharArray(), Tokens = new List<(int, int)> { (0, value.Length) } } :
+                    tokenizer.Tokenize(value);
 
                 var or = root == null || (key[0] != '+' && key[0] != '-');
                 var not = key[0] == '-';
@@ -43,12 +44,12 @@ namespace Sir.Store
                     key = key.Substring(1);
                 }
 
-                var q = new Query { Term = new Term(key, values[0]), And = and, Or = or, Not = not };
+                var q = new Query { Term = new Term(key, values, 0), And = and, Or = or, Not = not };
                 var qc = q;
 
-                for (int i = 1; i < values.Length; i++)
+                for (int i = 1; i < values.Tokens.Count; i++)
                 {
-                    qc.Next = new Query { Term = new Term(key, values[i]), Or = true };
+                    qc.Next = new Query { Term = new Term(key, values, i), Or = true };
                     qc = qc.Next;
                 }
 

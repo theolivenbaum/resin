@@ -53,9 +53,10 @@ namespace Sir.Store
                     {
                         var ix = _dirty[keyId];
 
-                        foreach (var token in tokens)
+                        foreach (var token in tokens.Tokens)
                         {
-                            var query = new VectorNode(token);
+                            var termVector = tokens.ToCharVector(token.offset, token.length);
+                            var query = new VectorNode(termVector);
                             var closestMatch = ix.ClosestMatch(query);
 
                             if (closestMatch.Score < VectorNode.IdenticalAngle)
@@ -133,9 +134,9 @@ namespace Sir.Store
                 keyId, time.Elapsed, size.depth, size.width, size.avgDepth);
         }
 
-        private IDictionary<long, HashSet<string>> Analyze(IDictionary doc)
+        private IDictionary<long, AnalyzedString> Analyze(IDictionary doc)
         {
-            var result = new Dictionary<long, HashSet<string>>();
+            var result = new Dictionary<long, AnalyzedString>();
             var docId = (ulong)doc["__docid"];
 
             foreach (var obj in doc.Keys)
@@ -146,7 +147,6 @@ namespace Sir.Store
                 {
                     var keyHash = key.ToHash();
                     var keyId = SessionFactory.GetKeyId(keyHash);
-                    var column = new HashSet<string>();
                     var val = (IComparable)doc[key];
                     var str = val as string;
 
@@ -156,33 +156,30 @@ namespace Sir.Store
 
                         if (!string.IsNullOrWhiteSpace(v))
                         {
-                            column.Add(v);
+                            result.Add(keyId, new AnalyzedString { Source = v.ToCharArray(), Tokens = new List<(int, int)> { (0, v.Length) } });
                         }
                     }
                     else
                     {
                         var tokens = _tokenizer.Tokenize(str);
 
-                        foreach (var token in tokens)
-                        {
-                            column.Add(token);
-                        }
+                        result.Add(keyId, tokens);
                     }
-
-                    result.Add(keyId, column);
                 }
             }
 
             return result;
         }
 
-        private void WriteTokens(ulong docId, long keyId, HashSet<string> tokens)
+        private void WriteTokens(ulong docId, long keyId, AnalyzedString tokens)
         {
             var ix = GetOrCreateIndex(keyId);
 
-            foreach (var token in tokens)
+            foreach (var token in tokens.Tokens)
             {
-                ix.Add(new VectorNode(token, docId), _vectorStream);
+                var termVector = tokens.ToCharVector(token.offset, token.length);
+
+                ix.Add(new VectorNode(termVector, docId), _vectorStream);
             }
         }
 

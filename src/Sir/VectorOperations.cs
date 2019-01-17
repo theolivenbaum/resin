@@ -4,7 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Sir.Store
+namespace Sir
 {
     /// <summary>
     /// Perform calculations on sparse vectors.
@@ -129,6 +129,49 @@ namespace Sir.Store
             return result;
         }
 
+        public static SortedList<int, byte> ToCharVector(this Term term)
+        {
+            var vec = new SortedList<int, byte>();
+            var span = term.TokenizedString.Tokens[term.Index];
+
+            for (int i = 0; i < span.length; i++)
+            {
+                var codePoint = (int)term.TokenizedString.Source[span.offset + i];
+
+                if (vec.ContainsKey(codePoint))
+                {
+                    vec[codePoint] += 1;
+                }
+                else
+                {
+                    vec[codePoint] = 1;
+                }
+            }
+            
+            return vec;
+        }
+
+        public static SortedList<int, byte> ToCharVector(this AnalyzedString term, int offset, int length)
+        {
+            var vec = new SortedList<int, byte>();
+
+            for (int i = 0; i < length; i++)
+            {
+                var codePoint = (int)term.Source[offset + i];
+
+                if (vec.ContainsKey(codePoint))
+                {
+                    vec[codePoint] += 1;
+                }
+                else
+                {
+                    vec[codePoint] = 1;
+                }
+            }
+
+            return vec;
+        }
+
         public static SortedList<int, byte> ToCharVector(this string word)
         {
             var vec = new SortedList<int, byte>();
@@ -139,7 +182,7 @@ namespace Sir.Store
                 var element = charEnum.GetTextElement().ToCharArray();
                 int codePoint = 0;
 
-                foreach (var c in element)
+                foreach (char c in element)
                 {
                     codePoint += c;
                 }
@@ -156,7 +199,7 @@ namespace Sir.Store
             return vec;
         }
 
-        public static float Length(this SortedList<int, byte> vector)
+        public static float Magnitude(this SortedList<int, byte> vector)
         {
             return (float) Math.Sqrt(Dot(vector, vector));
         }
