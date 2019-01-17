@@ -72,7 +72,6 @@ namespace Sir.Postings
 
         public void Dispose()
         {
-            Logging.Flush();
         }
     }
 }

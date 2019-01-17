@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sir.Core;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -21,6 +22,7 @@ namespace Sir.Store
         private readonly Stream _vectorStream;
         private bool _flushed;
         private bool _flushing;
+        private readonly ProducerConsumerQueue<IDictionary> _analyzeQueue;
 
         public IndexingSession(
             string collectionId, 
@@ -32,56 +34,16 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _validate = config.Get("create_index_validation_files") == "true";
             _dirty = new ConcurrentDictionary<long, VectorNode>();
-            _vectorStream = SessionFactory.CreateAppendStream(
-                Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId.ToHash())));
+            _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId.ToHash())));
+
+            var numThreads = int.Parse(_config.Get("index_thread_count"));
+
+            _analyzeQueue = new ProducerConsumerQueue<IDictionary>(Analyze, numThreads);
         }
 
         public void Write(IDictionary document)
         {
-            try
-            {
-                var timer = Stopwatch.StartNew();
-                var docId = ulong.Parse(document["__docid"].ToString());
-
-                foreach (var column in Analyze(document))
-                {
-                    var keyId = column.Key;
-                    var tokens = column.Value;
-
-                    WriteTokens(docId, keyId, tokens);
-
-                    // validate
-                    if (_validate)
-                    {
-                        var ix = _dirty[keyId];
-
-                        foreach (var token in tokens.Tokens)
-                        {
-                            var termVector = tokens.ToCharVector(token.offset, token.length);
-                            var query = new VectorNode(termVector);
-                            var closestMatch = ix.ClosestMatch(query);
-
-                            if (closestMatch.Score < VectorNode.IdenticalAngle)
-                            {
-                                throw new DataMisalignedException();
-                            }
-                        }
-
-                        File.WriteAllText(
-                            Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}.validate", CollectionId.ToHash(), keyId, docId)),
-                            string.Join('\n', tokens));
-                    }
-                }
-
-                Logging.Log(string.Format("added doc ID {0} to in-mem index in {1}", document["__docid"], timer.Elapsed));
-
-            }
-            catch (Exception ex)
-            {
-                Logging.Log(ex);
-
-                throw;
-            }
+            _analyzeQueue.Enqueue(document);
         }
 
         public void Flush()
@@ -90,6 +52,13 @@ namespace Sir.Store
                 return;
 
             _flushing = true;
+
+            Logging.Log("waiting for analyze queue");
+
+            using (_analyzeQueue)
+            {
+                _analyzeQueue.Join();
+            }
 
             var tasks = new Task[_dirty.Count];
             var taskId = 0;
@@ -139,14 +108,16 @@ namespace Sir.Store
                 keyId, time.Elapsed, size.depth, size.width, size.avgDepth);
         }
 
-        private IDictionary<long, AnalyzedString> Analyze(IDictionary doc)
+        private void Analyze(IDictionary doc)
         {
-            var result = new Dictionary<long, AnalyzedString>();
+            var time = Stopwatch.StartNew();
+
             var docId = (ulong)doc["__docid"];
 
             foreach (var obj in doc.Keys)
             {
                 var key = (string)obj;
+                AnalyzedString tokens = null;
 
                 if (!key.StartsWith("__"))
                 {
@@ -161,22 +132,25 @@ namespace Sir.Store
 
                         if (!string.IsNullOrWhiteSpace(v))
                         {
-                            result.Add(keyId, new AnalyzedString { Source = v.ToCharArray(), Tokens = new List<(int, int)> { (0, v.Length) } });
+                            tokens = new AnalyzedString { Source = v.ToCharArray(), Tokens = new List<(int, int)> { (0, v.Length) } };
                         }
                     }
                     else
                     {
-                        var tokens = _tokenizer.Tokenize(str);
+                        tokens = _tokenizer.Tokenize(str);
+                    }
 
-                        result.Add(keyId, tokens);
+                    if (tokens != null)
+                    {
+                        AddDocumentToModel(docId, keyId, tokens);
                     }
                 }
             }
 
-            return result;
+            Logging.Log("added document ID {0} to model in {1}", docId, time.Elapsed);
         }
 
-        private void WriteTokens(ulong docId, long keyId, AnalyzedString tokens)
+        private void AddDocumentToModel(ulong docId, long keyId, AnalyzedString tokens)
         {
             var ix = GetOrCreateIndex(keyId);
 
@@ -194,14 +168,22 @@ namespace Sir.Store
             return SessionFactory.CreateAppendStream(fileName);
         }
 
+        private static readonly object _sync = new object();
+
         private VectorNode GetOrCreateIndex(long keyId)
         {
             VectorNode root;
 
             if (!_dirty.TryGetValue(keyId, out root))
             {
-                root = new VectorNode();
-                _dirty.Add(keyId, root);
+                lock (_sync)
+                {
+                    if (!_dirty.TryGetValue(keyId, out root))
+                    {
+                        root = new VectorNode();
+                        _dirty.Add(keyId, root);
+                    }
+                }
             }
 
             return root;
@@ -213,8 +195,6 @@ namespace Sir.Store
             {
                 Thread.Sleep(100);
             }
-
-            Logging.Flush();
         }
     }
 }

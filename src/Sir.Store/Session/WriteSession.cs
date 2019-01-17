@@ -106,12 +106,5 @@ namespace Sir.Store
 
             return docId;
         }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-
-            Logging.Flush();
-        }
     }
 }

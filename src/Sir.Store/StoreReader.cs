@@ -29,7 +29,6 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            Logging.Flush();
         }
 
         public async Task<Result> Read(string collectionId, HttpRequest request)

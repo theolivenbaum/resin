@@ -94,12 +94,5 @@ namespace Sir.HttpServer.Controllers
                 throw ew;
             }
         }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            Logging.Flush();
-        }
     }
 }

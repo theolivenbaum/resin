@@ -12,7 +12,10 @@ namespace Sir
 
         private static void Write(object message)
         {
-            //GetWriter().WriteLine(message);
+            var writer = GetWriter();
+
+            writer.WriteLine(message);
+            writer.Flush();
 
             if (SendToConsole)
             {
@@ -47,28 +50,13 @@ namespace Sir
 
                         var fn = Path.Combine(logDir, "sir.log");
                         var stream = Stream.Synchronized(new FileStream(fn, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
-                        Writer = StreamWriter.Synchronized(new StreamWriter(stream));
-                        
+                        Writer = TextWriter.Synchronized(new StreamWriter(stream));
+                        return Writer;
                     }
                 }
             }
 
             return Writer;
-        }
-
-        public static void Flush()
-        {
-            if (Writer != null)
-            {
-                lock (Sync)
-                {
-                    if (Writer != null)
-                    {
-                        Writer.Dispose();
-                        Writer = null;
-                    }
-                }
-            }
         }
     }
 }

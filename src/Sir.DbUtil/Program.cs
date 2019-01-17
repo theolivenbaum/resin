@@ -38,7 +38,6 @@ namespace Sir.DbUtil
                     Task.Run(() => Query(dir: args[1], collectionId: args[2])).Wait();
                 }
 
-                Logging.Flush();
             }
             catch (Exception ex)
             {

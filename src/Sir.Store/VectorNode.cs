@@ -141,7 +141,10 @@ namespace Sir.Store
                 {
                     node.Angle = angle;
 
-                    cursor.Merge(node);
+                    lock (_sync)
+                    {
+                        cursor.Merge(node);
+                    }
 
                     break;
                 }
@@ -149,13 +152,23 @@ namespace Sir.Store
                 {
                     if (cursor.Left == null)
                     {
-                        node.Angle = angle;
-                        cursor.Left = node;
+                        lock (_sync)
+                        {
+                            if (cursor.Left == null)
+                            {
+                                node.Angle = angle;
+                                cursor.Left = node;
 
-                        if (vectorStream != null)
-                            cursor.Left.SerializeVector(vectorStream);
+                                if (vectorStream != null)
+                                    cursor.Left.SerializeVector(vectorStream);
 
-                        break;
+                                break;
+                            }
+                            else
+                            {
+                                cursor = cursor.Left;
+                            }
+                        }
                     }
                     else
                     {
@@ -166,13 +179,23 @@ namespace Sir.Store
                 {
                     if (cursor.Right == null)
                     {
-                        node.Angle = angle;
-                        cursor.Right = node;
+                        lock (_sync)
+                        {
+                            if (cursor.Right == null)
+                            {
+                                node.Angle = angle;
+                                cursor.Right = node;
 
-                        if (vectorStream != null)
-                            cursor.Right.SerializeVector(vectorStream);
+                                if (vectorStream != null)
+                                    cursor.Right.SerializeVector(vectorStream);
 
-                        break;
+                                break;
+                            }
+                            else
+                            {
+                                cursor = cursor.Right;
+                            }
+                        }
                     }
                     else
                     {
