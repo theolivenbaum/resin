@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Sir.Store
 {
@@ -44,9 +44,9 @@ namespace Sir.Store
             _postingsReader = new RemotePostingsReader(config);
         }
 
-        public async Task<ReadResult> Read(Query query, int take)
+        public async Task<ReadResult> Read(Query query)
         {
-            IDictionary<ulong, float> result = MapReduce(query);
+            var result = MapReduce(query);
 
             if (result == null)
             {
@@ -56,74 +56,13 @@ namespace Sir.Store
             }
             else
             {
-                IEnumerable<KeyValuePair<ulong, float>> sorted = result.OrderByDescending(x => x.Value);
-                
-                if (take > 0)
-                    sorted = sorted.Take(take);
+                var docs = await ReadDocs(result.Documents);
 
-                var docs = await ReadDocs(sorted);
-
-                return new ReadResult { Total = result.Count, Docs = docs };
+                return new ReadResult { Total = result.Total, Docs = docs };
             }
         }
 
-        public async Task<ReadResult> Read(Query query)
-        {
-            var timer = new Stopwatch();
-
-            // Get doc IDs and their score
-            IDictionary<ulong, float> docIds = MapReduce(query);
-
-            if (docIds == null)
-            {
-                Logging.Log("found nothing for query {0}", query);
-
-                return new ReadResult { Total = 0, Docs = new IDictionary[0] };
-            }
-            else
-            {
-                if (docIds.Count < 101)
-                {
-                    return new ReadResult { Total = docIds.Count, Docs = await ReadDocs(docIds) };
-                }
-
-                timer.Restart();
-
-                var sorted = new List<KeyValuePair<ulong, float>>();
-                var ordered = docIds.OrderByDescending(x => x.Value);
-                float topScore = 0;
-                int index = 0;
-
-                foreach (var s in ordered)
-                {
-                    if (index++ == 0)
-                    {
-                        topScore = s.Value;
-                        sorted.Add(s);
-                    }
-                    else if (s.Value == topScore)
-                    {
-                        sorted.Add(s);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                Logging.Log("sorted and reduced {0} postings for query {1} in {2}",
-                    docIds.Count, query, timer.Elapsed);
-
-                var docs = await ReadDocs(sorted);
-
-                Logging.Log("read {0} documents from disk for query {1} in {2}",
-                    docs.Count, query, timer.Elapsed);
-
-                return new ReadResult { Total = docIds.Count, Docs = docs };
-            }
-        }
-
-        private IDictionary<ulong, float> MapReduce(Query query)
+        private MapReduceResult MapReduce(Query query)
         {
             try
             {
@@ -136,12 +75,12 @@ namespace Sir.Store
 
                 timer.Restart();
 
-                var docIds =  _postingsReader.Reduce(CollectionId, query.ToStream());
+                var result =  _postingsReader.Reduce(CollectionId, query.ToStream(), query.Skip, query.Take);
 
                 Logging.Log("reducing {0} to {1} docs took {2}",
-                    query, docIds.Count, timer.Elapsed);
+                    query, result.Documents.Count, timer.Elapsed);
 
-                return docIds;
+                return result;
             }
             catch (Exception ex)
             {
@@ -154,6 +93,8 @@ namespace Sir.Store
         {
             foreach (var cursor in query.ToList())
             {
+                // score each query term
+
                 var timer = new Stopwatch();
                 timer.Start();
 
@@ -184,7 +125,8 @@ namespace Sir.Store
                     {
                         foreach (var hit in topHits.Skip(1))
                         {
-                            cursor.InsertAfter(new Query { Score = hit.Score, PostingsOffset = hit.PostingsOffset });
+                            if (hit.Score > VectorNode.FoldAngle)
+                                cursor.InsertAfter(new Query { Score = hit.Score, PostingsOffset = hit.PostingsOffset });
                         }
                     }
 

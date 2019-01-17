@@ -31,10 +31,9 @@ namespace Sir.Postings
                 var buf = stream.ToArray();
 
                 var query = Query.FromStream(buf);
-
-                var data = await _data.Reduce(collectionId.ToHash(), query);
-
-                var result = new Result { Data = data, MediaType = "application/postings", Total = data.Length/sizeof(ulong) };
+                var skip = int.Parse(request.Query["skip"]);
+                var take = int.Parse(request.Query["take"]);
+                var result = await _data.Reduce(collectionId.ToHash(), query, skip, take);
 
                 Logging.Log("processed read request for {0} postings in {1}", result.Total, timer.Elapsed);
 

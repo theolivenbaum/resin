@@ -20,9 +20,9 @@ namespace Sir.Postings
             _cache = new ConcurrentDictionary<(ulong, long), IList<ulong>>();
         }
 
-        public async Task<MemoryStream> Reduce(ulong collectionId, IList<Query> query)
+        public async Task<Result> Reduce(ulong collectionId, IList<Query> query, int skip, int take)
         {
-            var result = new ConcurrentDictionary<ulong, float>();
+            var result = new Dictionary<ulong, float>();
 
             foreach (var cursor in query)
             {
@@ -34,7 +34,7 @@ namespace Sir.Postings
 
                 if (cursor.And)
                 {
-                    var aggregatedResult = new ConcurrentDictionary<ulong, float>();
+                    var aggregatedResult = new Dictionary<ulong, float>();
 
                     foreach (var doc in result)
                     {
@@ -67,7 +67,7 @@ namespace Sir.Postings
                         }
                         else
                         {
-                            result.GetOrAdd(id.Key, id.Value);
+                            result.Add(id.Key, id.Value);
                         }
                     }
                 }
@@ -76,9 +76,31 @@ namespace Sir.Postings
                     cursor, result.Count, timer.Elapsed);
             }
 
-            var stream = Serialize(result);
+            var sortedByScore = result.ToList();
+            sortedByScore.Sort(
+                delegate (KeyValuePair<ulong, float> pair1,
+                KeyValuePair<ulong, float> pair2)
+                {
+                    return pair1.Value.CompareTo(pair2.Value);
+                }
+            );
 
-            return stream;
+            if (take < 1)
+            {
+                take = sortedByScore.Count;
+            }
+            if (skip < 1)
+            {
+                skip = 0;
+            }
+
+            sortedByScore.Reverse();
+
+            var window = sortedByScore.Skip(skip).Take(take);
+
+            var stream = Serialize(window);
+
+            return new Result { Data = stream, MediaType = "application/postings", Total = sortedByScore.Count };
         }
 
         private async Task<IList<ulong>> Read(ulong collectionId, long offset)
@@ -338,7 +360,7 @@ namespace Sir.Postings
             return res;
         }
 
-        private MemoryStream Serialize(IDictionary<ulong, float> docs)
+        private MemoryStream Serialize(IEnumerable<KeyValuePair<ulong, float>> docs)
         {
             var timer = Stopwatch.StartNew();
             var result = new MemoryStream();

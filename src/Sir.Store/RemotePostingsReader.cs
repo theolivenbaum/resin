@@ -19,9 +19,9 @@ namespace Sir.Store
             _config = config;
         }
 
-        public IDictionary<ulong, float> Reduce(string collectionId, byte[] query)
+        public MapReduceResult Reduce(string collectionId, byte[] query, int skip, int take)
         {
-            var endpoint = string.Format("{0}{1}", _config.Get("postings_endpoint"), collectionId);
+            var endpoint = string.Format("{0}{1}?skip={2}&take={3}", _config.Get("postings_endpoint"), collectionId, skip, take);
 
             var request = (HttpWebRequest)WebRequest.Create(endpoint);
 
@@ -46,6 +46,7 @@ namespace Sir.Store
                     timer.Restart();
 
                     var result = new Dictionary<ulong, float>();
+                    int total = 0;
 
                     using (var body = response.GetResponseStream())
                     {
@@ -69,10 +70,12 @@ namespace Sir.Store
                             result.Add(docId, score);
                         }
 
+                        total = int.Parse(response.Headers["X-Total"]);
+
                         Logging.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
                     }
 
-                    return result;
+                    return new MapReduceResult { Documents = result, Total = total };
                 }
             }
         }
@@ -159,5 +162,11 @@ namespace Sir.Store
         {
             Logging.Flush();
         }
+    }
+
+    public class MapReduceResult
+    {
+        public IDictionary<ulong, float> Documents { get; set; }
+        public int Total { get; set; }
     }
 }

@@ -68,6 +68,8 @@ namespace Sir.DbUtil
                 }
 
                 var q = qp.Parse(input, tokenizer);
+                q.Skip = 0;
+                q.Take = 100;
 
                 using (var session = sessionFactory.CreateReadSession(collectionId))
                 {

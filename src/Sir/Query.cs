@@ -21,6 +21,7 @@ namespace Sir
         public bool Not { get; set; }
         public Term Term { get; set; }
         public Query Next { get; set; }
+        public int Skip { get; set; }
         public int Take { get; set; }
         public long PostingsOffset { get; set; }
         public float Score { get; set; }

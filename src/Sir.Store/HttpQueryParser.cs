@@ -54,6 +54,9 @@ namespace Sir.Store
 
                 if (request.Query.ContainsKey("take"))
                     query.Take = int.Parse(request.Query["take"]);
+
+                if (request.Query.ContainsKey("skip"))
+                    query.Skip = int.Parse(request.Query["skip"]);
             }
 
             return query;

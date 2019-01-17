@@ -50,7 +50,7 @@ namespace Sir.Store
                 {
                     using (var session = _sessionFactory.CreateReadSession(collectionId))
                     {
-                        var result = await session.Read(query, query.Take);
+                        var result = await session.Read(query);
                         var docs = result.Docs;
 
                         Logging.Log(string.Format("executed query {0} and read {1} docs from disk in {2}", query, docs.Count, timer.Elapsed));
