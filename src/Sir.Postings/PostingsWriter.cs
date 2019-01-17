@@ -51,9 +51,13 @@ namespace Sir.Postings
 
                     responseStream = _data.Write(ulong.Parse(collectionId), messageBuf);
 
+                    timer.Stop();
+
+                    var t = timer.ElapsedMilliseconds > 0 ? timer.ElapsedMilliseconds : 1;
+
                     Logging.Log(string.Format(
                         "wrote {0} bytes in {1}: {2} bytes/ms",
-                        messageBuf.Length, timer.Elapsed, messageBuf.Length / timer.ElapsedMilliseconds));
+                        messageBuf.Length, timer.Elapsed, messageBuf.Length / t));
                 }
 
                 return new Result { Data = responseStream, MediaType = "application/octet-stream" };

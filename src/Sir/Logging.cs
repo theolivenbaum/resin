@@ -5,14 +5,14 @@ namespace Sir
 {
     public static class Logging
     {
-        private static StreamWriter Writer;
+        private static TextWriter Writer;
         private static object Sync = new object();
 
         public static bool SendToConsole { get; set; }
 
         private static void Write(object message)
         {
-            GetWriter().WriteLine(message);
+            //GetWriter().WriteLine(message);
 
             if (SendToConsole)
             {
@@ -30,7 +30,7 @@ namespace Sir
             Write(string.Format(DateTime.Now + " " + format, args));
         }
 
-        private static StreamWriter GetWriter()
+        private static TextWriter GetWriter()
         {
             if (Writer == null)
             {
@@ -47,7 +47,8 @@ namespace Sir
 
                         var fn = Path.Combine(logDir, "sir.log");
                         var stream = Stream.Synchronized(new FileStream(fn, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
-                        Writer = new StreamWriter(stream);
+                        Writer = StreamWriter.Synchronized(new StreamWriter(stream));
+                        
                     }
                 }
             }
