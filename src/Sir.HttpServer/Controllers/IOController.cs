@@ -53,6 +53,7 @@ namespace Sir.HttpServer.Controllers
         }
 
         [HttpGet("{*collectionId}")]
+        [HttpPut("{*collectionId}")]
         public async Task<IActionResult> Get(string collectionId)
         {
             var mediaType = Request.Headers["Accept"].ToArray()[0];

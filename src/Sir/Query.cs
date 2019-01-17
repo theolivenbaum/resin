@@ -96,8 +96,9 @@ namespace Sir
             return result;
         }
 
-        public static IEnumerable<Query> FromStream(byte[] stream)
+        public static IList<Query> FromStream(byte[] stream)
         {
+            var result = new List<Query>();
             var offset = 0;
 
             while (offset < stream.Length)
@@ -116,8 +117,10 @@ namespace Sir
 
                 var query = new Query { Score = score, PostingsOffset = postingsOffset, And = booleanOperator == 1, Or = booleanOperator == 2, Not = booleanOperator == 0 };
 
-                yield return query;
+                result.Add(query);
             }
+
+            return result;
         }
 
         public void InsertAfter(Query query)

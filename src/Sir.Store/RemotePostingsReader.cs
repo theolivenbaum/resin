@@ -21,53 +21,59 @@ namespace Sir.Store
 
         public IDictionary<ulong, float> Reduce(string collectionId, byte[] query)
         {
-            var b64 = Uri.EscapeDataString(Convert.ToBase64String(query));
-            var endpoint = string.Format("{0}{1}?query={2}", _config.Get("postings_endpoint"), collectionId, b64);
+            var endpoint = string.Format("{0}{1}", _config.Get("postings_endpoint"), collectionId);
 
             var request = (HttpWebRequest)WebRequest.Create(endpoint);
 
+            request.ContentType = "application/query";
             request.Accept = "application/postings";
-            request.Method = WebRequestMethods.Http.Get;
+            request.Method = WebRequestMethods.Http.Put;
+            request.ContentLength = query.Length;
 
             var timer = new Stopwatch();
             timer.Start();
 
             Logging.Log("execute request {0}", endpoint);
 
-            using (var response = (HttpWebResponse)request.GetResponse())
+            using (var requestBody = request.GetRequestStream())
             {
-                Logging.Log("waited {0} for a response from postings service", timer.Elapsed);
+                requestBody.Write(query, 0, query.Length);
 
-                timer.Restart();
-
-                var result = new Dictionary<ulong, float>();
-
-                using (var body = response.GetResponseStream())
+                using (var response = (HttpWebResponse)request.GetResponse())
                 {
-                    var mem = new MemoryStream();
-                    body.CopyTo(mem);
+                    Logging.Log("waited {0} for a response from postings service", timer.Elapsed);
 
-                    var buf = mem.ToArray();
+                    timer.Restart();
 
-                    var read = 0;
+                    var result = new Dictionary<ulong, float>();
 
-                    while (read < buf.Length)
+                    using (var body = response.GetResponseStream())
                     {
-                        var docId = BitConverter.ToUInt64(buf, read);
+                        var mem = new MemoryStream();
+                        body.CopyTo(mem);
 
-                        read += sizeof(ulong);
+                        var buf = mem.ToArray();
 
-                        var score = BitConverter.ToSingle(buf, read);
+                        var read = 0;
 
-                        read += sizeof(float);
+                        while (read < buf.Length)
+                        {
+                            var docId = BitConverter.ToUInt64(buf, read);
 
-                        result.Add(docId, score);
+                            read += sizeof(ulong);
+
+                            var score = BitConverter.ToSingle(buf, read);
+
+                            read += sizeof(float);
+
+                            result.Add(docId, score);
+                        }
+
+                        Logging.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
                     }
 
-                    Logging.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
+                    return result;
                 }
-
-                return result;
             }
         }
 

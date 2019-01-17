@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
@@ -25,10 +24,15 @@ namespace Sir.Postings
                 var timer = new Stopwatch();
                 timer.Start();
 
-                var stream = Convert.FromBase64String(Uri.UnescapeDataString(request.Query["query"]));
-                var query = Query.FromStream(stream);
+                var stream = new MemoryStream();
 
-                var data = await _data.Reduce(collectionId.ToHash(), query.ToList());
+                request.Body.CopyTo(stream);
+
+                var buf = stream.ToArray();
+
+                var query = Query.FromStream(buf);
+
+                var data = await _data.Reduce(collectionId.ToHash(), query);
 
                 var result = new Result { Data = data, MediaType = "application/postings", Total = data.Length/sizeof(ulong) };
 
