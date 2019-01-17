@@ -262,7 +262,7 @@ namespace Sir.Store
             base.Dispose();
 
             _postingsReader.Dispose();
-            Logging.Close();
+            Logging.Flush();
         }
     }
 }

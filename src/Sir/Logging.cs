@@ -55,7 +55,7 @@ namespace Sir
             return Writer;
         }
 
-        public static void Close()
+        public static void Flush()
         {
             if (Writer != null)
             {

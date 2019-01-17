@@ -157,7 +157,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            Logging.Close();
+            Logging.Flush();
         }
     }
 }

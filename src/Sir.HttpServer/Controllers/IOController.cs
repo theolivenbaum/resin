@@ -99,7 +99,7 @@ namespace Sir.HttpServer.Controllers
         {
             base.Dispose(disposing);
 
-            Logging.Close();
+            Logging.Flush();
         }
     }
 }

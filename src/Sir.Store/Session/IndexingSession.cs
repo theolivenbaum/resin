@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -19,6 +20,7 @@ namespace Sir.Store
         private readonly IDictionary<long, VectorNode> _dirty;
         private readonly Stream _vectorStream;
         private bool _flushed;
+        private bool _flushing;
 
         public IndexingSession(
             string collectionId, 
@@ -84,8 +86,10 @@ namespace Sir.Store
 
         public void Flush()
         {
-            if (_flushed)
+            if (_flushing || _flushed)
                 return;
+
+            _flushing = true;
 
             var tasks = new Task[_dirty.Count];
             var taskId = 0;
@@ -102,6 +106,7 @@ namespace Sir.Store
             Task.WaitAll(tasks);
 
             _flushed = true;
+            _flushing = false;
 
             Logging.Log(string.Format("***FLUSHED***"));
         }
@@ -204,12 +209,12 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            if (!_flushed)
+            while (_flushing)
             {
-                throw new InvalidOperationException();
+                Thread.Sleep(100);
             }
 
-            Logging.Close();
+            Logging.Flush();
         }
     }
 }

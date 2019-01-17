@@ -111,7 +111,7 @@ namespace Sir.Store
         {
             base.Dispose();
 
-            Logging.Close();
+            Logging.Flush();
         }
     }
 }
