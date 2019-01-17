@@ -4,7 +4,7 @@
     IList<Sir.HttpServer.Controllers.SearchResultModel> docs = Model == null ?
         new Sir.HttpServer.Controllers.SearchResultModel[0].ToList() : Model.ToList();
 }
-<h3>Showing @docs.Count results of @ViewData["total"] for '@ViewData["q"]' in '@ViewData["collectionName"]' (@ViewData["time_ms"] ms)</h3>
+<h3>@docs.Count results of @ViewData["total"] for '@ViewData["q"]' in '@ViewData["collectionName"]' (@ViewData["time_ms"] ms)</h3>
 
 <div>
     <ol>
