@@ -12,7 +12,7 @@ Reading and writing JSON works out of the box. It's not hard to implement custom
 
 ### Distributable micro-services
 
-Presently, there are two services, both run on Kestrel. One handles the key/value payload and the index, the other serves postings (document references).  They may be hosted together as one service or they can be distributed.
+Presently, there are two services, both run on Kestrel. One handles the key/value payload and the index, the other stores postings (document references) and also performs boolean operations on its payload (AND, OR, NOT). The former acts as a map/reduce orchestrator, the latter performs the calculations. They may be hosted together as one service or they can be distributed.
 
 ### Read more
 
