@@ -120,8 +120,6 @@ namespace Sir.DbUtil
                                     {
                                         indexSession.Write(doc);
                                     }
-
-                                    indexSession.Flush();
                                 }
 
                                 Logging.Log(null, string.Format("indexed batch #{0} in {1}", batchCount++, timer.Elapsed));
@@ -140,10 +138,8 @@ namespace Sir.DbUtil
                     }
                 }
             }
-            
 
             Logging.Log(null, string.Format("indexed {0} batches in {1}", batchCount, fullTime.Elapsed));
-
         }
 
         private static void Write(IList<IDictionary> obj)

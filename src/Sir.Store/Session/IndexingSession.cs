@@ -194,10 +194,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            while (_flushing)
-            {
-                Thread.Sleep(100);
-            }
+            Flush();
         }
     }
 }
