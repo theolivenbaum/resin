@@ -49,7 +49,7 @@ namespace Sir
                         }
 
                         var fn = Path.Combine(logDir, "sir.log");
-                        var stream = Stream.Synchronized(new FileStream(fn, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
+                        var stream = Stream.Synchronized(new FileStream(fn, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 8*4096));
                         Writer = TextWriter.Synchronized(new StreamWriter(stream));
                         return Writer;
                     }
