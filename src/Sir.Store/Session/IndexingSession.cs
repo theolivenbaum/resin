@@ -84,6 +84,9 @@ namespace Sir.Store
             this.Log(string.Format("***FLUSHED***"));
         }
 
+        private static readonly object _indexFileSync = new object();
+
+
         private async Task SerializeColumn(long keyId, VectorNode column)
         {
             var time = Stopwatch.StartNew();
@@ -95,15 +98,19 @@ namespace Sir.Store
             await _postingsWriter.Write(collectionId, column);
 
             var pixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", collectionId, keyId));
+            var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
 
-            using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(pixFileName)))
-            using (var ixStream = CreateIndexStream(collectionId, keyId))
+            lock (_indexFileSync)
             {
-                var page = column.SerializeTree(ixStream);
+                using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(pixFileName)))
+                using (var ixStream = SessionFactory.CreateAppendStream(ixFileName))
+                {
+                    var page = column.SerializeTree(ixStream);
 
-                pageIndexWriter.Write(page.offset, page.length);
+                    pageIndexWriter.Write(page.offset, page.length);
 
-                size = column.Size();
+                    size = column.Size();
+                }
             }
 
             this.Log("serialized column {0} in {1} with size {2},{3} (avg depth {4})",
@@ -162,12 +169,6 @@ namespace Sir.Store
             }
 
             this.Log("added document ID {0} key {1} to model in {2}", item.docId, item.keyId, time.Elapsed);
-        }
-
-        private Stream CreateIndexStream(ulong collectionId, long keyId)
-        {
-            var fileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
-            return SessionFactory.CreateAppendStream(fileName);
         }
 
         private static readonly object _syncIndexAccess = new object();

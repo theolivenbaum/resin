@@ -17,6 +17,7 @@ namespace Sir.Core
         private Task[] _consumers;
         private bool _completed;
         private bool _started;
+        private bool _joining;
 
         public int Count { get { return _queue.Count; } }
 
@@ -70,11 +71,13 @@ namespace Sir.Core
 
         public void Join()
         {
+            if (_joining || _completed)
+                return;
+
             if (!_started)
                 return;
 
-            if (_completed)
-                return;
+            _joining = true;
 
             _queue.CompleteAdding();
 
@@ -83,6 +86,7 @@ namespace Sir.Core
             _queue.Dispose();
             _queue = null;
             _completed = true;
+            _joining = false;
         }
 
         public void Dispose()

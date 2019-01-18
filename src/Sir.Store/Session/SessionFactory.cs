@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -15,7 +14,6 @@ namespace Sir.Store
         private readonly ITokenizer _tokenizer;
         private readonly IConfigurationProvider _config;
         private readonly ConcurrentDictionary<ulong, long> _keys;
-        private readonly object _sync = new object();
 
         private Stream _writableKeyMapStream { get; }
 
@@ -27,7 +25,7 @@ namespace Sir.Store
             _keys = LoadKeyMap();
             _tokenizer = tokenizer;
             _config = config;
-            _writableKeyMapStream = CreateAsyncAppendStream(Path.Combine(dir, "_.kmap"));
+            _writableKeyMapStream = CreateAppendStream(Path.Combine(dir, "_.kmap"));
         }
 
         private ConcurrentDictionary<ulong, long> LoadKeyMap()
@@ -125,15 +123,16 @@ namespace Sir.Store
             }
         }
 
-        public async Task PersistKeyMapping(ulong keyHash, long keyId)
+        public void PersistKeyMapping(ulong keyHash, long keyId)
         {
-            _keys.GetOrAdd(keyHash, keyId);
+            if (!_keys.ContainsKey(keyHash))
+            {
+                _keys.GetOrAdd(keyHash, keyId);
 
-            var buf = BitConverter.GetBytes(keyHash);
+                _writableKeyMapStream.Write(BitConverter.GetBytes(keyHash), 0, sizeof(ulong));
 
-            await _writableKeyMapStream.WriteAsync(buf, 0, sizeof(ulong));
-
-            await _writableKeyMapStream.FlushAsync();
+                _writableKeyMapStream.Flush();
+            }
         }
 
         public long GetKeyId(ulong keyHash)

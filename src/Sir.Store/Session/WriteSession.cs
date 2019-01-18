@@ -86,7 +86,7 @@ namespace Sir.Store
                     // store key
                     var keyInfo = await _keys.Append(keyStr);
                     keyId = await _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
-                    await SessionFactory.PersistKeyMapping(keyHash, keyId);
+                    SessionFactory.PersistKeyMapping(keyHash, keyId);
                 }
 
                 // store value

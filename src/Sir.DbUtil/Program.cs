@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Sir.Core;
 using Sir.Store;
 
 namespace Sir.DbUtil
@@ -95,44 +98,57 @@ namespace Sir.DbUtil
             var batchCount = 0;
 
             using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration("sir.ini")))
-            foreach (var docFileName in files)
             {
-                var name = Path.GetFileNameWithoutExtension(docFileName)
-                    .Split(".", StringSplitOptions.RemoveEmptyEntries);
-
-                var collectionId = name[0];
-
-                if (collectionId == collection.ToHash().ToString())
+                foreach (var docFileName in files)
                 {
-                    using (var readSession = sessionFactory.CreateDocumenSession(collectionId))
+                    var name = Path.GetFileNameWithoutExtension(docFileName)
+                        .Split(".", StringSplitOptions.RemoveEmptyEntries);
+
+                    var collectionId = name[0];
+
+                    if (collectionId == collection.ToHash().ToString())
                     {
-                        var docs = readSession.ReadDocs(skip, take);
-
-                        foreach (var batch in docs.Batch(batchSize))
+                        using (var readSession = sessionFactory.CreateDocumenSession(collectionId))
                         {
-                            var timer = Stopwatch.StartNew();
-
-                            using (var indexSession = sessionFactory.CreateIndexSession(collection))
+                            using (var queue = new ProducerConsumerQueue<IList<IDictionary>>((batch) =>
                             {
-                                foreach (var doc in batch)
+                                var timer = Stopwatch.StartNew();
+
+                                using (var indexSession = sessionFactory.CreateIndexSession(collection))
                                 {
-                                    indexSession.Write(doc);
+                                    foreach (var doc in batch)
+                                    {
+                                        indexSession.Write(doc);
+                                    }
+
+                                    indexSession.Flush();
                                 }
 
-                                indexSession.Flush();
-                            }
+                                Logging.Log(null, string.Format("indexed batch #{0} in {1}", batchCount++, timer.Elapsed));
+                            }))
+                            {
+                                var docs = readSession.ReadDocs(skip, take);
 
-                            Logging.Log(null, string.Format("indexed batch #{0} in {1}", batchCount++, timer.Elapsed));
+                                foreach (var batch in docs.Batch(batchSize))
+                                {
+                                    queue.Enqueue(batch.ToList());
+                                }
+                            }
                         }
 
+                        break;
                     }
-
-                    break;
                 }
             }
+            
 
             Logging.Log(null, string.Format("indexed {0} batches in {1}", batchCount, fullTime.Elapsed));
 
+        }
+
+        private static void Write(IList<IDictionary> obj)
+        {
+            throw new NotImplementedException();
         }
     }
 }
