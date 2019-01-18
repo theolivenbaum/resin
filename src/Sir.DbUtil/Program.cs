@@ -15,7 +15,6 @@ namespace Sir.DbUtil
             {
                 Console.WriteLine("processing command: {0}", string.Join(" ", args));
 
-
                 Logging.SendToConsole = true;
 
                 var command = args[0].ToLower();
@@ -38,6 +37,7 @@ namespace Sir.DbUtil
                     Task.Run(() => Query(dir: args[1], collectionId: args[2])).Wait();
                 }
 
+                Console.Read();
             }
             catch (Exception ex)
             {

@@ -10,7 +10,7 @@ namespace Sir.Store
     /// <summary>
     /// Write postings to HTTP endpoint.
     /// </summary>
-    public class RemotePostingsWriter : IDisposable
+    public class RemotePostingsWriter
     {
         private IConfigurationProvider _config;
 
@@ -149,10 +149,6 @@ namespace Sir.Store
             }
 
             return result;    
-        }
-
-        public void Dispose()
-        {
         }
     }
 }

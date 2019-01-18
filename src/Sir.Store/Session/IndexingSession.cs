@@ -23,6 +23,7 @@ namespace Sir.Store
         private bool _flushed;
         private bool _flushing;
         private readonly ProducerConsumerQueue<IDictionary> _analyzeQueue;
+        private readonly RemotePostingsWriter _postingsWriter;
 
         public IndexingSession(
             string collectionId, 
@@ -87,23 +88,20 @@ namespace Sir.Store
             var time = Stopwatch.StartNew();
             (int depth, int width, int avgDepth) size;
 
-            using (var postingsWriter = new RemotePostingsWriter(_config))
+            var collectionId = CollectionId.ToHash();
+
+            await _postingsWriter.Write(collectionId, column);
+
+            var pixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", collectionId, keyId));
+
+            using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(pixFileName)))
+            using (var ixStream = CreateIndexStream(collectionId, keyId))
             {
-                var collectionId = CollectionId.ToHash();
+                var page = column.SerializeTree(ixStream);
 
-                await postingsWriter.Write(collectionId, column);
+                pageIndexWriter.Write(page.offset, page.length);
 
-                var pixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", collectionId, keyId));
-
-                using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(pixFileName)))
-                using (var ixStream = CreateIndexStream(collectionId, keyId))
-                {
-                    var page = column.SerializeTree(ixStream);
-
-                    pageIndexWriter.Write(page.offset, page.length);
-
-                    size = column.Size();
-                }
+                size = column.Size();
             }
 
             Logging.Log("serialized column {0} in {1} with size {2},{3} (avg depth {4})",
@@ -170,7 +168,7 @@ namespace Sir.Store
             return SessionFactory.CreateAppendStream(fileName);
         }
 
-        private static readonly object _sync = new object();
+        private static readonly object _syncIndexAccess = new object();
 
         private VectorNode GetOrCreateIndex(long keyId)
         {
@@ -178,7 +176,7 @@ namespace Sir.Store
 
             if (!_dirty.TryGetValue(keyId, out root))
             {
-                lock (_sync)
+                lock (_syncIndexAccess)
                 {
                     if (!_dirty.TryGetValue(keyId, out root))
                     {
