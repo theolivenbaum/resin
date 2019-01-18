@@ -87,6 +87,7 @@ namespace Sir.Store
         private async Task SerializeColumn(long keyId, VectorNode column)
         {
             var time = Stopwatch.StartNew();
+
             (int depth, int width, int avgDepth) size;
 
             var collectionId = CollectionId.ToHash();
@@ -111,8 +112,6 @@ namespace Sir.Store
 
         private void Analyze(IDictionary document)
         {
-            var time = Stopwatch.StartNew();
-
             var docId = (ulong)document["__docid"];
 
             foreach (var obj in document.Keys)
@@ -147,12 +146,12 @@ namespace Sir.Store
                     }
                 }
             }
-
-            Logging.Log("analyzed document ID {0} in {1}", docId, time.Elapsed);
         }
 
         private void AddDocumentToModel((ulong docId, long keyId, AnalyzedString tokens) item)
         {
+            var time = Stopwatch.StartNew();
+
             var ix = GetOrCreateIndex(item.keyId);
 
             foreach (var token in item.tokens.Tokens)
@@ -161,6 +160,8 @@ namespace Sir.Store
 
                 ix.Add(new VectorNode(termVector, item.docId), _vectorStream);
             }
+
+            Logging.Log("added document ID {0} key {1} to model in {2}", item.docId, item.keyId, time.Elapsed);
         }
 
         private Stream CreateIndexStream(ulong collectionId, long keyId)
