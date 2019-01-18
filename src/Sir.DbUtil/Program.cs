@@ -122,7 +122,7 @@ namespace Sir.DbUtil
                                 indexSession.Flush();
                             }
 
-                            Logging.Log(string.Format("indexed batch {0} in {1}", batchCount++, timer.Elapsed));
+                            Logging.Log(string.Format("indexed batch #{0} in {1}", batchCount++, timer.Elapsed));
                         }
 
                     }
