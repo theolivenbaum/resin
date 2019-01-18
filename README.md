@@ -1,4 +1,4 @@
-# Resin
+# Resin - Simple Information Retrieval
 
 ## Demo
 
@@ -6,23 +6,14 @@
 
 ## What is this?
 
-A full-text distributed search engine with HTTP API and programmable read/write pipelines, with support for any message format that can define its payload as a collection of documents, e.g. JSON, XML as well as custom formats.
+This here is Resin a.k.a. Sir, a full-text search engine with HTTP API and programmable read/write pipelines, 
+with support for virtually any type of messaging format as long as it can be carried over HTTP. 
+Reading and writing JSON works out of the box. It's not hard to implement custom formats.
 
-Can you define your data entries as documents? Do you need to write data in any format you want and read it also in any format you want? Then this might be for you.
+### Distributable micro-services
 
-Do you need full-text search over your data? Both syntax and semantic? Do you also want to define your queries in any query language you want? Then a distributed search engine that doesn't crumble under its weight might be a good choice, one where you can implement any custom query language, so that all business analysts at the office can query for their favorite result.
-
-### Vector-space model index
-
-To provide full-text search words and phrases are extracted from documents and mapped to a 2 billion dimensional vector-space that form clusters of syntactically similar "bag-of-chars". In this language model, each character (glyph) is encoded as a 32-bit word and each word or phrase alike encoded as a 32-bit wide (but sparse) array. 
-
-On disk this language model is represented as a bitmap, and in-memory as a binary tree ([VectorNode](src/Sir.Store/VectorNode.cs)).
-
-Each node in the index tree carries as their payload a list of document references.
-
-This model encodes less information than e.g. word2vec. Because of the smaller information payload, training the model, i.e. generating word encodings, takes less time compared to word2vec.
-
-The model works with approximate phrase search, one of the most common types of web search queries.
+Presently, there are two services, both run on Kestrel. One handles the key/value payload and the index, the other serves postings (document references). 
+They may be hosted together as one service or they can be distributed.
 
 ### Roadmap
 
@@ -32,9 +23,9 @@ Latest code is in `dev` branch.
 - [x] v0.2a - 32-bit search engine
 - [x] v0.3a - search service
 - [x] v0.4a - distributed search service
-- [ ] v0.5b - "Hadoop for text"
-- [ ] v0.6b - JITT semantic runtime engine (Just-In-Time Training)
+- [ ] v0.5b - join between collections
+- [ ] v0.6b - semantic index
 - [ ] v0.7b - "Web search for kids"
 - [ ] v0.8 - voice-to-text
-- [ ] v0.9 - bot API
+- [ ] v0.9 - text-to-voice
 - [ ] v1.0 - image search
