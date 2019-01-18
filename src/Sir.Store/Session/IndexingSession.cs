@@ -36,6 +36,7 @@ namespace Sir.Store
             _validate = config.Get("create_index_validation_files") == "true";
             _dirty = new ConcurrentDictionary<long, VectorNode>();
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId.ToHash())));
+            _postingsWriter = new RemotePostingsWriter(_config);
 
             var numThreads = int.Parse(_config.Get("index_thread_count"));
 

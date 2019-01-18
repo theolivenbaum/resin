@@ -26,9 +26,16 @@ namespace Sir
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
             var dic = new Dictionary<string, string>();
-            var file = File.ReadAllText(_fileName).Split('\n');
 
-            foreach (var line in file)
+            string text;
+
+            using (var fs = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var r = new StreamReader(fs))
+            {
+                text = r.ReadToEnd();
+            }
+
+            foreach (var line in text.Split('\n'))
             {
                 var segs = line.Split('=');
 
