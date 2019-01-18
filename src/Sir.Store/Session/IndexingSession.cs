@@ -22,7 +22,7 @@ namespace Sir.Store
         private readonly Stream _vectorStream;
         private bool _flushed;
         private bool _flushing;
-        private readonly ProducerConsumerQueue<IDictionary> _analyzeQueue;
+        private readonly ProducerConsumerQueue<(ulong docId, long keyId, AnalyzedString tokens)> _modelBuilder;
         private readonly RemotePostingsWriter _postingsWriter;
 
         public IndexingSession(
@@ -40,12 +40,12 @@ namespace Sir.Store
 
             var numThreads = int.Parse(_config.Get("index_thread_count"));
 
-            _analyzeQueue = new ProducerConsumerQueue<IDictionary>(Analyze, numThreads);
+            _modelBuilder = new ProducerConsumerQueue<(ulong docId, long keyId, AnalyzedString tokens)>(AddDocumentToModel, numThreads);
         }
 
         public void Write(IDictionary document)
         {
-            _analyzeQueue.Enqueue(document);
+            Analyze(document);
         }
 
         public void Flush()
@@ -55,11 +55,11 @@ namespace Sir.Store
 
             _flushing = true;
 
-            Logging.Log("waiting for analyze queue");
+            Logging.Log("waiting for model builder");
 
-            using (_analyzeQueue)
+            using (_modelBuilder)
             {
-                _analyzeQueue.Join();
+                _modelBuilder.Join();
             }
 
             var tasks = new Task[_dirty.Count];
@@ -109,13 +109,13 @@ namespace Sir.Store
                 keyId, time.Elapsed, size.depth, size.width, size.avgDepth);
         }
 
-        private void Analyze(IDictionary doc)
+        private void Analyze(IDictionary document)
         {
             var time = Stopwatch.StartNew();
 
-            var docId = (ulong)doc["__docid"];
+            var docId = (ulong)document["__docid"];
 
-            foreach (var obj in doc.Keys)
+            foreach (var obj in document.Keys)
             {
                 var key = (string)obj;
                 AnalyzedString tokens = null;
@@ -124,7 +124,7 @@ namespace Sir.Store
                 {
                     var keyHash = key.ToHash();
                     var keyId = SessionFactory.GetKeyId(keyHash);
-                    var val = (IComparable)doc[key];
+                    var val = (IComparable)document[key];
                     var str = val as string;
 
                     if (str == null || key[0] == '_')
@@ -143,23 +143,23 @@ namespace Sir.Store
 
                     if (tokens != null)
                     {
-                        AddDocumentToModel(docId, keyId, tokens);
+                        _modelBuilder.Enqueue((docId, keyId, tokens));
                     }
                 }
             }
 
-            Logging.Log("added document ID {0} to model in {1}", docId, time.Elapsed);
+            Logging.Log("analyzed document ID {0} in {1}", docId, time.Elapsed);
         }
 
-        private void AddDocumentToModel(ulong docId, long keyId, AnalyzedString tokens)
+        private void AddDocumentToModel((ulong docId, long keyId, AnalyzedString tokens) item)
         {
-            var ix = GetOrCreateIndex(keyId);
+            var ix = GetOrCreateIndex(item.keyId);
 
-            foreach (var token in tokens.Tokens)
+            foreach (var token in item.tokens.Tokens)
             {
-                var termVector = tokens.ToCharVector(token.offset, token.length);
+                var termVector = item.tokens.ToCharVector(token.offset, token.length);
 
-                ix.Add(new VectorNode(termVector, docId), _vectorStream);
+                ix.Add(new VectorNode(termVector, item.docId), _vectorStream);
             }
         }
 
