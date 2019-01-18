@@ -198,6 +198,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
+            _writableKeyMapStream.Dispose();
         }
     }
 }

@@ -68,9 +68,11 @@ namespace Sir.Store
                 tasks[taskId++] = SerializeColumn(column.Key, column.Value);
             }
 
-            _vectorStream.Flush();
-            _vectorStream.Close();
-            _vectorStream.Dispose();
+            using (_vectorStream)
+            {
+                _vectorStream.Flush();
+                _vectorStream.Close();
+            }
 
             Task.WaitAll(tasks);
 
