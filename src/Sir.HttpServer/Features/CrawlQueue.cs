@@ -8,7 +8,7 @@ using Sir.Core;
 
 namespace Sir.HttpServer.Features
 {
-    public class CrawlQueue : IDisposable
+    public class CrawlQueue : IDisposable, ILogger
     {
         private readonly ProducerConsumerQueue<Uri> _queue;
         private readonly PluginsCollection _plugins;
@@ -50,7 +50,7 @@ namespace Sir.HttpServer.Features
 
                 if (!allowed)
                 {
-                    Logging.Log(string.Format("url forbidden by robot.txt {0}", uri));
+                    this.Log(string.Format("url forbidden by robot.txt {0}", uri));
 
                     return;
                 }
@@ -70,7 +70,7 @@ namespace Sir.HttpServer.Features
 
                 if (doc.title == null)
                 {
-                    Logging.Log(string.Format("error processing {0} (no title)", uri));
+                    this.Log(string.Format("error processing {0} (no title)", uri));
                     return;
                 }
 
@@ -90,7 +90,7 @@ namespace Sir.HttpServer.Features
             }
             catch (Exception ex)
             {
-                Logging.Log(string.Format("error processing {0} {1}", uri, ex));
+                this.Log(string.Format("error processing {0} {1}", uri, ex));
             }
         }
 
@@ -116,19 +116,19 @@ namespace Sir.HttpServer.Features
 
                     if (response.StatusCode != HttpStatusCode.OK)
                     {
-                        Logging.Log(string.Format("bad request: {0} response: {1}", uri, response.StatusCode));
+                        this.Log(string.Format("bad request: {0} response: {1}", uri, response.StatusCode));
 
                         return null;
                     }
 
-                    Logging.Log(string.Format("requested: {0}", uri));
+                    this.Log(string.Format("requested: {0}", uri));
 
                     return reader.ReadToEnd();
                 }
             }
             catch (Exception ex)
             {
-                Logging.Log(string.Format("request failed: {0} {1}", uri, ex));
+                this.Log(string.Format("request failed: {0} {1}", uri, ex));
 
                 return null;
             }

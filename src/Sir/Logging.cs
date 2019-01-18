@@ -10,12 +10,12 @@ namespace Sir
 
         public static bool SendToConsole { get; set; }
 
-        private static void Write(object message)
+        private static void Write(this ILogger logger, object message)
         {
             var writer = GetWriter();
 
-            writer.WriteLine(message);
-            writer.Flush();
+            writer.WriteLineAsync(string.Format("{0} {1}", logger?.GetType(), message));
+            writer.FlushAsync();
 
             if (SendToConsole)
             {
@@ -23,14 +23,14 @@ namespace Sir
             }
         }
 
-        public static void Log(object message)
+        public static void Log(this ILogger logger, object message)
         {
-            Write(string.Format("{0}\t{1}", DateTime.Now, message));
+            Write(logger, string.Format("{0}\t{1}", DateTime.Now, message));
         }
 
-        public static void Log(string format, params object[] args)
+        public static void Log(this ILogger logger, string format, params object[] args)
         {
-            Write(string.Format(DateTime.Now + " " + format, args));
+            Write(logger, string.Format(DateTime.Now + " " + format, args));
         }
 
         private static TextWriter GetWriter()
@@ -49,7 +49,7 @@ namespace Sir
                         }
 
                         var fn = Path.Combine(logDir, "sir.log");
-                        var stream = Stream.Synchronized(new FileStream(fn, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 8*4096));
+                        var stream = Stream.Synchronized(new FileStream(fn, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 8*4096, true));
                         Writer = TextWriter.Synchronized(new StreamWriter(stream));
                         return Writer;
                     }
@@ -58,5 +58,9 @@ namespace Sir
 
             return Writer;
         }
+    }
+
+    public interface ILogger
+    {
     }
 }

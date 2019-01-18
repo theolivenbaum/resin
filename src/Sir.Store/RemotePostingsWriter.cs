@@ -10,7 +10,7 @@ namespace Sir.Store
     /// <summary>
     /// Write postings to HTTP endpoint.
     /// </summary>
-    public class RemotePostingsWriter
+    public class RemotePostingsWriter : ILogger
     {
         private IConfigurationProvider _config;
 
@@ -65,12 +65,12 @@ namespace Sir.Store
                 var ctime = Stopwatch.StartNew();
                 var compressed = QuickLZ.compress(buf, 3);
 
-                Logging.Log(string.Format("compressing {0} bytes to {1} took {2}", buf.Length, compressed.Length, ctime.Elapsed));
+                this.Log(string.Format("compressing {0} bytes to {1} took {2}", buf.Length, compressed.Length, ctime.Elapsed));
 
                 payload = compressed;
             }
 
-            Logging.Log(string.Format("create postings message took {0}", timer.Elapsed));
+            this.Log(string.Format("create postings message took {0}", timer.Elapsed));
 
             // send message, recieve list of (remote) file positions, save positions in index.
 
@@ -88,8 +88,7 @@ namespace Sir.Store
                 nodes[i].PostingsOffset = positions[i];
             }
 
-            Logging.Log(string.Format("record postings offsets took {0}", timer.Elapsed));
-
+            this.Log(string.Format("record postings offsets took {0}", timer.Elapsed));
         }
 
         private async Task<IList<long>> Send(ulong collectionId, byte[] payload)
@@ -118,7 +117,7 @@ namespace Sir.Store
                 {
                     using (var responseBody = response.GetResponseStream())
                     {
-                        Logging.Log(string.Format("sent {0} bytes and got a response in {1}", payload.Length, timer.Elapsed));
+                        this.Log(string.Format("sent {0} bytes and got a response in {1}", payload.Length, timer.Elapsed));
                         timer.Restart();
 
                         var mem = new MemoryStream();
@@ -143,7 +142,7 @@ namespace Sir.Store
                             read += sizeof(long);
                         }
 
-                        Logging.Log(string.Format("deserialized {0} bytes of response data in {1}", buf.Length, timer.Elapsed));
+                        this.Log(string.Format("deserialized {0} bytes of response data in {1}", buf.Length, timer.Elapsed));
                     }
                 }
             }

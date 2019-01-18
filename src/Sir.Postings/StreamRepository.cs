@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Sir.Postings
 {
-    public class StreamRepository : IDisposable
+    public class StreamRepository : IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
         private const string DataFileNameFormat = "{0}.pos";
@@ -72,7 +72,7 @@ namespace Sir.Postings
                     }
                 }
 
-                Logging.Log("reduced {0} to {1} docs in {2}",
+                this.Log("reduced {0} to {1} docs in {2}",
                     cursor, result.Count, timer.Elapsed);
             }
 
@@ -129,7 +129,7 @@ namespace Sir.Postings
             {
                 data.Seek(offset, SeekOrigin.Begin);
 
-                Logging.Log("seek took {0}", timer.Elapsed);
+                this.Log("seek took {0}", timer.Elapsed);
                 timer.Restart();
 
                 // We are now at the first page.
@@ -162,7 +162,7 @@ namespace Sir.Postings
                     }
                 }
 
-                Logging.Log("reading first page took {0}", timer.Elapsed);
+                this.Log("reading first page took {0}", timer.Elapsed);
 
                 while (nextPageOffset > -1)
                 {
@@ -194,13 +194,13 @@ namespace Sir.Postings
                         }
                     }
 
-                    Logging.Log("reading next page took {0}", timer.Elapsed);
+                    this.Log("reading next page took {0}", timer.Elapsed);
 
                     pageCount++;
                 }
             }
 
-            Logging.Log("read {0} postings from {0} pages in {2}", result.Count, pageCount, timer.Elapsed);
+            this.Log("read {0} postings from {0} pages in {2}", result.Count, pageCount, timer.Elapsed);
 
             return result.ToList();
         }
@@ -248,7 +248,7 @@ namespace Sir.Postings
                 throw new DataMisalignedException();
             }
 
-            Logging.Log("parsed payload in {0}", time.Elapsed);
+            this.Log("parsed payload in {0}", time.Elapsed);
             time.Restart();
 
             var positions = new List<long>(lists.Count);
@@ -337,7 +337,7 @@ namespace Sir.Postings
                 }
             }
 
-            Logging.Log("serialized data and index in {0}", time.Elapsed);
+            this.Log("serialized data and index in {0}", time.Elapsed);
 
             time.Restart();
 
@@ -355,7 +355,7 @@ namespace Sir.Postings
 
             res.Position = 0;
 
-            Logging.Log("serialized response message in {0}", time.Elapsed);
+            this.Log("serialized response message in {0}", time.Elapsed);
 
             return res;
         }
@@ -371,32 +371,11 @@ namespace Sir.Postings
                 result.Write(BitConverter.GetBytes(doc.Value));
             }
 
-            Logging.Log("serialized result in {0}", timer.Elapsed);
+            this.Log("serialized result in {0}", timer.Elapsed);
 
             return result;
         }
-
-        private IList<ulong> Deserialize(byte[] buffer)
-        {
-            var timer = new Stopwatch();
-            timer.Start();
-
-            var result = new List<ulong>();
-
-            var read = 0;
-
-            while (read < buffer.Length)
-            {
-                result.Add(BitConverter.ToUInt64(buffer, read));
-
-                read += sizeof(ulong);
-            }
-
-            Logging.Log("deserialized {0} postings in {1}", result.Count, timer.Elapsed);
-
-            return result;
-        }
-
+        
         private Stream CreateReadableWritableDataStream(ulong collectionId)
         {
             var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));
@@ -404,29 +383,6 @@ namespace Sir.Postings
             var stream = new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
             return Stream.Synchronized(stream);
-        }
-
-        //private Stream CreateAppendableIndexStream(ulong collectionId, long offset)
-        //{
-        //    var fileName = Path.Combine(_config.Get("data_dir"), string.Format("{0}.{1}.pix", collectionId, offset));
-
-
-        //    var stream = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
-
-        //    return Stream.Synchronized(stream);
-        //}
-
-        private Stream CreateReadableIndexStream(ulong collectionId, long offset)
-        {
-            var fileName = Path.Combine(_config.Get("data_dir"), string.Format("{0}.{1}.pix", collectionId, offset));
-
-            if (File.Exists(fileName))
-            {
-                var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true);
-                return stream;
-            }
-
-            return null;
         }
 
         private Stream CreateReadableDataStream(ulong collectionId)

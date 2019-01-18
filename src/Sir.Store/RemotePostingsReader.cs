@@ -10,7 +10,7 @@ namespace Sir.Store
     /// <summary>
     /// Read postings from HTTP endpoint.
     /// </summary>
-    public class RemotePostingsReader : IDisposable
+    public class RemotePostingsReader : IDisposable, ILogger
     {
         private IConfigurationProvider _config;
 
@@ -33,7 +33,7 @@ namespace Sir.Store
             var timer = new Stopwatch();
             timer.Start();
 
-            Logging.Log("execute request {0}", endpoint);
+            this.Log("execute request {0}", endpoint);
 
             using (var requestBody = request.GetRequestStream())
             {
@@ -41,7 +41,7 @@ namespace Sir.Store
 
                 using (var response = (HttpWebResponse)request.GetResponse())
                 {
-                    Logging.Log("waited {0} for a response from postings service", timer.Elapsed);
+                    this.Log("waited {0} for a response from postings service", timer.Elapsed);
 
                     timer.Restart();
 
@@ -72,7 +72,7 @@ namespace Sir.Store
 
                         total = int.Parse(response.Headers["X-Total"]);
 
-                        Logging.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
+                        this.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
                     }
 
                     return new MapReduceResult { Documents = result, Total = total };
@@ -94,7 +94,7 @@ namespace Sir.Store
 
             using (var response = (HttpWebResponse)request.GetResponse())
             {
-                Logging.Log("waited {0} for a response from postings service", timer.Elapsed);
+                this.Log("waited {0} for a response from postings service", timer.Elapsed);
 
                 timer.Restart();
 
@@ -116,7 +116,7 @@ namespace Sir.Store
                         read += sizeof(ulong);
                     }
 
-                    Logging.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
+                    this.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
                 }
 
                 return result;

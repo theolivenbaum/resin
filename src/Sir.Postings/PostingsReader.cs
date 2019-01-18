@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Sir.Postings
 {
-    public class PostingsReader : IReader
+    public class PostingsReader : IReader, ILogger
     {
         public string ContentType => "application/postings";
 
@@ -35,13 +35,13 @@ namespace Sir.Postings
                 var take = int.Parse(request.Query["take"]);
                 var result = await _data.Reduce(collectionId.ToHash(), query, skip, take);
 
-                Logging.Log("processed read request for {0} postings in {1}", result.Total, timer.Elapsed);
+                this.Log("processed read request for {0} postings in {1}", result.Total, timer.Elapsed);
 
                 return result;
             }
             catch (Exception ex)
             {
-                Logging.Log(ex);
+                this.Log(ex);
 
                 throw;
             }

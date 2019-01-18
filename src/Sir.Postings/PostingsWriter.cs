@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Sir.Postings
 {
-    public class PostingsWriter : IWriter
+    public class PostingsWriter : IWriter, ILogger
     {
         public string ContentType => "application/postings";
 
@@ -37,7 +37,7 @@ namespace Sir.Postings
                 var compressed = payload.ToArray();
                 var messageBuf = QuickLZ.decompress(compressed);
 
-                Logging.Log(string.Format("serialized {0} bytes in {1}", messageBuf.Length, timer.Elapsed));
+                this.Log(string.Format("serialized {0} bytes in {1}", messageBuf.Length, timer.Elapsed));
 
                 timer.Restart();
 
@@ -45,7 +45,7 @@ namespace Sir.Postings
 
                 lock (Sync)
                 {
-                    Logging.Log("waited for synchronization for {0}", timer.Elapsed);
+                    this.Log("waited for synchronization for {0}", timer.Elapsed);
 
                     timer.Restart();
 
@@ -55,7 +55,7 @@ namespace Sir.Postings
 
                     var t = timer.ElapsedMilliseconds > 0 ? timer.ElapsedMilliseconds : 1;
 
-                    Logging.Log(string.Format(
+                    this.Log(string.Format(
                         "wrote {0} bytes in {1}: {2} bytes/ms",
                         messageBuf.Length, timer.Elapsed, messageBuf.Length / t));
                 }
@@ -64,7 +64,7 @@ namespace Sir.Postings
             }
             catch (Exception ex)
             {
-                Logging.Log(ex);
+                this.Log(ex);
 
                 throw;
             }

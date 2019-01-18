@@ -12,7 +12,7 @@ namespace Sir.Store
     /// <summary>
     /// Query a collection.
     /// </summary>
-    public class StoreReader : IReader
+    public class StoreReader : IReader, ILogger
     {
         public string ContentType => "application/json";
 
@@ -52,7 +52,7 @@ namespace Sir.Store
                         var result = await session.Read(query);
                         var docs = result.Docs;
 
-                        Logging.Log(string.Format("executed query {0} and read {1} docs from disk in {2}", query, docs.Count, timer.Elapsed));
+                        this.Log(string.Format("executed query {0} and read {1} docs from disk in {2}", query, docs.Count, timer.Elapsed));
 
                         timer.Restart();
 
@@ -60,7 +60,7 @@ namespace Sir.Store
 
                         Serialize(docs, stream);
 
-                        Logging.Log(string.Format("serialized {0} docs in {1}", docs.Count, timer.Elapsed));
+                        this.Log(string.Format("serialized {0} docs in {1}", docs.Count, timer.Elapsed));
 
                         return new Result { MediaType = "application/json", Data = stream, Documents = docs, Total = result.Total };
                     }
@@ -70,7 +70,7 @@ namespace Sir.Store
             }
             catch (Exception ex)
             {
-                Logging.Log(string.Format("read failed for query: {0} {1}", query.ToString() ?? "unknown", ex));
+                this.Log(string.Format("read failed for query: {0} {1}", query.ToString() ?? "unknown", ex));
 
                 throw;
             }

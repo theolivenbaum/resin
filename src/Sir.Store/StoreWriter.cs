@@ -12,7 +12,7 @@ namespace Sir.Store
     /// <summary>
     /// Write into a collection.
     /// </summary>
-    public class StoreWriter : IWriter
+    public class StoreWriter : IWriter, ILogger
     {
         public string ContentType => "application/json";
 
@@ -45,7 +45,7 @@ namespace Sir.Store
                 var data = Deserialize<IEnumerable<IDictionary>>(payload);
                 var job = new WriteJob(collectionId, data);
 
-                Logging.Log(string.Format("deserialized write job {0} for collection {1} in {2}", job.Id, collectionId, _timer.Elapsed));
+                this.Log("deserialized write job {0} for collection {1} in {2}", job.Id, collectionId, _timer.Elapsed);
 
                 var docIds = await ExecuteWrite(job);
                 var response = new MemoryStream();
@@ -56,7 +56,7 @@ namespace Sir.Store
             }
             catch (Exception ex)
             {
-                Logging.Log(string.Format("write failed: {0}", ex));
+                this.Log("write failed: {0}", ex);
 
                 throw;
             }
@@ -86,13 +86,13 @@ namespace Sir.Store
                     docIds = await session.Write(job);
                 }
 
-                Logging.Log(string.Format("executed write job {0} in {1}", job.Id, _timer.Elapsed));
+                this.Log("executed write job {0} in {1}", job.Id, _timer.Elapsed);
 
                 return docIds;
             }
             catch (Exception ex)
             {
-                Logging.Log(string.Format("failed to write job {0}: {1}", job.Id, ex));
+                this.Log("failed to write job {0}: {1}", job.Id, ex);
 
                 throw;
             }

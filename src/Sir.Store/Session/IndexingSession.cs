@@ -13,7 +13,7 @@ namespace Sir.Store
     /// <summary>
     /// Indexing session targeting a single collection.
     /// </summary>
-    public class IndexingSession : CollectionSession, IDisposable
+    public class IndexingSession : CollectionSession, IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
@@ -55,7 +55,7 @@ namespace Sir.Store
 
             _flushing = true;
 
-            Logging.Log("waiting for model builder");
+            this.Log("waiting for model builder");
 
             using (_modelBuilder)
             {
@@ -81,7 +81,7 @@ namespace Sir.Store
             _flushed = true;
             _flushing = false;
 
-            Logging.Log(string.Format("***FLUSHED***"));
+            this.Log(string.Format("***FLUSHED***"));
         }
 
         private async Task SerializeColumn(long keyId, VectorNode column)
@@ -106,7 +106,7 @@ namespace Sir.Store
                 size = column.Size();
             }
 
-            Logging.Log("serialized column {0} in {1} with size {2},{3} (avg depth {4})",
+            this.Log("serialized column {0} in {1} with size {2},{3} (avg depth {4})",
                 keyId, time.Elapsed, size.depth, size.width, size.avgDepth);
         }
 
@@ -161,7 +161,7 @@ namespace Sir.Store
                 ix.Add(new VectorNode(termVector, item.docId), _vectorStream);
             }
 
-            Logging.Log("added document ID {0} key {1} to model in {2}", item.docId, item.keyId, time.Elapsed);
+            this.Log("added document ID {0} key {1} to model in {2}", item.docId, item.keyId, time.Elapsed);
         }
 
         private Stream CreateIndexStream(ulong collectionId, long keyId)

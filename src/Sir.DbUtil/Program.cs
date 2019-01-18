@@ -122,7 +122,7 @@ namespace Sir.DbUtil
                                 indexSession.Flush();
                             }
 
-                            Logging.Log(string.Format("indexed batch #{0} in {1}", batchCount++, timer.Elapsed));
+                            Logging.Log(null, string.Format("indexed batch #{0} in {1}", batchCount++, timer.Elapsed));
                         }
 
                     }
@@ -131,7 +131,7 @@ namespace Sir.DbUtil
                 }
             }
 
-            Logging.Log(string.Format("indexed {0} batches in {1}", batchCount, fullTime.Elapsed));
+            Logging.Log(null, string.Format("indexed {0} batches in {1}", batchCount, fullTime.Elapsed));
 
         }
     }

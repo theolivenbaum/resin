@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Sir.HttpServer.Controllers
 {
     [Route("io")]
-    public class IOController : Controller
+    public class IOController : Controller, ILogger
     {
         private readonly PluginsCollection _plugins;
 
@@ -37,17 +37,17 @@ namespace Sir.HttpServer.Controllers
                 timer.Start();
 
                 Result result = await writer.Write(collectionId, Request);
-                Logging.Log("write took {0}", timer.Elapsed);
+                this.Log("write took {0}", timer.Elapsed);
                 timer.Restart();
 
                 var buf = result.Data.ToArray();
-                Logging.Log("serialized response in {0}", timer.Elapsed);
+                this.Log("serialized response in {0}", timer.Elapsed);
 
                 return new FileContentResult(buf, result.MediaType);
             }
             catch (Exception ew)
             {
-                Logging.Log(ew);
+                this.Log(ew);
                 throw ew;
             }
         }
@@ -71,7 +71,7 @@ namespace Sir.HttpServer.Controllers
 
                 var result = await reader.Read(collectionId, Request);
 
-                Logging.Log("processed {0} request in {1}", mediaType, timer.Elapsed);
+                this.Log("processed {0} request in {1}", mediaType, timer.Elapsed);
 
                 if (result.Data == null)
                 {
@@ -83,14 +83,14 @@ namespace Sir.HttpServer.Controllers
 
                     var buf = result.Data.ToArray();
 
-                    Logging.Log("serialized {0} response in {1}", reader.GetType().ToString(), timer.Elapsed);
+                    this.Log("serialized {0} response in {1}", reader.GetType().ToString(), timer.Elapsed);
 
                     return new FileContentResult(buf, result.MediaType);
                 }
             }
             catch (Exception ew)
             {
-                Logging.Log(ew);
+                this.Log(ew);
                 throw ew;
             }
         }

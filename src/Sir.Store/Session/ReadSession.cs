@@ -11,7 +11,7 @@ namespace Sir.Store
     /// <summary>
     /// Read session targeting a single collection.
     /// </summary>
-    public class ReadSession : DocumentSession
+    public class ReadSession : DocumentSession, ILogger
     {
         private readonly DocIndexReader _docIx;
         private readonly DocReader _docs;
@@ -50,7 +50,7 @@ namespace Sir.Store
 
             if (result == null)
             {
-                Logging.Log("found nothing for query {0}", query);
+                this.Log("found nothing for query {0}", query);
 
                 return new ReadResult { Total = 0, Docs = new IDictionary[0] };
             }
@@ -71,20 +71,20 @@ namespace Sir.Store
 
                 Map(query);
 
-                Logging.Log("index scan for query {0} took {1}", query, timer.Elapsed);
+                this.Log("index scan for query {0} took {1}", query, timer.Elapsed);
 
                 timer.Restart();
 
                 var result =  _postingsReader.Reduce(CollectionId, query.ToStream(), query.Skip, query.Take);
 
-                Logging.Log("reducing {0} to {1} docs took {2}",
+                this.Log("reducing {0} to {1} docs took {2}",
                     query, result.Documents.Count, timer.Elapsed);
 
                 return result;
             }
             catch (Exception ex)
             {
-                Logging.Log(ex);
+                this.Log(ex);
                 throw;
             }
         }
@@ -109,7 +109,7 @@ namespace Sir.Store
                     hits = indexReader.ClosestMatch(termVector);
                 }
 
-                Logging.Log("scan found {0} matches in {1}", hits.Count, timer.Elapsed);
+                this.Log("scan found {0} matches in {1}", hits.Count, timer.Elapsed);
 
                 if (hits.Count > 0)
                 {
@@ -130,7 +130,7 @@ namespace Sir.Store
                         }
                     }
 
-                    Logging.Log("sorted and mapped term {0} in {1}", cursor, timer.Elapsed);
+                    this.Log("sorted and mapped term {0} in {1}", cursor, timer.Elapsed);
                 }
             }
         }
@@ -194,7 +194,7 @@ namespace Sir.Store
                 result.Add(doc);
             }
 
-            Logging.Log("read {0} docs in {1}", result.Count, timer.Elapsed);
+            this.Log("read {0} docs in {1}", result.Count, timer.Elapsed);
 
             return result;
         }

@@ -10,7 +10,7 @@ namespace Sir.Store
     /// <summary>
     /// Write session targeting a single collection.
     /// </summary>
-    public class WriteSession : DocumentSession
+    public class WriteSession : DocumentSession, ILogger
     {
         private readonly ValueWriter _vals;
         private readonly ValueWriter _keys;
@@ -58,7 +58,7 @@ namespace Sir.Store
                 docCount++;
             }
 
-            Logging.Log(string.Format("processed {0} documents in {1}", docCount, timer.Elapsed));
+            this.Log(string.Format("processed {0} documents in {1}", docCount, timer.Elapsed));
 
             return docIds;
         }
@@ -102,7 +102,7 @@ namespace Sir.Store
 
             model.Add("__docid", docId);
 
-            Logging.Log(string.Format("processed document {0} in {1}", docId, timer.Elapsed));
+            this.Log(string.Format("processed document {0} in {1}", docId, timer.Elapsed));
 
             return docId;
         }
