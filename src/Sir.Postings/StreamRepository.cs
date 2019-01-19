@@ -217,7 +217,7 @@ namespace Sir.Postings
             var payloadCount = BitConverter.ToInt32(messageBuf, 0);
             read = sizeof(int);
 
-            // read lengths
+            // read list lengths
             for (int index = 0; index < payloadCount; index++)
             {
                 var len = BitConverter.ToInt32(messageBuf, read);
@@ -225,7 +225,7 @@ namespace Sir.Postings
                 read += sizeof(int);
             }
 
-            // read offsets
+            // read offsets (IDs)
             for (int index = 0; index < payloadCount; index++)
             {
                 var offset = BitConverter.ToInt64(messageBuf, read);
@@ -251,7 +251,7 @@ namespace Sir.Postings
             this.Log("parsed payload in {0}", time.Elapsed);
             time.Restart();
 
-            var positions = new List<long>(lists.Count);
+            var listOffsets = new List<long>(lists.Count);
 
             // persist payload
 
@@ -271,7 +271,9 @@ namespace Sir.Postings
 
                     if (offset < 0)
                     {
-                        // we are writing a first page
+                        // Since this data does not have an ID we are going to append it
+                        // and give it a new ID.
+
                         data.Seek(0, SeekOrigin.End);
 
                         // record new file location
@@ -291,7 +293,10 @@ namespace Sir.Postings
                     }
                     else
                     {
-                        // there is already at least one page
+                        // There is already at least one page with this ID.
+                        // We need to find the offset of that page so that we can update its header,
+                        // then write the data and record its offset,
+                        // and then write that offset into the header of the first page.
 
                         var nextPageOffsetWordPosition = offset + sizeof(long);
                         long lastPageOffsetWordPosition = offset + (2 * sizeof(long));
@@ -333,7 +338,7 @@ namespace Sir.Postings
                         data.Write(BitConverter.GetBytes(newPageOffset));
                     }
 
-                    positions.Add(offset);
+                    listOffsets.Add(offset);
                 }
             }
 
@@ -341,16 +346,18 @@ namespace Sir.Postings
 
             time.Restart();
 
-            if (positions.Count != payloadCount)
+            if (listOffsets.Count != payloadCount)
             {
                 throw new DataMisalignedException();
             }
 
+            // construct a response message that contains a list of offsets (IDs).
+
             var res = new MemoryStream();
 
-            for (int i = 0; i < positions.Count; i++)
+            for (int i = 0; i < listOffsets.Count; i++)
             {
-                res.Write(BitConverter.GetBytes(positions[i]));
+                res.Write(BitConverter.GetBytes(listOffsets[i]));
             }
 
             res.Position = 0;
