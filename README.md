@@ -1,4 +1,4 @@
-# Resin - Rock-solid information retrieval
+# Resin Search
 
 ## Demo
 
@@ -6,21 +6,21 @@
 
 ## What is this?
 
-This here is a distributable full-text search engine with HTTP API and programmable read/write pipelines, 
-with support for virtually any type of messaging format as long as it can be carried over HTTP. 
+This is a distributable full-text search engine with HTTP API and programmable read/write pipelines, 
+with support for virtually any type of document format as long as it can be carried over HTTP. 
 Reading and writing JSON works out of the box. It's not hard to implement custom formats.
 
 ### Distributable micro-services
 
 Presently, there are two services, both run on Kestrel. 
-One handles the key/value payload and the index, the other stores postings (document references) 
-and also performs boolean operations on its payload (i.e. set arithmetics such as AND, OR, NOT). 
-The former acts as a map/reduce orchestrator, the latter performs the calculations. 
-The services may be hosted together as one or they can be distributed.
+One handles the raw key/value payload and the index, the other stores postings (document references) 
+and also performs set operations on its payload (i.e. AND, OR, NOT) before giving you a result. 
+The former acts as a map/reduce orchestrator, the latter performs the calculations.
+The services may be hosted together or in isolation.
 
 ### Read more
 
-#### Author read and write plugins and jack them into Sir.HttpServer  
+#### Create your own read and write plugins and jack them into Sir.HttpServer  
 https://github.com/kreeben/resin/tree/master/src/Sir.HttpServer
 
 #### A Int64/UInt64[] key/value store and map/reduce node  
