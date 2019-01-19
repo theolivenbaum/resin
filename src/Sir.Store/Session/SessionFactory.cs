@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 
 namespace Sir.Store
@@ -148,6 +149,25 @@ namespace Sir.Store
                 return false;
             }
             return true;
+        }
+
+        public MemoryMappedFile CreateMMF(string fileName, string mapName)
+        {
+            try
+            {
+                return MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+            }
+            catch
+            {
+                try
+                {
+                    return MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.Read);
+                }
+                catch
+                {
+                    return MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+                }
+            }
         }
 
         public DocumentStreamSession CreateDocumenSession(string collectionId)

@@ -29,9 +29,6 @@ namespace Sir.Postings
                 var docIdList = await ReadAndRefreshCache(collectionId, cursor.PostingsOffset);
                 var docIds = docIdList.ToDictionary(docId => docId, score => cursor.Score);
 
-                var timer = new Stopwatch();
-                timer.Start();
-
                 if (cursor.And)
                 {
                     var aggregatedResult = new Dictionary<ulong, float>();
@@ -71,9 +68,6 @@ namespace Sir.Postings
                         }
                     }
                 }
-
-                this.Log("reduced {0} to {1} docs in {2}",
-                    cursor, result.Count, timer.Elapsed);
             }
 
             var sortedByScore = result.ToList();
@@ -154,9 +148,6 @@ namespace Sir.Postings
             {
                 data.Seek(offset, SeekOrigin.Begin);
 
-                this.Log("seek took {0}", timer.Elapsed);
-                timer.Restart();
-
                 // We are now at the first page.
                 // Each page starts with a header consisting of (a) count, (b) next page offset and (c) last page offset (long, long, long).
                 // The rest of the page is data (ulong's).
@@ -225,7 +216,7 @@ namespace Sir.Postings
                 }
             }
 
-            this.Log("read {0} postings from {0} pages in {2}", result.Count, pageCount, timer.Elapsed);
+            this.Log("read {0} postings from {1} pages in {2}", result.Count, pageCount, timer.Elapsed);
 
             return result.ToList();
         }
