@@ -91,7 +91,7 @@ namespace Sir.Store
 
         private void Map(Query query)
         {
-            foreach (var cursor in query.ToList())
+            Parallel.ForEach(query.ToList(), cursor =>
             {
                 // score each query term
 
@@ -132,7 +132,7 @@ namespace Sir.Store
 
                     this.Log("sorted and mapped term {0} in {1}", cursor, timer.Elapsed);
                 }
-            }
+            });
         }
 
         private NodeReader CreateIndexReader(long keyId)
