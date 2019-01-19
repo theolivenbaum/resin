@@ -35,6 +35,8 @@ namespace Sir.Store
                     new AnalyzedString { Source = value.ToCharArray(), Tokens = new List<(int, int)> { (0, value.Length) } } :
                     tokenizer.Tokenize(value);
 
+                values.Original = value;
+
                 var or = root == null || (key[0] != '+' && key[0] != '-');
                 var not = key[0] == '-';
                 var and = !or && !not;

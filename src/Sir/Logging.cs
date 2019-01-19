@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace Sir
@@ -21,6 +22,8 @@ namespace Sir
             {
                 Console.WriteLine(message);
             }
+
+            Debug.WriteLine(message);
         }
 
         public static void Log(this ILogger logger, object message)

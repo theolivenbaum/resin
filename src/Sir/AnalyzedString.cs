@@ -6,5 +6,6 @@ namespace Sir
     {
         public IList<(int offset, int length)> Tokens { get; set; }
         public char[] Source { get; set; }
+        public string Original { get; set; }
     }
 }

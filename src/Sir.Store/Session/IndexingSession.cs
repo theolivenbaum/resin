@@ -153,12 +153,12 @@ namespace Sir.Store
                     }
                 }
             }
+
+            this.Log("analyzed document ID {0}", docId);
         }
 
         private void AddDocumentToModel((ulong docId, long keyId, AnalyzedString tokens) item)
         {
-            var time = Stopwatch.StartNew();
-
             var ix = GetOrCreateIndex(item.keyId);
 
             foreach (var token in item.tokens.Tokens)
@@ -167,8 +167,6 @@ namespace Sir.Store
 
                 ix.Add(new VectorNode(termVector, item.docId), _vectorStream);
             }
-
-            this.Log("added document ID {0} key {1} to model in {2}", item.docId, item.keyId, time.Elapsed);
         }
 
         private static readonly object _syncIndexAccess = new object();

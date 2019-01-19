@@ -22,7 +22,7 @@ namespace Sir
 
         public override string ToString()
         {
-            return string.Format("{0}:{1}", Key, TokenizedString);
+            return string.Format("{0}:{1}", Key, TokenizedString.Original);
         }
     }
 }
