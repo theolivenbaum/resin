@@ -110,7 +110,9 @@ namespace Sir.DbUtil
                     {
                         using (var readSession = sessionFactory.CreateDocumenSession(collectionId))
                         {
-                            using (var queue = new ProducerConsumerQueue<IList<IDictionary>>((batch) =>
+                            var docs = readSession.ReadDocs(skip, take);
+
+                            foreach (var batch in docs.Batch(batchSize))
                             {
                                 var timer = Stopwatch.StartNew();
 
@@ -123,14 +125,6 @@ namespace Sir.DbUtil
                                 }
 
                                 Logging.Log(null, string.Format("indexed batch #{0} in {1}", batchCount++, timer.Elapsed));
-                            }, 10))
-                            {
-                                var docs = readSession.ReadDocs(skip, take);
-
-                                foreach (var batch in docs.Batch(batchSize))
-                                {
-                                    queue.Enqueue(batch.ToList());
-                                }
                             }
                         }
 
