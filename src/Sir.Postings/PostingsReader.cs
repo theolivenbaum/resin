@@ -21,6 +21,8 @@ namespace Sir.Postings
         {
             try
             {
+                // A read request is either a request to "lookup by ID" or to "execute query".
+
                 var timer = new Stopwatch();
                 timer.Start();
 
@@ -29,13 +31,26 @@ namespace Sir.Postings
                 request.Body.CopyTo(stream);
 
                 var buf = stream.ToArray();
-
-                var query = Query.FromStream(buf);
+                Result result;
                 var skip = int.Parse(request.Query["skip"]);
                 var take = int.Parse(request.Query["take"]);
-                var result = await _data.Reduce(collectionId.ToHash(), query, skip, take);
 
-                this.Log("processed read request for {0} postings in {1}", result.Total, timer.Elapsed);
+                if (buf.Length == 0)
+                {
+                    var id = long.Parse(request.Query["id"]);
+
+                    result = await _data.Read(collectionId.ToHash(), id, skip, take);
+
+                    this.Log("processed read request for {0} postings in {1}", result.Total, timer.Elapsed);
+                }
+                else
+                {
+                    var query = Query.FromStream(buf);
+
+                    result = await _data.Reduce(collectionId.ToHash(), query, skip, take);
+
+                    this.Log("processed map/reduce request resulting in {0} postings in {1}", result.Total, timer.Elapsed);
+                }
 
                 return result;
             }

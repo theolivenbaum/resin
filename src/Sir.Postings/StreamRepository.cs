@@ -26,7 +26,7 @@ namespace Sir.Postings
 
             foreach (var cursor in query)
             {
-                var docIdList = await Read(collectionId, cursor.PostingsOffset);
+                var docIdList = await ReadAndRefreshCache(collectionId, cursor.PostingsOffset);
                 var docIds = docIdList.ToDictionary(docId => docId, score => cursor.Score);
 
                 var timer = new Stopwatch();
@@ -103,7 +103,32 @@ namespace Sir.Postings
             return new Result { Data = stream, MediaType = "application/postings", Total = sortedByScore.Count };
         }
 
-        private async Task<IList<ulong>> Read(ulong collectionId, long offset)
+        public async Task<Result> Read(ulong collectionId, long offset, int skip, int take)
+        {
+            var key = (collectionId, offset);
+            IList<ulong> result;
+
+            if (!_cache.TryGetValue(key, out result))
+            {
+                result = await ReadFromDisk(collectionId, offset);
+                _cache[key] = result;
+            }
+
+            if (take < 1)
+            {
+                take = result.Count;
+            }
+            if (skip < 1)
+            {
+                skip = 0;
+            }
+
+            var stream = Serialize(result.Skip(skip).Take(take).ToDictionary(x => x, y => 0f));
+
+            return new Result { Data = stream, MediaType = "application/postings", Total = result.Count };
+        }
+
+        private async Task<IList<ulong>> ReadAndRefreshCache(ulong collectionId, long offset)
         {
             var key = (collectionId, offset);
             IList<ulong> result;
