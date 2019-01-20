@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Threading.Tasks;
@@ -28,31 +27,6 @@ namespace Sir.Store
             pageIndexStream.Dispose();
         }
 
-        //public IList<Hit> ClosestMatch(SortedList<int, byte> node)
-        //{
-        //    var toplist = new ConcurrentBag<Hit>();
-
-        //    Parallel.ForEach(_pages, page =>
-        //    {
-        //        using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
-        //        {
-        //            indexStream.Seek(page.offset, SeekOrigin.Begin);
-
-        //            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-        //            {
-        //                var hit = ClosestMatchInPage(node, indexStream, page.offset + page.length, vectorStream);
-
-        //                if (hit.Score > 0)
-        //                {
-        //                    toplist.Add(hit);
-        //                }
-        //            }
-        //        }
-        //    });
-
-        //    return new List<Hit>(toplist);
-        //}
-
         public IList<Hit> ClosestMatch(SortedList<int, byte> node)
         {
             var toplist = new ConcurrentBag<Hit>();
@@ -60,7 +34,6 @@ namespace Sir.Store
 
             using (var ixmmf = _sessionFactory.CreateMMF(_ixFileName, ixMapName))
             {
-                
                 Parallel.ForEach(_pages, page =>
                 {
                     using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))

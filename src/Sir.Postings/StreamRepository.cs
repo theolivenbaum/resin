@@ -138,9 +138,7 @@ namespace Sir.Postings
 
         private async Task<IList<ulong>> ReadFromDisk(ulong collectionId, long offset)
         {
-            var timer = new Stopwatch();
-            timer.Start();
-
+            var timer = Stopwatch.StartNew();
             var result = new HashSet<ulong>();
             var pageCount = 0;
 
@@ -178,12 +176,10 @@ namespace Sir.Postings
                     }
                 }
 
-                this.Log("reading first page took {0}", timer.Elapsed);
+                pageCount++;
 
                 while (nextPageOffset > -1)
                 {
-                    timer.Restart();
-
                     data.Seek(nextPageOffset, SeekOrigin.Begin);
 
                     await data.ReadAsync(lbuf);
@@ -209,8 +205,6 @@ namespace Sir.Postings
                             throw new DataMisalignedException("page is crap");
                         }
                     }
-
-                    this.Log("reading next page took {0}", timer.Elapsed);
 
                     pageCount++;
                 }
@@ -287,12 +281,11 @@ namespace Sir.Postings
 
                     if (offset < 0)
                     {
-                        // Since this data does not have an ID we are going to append it
-                        // and give it a new ID.
+                        // Since this data does not have an ID we are going to append it and give it one.
 
                         data.Seek(0, SeekOrigin.End);
 
-                        // record new file location
+                        // record new file location (its ID)
                         offset = data.Position;
 
                         // write count to header of this page

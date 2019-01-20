@@ -21,7 +21,7 @@ namespace Sir.Postings
         {
             try
             {
-                // A read request is either a request to "lookup by ID" or to "execute query".
+                // A read request is either a request to do a "lookup by ID" or to "execute query".
 
                 var timer = new Stopwatch();
                 timer.Start();

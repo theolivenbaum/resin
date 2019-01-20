@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 
 namespace Sir
@@ -11,29 +10,27 @@ namespace Sir
 
         public static bool SendToConsole { get; set; }
 
-        private static void Write(this ILogger logger, object message)
+        private static void Write(this ILogger logger, string message)
         {
             var writer = GetWriter();
 
-            writer.WriteLineAsync(string.Format("{0} {1}", logger?.GetType(), message));
+            writer.WriteLineAsync(message);
             writer.FlushAsync();
 
             if (SendToConsole)
             {
                 Console.WriteLine(message);
             }
-
-            Debug.WriteLine(message);
         }
 
         public static void Log(this ILogger logger, object message)
         {
-            Write(logger, string.Format("{0}\t{1}", DateTime.Now, message));
+            Write(logger, string.Format("{0} :: {1} :: {2}", DateTime.Now, logger?.GetType(), message));
         }
 
         public static void Log(this ILogger logger, string format, params object[] args)
         {
-            Write(logger, string.Format(DateTime.Now + " " + format, args));
+            Write(logger, string.Format("{0} :: {1}", DateTime.Now, string.Format(logger?.GetType() + " :: " + format, args)));
         }
 
         private static TextWriter GetWriter()
