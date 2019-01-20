@@ -20,83 +20,6 @@ namespace Sir.Postings
             _cache = new ConcurrentDictionary<(ulong, long), IList<ulong>>();
         }
 
-        public async Task<Result> Reduce(ulong collectionId, IList<Query> query, int skip, int take)
-        {
-            var result = new Dictionary<ulong, float>();
-
-            foreach (var cursor in query)
-            {
-                var docIdList = await ReadAndRefreshCache(collectionId, cursor.PostingsOffset);
-                var docIds = docIdList.ToDictionary(docId => docId, score => cursor.Score);
-
-                if (cursor.And)
-                {
-                    var aggregatedResult = new Dictionary<ulong, float>();
-
-                    foreach (var doc in result)
-                    {
-                        float score;
-
-                        if (docIds.TryGetValue(doc.Key, out score))
-                        {
-                            aggregatedResult[doc.Key] = score + doc.Value;
-                        }
-                    }
-
-                    result = aggregatedResult;
-                }
-                else if (cursor.Not)
-                {
-                    foreach (var id in docIds.Keys)
-                    {
-                        result.Remove(id, out float _);
-                    }
-                }
-                else // Or
-                {
-                    foreach (var id in docIds)
-                    {
-                        float score;
-
-                        if (result.TryGetValue(id.Key, out score))
-                        {
-                            result[id.Key] = score + id.Value;
-                        }
-                        else
-                        {
-                            result.Add(id.Key, id.Value);
-                        }
-                    }
-                }
-            }
-
-            var sortedByScore = result.ToList();
-            sortedByScore.Sort(
-                delegate (KeyValuePair<ulong, float> pair1,
-                KeyValuePair<ulong, float> pair2)
-                {
-                    return pair1.Value.CompareTo(pair2.Value);
-                }
-            );
-
-            if (take < 1)
-            {
-                take = sortedByScore.Count;
-            }
-            if (skip < 1)
-            {
-                skip = 0;
-            }
-
-            sortedByScore.Reverse();
-
-            var window = sortedByScore.Skip(skip).Take(take);
-
-            var stream = Serialize(window);
-
-            return new Result { Data = stream, MediaType = "application/postings", Total = sortedByScore.Count };
-        }
-
         public async Task<Result> Read(ulong collectionId, long offset, int skip, int take)
         {
             var key = (collectionId, offset);
@@ -122,7 +45,7 @@ namespace Sir.Postings
             return new Result { Data = stream, MediaType = "application/postings", Total = result.Count };
         }
 
-        private async Task<IList<ulong>> ReadAndRefreshCache(ulong collectionId, long offset)
+        public async Task<IList<ulong>> ReadAndRefreshCache(ulong collectionId, long offset)
         {
             var key = (collectionId, offset);
             IList<ulong> result;
@@ -376,9 +299,8 @@ namespace Sir.Postings
             return res;
         }
 
-        private MemoryStream Serialize(IEnumerable<KeyValuePair<ulong, float>> docs)
+        public static MemoryStream Serialize(IEnumerable<KeyValuePair<ulong, float>> docs)
         {
-            var timer = Stopwatch.StartNew();
             var result = new MemoryStream();
 
             foreach (var doc in docs)
@@ -386,8 +308,6 @@ namespace Sir.Postings
                 result.Write(BitConverter.GetBytes(doc.Key));
                 result.Write(BitConverter.GetBytes(doc.Value));
             }
-
-            this.Log("serialized result in {0}", timer.Elapsed);
 
             return result;
         }
