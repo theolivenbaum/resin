@@ -13,7 +13,7 @@ namespace Sir.StringCompare
 
             var docNode1 = new VectorNode(document1);
             var docNode2 = new VectorNode(document2);
-            var docAngle = docNode1.TermVector.CosAngle(docNode2.TermVector);
+            var docAngle = docNode1.Vector.CosAngle(docNode2.Vector);
 
             if (docAngle >= VectorNode.IdenticalAngle)
             {

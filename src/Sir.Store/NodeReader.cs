@@ -66,7 +66,7 @@ namespace Sir.Store
 
             while (cursor != null)
             {
-                var angle = cursor.TermVector.CosAngle(node);
+                var angle = cursor.Vector.CosAngle(node);
 
                 if (angle > VectorNode.FoldAngle)
                 {
@@ -127,7 +127,7 @@ namespace Sir.Store
 
             return new Hit
             {
-                Embedding = best.TermVector,
+                Embedding = best.Vector,
                 Score = highscore,
                 PostingsOffset = best.PostingsOffset
             };

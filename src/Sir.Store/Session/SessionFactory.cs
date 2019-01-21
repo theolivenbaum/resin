@@ -99,7 +99,7 @@ namespace Sir.Store
                                 {
                                     foreach (var token in File.ReadAllLines(validateFn))
                                     {
-                                        var closestMatch = nodeReader.ClosestMatch(new VectorNode(token).TermVector).FirstOrDefault();
+                                        var closestMatch = nodeReader.ClosestMatch(new VectorNode(token).Vector).FirstOrDefault();
 
                                         if (closestMatch != null && closestMatch.Score < VectorNode.IdenticalAngle)
                                         {

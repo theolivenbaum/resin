@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 namespace Sir.Store
 {
     /// <summary>
-    /// Binary tree where the data is a word embedding represented in-memory as a sparse vector.
-    /// The tree is balanced according to cos angles between word vectors of the immediate neighbouring nodes.
+    /// Binary tree where the data is an embedding, a sparse vector.
+    /// The tree is balanced according to cos angles between vectors of the immediate neighbouring nodes.
     /// </summary>
     public class VectorNode
     {
@@ -26,7 +26,7 @@ namespace Sir.Store
         public long VecOffset { get; private set; }
         public long PostingsOffset { get; set; }
         public float Angle { get; private set; }
-        public SortedList<int, byte> TermVector { get; }
+        public SortedList<int, byte> Vector { get; }
         public VectorNode Ancestor { get; private set; }
         public int Weight
         {
@@ -81,7 +81,7 @@ namespace Sir.Store
         public VectorNode(SortedList<int, byte> termVector)
         {
             _docIds = new HashSet<ulong>();
-            TermVector = termVector;
+            Vector = termVector;
             PostingsOffset = -1;
             VecOffset = -1;
         }
@@ -89,7 +89,7 @@ namespace Sir.Store
         public VectorNode(SortedList<int, byte> termVector, ulong docId)
         {
             _docIds = new HashSet<ulong> { docId };
-            TermVector = termVector;
+            Vector = termVector;
             PostingsOffset = -1;
             VecOffset = -1;
         }
@@ -102,7 +102,7 @@ namespace Sir.Store
 
             while (cursor != null)
             {
-                var angle = node.TermVector.CosAngle(cursor.TermVector);
+                var angle = node.Vector.CosAngle(cursor.Vector);
 
                 if (angle > FoldAngle)
                 {
@@ -124,7 +124,7 @@ namespace Sir.Store
                 }
             }
 
-            return new Hit { Embedding = best.TermVector, Score = highscore, PostingsOffset = best.PostingsOffset };
+            return new Hit { Embedding = best.Vector, Score = highscore, PostingsOffset = best.PostingsOffset };
         }
 
         private readonly object _sync = new object();
@@ -135,7 +135,7 @@ namespace Sir.Store
 
             while (cursor != null)
             {
-                var angle = node.TermVector.CosAngle(cursor.TermVector);
+                var angle = node.Vector.CosAngle(cursor.Vector);
 
                 if (angle >= IdenticalAngle)
                 {
@@ -257,7 +257,7 @@ namespace Sir.Store
             block[0] = BitConverter.GetBytes(Angle);
             block[1] = BitConverter.GetBytes(VecOffset);
             block[2] = BitConverter.GetBytes(PostingsOffset);
-            block[3] = BitConverter.GetBytes(TermVector.Count);
+            block[3] = BitConverter.GetBytes(Vector.Count);
             block[4] = BitConverter.GetBytes(Weight);
             block[5] = terminator;
 
@@ -297,12 +297,12 @@ namespace Sir.Store
 
         private void SerializeVector(Stream vectorStream)
         {
-            VecOffset = TermVector.Serialize(vectorStream);
+            VecOffset = Vector.Serialize(vectorStream);
         }
 
         private async Task SerializeVectorAsync(Stream vectorStream)
         {
-            VecOffset = await TermVector.SerializeAsync(vectorStream);
+            VecOffset = await Vector.SerializeAsync(vectorStream);
         }
 
         public IList<VectorNode> SerializePostings(Stream lengths, Stream offsets, Stream lists)
@@ -546,11 +546,11 @@ namespace Sir.Store
 
         public override string ToString()
         {
-            if (TermVector == null) return string.Empty;
+            if (Vector == null) return string.Empty;
 
             var w = new StringBuilder();
 
-            foreach (var c in TermVector)
+            foreach (var c in Vector)
             {
                 w.Append((char)c.Key);
             }
