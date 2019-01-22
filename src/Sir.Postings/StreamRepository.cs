@@ -20,7 +20,7 @@ namespace Sir.Postings
             _cache = new ConcurrentDictionary<(ulong, long), IList<ulong>>();
         }
 
-        public async Task<Result> Read(ulong collectionId, long offset, int skip, int take)
+        public async Task<IList<ulong>> Read(ulong collectionId, long offset)
         {
             var key = (collectionId, offset);
             IList<ulong> result;
@@ -31,18 +31,20 @@ namespace Sir.Postings
                 _cache[key] = result;
             }
 
-            if (take < 1)
-            {
-                take = result.Count;
-            }
-            if (skip < 1)
-            {
-                skip = 0;
-            }
+            return result;
 
-            var stream = Serialize(result.Skip(skip).Take(take).ToDictionary(x => x, y => 0f));
+            //if (take < 1)
+            //{
+            //    take = result.Count;
+            //}
+            //if (skip < 1)
+            //{
+            //    skip = 0;
+            //}
 
-            return new Result { Data = stream, MediaType = "application/postings", Total = result.Count };
+            //var stream = Serialize(result.Skip(skip).Take(take).ToDictionary(x => x, y => 0f));
+
+            //return new Result { Data = stream, MediaType = "application/postings", Total = result.Count };
         }
 
         public async Task<IList<ulong>> ReadAndRefreshCache(ulong collectionId, long offset)

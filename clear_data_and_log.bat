@@ -1,5 +1,7 @@
 del /Q /S "C:\temp\App_Data\*.ix"
 del /Q /S "C:\temp\App_Data\*.ixp"
+del /Q /S "C:\temp\App_Data\*.ixo"
+del /Q /S "C:\temp\App_Data\*.ixop"
 del /Q /S "C:\temp\App_Data\*.pos"
 del /Q /S "C:\temp\App_Data\*.vec"
 del /Q /S "C:\temp\App_Data\*.zip"

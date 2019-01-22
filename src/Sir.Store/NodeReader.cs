@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Threading.Tasks;
@@ -10,21 +11,44 @@ namespace Sir.Store
     /// <summary>
     /// Index bitmap reader. Each block is a <see cref="Sir.Store.VectorNode"/>.
     /// </summary>
-    public class NodeReader
+    public class NodeReader : ILogger
     {
         private readonly IList<(long offset, long length)> _pages;
         private readonly SessionFactory _sessionFactory;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
 
-        public NodeReader(string ixFileName, string vecFileName, Stream pageIndexStream, SessionFactory sessionFactory)
+        public NodeReader(string ixFileName, string vecFileName, SessionFactory sessionFactory, IList<(long, long)> pages)
         {
             _vecFileName = vecFileName;
             _ixFileName = ixFileName;
-            _pages = new PageIndexReader(pageIndexStream).ReadAll();
+            _pages = pages;
             _sessionFactory = sessionFactory;
+        }
 
-            pageIndexStream.Dispose();
+        public IList<VectorNode> ReadAllPages()
+        {
+            this.Log("reading all segments in {0}", _ixFileName);
+
+            var pages = new List<VectorNode>();
+            var time = Stopwatch.StartNew();
+
+            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+            using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
+            {
+                foreach (var page in _pages)
+                {
+                    ixStream.Seek(page.offset, SeekOrigin.Begin);
+
+                    var tree = VectorNode.DeserializeTree(ixStream, vectorStream, page.length);
+
+                    pages.Add(tree);
+                }
+            }
+
+            this.Log("deserialized {0} index segments in {1}", pages.Count, time.Elapsed);
+
+            return pages;
         }
 
         public IList<Hit> ClosestMatch(SortedList<int, byte> node)

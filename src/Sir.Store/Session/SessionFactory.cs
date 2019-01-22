@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
@@ -76,10 +77,16 @@ namespace Sir.Store
                     var keyId = long.Parse(name[1]);
                     var vecFileName = Path.Combine(Dir, string.Format("{0}.vec", collectionHash));
                     var pageIndexFileName = Path.Combine(Dir, string.Format("{0}.{1}.ixp", collectionHash, keyId));
+                    IList<(long, long)> pages;
 
                     using (var ixpStream = CreateAsyncReadStream(pageIndexFileName))
                     {
-                        var nodeReader = new NodeReader(ixFileName, vecFileName, ixpStream, this);
+                        pages = new PageIndexReader(ixpStream).ReadAll();
+                    }
+
+                    using (var ixpStream = CreateAsyncReadStream(pageIndexFileName))
+                    {
+                        var nodeReader = new NodeReader(ixFileName, vecFileName, this, pages);
 
                         // validate
                         foreach (var validateFn in Directory.GetFiles(Dir, string.Format("*.validate")))
@@ -111,7 +118,7 @@ namespace Sir.Store
                                         }
                                     }
                                 }
-                            }                           
+                            }               
                         }
                     }
                 }
@@ -151,23 +158,32 @@ namespace Sir.Store
             return true;
         }
 
+        private readonly object _syncMMF = new object();
+
         public MemoryMappedFile CreateMMF(string fileName, string mapName)
         {
-            try
-            {
-                return MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
-            }
-            catch
+            MemoryMappedFile mmf;
+
+            lock (_syncMMF)
             {
                 try
                 {
-                    return MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.Read);
+                    mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
                 }
-                catch
+                catch (FileNotFoundException)
                 {
-                    return MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+                    try
+                    {
+                        mmf = MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.Read);
+                    }
+                    catch (IOException)
+                    {
+                        mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+                    }
                 }
             }
+
+            return mmf;
         }
 
         public DocumentStreamSession CreateDocumenSession(string collectionId)
@@ -183,6 +199,11 @@ namespace Sir.Store
         public IndexingSession CreateIndexSession(string collectionId)
         {
             return new IndexingSession(collectionId, this, _tokenizer, _config);
+        }
+
+        public OptimizeSession CreateOptimizeSession(string collectionId)
+        {
+            return new OptimizeSession(collectionId, this, _config);
         }
 
         public ReadSession CreateReadSession(string collectionId)

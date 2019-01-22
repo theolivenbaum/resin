@@ -3,9 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -23,7 +21,6 @@ namespace Sir.Store
         private bool _flushed;
         private bool _flushing;
         private readonly ProducerConsumerQueue<(ulong docId, long keyId, AnalyzedString tokens)> _modelBuilder;
-        private readonly RemotePostingsWriter _postingsWriter;
 
         public IndexingSession(
             string collectionId, 
@@ -35,15 +32,14 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _validate = config.Get("create_index_validation_files") == "true";
             _dirty = new ConcurrentDictionary<long, VectorNode>();
-            _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId.ToHash())));
-            _postingsWriter = new RemotePostingsWriter(_config);
+            _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId)));
 
             var numThreads = int.Parse(_config.Get("index_thread_count"));
 
             _modelBuilder = new ProducerConsumerQueue<(ulong docId, long keyId, AnalyzedString tokens)>(AddDocumentToModel, numThreads);
         }
 
-        public void Write(IDictionary document)
+        public void Embed(IDictionary document)
         {
             Analyze(document);
         }
@@ -64,10 +60,13 @@ namespace Sir.Store
 
             var tasks = new Task[_dirty.Count];
             var taskId = 0;
+            var cWriters = new List<ColumnWriter>();
 
             foreach (var column in _dirty)
             {
-                tasks[taskId++] = SerializeColumn(column.Key, column.Value);
+                var columnWriter = new ColumnWriter(CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config));
+                cWriters.Add(columnWriter);
+                tasks[taskId++] = columnWriter.WriteColumnSegment(column.Value);
             }
 
             using (_vectorStream)
@@ -78,6 +77,11 @@ namespace Sir.Store
 
             Task.WaitAll(tasks);
 
+            foreach (var cWriter in cWriters)
+            {
+                cWriter.Dispose();
+            }
+
             _flushed = true;
             _flushing = false;
 
@@ -87,35 +91,7 @@ namespace Sir.Store
         private static readonly object _indexFileSync = new object();
 
 
-        private async Task SerializeColumn(long keyId, VectorNode column)
-        {
-            var time = Stopwatch.StartNew();
 
-            (int depth, int width, int avgDepth) size;
-
-            var collectionId = CollectionId.ToHash();
-
-            await _postingsWriter.Write(collectionId, column);
-
-            var pixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", collectionId, keyId));
-            var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
-
-            lock (_indexFileSync)
-            {
-                using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(pixFileName)))
-                using (var ixStream = SessionFactory.CreateAppendStream(ixFileName))
-                {
-                    var page = column.SerializeTree(ixStream);
-
-                    pageIndexWriter.Write(page.offset, page.length);
-
-                    size = column.Size();
-                }
-            }
-
-            this.Log("serialized column {0} in {1} with size {2},{3} (avg depth {4})",
-                keyId, time.Elapsed, size.depth, size.width, size.avgDepth);
-        }
 
         private void Analyze(IDictionary document)
         {

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace Sir.Store
 {
     /// <summary>
-    /// Index bitmap segment writer.
+    /// Index segment writer.
     /// </summary>
     public class PageIndexWriter : IDisposable
     {

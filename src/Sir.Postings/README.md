@@ -1,7 +1,12 @@
 # Sir.Postings
 
-A key/value store where the key is a Int64 and the payload is a list of UInt64's.
+## A micro service key/value store
 
-After you have stored your payload, you can send queries to the service, boolean query expressions, that reference the keys.
+This is a key/value store where the key is a Int64 and the payload is a set of UInt64's that you communicate with 
+either through HTTP (e.g. if used as a read/write plugin for Sir.HttpServer) or embed directly into your application.
 
-This service will perform AND, OR and NOT arithmetics on your payload and return to you a window those UInt64 values that are the result of the query expression.
+## A map/reduce node
+
+After you have stored your data you may query it by posting boolean query expressions that reference the keys. 
+You may execute queries composed of AND, OR and NOT terms. Intersect, union and except set operations are performed on your data 
+reducing it to a smaller set. A window of that set, defined by the skip and take parameters, is returned to you.

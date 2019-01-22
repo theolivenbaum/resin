@@ -33,28 +33,35 @@ namespace Sir.Postings
                 request.Body.CopyTo(stream);
 
                 var buf = stream.ToArray();
-                Result result;
+                var result = new List<ulong>();
                 var skip = int.Parse(request.Query["skip"]);
                 var take = int.Parse(request.Query["take"]);
+                Result resultModel;
 
                 if (buf.Length == 0)
                 {
-                    var id = long.Parse(request.Query["id"]);
+                    foreach (var idParam in request.Query["id"])
+                    {
+                        var id = long.Parse(idParam);
+                        var subResult = await _data.Read(collectionId.ToHash(), id);
+                        result.AddRange(subResult);
+                    }
 
-                    result = await _data.Read(collectionId.ToHash(), id, skip, take);
+                    this.Log("processed read request for {0} postings in {1}", result.Count, timer.Elapsed);
 
-                    this.Log("processed read request for {0} postings in {1}", result.Total, timer.Elapsed);
+                    var streamResult = StreamRepository.Serialize(result.Skip(skip).Take(take).ToDictionary(x => x, y => 0f));
+                    resultModel = new Result { Data = streamResult, MediaType = "application/postings", Total = result.Count };
                 }
                 else
                 {
                     var query = Query.FromStream(buf);
 
-                    result = await Reduce(collectionId.ToHash(), query, skip, take);
+                    resultModel = await Reduce(collectionId.ToHash(), query, skip, take);
 
-                    this.Log("processed map/reduce request resulting in {0} postings in {1}", result.Total, timer.Elapsed);
+                    this.Log("processed map/reduce request resulting in {0} postings in {1}", result.Count, timer.Elapsed);
                 }
 
-                return result;
+                return resultModel;
             }
             catch (Exception ex)
             {

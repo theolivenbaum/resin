@@ -10,7 +10,7 @@ namespace Sir.Store
     /// <summary>
     /// Read postings from HTTP endpoint.
     /// </summary>
-    public class RemotePostingsReader : IDisposable, ILogger
+    public class RemotePostingsReader : ILogger
     {
         private IConfigurationProvider _config;
 
@@ -19,9 +19,9 @@ namespace Sir.Store
             _config = config;
         }
 
-        public MapReduceResult Reduce(string collectionId, byte[] query, int skip, int take)
+        public MapReduceResult Reduce(string collection, byte[] query, int skip, int take)
         {
-            var endpoint = string.Format("{0}{1}?skip={2}&take={3}", _config.Get("postings_endpoint"), collectionId, skip, take);
+            var endpoint = string.Format("{0}{1}?skip={2}&take={3}", _config.Get("postings_endpoint"), collection, skip, take);
 
             var request = (HttpWebRequest)WebRequest.Create(endpoint);
 
@@ -156,10 +156,6 @@ namespace Sir.Store
 
                 return result;
             }
-        }
-
-        public void Dispose()
-        {
         }
     }
 

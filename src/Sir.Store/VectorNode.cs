@@ -80,7 +80,6 @@ namespace Sir.Store
 
         public VectorNode(SortedList<int, byte> termVector)
         {
-            _docIds = new HashSet<ulong>();
             Vector = termVector;
             PostingsOffset = -1;
             VecOffset = -1;
@@ -88,10 +87,11 @@ namespace Sir.Store
 
         public VectorNode(SortedList<int, byte> termVector, ulong docId)
         {
-            _docIds = new HashSet<ulong> { docId };
             Vector = termVector;
             PostingsOffset = -1;
             VecOffset = -1;
+            _docIds = new HashSet<ulong>();
+            _docIds.Add(docId);
         }
 
         public Hit ClosestMatch(VectorNode node)
@@ -131,6 +131,11 @@ namespace Sir.Store
 
         public void Add(VectorNode node, Stream vectorStream = null)
         {
+            node.Ancestor = null;
+            node._left = null;
+            node._right = null;
+            node._weight = 0;
+
             var cursor = this;
 
             while (cursor != null)
@@ -212,9 +217,16 @@ namespace Sir.Store
                 throw new InvalidOperationException();
             }
 
-            foreach (var id in node._docIds)
+            if (_docIds == null)
             {
-                _docIds.Add(id);
+                _docIds = node._docIds;
+            }
+            else if (node._docIds != null)
+            {
+                foreach (var id in node._docIds)
+                {
+                    _docIds.Add(id);
+                }
             }
         }
 
@@ -313,11 +325,11 @@ namespace Sir.Store
 
             while (node != null)
             {
-                if (node._docIds.Count > 0)
+                if (node._docIds != null)
                 {
                     // dirty node
 
-                    var list = node._docIds.Distinct().ToArray();
+                    var list = node._docIds.ToArray();
 
                     node._docIds.Clear();
 
@@ -387,7 +399,9 @@ namespace Sir.Store
                 read += NodeSize;
             }
 
-            return root;
+            root.Right.Ancestor = null;
+
+            return root.Right;
         }
 
         public static VectorNode DeserializeNode(byte[] buf, Stream vectorStream, ref byte terminator)

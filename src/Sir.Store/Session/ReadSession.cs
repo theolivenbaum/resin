@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Collections.Concurrent;
 
 namespace Sir.Store
 {
@@ -20,6 +21,7 @@ namespace Sir.Store
         private readonly ValueReader _keyReader;
         private readonly ValueReader _valReader;
         private readonly RemotePostingsReader _postingsReader;
+        private readonly ConcurrentDictionary<long, NodeReader> _indexReaders;
 
         public ReadSession(string collectionId, 
             SessionFactory sessionFactory, 
@@ -42,6 +44,7 @@ namespace Sir.Store
             _keyReader = new ValueReader(KeyStream);
             _valReader = new ValueReader(ValueStream);
             _postingsReader = new RemotePostingsReader(config);
+            _indexReaders = new ConcurrentDictionary<long, NodeReader>();
         }
 
         public async Task<ReadResult> Read(Query query)
@@ -69,13 +72,13 @@ namespace Sir.Store
                 var timer = new Stopwatch();
                 timer.Start();
 
-                Map(query);
+                Scan(query);
 
                 this.Log("index scan for query {0} took {1}", query, timer.Elapsed);
 
                 timer.Restart();
 
-                var result =  _postingsReader.Reduce(CollectionId, query.ToStream(), query.Skip, query.Take);
+                var result =  _postingsReader.Reduce(Collection, query.ToStream(), query.Skip, query.Take);
 
                 this.Log("reducing {0} to {1} docs took {2}",
                     query, result.Documents.Count, timer.Elapsed);
@@ -89,8 +92,9 @@ namespace Sir.Store
             }
         }
 
-        private void Map(Query query)
+        private void Scan(Query query)
         {
+            //foreach (var cursor in query.ToList())
             Parallel.ForEach(query.ToList(), cursor =>
             {
                 // score each query term
@@ -135,16 +139,19 @@ namespace Sir.Store
             });
         }
 
-        private NodeReader CreateIndexReader(long keyId)
+        public NodeReader CreateIndexReader(long keyId)
         {
-            var cid = CollectionId.ToHash();
-            var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", cid, keyId));
-            var pageIxFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", cid, keyId));
-            var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", cid));
+            var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
+            var ixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", CollectionId, keyId));
+            var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId));
 
-            var ixpStream = SessionFactory.CreateAsyncReadStream(pageIxFileName);
+            IList<(long, long)> pages;
+            using (var ixpStream = SessionFactory.CreateAsyncReadStream(ixpFileName))
+            {
+                pages = new PageIndexReader(ixpStream).ReadAll();
+            }
 
-            return new NodeReader(ixFileName, vecFileName, ixpStream, SessionFactory);
+            return new NodeReader(ixFileName, vecFileName, SessionFactory, pages);
         }
 
         public NodeReader CreateIndexReader(ulong keyHash)
@@ -197,13 +204,6 @@ namespace Sir.Store
             this.Log("read {0} docs in {1}", result.Count, timer.Elapsed);
 
             return result;
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-
-            _postingsReader.Dispose();
         }
     }
 }

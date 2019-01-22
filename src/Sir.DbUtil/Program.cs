@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Sir.Core;
 using Sir.Store;
 
 namespace Sir.DbUtil
@@ -38,6 +37,12 @@ namespace Sir.DbUtil
                     // example: query C:\projects\resin\src\Sir.HttpServer\App_Data www
 
                     Task.Run(() => Query(dir: args[1], collectionId: args[2])).Wait();
+                }
+                else if (command == "optimize" && args.Length == 3)
+                {
+                    // example: optimize C:\projects\resin\src\Sir.HttpServer\App_Data www
+
+                    Optimize(dir: args[1], collection: args[2]);
                 }
 
                 Console.Read();
@@ -120,7 +125,7 @@ namespace Sir.DbUtil
                                 {
                                     foreach (var doc in batch)
                                     {
-                                        indexSession.Write(doc);
+                                        indexSession.Embed(doc);
                                     }
                                 }
 
@@ -134,6 +139,22 @@ namespace Sir.DbUtil
             }
 
             Logging.Log(null, string.Format("indexed {0} batches in {1}", batchCount, fullTime.Elapsed));
+        }
+
+        private static void Optimize(string dir, string collection)
+        {
+            var files = Directory.GetFiles(dir, "*.docs");
+            var time = Stopwatch.StartNew();
+
+            using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration("sir.ini")))
+            {
+                using (var optimizeSession = sessionFactory.CreateOptimizeSession(collection))
+                {
+                    optimizeSession.Optimize();
+                }
+            }
+
+            Logging.Log(null, string.Format("{0} index optimize operation took {1}", collection, time.Elapsed));
         }
 
         private static void Write(IList<IDictionary> obj)
