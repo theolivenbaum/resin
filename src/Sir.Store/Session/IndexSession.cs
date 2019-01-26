@@ -11,7 +11,7 @@ namespace Sir.Store
     /// <summary>
     /// Indexing session targeting a single collection.
     /// </summary>
-    public class IndexingSession : CollectionSession, IDisposable, ILogger
+    public class IndexSession : CollectionSession, IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
@@ -22,7 +22,7 @@ namespace Sir.Store
         private bool _flushing;
         private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _modelBuilder;
 
-        public IndexingSession(
+        public IndexSession(
             string collectionId, 
             SessionFactory sessionFactory, 
             ITokenizer tokenizer,

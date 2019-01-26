@@ -196,9 +196,9 @@ namespace Sir.Store
             return new WriteSession(collectionId, this);
         }
 
-        public IndexingSession CreateIndexSession(string collectionId)
+        public IndexSession CreateIndexSession(string collectionId)
         {
-            return new IndexingSession(collectionId, this, _tokenizer, _config);
+            return new IndexSession(collectionId, this, _tokenizer, _config);
         }
 
         public OptimizeSession CreateOptimizeSession(string collectionId)

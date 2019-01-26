@@ -36,15 +36,14 @@ https://github.com/kreeben/resin/tree/master/src/Sir.Store
 
 ### Roadmap
 
-Latest code is in `dev` branch.
-
-- [x] v0.1a - 32-bit "bag-of-characters" term vector space language model
+- [x] v0.1a - bag-of-characters term vector space language model
 - [x] v0.2a - HTTP API
 - [x] v0.3a - distributable search microservices
-- [ ] v0.4a - 64-bit "bag-of-words" document vector space language model
+- [ ] v0.4a - bag-of-words document vector space language model
 - [ ] v0.5b - semantic language model
 - [ ] v0.6b - local join between collections
 - [ ] v0.7b - distributed join between collections
 - [ ] v0.8 - voice-to-text
 - [ ] v0.9 - image search
 - [ ] v1.0 - text-to-voice
+- [ ] v2.0 - AI
