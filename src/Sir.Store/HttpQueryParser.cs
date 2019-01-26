@@ -20,6 +20,8 @@ namespace Sir.Store
 
             string[] fields;
 
+            bool and = request.Query.ContainsKey("AND");
+
             if (request.Query.ContainsKey("fields"))
             {
                 fields = request.Query["fields"].ToArray();
@@ -49,7 +51,7 @@ namespace Sir.Store
             {
                 var expandedQuery = string.Format(queryFormat, request.Query["q"]);
 
-                query = _queryParser.Parse(expandedQuery, tokenizer);
+                query = _queryParser.Parse(expandedQuery, and, !and, tokenizer);
                 query.Collection = collectionId.ToHash();
 
                 if (request.Query.ContainsKey("take"))

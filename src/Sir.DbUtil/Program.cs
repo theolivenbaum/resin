@@ -74,7 +74,7 @@ namespace Sir.DbUtil
                     break;
                 }
 
-                var q = qp.Parse(input, tokenizer);
+                var q = qp.Parse(input, false, true, tokenizer);
                 q.Skip = 0;
                 q.Take = 100;
 

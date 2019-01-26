@@ -13,7 +13,7 @@ namespace Sir.Store
     {
         private static  char[] Operators = new char[] { ' ', '+', '-' };
 
-        public Query Parse(string query, ITokenizer tokenizer)
+        public Query Parse(string query, bool andTermSeparator, bool orTermSeparator, ITokenizer tokenizer)
         {
             Query root = null;
             Query cursor = null;
@@ -51,7 +51,7 @@ namespace Sir.Store
 
                 for (int i = 1; i < values.Tokens.Count; i++)
                 {
-                    qc.Next = new Query { Term = new Term(key, values, i), Or = true };
+                    qc.Next = new Query { Term = new Term(key, values, i), And = andTermSeparator, Or = orTermSeparator };
                     qc = qc.Next;
                 }
 

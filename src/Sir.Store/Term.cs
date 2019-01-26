@@ -5,7 +5,7 @@ namespace Sir
     /// <summary>
     /// A query term.
     /// </summary>
-    [System.Diagnostics.DebuggerDisplay("{Key}:{Value}")]
+    [System.Diagnostics.DebuggerDisplay("{Key}:{TokenizedString.Original}")]
     public class Term
     {
         public IComparable Key { get; private set; }
