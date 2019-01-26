@@ -21,9 +21,9 @@ namespace Sir.Store
         /// Get the next auto-incrementing doc id (peeking is allowed)
         /// </summary>
         /// <returns>The next auto-incrementing doc id</returns>
-        public ulong GetNextDocId()
+        public long GetNextDocId()
         {
-            return Convert.ToUInt64(_stream.Position) / Convert.ToUInt64(_blockSize);
+            return _stream.Position / _blockSize;
         }
 
         /// <summary>

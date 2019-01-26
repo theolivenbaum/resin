@@ -41,9 +41,9 @@ namespace Sir.Store
             _docIx = new DocIndexWriter(DocIndexStream);
         }
 
-        public async Task<IList<ulong>> Write(WriteJob job)
+        public async Task<IList<long>> Write(WriteJob job)
         {
-            var docIds = new List<ulong>();
+            var docIds = new List<long>();
             var docCount = 0;
             var timer = new Stopwatch();
 
@@ -63,7 +63,7 @@ namespace Sir.Store
             return docIds;
         }
 
-        public async Task<ulong> Write(IDictionary model)
+        public async Task<long> Write(IDictionary model)
         {
             var timer = new Stopwatch();
             timer.Start();

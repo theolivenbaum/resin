@@ -51,12 +51,12 @@ namespace Sir.Store
                 docIds = docIds.Take(take);
             }
 
-            var dic = docIds.ToDictionary(x => (ulong)x, y => (float)0);
+            var dic = docIds.ToDictionary(x => (long)x, y => (float)0);
 
             return ReadDocs(dic);
         }
 
-        public IEnumerable<IDictionary> ReadDocs(IDictionary<ulong, float> docs)
+        public IEnumerable<IDictionary> ReadDocs(IDictionary<long, float> docs)
         {
             foreach (var d in docs)
             {

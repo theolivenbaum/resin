@@ -20,7 +20,7 @@ namespace Sir.Store
 
         private VectorNode _right;
         private VectorNode _left;
-        private HashSet<ulong> _docIds;
+        private HashSet<long> _docIds;
         private int _weight;
 
         public long VecOffset { get; private set; }
@@ -85,12 +85,12 @@ namespace Sir.Store
             VecOffset = -1;
         }
 
-        public VectorNode(SortedList<int, byte> termVector, ulong docId)
+        public VectorNode(SortedList<int, byte> termVector, long docId)
         {
             Vector = termVector;
             PostingsOffset = -1;
             VecOffset = -1;
-            _docIds = new HashSet<ulong>();
+            _docIds = new HashSet<long>();
             _docIds.Add(docId);
         }
 
@@ -575,7 +575,7 @@ namespace Sir.Store
 
     public static class StreamHelper
     {
-        public static byte[] ToStream(this IEnumerable<ulong> docIds)
+        public static byte[] ToStream(this IEnumerable<long> docIds)
         {
             var payload = new MemoryStream();
 

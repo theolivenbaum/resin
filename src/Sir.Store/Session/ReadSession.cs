@@ -165,7 +165,7 @@ namespace Sir.Store
             return CreateIndexReader(keyId);
         }
 
-        private async Task<IList<IDictionary>> ReadDocs(IEnumerable<KeyValuePair<ulong, float>> docs)
+        private async Task<IList<IDictionary>> ReadDocs(IEnumerable<KeyValuePair<long, float>> docs)
         {
             var timer = new Stopwatch();
             timer.Start();

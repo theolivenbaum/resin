@@ -45,7 +45,7 @@ namespace Sir.Store
 
                     timer.Restart();
 
-                    var result = new Dictionary<ulong, float>();
+                    var result = new Dictionary<long, float>();
                     int total = 0;
 
                     using (var body = response.GetResponseStream())
@@ -59,9 +59,9 @@ namespace Sir.Store
 
                         while (read < buf.Length)
                         {
-                            var docId = BitConverter.ToUInt64(buf, read);
+                            var docId = BitConverter.ToInt64(buf, read);
 
-                            read += sizeof(ulong);
+                            read += sizeof(long);
 
                             var score = BitConverter.ToSingle(buf, read);
 
@@ -80,7 +80,7 @@ namespace Sir.Store
             }
         }
 
-        public IList<ulong> Read(string collectionId, long offset)
+        public IList<long> Read(string collectionId, long offset)
         {
             var endpoint = string.Format("{0}{1}?id={2}", _config.Get("postings_endpoint"), collectionId, offset);
 
@@ -98,7 +98,7 @@ namespace Sir.Store
 
                 timer.Restart();
 
-                var result = new List<ulong>();
+                var result = new List<long>();
 
                 using (var body = response.GetResponseStream())
                 {
@@ -111,7 +111,7 @@ namespace Sir.Store
 
                     while (read < buf.Length)
                     {
-                        result.Add(BitConverter.ToUInt64(buf, read));
+                        result.Add(BitConverter.ToInt64(buf, read));
 
                         read += sizeof(ulong);
                     }
@@ -123,7 +123,7 @@ namespace Sir.Store
             }
         }
 
-        public async Task<IList<ulong>> ReadAsync(string collectionId, long offset)
+        public async Task<IList<long>> ReadAsync(string collectionId, long offset)
         {
             var endpoint = string.Format("{0}{1}?id={2}",
                 _config.Get("postings_endpoint"), collectionId, offset);
@@ -135,7 +135,7 @@ namespace Sir.Store
 
             using (var response = (HttpWebResponse) await request.GetResponseAsync())
             {
-                var result = new List<ulong>();
+                var result = new List<long>();
 
                 using (var body = response.GetResponseStream())
                 {
@@ -148,9 +148,9 @@ namespace Sir.Store
 
                     while (read < buf.Length)
                     {
-                        result.Add(BitConverter.ToUInt64(buf, read));
+                        result.Add(BitConverter.ToInt64(buf, read));
 
-                        read += sizeof(ulong);
+                        read += sizeof(long);
                     }
                 }
 
@@ -161,7 +161,7 @@ namespace Sir.Store
 
     public class MapReduceResult
     {
-        public IDictionary<ulong, float> Documents { get; set; }
+        public IDictionary<long, float> Documents { get; set; }
         public int Total { get; set; }
     }
 }

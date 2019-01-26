@@ -20,7 +20,7 @@ namespace Sir.Store
         private readonly Stream _vectorStream;
         private bool _flushed;
         private bool _flushing;
-        private readonly ProducerConsumerQueue<(ulong docId, long keyId, AnalyzedString tokens)> _modelBuilder;
+        private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _modelBuilder;
 
         public IndexingSession(
             string collectionId, 
@@ -36,7 +36,7 @@ namespace Sir.Store
 
             var numThreads = int.Parse(_config.Get("index_thread_count"));
 
-            _modelBuilder = new ProducerConsumerQueue<(ulong docId, long keyId, AnalyzedString tokens)>(AddDocumentToModel, numThreads);
+            _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>(AddDocumentToModel, numThreads);
         }
 
         public void EmbedTerms(IDictionary document)
@@ -90,7 +90,7 @@ namespace Sir.Store
 
         private void Analyze(IDictionary document)
         {
-            var docId = (ulong)document["__docid"];
+            var docId = (long)document["__docid"];
 
             foreach (var obj in document.Keys)
             {
@@ -128,7 +128,7 @@ namespace Sir.Store
             this.Log("analyzed document ID {0}", docId);
         }
 
-        private void AddDocumentToModel((ulong docId, long keyId, AnalyzedString tokens) item)
+        private void AddDocumentToModel((long docId, long keyId, AnalyzedString tokens) item)
         {
             var ix = GetOrCreateIndex(item.keyId);
 

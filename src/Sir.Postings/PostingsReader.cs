@@ -33,7 +33,7 @@ namespace Sir.Postings
                 request.Body.CopyTo(stream);
 
                 var buf = stream.ToArray();
-                var result = new List<ulong>();
+                var result = new List<long>();
                 var skip = int.Parse(request.Query["skip"]);
                 var take = int.Parse(request.Query["take"]);
                 Result resultModel;
@@ -73,7 +73,7 @@ namespace Sir.Postings
 
         private async Task<Result> Reduce(ulong collectionId, IList<Query> query, int skip, int take)
         {
-            var result = new Dictionary<ulong, float>();
+            var result = new Dictionary<long, float>();
 
             foreach (var cursor in query)
             {
@@ -82,7 +82,7 @@ namespace Sir.Postings
 
                 if (cursor.And)
                 {
-                    var aggregatedResult = new Dictionary<ulong, float>();
+                    var aggregatedResult = new Dictionary<long, float>();
 
                     foreach (var doc in result)
                     {
@@ -123,8 +123,8 @@ namespace Sir.Postings
 
             var sortedByScore = result.ToList();
             sortedByScore.Sort(
-                delegate (KeyValuePair<ulong, float> pair1,
-                KeyValuePair<ulong, float> pair2)
+                delegate (KeyValuePair<long, float> pair1,
+                KeyValuePair<long, float> pair2)
                 {
                     return pair1.Value.CompareTo(pair2.Value);
                 }

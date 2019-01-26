@@ -12,18 +12,18 @@ namespace Sir.Postings
     {
         private readonly IConfigurationProvider _config;
         private const string DataFileNameFormat = "{0}.pos";
-        private readonly IDictionary<(ulong, long), IList<ulong>> _cache;
+        private readonly IDictionary<(ulong, long), IList<long>> _cache;
 
         public StreamRepository(IConfigurationProvider config)
         {
             _config = config;
-            _cache = new ConcurrentDictionary<(ulong, long), IList<ulong>>();
+            _cache = new ConcurrentDictionary<(ulong, long), IList<long>>();
         }
 
-        public async Task<IList<ulong>> Read(ulong collectionId, long offset)
+        public async Task<IList<long>> Read(ulong collectionId, long offset)
         {
             var key = (collectionId, offset);
-            IList<ulong> result;
+            IList<long> result;
 
             if (!_cache.TryGetValue(key, out result))
             {
@@ -47,10 +47,10 @@ namespace Sir.Postings
             //return new Result { Data = stream, MediaType = "application/postings", Total = result.Count };
         }
 
-        public async Task<IList<ulong>> ReadAndRefreshCache(ulong collectionId, long offset)
+        public async Task<IList<long>> ReadAndRefreshCache(ulong collectionId, long offset)
         {
             var key = (collectionId, offset);
-            IList<ulong> result;
+            IList<long> result;
 
             if (!_cache.TryGetValue(key, out result))
             {
@@ -61,10 +61,10 @@ namespace Sir.Postings
             return result;
         }
 
-        private async Task<IList<ulong>> ReadFromDisk(ulong collectionId, long offset)
+        private async Task<IList<long>> ReadFromDisk(ulong collectionId, long offset)
         {
             var timer = Stopwatch.StartNew();
-            var result = new HashSet<ulong>();
+            var result = new HashSet<long>();
             var pageCount = 0;
 
             using (var data = CreateReadableDataStream(collectionId))
@@ -73,7 +73,7 @@ namespace Sir.Postings
 
                 // We are now at the first page.
                 // Each page starts with a header consisting of (a) count, (b) next page offset and (c) last page offset (long, long, long).
-                // The rest of the page is data (ulong's).
+                // The rest of the page is data (long's).
 
                 var lbuf = new byte[sizeof(long)];
 
@@ -85,15 +85,15 @@ namespace Sir.Postings
 
                 var nextPageOffset = BitConverter.ToInt64(lbuf);
 
-                var pageLen = sizeof(long) + (count * sizeof(ulong));
+                var pageLen = sizeof(long) + (count * sizeof(long));
                 var pageBuf = new byte[pageLen];
 
                 await data.ReadAsync(pageBuf);
 
                 for (int i = 0; i < count; i++)
                 {
-                    var entryOffset = sizeof(long) + (i * sizeof(ulong));
-                    var entry = BitConverter.ToUInt64(pageBuf, entryOffset);
+                    var entryOffset = sizeof(long) + (i * sizeof(long));
+                    var entry = BitConverter.ToInt64(pageBuf, entryOffset);
 
                     if (!result.Add(entry))
                     {
@@ -115,15 +115,15 @@ namespace Sir.Postings
 
                     nextPageOffset = BitConverter.ToInt64(lbuf);
 
-                    pageLen = sizeof(long) + (count * sizeof(ulong));
+                    pageLen = sizeof(long) + (count * sizeof(long));
                     var page = new byte[pageLen];
 
                     await data.ReadAsync(page);
 
                     for (int i = 0; i < count; i++)
                     {
-                        var entryOffset = sizeof(long) + (i * sizeof(ulong));
-                        var entry = BitConverter.ToUInt64(page, entryOffset);
+                        var entryOffset = sizeof(long) + (i * sizeof(long));
+                        var entry = BitConverter.ToInt64(page, entryOffset);
 
                         if (!result.Add(entry))
                         {
@@ -214,7 +214,7 @@ namespace Sir.Postings
                         offset = data.Position;
 
                         // write count to header of this page
-                        data.Write(BitConverter.GetBytes(Convert.ToInt64(list.Length/sizeof(ulong))));
+                        data.Write(BitConverter.GetBytes(Convert.ToInt64(list.Length/sizeof(long))));
 
                         // write nextPageOffset
                         data.Write(BitConverter.GetBytes((long)-1));
@@ -252,7 +252,7 @@ namespace Sir.Postings
                         var newPageOffset = data.Position;
 
                         // write count to header of this page
-                        data.Write(BitConverter.GetBytes(Convert.ToInt64(list.Length / sizeof(ulong))));
+                        data.Write(BitConverter.GetBytes(Convert.ToInt64(list.Length / sizeof(long))));
 
                         // write nextPageOffset
                         data.Write(BitConverter.GetBytes((long)-1));
@@ -301,7 +301,7 @@ namespace Sir.Postings
             return res;
         }
 
-        public static MemoryStream Serialize(IEnumerable<KeyValuePair<ulong, float>> docs)
+        public static MemoryStream Serialize(IEnumerable<KeyValuePair<long, float>> docs)
         {
             var result = new MemoryStream();
 

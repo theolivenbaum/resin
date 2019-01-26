@@ -73,13 +73,13 @@ namespace Sir.Store
             s.Position = 0;
         }
 
-        private async Task<IList<ulong>> ExecuteWrite(WriteJob job)
+        private async Task<IList<long>> ExecuteWrite(WriteJob job)
         {
             try
             {
                 _timer.Restart();
 
-                IList<ulong> docIds;
+                IList<long> docIds;
 
                 using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
                 {
