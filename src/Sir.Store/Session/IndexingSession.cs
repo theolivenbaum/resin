@@ -39,7 +39,7 @@ namespace Sir.Store
             _modelBuilder = new ProducerConsumerQueue<(ulong docId, long keyId, AnalyzedString tokens)>(AddDocumentToModel, numThreads);
         }
 
-        public void Embed(IDictionary document)
+        public void EmbedTerms(IDictionary document)
         {
             Analyze(document);
         }
@@ -88,11 +88,6 @@ namespace Sir.Store
             this.Log(string.Format("***FLUSHED***"));
         }
 
-        private static readonly object _indexFileSync = new object();
-
-
-
-
         private void Analyze(IDictionary document)
         {
             var docId = (ulong)document["__docid"];
@@ -137,10 +132,8 @@ namespace Sir.Store
         {
             var ix = GetOrCreateIndex(item.keyId);
 
-            foreach (var token in item.tokens.Tokens)
+            foreach (var termVector in item.tokens.Embeddings)
             {
-                var termVector = item.tokens.ToCharVector(token.offset, token.length);
-
                 ix.Add(new VectorNode(termVector, item.docId), _vectorStream);
             }
         }

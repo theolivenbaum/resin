@@ -125,7 +125,7 @@ namespace Sir.DbUtil
                                 {
                                     foreach (var doc in batch)
                                     {
-                                        indexSession.Embed(doc);
+                                        indexSession.EmbedTerms(doc);
                                     }
                                 }
 
