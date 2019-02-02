@@ -18,59 +18,78 @@ namespace Sir.Store
 
         private readonly SessionFactory _sessionFactory;
         private readonly HttpQueryParser _httpQueryParser;
+        private readonly HttpBowQueryParser _httpBowQueryParser;
         private readonly ITokenizer _tokenizer;
 
-        public StoreReader(SessionFactory sessionFactory, HttpQueryParser httpQueryParser, ITokenizer tokenizer)
+        public StoreReader(
+            SessionFactory sessionFactory, HttpQueryParser httpQueryParser, HttpBowQueryParser httpDocumentQueryParser, ITokenizer tokenizer)
         {
             _sessionFactory = sessionFactory;
             _httpQueryParser = httpQueryParser;
             _tokenizer = tokenizer;
+            _httpBowQueryParser = httpDocumentQueryParser;
         }
 
         public void Dispose()
         {
         }
 
-        public async Task<Result> Read(string collectionId, HttpRequest request)
+        public async Task<ResultModel> Read(string collectionName, HttpRequest request)
         {
-            Query query = null;
-
             try
             {
-                query = _httpQueryParser.Parse(collectionId, request, _tokenizer);
+                var timer = Stopwatch.StartNew();
 
-                ulong keyHash = query.Term.Key.ToString().ToHash();
-                long keyId;
-                var timer = new Stopwatch();
+                var vec1FileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.vec1", collectionName.ToHash()));
 
-                timer.Start();
-
-                if (_sessionFactory.TryGetKeyId(keyHash, out keyId))
+                if (File.Exists(vec1FileName))
                 {
-                    using (var session = _sessionFactory.CreateReadSession(collectionId))
+                    using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
+                    using (var bowReadSession = _sessionFactory.CreateBOWReadSession(collectionName, collectionName.ToHash()))
                     {
-                        var result = await session.Read(query);
+                        int skip = 0;
+                        int take = 10;
+
+                        if (request.Query.ContainsKey("take"))
+                            take = int.Parse(request.Query["take"]);
+
+                        if (request.Query.ContainsKey("skip"))
+                            skip = int.Parse(request.Query["skip"]);
+
+                        var query = _httpBowQueryParser.Parse(collectionName, request, readSession, _sessionFactory);
+                        var result = await bowReadSession.Read(query, readSession, skip, take);
                         var docs = result.Docs;
 
                         this.Log(string.Format("executed query {0} and read {1} docs from disk in {2}", query, docs.Count, timer.Elapsed));
-
-                        timer.Restart();
 
                         var stream = new MemoryStream();
 
                         Serialize(docs, stream);
 
-                        this.Log(string.Format("serialized {0} docs in {1}", docs.Count, timer.Elapsed));
-
-                        return new Result { MediaType = "application/json", Data = stream, Documents = docs, Total = result.Total };
+                        return new ResultModel { MediaType = "application/json", Data = stream, Documents = docs, Total = result.Total };
                     }
                 }
+                else
+                {
+                    using (var session = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
+                    {
+                        var query = _httpQueryParser.Parse(collectionName, request);
+                        var result = await session.Read(query);
+                        var docs = result.Docs;
 
-                return new Result { Total = 0 };
+                        this.Log(string.Format("executed query {0} and read {1} docs from disk in {2}", query, docs.Count, timer.Elapsed));
+
+                        var stream = new MemoryStream();
+
+                        Serialize(docs, stream);
+
+                        return new ResultModel { MediaType = "application/json", Data = stream, Documents = docs, Total = result.Total };
+                    }
+                }
             }
             catch (Exception ex)
             {
-                this.Log(string.Format("read failed for query: {0} {1}", query.ToString() ?? "unknown", ex));
+                this.Log(ex);
 
                 throw;
             }

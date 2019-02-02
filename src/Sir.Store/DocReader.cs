@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -18,12 +17,12 @@ namespace Sir.Store
             _stream = stream;
         }
 
-        public async Task<IList<(long keyId, long valId)>> Read(long offset, int length)
+        public IList<(long keyId, long valId)> Read(long offset, int length)
         {
             _stream.Seek(offset, SeekOrigin.Begin);
 
             var buf = new byte[length];
-            var read = await _stream.ReadAsync(buf, 0, length);
+            var read = _stream.Read(buf, 0, length);
 
             if (read != length)
             {

@@ -17,6 +17,7 @@ namespace Sir.Store
         private readonly SessionFactory _sessionFactory;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
+        private IList<VectorNode> _pageCache;
 
         public NodeReader(string ixFileName, string vecFileName, SessionFactory sessionFactory, IList<(long, long)> pages)
         {
@@ -28,7 +29,10 @@ namespace Sir.Store
 
         public IList<VectorNode> ReadAllPages()
         {
-            this.Log("reading all segments in {0}", _ixFileName);
+            if (_pageCache != null)
+            {
+                return _pageCache;
+            }
 
             var pages = new List<VectorNode>();
             var time = Stopwatch.StartNew();
@@ -48,10 +52,12 @@ namespace Sir.Store
 
             this.Log("deserialized {0} index segments in {1}", pages.Count, time.Elapsed);
 
+            _pageCache = pages;
+
             return pages;
         }
 
-        public IList<Hit> ClosestMatch(SortedList<int, byte> node)
+        public IList<Hit> ClosestMatch(SortedList<int, byte> vector)
         {
             var toplist = new ConcurrentBag<Hit>();
             var ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
@@ -63,7 +69,7 @@ namespace Sir.Store
                     using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
                     using (var indexStream = ixmmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
                     {
-                        var hit = ClosestMatchInPage(node, indexStream, page.offset + page.length, vectorStream);
+                        var hit = ClosestMatchInPage(vector, indexStream, page.offset + page.length, vectorStream);
 
                         if (hit.Score > 0)
                         {
@@ -92,7 +98,7 @@ namespace Sir.Store
             {
                 var angle = cursor.Vector.CosAngle(node);
 
-                if (angle > VectorNode.FoldAngle)
+                if (angle > VectorNode.TermFoldAngle)
                 {
                     if (angle > highscore)
                     {
@@ -153,7 +159,8 @@ namespace Sir.Store
             {
                 Embedding = best.Vector,
                 Score = highscore,
-                PostingsOffset = best.PostingsOffset
+                PostingsOffset = best.PostingsOffset,
+                NodeId = Convert.ToInt32(best.VectorOffset)
             };
         }
 

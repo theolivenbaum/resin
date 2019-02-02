@@ -19,7 +19,7 @@ namespace Sir.Postings
             _data = data;
         }
 
-        public async Task<Result> Read(string collectionId, HttpRequest request)
+        public async Task<ResultModel> Read(string collectionId, HttpRequest request)
         {
             try
             {
@@ -33,24 +33,42 @@ namespace Sir.Postings
                 request.Body.CopyTo(stream);
 
                 var buf = stream.ToArray();
-                var result = new List<long>();
                 var skip = int.Parse(request.Query["skip"]);
                 var take = int.Parse(request.Query["take"]);
-                Result resultModel;
+                ResultModel resultModel;
 
                 if (buf.Length == 0)
                 {
+                    var ids = new List<long>();
+
                     foreach (var idParam in request.Query["id"])
                     {
-                        var id = long.Parse(idParam);
-                        var subResult = await _data.Read(collectionId.ToHash(), id);
-                        result.AddRange(subResult);
+                        var offset = long.Parse(idParam);
+                        var subResult = await _data.Read(collectionId.ToHash(), offset);
+
+                        foreach (var x in subResult)
+                        {
+                            ids.Add(x);
+                        }
                     }
 
-                    this.Log("processed read request for {0} postings in {1}", result.Count, timer.Elapsed);
+                    var sorted = ids
+                        .GroupBy(x => x)
+                        .Select(x => (x.Key, x.Count()))
+                        .OrderByDescending(x => x.Item2)
+                        .ToList();
 
-                    var streamResult = StreamRepository.Serialize(result.Skip(skip).Take(take).ToDictionary(x => x, y => 0f));
-                    resultModel = new Result { Data = streamResult, MediaType = "application/postings", Total = result.Count };
+                    var window = sorted
+                        .Skip(skip)
+                        .Take(take)
+                        .Select(x => x.Item1)
+                        .ToList();
+
+                    var streamResult = StreamRepository.Serialize(window.ToDictionary(x => x, y => 0f));
+
+                    resultModel = new ResultModel { Data = streamResult, MediaType = "application/postings", Total = sorted.Count };
+
+                    this.Log("processed read request for {0} postings in {1}", ids.Count, timer.Elapsed);
                 }
                 else
                 {
@@ -58,7 +76,7 @@ namespace Sir.Postings
 
                     resultModel = await Reduce(collectionId.ToHash(), query, skip, take);
 
-                    this.Log("processed map/reduce request resulting in {0} postings in {1}", result.Count, timer.Elapsed);
+                    this.Log("executed query in {0}", timer.Elapsed);
                 }
 
                 return resultModel;
@@ -71,51 +89,42 @@ namespace Sir.Postings
             }
         }
 
-        private async Task<Result> Reduce(ulong collectionId, IList<Query> query, int skip, int take)
+        private async Task<ResultModel> Reduce(ulong collectionId, IList<Query> query, int skip, int take)
         {
-            var result = new Dictionary<long, float>();
+            IDictionary<long, float> result = null;
 
             foreach (var cursor in query)
             {
                 var docIdList = await _data.ReadAndRefreshCache(collectionId, cursor.PostingsOffset);
                 var docIds = docIdList.ToDictionary(docId => docId, score => cursor.Score);
 
-                if (cursor.And)
+                if (result == null)
                 {
-                    var aggregatedResult = new Dictionary<long, float>();
-
-                    foreach (var doc in result)
+                    result = docIds;
+                }
+                else
+                {
+                    if (cursor.Not)
                     {
-                        float score;
-
-                        if (docIds.TryGetValue(doc.Key, out score))
+                        foreach (var id in docIds.Keys)
                         {
-                            aggregatedResult[doc.Key] = score + doc.Value;
+                            result.Remove(id, out float _);
                         }
                     }
-
-                    result = aggregatedResult;
-                }
-                else if (cursor.Not)
-                {
-                    foreach (var id in docIds.Keys)
+                    else // And, Or
                     {
-                        result.Remove(id, out float _);
-                    }
-                }
-                else // Or
-                {
-                    foreach (var id in docIds)
-                    {
-                        float score;
+                        foreach (var id in docIds)
+                        {
+                            float score;
 
-                        if (result.TryGetValue(id.Key, out score))
-                        {
-                            result[id.Key] = score + id.Value;
-                        }
-                        else
-                        {
-                            result.Add(id.Key, id.Value);
+                            if (result.TryGetValue(id.Key, out score))
+                            {
+                                result[id.Key] = score + id.Value;
+                            }
+                            else
+                            {
+                                result.Add(id.Key, id.Value);
+                            }
                         }
                     }
                 }
@@ -130,6 +139,8 @@ namespace Sir.Postings
                 }
             );
 
+            sortedByScore.Reverse();
+
             if (take < 1)
             {
                 take = sortedByScore.Count;
@@ -139,13 +150,11 @@ namespace Sir.Postings
                 skip = 0;
             }
 
-            sortedByScore.Reverse();
-
             var window = sortedByScore.Skip(skip).Take(take);
 
             var stream = StreamRepository.Serialize(window);
 
-            return new Result { Data = stream, MediaType = "application/postings", Total = sortedByScore.Count };
+            return new ResultModel { Data = stream, MediaType = "application/postings", Total = sortedByScore.Count };
         }
 
         public void Dispose()

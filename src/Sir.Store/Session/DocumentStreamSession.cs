@@ -15,17 +15,15 @@ namespace Sir.Store
         private readonly ValueReader _keyReader;
         private readonly ValueReader _valReader;
 
-        public DocumentStreamSession(string collectionId, SessionFactory sessionFactory) 
-            : base(collectionId, sessionFactory)
+        public DocumentStreamSession(string collectionName, ulong collectionId, SessionFactory sessionFactory) 
+            : base(collectionName, collectionId, sessionFactory)
         {
-            var collection = ulong.Parse(collectionId);
-
-            ValueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collection)));
-            KeyStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collection)));
-            DocStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", collection)));
-            ValueIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collection)));
-            KeyIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collection)));
-            DocIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collection)));
+            ValueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
+            KeyStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", CollectionId)));
+            DocStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", CollectionId)));
+            ValueIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", CollectionId)));
+            KeyIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", CollectionId)));
+            DocIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
 
             _docIx = new DocIndexReader(DocIndexStream);
             _docs = new DocReader(DocStream);
@@ -67,7 +65,7 @@ namespace Sir.Store
                     continue;
                 }
 
-                var docMap = _docs.Read(docInfo.offset, docInfo.length).Result;
+                var docMap = _docs.Read(docInfo.offset, docInfo.length);
                 var doc = new Dictionary<IComparable, IComparable>();
 
                 for (int i = 0; i < docMap.Count; i++)

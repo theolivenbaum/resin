@@ -8,6 +8,6 @@ namespace Sir
     /// </summary>
     public interface IWriter : IPlugin
     {
-        Task<Result> Write(string collectionId, HttpRequest request);
+        Task<ResultModel> Write(string collectionId, HttpRequest request);
     }
 }

@@ -32,19 +32,6 @@ namespace Sir.Postings
             }
 
             return result;
-
-            //if (take < 1)
-            //{
-            //    take = result.Count;
-            //}
-            //if (skip < 1)
-            //{
-            //    skip = 0;
-            //}
-
-            //var stream = Serialize(result.Skip(skip).Take(take).ToDictionary(x => x, y => 0f));
-
-            //return new Result { Data = stream, MediaType = "application/postings", Total = result.Count };
         }
 
         public async Task<IList<long>> ReadAndRefreshCache(ulong collectionId, long offset)
@@ -313,7 +300,7 @@ namespace Sir.Postings
 
             return result;
         }
-        
+
         private Stream CreateReadableWritableDataStream(ulong collectionId)
         {
             var fileName = Path.Combine(_config.Get("data_dir"), string.Format(DataFileNameFormat, collectionId));

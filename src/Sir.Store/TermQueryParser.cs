@@ -9,11 +9,11 @@ namespace Sir.Store
     /// terms are separated by newline characters. 
     /// Terms may be appended with a + sign (meaning AND), a - sign (meaning NOT) or nothing (meaning OR).
     /// </summary>
-    public class KeyValueBooleanQueryParser
+    public class TermQueryParser
     {
         private static  char[] Operators = new char[] { ' ', '+', '-' };
 
-        public Query Parse(string query, bool andTermSeparator, bool orTermSeparator, ITokenizer tokenizer)
+        public Query Parse(string query, ITokenizer tokenizer)
         {
             Query root = null;
             Query cursor = null;
@@ -37,7 +37,7 @@ namespace Sir.Store
 
                 values.Original = value;
 
-                var or = root == null || (key[0] != '+' && key[0] != '-');
+                var or = key[0] != '+' && key[0] != '-';
                 var not = key[0] == '-';
                 var and = !or && !not;
 
@@ -46,12 +46,12 @@ namespace Sir.Store
                     key = key.Substring(1);
                 }
 
-                var q = new Query { Term = new Term(key, values, 0), And = and, Or = or, Not = not };
+                var q = new Query(new Term(key, values, 0)) { And = and, Or = or, Not = not };
                 var qc = q;
 
                 for (int i = 1; i < values.Tokens.Count; i++)
                 {
-                    qc.Next = new Query { Term = new Term(key, values, i), And = andTermSeparator, Or = orTermSeparator };
+                    qc.Next = new Query(new Term(key, values, i)) { And = and, Or = or, Not = not };
                     qc = qc.Next;
                 }
 

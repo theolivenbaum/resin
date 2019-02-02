@@ -10,7 +10,8 @@ namespace Sir.Store
         protected Stream ValueIndexStream { get; set; }
         protected Stream KeyIndexStream { get; set; }
 
-        protected KeyValueSession(string collectionId, SessionFactory sessionFactory) : base(collectionId, sessionFactory)
+        protected KeyValueSession(string collectionName, ulong collectionId, SessionFactory sessionFactory) 
+            : base(collectionName, collectionId, sessionFactory)
         {
         }
 

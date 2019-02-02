@@ -27,7 +27,7 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
-        public async Task<Result> Write(string collectionId, HttpRequest request)
+        public async Task<ResultModel> Write(string collectionId, HttpRequest request)
         {
             try
             {
@@ -52,7 +52,7 @@ namespace Sir.Store
 
                 Serialize(docIds, response);
 
-                return new Result { Data = response, MediaType = "application/json"};
+                return new ResultModel { Data = response, MediaType = "application/json"};
             }
             catch (Exception ex)
             {
@@ -81,7 +81,7 @@ namespace Sir.Store
 
                 IList<long> docIds;
 
-                using (var session = _sessionFactory.CreateWriteSession(job.CollectionId))
+                using (var session = _sessionFactory.CreateWriteSession(job.CollectionName, job.CollectionName.ToHash()))
                 {
                     docIds = await session.Write(job);
                 }

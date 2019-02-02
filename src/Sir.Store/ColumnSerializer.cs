@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
-    public class ColumnWriter : IDisposable, ILogger
+    public class ColumnSerializer : IDisposable, ILogger
     {
         private readonly long _keyId;
         private readonly ulong _collectionId;
@@ -15,21 +15,21 @@ namespace Sir.Store
         private readonly PageIndexWriter _pageIndexWriter;
         private readonly Stream _ixStream;
 
-        public ColumnWriter(ulong collectionId, long keyId, SessionFactory sessionFactory, RemotePostingsWriter postingsWriter = null, string fileExtension = "ix")
+        public ColumnSerializer(ulong collectionId, long keyId, SessionFactory sessionFactory, RemotePostingsWriter postingsWriter = null, string ixFileExtension = "ix", string pageFileExtension = "ixp")
         {
             _keyId = keyId;
             _collectionId = collectionId;
             _postingsWriter = postingsWriter;
             _sessionFactory = sessionFactory;
 
-            var pixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}p", _collectionId, keyId, fileExtension));
-            var ixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}", _collectionId, keyId, fileExtension));
+            var pixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}", _collectionId, keyId, pageFileExtension));
+            var ixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}", _collectionId, keyId, ixFileExtension));
 
             _pageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(pixFileName));
             _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
         }
 
-        public async Task WriteColumnSegment(VectorNode column)
+        public async Task SerializeColumnSegment(VectorNode column)
         {
             var time = Stopwatch.StartNew();
 

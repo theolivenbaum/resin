@@ -36,14 +36,14 @@ namespace Sir.Postings
 
                 offset += sizeof(float);
 
-                var booleanOperator = stream[offset];
+                var termOperator = stream[offset];
 
                 offset += sizeof(byte);
 
-                var query = new Query { Score = score, PostingsOffset = postingsOffset, And = booleanOperator == 1, Or = booleanOperator == 2, Not = booleanOperator == 0 };
+                var query = new Query { Score = score, PostingsOffset = postingsOffset, And = termOperator == 1, Or = termOperator == 2, Not = termOperator == 0 };
 
                 result.Add(query);
-            }
+            }   
 
             return result;
         }

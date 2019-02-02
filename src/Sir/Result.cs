@@ -7,7 +7,7 @@ namespace Sir
     /// <summary>
     /// Read/write result.
     /// </summary>
-    public class Result
+    public class ResultModel
     {
         public IList<IDictionary> Documents { get; set; }
         public MemoryStream Data { get; set; }

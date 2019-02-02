@@ -8,6 +8,7 @@ namespace Sir.Store
         public SortedList<int, byte> Embedding { get; set; }
         public float Score { get; set; }
         public long PostingsOffset { get; set; }
+        public int NodeId { get; set; }
 
         public override string ToString()
         {

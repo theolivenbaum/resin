@@ -57,7 +57,7 @@ namespace Sir.Store
                 tokens.Add((offset, index - offset));
             }
 
-            return new AnalyzedString { Source = normalized, Tokens = tokens };
+            return new AnalyzedString { Source = normalized, Tokens = tokens, Original = text };
         }
 
         private bool IsData(char c)

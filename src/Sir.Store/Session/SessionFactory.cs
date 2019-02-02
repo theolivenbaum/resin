@@ -57,80 +57,6 @@ namespace Sir.Store
             return keys;
         }
 
-        private void ValidateIndex()
-        {
-            try
-            {
-                var timer = new Stopwatch();
-                timer.Start();
-
-                this.Log("begin validating");
-
-                var indexFiles = Directory.GetFiles(Dir, "*.ix");
-
-                foreach (var ixFileName in indexFiles)
-                {
-                    var name = Path.GetFileNameWithoutExtension(ixFileName)
-                        .Split(".", StringSplitOptions.RemoveEmptyEntries);
-
-                    var collectionHash = ulong.Parse(name[0]);
-                    var keyId = long.Parse(name[1]);
-                    var vecFileName = Path.Combine(Dir, string.Format("{0}.vec", collectionHash));
-                    var pageIndexFileName = Path.Combine(Dir, string.Format("{0}.{1}.ixp", collectionHash, keyId));
-                    IList<(long, long)> pages;
-
-                    using (var ixpStream = CreateAsyncReadStream(pageIndexFileName))
-                    {
-                        pages = new PageIndexReader(ixpStream).ReadAll();
-                    }
-
-                    using (var ixpStream = CreateAsyncReadStream(pageIndexFileName))
-                    {
-                        var nodeReader = new NodeReader(ixFileName, vecFileName, this, pages);
-
-                        // validate
-                        foreach (var validateFn in Directory.GetFiles(Dir, string.Format("*.validate")))
-                        {
-                            this.Log("validating {0}", validateFn);
-
-                            var fi = new FileInfo(validateFn);
-                            var segs = Path.GetFileNameWithoutExtension(fi.Name).Split('.');
-                            var col = ulong.Parse(segs[0]);
-                            var key = long.Parse(segs[1]);
-
-                            if (col == collectionHash && key == keyId)
-                            {
-                                string[] lines = File.ReadAllLines(validateFn);
-
-                                if (lines != null)
-                                {
-                                    foreach (var token in File.ReadAllLines(validateFn))
-                                    {
-                                        var closestMatch = nodeReader.ClosestMatch(new VectorNode(token).Vector).FirstOrDefault();
-
-                                        if (closestMatch != null && closestMatch.Score < VectorNode.IdenticalAngle)
-                                        {
-                                            throw new DataMisalignedException();
-                                        }
-                                        else
-                                        {
-                                            File.Delete(validateFn);
-                                        }
-                                    }
-                                }
-                            }               
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                this.Log(ex);
-
-                throw;
-            }
-        }
-
         public void PersistKeyMapping(ulong keyHash, long keyId)
         {
             if (!_keys.ContainsKey(keyHash))
@@ -186,29 +112,39 @@ namespace Sir.Store
             return mmf;
         }
 
-        public DocumentStreamSession CreateDocumenSession(string collectionId)
+        public DocumentStreamSession CreateDocumentStreamSession(string collectionName, ulong collectionId)
         {
-            return new DocumentStreamSession(collectionId, this);
+            return new DocumentStreamSession(collectionName, collectionId, this);
         }
 
-        public WriteSession CreateWriteSession(string collectionId)
+        public WriteSession CreateWriteSession(string collectionName, ulong collectionId)
         {
-            return new WriteSession(collectionId, this);
+            return new WriteSession(collectionName, collectionId, this);
         }
 
-        public IndexSession CreateIndexSession(string collectionId)
+        public IndexSession CreateIndexSession(string collectionName, ulong collectionId)
         {
-            return new IndexSession(collectionId, this, _tokenizer, _config);
+            return new IndexSession(collectionName, collectionId, this, _tokenizer, _config);
         }
 
-        public OptimizeSession CreateOptimizeSession(string collectionId)
+        public BOWWriteSession CreateBOWSession(string collectionName, ulong collectionId)
         {
-            return new OptimizeSession(collectionId, this, _config);
+            return new BOWWriteSession(collectionName, collectionId, this, _config, _tokenizer);
         }
 
-        public ReadSession CreateReadSession(string collectionId)
+        public ValidateSession CreateValidateSession(string collectionName, ulong collectionId)
         {
-            return new ReadSession(collectionId, this, _config);
+            return new ValidateSession(collectionName, collectionId, this, _tokenizer, _config);
+        }
+
+        public ReadSession CreateReadSession(string collectionName, ulong collectionId)
+        {
+            return new ReadSession(collectionName, collectionId, this, _config);
+        }
+
+        public BOWReadSession CreateBOWReadSession(string collectionName, ulong collectionId)
+        {
+            return new BOWReadSession(collectionName, collectionId, this, _config);
         }
 
         public Stream CreateAsyncReadStream(string fileName)

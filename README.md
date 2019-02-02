@@ -4,21 +4,20 @@
 
 ## What is this?
 
-This is a distributable full-text search engine with a HTTP API. 
-It has programmable read/write pipelines. 
-It supports virtually any type of document format as long as it can be carried over HTTP. 
-Reading and writing JSON works out of the box.  
+A distributable full-text search engine with HTTP API. 
+Programmable, pluggable reader/writers. 
+Supports virtually any type of read/write document format as long as it can be carried over HTTP (JSON works out of the box).  
 It's not very hard to implement custom formats.
 
 ### (Micro) services
 
 Presently, there are two services, both run on Kestrel. 
-One handles the raw key/value payload and the index, the other stores postings (document references) 
-and also performs set operations on its payload (i.e. AND, OR, NOT) before giving you a result.  
+One service services the raw key/value payload and the index, the other acts as sink for postings (document references) 
+and can also perform set operations on its payload (i.e. AND, OR, NOT) before responding to read requests.  
 
-The former acts as a map/reduce orchestrator, the latter performs the calculations.  
+In read-time, one service acts as a map/reduce orchestrator, the latter as reducer.  
 
-The services may be hosted on one machine or in isolation.  
+These services may be hosted on one machine or in isolation.  
 
 You can create custom reader and writer services, orchestrators and nodes, and plug them into Sir.HttpServer.
 

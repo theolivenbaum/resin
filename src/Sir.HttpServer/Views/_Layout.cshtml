@@ -10,7 +10,10 @@
         body{
             font-family: sans-serif;
         }
-        
+        sup{
+            font-size: xx-small;
+            color: gray;
+        }
         a {
             text-decoration: none;
             color: orangered;
@@ -22,19 +25,44 @@
             color: purple;
         }
         input[type=text] {
-            width: 300px;
+            width: 480px;
+        }
+        @@media only screen and (max-width: 700px) {
+            input[type=text] {
+                width: 70%;
+            }
+        }
+        @@media only screen and (max-width: 500px) {
+            input[type=text] {
+                width: 60%;
+            }
+        }
+        @@media only screen and (max-width: 400px) {
+            input[type=text] {
+                width: 50%;
+            }
+        }
+        @@media only screen and (max-width: 310px) {
+            input[type=text] {
+                width: 40%;
+            }
         }
         textarea {
-            width: 300px;
+            width: 250px;
             height: 150px;
+        }
+        h3 {
+            margin-top: 25px;
+            margin-bottom: 20px;
+        }
+        p {
+            margin-bottom: 25px;
         }
         .medium-text{
             font-size: 10pt;
         }
         footer {
-            border-top: 1px solid black;
             font-size: 10pt;
-            padding-top: 10px;
         }
         footer span{
             padding-top: 10px;
@@ -63,7 +91,7 @@
             {
                 <p>Last crawled: <a href="@ViewData["last_processed_url"]">@ViewData["last_processed_title"]</a></p>
             }
-            <p>Powered by <a href="https://github.com/kreeben/resin">Resin Search</a>.</p>
+            <p>Powered by <a href="https://github.com/kreeben/resin">Resin</a>.</p>
         </div>
     </footer>
 </body>

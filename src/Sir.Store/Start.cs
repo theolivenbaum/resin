@@ -20,7 +20,8 @@ namespace Sir.Store
 
             services.AddSingleton(typeof(ITokenizer), tokenizer);
 
-            services.AddSingleton(typeof(HttpQueryParser), new HttpQueryParser(new KeyValueBooleanQueryParser()));
+            services.AddSingleton(typeof(HttpQueryParser), new HttpQueryParser(new TermQueryParser(), tokenizer));
+            services.AddSingleton(typeof(HttpBowQueryParser), new HttpBowQueryParser(tokenizer));
         }
     }
 }

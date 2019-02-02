@@ -54,7 +54,7 @@ namespace Sir.Store
         /// <returns>The offset and length of a document's key_id/value_id map</returns>
         public async Task<(long offset, int length)> ReadAsync(long docId)
         {
-            var offs = (long) docId * _blockSize;
+            var offs = docId * _blockSize;
 
             _stream.Seek(offs, SeekOrigin.Begin);
 

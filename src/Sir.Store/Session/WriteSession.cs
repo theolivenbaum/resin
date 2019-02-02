@@ -20,18 +20,16 @@ namespace Sir.Store
         private readonly DocIndexWriter _docIx;
 
         public WriteSession(
-            string collectionId, 
-            SessionFactory sessionFactory) : base(collectionId, sessionFactory)
+            string collectionName,
+            ulong collectionId,
+            SessionFactory sessionFactory) : base(collectionName, collectionId, sessionFactory)
         {
-
-            var collection = collectionId.ToHash();
-
-            ValueStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collection)));
-            KeyStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collection)));
-            DocStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", collection)));
-            ValueIndexStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collection)));
-            KeyIndexStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collection)));
-            DocIndexStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collection)));
+            ValueStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
+            KeyStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", CollectionId)));
+            DocStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", CollectionId)));
+            ValueIndexStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", CollectionId)));
+            KeyIndexStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", CollectionId)));
+            DocIndexStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
 
             _vals = new ValueWriter(ValueStream);
             _keys = new ValueWriter(KeyStream);

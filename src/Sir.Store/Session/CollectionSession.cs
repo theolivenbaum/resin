@@ -3,14 +3,14 @@
     public abstract class CollectionSession 
     {
         protected SessionFactory SessionFactory { get; private set; }
-        protected string Collection { get; }
+        protected string CollectionName { get; }
         protected ulong CollectionId { get; }
 
-        protected CollectionSession(string collectionId, SessionFactory sessionFactory)
+        protected CollectionSession(string collectionName, ulong collectionId, SessionFactory sessionFactory)
         {
             SessionFactory = sessionFactory;
-            Collection = collectionId;
-            CollectionId = collectionId.ToHash();
+            CollectionId = collectionId;
+            CollectionName = collectionName;
         }
     }
 }

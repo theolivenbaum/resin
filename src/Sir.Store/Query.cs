@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Sir.Store
 {
@@ -8,10 +9,21 @@ namespace Sir.Store
     /// </summary>
     public class Query
     {
-        public Query()
+        private static readonly object _sync = new object();
+
+        public Query(Term term)
         {
+            Term = term;
             PostingsOffset = -1;
             Score = -1;
+            Or = true;
+        }
+
+        public Query(Hit hit)
+        {
+            Hit = hit;
+            Score = hit.Score;
+            PostingsOffset = hit.PostingsOffset;
             Or = true;
         }
 
@@ -19,22 +31,39 @@ namespace Sir.Store
         public bool And { get; set; }
         public bool Or { get; set; }
         public bool Not { get; set; }
-        public Term Term { get; set; }
+        public Term Term { get; private set; }
         public Query Next { get; set; }
         public int Skip { get; set; }
         public int Take { get; set; }
+        public Hit Hit { get; private set; }
         public long PostingsOffset { get; set; }
         public float Score { get; set; }
 
         public override string ToString()
         {
-            if (Term != null)
+            var op = And ? "AND " : Or ? "OR " : "NOT ";
+
+            if (Hit == null)
             {
-                var op = And ? "+" : Or ? " " : "-";
-                return string.Format("{0}{1}", op, Term);
+                return string.Format("{0}{1} {2}", op, Term, Score);
             }
 
-            return string.Format("{0}:{1}", Score, PostingsOffset);
+            return string.Format("{0}{1} {2}", op, Hit, Score);;
+        }
+
+        public string ToDiagram()
+        {
+            var x = this;
+            var diagram = new StringBuilder();
+
+            while (x != null)
+            {
+                diagram.AppendLine(x.ToString());
+
+                x = x.Next;
+            }
+
+            return diagram.ToString();
         }
 
         public IList<Query> ToList()
@@ -54,7 +83,7 @@ namespace Sir.Store
         public byte[] ToStream()
         {
             var list = ToList();
-            var result = new byte[(list.Count * (sizeof(float) + sizeof(long))) + (list.Count * sizeof(byte))];
+            var result = new byte[list.Count * (sizeof(float) + sizeof(long) + sizeof(byte))];
             var offset = 0;
 
             for (int index = 0; index < list.Count; index++)
@@ -66,15 +95,15 @@ namespace Sir.Store
                     continue;
                 }
 
-                byte booleanOperator = 0;
+                byte termOperator = 0;
 
                 if (q.And)
                 {
-                    booleanOperator = 1;
+                    termOperator = 1;
                 }
                 else if (q.Or)
                 {
-                    booleanOperator = 2;
+                    termOperator = 2;
                 }
 
                 var pbuf = BitConverter.GetBytes(q.PostingsOffset);
@@ -89,7 +118,7 @@ namespace Sir.Store
 
                 offset += sizeof(float);
 
-                result[offset] = booleanOperator;
+                result[offset] = termOperator;
 
                 offset += sizeof(byte);
             }
@@ -99,15 +128,18 @@ namespace Sir.Store
 
         public void InsertAfter(Query query)
         {
-            if (Next == null)
+            lock (_sync)
             {
-                Next = query;
-            }
-            else
-            {
-                var tmp = Next;
-                Next = query;
-                query.Next = tmp;
+                if (Next == null)
+                {
+                    Next = query;
+                }
+                else
+                {
+                    var tmp = Next;
+                    Next = query;
+                    query.Next = tmp;
+                }
             }
         }
     }

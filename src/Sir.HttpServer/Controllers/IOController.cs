@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,12 +15,12 @@ namespace Sir.HttpServer.Controllers
             _plugins = plugins;
         }
 
-        [HttpPost("{*collectionId}")]
-        public async Task<IActionResult> Post(string collectionId)
+        [HttpPost("{*collectionName}")]
+        public async Task<IActionResult> Post(string collectionName)
         {
-            if (collectionId == null)
+            if (collectionName == null)
             {
-                throw new ArgumentNullException(nameof(collectionId));
+                throw new ArgumentNullException(nameof(collectionName));
             }
 
             var writer = _plugins.Get<IWriter>(Request.ContentType);
@@ -36,7 +35,7 @@ namespace Sir.HttpServer.Controllers
                 var timer = new Stopwatch();
                 timer.Start();
 
-                Result result = await writer.Write(collectionId, Request);
+                ResultModel result = await writer.Write(collectionName, Request);
                 this.Log("write took {0}", timer.Elapsed);
                 timer.Restart();
 
@@ -52,9 +51,9 @@ namespace Sir.HttpServer.Controllers
             }
         }
 
-        [HttpGet("{*collectionId}")]
-        [HttpPut("{*collectionId}")]
-        public async Task<IActionResult> Get(string collectionId)
+        [HttpGet("{*collectionName}")]
+        [HttpPut("{*collectionName}")]
+        public async Task<IActionResult> Get(string collectionName)
         {
             var mediaType = Request.Headers["Accept"].ToArray()[0];
             var reader = _plugins.Get<IReader>(mediaType);
@@ -69,7 +68,7 @@ namespace Sir.HttpServer.Controllers
                 var timer = new Stopwatch();
                 timer.Start();
 
-                var result = await reader.Read(collectionId, Request);
+                var result = await reader.Read(collectionName, Request);
 
                 this.Log("processed {0} request in {1}", mediaType, timer.Elapsed);
 

@@ -15,15 +15,17 @@ namespace Sir.Store
     {
         public const int NodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
         public const int ComponentSize = sizeof(int) + sizeof(byte);
-        public const float IdenticalAngle = 0.97f;
-        public const float FoldAngle = 0.65f;
+        public const float IdenticalTermAngle = 0.95f;
+        public const float TermFoldAngle = 0.55f;
+        public const float IdenticalDocAngle = 0.6f;
+        public const float DocFoldAngle = 0.4f;
 
         private VectorNode _right;
         private VectorNode _left;
         private HashSet<long> _docIds;
         private int _weight;
 
-        public long VecOffset { get; private set; }
+        public long VectorOffset { get; private set; }
         public long PostingsOffset { get; set; }
         public float Angle { get; private set; }
         public SortedList<int, byte> Vector { get; }
@@ -42,6 +44,11 @@ namespace Sir.Store
                     Ancestor.Weight += diff;
                 }
             }
+        }
+
+        public VectorNode ShallowClone()
+        {
+            return new VectorNode(Vector) { VectorOffset = VectorOffset, PostingsOffset = PostingsOffset };
         }
 
         public VectorNode Right
@@ -82,16 +89,21 @@ namespace Sir.Store
         {
             Vector = termVector;
             PostingsOffset = -1;
-            VecOffset = -1;
+            VectorOffset = -1;
         }
 
         public VectorNode(SortedList<int, byte> termVector, long docId)
         {
             Vector = termVector;
             PostingsOffset = -1;
-            VecOffset = -1;
+            VectorOffset = -1;
             _docIds = new HashSet<long>();
             _docIds.Add(docId);
+        }
+
+        public Hit ClosestMatch(SortedList<int, byte> vector)
+        {
+            return ClosestMatch(new VectorNode(vector));
         }
 
         public Hit ClosestMatch(VectorNode node)
@@ -104,7 +116,7 @@ namespace Sir.Store
             {
                 var angle = node.Vector.CosAngle(cursor.Vector);
 
-                if (angle > FoldAngle)
+                if (angle > TermFoldAngle)
                 {
                     if (angle > highscore)
                     {
@@ -124,25 +136,26 @@ namespace Sir.Store
                 }
             }
 
-            return new Hit { Embedding = best.Vector, Score = highscore, PostingsOffset = best.PostingsOffset };
+            return new Hit
+            {
+                Embedding = best.Vector,
+                Score = highscore,
+                PostingsOffset = best.PostingsOffset,
+                NodeId = Convert.ToInt32(best.VectorOffset)
+            };
         }
 
         private readonly object _sync = new object();
 
-        public void Add(VectorNode node, Stream vectorStream = null)
+        public void Add(VectorNode node, float identicalAngle, float foldAngle, Stream vectorStream = null)
         {
-            node.Ancestor = null;
-            node._left = null;
-            node._right = null;
-            node._weight = 0;
-
             var cursor = this;
 
             while (cursor != null)
             {
                 var angle = node.Vector.CosAngle(cursor.Vector);
 
-                if (angle >= IdenticalAngle)
+                if (angle >= identicalAngle)
                 {
                     node.Angle = angle;
 
@@ -153,7 +166,7 @@ namespace Sir.Store
 
                     break;
                 }
-                else if (angle > FoldAngle)
+                else if (angle > foldAngle)
                 {
                     if (cursor.Left == null)
                     {
@@ -212,11 +225,6 @@ namespace Sir.Store
 
         private void Merge(VectorNode node)
         {
-            if (VecOffset < 0)
-            {
-                throw new InvalidOperationException();
-            }
-
             if (_docIds == null)
             {
                 _docIds = node._docIds;
@@ -234,7 +242,7 @@ namespace Sir.Store
         {
             if (Ancestor != null)
             {
-                if (VecOffset < 0)
+                if (VectorOffset < 0)
                 {
                     throw new InvalidOperationException();
                 }
@@ -267,7 +275,7 @@ namespace Sir.Store
             }
 
             block[0] = BitConverter.GetBytes(Angle);
-            block[1] = BitConverter.GetBytes(VecOffset);
+            block[1] = BitConverter.GetBytes(VectorOffset);
             block[2] = BitConverter.GetBytes(PostingsOffset);
             block[3] = BitConverter.GetBytes(Vector.Count);
             block[4] = BitConverter.GetBytes(Weight);
@@ -307,14 +315,14 @@ namespace Sir.Store
             return (offset, length);
         }
 
-        private void SerializeVector(Stream vectorStream)
+        public void SerializeVector(Stream vectorStream)
         {
-            VecOffset = Vector.Serialize(vectorStream);
+            VectorOffset = Vector.Serialize(vectorStream);
         }
 
         private async Task SerializeVectorAsync(Stream vectorStream)
         {
-            VecOffset = await Vector.SerializeAsync(vectorStream);
+            VectorOffset = await Vector.SerializeAsync(vectorStream);
         }
 
         public IList<VectorNode> SerializePostings(Stream lengths, Stream offsets, Stream lists)
@@ -444,7 +452,7 @@ namespace Sir.Store
 
             node.Angle = angle;
             node.PostingsOffset = postingsOffset;
-            node.VecOffset = vecOffset;
+            node.VectorOffset = vecOffset;
             node.Terminator = terminator;
             node.Weight = weight;
 
@@ -491,7 +499,7 @@ namespace Sir.Store
 
             while (node != null)
             {
-                yield return node;
+                yield return node.ShallowClone();
 
                 if (node.Right != null)
                 {
@@ -508,6 +516,26 @@ namespace Sir.Store
             }
         }
 
+        //public IEnumerable<VectorNode> All()
+        //{
+        //    yield return this;
+
+        //    if (Left != null)
+        //    {
+        //        foreach (var n in Left.All())
+        //        {
+        //            yield return n;
+        //        }
+        //    }
+
+        //    if (Right != null)
+        //    {
+        //        foreach (var n in Right.All())
+        //        {
+        //            yield return n;
+        //        }
+        //    }
+        //}
 
         private void Visualize(VectorNode node, StringBuilder output, int depth)
         {

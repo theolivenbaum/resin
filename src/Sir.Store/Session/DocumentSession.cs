@@ -7,7 +7,8 @@ namespace Sir.Store
         protected Stream DocStream { get; set; }
         protected Stream DocIndexStream { get; set; }
 
-        protected DocumentSession(string collectionId, SessionFactory sessionFactory) : base(collectionId, sessionFactory)
+        protected DocumentSession(string collectionName, ulong collectionId, SessionFactory sessionFactory) 
+            : base(collectionName, collectionId, sessionFactory)
         {
         }
 

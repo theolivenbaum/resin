@@ -21,22 +21,28 @@ namespace Sir.Store
         private bool _flushed;
         private bool _flushing;
         private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _modelBuilder;
+        private readonly ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)> _modelBuilder2;
 
         public IndexSession(
-            string collectionId, 
+            string collectionName,
+            ulong collectionId,
             SessionFactory sessionFactory, 
             ITokenizer tokenizer,
-            IConfigurationProvider config) : base(collectionId, sessionFactory)
+            IConfigurationProvider config) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
             _tokenizer = tokenizer;
-            _validate = config.Get("create_index_validation_files") == "true";
+            _validate = config.Get("validate_when_indexing") == "true";
             _dirty = new ConcurrentDictionary<long, VectorNode>();
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId)));
 
             var numThreads = int.Parse(_config.Get("index_thread_count"));
 
-            _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>(AddDocumentToModel, numThreads);
+            _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>
+                (AddDocumentToModel, 8);
+
+            _modelBuilder2 = new ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)>
+                (AddDocumentToModel2, 8);
         }
 
         public void EmbedTerms(IDictionary document)
@@ -58,15 +64,20 @@ namespace Sir.Store
                 _modelBuilder.Join();
             }
 
+            using (_modelBuilder2)
+            {
+                _modelBuilder2.Join();
+            }
+
             var tasks = new Task[_dirty.Count];
             var taskId = 0;
-            var cWriters = new List<ColumnWriter>();
+            var columnWriters = new List<ColumnSerializer>();
 
             foreach (var column in _dirty)
             {
-                var columnWriter = new ColumnWriter(CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config));
-                cWriters.Add(columnWriter);
-                tasks[taskId++] = columnWriter.WriteColumnSegment(column.Value);
+                var columnWriter = new ColumnSerializer(CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config));
+                columnWriters.Add(columnWriter);
+                tasks[taskId++] = columnWriter.SerializeColumnSegment(column.Value);
             }
 
             using (_vectorStream)
@@ -77,15 +88,32 @@ namespace Sir.Store
 
             Task.WaitAll(tasks);
 
-            foreach (var cWriter in cWriters)
+            foreach (var writer in columnWriters)
             {
-                cWriter.Dispose();
+                writer.Dispose();
             }
 
             _flushed = true;
             _flushing = false;
 
             this.Log(string.Format("***FLUSHED***"));
+        }
+
+        private bool Validate(long keyId, AnalyzedString tokens)
+        {
+            var tree = _dirty[keyId];
+
+            foreach (var vector in tokens.Embeddings)
+            {
+                var hit = tree.ClosestMatch(vector);
+
+                if (hit.Score < VectorNode.IdenticalTermAngle)
+                {
+                    throw new DataMisalignedException();
+                }
+            }
+
+            return true;
         }
 
         private void Analyze(IDictionary document)
@@ -125,17 +153,30 @@ namespace Sir.Store
                 }
             }
 
-            this.Log("analyzed document ID {0}", docId);
+            if (!_validate)
+                this.Log("analyzed document ID {0}", docId);
         }
 
         private void AddDocumentToModel((long docId, long keyId, AnalyzedString tokens) item)
         {
-            var ix = GetOrCreateIndex(item.keyId);
-
             foreach (var termVector in item.tokens.Embeddings)
             {
-                ix.Add(new VectorNode(termVector, item.docId), _vectorStream);
+                _modelBuilder2.Enqueue((item.docId, item.keyId, termVector));
             }
+
+            if (_validate)
+            {
+                Validate(item.keyId, item.tokens);
+
+                this.Log("validated doc {0}", item.docId);
+            }
+        }
+
+        private void AddDocumentToModel2((long docId, long keyId, SortedList<int, byte> vector) item)
+        {
+            var ix = GetOrCreateIndex(item.keyId);
+
+            ix.Add(new VectorNode(item.vector, item.docId), VectorNode.IdenticalTermAngle, VectorNode.TermFoldAngle, _vectorStream);
         }
 
         private static readonly object _syncIndexAccess = new object();

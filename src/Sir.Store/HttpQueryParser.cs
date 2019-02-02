@@ -1,26 +1,30 @@
 ﻿using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 
 namespace Sir.Store
 {
     /// <summary>
-    /// Parse a query from a http request message.
+    /// Parse text from a http request message into a query.
     /// </summary>
     public class HttpQueryParser
     {
-        private readonly KeyValueBooleanQueryParser _queryParser;
+        private readonly TermQueryParser _queryParser;
+        private readonly ITokenizer _tokenizer;
 
-        public HttpQueryParser(KeyValueBooleanQueryParser queryParser)
+        public HttpQueryParser(TermQueryParser queryParser, ITokenizer tokenizer)
         {
             _queryParser = queryParser;
+            _tokenizer = tokenizer;
         }
 
-        public Query Parse(string collectionId, HttpRequest request, ITokenizer tokenizer)
+        public Query Parse(string collectionId, HttpRequest request)
         {
             Query query = null;
 
             string[] fields;
 
             bool and = request.Query.ContainsKey("AND");
+            var termOperator = and ? "+" : "";
 
             if (request.Query.ContainsKey("fields"))
             {
@@ -41,7 +45,7 @@ namespace Sir.Store
             {
                 foreach (var field in fields)
                 {
-                    queryFormat += (field + ":{0}\n");
+                    queryFormat += (termOperator + field + ":{0}\n");
                 }
 
                 queryFormat = queryFormat.Substring(0, queryFormat.Length - 1);
@@ -51,7 +55,7 @@ namespace Sir.Store
             {
                 var expandedQuery = string.Format(queryFormat, request.Query["q"]);
 
-                query = _queryParser.Parse(expandedQuery, and, !and, tokenizer);
+                query = _queryParser.Parse(expandedQuery, _tokenizer);
                 query.Collection = collectionId.ToHash();
 
                 if (request.Query.ContainsKey("take"))
@@ -62,6 +66,44 @@ namespace Sir.Store
             }
 
             return query;
+        }
+    }
+
+    public class HttpBowQueryParser
+    {
+        private readonly ITokenizer _tokenizer;
+
+        public HttpBowQueryParser(ITokenizer tokenizer)
+        {
+            _tokenizer = tokenizer;
+        }
+
+        public IDictionary<long, SortedList<int, byte>> Parse(
+            string collectionId, HttpRequest request, ReadSession readSession, SessionFactory sessionFactory)
+        {
+            string[] fields;
+            var docs = new Dictionary<long, SortedList<int, byte>>();
+
+            if (request.Query.ContainsKey("fields"))
+            {
+                fields = request.Query["fields"].ToArray();
+            }
+            else
+            {
+                fields = new[] { "title", "body" };
+            }
+
+            var phrase = request.Query["q"];
+
+            foreach (var field in fields)
+            {
+                var keyId = sessionFactory.GetKeyId(field.ToLower().ToHash());
+                var vector = BOWWriteSession.CreateDocumentVector(phrase, readSession.CreateIndexReader(keyId), _tokenizer);
+
+                docs.Add(keyId, vector);
+            }
+
+            return docs;
         }
     }
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -19,7 +18,7 @@ namespace Sir.Store
             _config = config;
         }
 
-        public MapReduceResult Reduce(string collection, byte[] query, int skip, int take)
+        public ScoredResult Reduce(string collection, byte[] query, int skip, int take)
         {
             var endpoint = string.Format("{0}{1}?skip={2}&take={3}", _config.Get("postings_endpoint"), collection, skip, take);
 
@@ -75,14 +74,19 @@ namespace Sir.Store
                         this.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
                     }
 
-                    return new MapReduceResult { Documents = result, Total = total };
+                    return new ScoredResult { Documents = result, Total = total };
                 }
             }
         }
 
-        public IList<long> Read(string collectionId, long offset)
+        public ICollection<long> Read(string collectionName, int skip, int take, params long[] offsets)
         {
-            var endpoint = string.Format("{0}{1}?id={2}", _config.Get("postings_endpoint"), collectionId, offset);
+            var endpoint = string.Format("{0}{1}?skip={2}&take={3}", _config.Get("postings_endpoint"), collectionName, skip, take);
+
+            foreach (var offset in offsets)
+            {
+                endpoint += "&id=" + offset;
+            }
 
             var request = (HttpWebRequest)WebRequest.Create(endpoint);
 
@@ -98,7 +102,7 @@ namespace Sir.Store
 
                 timer.Restart();
 
-                var result = new List<long>();
+                var result = new Dictionary<long, float>();
 
                 using (var body = response.GetResponseStream())
                 {
@@ -111,55 +115,27 @@ namespace Sir.Store
 
                     while (read < buf.Length)
                     {
-                        result.Add(BitConverter.ToInt64(buf, read));
+                        var docId = BitConverter.ToInt64(buf, read);
 
-                        read += sizeof(ulong);
+                        read += sizeof(long);
+
+                        var score = BitConverter.ToSingle(buf, read);
+
+                        read += sizeof(float);
+
+                        result.Add(docId, score);
                     }
 
                     this.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
                 }
 
-                return result;
+                return result.Keys;
             }
         }
 
-        public async Task<IList<long>> ReadAsync(string collectionId, long offset)
-        {
-            var endpoint = string.Format("{0}{1}?id={2}",
-                _config.Get("postings_endpoint"), collectionId, offset);
-
-            var request = (HttpWebRequest)WebRequest.Create(endpoint);
-
-            request.Accept = "application/postings";
-            request.Method = WebRequestMethods.Http.Get;
-
-            using (var response = (HttpWebResponse) await request.GetResponseAsync())
-            {
-                var result = new List<long>();
-
-                using (var body = response.GetResponseStream())
-                {
-                    var mem = new MemoryStream();
-                    await body.CopyToAsync(mem);   
-
-                    var buf = mem.ToArray();
-
-                    var read = 0;
-
-                    while (read < buf.Length)
-                    {
-                        result.Add(BitConverter.ToInt64(buf, read));
-
-                        read += sizeof(long);
-                    }
-                }
-
-                return result;
-            }
-        }
     }
 
-    public class MapReduceResult
+    public class ScoredResult
     {
         public IDictionary<long, float> Documents { get; set; }
         public int Total { get; set; }
