@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sir.Core;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,8 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
         private readonly ReadSession _readSession;
+        private readonly ProducerConsumerQueue<(long docId, AnalyzedString tokens, NodeReader indexReader)> _validator;
+        private readonly RemotePostingsReader _postingsReader;
 
         public ValidateSession(
             string collectionName,
@@ -24,6 +27,8 @@ namespace Sir.Store
             _config = config;
             _tokenizer = tokenizer;
             _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config);
+            _validator = new ProducerConsumerQueue<(long docId, AnalyzedString tokens, NodeReader indexReader)>(Validate, 8);
+            _postingsReader = new RemotePostingsReader(_config);
         }
 
         public void Validate(IEnumerable<IDictionary> documents, params long[] excludeKeyIds)
@@ -35,6 +40,7 @@ namespace Sir.Store
                 foreach (var key in doc.Keys)
                 {
                     var strKey = key.ToString();
+
                     if (!strKey.StartsWith("__"))
                     {
                         var keyId = SessionFactory.GetKeyId(strKey.ToHash());
@@ -47,50 +53,52 @@ namespace Sir.Store
                         var terms = _tokenizer.Tokenize(doc[key].ToString());
                         var reader = _readSession.CreateIndexReader(keyId);
 
-                        Validate(keyId, terms, reader);
-                    }
-                        
+                        _validator.Enqueue((docId, terms, reader));
+                    }       
                 }
-
-                this.Log("validated doc {0}", docId);
             }
         }
 
-        private void Validate(long keyId, AnalyzedString tokens, NodeReader indexReader)
+        private void Validate((long docId, AnalyzedString tokens, NodeReader indexReader) item)
         {
-            foreach (var vector in tokens.Embeddings)
+            foreach (var vector in item.tokens.Embeddings)
             {
-                Hit best = null;
+                var hits = new SortedList<float, Hit>(); ;
 
-                foreach (var page in indexReader.ReadAllPages())
+                foreach (var page in item.indexReader.ReadAllPages())
                 {
-                    var hit = page.ClosestMatch(vector);
+                    var hit = page.ClosestMatch(new VectorNode(vector), VectorNode.TermFoldAngle);
 
-                    if (best == null || hit.Score > best.Score)
+                    hits.Add(hit.Score, hit);
+                }
+
+                if (hits.Keys[0] < VectorNode.TermIdenticalAngle)
+                {
+                    throw new DataMisalignedException();
+                }
+
+                var postings = new HashSet<long>();
+
+                foreach (var hit in hits)
+                {
+                    foreach(var id in _postingsReader.Read(CollectionName, 0, 0, hit.Value.PostingsOffset))
                     {
-                        best = hit;
+                        postings.Add(id);
                     }
                 }
 
-                if (best.Score < VectorNode.IdenticalTermAngle)
+                if (!postings.Contains(item.docId))
                 {
                     throw new DataMisalignedException();
                 }
             }
 
-            //foreach (var vector in tokens.Embeddings)
-            //{
-            //    var hit = indexReader.ClosestMatch(vector).OrderBy(x => x.Score).LastOrDefault();
-
-            //    if (hit == null || hit.Score < VectorNode.IdenticalAngle)
-            //    {
-            //        throw new DataMisalignedException();
-            //    }
-            //}
+            this.Log("validated doc {0}", item.docId);
         }
 
         public void Dispose()
         {
+            _validator.Dispose();
             _readSession.Dispose();
         }
     }

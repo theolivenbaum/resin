@@ -20,6 +20,7 @@ namespace Sir.Postings
         public bool Not { get; set; }
         public long PostingsOffset { get; set; }
         public float Score { get; set; }
+        public Query Then { get; set; }
 
         public static IList<Query> FromStream(byte[] stream)
         {
@@ -40,10 +41,24 @@ namespace Sir.Postings
 
                 offset += sizeof(byte);
 
-                var query = new Query { Score = score, PostingsOffset = postingsOffset, And = termOperator == 1, Or = termOperator == 2, Not = termOperator == 0 };
+                var query = new Query
+                {
+                    Score = score,
+                    PostingsOffset = postingsOffset,
+                    And = termOperator == 1 || termOperator == 101,
+                    Or = termOperator == 2 || termOperator == 201,
+                    Not = termOperator == 0 || termOperator == 100
+                };
 
-                result.Add(query);
-            }   
+                if (termOperator < 100)
+                {
+                    result.Add(query);
+                }
+                else
+                {
+                    result[result.Count - 1].Then = query;
+                }
+            }
 
             return result;
         }

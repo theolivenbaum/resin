@@ -79,8 +79,8 @@ namespace Sir.Store
                 }
             }
 
-            var sorted = scored.Values.OrderByDescending(h => h.Score);
-            var offsets = sorted.Select(h => h.PostingsOffset).ToArray();
+            var sortedHits = scored.Values.OrderByDescending(h => h.Score);
+            var offsets = sortedHits.Select(h => h.PostingsOffset).ToArray();
             var docIds = _postingsReader.Read(CollectionName, skip, take, offsets);
             var window = docIds.GroupBy(x => x).Select(x => (x.Key, x.Count()))
                 .OrderByDescending(x => x.Item2)

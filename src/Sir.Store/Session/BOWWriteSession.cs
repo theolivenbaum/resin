@@ -2,7 +2,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,8 +29,8 @@ namespace Sir.Store
             _config = config;
             _readSession = new ReadSession(collectionName, collectionId, sessionFactory, config);
             _tokenizer = tokenizer;
-            _indexWriter = new ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)>(WriteToMemIndex, 16);
-            _vectorCalculator = new ProducerConsumerQueue<(long docId, long keyId, object key, IDictionary doc)>(CreateVector, 8);
+            _indexWriter = new ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)>(WriteToMemIndex, 2 * int.Parse(config.Get("index_thread_count")));
+            _vectorCalculator = new ProducerConsumerQueue<(long docId, long keyId, object key, IDictionary doc)>(CreateVector, int.Parse(config.Get("index_thread_count")));
             _newColumns = new SortedList<long, VectorNode>();
 
             var docVecFileName = Path.Combine(SessionFactory.Dir, CollectionId + ".vec1");
@@ -63,7 +62,7 @@ namespace Sir.Store
                 }
             }
 
-            column.Add(new VectorNode(item.vector, item.docId), VectorNode.IdenticalDocAngle, VectorNode.DocFoldAngle, _documentVectorStream);
+            column.Add(new VectorNode(item.vector, item.docId), VectorNode.DocIdenticalAngle, VectorNode.DocFoldAngle, _documentVectorStream);
 
             this.Log("added doc field {0}.{1} to memory index", item.docId, item.keyId);
         }
@@ -109,7 +108,7 @@ namespace Sir.Store
 
                 foreach (var page in treeReader.ReadAllPages())
                 {
-                    var hit = page.ClosestMatch(vector);
+                    var hit = page.ClosestMatch(new VectorNode(vector), VectorNode.DocFoldAngle);
 
                     if (best == null || hit.Score > best.Score)
                     {

@@ -97,23 +97,23 @@ namespace Sir.Store
             Debug.WriteLine(query.ToDiagram());
 
             //foreach (var cursor in query.ToList())
-            Parallel.ForEach(query.ToList(), cursor =>
+            Parallel.ForEach(query.ToList(), q =>
             {
                 // score each query term
 
                 var timer = new Stopwatch();
                 timer.Start();
 
-                var keyHash = cursor.Term.KeyHash;
+                var keyHash = q.Term.KeyHash;
                 IList<Hit> hits = null;
 
-                var indexReader = cursor.Term.KeyId.HasValue ? 
-                    CreateIndexReader(cursor.Term.KeyId.Value) : 
+                var indexReader = q.Term.KeyId.HasValue ? 
+                    CreateIndexReader(q.Term.KeyId.Value) : 
                     CreateIndexReader(keyHash);
 
                 if (indexReader != null)
                 {
-                    var termVector = cursor.Term.ToCharVector();
+                    var termVector = q.Term.ToCharVector();
 
                     hits = indexReader.ClosestMatch(termVector);
                 }
@@ -127,24 +127,24 @@ namespace Sir.Store
                     var topHits = hits.OrderByDescending(x => x.Score).ToList();
                     var topHit = topHits.First();
 
-                    cursor.Score = topHit.Score;
-                    cursor.PostingsOffset = topHit.PostingsOffset;
+                    q.Score = topHit.Score;
+                    q.PostingsOffset = topHit.PostingsOffset;
 
                     if (topHits.Count > 1)
                     {
                         foreach (var hit in topHits.Skip(1))
                         {
-                            if (cursor.And && hit.Score < topHit.Score)
+                            if (q.And && hit.Score < topHit.Score)
                             {
                                 break;
                             }
 
                             if (hit.Score > VectorNode.TermFoldAngle)
-                                cursor.InsertAfter(new Query(hit));
+                                q.AddClause(new Query(hit));
                         }
                     }
 
-                    this.Log("sorted and mapped term {0} in {1}", cursor, timer.Elapsed);
+                    this.Log("sorted and mapped term {0} in {1}", q, timer.Elapsed);
                 }
             });
 

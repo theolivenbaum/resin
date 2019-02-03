@@ -15,7 +15,7 @@ namespace Sir.StringCompare
             var docNode2 = new VectorNode(document2);
             var docAngle = docNode1.Vector.CosAngle(docNode2.Vector);
 
-            if (docAngle >= VectorNode.IdenticalTermAngle)
+            if (docAngle >= VectorNode.TermIdenticalAngle)
             {
                 Console.Write("{0} is very similar to {1}", document1, document2);
             }
@@ -28,7 +28,7 @@ namespace Sir.StringCompare
                 foreach (var token in tokens.Tokens)
                 {
                     var termVector = tokens.ToCharVector(token.offset, token.length);
-                    index1.Add(new VectorNode(termVector), VectorNode.IdenticalTermAngle, VectorNode.TermFoldAngle, new MemoryStream());
+                    index1.Add(new VectorNode(termVector), VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle, new MemoryStream());
                 }
 
                 float score = 0;
@@ -37,7 +37,7 @@ namespace Sir.StringCompare
                 foreach (var token in tokens2.Tokens)
                 {
                     var termVector = tokens.ToCharVector(token.offset, token.length);
-                    var node = index1.ClosestMatch(new VectorNode(termVector));
+                    var node = index1.ClosestMatch(new VectorNode(termVector), VectorNode.TermFoldAngle);
 
                     score += node.Score;
                     count++;

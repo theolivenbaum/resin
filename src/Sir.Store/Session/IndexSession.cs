@@ -15,13 +15,12 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
-        private bool _validate;
         private readonly IDictionary<long, VectorNode> _dirty;
         private readonly Stream _vectorStream;
         private bool _flushed;
         private bool _flushing;
-        private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _modelBuilder;
-        private readonly ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)> _modelBuilder2;
+        private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _vectorBuilder;
+        private readonly ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)> _modelBuilder;
 
         public IndexSession(
             string collectionName,
@@ -32,17 +31,16 @@ namespace Sir.Store
         {
             _config = config;
             _tokenizer = tokenizer;
-            _validate = config.Get("validate_when_indexing") == "true";
             _dirty = new ConcurrentDictionary<long, VectorNode>();
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId)));
 
             var numThreads = int.Parse(_config.Get("index_thread_count"));
 
-            _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>
-                (AddDocumentToModel, 8);
+            _vectorBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>
+                (CreateTermVector, int.Parse(config.Get("index_thread_count")));
 
-            _modelBuilder2 = new ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)>
-                (AddDocumentToModel2, 8);
+            _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)>
+                (AddVectorToModel, int.Parse(config.Get("index_thread_count")));
         }
 
         public void EmbedTerms(IDictionary document)
@@ -59,14 +57,14 @@ namespace Sir.Store
 
             this.Log("waiting for model builder");
 
+            using (_vectorBuilder)
+            {
+                _vectorBuilder.Join();
+            }
+
             using (_modelBuilder)
             {
                 _modelBuilder.Join();
-            }
-
-            using (_modelBuilder2)
-            {
-                _modelBuilder2.Join();
             }
 
             var tasks = new Task[_dirty.Count];
@@ -97,23 +95,6 @@ namespace Sir.Store
             _flushing = false;
 
             this.Log(string.Format("***FLUSHED***"));
-        }
-
-        private bool Validate(long keyId, AnalyzedString tokens)
-        {
-            var tree = _dirty[keyId];
-
-            foreach (var vector in tokens.Embeddings)
-            {
-                var hit = tree.ClosestMatch(vector);
-
-                if (hit.Score < VectorNode.IdenticalTermAngle)
-                {
-                    throw new DataMisalignedException();
-                }
-            }
-
-            return true;
         }
 
         private void Analyze(IDictionary document)
@@ -148,35 +129,27 @@ namespace Sir.Store
 
                     if (tokens != null)
                     {
-                        _modelBuilder.Enqueue((docId, keyId, tokens));
+                        _vectorBuilder.Enqueue((docId, keyId, tokens));
                     }
                 }
             }
 
-            if (!_validate)
-                this.Log("analyzed document ID {0}", docId);
+            this.Log("analyzed document {0} ", docId);
         }
 
-        private void AddDocumentToModel((long docId, long keyId, AnalyzedString tokens) item)
+        private void CreateTermVector((long docId, long keyId, AnalyzedString tokens) item)
         {
             foreach (var termVector in item.tokens.Embeddings)
             {
-                _modelBuilder2.Enqueue((item.docId, item.keyId, termVector));
-            }
-
-            if (_validate)
-            {
-                Validate(item.keyId, item.tokens);
-
-                this.Log("validated doc {0}", item.docId);
+                _modelBuilder.Enqueue((item.docId, item.keyId, termVector));
             }
         }
 
-        private void AddDocumentToModel2((long docId, long keyId, SortedList<int, byte> vector) item)
+        private void AddVectorToModel((long docId, long keyId, SortedList<int, byte> vector) item)
         {
             var ix = GetOrCreateIndex(item.keyId);
 
-            ix.Add(new VectorNode(item.vector, item.docId), VectorNode.IdenticalTermAngle, VectorNode.TermFoldAngle, _vectorStream);
+            ix.Add(new VectorNode(item.vector, item.docId), VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle, _vectorStream);
         }
 
         private static readonly object _syncIndexAccess = new object();

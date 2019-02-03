@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace Sir.Store
@@ -33,6 +34,7 @@ namespace Sir.Store
         public bool Not { get; set; }
         public Term Term { get; private set; }
         public Query Next { get; set; }
+        public Query Then { get; set; }
         public int Skip { get; set; }
         public int Take { get; set; }
         public Hit Hit { get; private set; }
@@ -83,8 +85,7 @@ namespace Sir.Store
         public byte[] ToStream()
         {
             var list = ToList();
-            var result = new byte[list.Count * (sizeof(float) + sizeof(long) + sizeof(byte))];
-            var offset = 0;
+            var result = new MemoryStream();
 
             for (int index = 0; index < list.Count; index++)
             {
@@ -106,39 +107,47 @@ namespace Sir.Store
                     termOperator = 2;
                 }
 
-                var pbuf = BitConverter.GetBytes(q.PostingsOffset);
+                result.Write(BitConverter.GetBytes(q.PostingsOffset));
+                result.Write(BitConverter.GetBytes(q.Score));
+                result.WriteByte(termOperator);
 
-                Buffer.BlockCopy(pbuf, 0, result, offset, pbuf.Length);
+                var then = q.Then;
 
-                offset += sizeof(long);
+                while (then != null)
+                {
+                    termOperator = 100;
 
-                var sbuf = BitConverter.GetBytes(q.Score);
+                    if (q.And)
+                    {
+                        termOperator = 101;
+                    }
+                    else if (q.Or)
+                    {
+                        termOperator = 102;
+                    }
 
-                Buffer.BlockCopy(sbuf, 0, result, offset, sbuf.Length);
+                    result.Write(BitConverter.GetBytes(q.PostingsOffset));
+                    result.Write(BitConverter.GetBytes(q.Score));
+                    result.WriteByte(termOperator);
 
-                offset += sizeof(float);
-
-                result[offset] = termOperator;
-
-                offset += sizeof(byte);
+                    then = then.Then;
+                }
             }
 
-            return result;
+            return result.ToArray();
         }
 
-        public void InsertAfter(Query query)
+        public void AddClause(Query query)
         {
             lock (_sync)
             {
-                if (Next == null)
+                if (Then == null)
                 {
-                    Next = query;
+                    Then = query;
                 }
                 else
                 {
-                    var tmp = Next;
-                    Next = query;
-                    query.Next = tmp;
+                    Then.AddClause(query);
                 }
             }
         }

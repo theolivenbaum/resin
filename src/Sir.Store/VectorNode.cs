@@ -8,17 +8,17 @@ using System.Threading.Tasks;
 namespace Sir.Store
 {
     /// <summary>
-    /// Binary tree where the data is an embedding, a sparse vector.
-    /// The tree is balanced according to cos angles between vectors of the immediate neighbouring nodes.
+    /// Binary tree where the data is a vector and that is
+    /// balanced according to the cos angles between the vectors of the immediate neighbouring nodes.
     /// </summary>
     public class VectorNode
     {
         public const int NodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
         public const int ComponentSize = sizeof(int) + sizeof(byte);
-        public const float IdenticalTermAngle = 0.95f;
-        public const float TermFoldAngle = 0.55f;
-        public const float IdenticalDocAngle = 0.6f;
-        public const float DocFoldAngle = 0.4f;
+        public const float TermIdenticalAngle = 0.97f;
+        public const float TermFoldAngle = 0.65f;
+        public const float DocIdenticalAngle = 0.97f;
+        public const float DocFoldAngle = 0.65f;
 
         private VectorNode _right;
         private VectorNode _left;
@@ -44,11 +44,6 @@ namespace Sir.Store
                     Ancestor.Weight += diff;
                 }
             }
-        }
-
-        public VectorNode ShallowClone()
-        {
-            return new VectorNode(Vector) { VectorOffset = VectorOffset, PostingsOffset = PostingsOffset };
         }
 
         public VectorNode Right
@@ -101,12 +96,7 @@ namespace Sir.Store
             _docIds.Add(docId);
         }
 
-        public Hit ClosestMatch(SortedList<int, byte> vector)
-        {
-            return ClosestMatch(new VectorNode(vector));
-        }
-
-        public Hit ClosestMatch(VectorNode node)
+        public Hit ClosestMatch(VectorNode node, float foldAngle)
         {
             var best = this;
             var cursor = this;
@@ -116,7 +106,7 @@ namespace Sir.Store
             {
                 var angle = node.Vector.CosAngle(cursor.Vector);
 
-                if (angle > TermFoldAngle)
+                if (angle > foldAngle)
                 {
                     if (angle > highscore)
                     {
@@ -136,19 +126,18 @@ namespace Sir.Store
                 }
             }
 
-            return new Hit
-            {
-                Embedding = best.Vector,
-                Score = highscore,
-                PostingsOffset = best.PostingsOffset,
-                NodeId = Convert.ToInt32(best.VectorOffset)
-            };
+            return new Hit { Embedding = best.Vector, Score = highscore, PostingsOffset = best.PostingsOffset };
         }
 
         private readonly object _sync = new object();
 
         public void Add(VectorNode node, float identicalAngle, float foldAngle, Stream vectorStream = null)
         {
+            node.Ancestor = null;
+            node._left = null;
+            node._right = null;
+            node._weight = 0;
+
             var cursor = this;
 
             while (cursor != null)
@@ -223,8 +212,26 @@ namespace Sir.Store
             }
         }
 
-        private void Merge(VectorNode node)
+        public void Merge(IEnumerable<long> docIds)
         {
+            if (_docIds == null)
+            {
+                _docIds = new HashSet<long>();
+            }
+
+            foreach (var id in docIds)
+            {
+                _docIds.Add(id);
+            }
+        }
+
+        public void Merge(VectorNode node)
+        {
+            if (VectorOffset < 0)
+            {
+                throw new InvalidOperationException();
+            }
+
             if (_docIds == null)
             {
                 _docIds = node._docIds;
@@ -499,7 +506,7 @@ namespace Sir.Store
 
             while (node != null)
             {
-                yield return node.ShallowClone();
+                yield return node;
 
                 if (node.Right != null)
                 {
@@ -516,26 +523,6 @@ namespace Sir.Store
             }
         }
 
-        //public IEnumerable<VectorNode> All()
-        //{
-        //    yield return this;
-
-        //    if (Left != null)
-        //    {
-        //        foreach (var n in Left.All())
-        //        {
-        //            yield return n;
-        //        }
-        //    }
-
-        //    if (Right != null)
-        //    {
-        //        foreach (var n in Right.All())
-        //        {
-        //            yield return n;
-        //        }
-        //    }
-        //}
 
         private void Visualize(VectorNode node, StringBuilder output, int depth)
         {
@@ -583,7 +570,7 @@ namespace Sir.Store
                 node = node.Right;
             }
 
-            return (depth, width, aggDepth/count);
+            return (depth, width, aggDepth / count);
         }
 
         public override string ToString()

@@ -29,9 +29,6 @@ namespace Sir.Store
             request.Method = WebRequestMethods.Http.Put;
             request.ContentLength = query.Length;
 
-            var timer = new Stopwatch();
-            timer.Start();
-
             this.Log("execute request {0}", endpoint);
 
             using (var requestBody = request.GetRequestStream())
@@ -40,10 +37,6 @@ namespace Sir.Store
 
                 using (var response = (HttpWebResponse)request.GetResponse())
                 {
-                    this.Log("waited {0} for a response from postings service", timer.Elapsed);
-
-                    timer.Restart();
-
                     var result = new Dictionary<long, float>();
                     int total = 0;
 
@@ -70,8 +63,6 @@ namespace Sir.Store
                         }
 
                         total = int.Parse(response.Headers["X-Total"]);
-
-                        this.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
                     }
 
                     return new ScoredResult { Documents = result, Total = total };
@@ -93,15 +84,8 @@ namespace Sir.Store
             request.Accept = "application/postings";
             request.Method = WebRequestMethods.Http.Get;
 
-            var timer = new Stopwatch();
-            timer.Start();
-
             using (var response = (HttpWebResponse)request.GetResponse())
             {
-                this.Log("waited {0} for a response from postings service", timer.Elapsed);
-
-                timer.Restart();
-
                 var result = new Dictionary<long, float>();
 
                 using (var body = response.GetResponseStream())
@@ -125,14 +109,11 @@ namespace Sir.Store
 
                         result.Add(docId, score);
                     }
-
-                    this.Log("serialized response of {0} bytes in {1}", read, timer.Elapsed);
                 }
 
                 return result.Keys;
             }
         }
-
     }
 
     public class ScoredResult

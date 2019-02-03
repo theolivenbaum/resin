@@ -9,53 +9,67 @@ namespace Sir.DbUtil
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            try
+            Console.WriteLine("processing command: {0}", string.Join(" ", args));
+
+            Logging.SendToConsole = true;
+
+            var command = args[0].ToLower();
+
+            if (command == "index")
             {
-                Console.WriteLine("processing command: {0}", string.Join(" ", args));
+                // example: index C:\projects\resin\src\Sir.HttpServer\App_Data www 0 10000 1000 true
 
-                Logging.SendToConsole = true;
-
-                var command = args[0].ToLower();
-
-                if (command == "index" && args.Length >= 6)
-                {
-                    // example: index C:\projects\resin\src\Sir.HttpServer\App_Data www 0 10000 1000
-
-                    Index(
-                        dir: args[1],
-                        collectionName: args[2],
-                        skip: int.Parse(args[3]),
-                        take: int.Parse(args[4]),
-                        batchSize: int.Parse(args[5]));
-                }
-                else if (command == "query" && args.Length == 3)
-                {
-                    // example: query C:\projects\resin\src\Sir.HttpServer\App_Data www
-
-                    Task.Run(() => Query(dir: args[1], collectionName: args[2])).Wait();
-                }
-                else if (command == "create-bow" && args.Length >= 5)
-                {
-                    // example: create-bow C:\projects\resin\src\Sir.HttpServer\App_Data www
-
-                    CreateBOWModel(dir: args[1], collectionName: args[2], skip: int.Parse(args[3]), take: int.Parse(args[4]));
-                }
-                else if (command == "validate" && args.Length >= 5)
-                {
-                    // example: validate C:\projects\resin\src\Sir.HttpServer\App_Data www 0 3000
-
-                    Validate(dir: args[1], collectionName: args[2], skip:int.Parse(args[3]), take:int.Parse(args[4]));
-                }
-
-                Console.Read();
+                Index(
+                    dir: args[1],
+                    collectionName: args[2],
+                    skip: int.Parse(args[3]),
+                    take: int.Parse(args[4]),
+                    batchSize: int.Parse(args[5]));
             }
-            catch (Exception ex)
+            else if (command == "query")
             {
-                Console.WriteLine(ex.ToString());
-                Console.Read();
+                // example: query C:\projects\resin\src\Sir.HttpServer\App_Data www
+
+                await Query(dir: args[1], collectionName: args[2]);
             }
+            else if (command == "create-bow")
+            {
+                // example: create-bow C:\projects\resin\src\Sir.HttpServer\App_Data www
+
+                CreateBOWModel(dir: args[1], collectionName: args[2], skip: int.Parse(args[3]), take: int.Parse(args[4]));
+            }
+            else if (command == "validate")
+            {
+                // example: validate C:\projects\resin\src\Sir.HttpServer\App_Data www 0 3000
+
+                Validate(dir: args[1], collectionName: args[2], skip: int.Parse(args[3]), take: int.Parse(args[4]));
+            }
+            else if (command == "optimize")
+            {
+                // example: optimize C:\projects\resin\src\Sir.HttpServer\App_Data www
+
+                Optimize(dir: args[1], collectionName: args[2]);
+            }
+
+            Console.Read();
+        }
+
+        private static void Optimize(string dir, string collectionName)
+        {
+            var files = Directory.GetFiles(dir, "*.docs");
+            var time = Stopwatch.StartNew();
+
+            using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration("sir.ini")))
+            {
+                using (var optimizeSession = sessionFactory.CreateOptimizeSession(collectionName, collectionName.ToHash()))
+                {
+                    optimizeSession.Optimize();
+                }
+            }
+
+            Logging.Log(null, string.Format("{0} optimize operation took {1}", collectionName, time.Elapsed));
         }
 
         private static async Task Query(string dir, string collectionName)
@@ -172,7 +186,7 @@ namespace Sir.DbUtil
                 using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
                 using (var validateSession = sessionFactory.CreateValidateSession(collectionName, collectionName.ToHash()))
                 {
-                    validateSession.Validate(documentStreamSession.ReadDocs(skip, take), 3, 6);
+                    validateSession.Validate(documentStreamSession.ReadDocs(skip, take), 0, 1, 2, 3, 6);
                 }
             }
 

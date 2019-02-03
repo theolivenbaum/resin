@@ -60,7 +60,7 @@ namespace Sir.Postings
 
                     var window = sorted
                         .Skip(skip)
-                        .Take(take)
+                        .Take(take == 0 ? sorted.Count : take)
                         .Select(x => x.Item1)
                         .ToList();
 
@@ -93,40 +93,63 @@ namespace Sir.Postings
         {
             IDictionary<long, float> result = null;
 
-            foreach (var cursor in query)
+            foreach (var q in query)
             {
-                var docIdList = await _data.ReadAndRefreshCache(collectionId, cursor.PostingsOffset);
-                var docIds = docIdList.ToDictionary(docId => docId, score => cursor.Score);
+                var cursor = q;
 
-                if (result == null)
+                while (cursor != null)
                 {
-                    result = docIds;
-                }
-                else
-                {
-                    if (cursor.Not)
+                    var docIdList = await _data.ReadAndRefreshCache(collectionId, cursor.PostingsOffset);
+                    var docIds = docIdList.ToDictionary(docId => docId, score => cursor.Score);
+
+                    if (result == null)
                     {
-                        foreach (var id in docIds.Keys)
+                        result = docIds;
+                    }
+                    else
+                    {
+                        if (cursor.And)
                         {
-                            result.Remove(id, out float _);
+                            var aggregatedResult = new Dictionary<long, float>();
+
+                            foreach (var doc in result)
+                            {
+                                float score;
+
+                                if (docIds.TryGetValue(doc.Key, out score))
+                                {
+                                    aggregatedResult[doc.Key] = score + doc.Value;
+                                }
+                            }
+
+                            result = aggregatedResult;
+                        }
+                        else if (cursor.Not)
+                        {
+                            foreach (var id in docIds.Keys)
+                            {
+                                result.Remove(id, out float _);
+                            }
+                        }
+                        else // Or
+                        {
+                            foreach (var id in docIds)
+                            {
+                                float score;
+
+                                if (result.TryGetValue(id.Key, out score))
+                                {
+                                    result[id.Key] = score + id.Value;
+                                }
+                                else
+                                {
+                                    result.Add(id.Key, id.Value);
+                                }
+                            }
                         }
                     }
-                    else // And, Or
-                    {
-                        foreach (var id in docIds)
-                        {
-                            float score;
 
-                            if (result.TryGetValue(id.Key, out score))
-                            {
-                                result[id.Key] = score + id.Value;
-                            }
-                            else
-                            {
-                                result.Add(id.Key, id.Value);
-                            }
-                        }
-                    }
+                    cursor = cursor.Then;
                 }
             }
 

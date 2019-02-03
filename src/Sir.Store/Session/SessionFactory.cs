@@ -112,6 +112,11 @@ namespace Sir.Store
             return mmf;
         }
 
+        public OptimizeSession CreateOptimizeSession(string collectionName, ulong collectionId)
+        {
+            return new OptimizeSession(collectionName, collectionId, this, _config);
+        }
+
         public DocumentStreamSession CreateDocumentStreamSession(string collectionName, ulong collectionId)
         {
             return new DocumentStreamSession(collectionName, collectionId, this);
