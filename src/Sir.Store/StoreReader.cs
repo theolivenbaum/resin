@@ -57,7 +57,7 @@ namespace Sir.Store
                             skip = int.Parse(request.Query["skip"]);
 
                         var query = _httpBowQueryParser.Parse(collectionName, request, readSession, _sessionFactory);
-                        var result = await bowReadSession.Read(query, readSession, skip, take);
+                        var result = bowReadSession.Read(query, readSession, skip, take);
                         var docs = result.Docs;
 
                         this.Log(string.Format("executed query {0} and read {1} docs from disk in {2}", query, docs.Count, timer.Elapsed));
@@ -74,7 +74,7 @@ namespace Sir.Store
                     using (var session = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
                     {
                         var query = _httpQueryParser.Parse(collectionName, request);
-                        var result = await session.Read(query);
+                        var result = session.Read(query);
                         var docs = result.Docs;
 
                         this.Log(string.Format("executed query {0} and read {1} docs from disk in {2}", query, docs.Count, timer.Elapsed));

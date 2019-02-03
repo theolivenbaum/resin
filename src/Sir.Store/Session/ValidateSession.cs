@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -14,7 +15,7 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
         private readonly ReadSession _readSession;
-        private readonly ProducerConsumerQueue<(long docId, AnalyzedString tokens, NodeReader indexReader)> _validator;
+        private readonly ProducerConsumerQueue<(long docId, IComparable key, AnalyzedString tokens)> _validator;
         private readonly RemotePostingsReader _postingsReader;
 
         public ValidateSession(
@@ -27,7 +28,7 @@ namespace Sir.Store
             _config = config;
             _tokenizer = tokenizer;
             _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config);
-            _validator = new ProducerConsumerQueue<(long docId, AnalyzedString tokens, NodeReader indexReader)>(Validate, 8);
+            _validator = new ProducerConsumerQueue<(long docId, IComparable key, AnalyzedString tokens)>(Validate, 32);
             _postingsReader = new RemotePostingsReader(_config);
         }
 
@@ -53,7 +54,7 @@ namespace Sir.Store
                         var terms = _tokenizer.Tokenize(doc[key].ToString());
                         var reader = _readSession.CreateIndexReader(keyId);
 
-                        _validator.Enqueue((docId, terms, reader));
+                        _validator.Enqueue((docId, (IComparable)key, terms));
                     }       
                 }
             }
@@ -86,6 +87,23 @@ namespace Sir.Store
                         postings.Add(id);
                     }
                 }
+
+                if (!postings.Contains(item.docId))
+                {
+                    throw new DataMisalignedException();
+                }
+            }
+
+            this.Log("validated doc {0}", item.docId);
+        }
+
+        private void Validate((long docId, IComparable key, AnalyzedString tokens) item)
+        {
+            for (var i = 0; i < item.tokens.Tokens.Count; i++)
+            {
+                var query = new Query(new Term(item.key, item.tokens, i));
+                var result = _readSession.ReadIds(query).ToList();
+                var postings = new HashSet<long>(result);
 
                 if (!postings.Contains(item.docId))
                 {

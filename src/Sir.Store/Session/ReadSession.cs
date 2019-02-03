@@ -46,7 +46,7 @@ namespace Sir.Store
             _indexReaders = new ConcurrentDictionary<long, NodeReader>();
         }
 
-        public async Task<ReadResult> Read(Query query)
+        public ReadResult Read(Query query)
         {
             var result = Reduce(query);
 
@@ -58,9 +58,25 @@ namespace Sir.Store
             }
             else
             {
-                var docs = await ReadDocs(result.Documents);
+                var docs = ReadDocs(result.Documents);
 
                 return new ReadResult { Total = result.Total, Docs = docs };
+            }
+        }
+
+        public IEnumerable<long> ReadIds(Query query)
+        {
+            var result = Reduce(query);
+
+            if (result == null)
+            {
+                this.Log("found nothing for query {0}", query);
+
+                return Enumerable.Empty<long>();
+            }
+            else
+            {
+                return result.Documents.Keys;
             }
         }
 
@@ -187,7 +203,7 @@ namespace Sir.Store
             return CreateIndexReader(keyId);
         }
 
-        public async Task<IList<IDictionary>> ReadDocs(IEnumerable<KeyValuePair<long, float>> docs)
+        public IList<IDictionary> ReadDocs(IEnumerable<KeyValuePair<long, float>> docs)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -196,7 +212,7 @@ namespace Sir.Store
 
             foreach (var d in docs)
             {
-                var docInfo = await _docIx.ReadAsync(d.Key);
+                var docInfo = _docIx.Read(d.Key);
 
                 if (docInfo.offset < 0)
                 {
@@ -209,10 +225,10 @@ namespace Sir.Store
                 for (int i = 0; i < docMap.Count; i++)
                 {
                     var kvp = docMap[i];
-                    var kInfo = await _keyIx.ReadAsync(kvp.keyId);
-                    var vInfo = await _valIx.ReadAsync(kvp.valId);
-                    var key = await _keyReader.ReadAsync(kInfo.offset, kInfo.len, kInfo.dataType);
-                    var val = await _valReader.ReadAsync(vInfo.offset, vInfo.len, vInfo.dataType);
+                    var kInfo = _keyIx.Read(kvp.keyId);
+                    var vInfo = _valIx.Read(kvp.valId);
+                    var key = _keyReader.Read(kInfo.offset, kInfo.len, kInfo.dataType);
+                    var val = _valReader.Read(vInfo.offset, vInfo.len, vInfo.dataType);
 
                     doc[key] = val;
                 }
@@ -229,7 +245,7 @@ namespace Sir.Store
         }
 
 
-        public async Task<IList<IDictionary>> ReadDocs(IEnumerable<long> docs)
+        public IList<IDictionary> ReadDocs(IEnumerable<long> docs)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -238,7 +254,7 @@ namespace Sir.Store
 
             foreach (var d in docs)
             {
-                var docInfo = await _docIx.ReadAsync(d);
+                var docInfo = _docIx.Read(d);
 
                 if (docInfo.offset < 0)
                 {
@@ -251,10 +267,10 @@ namespace Sir.Store
                 for (int i = 0; i < docMap.Count; i++)
                 {
                     var kvp = docMap[i];
-                    var kInfo = await _keyIx.ReadAsync(kvp.keyId);
-                    var vInfo = await _valIx.ReadAsync(kvp.valId);
-                    var key = await _keyReader.ReadAsync(kInfo.offset, kInfo.len, kInfo.dataType);
-                    var val = await _valReader.ReadAsync(vInfo.offset, vInfo.len, vInfo.dataType);
+                    var kInfo = _keyIx.Read(kvp.keyId);
+                    var vInfo = _valIx.Read(kvp.valId);
+                    var key = _keyReader.Read(kInfo.offset, kInfo.len, kInfo.dataType);
+                    var val = _valReader.Read(vInfo.offset, vInfo.len, vInfo.dataType);
 
                     doc[key] = val;
                 }

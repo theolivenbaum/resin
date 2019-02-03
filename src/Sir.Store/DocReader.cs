@@ -11,6 +11,7 @@ namespace Sir.Store
     public class DocReader
     {
         private readonly Stream _stream;
+        private readonly object _sync = new object();
 
         public DocReader(Stream stream)
         {
@@ -19,10 +20,16 @@ namespace Sir.Store
 
         public IList<(long keyId, long valId)> Read(long offset, int length)
         {
-            _stream.Seek(offset, SeekOrigin.Begin);
+            byte[] buf;
+            int read;
 
-            var buf = new byte[length];
-            var read = _stream.Read(buf, 0, length);
+            lock (_sync)
+            {
+                _stream.Seek(offset, SeekOrigin.Begin);
+
+                buf = new byte[length];
+                read = _stream.Read(buf, 0, length);
+            }
 
             if (read != length)
             {

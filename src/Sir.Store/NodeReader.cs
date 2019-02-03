@@ -18,6 +18,7 @@ namespace Sir.Store
         private readonly string _ixFileName;
         private readonly string _vecFileName;
         private IList<VectorNode> _pageCache;
+        private readonly object _sync = new object();
 
         public NodeReader(string ixFileName, string vecFileName, SessionFactory sessionFactory, IList<(long, long)> pages)
         {
@@ -34,25 +35,36 @@ namespace Sir.Store
                 return _pageCache;
             }
 
-            var pages = new List<VectorNode>();
-            var time = Stopwatch.StartNew();
+            IList<VectorNode> pages = new List<VectorNode>();
 
-            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-            using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
+            lock (_sync)
             {
-                foreach (var page in _pages)
+                if (_pageCache == null)
                 {
-                    ixStream.Seek(page.offset, SeekOrigin.Begin);
+                    var time = Stopwatch.StartNew();
 
-                    var tree = VectorNode.DeserializeTree(ixStream, vectorStream, page.length);
+                    using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                    using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
+                    {
+                        foreach (var page in _pages)
+                        {
+                            ixStream.Seek(page.offset, SeekOrigin.Begin);
 
-                    pages.Add(tree);
+                            var tree = VectorNode.DeserializeTree(ixStream, vectorStream, page.length);
+
+                            pages.Add(tree);
+                        }
+                    }
+
+                    this.Log("deserialized {0} index segments in {1}", pages.Count, time.Elapsed);
+
+                    _pageCache = pages;
+                }
+                else
+                {
+                    pages = _pageCache;
                 }
             }
-
-            this.Log("deserialized {0} index segments in {1}", pages.Count, time.Elapsed);
-
-            _pageCache = pages;
 
             return pages;
         }

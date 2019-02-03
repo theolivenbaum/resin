@@ -47,6 +47,11 @@ namespace Sir.Store
 
                         var buf = mem.ToArray();
 
+                        if (response.ContentLength != buf.Length)
+                        {
+                            throw new DataMisalignedException();
+                        }
+
                         var read = 0;
 
                         while (read < buf.Length)
@@ -94,6 +99,11 @@ namespace Sir.Store
                     body.CopyTo(mem);
 
                     var buf = mem.ToArray();
+
+                    if (response.ContentLength != buf.Length)
+                    {
+                        throw new DataMisalignedException();
+                    }
 
                     var read = 0;
 

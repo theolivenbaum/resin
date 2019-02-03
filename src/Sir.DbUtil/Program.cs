@@ -2,14 +2,13 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Sir.Store;
 
 namespace Sir.DbUtil
 {
     class Program
     {
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
             Console.WriteLine("processing command: {0}", string.Join(" ", args));
 
@@ -32,7 +31,7 @@ namespace Sir.DbUtil
             {
                 // example: query C:\projects\resin\src\Sir.HttpServer\App_Data www
 
-                await Query(dir: args[1], collectionName: args[2]);
+                Query(dir: args[1], collectionName: args[2]);
             }
             else if (command == "create-bow")
             {
@@ -72,7 +71,7 @@ namespace Sir.DbUtil
             Logging.Log(null, string.Format("{0} optimize operation took {1}", collectionName, time.Elapsed));
         }
 
-        private static async Task Query(string dir, string collectionName)
+        private static void Query(string dir, string collectionName)
         {
             var tokenizer = new LatinTokenizer();
             var qp = new TermQueryParser();
@@ -98,7 +97,7 @@ namespace Sir.DbUtil
 
                 using (var session = sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
                 {
-                    var result = await session.Read(q);
+                    var result = session.Read(q);
                     var docs = result.Docs;
 
                     if (docs.Count > 0)

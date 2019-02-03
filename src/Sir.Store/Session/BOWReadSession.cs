@@ -44,12 +44,12 @@ namespace Sir.Store
             _indexReaders = new ConcurrentDictionary<long, NodeReader>();
         }
 
-        public async Task<ReadResult> Read(IDictionary<long, SortedList<int, byte>> query, ReadSession readSession, int skip, int take)
+        public ReadResult Read(IDictionary<long, SortedList<int, byte>> query, ReadSession readSession, int skip, int take)
         {
-            return await Reduce(query, readSession, skip, take);
+            return Reduce(query, readSession, skip, take);
         }
 
-        private async Task<ReadResult> Reduce(IDictionary<long, SortedList<int, byte>> query, ReadSession readSession, int skip, int take)
+        private ReadResult Reduce(IDictionary<long, SortedList<int, byte>> query, ReadSession readSession, int skip, int take)
         {
             IDictionary<long, Hit> scored = null;
 
@@ -87,7 +87,7 @@ namespace Sir.Store
                 .Skip(skip)
                 .Take(take)
                 .Select(x => x.Key).ToList();
-            var docs = await readSession.ReadDocs(window);
+            var docs = readSession.ReadDocs(window);
 
             return new ReadResult { Docs = docs, Total = docIds.Count };
         }
