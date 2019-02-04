@@ -570,8 +570,6 @@ namespace Sir.Store
 
         public override string ToString()
         {
-            if (Vector == null) return string.Empty;
-
             var w = new StringBuilder();
 
             foreach (var c in Vector)

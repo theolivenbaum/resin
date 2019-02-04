@@ -21,6 +21,8 @@ namespace Sir.Store
         private bool _flushing;
         private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _vectorBuilder;
         private readonly ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)> _modelBuilder;
+        private readonly ProducerConsumerQueue<(long keyId, AnalyzedString tokens)> _validator;
+        private readonly bool _validate;
 
         public IndexSession(
             string collectionName,
@@ -41,6 +43,10 @@ namespace Sir.Store
 
             _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)>
                 (AddVectorToModel, int.Parse(config.Get("index_thread_count")));
+
+            _validator = new ProducerConsumerQueue<(long keyId, AnalyzedString tokens)>(Validate, numThreads, startConsumingImmediately: false);
+
+            _validate = bool.Parse(config.Get("validate_when_indexing"));
         }
 
         public void EmbedTerms(IDictionary document)
@@ -55,17 +61,22 @@ namespace Sir.Store
 
             _flushing = true;
 
-            this.Log("waiting for model builder");
+            this.Log("waiting for vector builder");
 
             using (_vectorBuilder)
             {
                 _vectorBuilder.Join();
             }
 
+            this.Log("waiting for model builder");
+
             using (_modelBuilder)
             {
                 _modelBuilder.Join();
             }
+
+            if (_validate)
+                _validator.Start();
 
             var tasks = new Task[_dirty.Count];
             var taskId = 0;
@@ -86,6 +97,16 @@ namespace Sir.Store
 
             Task.WaitAll(tasks);
 
+            if (_validate)
+            {
+                this.Log("waiting for validator");
+
+                using (_validator)
+                {
+                    _validator.Join();
+                }
+            }
+
             foreach (var writer in columnWriters)
             {
                 writer.Dispose();
@@ -95,6 +116,21 @@ namespace Sir.Store
             _flushing = false;
 
             this.Log(string.Format("***FLUSHED***"));
+        }
+
+        private void Validate((long keyId, AnalyzedString tokens) item)
+        {
+            var tree = GetOrCreateIndex(item.keyId);
+
+            foreach (var vector in item.tokens.Embeddings)
+            {
+                var hit = tree.ClosestMatch(new VectorNode(vector), VectorNode.TermFoldAngle);
+
+                if (hit.Score < VectorNode.TermIdenticalAngle)
+                {
+                    throw new DataMisalignedException();
+                }
+            }
         }
 
         private void Analyze(IDictionary document)
@@ -131,6 +167,9 @@ namespace Sir.Store
                     {
                         _vectorBuilder.Enqueue((docId, keyId, tokens));
                     }
+
+                    if (_validate)
+                        _validator.Enqueue((keyId, tokens));
                 }
             }
 
