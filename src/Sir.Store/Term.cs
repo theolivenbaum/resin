@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sir.Store;
+using System;
 
 namespace Sir
 {
@@ -12,6 +13,7 @@ namespace Sir
         public ulong KeyHash { get; private set; }
         public int Index { get; private set; }
         public long? KeyId { get; private set; }
+        public VectorNode Node { get; private set; }
 
         public Term(IComparable key, AnalyzedString tokenizedString, int index)
         {
@@ -28,8 +30,18 @@ namespace Sir
             Index = index;
         }
 
+        public Term(IComparable key, VectorNode node)
+        {
+            Key = key;
+            KeyHash = key.ToHash();
+            Node = node;
+        }
+
         private string GetString()
         {
+            if (Node != null)
+                return Node.ToString();
+
             var token = TokenizedString.Tokens[Index];
             return TokenizedString.Original.Substring(token.offset, token.length);
         }

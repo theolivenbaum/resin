@@ -84,14 +84,10 @@ namespace Sir.Store
         {
             try
             {
-                var timer = new Stopwatch();
-                timer.Start();
-
                 Scan(query);
 
-                this.Log("index scan for query {0} took {1}", query, timer.Elapsed);
-
-                timer.Restart();
+                var timer = new Stopwatch();
+                timer.Start();
 
                 var result =  _postingsReader.Reduce(CollectionName, query.ToStream(), query.Skip, query.Take);
 
@@ -112,13 +108,10 @@ namespace Sir.Store
             Debug.WriteLine("before");
             Debug.WriteLine(query.ToDiagram());
 
-            //foreach (var cursor in query.ToList())
-            Parallel.ForEach(query.ToList(), q =>
+            foreach (var q in query.ToList())
+            //Parallel.ForEach(query.ToList(), q =>
             {
                 // score each query term
-
-                var timer = new Stopwatch();
-                timer.Start();
 
                 var keyHash = q.Term.KeyHash;
                 IList<Hit> hits = null;
@@ -134,12 +127,8 @@ namespace Sir.Store
                     hits = indexReader.ClosestMatch(termVector);
                 }
 
-                this.Log("scan found {0} matches in {1}", hits.Count, timer.Elapsed);
-
                 if (hits.Count > 0)
                 {
-                    timer.Restart();
-
                     var topHits = hits.OrderByDescending(x => x.Score).ToList();
                     var topHit = topHits.First();
 
@@ -159,10 +148,8 @@ namespace Sir.Store
                                 q.AddClause(new Query(hit));
                         }
                     }
-
-                    this.Log("sorted and mapped term {0} in {1}", q, timer.Elapsed);
                 }
-            });
+            }//);
 
             Debug.WriteLine("after");
             Debug.WriteLine(query.ToDiagram());

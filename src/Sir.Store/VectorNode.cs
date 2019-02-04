@@ -227,11 +227,6 @@ namespace Sir.Store
 
         public void Merge(VectorNode node)
         {
-            if (VectorOffset < 0)
-            {
-                throw new InvalidOperationException();
-            }
-
             if (_docIds == null)
             {
                 _docIds = node._docIds;

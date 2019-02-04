@@ -131,6 +131,11 @@ namespace Sir
 
         public static SortedList<int, byte> ToCharVector(this Term term)
         {
+            if (term.Node != null)
+            {
+                return term.Node.Vector;
+            }
+
             var vec = new SortedList<int, byte>();
             var span = term.TokenizedString.Tokens[term.Index];
 

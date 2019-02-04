@@ -72,24 +72,37 @@ namespace Sir.Store
         public IList<Hit> ClosestMatch(SortedList<int, byte> vector)
         {
             var toplist = new ConcurrentBag<Hit>();
-            var ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
+            var query = new VectorNode(vector);
 
-            using (var ixmmf = _sessionFactory.CreateMMF(_ixFileName, ixMapName))
+            Parallel.ForEach(ReadAllPages(), page =>
             {
-                Parallel.ForEach(_pages, page =>
-                {
-                    using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-                    using (var indexStream = ixmmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
-                    {
-                        var hit = ClosestMatchInPage(vector, indexStream, page.offset + page.length, vectorStream);
+                var hit = page.ClosestMatch(query, VectorNode.TermFoldAngle);
 
-                        if (hit.Score > 0)
-                        {
-                            toplist.Add(hit);
-                        }
-                    }
-                });
-            }
+                if (hit.Score > 0)
+                {
+                    toplist.Add(hit);
+                }
+            });
+
+            //var toplist = new ConcurrentBag<Hit>();
+            //var ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
+
+            //using (var ixmmf = _sessionFactory.CreateMMF(_ixFileName, ixMapName))
+            //{
+            //    Parallel.ForEach(_pages, page =>
+            //    {
+            //        using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+            //        using (var indexStream = ixmmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
+            //        {
+            //            var hit = ClosestMatchInPage(vector, indexStream, page.offset + page.length, vectorStream);
+
+            //            if (hit.Score > 0)
+            //            {
+            //                toplist.Add(hit);
+            //            }
+            //        }
+            //    });
+            //}
 
             return new List<Hit>(toplist);
         }

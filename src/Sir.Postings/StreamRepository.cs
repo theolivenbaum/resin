@@ -34,20 +34,6 @@ namespace Sir.Postings
             return result;
         }
 
-        public async Task<IList<long>> ReadAndRefreshCache(ulong collectionId, long offset)
-        {
-            var key = (collectionId, offset);
-            IList<long> result;
-
-            if (!_cache.TryGetValue(key, out result))
-            {
-                result = await ReadFromDisk(collectionId, offset);
-                _cache[key] = result;
-            }
-
-            return result;
-        }
-
         private async Task<IList<long>> ReadFromDisk(ulong collectionId, long offset)
         {
             var timer = Stopwatch.StartNew();

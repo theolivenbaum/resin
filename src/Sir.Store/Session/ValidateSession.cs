@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -28,7 +27,7 @@ namespace Sir.Store
             _config = config;
             _tokenizer = tokenizer;
             _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config);
-            _validator = new ProducerConsumerQueue<(long docId, IComparable key, AnalyzedString tokens)>(Validate, 32);
+            _validator = new ProducerConsumerQueue<(long docId, IComparable key, AnalyzedString tokens)>(Validate, 8);
             _postingsReader = new RemotePostingsReader(_config);
         }
 
@@ -52,7 +51,6 @@ namespace Sir.Store
                         }
 
                         var terms = _tokenizer.Tokenize(doc[key].ToString());
-                        var reader = _readSession.CreateIndexReader(keyId);
 
                         _validator.Enqueue((docId, (IComparable)key, terms));
                     }       
@@ -99,19 +97,36 @@ namespace Sir.Store
 
         private void Validate((long docId, IComparable key, AnalyzedString tokens) item)
         {
-            for (var i = 0; i < item.tokens.Tokens.Count; i++)
-            {
-                var query = new Query(new Term(item.key, item.tokens, i));
-                var result = _readSession.ReadIds(query).ToList();
-                var postings = new HashSet<long>(result);
+            var docTree = new VectorNode();
 
-                if (!postings.Contains(item.docId))
+            foreach (var vector in item.tokens.Embeddings)
+            {
+                docTree.Add(new VectorNode(vector), VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
+            }
+
+            var distinctTerms = docTree.Right.All().ToList();
+
+            foreach (var node in distinctTerms)
+            {
+                var query = new Query(new Term(item.key, node));
+                bool valid = false;
+
+                foreach (var id in _readSession.ReadIds(query))
+                {
+                    if (id == item.docId)
+                    {
+                        valid = true;
+                        break;
+                    }
+                }
+
+                if (!valid)
                 {
                     throw new DataMisalignedException();
                 }
             }
 
-            this.Log("validated doc {0}", item.docId);
+            this.Log("**************************validated doc {0}", item.docId);
         }
 
         public void Dispose()

@@ -29,8 +29,6 @@ namespace Sir.Store
             request.Method = WebRequestMethods.Http.Put;
             request.ContentLength = query.Length;
 
-            this.Log("execute request {0}", endpoint);
-
             using (var requestBody = request.GetRequestStream())
             {
                 requestBody.Write(query, 0, query.Length);
