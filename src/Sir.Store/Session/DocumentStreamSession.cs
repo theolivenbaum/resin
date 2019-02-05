@@ -9,7 +9,7 @@ namespace Sir.Store
     public class DocumentStreamSession : DocumentSession
     {
         private readonly DocIndexReader _docIx;
-        private readonly DocReader _docs;
+        private readonly DocMapReader _docs;
         private readonly ValueIndexReader _keyIx;
         private readonly ValueIndexReader _valIx;
         private readonly ValueReader _keyReader;
@@ -26,7 +26,7 @@ namespace Sir.Store
             DocIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
 
             _docIx = new DocIndexReader(DocIndexStream);
-            _docs = new DocReader(DocStream);
+            _docs = new DocMapReader(DocStream);
             _keyIx = new ValueIndexReader(KeyIndexStream);
             _valIx = new ValueIndexReader(ValueIndexStream);
             _keyReader = new ValueReader(KeyStream);

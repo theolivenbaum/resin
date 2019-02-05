@@ -14,7 +14,7 @@ namespace Sir.Store
     {
         private readonly ValueWriter _vals;
         private readonly ValueWriter _keys;
-        private readonly DocWriter _docs;
+        private readonly DocMapWriter _docs;
         private readonly ValueIndexWriter _valIx;
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
@@ -33,7 +33,7 @@ namespace Sir.Store
 
             _vals = new ValueWriter(ValueStream);
             _keys = new ValueWriter(KeyStream);
-            _docs = new DocWriter(DocStream);
+            _docs = new DocMapWriter(DocStream);
             _valIx = new ValueIndexWriter(ValueIndexStream);
             _keyIx = new ValueIndexWriter(KeyIndexStream);
             _docIx = new DocIndexWriter(DocIndexStream);

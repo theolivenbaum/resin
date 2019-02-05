@@ -10,8 +10,6 @@ namespace Sir.Store
     /// </summary>
     public class Query
     {
-        private static readonly object _sync = new object();
-
         public Query(Term term)
         {
             Term = term;
@@ -117,17 +115,17 @@ namespace Sir.Store
                 {
                     termOperator = 100;
 
-                    if (q.And)
+                    if (then.And)
                     {
                         termOperator = 101;
                     }
-                    else if (q.Or)
+                    else if (then.Or)
                     {
                         termOperator = 102;
                     }
 
-                    result.Write(BitConverter.GetBytes(q.PostingsOffset));
-                    result.Write(BitConverter.GetBytes(q.Score));
+                    result.Write(BitConverter.GetBytes(then.PostingsOffset));
+                    result.Write(BitConverter.GetBytes(then.Score));
                     result.WriteByte(termOperator);
 
                     then = then.Then;
@@ -139,16 +137,13 @@ namespace Sir.Store
 
         public void AddClause(Query query)
         {
-            lock (_sync)
+            if (Then == null)
             {
-                if (Then == null)
-                {
-                    Then = query;
-                }
-                else
-                {
-                    Then.AddClause(query);
-                }
+                Then = query;
+            }
+            else
+            {
+                Then.AddClause(query);
             }
         }
     }

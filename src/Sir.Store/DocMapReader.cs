@@ -8,12 +8,12 @@ namespace Sir.Store
     /// Document map stream reader, for fetching a document maps (key_id/val_id) from the document map stream.
     /// A document map is needed to re-contruct a complete document.
     /// </summary>
-    public class DocReader
+    public class DocMapReader
     {
         private readonly Stream _stream;
         private readonly object _sync = new object();
 
-        public DocReader(Stream stream)
+        public DocMapReader(Stream stream)
         {
             _stream = stream;
         }

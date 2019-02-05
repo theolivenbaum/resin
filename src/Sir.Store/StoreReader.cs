@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -73,17 +74,34 @@ namespace Sir.Store
                 {
                     using (var session = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
                     {
-                        var query = _httpQueryParser.Parse(collectionName, request);
-                        var result = session.Read(query);
-                        var docs = result.Docs;
+                        IList<IDictionary> docs;
+                        long total;
 
-                        this.Log(string.Format("executed query {0} and read {1} docs from disk in {2}", query, docs.Count, timer.Elapsed));
+                        if (request.Query.ContainsKey("id"))
+                        {
+                            var ids = request.Query["id"].Select(s => long.Parse(s));
+
+                            docs = session.ReadDocs(ids);
+                            total = docs.Count;
+
+                            this.Log(string.Format("executed lookup by id in {0}", timer.Elapsed));
+                        }
+                        else
+                        {
+                            var query = _httpQueryParser.Parse(collectionName, request);
+                            var result = session.Read(query);
+
+                            docs = result.Docs;
+                            total = result.Total;
+
+                            this.Log(string.Format("executed query {0} in {1}", query, timer.Elapsed));
+                        }
 
                         var stream = new MemoryStream();
 
                         Serialize(docs, stream);
 
-                        return new ResultModel { MediaType = "application/json", Data = stream, Documents = docs, Total = result.Total };
+                        return new ResultModel { MediaType = "application/json", Data = stream, Documents = docs, Total = total };
                     }
                 }
             }

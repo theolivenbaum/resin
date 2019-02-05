@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -25,15 +26,32 @@ namespace Sir.Store
             var pixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}", _collectionId, keyId, pageFileExtension));
             var ixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}", _collectionId, keyId, ixFileExtension));
 
-            _pageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(pixFileName));
-            _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
+            try
+            {
+                _pageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(pixFileName));
+                _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(100);
+
+                if (_pageIndexWriter != null)
+                {
+                    _pageIndexWriter.Dispose();
+                }
+                if (_ixStream != null)
+                {
+                    _ixStream.Dispose();
+                }
+
+                _pageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(pixFileName));
+                _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
+            }
         }
 
         public async Task SerializeColumnSegment(VectorNode column)
         {
             var time = Stopwatch.StartNew();
-
-            (int depth, int width, int avgDepth) size;
 
             if (_postingsWriter != null)
             {
@@ -47,10 +65,10 @@ namespace Sir.Store
                 _pageIndexWriter.Write(page.offset, page.length);
             }
 
-            size = column.Size();
+            var size = column.Size();
 
-            this.Log("serialized column {0} in {1} with size {2},{3} (avg depth {4})",
-                _keyId, time.Elapsed, size.depth, size.width, size.avgDepth);
+            this.Log("serialized column {0} in {1}. weight {2} depth {3} width {4} (avg depth {5})",
+                _keyId, time.Elapsed, column.Weight, size.depth, size.width, size.avgDepth);
         }
 
         public void Dispose()

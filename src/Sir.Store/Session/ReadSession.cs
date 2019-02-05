@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -15,7 +15,7 @@ namespace Sir.Store
     public class ReadSession : DocumentSession, ILogger
     {
         private readonly DocIndexReader _docIx;
-        private readonly DocReader _docs;
+        private readonly DocMapReader _docs;
         private readonly ValueIndexReader _keyIx;
         private readonly ValueIndexReader _valIx;
         private readonly ValueReader _keyReader;
@@ -37,7 +37,7 @@ namespace Sir.Store
             DocIndexStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
 
             _docIx = new DocIndexReader(DocIndexStream);
-            _docs = new DocReader(DocStream);
+            _docs = new DocMapReader(DocStream);
             _keyIx = new ValueIndexReader(KeyIndexStream);
             _valIx = new ValueIndexReader(ValueIndexStream);
             _keyReader = new ValueReader(KeyStream);
@@ -48,7 +48,7 @@ namespace Sir.Store
 
         public ReadResult Read(Query query)
         {
-            var result = Reduce(query);
+            var result = Execute(query);
 
             if (result == null)
             {
@@ -66,7 +66,7 @@ namespace Sir.Store
 
         public IEnumerable<long> ReadIds(Query query)
         {
-            var result = Reduce(query);
+            var result = Execute(query);
 
             if (result == null)
             {
@@ -80,30 +80,29 @@ namespace Sir.Store
             }
         }
 
-        private ScoredResult Reduce(Query query)
+        private ScoredResult Execute(Query query)
         {
             try
             {
-                Scan(query);
+                Map(query);
 
-                var timer = new Stopwatch();
-                timer.Start();
+                var timer = Stopwatch.StartNew();
 
                 var result =  _postingsReader.Reduce(CollectionName, query.ToStream(), query.Skip, query.Take);
 
-                this.Log("reducing {0} to {1} docs took {2}",
-                    query, result.Documents.Count, timer.Elapsed);
+                this.Log("reducing {0} to {1} docs took {2}", query, result.Documents.Count, timer.Elapsed);
 
                 return result;
             }
             catch (Exception ex)
             {
                 this.Log(ex);
+
                 throw;
             }
         }
 
-        private void Scan(Query query)
+        private void Map(Query query)
         {
             Debug.WriteLine("before");
             Debug.WriteLine(query.ToDiagram());
@@ -127,7 +126,7 @@ namespace Sir.Store
                     hits = indexReader.ClosestMatch(termVector);
                 }
 
-                if (hits.Count > 0)
+                if (hits != null && hits.Count > 0)
                 {
                     var topHits = hits.OrderByDescending(x => x.Score).ToList();
                     var topHit = topHits.First();
@@ -139,11 +138,6 @@ namespace Sir.Store
                     {
                         foreach (var hit in topHits.Skip(1))
                         {
-                            if (q.And && hit.Score < topHit.Score)
-                            {
-                                break;
-                            }
-
                             if (hit.Score > VectorNode.TermFoldAngle)
                                 q.AddClause(new Query(hit));
                         }
@@ -192,8 +186,7 @@ namespace Sir.Store
 
         public IList<IDictionary> ReadDocs(IEnumerable<KeyValuePair<long, float>> docs)
         {
-            var timer = new Stopwatch();
-            timer.Start();
+            var timer = Stopwatch.StartNew();
 
             var result = new List<IDictionary>();
 
@@ -231,11 +224,9 @@ namespace Sir.Store
             return result;
         }
 
-
         public IList<IDictionary> ReadDocs(IEnumerable<long> docs)
         {
-            var timer = new Stopwatch();
-            timer.Start();
+            var timer = Stopwatch.StartNew();
 
             var result = new List<IDictionary>();
 

@@ -15,14 +15,14 @@ namespace Sir.Store
     {
         public const int NodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
         public const int ComponentSize = sizeof(int) + sizeof(byte);
-        public const float TermIdenticalAngle = 0.97f;
+        public const float TermIdenticalAngle = 0.999f;
         public const float TermFoldAngle = 0.65f;
         public const float DocIdenticalAngle = 0.97f;
         public const float DocFoldAngle = 0.65f;
 
         private VectorNode _right;
         private VectorNode _left;
-        private HashSet<long> _docIds;
+        public HashSet<long> DocIds { get; private set; }
         private int _weight;
 
         public long VectorOffset { get; private set; }
@@ -92,8 +92,8 @@ namespace Sir.Store
             Vector = termVector;
             PostingsOffset = -1;
             VectorOffset = -1;
-            _docIds = new HashSet<long>();
-            _docIds.Add(docId);
+            DocIds = new HashSet<long>();
+            DocIds.Add(docId);
         }
 
         public Hit ClosestMatch(VectorNode node, float foldAngle)
@@ -126,7 +126,13 @@ namespace Sir.Store
                 }
             }
 
-            return new Hit { Embedding = best.Vector, Score = highscore, PostingsOffset = best.PostingsOffset };
+            return new Hit
+            {
+                Embedding = best.Vector,
+                Score = highscore,
+                PostingsOffset = best.PostingsOffset,
+                Ids = best.DocIds
+            };
         }
 
         private readonly object _sync = new object();
@@ -212,30 +218,30 @@ namespace Sir.Store
             }
         }
 
-        public void Merge(IEnumerable<long> docIds)
+        public void Add(IEnumerable<long> docIds)
         {
-            if (_docIds == null)
+            if (DocIds == null)
             {
-                _docIds = new HashSet<long>();
+                DocIds = new HashSet<long>();
             }
 
             foreach (var id in docIds)
             {
-                _docIds.Add(id);
+                DocIds.Add(id);
             }
         }
 
-        public void Merge(VectorNode node)
+        private void Merge(VectorNode node)
         {
-            if (_docIds == null)
+            if (DocIds == null)
             {
-                _docIds = node._docIds;
+                DocIds = node.DocIds;
             }
-            else if (node._docIds != null)
+            else
             {
-                foreach (var id in node._docIds)
+                foreach (var id in node.DocIds)
                 {
-                    _docIds.Add(id);
+                    DocIds.Add(id);
                 }
             }
         }
@@ -335,13 +341,13 @@ namespace Sir.Store
 
             while (node != null)
             {
-                if (node._docIds != null)
+                if (node.DocIds != null)
                 {
                     // dirty node
 
-                    var list = node._docIds.ToArray();
+                    var list = node.DocIds.ToArray();
 
-                    node._docIds.Clear();
+                    node.DocIds.Clear();
 
                     var buf = list.ToStream();
 
@@ -494,6 +500,14 @@ namespace Sir.Store
             return cursor;
         }
 
+        public VectorNode ShallowCopy()
+        {
+            return new VectorNode (Vector)
+            {
+                VectorOffset = VectorOffset
+            };
+        }
+
         public IEnumerable<VectorNode> All()
         {
             var node = this;
@@ -501,7 +515,7 @@ namespace Sir.Store
 
             while (node != null)
             {
-                yield return node;
+                yield return node.ShallowCopy();
 
                 if (node.Right != null)
                 {
@@ -543,10 +557,9 @@ namespace Sir.Store
 
         public (int depth, int width, int avgDepth) Size()
         {
-            var root = this;
             var width = 0;
             var depth = 1;
-            var node = root.Right;
+            var node = this;
             var aggDepth = 0;
             var count = 0;
 

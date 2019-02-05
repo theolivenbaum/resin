@@ -56,11 +56,23 @@ namespace Sir.Postings
                 }
                 else
                 {
-                    result[result.Count - 1].Then = query;
+                    result[result.Count - 1].AddClause(query);
                 }
             }
 
             return result;
+        }
+
+        public void AddClause(Query query)
+        {
+            if (Then == null)
+            {
+                Then = query;
+            }
+            else
+            {
+                Then.AddClause(query);
+            }
         }
     }
 }

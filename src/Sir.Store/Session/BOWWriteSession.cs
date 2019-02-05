@@ -118,10 +118,10 @@ namespace Sir.Store
 
                 var termId = best.NodeId;
 
-                if (!docVec.ContainsKey(termId))
-                {
-                    docVec.Add(termId, 1);
-                }
+                //if (!docVec.ContainsKey(termId))
+                //{
+                //    docVec.Add(termId, 1);
+                //}
             }
 
             return docVec;

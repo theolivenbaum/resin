@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
+using System.Threading;
 
 namespace Sir.Store
 {
@@ -90,21 +89,37 @@ namespace Sir.Store
         {
             MemoryMappedFile mmf;
 
-            lock (_syncMMF)
+            try
             {
-                try
-                {
-                    mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
-                }
-                catch (FileNotFoundException)
+                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+            }
+            catch (FileNotFoundException)
+            {
+                lock (_syncMMF)
                 {
                     try
                     {
-                        mmf = MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.Read);
-                    }
-                    catch (IOException)
-                    {
                         mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+                    }
+                    catch (FileNotFoundException)
+                    {
+                        try
+                        {
+                            mmf = MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.Read);
+                        }
+                        catch (IOException)
+                        {
+                            try
+                            {
+                                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+                            }
+                            catch (FileNotFoundException)
+                            {
+                                Thread.Sleep(100);
+
+                                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+                            }
+                        }
                     }
                 }
             }
@@ -174,7 +189,16 @@ namespace Sir.Store
             //FileStream file = new FileStream(fileName, fileMode, fileAccess, fileShare, blockSize,
             //    FileFlagNoBuffering | FileOptions.WriteThrough | fileOptions);
 
-            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+            try
+            {
+                return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(100);
+
+                return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+            }
         }
 
         public void Dispose()

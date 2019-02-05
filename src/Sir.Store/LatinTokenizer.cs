@@ -31,7 +31,10 @@ namespace Sir.Store
                 {
                     if (!IsData(c))
                     {
-                        tokens.Add((offset, index - offset));
+                        var len = index - offset;
+
+                        if (len > 1)
+                            tokens.Add((offset, index - offset));
 
                         offset = index;
 
@@ -54,7 +57,10 @@ namespace Sir.Store
 
             if (word)
             {
-                tokens.Add((offset, index - offset));
+                var len = index - offset;
+
+                if (len > 1)
+                    tokens.Add((offset, index - offset));
             }
 
             return new AnalyzedString { Source = normalized, Tokens = tokens, Original = text };

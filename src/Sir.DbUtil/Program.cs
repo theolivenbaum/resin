@@ -2,13 +2,14 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Sir.Store;
 
 namespace Sir.DbUtil
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             Console.WriteLine("processing command: {0}", string.Join(" ", args));
 
@@ -49,13 +50,13 @@ namespace Sir.DbUtil
             {
                 // example: optimize C:\projects\resin\src\Sir.HttpServer\App_Data www
 
-                Optimize(dir: args[1], collectionName: args[2]);
+                await Optimize(dir: args[1], collectionName: args[2]);
             }
 
             Console.Read();
         }
 
-        private static void Optimize(string dir, string collectionName)
+        private static async Task Optimize(string dir, string collectionName)
         {
             var files = Directory.GetFiles(dir, "*.docs");
             var time = Stopwatch.StartNew();
@@ -64,7 +65,7 @@ namespace Sir.DbUtil
             {
                 using (var optimizeSession = sessionFactory.CreateOptimizeSession(collectionName, collectionName.ToHash()))
                 {
-                    optimizeSession.Optimize();
+                    await optimizeSession.Optimize();
                 }
             }
 

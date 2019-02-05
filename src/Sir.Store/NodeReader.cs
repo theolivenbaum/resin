@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -71,40 +70,40 @@ namespace Sir.Store
 
         public IList<Hit> ClosestMatch(SortedList<int, byte> vector)
         {
-            var toplist = new ConcurrentBag<Hit>();
-            var query = new VectorNode(vector);
-
-            Parallel.ForEach(ReadAllPages(), page =>
-            {
-                var hit = page.ClosestMatch(query, VectorNode.TermFoldAngle);
-
-                if (hit.Score > 0)
-                {
-                    toplist.Add(hit);
-                }
-            });
-
             //var toplist = new ConcurrentBag<Hit>();
-            //var ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
+            //var query = new VectorNode(vector);
 
-            //using (var ixmmf = _sessionFactory.CreateMMF(_ixFileName, ixMapName))
+            //foreach (var page in ReadAllPages())
             //{
-            //    Parallel.ForEach(_pages, page =>
-            //    {
-            //        using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-            //        using (var indexStream = ixmmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
-            //        {
-            //            var hit = ClosestMatchInPage(vector, indexStream, page.offset + page.length, vectorStream);
+            //    var hit = page.ClosestMatch(query, VectorNode.TermFoldAngle);
 
-            //            if (hit.Score > 0)
-            //            {
-            //                toplist.Add(hit);
-            //            }
-            //        }
-            //    });
+            //    if (hit.Score > 0)
+            //    {
+            //        toplist.Add(hit);
+            //    }
             //}
 
-            return new List<Hit>(toplist);
+            var toplist = new List<Hit>();
+            var ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
+
+            using (var ixmmf = _sessionFactory.CreateMMF(_ixFileName, ixMapName))
+            {
+                foreach (var page in _pages)
+                {
+                    using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                    using (var indexStream = ixmmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
+                    {
+                        var hit = ClosestMatchInPage(vector, indexStream, page.offset + page.length, vectorStream);
+
+                        if (hit.Score > 0)
+                        {
+                            toplist.Add(hit);
+                        }
+                    }
+                }
+            }
+
+            return toplist;
         }
 
         private Hit ClosestMatchInPage(SortedList<int, byte> node, Stream indexStream, long endOfSegment, Stream vectorStream)
@@ -185,7 +184,7 @@ namespace Sir.Store
                 Embedding = best.Vector,
                 Score = highscore,
                 PostingsOffset = best.PostingsOffset,
-                NodeId = Convert.ToInt32(best.VectorOffset)
+                NodeId = best.VectorOffset
             };
         }
 

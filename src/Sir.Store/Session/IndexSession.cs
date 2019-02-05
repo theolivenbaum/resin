@@ -19,9 +19,8 @@ namespace Sir.Store
         private readonly Stream _vectorStream;
         private bool _flushed;
         private bool _flushing;
-        private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _vectorBuilder;
-        private readonly ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)> _modelBuilder;
-        private readonly ProducerConsumerQueue<(long keyId, AnalyzedString tokens)> _validator;
+        private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _modelBuilder;
+        private readonly ProducerConsumerQueue<(long keyId, long docId, AnalyzedString tokens)> _validator;
         private readonly bool _validate;
 
         public IndexSession(
@@ -38,13 +37,9 @@ namespace Sir.Store
 
             var numThreads = int.Parse(_config.Get("index_thread_count"));
 
-            _vectorBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>
-                (CreateTermVector, int.Parse(config.Get("index_thread_count")));
+            _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>(BuildModel, numThreads);
 
-            _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)>
-                (AddVectorToModel, int.Parse(config.Get("index_thread_count")));
-
-            _validator = new ProducerConsumerQueue<(long keyId, AnalyzedString tokens)>(Validate, numThreads, startConsumingImmediately: false);
+            _validator = new ProducerConsumerQueue<(long keyId, long docId, AnalyzedString tokens)>(Validate, numThreads, startConsumingImmediately: false);
 
             _validate = bool.Parse(config.Get("validate_when_indexing"));
         }
@@ -52,85 +47,6 @@ namespace Sir.Store
         public void EmbedTerms(IDictionary document)
         {
             Analyze(document);
-        }
-
-        public void Flush()
-        {
-            if (_flushing || _flushed)
-                return;
-
-            _flushing = true;
-
-            this.Log("waiting for vector builder");
-
-            using (_vectorBuilder)
-            {
-                _vectorBuilder.Join();
-            }
-
-            this.Log("waiting for model builder");
-
-            using (_modelBuilder)
-            {
-                _modelBuilder.Join();
-            }
-
-            if (_validate)
-                _validator.Start();
-
-            var tasks = new Task[_dirty.Count];
-            var taskId = 0;
-            var columnWriters = new List<ColumnSerializer>();
-
-            foreach (var column in _dirty)
-            {
-                var columnWriter = new ColumnSerializer(CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config));
-                columnWriters.Add(columnWriter);
-                tasks[taskId++] = columnWriter.SerializeColumnSegment(column.Value);
-            }
-
-            using (_vectorStream)
-            {
-                _vectorStream.Flush();
-                _vectorStream.Close();
-            }
-
-            Task.WaitAll(tasks);
-
-            if (_validate)
-            {
-                this.Log("waiting for validator");
-
-                using (_validator)
-                {
-                    _validator.Join();
-                }
-            }
-
-            foreach (var writer in columnWriters)
-            {
-                writer.Dispose();
-            }
-
-            _flushed = true;
-            _flushing = false;
-
-            this.Log(string.Format("***FLUSHED***"));
-        }
-
-        private void Validate((long keyId, AnalyzedString tokens) item)
-        {
-            var tree = GetOrCreateIndex(item.keyId);
-
-            foreach (var vector in item.tokens.Embeddings)
-            {
-                var hit = tree.ClosestMatch(new VectorNode(vector), VectorNode.TermFoldAngle);
-
-                if (hit.Score < VectorNode.TermIdenticalAngle)
-                {
-                    throw new DataMisalignedException();
-                }
-            }
         }
 
         private void Analyze(IDictionary document)
@@ -165,30 +81,114 @@ namespace Sir.Store
 
                     if (tokens != null)
                     {
-                        _vectorBuilder.Enqueue((docId, keyId, tokens));
+                        _modelBuilder.Enqueue((docId, keyId, tokens));
                     }
 
                     if (_validate)
-                        _validator.Enqueue((keyId, tokens));
+                        _validator.Enqueue((keyId, docId, tokens));
                 }
             }
 
             this.Log("analyzed document {0} ", docId);
         }
 
-        private void CreateTermVector((long docId, long keyId, AnalyzedString tokens) item)
-        {
-            foreach (var termVector in item.tokens.Embeddings)
-            {
-                _modelBuilder.Enqueue((item.docId, item.keyId, termVector));
-            }
-        }
-
-        private void AddVectorToModel((long docId, long keyId, SortedList<int, byte> vector) item)
+        private void BuildModel((long docId, long keyId, AnalyzedString tokens) item)
         {
             var ix = GetOrCreateIndex(item.keyId);
 
-            ix.Add(new VectorNode(item.vector, item.docId), VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle, _vectorStream);
+            foreach (var vector in item.tokens.Embeddings)
+            {
+                ix.Add(new VectorNode(vector, item.docId), VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle, _vectorStream);
+            }
+        }
+
+        public void Flush()
+        {
+            if (_flushing || _flushed)
+                return;
+
+            _flushing = true;
+
+            this.Log("waiting for model builder");
+
+            using (_modelBuilder)
+            {
+                _modelBuilder.Join();
+            }
+
+            if (_validate)
+            {
+                this.Log("awaiting validation");
+
+                using (_validator)
+                {
+                    _validator.Start();
+                    _validator.Join();
+                }
+            }               
+
+            var tasks = new Task[_dirty.Count];
+            var taskId = 0;
+            var columnWriters = new List<ColumnSerializer>();
+
+            foreach (var column in _dirty)
+            {
+                var columnWriter = new ColumnSerializer(CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config));
+                columnWriters.Add(columnWriter);
+                tasks[taskId++] = columnWriter.SerializeColumnSegment(column.Value);
+            }
+
+            using (_vectorStream)
+            {
+                _vectorStream.Flush();
+                _vectorStream.Close();
+            }
+
+            Task.WaitAll(tasks);
+
+            foreach (var writer in columnWriters)
+            {
+                writer.Dispose();
+            }
+
+            _flushed = true;
+            _flushing = false;
+
+            this.Log(string.Format("***FLUSHED***"));
+        }
+
+        private void Validate((long keyId, long docId, AnalyzedString tokens) item)
+        {
+            if (item.keyId == 4 || item.keyId == 5)
+            {
+                var tree = GetOrCreateIndex(item.keyId);
+
+                foreach (var vector in item.tokens.Embeddings)
+                {
+                    var hit = tree.ClosestMatch(new VectorNode(vector), VectorNode.TermFoldAngle);
+
+                    if (hit.Score < VectorNode.TermIdenticalAngle)
+                    {
+                        throw new DataMisalignedException();
+                    }
+
+                    var valid = false;
+
+                    foreach (var id in hit.Ids)
+                    {
+                        if (id == item.docId)
+                        {
+                            valid = true;
+                            break;
+                        }
+                    }
+
+                    if (!valid)
+                    {
+                        throw new DataMisalignedException();
+                    }
+                }
+            }
         }
 
         private static readonly object _syncIndexAccess = new object();

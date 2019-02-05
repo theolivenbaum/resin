@@ -8,11 +8,11 @@ namespace Sir.Store
     /// <summary>
     /// Write document maps (key_id/val_id) to the document map stream.
     /// </summary>
-    public class DocWriter
+    public class DocMapWriter
     {
         private readonly Stream _stream;
 
-        public DocWriter(Stream stream)
+        public DocMapWriter(Stream stream)
         {
             _stream = stream;
         }
