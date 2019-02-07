@@ -35,7 +35,7 @@ namespace Sir.Store
         {
         }
 
-        public async Task<ResultModel> Read(string collectionName, HttpRequest request)
+        public async Task<ResponseModel> Read(string collectionName, HttpRequest request)
         {
             try
             {
@@ -67,7 +67,7 @@ namespace Sir.Store
 
                         Serialize(docs, stream);
 
-                        return new ResultModel { MediaType = "application/json", Data = stream, Documents = docs, Total = result.Total };
+                        return new ResponseModel { MediaType = "application/json", Stream = stream, Documents = docs, Total = result.Total };
                     }
                 }
                 else
@@ -101,7 +101,7 @@ namespace Sir.Store
 
                         Serialize(docs, stream);
 
-                        return new ResultModel { MediaType = "application/json", Data = stream, Documents = docs, Total = total };
+                        return new ResponseModel { MediaType = "application/json", Stream = stream, Documents = docs, Total = total };
                     }
                 }
             }

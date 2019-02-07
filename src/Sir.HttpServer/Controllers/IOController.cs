@@ -35,11 +35,11 @@ namespace Sir.HttpServer.Controllers
                 var timer = new Stopwatch();
                 timer.Start();
 
-                ResultModel result = await writer.Write(collectionName, Request);
+                ResponseModel result = await writer.Write(collectionName, Request);
                 this.Log("write took {0}", timer.Elapsed);
                 timer.Restart();
 
-                var buf = result.Data.ToArray();
+                var buf = result.Stream.ToArray();
                 this.Log("serialized response in {0}", timer.Elapsed);
 
                 return new FileContentResult(buf, result.MediaType);
@@ -72,7 +72,7 @@ namespace Sir.HttpServer.Controllers
 
                 this.Log("processed {0} request in {1}", mediaType, timer.Elapsed);
 
-                if (result.Data == null)
+                if (result.Stream == null)
                 {
                     return new FileContentResult(new byte[0], result.MediaType);
                 }
@@ -80,7 +80,7 @@ namespace Sir.HttpServer.Controllers
                 {
                     Response.Headers.Add("X-Total", result.Total.ToString());
 
-                    var buf = result.Data.ToArray();
+                    var buf = result.Stream.ToArray();
 
                     this.Log("serialized {0} response in {1}", reader.GetType().ToString(), timer.Elapsed);
 

@@ -27,7 +27,7 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
-        public async Task<ResultModel> Write(string collectionId, HttpRequest request)
+        public async Task<ResponseModel> Write(string collectionId, HttpRequest request)
         {
             try
             {
@@ -52,7 +52,7 @@ namespace Sir.Store
 
                 Serialize(docIds, response);
 
-                return new ResultModel { Data = response, MediaType = "application/json"};
+                return new ResponseModel { Stream = response, MediaType = "application/json" };
             }
             catch (Exception ex)
             {

@@ -19,7 +19,7 @@ namespace Sir.Postings
             _data = data;
         }
 
-        public async Task<ResultModel> Read(string collectionId, HttpRequest request)
+        public async Task<ResponseModel> Read(string collectionId, HttpRequest request)
         {
             try
             {
@@ -35,7 +35,7 @@ namespace Sir.Postings
                 var buf = stream.ToArray();
                 var skip = int.Parse(request.Query["skip"]);
                 var take = int.Parse(request.Query["take"]);
-                ResultModel resultModel;
+                ResponseModel resultModel;
 
                 if (buf.Length == 0)
                 {
@@ -66,7 +66,7 @@ namespace Sir.Postings
 
                     var streamResult = StreamRepository.Serialize(window.ToDictionary(x => x, y => 0f));
 
-                    resultModel = new ResultModel { Data = streamResult, MediaType = "application/postings", Total = sorted.Count };
+                    resultModel = new ResponseModel { Stream = streamResult, MediaType = "application/postings", Total = sorted.Count };
 
                     this.Log("processed read request for {0} postings in {1}", ids.Count, timer.Elapsed);
                 }
@@ -89,7 +89,7 @@ namespace Sir.Postings
             }
         }
 
-        private async Task<ResultModel> Reduce(ulong collectionId, IList<Query> query, int skip, int take)
+        private async Task<ResponseModel> Reduce(ulong collectionId, IList<Query> query, int skip, int take)
         {
             IDictionary<long, float> result = null;
 
@@ -177,7 +177,7 @@ namespace Sir.Postings
 
             var stream = StreamRepository.Serialize(window);
 
-            return new ResultModel { Data = stream, MediaType = "application/postings", Total = sortedByScore.Count };
+            return new ResponseModel { Stream = stream, MediaType = "application/postings", Total = sortedByScore.Count };
         }
 
         public void Dispose()

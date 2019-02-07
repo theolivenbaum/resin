@@ -7,10 +7,10 @@ namespace Sir
     /// <summary>
     /// Read/write result.
     /// </summary>
-    public class ResultModel
+    public class ResponseModel
     {
         public IList<IDictionary> Documents { get; set; }
-        public MemoryStream Data { get; set; }
+        public MemoryStream Stream { get; set; }
         public long Total { get; set; }
         public string MediaType { get; set; }
     }

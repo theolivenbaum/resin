@@ -19,7 +19,7 @@ namespace Sir.Postings
 
         private static object Sync = new object();
 
-        public async Task<ResultModel> Write(string collectionId, HttpRequest request)
+        public async Task<ResponseModel> Write(string collectionId, HttpRequest request)
         {
             try
             {
@@ -60,7 +60,7 @@ namespace Sir.Postings
                         messageBuf.Length, timer.Elapsed, messageBuf.Length / t));
                 }
 
-                return new ResultModel { Data = responseStream, MediaType = "application/octet-stream" };
+                return new ResponseModel { Stream = responseStream, MediaType = "application/octet-stream" };
             }
             catch (Exception ex)
             {
