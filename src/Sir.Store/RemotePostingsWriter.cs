@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -13,13 +14,72 @@ namespace Sir.Store
     public class RemotePostingsWriter : ILogger
     {
         private IConfigurationProvider _config;
+        private readonly string _collectionName;
 
-        public RemotePostingsWriter(IConfigurationProvider config)
+        public RemotePostingsWriter(IConfigurationProvider config, string collectionName)
         {
             _config = config;
+            _collectionName = collectionName;
         }
 
-        public async Task Write(ulong collectionId, VectorNode rootNode)
+        //public async Task Concat(IDictionary<long, IList<long>> offsets)
+        //{
+        //    foreach (var offset in offsets)
+        //    {
+        //        var canonical = offset.Key;
+        //        var batch = new Dictionary<long, IList<long>>();
+
+        //        batch.Add(canonical, offset.Value);
+
+        //        await ExecuteConcat(batch);
+        //    }
+        //}
+
+        public async Task Concat(IDictionary<long, IList<long>> offsets)
+        {
+            if (offsets == null) throw new ArgumentNullException(nameof(offsets));
+
+            var timer = Stopwatch.StartNew();
+
+            var requestMessage = new MemoryStream();
+        
+            foreach (var offset in offsets)
+            {
+                // write key
+                requestMessage.Write(BitConverter.GetBytes(offset.Key));
+
+                // write count
+                requestMessage.Write(BitConverter.GetBytes(offset.Value.Count));
+
+                foreach (var offs in offset.Value)
+                {
+                    // write data
+                    requestMessage.Write(BitConverter.GetBytes(offs));
+                }
+            }
+
+            var messageBuf = requestMessage.ToArray();
+            var compressed = QuickLZ.compress(messageBuf, 3);
+            var endpoint = string.Format("{0}{1}?concat=true", 
+                _config.Get("postings_endpoint"), _collectionName);
+
+            var request = (HttpWebRequest)WebRequest.Create(endpoint);
+
+            request.Method = WebRequestMethods.Http.Post;
+            request.ContentType = "application/postings";
+
+            using (var requestBody = await request.GetRequestStreamAsync())
+            {
+                requestBody.Write(compressed, 0, compressed.Length);
+
+                using (var response = (HttpWebResponse) await request.GetResponseAsync())
+                {
+                    this.Log(string.Format("{0} concat operation took {1}", _collectionName, timer.Elapsed));
+                }
+            }
+        }
+
+        public async Task Write(VectorNode rootNode)
         {
             var timer = Stopwatch.StartNew();
 
@@ -74,7 +134,7 @@ namespace Sir.Store
 
             // send message, recieve list of (remote) file positions, save positions in index.
 
-            var positions = await Send(collectionId, payload);
+            var positions = await Send(payload);
 
             if (nodes.Count != positions.Count)
             {
@@ -91,14 +151,14 @@ namespace Sir.Store
             this.Log(string.Format("record postings offsets took {0}", timer.Elapsed));
         }
 
-        private async Task<IList<long>> Send(ulong collectionId, byte[] payload)
+        private async Task<IList<long>> Send(byte[] payload)
         {
             var timer = new Stopwatch();
             timer.Start();
 
             var result = new List<long>();
 
-            var endpoint = _config.Get("postings_endpoint") + collectionId.ToString();
+            var endpoint = _config.Get("postings_endpoint") + _collectionName;
 
             var request = (HttpWebRequest)WebRequest.Create(endpoint);
 

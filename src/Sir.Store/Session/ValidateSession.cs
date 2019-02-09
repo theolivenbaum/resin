@@ -1,6 +1,7 @@
 ﻿using Sir.Core;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -22,13 +23,14 @@ namespace Sir.Store
             ulong collectionId,
             SessionFactory sessionFactory, 
             ITokenizer tokenizer,
-            IConfigurationProvider config) : base(collectionName, collectionId, sessionFactory)
+            IConfigurationProvider config,
+            ConcurrentDictionary<long, NodeReader> indexReaders) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
             _tokenizer = tokenizer;
-            _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config);
+            _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, indexReaders);
             _validator = new ProducerConsumerQueue<(long docId, IComparable key, AnalyzedString tokens)>(Validate, 8);
-            _postingsReader = new RemotePostingsReader(_config);
+            _postingsReader = new RemotePostingsReader(_config, collectionName);
         }
 
         public void Validate(IEnumerable<IDictionary> documents, params long[] excludeKeyIds)
@@ -80,7 +82,7 @@ namespace Sir.Store
 
                 foreach (var hit in hits)
                 {
-                    foreach(var id in _postingsReader.Read(CollectionName, 0, 0, hit.Value.PostingsOffset))
+                    foreach(var id in _postingsReader.Read(0, 0, hit.Value.PostingsOffset))
                     {
                         postings.Add(id);
                     }
@@ -104,9 +106,7 @@ namespace Sir.Store
                 docTree.Add(new VectorNode(vector), VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
             }
 
-            var distinctTerms = docTree.Right.All().ToList();
-
-            foreach (var node in distinctTerms)
+            foreach (var node in docTree.All())
             {
                 var query = new Query(new Term(item.key, node));
                 bool valid = false;

@@ -133,7 +133,8 @@ namespace Sir.Store
 
             foreach (var column in _dirty)
             {
-                var columnWriter = new ColumnSerializer(CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config));
+                var columnWriter = new ColumnSerializer(
+                    CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config, CollectionName));
                 columnWriters.Add(columnWriter);
                 tasks[taskId++] = columnWriter.SerializeColumnSegment(column.Value);
             }

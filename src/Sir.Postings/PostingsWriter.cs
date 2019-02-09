@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -19,14 +20,14 @@ namespace Sir.Postings
 
         private static object Sync = new object();
 
-        public async Task<ResponseModel> Write(string collectionId, HttpRequest request)
+        public async Task<ResponseModel> Write(string collectionName, HttpRequest request)
         {
             try
             {
+                var collectionId = collectionName.ToHash();
                 var timer = Stopwatch.StartNew();
 
                 var payload = new MemoryStream();
-
                 await request.Body.CopyToAsync(payload);
 
                 if (request.ContentLength.Value != payload.Length)
@@ -37,30 +38,43 @@ namespace Sir.Postings
                 var compressed = payload.ToArray();
                 var messageBuf = QuickLZ.decompress(compressed);
 
-                this.Log(string.Format("serialized {0} bytes in {1}", messageBuf.Length, timer.Elapsed));
+                // A write request is either a request to write new data
+                // or a request to concat two existing pages.
 
-                timer.Restart();
-
-                MemoryStream responseStream;
-
-                lock (Sync)
+                if (request.Query.ContainsKey("concat") 
+                    && request.Query["concat"].ToArray()[0].ToLower() == "true")
                 {
-                    this.Log("waited for synchronization for {0}", timer.Elapsed);
+                    await _data.Concat(collectionId, Deserialize(messageBuf));
+
+                    return new ResponseModel();
+                }
+                else
+                {
+                    this.Log(string.Format("serialized {0} bytes in {1}", messageBuf.Length, timer.Elapsed));
 
                     timer.Restart();
 
-                    responseStream = _data.Write(ulong.Parse(collectionId), messageBuf);
+                    MemoryStream responseStream;
 
-                    timer.Stop();
+                    lock (Sync)
+                    {
+                        this.Log("waited for synchronization for {0}", timer.Elapsed);
 
-                    var t = timer.ElapsedMilliseconds > 0 ? timer.ElapsedMilliseconds : 1;
+                        timer.Restart();
 
-                    this.Log(string.Format(
-                        "wrote {0} bytes in {1}: {2} bytes/ms",
-                        messageBuf.Length, timer.Elapsed, messageBuf.Length / t));
+                        responseStream = _data.Write(collectionId, messageBuf);
+
+                        timer.Stop();
+
+                        var t = timer.ElapsedMilliseconds > 0 ? timer.ElapsedMilliseconds : 1;
+
+                        this.Log(string.Format(
+                            "wrote {0} bytes in {1}: {2} bytes/ms",
+                            messageBuf.Length, timer.Elapsed, messageBuf.Length / t));
+                    }
+
+                    return new ResponseModel { Stream = responseStream, MediaType = "application/octet-stream" };
                 }
-
-                return new ResponseModel { Stream = responseStream, MediaType = "application/octet-stream" };
             }
             catch (Exception ex)
             {
@@ -68,6 +82,36 @@ namespace Sir.Postings
 
                 throw;
             }
+        }
+
+        private IDictionary<long, IList<long>> Deserialize(byte[] buf)
+        {
+            var result = new Dictionary<long, IList<long>>();
+            var read = 0;
+
+            while (read < buf.Length)
+            {
+                var canonical = BitConverter.ToInt32(buf, read);
+
+                read += sizeof(long);
+
+                var count = BitConverter.ToInt32(buf, read);
+
+                read += sizeof(int);
+
+                var list = new List<long>();
+
+                for (int i = 0; i < count; i++)
+                {
+                    list.Add(BitConverter.ToInt64(buf, read));
+
+                    read += sizeof(long);
+                }
+
+                result.Add(list[0], list);
+            }
+
+            return result;
         }
 
         public void Dispose()

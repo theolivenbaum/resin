@@ -39,7 +39,7 @@ namespace Sir.Store
             _valIx = new ValueIndexReader(ValueIndexStream);
             _keyReader = new ValueReader(KeyStream);
             _valReader = new ValueReader(ValueStream);
-            _postingsReader = new RemotePostingsReader(config);
+            _postingsReader = new RemotePostingsReader(config, collectionName);
             _indexReaders = new ConcurrentDictionary<long, NodeReader>();
         }
 
@@ -80,7 +80,7 @@ namespace Sir.Store
 
             var sortedHits = scored.Values.OrderByDescending(h => h.Score);
             var offsets = sortedHits.Select(h => h.PostingsOffset).ToArray();
-            var docIds = _postingsReader.Read(CollectionName, skip, take, offsets);
+            var docIds = _postingsReader.Read(skip, take, offsets);
             var window = docIds.GroupBy(x => x).Select(x => (x.Key, x.Count()))
                 .OrderByDescending(x => x.Item2)
                 .Skip(skip)
@@ -93,10 +93,7 @@ namespace Sir.Store
 
         private IList<Hit> Scan(long keyId, SortedList<int, byte> query)
         {
-            var timer = new Stopwatch();
-            timer.Start();
-
-            IList<Hit> hits = null;
+            IEnumerable<Hit> hits = null;
 
             var indexReader = CreateDocumentIndexReader(keyId);
 
@@ -104,8 +101,6 @@ namespace Sir.Store
             {
                 hits = indexReader.ClosestMatch(query);
             }
-
-            this.Log("index scan found {0} matches in {1}", hits.Count, timer.Elapsed);
 
             return hits.OrderByDescending(x => x.Score).ToList();
         }

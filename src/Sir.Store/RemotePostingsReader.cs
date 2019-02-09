@@ -11,17 +11,19 @@ namespace Sir.Store
     public class RemotePostingsReader : ILogger
     {
         private IConfigurationProvider _config;
+        private readonly string _collectionName;
 
-        public RemotePostingsReader(IConfigurationProvider config)
+        public RemotePostingsReader(IConfigurationProvider config, string collectionName)
         {
             _config = config;
+            _collectionName = collectionName;
         }
 
-        public ScoredResult Reduce(string collection, byte[] query, int skip, int take)
+        public ScoredResult Reduce(byte[] query, int skip, int take)
         {
-            var endpoint = string.Format("{0}{1}?skip={2}&take={3}", _config.Get("postings_endpoint"), collection, skip, take);
-
-            var request = (HttpWebRequest)WebRequest.Create(endpoint);
+            var endpoint = _config.Get("postings_endpoint");
+            var url = string.Format("{0}{1}?skip={2}&take={3}", endpoint, _collectionName, skip, take);
+            var request = (HttpWebRequest)WebRequest.Create(url);
 
             request.ContentType = "application/query";
             request.Accept = "application/postings";
@@ -72,9 +74,9 @@ namespace Sir.Store
             }
         }
 
-        public ICollection<long> Read(string collectionName, int skip, int take, params long[] offsets)
+        public ICollection<long> Read(int skip, int take, params long[] offsets)
         {
-            var endpoint = string.Format("{0}{1}?skip={2}&take={3}", _config.Get("postings_endpoint"), collectionName, skip, take);
+            var endpoint = string.Format("{0}{1}?skip={2}&take={3}", _config.Get("postings_endpoint"), _collectionName, skip, take);
 
             foreach (var offset in offsets)
             {

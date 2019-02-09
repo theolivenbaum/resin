@@ -37,7 +37,7 @@ namespace Sir
             Node = node;
         }
 
-        private string GetString()
+        private string GetDebugString()
         {
             if (Node != null)
                 return Node.ToString();
@@ -48,7 +48,7 @@ namespace Sir
 
         public override string ToString()
         {
-            return string.Format("{0}:{1}", Key, GetString());
+            return string.Format("{0}:{1}", Key, GetDebugString());
         }
     }
 }

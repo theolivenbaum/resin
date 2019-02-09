@@ -137,7 +137,8 @@ namespace Sir.Store
 
         private readonly object _sync = new object();
 
-        public void Add(VectorNode node, float identicalAngle, float foldAngle, Stream vectorStream = null)
+        public void Add(
+            VectorNode node, float identicalAngle, float foldAngle, Stream vectorStream = null, IDictionary<long, IList<long>> conflicts = null)
         {
             node.Ancestor = null;
             node._left = null;
@@ -156,7 +157,7 @@ namespace Sir.Store
 
                     lock (_sync)
                     {
-                        cursor.Merge(node);
+                        cursor.Merge(node, conflicts);
                     }
 
                     break;
@@ -231,7 +232,7 @@ namespace Sir.Store
             }
         }
 
-        private void Merge(VectorNode node)
+        private void Merge(VectorNode node, IDictionary<long, IList<long>> conflicts = null)
         {
             if (DocIds == null)
             {
@@ -242,6 +243,33 @@ namespace Sir.Store
                 foreach (var id in node.DocIds)
                 {
                     DocIds.Add(id);
+                }
+            }
+
+            if (conflicts == null)
+            {
+                return;
+            }
+
+            if (node.PostingsOffset >= 0)
+            {
+                if (PostingsOffset >= 0)
+                {
+                    IList<long> offs;
+
+                    if (conflicts.TryGetValue(PostingsOffset, out offs))
+                    {
+                        offs.Add(node.PostingsOffset);
+                    }
+                    else
+                    {
+                        offs = new List<long> { node.PostingsOffset };
+                        conflicts.Add(PostingsOffset, offs);
+                    }
+                }
+                else
+                {
+                    PostingsOffset = node.PostingsOffset;
                 }
             }
         }
@@ -504,7 +532,8 @@ namespace Sir.Store
         {
             return new VectorNode (Vector)
             {
-                VectorOffset = VectorOffset
+                VectorOffset = VectorOffset,
+                PostingsOffset = PostingsOffset
             };
         }
 
@@ -515,7 +544,10 @@ namespace Sir.Store
 
             while (node != null)
             {
-                yield return node.ShallowCopy();
+                if (node.PostingsOffset > 0)
+                {
+                    yield return node.ShallowCopy();
+                }
 
                 if (node.Right != null)
                 {
@@ -531,7 +563,6 @@ namespace Sir.Store
                 }
             }
         }
-
 
         private void Visualize(VectorNode node, StringBuilder output, int depth)
         {

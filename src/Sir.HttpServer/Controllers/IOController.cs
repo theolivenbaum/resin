@@ -39,10 +39,17 @@ namespace Sir.HttpServer.Controllers
                 this.Log("write took {0}", timer.Elapsed);
                 timer.Restart();
 
-                var buf = result.Stream.ToArray();
-                this.Log("serialized response in {0}", timer.Elapsed);
+                if (result.Stream != null)
+                {
+                    var buf = result.Stream.ToArray();
+                    this.Log("serialized response in {0}", timer.Elapsed);
 
-                return new FileContentResult(buf, result.MediaType);
+                    return new FileContentResult(buf, result.MediaType);
+                }
+                else
+                {
+                    return Ok();
+                }
             }
             catch (Exception ew)
             {

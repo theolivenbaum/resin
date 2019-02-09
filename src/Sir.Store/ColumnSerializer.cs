@@ -55,7 +55,7 @@ namespace Sir.Store
 
             if (_postingsWriter != null)
             {
-                await _postingsWriter.Write(_collectionId, column);
+                await _postingsWriter.Write(column);
             }
 
             lock (_indexFileSync)

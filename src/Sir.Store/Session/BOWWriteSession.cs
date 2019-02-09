@@ -1,6 +1,7 @@
 ﻿using Sir.Core;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,10 +25,11 @@ namespace Sir.Store
             ulong collectionId,
             SessionFactory sessionFactory,
             IConfigurationProvider config,
-            ITokenizer tokenizer) : base(collectionName, collectionId, sessionFactory)
+            ITokenizer tokenizer,
+            ConcurrentDictionary<long, NodeReader> indexReaders) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
-            _readSession = new ReadSession(collectionName, collectionId, sessionFactory, config);
+            _readSession = new ReadSession(collectionName, collectionId, sessionFactory, config, indexReaders);
             _tokenizer = tokenizer;
             _indexWriter = new ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)>(WriteToMemIndex, 2 * int.Parse(config.Get("index_thread_count")));
             _vectorCalculator = new ProducerConsumerQueue<(long docId, long keyId, object key, IDictionary doc)>(CreateVector, int.Parse(config.Get("index_thread_count")));
@@ -138,8 +140,11 @@ namespace Sir.Store
 
             foreach (var model in _newColumns)
             {
-                var columnWriter = new ColumnSerializer(CollectionId, model.Key, SessionFactory, new RemotePostingsWriter(_config), "ix1", "ixp1");
+                var columnWriter = new ColumnSerializer(
+                    CollectionId, model.Key, SessionFactory, new RemotePostingsWriter(_config, CollectionName), "ix1", "ixp1");
+
                 tasks.Add(columnWriter.SerializeColumnSegment(model.Value));
+
                 writers.Add(columnWriter);
             }
 

@@ -20,6 +20,53 @@ namespace Sir.Postings
             _cache = new ConcurrentDictionary<(ulong, long), IList<long>>();
         }
 
+        public async Task Concat(ulong collectionId, IDictionary<long, IList<long>> offsets)
+        {
+            foreach (var list in offsets)
+            {
+                var canonical = list.Key;
+
+                foreach (var offset in list.Value)
+                {
+                    await Concat(collectionId, canonical, offset);
+                }
+            }
+        }
+
+        public async Task Concat(ulong collectionId, long offset1, long offset2)
+        {
+            if (offset1 == offset2)
+            {
+                throw new InvalidOperationException();
+            }
+
+            var offset2Buf = BitConverter.GetBytes(offset2);
+
+            using (var data = CreateReadableWritableDataStream(collectionId))
+            {
+                data.Seek(offset1 + (sizeof(long)*2), SeekOrigin.Begin);
+
+                var lastPageBuf = new byte[sizeof(long)];
+                await data.ReadAsync(lastPageBuf);
+                var lastPage = BitConverter.ToInt64(lastPageBuf, 0);
+
+                if (lastPage == offset1)
+                {
+                    data.Seek(offset1 + sizeof(ulong), SeekOrigin.Begin);
+
+                    await data.WriteAsync(offset2Buf);
+                    await data.WriteAsync(offset2Buf);
+                }
+                else
+                {
+                    data.Seek(lastPage + sizeof(ulong), SeekOrigin.Begin);
+
+                    await data.WriteAsync(offset2Buf);
+                    await data.WriteAsync(offset2Buf);
+                }
+            }
+        }
+
         public async Task<IList<long>> Read(ulong collectionId, long offset)
         {
             var key = (collectionId, offset);
@@ -44,26 +91,29 @@ namespace Sir.Postings
             {
                 data.Seek(offset, SeekOrigin.Begin);
 
-                // We are now at the first page.
-                // Each page starts with a header consisting of (a) count, (b) next page offset and (c) last page offset (long, long, long).
-                // The rest of the page is data (long's).
+                // We are now at the offset's first page.
+                // Each page starts with a header consisting of 
+                // (a) page data count (long),
+                // (b) next page offset (long) and 
+                // (c) last page offset (long).
+                // The rest of the page is data (one or more long's).
 
                 var lbuf = new byte[sizeof(long)];
 
                 await data.ReadAsync(lbuf);
 
-                var count = BitConverter.ToInt64(lbuf);
+                var pageDataCount = BitConverter.ToInt64(lbuf);
 
                 await data.ReadAsync(lbuf);
 
                 var nextPageOffset = BitConverter.ToInt64(lbuf);
 
-                var pageLen = sizeof(long) + (count * sizeof(long));
+                var pageLen = sizeof(long) + (pageDataCount * sizeof(long));
                 var pageBuf = new byte[pageLen];
 
                 await data.ReadAsync(pageBuf);
 
-                for (int i = 0; i < count; i++)
+                for (int i = 0; i < pageDataCount; i++)
                 {
                     var entryOffset = sizeof(long) + (i * sizeof(long));
                     var entry = BitConverter.ToInt64(pageBuf, entryOffset);
@@ -82,18 +132,18 @@ namespace Sir.Postings
 
                     await data.ReadAsync(lbuf);
 
-                    count = BitConverter.ToInt64(lbuf);
+                    pageDataCount = BitConverter.ToInt64(lbuf);
 
                     await data.ReadAsync(lbuf);
 
                     nextPageOffset = BitConverter.ToInt64(lbuf);
 
-                    pageLen = sizeof(long) + (count * sizeof(long));
+                    pageLen = sizeof(long) + (pageDataCount * sizeof(long));
                     var page = new byte[pageLen];
 
                     await data.ReadAsync(page);
 
-                    for (int i = 0; i < count; i++)
+                    for (int i = 0; i < pageDataCount; i++)
                     {
                         var entryOffset = sizeof(long) + (i * sizeof(long));
                         var entry = BitConverter.ToInt64(page, entryOffset);
@@ -113,45 +163,45 @@ namespace Sir.Postings
             return result.ToList();
         }
 
-        public MemoryStream Write(ulong collectionId, byte[] messageBuf)
+        public MemoryStream Write(ulong collectionId, byte[] message)
         {
             var time = Stopwatch.StartNew();
             int read = 0;
-            var lists = new List<byte[]>();
+            var payload = new List<byte[]>();
             var offsets = new List<long>();
             var lengths = new List<int>();
 
             // read first word of payload
-            var payloadCount = BitConverter.ToInt32(messageBuf, 0);
+            var payloadCount = BitConverter.ToInt32(message, 0);
             read = sizeof(int);
 
             // read list lengths
             for (int index = 0; index < payloadCount; index++)
             {
-                var len = BitConverter.ToInt32(messageBuf, read);
+                var len = BitConverter.ToInt32(message, read);
                 lengths.Add(len);
                 read += sizeof(int);
             }
 
-            // read offsets (IDs)
+            // read offsets
             for (int index = 0; index < payloadCount; index++)
             {
-                var offset = BitConverter.ToInt64(messageBuf, read);
-                offsets.Add(offset);
+                var data = BitConverter.ToInt64(message, read);
+                offsets.Add(data);
                 read += sizeof(long);
             }
 
-            // read lists
+            // read payload
             for (int index = 0; index < lengths.Count; index++)
             {
                 var size = lengths[index];
                 var buf = new byte[size];
-                Buffer.BlockCopy(messageBuf, read, buf, 0, size);
+                Buffer.BlockCopy(message, read, buf, 0, size);
                 read += size;
-                lists.Add(buf);
+                payload.Add(buf);
             }
 
-            if (lists.Count != payloadCount)
+            if (payload.Count != payloadCount)
             {
                 throw new DataMisalignedException();
             }
@@ -159,16 +209,16 @@ namespace Sir.Postings
             this.Log("parsed payload in {0}", time.Elapsed);
             time.Restart();
 
-            var listOffsets = new List<long>(lists.Count);
+            var listOffsets = new List<long>(payload.Count);
 
             // persist payload
 
             using (var data = CreateReadableWritableDataStream(collectionId))
             {
-                for (int listIndex = 0; listIndex < lists.Count; listIndex++)
+                for (int listIndex = 0; listIndex < payload.Count; listIndex++)
                 {
                     var offset = offsets[listIndex];
-                    var list = lists[listIndex];
+                    var list = payload[listIndex];
 
                     // invalidate cache
                     var cacheKey = (collectionId, offset);
@@ -203,7 +253,7 @@ namespace Sir.Postings
                         // There is already at least one page with this ID.
                         // We need to find the offset of that page so that we can update its header,
                         // then write the data and record its offset,
-                        // and then write that offset into the header of the first page.
+                        // then write that offset into the header of the first page.
 
                         var nextPageOffsetWordPosition = offset + sizeof(long);
                         long lastPageOffsetWordPosition = offset + (2 * sizeof(long));

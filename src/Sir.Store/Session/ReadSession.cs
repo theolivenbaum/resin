@@ -26,7 +26,8 @@ namespace Sir.Store
         public ReadSession(string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
-            IConfigurationProvider config) 
+            IConfigurationProvider config,
+            ConcurrentDictionary<long, NodeReader> indexReaders) 
             : base(collectionName, collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
@@ -42,8 +43,8 @@ namespace Sir.Store
             _valIx = new ValueIndexReader(ValueIndexStream);
             _keyReader = new ValueReader(KeyStream);
             _valReader = new ValueReader(ValueStream);
-            _postingsReader = new RemotePostingsReader(config);
-            _indexReaders = new ConcurrentDictionary<long, NodeReader>();
+            _postingsReader = new RemotePostingsReader(config, collectionName);
+            _indexReaders = indexReaders;
         }
 
         public ReadResult Read(Query query)
@@ -88,7 +89,7 @@ namespace Sir.Store
 
                 var timer = Stopwatch.StartNew();
 
-                var result =  _postingsReader.Reduce(CollectionName, query.ToStream(), query.Skip, query.Take);
+                var result =  _postingsReader.Reduce(query.ToStream(), query.Skip, query.Take);
 
                 this.Log("reducing {0} to {1} docs took {2}", query, result.Documents.Count, timer.Elapsed);
 
@@ -113,7 +114,7 @@ namespace Sir.Store
                 // score each query term
 
                 var keyHash = q.Term.KeyHash;
-                IList<Hit> hits = null;
+                IEnumerable<Hit> hits = null;
 
                 var indexReader = q.Term.KeyId.HasValue ? 
                     CreateIndexReader(q.Term.KeyId.Value) : 
@@ -126,7 +127,7 @@ namespace Sir.Store
                     hits = indexReader.ClosestMatch(termVector);
                 }
 
-                if (hits != null && hits.Count > 0)
+                if (hits != null)
                 {
                     var topHits = hits.OrderByDescending(x => x.Score).ToList();
                     var topHit = topHits.First();

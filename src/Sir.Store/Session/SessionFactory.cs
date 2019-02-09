@@ -15,6 +15,7 @@ namespace Sir.Store
         private readonly ITokenizer _tokenizer;
         private readonly IConfigurationProvider _config;
         private readonly ConcurrentDictionary<ulong, long> _keys;
+        private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>> _indexReaders;
 
         private Stream _writableKeyMapStream { get; }
 
@@ -26,6 +27,7 @@ namespace Sir.Store
             _keys = LoadKeyMap();
             _tokenizer = tokenizer;
             _config = config;
+            _indexReaders = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>>();
             _writableKeyMapStream = CreateAppendStream(Path.Combine(dir, "_.kmap"));
         }
 
@@ -129,7 +131,14 @@ namespace Sir.Store
 
         public OptimizeSession CreateOptimizeSession(string collectionName, ulong collectionId)
         {
-            return new OptimizeSession(collectionName, collectionId, this, _config);
+            ConcurrentDictionary<long, NodeReader> indexReaders;
+
+            if (!_indexReaders.TryGetValue(collectionId, out indexReaders))
+            {
+                _indexReaders[collectionId] = indexReaders = new ConcurrentDictionary<long, NodeReader>();
+            }
+
+            return new OptimizeSession(collectionName, collectionId, this, _config, indexReaders);
         }
 
         public DocumentStreamSession CreateDocumentStreamSession(string collectionName, ulong collectionId)
@@ -149,17 +158,38 @@ namespace Sir.Store
 
         public BOWWriteSession CreateBOWSession(string collectionName, ulong collectionId)
         {
-            return new BOWWriteSession(collectionName, collectionId, this, _config, _tokenizer);
+            ConcurrentDictionary<long, NodeReader> indexReaders;
+
+            if (!_indexReaders.TryGetValue(collectionId, out indexReaders))
+            {
+                _indexReaders[collectionId] = indexReaders = new ConcurrentDictionary<long, NodeReader>();
+            }
+
+            return new BOWWriteSession(collectionName, collectionId, this, _config, _tokenizer, indexReaders);
         }
 
         public ValidateSession CreateValidateSession(string collectionName, ulong collectionId)
         {
-            return new ValidateSession(collectionName, collectionId, this, _tokenizer, _config);
+            ConcurrentDictionary<long, NodeReader> indexReaders;
+
+            if (!_indexReaders.TryGetValue(collectionId, out indexReaders))
+            {
+                _indexReaders[collectionId] = indexReaders = new ConcurrentDictionary<long, NodeReader>();
+            }
+
+            return new ValidateSession(collectionName, collectionId, this, _tokenizer, _config, indexReaders);
         }
 
         public ReadSession CreateReadSession(string collectionName, ulong collectionId)
         {
-            return new ReadSession(collectionName, collectionId, this, _config);
+            ConcurrentDictionary<long, NodeReader> indexReaders;
+
+            if (!_indexReaders.TryGetValue(collectionId, out indexReaders))
+            {
+                _indexReaders[collectionId] = indexReaders = new ConcurrentDictionary<long, NodeReader>();
+            }
+
+            return new ReadSession(collectionName, collectionId, this, _config, indexReaders);
         }
 
         public BOWReadSession CreateBOWReadSession(string collectionName, ulong collectionId)

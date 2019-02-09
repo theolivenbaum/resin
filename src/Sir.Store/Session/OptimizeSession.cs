@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -10,63 +12,64 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly ReadSession _readSession;
-        private readonly RemotePostingsReader _postingsReader;
+        private readonly RemotePostingsWriter _postingsWriter;
 
         public OptimizeSession(
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory,
-            IConfigurationProvider config) : base(collectionName, collectionId, sessionFactory)
+            IConfigurationProvider config,
+            ConcurrentDictionary<long, NodeReader> indexReaders) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
-            _readSession = new ReadSession(collectionName, collectionId, sessionFactory, config);
-            _postingsReader = new RemotePostingsReader(config);
+            _readSession = new ReadSession(collectionName, collectionId, sessionFactory, config, indexReaders);
+            _postingsWriter= new RemotePostingsWriter(config, collectionName);
         }
 
         public async Task Optimize()
         {
             var time = Stopwatch.StartNew();
-            var cols = new List<(long keyId, VectorNode column)>();
+            var optimizedColumns = new List<(long keyId, VectorNode column)>();
 
-            foreach (var ixFileName in Directory.GetFiles(SessionFactory.Dir, string.Format("{0}.*.ix", CollectionId)))
+            Parallel.ForEach(Directory.GetFiles(SessionFactory.Dir, string.Format("{0}.*.ix", CollectionId)), ixFileName =>
             {
                 var columnTime = Stopwatch.StartNew();
                 var keyId = long.Parse(Path.GetFileNameWithoutExtension(ixFileName).Split('.')[1]);
                 var indexReader = _readSession.CreateIndexReader(keyId);
                 var pages = indexReader.ReadAllPages();
 
-                if (pages.Count == 1)
+                if (pages.Count > 1)
                 {
-                    continue;
-                }
+                    VectorNode optimized = new VectorNode();
+                    var tasks = new List<Task>();
 
-                var optimized = new VectorNode();
-
-                for (int i = 0; i < pages.Count; i++)
-                {
-                    var page = pages[i];
-
-                    foreach (var node in page.All())
+                    foreach (var page in pages)
                     {
-                        if (node.Ancestor == null)
-                            continue;
+                        var conflictingOffsets = new Dictionary<long, IList<long>>();
 
-                        var docIds = _postingsReader.Read(CollectionName, 0, 0, node.PostingsOffset);
+                        foreach (var node in page.All())
+                        {
+                            optimized.Add(
+                                node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle, conflicts:conflictingOffsets);
+                        }
 
-                        node.Add(docIds);
-
-                        optimized.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
+                        if (conflictingOffsets.Count > 0)
+                        {
+                            tasks.Add(_postingsWriter.Concat(conflictingOffsets));
+                        }
                     }
+
+                    Task.WaitAll(tasks.ToArray());
+
+                    optimizedColumns.Add((keyId, optimized));
+
+                    this.Log("rebuilt {0}.{1} in {2}", CollectionId, keyId, columnTime.Elapsed);
                 }
-
-                cols.Add((keyId, optimized));
-
-                this.Log("rebuilt {0}.{1} in {2}", CollectionId, keyId, columnTime.Elapsed);
-            }
+            });
 
             this.Log("rebuilding {0} took {1}", CollectionId, time.Elapsed);
 
-            foreach (var col in cols)
+            foreach (var col in optimizedColumns)
             {
                 await SerializeColumn(col.keyId, col.column);
             }
@@ -75,7 +78,7 @@ namespace Sir.Store
         private async Task SerializeColumn(long keyId, VectorNode column)
         {
             using (var columnWriter = new ColumnSerializer(
-                CollectionId, keyId, SessionFactory, new RemotePostingsWriter(_config), "ixo", "ixop"))
+                CollectionId, keyId, SessionFactory, ixFileExtension: "ixo", pageFileExtension: "ixop"))
             {
                 await columnWriter.SerializeColumnSegment(column);
             }

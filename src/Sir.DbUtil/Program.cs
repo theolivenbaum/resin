@@ -52,6 +52,10 @@ namespace Sir.DbUtil
 
                 await Optimize(dir: args[1], collectionName: args[2]);
             }
+            else
+            {
+                Console.WriteLine("unknown command: {0}", command);
+            }
 
             Console.Read();
         }
