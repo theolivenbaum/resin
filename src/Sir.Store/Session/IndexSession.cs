@@ -22,13 +22,15 @@ namespace Sir.Store
         private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _modelBuilder;
         private readonly ProducerConsumerQueue<(long keyId, long docId, AnalyzedString tokens)> _validator;
         private readonly bool _validate;
+        private readonly ConcurrentDictionary<long, NodeReader> _indexReaders;
 
         public IndexSession(
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
             ITokenizer tokenizer,
-            IConfigurationProvider config) : base(collectionName, collectionId, sessionFactory)
+            IConfigurationProvider config,
+            ConcurrentDictionary<long, NodeReader> indexReaders) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
             _tokenizer = tokenizer;
@@ -42,6 +44,7 @@ namespace Sir.Store
             _validator = new ProducerConsumerQueue<(long keyId, long docId, AnalyzedString tokens)>(Validate, numThreads, startConsumingImmediately: false);
 
             _validate = bool.Parse(config.Get("validate_when_indexing"));
+            _indexReaders = indexReaders;
         }
 
         public void EmbedTerms(IDictionary document)
@@ -116,6 +119,12 @@ namespace Sir.Store
                 _modelBuilder.Join();
             }
 
+            using (_vectorStream)
+            {
+                _vectorStream.Flush();
+                _vectorStream.Close();
+            }
+
             if (_validate)
             {
                 this.Log("awaiting validation");
@@ -135,14 +144,10 @@ namespace Sir.Store
             {
                 var columnWriter = new ColumnSerializer(
                     CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config, CollectionName));
-                columnWriters.Add(columnWriter);
-                tasks[taskId++] = columnWriter.SerializeColumnSegment(column.Value);
-            }
 
-            using (_vectorStream)
-            {
-                _vectorStream.Flush();
-                _vectorStream.Close();
+                columnWriters.Add(columnWriter);
+
+                tasks[taskId++] = columnWriter.SerializeColumnSegment(column.Value);
             }
 
             Task.WaitAll(tasks);
@@ -150,6 +155,12 @@ namespace Sir.Store
             foreach (var writer in columnWriters)
             {
                 writer.Dispose();
+            }
+
+            foreach (var column in _dirty)
+            {
+                NodeReader staleReader;
+                _indexReaders.TryRemove(column.Key, out staleReader);
             }
 
             _flushed = true;
