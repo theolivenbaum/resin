@@ -2,7 +2,7 @@
   "profiles": {
     "Sir.DbUtil": {
       "commandName": "Project",
-      "commandLineArgs": "validate C:\\temp\\App_Data www 0 10000 1000"
+      "commandLineArgs": "index C:\\temp\\App_Data www 0 10000 1000"
     }
   }
 }

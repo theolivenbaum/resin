@@ -13,7 +13,9 @@
             var host = new Uri("https://" + item.Document["_url"].ToString()).Host.ToString();
             <li>
                 <p>
-                    <a class="result-link" href="https://@item.Document["_url"].ToString()">@item.Document["title"].ToString()</a><br />
+                    <span><a href="http://localhost:54865/label-and-redirect/?url=@Uri.EscapeDataString(item.Document["_url"].ToString())&q=@ViewData["q"]&collection=@ViewData["collection"]">&#94;</a></span>
+                    <span><a class="result-link" href="https://@item.Document["_url"].ToString()">@item.Document["title"].ToString()</a></span>
+                    <br />
                     <span style="font-weight:bold;color:black;opacity:0.45;font-size:9pt;">@host</span><br />
                     <span class="medium-text">Score: @item.Document["__score"]</span><br />
                     <span class="medium-text">Indexed @DateTime.FromBinary((long)(item.Document["_created"]))</span>
