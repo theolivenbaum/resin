@@ -12,14 +12,19 @@
         {
             var host = new Uri("https://" + item.Document["_url"].ToString()).Host.ToString();
             <li>
-                <p>
-                    <a href="/upvote/?url=@System.Web.HttpUtility.UrlEncode(item.Document["_url"].ToString())&q=@ViewData["q"]&collection=@ViewData["collection"]"><span class="upvote" title="upvote">&#9650;</span></a>
-                    <span><a class="result-link" href="https://@item.Document["_url"].ToString()">@item.Document["title"].ToString()</a></span>
-                    <br />
-                    <span style="font-weight:bold;color:black;opacity:0.45;font-size:9pt;">@host</span><br />
-                    <span class="medium-text">Score: @item.Document["__score"]</span><br />
-                    <span class="medium-text">Indexed @DateTime.FromBinary((long)(item.Document["_created"]))</span>
-                </p>
+                <div>
+                    <div class="document-header">
+                        <a href="/upvote/?url=@System.Web.HttpUtility.UrlEncode(item.Document["_url"].ToString())&q=@ViewData["q"]&collection=@ViewData["collection"]">
+                            <div class="upvote" title="upvote">&#9650;</div> 
+                        </a>
+                        <span><a class="result-link" href="https://@item.Document["_url"].ToString()">@item.Document["title"].ToString()</a></span>
+                    </div>
+                    <div class="document-body">
+                        <span style="font-weight:bold;color:black;opacity:0.45;font-size:9pt;">@host</span><br />
+                        <span class="medium-text">Score: @item.Document["__score"]</span><br />
+                        <span class="medium-text">Indexed @DateTime.FromBinary((long)(item.Document["_created"]))</span>
+                    </div>
+                </div>
             </li>
         }
     </ol>
