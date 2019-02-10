@@ -74,7 +74,8 @@ namespace Sir.Store
             var toplist = new ConcurrentBag<Hit>();
             var query = new VectorNode(vector);
 
-            foreach (var page in ReadAllPages())
+            Parallel.ForEach(ReadAllPages(), page =>
+            //foreach (var page in ReadAllPages())
             {
                 var hit = page.ClosestMatch(query, VectorNode.TermFoldAngle);
 
@@ -82,7 +83,7 @@ namespace Sir.Store
                 {
                     toplist.Add(hit);
                 }
-            }
+            });
 
             //var toplist = new List<Hit>();
             //var ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
