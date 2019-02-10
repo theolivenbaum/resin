@@ -13,7 +13,7 @@
             var host = new Uri("https://" + item.Document["_url"].ToString()).Host.ToString();
             <li>
                 <p>
-                    <span><a href="http://localhost:54865/label-and-redirect/?url=@Uri.EscapeDataString(item.Document["_url"].ToString())&q=@ViewData["q"]&collection=@ViewData["collection"]">&#94;</a></span>
+                    <a href="/upvote/?url=@System.Web.HttpUtility.UrlEncode(item.Document["_url"].ToString())&q=@ViewData["q"]&collection=@ViewData["collection"]"><span class="upvote" title="upvote">&#9650;</span></a>
                     <span><a class="result-link" href="https://@item.Document["_url"].ToString()">@item.Document["title"].ToString()</a></span>
                     <br />
                     <span style="font-weight:bold;color:black;opacity:0.45;font-size:9pt;">@host</span><br />
