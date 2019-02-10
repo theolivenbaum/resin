@@ -133,14 +133,24 @@ namespace Sir.Store
                     var topHit = topHits.First();
 
                     q.Score = topHit.Score;
-                    q.PostingsOffset = topHit.PostingsOffset;
+                    q.PostingsOffset = topHit.PostingsOffsets[0];
+
+                    foreach (var offset in topHit.PostingsOffsets.Skip(1))
+                    {
+                        q.AddClause(new Query(topHit.Copy(), offset));
+                    }
 
                     if (topHits.Count > 1)
                     {
                         foreach (var hit in topHits.Skip(1))
                         {
                             if (hit.Score > VectorNode.TermFoldAngle)
-                                q.AddClause(new Query(hit));
+                            {
+                                foreach (var offset in hit.PostingsOffsets)
+                                {
+                                    q.AddClause(new Query(topHit.Copy(), offset));
+                                }
+                            }
                         }
                     }
                 }

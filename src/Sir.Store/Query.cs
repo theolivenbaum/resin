@@ -18,11 +18,11 @@ namespace Sir.Store
             Or = true;
         }
 
-        public Query(Hit hit)
+        public Query(Hit hit, long postingsOffset)
         {
             Hit = hit;
             Score = hit.Score;
-            PostingsOffset = hit.PostingsOffset;
+            PostingsOffset = postingsOffset;
             Or = true;
         }
 

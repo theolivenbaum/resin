@@ -106,19 +106,9 @@ namespace Sir.Store
 
             foreach (var vector in terms.Embeddings)
             {
-                Hit best = null;
+                var hit = treeReader.ReadAllPages().ClosestMatch(new VectorNode(vector), VectorNode.DocFoldAngle);
 
-                foreach (var page in treeReader.ReadAllPages())
-                {
-                    var hit = page.ClosestMatch(new VectorNode(vector), VectorNode.DocFoldAngle);
-
-                    if (best == null || hit.Score > best.Score)
-                    {
-                        best = hit;
-                    }
-                }
-
-                var termId = best.NodeId;
+                var termId = hit.NodeId;
 
                 //if (!docVec.ContainsKey(termId))
                 //{

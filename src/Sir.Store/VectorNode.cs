@@ -70,6 +70,8 @@ namespace Sir.Store
 
         public byte Terminator { get; set; }
 
+        public IList<long> PostingsOffsets { get; private set; }
+
         public VectorNode()
             : this('\0'.ToString())
         {
@@ -130,7 +132,7 @@ namespace Sir.Store
             {
                 Embedding = best.Vector,
                 Score = highscore,
-                PostingsOffset = best.PostingsOffset,
+                PostingsOffsets = best.PostingsOffsets ?? new List<long> { best.PostingsOffset },
                 Ids = best.DocIds
             };
         }
@@ -243,6 +245,26 @@ namespace Sir.Store
                 foreach (var id in node.DocIds)
                 {
                     DocIds.Add(id);
+                }
+            }
+
+            if (node.PostingsOffset >= 0)
+            {
+                if (PostingsOffset >= 0)
+                {
+                    if (PostingsOffsets == null)
+                    {
+                        PostingsOffsets = new List<long> { PostingsOffset, node.PostingsOffset };
+                    }
+                    else
+                    {
+                        PostingsOffsets.Add(PostingsOffset);
+                        PostingsOffsets.Add(node.PostingsOffset);
+                    }
+                }
+                else
+                {
+                    PostingsOffset = node.PostingsOffset;
                 }
             }
 

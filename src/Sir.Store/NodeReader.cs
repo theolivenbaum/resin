@@ -17,8 +17,8 @@ namespace Sir.Store
         private readonly SessionFactory _sessionFactory;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
-        private IList<VectorNode> _pageCache;
         private readonly object _sync = new object();
+        private VectorNode _root;
 
         public NodeReader(string ixFileName, string vecFileName, SessionFactory sessionFactory, IList<(long, long)> pages)
         {
@@ -28,45 +28,46 @@ namespace Sir.Store
             _sessionFactory = sessionFactory;
         }
 
-        public IList<VectorNode> ReadAllPages()
+        public VectorNode ReadAllPages()
         {
-            if (_pageCache != null)
+            if (_root != null)
             {
-                return _pageCache;
+                return _root;
             }
-
-            IList<VectorNode> pages = new List<VectorNode>();
 
             lock (_sync)
             {
-                if (_pageCache == null)
+                if (_root == null)
                 {
                     var time = Stopwatch.StartNew();
+
+                    _root = new VectorNode();
 
                     using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
                     using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
                     {
+                        var pageCount = 0;
+
                         foreach (var page in _pages)
                         {
                             ixStream.Seek(page.offset, SeekOrigin.Begin);
 
                             var tree = VectorNode.DeserializeTree(ixStream, vectorStream, page.length);
 
-                            pages.Add(tree);
+                            foreach (var node in tree.All())
+                            {
+                                _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
+                            }
+
+                            this.Log("deserialized page {0}", pageCount++);
                         }
                     }
 
-                    this.Log("deserialized {0} index segments in {1}", pages.Count, time.Elapsed);
-
-                    _pageCache = pages;
-                }
-                else
-                {
-                    pages = _pageCache;
+                    this.Log("deserialized {0} index segments in {1}", _pages.Count, time.Elapsed);
                 }
             }
 
-            return pages;
+            return _root;
         }
 
         public IEnumerable<Hit> ClosestMatch(SortedList<int, byte> vector)
@@ -74,16 +75,17 @@ namespace Sir.Store
             var toplist = new ConcurrentBag<Hit>();
             var query = new VectorNode(vector);
 
-            Parallel.ForEach(ReadAllPages(), page =>
-            //foreach (var page in ReadAllPages())
-            {
-                var hit = page.ClosestMatch(query, VectorNode.TermFoldAngle);
+            yield return ReadAllPages().ClosestMatch(query, VectorNode.TermFoldAngle);
 
-                if (hit.Score > 0)
-                {
-                    toplist.Add(hit);
-                }
-            });
+            //Parallel.ForEach(ReadAllPages(), page =>
+            //{
+            //    var hit = page.ClosestMatch(query, VectorNode.TermFoldAngle);
+
+            //    if (hit.Score > 0)
+            //    {
+            //        toplist.Add(hit);
+            //    }
+            //});
 
             //var toplist = new List<Hit>();
             //var ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
@@ -105,7 +107,7 @@ namespace Sir.Store
             //    }
             //}
 
-            return toplist;
+            //return toplist;
         }
 
         private Hit ClosestMatchInPage(SortedList<int, byte> node, Stream indexStream, long endOfSegment, Stream vectorStream)
@@ -185,7 +187,7 @@ namespace Sir.Store
             {
                 Embedding = best.Vector,
                 Score = highscore,
-                PostingsOffset = best.PostingsOffset,
+                PostingsOffsets = best.PostingsOffsets ?? new List<long> { best.PostingsOffset },
                 NodeId = best.VectorOffset
             };
         }

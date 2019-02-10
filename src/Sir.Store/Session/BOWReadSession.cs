@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Collections.Concurrent;
+using System;
 
 namespace Sir.Store
 {
@@ -50,45 +51,47 @@ namespace Sir.Store
 
         private ReadResult Reduce(IDictionary<long, SortedList<int, byte>> query, ReadSession readSession, int skip, int take)
         {
-            IDictionary<long, Hit> scored = null;
+            throw new NotImplementedException();
 
-            foreach (var term in query)
-            {
-                var hits = Scan(term.Key, term.Value).ToDictionary(x => x.PostingsOffset, y => y);
+            //IDictionary<long, Hit> scored = null;
 
-                if (scored == null)
-                {
-                    scored = hits;
-                }
-                else
-                {
-                    foreach (var hit in hits)
-                    {
-                        Hit score;
+            //foreach (var term in query)
+            //{
+            //    var hits = Scan(term.Key, term.Value).ToDictionary(x => x.PostingsOffset, y => y);
 
-                        if (scored.TryGetValue(hit.Value.PostingsOffset, out score))
-                        {
-                            scored[hit.Key].Score = score.Score + hit.Value.Score;
-                        }
-                        else
-                        {
-                            scored.Add(hit.Key, hit.Value);
-                        }
-                    }
-                }
-            }
+            //    if (scored == null)
+            //    {
+            //        scored = hits;
+            //    }
+            //    else
+            //    {
+            //        foreach (var hit in hits)
+            //        {
+            //            Hit score;
 
-            var sortedHits = scored.Values.OrderByDescending(h => h.Score);
-            var offsets = sortedHits.Select(h => h.PostingsOffset).ToArray();
-            var docIds = _postingsReader.Read(skip, take, offsets);
-            var window = docIds.GroupBy(x => x).Select(x => (x.Key, x.Count()))
-                .OrderByDescending(x => x.Item2)
-                .Skip(skip)
-                .Take(take)
-                .Select(x => x.Key).ToList();
-            var docs = readSession.ReadDocs(window);
+            //            if (scored.TryGetValue(hit.Value.PostingsOffset, out score))
+            //            {
+            //                scored[hit.Key].Score = score.Score + hit.Value.Score;
+            //            }
+            //            else
+            //            {
+            //                scored.Add(hit.Key, hit.Value);
+            //            }
+            //        }
+            //    }
+            //}
 
-            return new ReadResult { Docs = docs, Total = docIds.Count };
+            //var sortedHits = scored.Values.OrderByDescending(h => h.Score);
+            //var offsets = sortedHits.Select(h => h.PostingsOffset).ToArray();
+            //var docIds = _postingsReader.Read(skip, take, offsets);
+            //var window = docIds.GroupBy(x => x).Select(x => (x.Key, x.Count()))
+            //    .OrderByDescending(x => x.Item2)
+            //    .Skip(skip)
+            //    .Take(take)
+            //    .Select(x => x.Key).ToList();
+            //var docs = readSession.ReadDocs(window);
+
+            //return new ReadResult { Docs = docs, Total = docIds.Count };
         }
 
         private IList<Hit> Scan(long keyId, SortedList<int, byte> query)

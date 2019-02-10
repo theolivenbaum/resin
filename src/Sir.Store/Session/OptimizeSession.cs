@@ -36,35 +36,8 @@ namespace Sir.Store
                 var columnTime = Stopwatch.StartNew();
                 var keyId = long.Parse(Path.GetFileNameWithoutExtension(ixFileName).Split('.')[1]);
                 var indexReader = _readSession.CreateIndexReader(keyId);
-                var pages = indexReader.ReadAllPages();
+                var optimized = indexReader.ReadAllPages();
 
-                if (pages.Count > 1)
-                {
-                    VectorNode optimized = new VectorNode();
-                    var tasks = new List<Task>();
-
-                    foreach (var page in pages)
-                    {
-                        var conflictingOffsets = new Dictionary<long, IList<long>>();
-
-                        foreach (var node in page.All())
-                        {
-                            optimized.Add(
-                                node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle, conflicts:conflictingOffsets);
-                        }
-
-                        if (conflictingOffsets.Count > 0)
-                        {
-                            tasks.Add(_postingsWriter.Concat(conflictingOffsets));
-                        }
-                    }
-
-                    Task.WaitAll(tasks.ToArray());
-
-                    optimizedColumns.Add((keyId, optimized));
-
-                    this.Log("rebuilt {0}.{1} in {2}", CollectionId, keyId, columnTime.Elapsed);
-                }
             });
 
             this.Log("rebuilding {0} took {1}", CollectionId, time.Elapsed);

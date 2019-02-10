@@ -66,32 +66,29 @@ namespace Sir.Store
             {
                 var hits = new SortedList<float, Hit>(); ;
 
-                foreach (var page in item.indexReader.ReadAllPages())
-                {
-                    var hit = page.ClosestMatch(new VectorNode(vector), VectorNode.TermFoldAngle);
+                var hit = item.indexReader.ReadAllPages().ClosestMatch(new VectorNode(vector), VectorNode.TermFoldAngle);
 
-                    hits.Add(hit.Score, hit);
-                }
+                //hits.Add(hit.Score, hit);
 
-                if (hits.Keys[0] < VectorNode.TermIdenticalAngle)
-                {
-                    throw new DataMisalignedException();
-                }
+                //if (hits.Keys[0] < VectorNode.TermIdenticalAngle)
+                //{
+                //    throw new DataMisalignedException();
+                //}
 
-                var postings = new HashSet<long>();
+                //var postings = new HashSet<long>();
 
-                foreach (var hit in hits)
-                {
-                    foreach(var id in _postingsReader.Read(0, 0, hit.Value.PostingsOffset))
-                    {
-                        postings.Add(id);
-                    }
-                }
+                //foreach (var hit in hits)
+                //{
+                //    foreach(var id in _postingsReader.Read(0, 0, hit.Value.PostingsOffset))
+                //    {
+                //        postings.Add(id);
+                //    }
+                //}
 
-                if (!postings.Contains(item.docId))
-                {
-                    throw new DataMisalignedException();
-                }
+                //if (!postings.Contains(item.docId))
+                //{
+                //    throw new DataMisalignedException();
+                //}
             }
 
             this.Log("validated doc {0}", item.docId);
