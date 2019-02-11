@@ -57,11 +57,6 @@ input[type=text] {
     }
 }
 
-textarea {
-    width: 250px;
-    height: 150px;
-}
-
 h1 {
     margin-top: 10px;
     margin-bottom: 12px;
@@ -118,4 +113,13 @@ footer p {
 .document-body {
     margin-left: 18px;
     margin-bottom: 15px;
+}
+textarea.query{
+    width: 516px;
+    height: 100px;
+    margin-bottom: 0px;
+}
+
+button.queryparser{
+    vertical-align: top;
 }

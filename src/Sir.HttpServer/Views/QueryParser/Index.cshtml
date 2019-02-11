@@ -1,0 +1,12 @@
+﻿@model IEnumerable<Sir.HttpServer.Controllers.QueryParserModel>
+
+@{
+    ViewData["Title"] = "Go.go!";
+    Layout = "~/Views/_Layout.cshtml";
+}
+@{await Html.RenderPartialAsync("QueryParserForm");}
+
+@if (ViewData["time_ms"] != null)
+{
+    //await Html.RenderPartialAsync("DocumentList", docs);
+}

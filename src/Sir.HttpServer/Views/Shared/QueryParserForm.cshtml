@@ -1,8 +1,7 @@
 ﻿@using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
 {
-    <input type="text" id="q" name="q" placeholder="Ask me anything." value="@ViewData["q"]" />
-    <button type="submit" value="OR" name="OR" id="or" title="Go">Go</button>
-    <button type="submit" value="QP" name="QP" id="or" title="go! (BETA)">go! <sup>BETA</sup></button>
+    <textarea class="query"></textarea>
+    <button class="queryparser" type="submit" value="OR" name="OR" id="or" title="OR">go! <sup>BETA</sup></button> 
     <input type="hidden" value="0" name="skip" id="skip" />
     <input type="hidden" value="10" name="take" id="take" />
     <input type="hidden" value="title" name="fields" />

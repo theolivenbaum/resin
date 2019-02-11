@@ -6,25 +6,19 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Sir.HttpServer.Controllers
 {
-    public class SearchController : UIController
+    public class QueryParserController : UIController
     {
         private readonly PluginsCollection _plugins;
 
-        public SearchController(PluginsCollection plugins, IConfigurationProvider config) : base(config)
+        public QueryParserController(PluginsCollection plugins, IConfigurationProvider config) : base(config)
         {
             _plugins = plugins;
         }
 
-        [HttpGet("/search/")]
-        [HttpPost("/search/")]
+        [HttpGet("/queryparser/")]
+        [HttpPost("/queryparser/")]
         public async Task<IActionResult> Index(string q, string collection)
         {
-            if (Request.Query.ContainsKey("QP"))
-            {
-                var u = Request.Scheme + "://" + Request.Host + "/queryparser";
-                Response.Redirect(u);
-            }
-
             if (string.IsNullOrWhiteSpace(q)) return View();
 
             ViewData["q"] = q;
@@ -45,7 +39,7 @@ namespace Sir.HttpServer.Controllers
             ViewData["collection"] = collection;
             ViewData["total"] = result.Total;
 
-            if (result.Total == 0)
+            if (result.Total== 0)
             {
                 return View(new SearchResultModel[0]);
             }
@@ -56,7 +50,7 @@ namespace Sir.HttpServer.Controllers
         }
     }
 
-    public class SearchResultModel
+    public class QueryParserModel
     {
         public IDictionary Document { get; set; }
     }

@@ -24,6 +24,12 @@
     <Content Update="Views\Add\Error.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
+    <Content Update="Views\QueryParser\Index.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+    <Content Update="Views\Shared\QueryParserForm.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\Shared\SearchForm.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
