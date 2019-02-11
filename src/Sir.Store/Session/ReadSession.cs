@@ -107,8 +107,8 @@ namespace Sir.Store
 
         private void Map(Query query)
         {
-            Debug.WriteLine("before");
-            Debug.WriteLine(query.ToDiagram());
+            this.Log("before");
+            this.Log(query.ToDiagram());
 
             //foreach (var q in query.ToList())
             Parallel.ForEach(query.ToList(), q =>
@@ -160,8 +160,8 @@ namespace Sir.Store
                 }
             });
 
-            Debug.WriteLine("after");
-            Debug.WriteLine(query.ToDiagram());
+            this.Log("after");
+            this.Log(query.ToDiagram());
         }
 
         public NodeReader CreateIndexReader(long keyId)
