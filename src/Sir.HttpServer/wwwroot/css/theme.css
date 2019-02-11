@@ -5,10 +5,10 @@
 }
 
 .sub {
-    font-size: xx-small;
+    font-size: 0.3em;
     color: orangered;
-    margin-left: 2px;
-    margin-right: 2px;
+    margin-left: 1px;
+    margin-right: 1px;
 }
 
 sup {
@@ -21,13 +21,13 @@ a {
     color: orangered;
 }
 
-    a.result-link {
-        color: mediumblue;
-    }
+a.result-link {
+    color: mediumblue;
+}
 
-        a.result-link:visited {
-            color: purple;
-        }
+a.result-link:visited {
+    color: purple;
+}
 
 input[type=text] {
     width: 480px;
@@ -101,19 +101,19 @@ footer {
     font-size: 10pt;
 }
 
-    footer span {
-        padding-top: 10px;
-    }
+footer span {
+    padding-top: 10px;
+}
 
-    footer a {
-        text-decoration: none;
-        color: gray;
-    }
+footer a {
+    text-decoration: none;
+    color: gray;
+}
 
-    footer p {
-        margin-top: 8px;
-        margin-bottom: 0px;
-    }
+footer p {
+    margin-top: 8px;
+    margin-bottom: 0px;
+}
 
 .document-body {
     margin-left: 18px;
