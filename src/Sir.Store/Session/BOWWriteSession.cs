@@ -31,8 +31,8 @@ namespace Sir.Store
             _config = config;
             _readSession = new ReadSession(collectionName, collectionId, sessionFactory, config, indexReaders);
             _tokenizer = tokenizer;
-            _indexWriter = new ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)>(WriteToMemIndex, 2 * int.Parse(config.Get("index_thread_count")));
-            _vectorCalculator = new ProducerConsumerQueue<(long docId, long keyId, object key, IDictionary doc)>(CreateVector, int.Parse(config.Get("index_thread_count")));
+            _indexWriter = new ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)>(WriteToMemIndex, 2 * int.Parse(config.Get("write_thread_count")));
+            _vectorCalculator = new ProducerConsumerQueue<(long docId, long keyId, object key, IDictionary doc)>(CreateVector, int.Parse(config.Get("write_thread_count")));
             _newColumns = new SortedList<long, VectorNode>();
 
             var docVecFileName = Path.Combine(SessionFactory.Dir, CollectionId + ".vec1");

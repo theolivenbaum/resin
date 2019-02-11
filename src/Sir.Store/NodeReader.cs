@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sir.Core;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,17 +16,19 @@ namespace Sir.Store
     {
         private readonly IList<(long offset, long length)> _pages;
         private readonly SessionFactory _sessionFactory;
+        private readonly IConfigurationProvider _config;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
         private readonly object _sync = new object();
         private VectorNode _root;
 
-        public NodeReader(string ixFileName, string vecFileName, SessionFactory sessionFactory, IList<(long, long)> pages)
+        public NodeReader(string ixFileName, string vecFileName, SessionFactory sessionFactory, IList<(long, long)> pages, IConfigurationProvider config)
         {
             _vecFileName = vecFileName;
             _ixFileName = ixFileName;
             _pages = pages;
             _sessionFactory = sessionFactory;
+            _config = config;
         }
 
         public VectorNode ReadAllPages()
@@ -45,21 +48,15 @@ namespace Sir.Store
 
                     using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
                     using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
+                    using (var queue = new ProducerConsumerQueue<VectorNode>(Build, int.Parse(_config.Get("write_thread_count"))))
                     {
-                        var pageCount = 0;
-
                         foreach (var page in _pages)
                         {
                             ixStream.Seek(page.offset, SeekOrigin.Begin);
 
                             var tree = VectorNode.DeserializeTree(ixStream, vectorStream, page.length);
 
-                            foreach (var node in tree.All())
-                            {
-                                _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
-                            }
-
-                            this.Log("deserialized page {0}", pageCount++);
+                            queue.Enqueue(tree);
                         }
                     }
 
@@ -68,6 +65,16 @@ namespace Sir.Store
             }
 
             return _root;
+        }
+
+        private void Build(VectorNode tree)
+        {
+            foreach (var node in tree.All())
+            {
+                _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
+            }
+
+            this.Log("deserialized page");
         }
 
         public IEnumerable<Hit> ClosestMatch(SortedList<int, byte> vector)

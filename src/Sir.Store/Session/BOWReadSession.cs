@@ -20,6 +20,7 @@ namespace Sir.Store
         private readonly ValueReader _valReader;
         private readonly RemotePostingsReader _postingsReader;
         private readonly ConcurrentDictionary<long, NodeReader> _indexReaders;
+        private readonly IConfigurationProvider _config;
 
         public BOWReadSession(string collectionName,
             ulong collectionId,
@@ -42,6 +43,7 @@ namespace Sir.Store
             _valReader = new ValueReader(ValueStream);
             _postingsReader = new RemotePostingsReader(config, collectionName);
             _indexReaders = new ConcurrentDictionary<long, NodeReader>();
+            _config = config;
         }
 
         public ReadResult Read(IDictionary<long, SortedList<int, byte>> query, ReadSession readSession, int skip, int take)
@@ -124,7 +126,7 @@ namespace Sir.Store
                     pages = new PageIndexReader(ixpStream).ReadAll();
                 }
 
-                reader = new NodeReader(ixFileName, vecFileName, SessionFactory, pages);
+                reader = new NodeReader(ixFileName, vecFileName, SessionFactory, pages, _config);
 
                 _indexReaders.GetOrAdd(keyId, reader);
             }

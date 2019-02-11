@@ -37,7 +37,7 @@ namespace Sir.Store
             _dirty = new ConcurrentDictionary<long, VectorNode>();
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId)));
 
-            var numThreads = int.Parse(_config.Get("index_thread_count"));
+            var numThreads = int.Parse(_config.Get("write_thread_count"));
 
             _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>(BuildModel, numThreads);
 

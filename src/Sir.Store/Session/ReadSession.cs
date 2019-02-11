@@ -22,6 +22,7 @@ namespace Sir.Store
         private readonly ValueReader _valReader;
         private readonly RemotePostingsReader _postingsReader;
         private readonly ConcurrentDictionary<long, NodeReader> _indexReaders;
+        private readonly IConfigurationProvider _config;
 
         public ReadSession(string collectionName,
             ulong collectionId,
@@ -45,6 +46,7 @@ namespace Sir.Store
             _valReader = new ValueReader(ValueStream);
             _postingsReader = new RemotePostingsReader(config, collectionName);
             _indexReaders = indexReaders;
+            _config = config;
         }
 
         public ReadResult Read(Query query)
@@ -108,8 +110,8 @@ namespace Sir.Store
             Debug.WriteLine("before");
             Debug.WriteLine(query.ToDiagram());
 
-            foreach (var q in query.ToList())
-            //Parallel.ForEach(query.ToList(), q =>
+            //foreach (var q in query.ToList())
+            Parallel.ForEach(query.ToList(), q =>
             {
                 // score each query term
 
@@ -135,9 +137,11 @@ namespace Sir.Store
                     q.Score = topHit.Score;
                     q.PostingsOffset = topHit.PostingsOffsets[0];
 
+                    var topHitCopy = topHit.Copy();
+
                     foreach (var offset in topHit.PostingsOffsets.Skip(1))
                     {
-                        q.AddClause(new Query(topHit.Copy(), offset));
+                        q.AddClause(new Query(topHitCopy, offset));
                     }
 
                     if (topHits.Count > 1)
@@ -148,13 +152,13 @@ namespace Sir.Store
                             {
                                 foreach (var offset in hit.PostingsOffsets)
                                 {
-                                    q.AddClause(new Query(topHit.Copy(), offset));
+                                    q.AddClause(new Query(topHitCopy, offset));
                                 }
                             }
                         }
                     }
                 }
-            }//);
+            });
 
             Debug.WriteLine("after");
             Debug.WriteLine(query.ToDiagram());
@@ -176,7 +180,7 @@ namespace Sir.Store
                     pages = new PageIndexReader(ixpStream).ReadAll();
                 }
 
-                reader = new NodeReader(ixFileName, vecFileName, SessionFactory, pages);
+                reader = new NodeReader(ixFileName, vecFileName, SessionFactory, pages, _config);
 
                 _indexReaders.GetOrAdd(keyId, reader);
             }
