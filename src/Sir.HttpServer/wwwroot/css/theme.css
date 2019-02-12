@@ -5,10 +5,10 @@
 }
 
 .sub {
-    font-size: 0.3em;
+    font-size: 0.25em;
     color: orangered;
-    margin-left: 1px;
-    margin-right: 1px;
+    margin-left: 2px;
+    margin-right: 2px;
 }
 
 sup {
@@ -18,16 +18,29 @@ sup {
 
 a {
     text-decoration: none;
-    color: orangered;
+    color: gray;
 }
 
-a.result-link {
-    color: mediumblue;
-}
+    a h1 {
+        text-decoration: none;
+        color: orangered;
+    }
 
-a.result-link:visited {
-    color: purple;
-}
+    a:visited h1 {
+        color: orangered;
+    }
+
+    a:visited {
+        color: orangered;
+    }
+
+    a.result-link {
+        color: mediumblue;
+    }
+
+        a.result-link:visited {
+            color: purple;
+        }
 
 input[type=text] {
     width: 480px;
@@ -57,6 +70,11 @@ input[type=text] {
     }
 }
 
+textarea {
+    width: 250px;
+    height: 150px;
+}
+
 h1 {
     margin-top: 10px;
     margin-bottom: 12px;
@@ -73,7 +91,6 @@ p {
 
 div.upvote {
     font-size: 0.75em;
-    color: orangered;
     margin-bottom: 3px;
     margin-right: 4px;
     float: left;
@@ -96,30 +113,31 @@ footer {
     font-size: 10pt;
 }
 
-footer span {
-    padding-top: 10px;
-}
+    footer span {
+        padding-top: 10px;
+    }
 
-footer a {
-    text-decoration: none;
-    color: gray;
-}
+    footer a {
+        text-decoration: none;
+        color: gray;
+    }
 
-footer p {
-    margin-top: 8px;
-    margin-bottom: 0px;
-}
+    footer p {
+        margin-top: 8px;
+        margin-bottom: 0px;
+    }
 
 .document-body {
     margin-left: 18px;
     margin-bottom: 15px;
 }
-textarea.query{
+
+textarea.query {
     width: 516px;
     height: 100px;
     margin-bottom: 0px;
 }
 
-button.queryparser{
+button.queryparser {
     vertical-align: top;
 }
