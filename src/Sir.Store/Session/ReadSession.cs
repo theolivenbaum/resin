@@ -107,20 +107,18 @@ namespace Sir.Store
 
         private void Map(Query query)
         {
-            this.Log("before");
-            this.Log(query.ToDiagram());
+            this.Log("before: " + query.ToDiagram());
 
             //foreach (var q in query.ToList())
             Parallel.ForEach(query.ToList(), q =>
             {
                 // score each query term
 
-                var keyHash = q.Term.KeyHash;
                 IEnumerable<Hit> hits = null;
 
                 var indexReader = q.Term.KeyId.HasValue ? 
                     CreateIndexReader(q.Term.KeyId.Value) : 
-                    CreateIndexReader(keyHash);
+                    CreateIndexReader(q.Term.KeyHash);
 
                 if (indexReader != null)
                 {
@@ -137,11 +135,9 @@ namespace Sir.Store
                     q.Score = topHit.Score;
                     q.PostingsOffset = topHit.PostingsOffsets[0];
 
-                    var topHitCopy = topHit.Copy();
-
                     foreach (var offset in topHit.PostingsOffsets.Skip(1))
                     {
-                        q.AddClause(new Query(topHitCopy, offset));
+                        q.AddClause(new Query(topHit, offset));
                     }
 
                     if (topHits.Count > 1)
@@ -152,7 +148,7 @@ namespace Sir.Store
                             {
                                 foreach (var offset in hit.PostingsOffsets)
                                 {
-                                    q.AddClause(new Query(topHitCopy, offset));
+                                    q.AddClause(new Query(hit, offset));
                                 }
                             }
                         }
@@ -160,8 +156,7 @@ namespace Sir.Store
                 }
             });
 
-            this.Log("after");
-            this.Log(query.ToDiagram());
+            this.Log("after: " + query.ToDiagram());
         }
 
         public NodeReader CreateIndexReader(long keyId)
