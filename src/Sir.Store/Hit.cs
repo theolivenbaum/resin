@@ -15,10 +15,5 @@ namespace Sir.Store
         {
             return string.Join(string.Empty, Embedding.Keys.Select(x => char.ConvertFromUtf32(x)).ToArray());
         }
-
-        public Hit Copy()
-        {
-            return new Hit { Embedding = Embedding, Score = Score, NodeId = NodeId, Ids = Ids };
-        }
     }
 }
