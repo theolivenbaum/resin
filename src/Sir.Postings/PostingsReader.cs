@@ -26,7 +26,7 @@ namespace Sir.Postings
         {
             try
             {
-                // A read request is either a request to do a "lookup by ID" or to "execute query".
+                // A read request is either a request to "lookup by ID" or to "execute query".
 
                 var timer = new Stopwatch();
                 timer.Start();
@@ -169,11 +169,9 @@ namespace Sir.Postings
                 delegate (KeyValuePair<long, float> pair1,
                 KeyValuePair<long, float> pair2)
                 {
-                    return pair1.Value.CompareTo(pair2.Value);
+                    return pair2.Value.CompareTo(pair1.Value);
                 }
             );
-
-            sortedByScore.Reverse();
 
             if (take < 1)
             {
