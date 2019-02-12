@@ -19,11 +19,14 @@ namespace Sir.Store
             _collectionName = collectionName;
         }
 
-        public ScoredResult Reduce(byte[] query, int skip, int take)
+        public ScoredResult Reduce(Query queryExpression)
         {
             var endpoint = _config.Get("postings_endpoint");
-            var url = string.Format("{0}{1}?skip={2}&take={3}", endpoint, _collectionName, skip, take);
+            var url = string.Format("{0}{1}?skip={2}&take={3}", 
+                endpoint, _collectionName, queryExpression.Skip, queryExpression.Take);
+
             var request = (HttpWebRequest)WebRequest.Create(url);
+            var query = queryExpression.ToStream();
 
             request.ContentType = "application/query";
             request.Accept = "application/postings";

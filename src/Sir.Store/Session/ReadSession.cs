@@ -91,7 +91,7 @@ namespace Sir.Store
 
                 var timer = Stopwatch.StartNew();
 
-                var result =  _postingsReader.Reduce(query.ToStream(), query.Skip, query.Take);
+                var result =  _postingsReader.Reduce(query);
 
                 this.Log("reducing {0} to {1} docs took {2}", query, result.Documents.Count, timer.Elapsed);
 
