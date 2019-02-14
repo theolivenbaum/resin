@@ -67,9 +67,9 @@ namespace Sir.Postings
             }
         }
 
-        public async Task<IList<long>> Read(ulong collectionId, IList<long> offsets)
+        public async Task<IEnumerable<long>> Read(ulong collectionId, IList<long> offsets)
         {
-            var result = new List<long>();
+            var result = new HashSet<long>();
 
             foreach (var offset in offsets)
             {
