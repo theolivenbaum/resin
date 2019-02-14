@@ -79,7 +79,7 @@ namespace Sir.Store
 
         public IEnumerable<Hit> ClosestMatch(SortedList<int, byte> vector)
         {
-            var toplist = new ConcurrentBag<Hit>();
+            //var toplist = new ConcurrentBag<Hit>();
             var query = new VectorNode(vector);
 
             yield return ReadAllPages().ClosestMatch(query, VectorNode.TermFoldAngle);

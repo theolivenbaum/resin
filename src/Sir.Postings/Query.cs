@@ -10,7 +10,7 @@ namespace Sir.Postings
     {
         public Query()
         {
-            PostingsOffset = -1;
+            PostingsOffsets = new List<long>();
             Score = -1;
             Or = true;
         }
@@ -18,7 +18,7 @@ namespace Sir.Postings
         public bool And { get; set; }
         public bool Or { get; set; }
         public bool Not { get; set; }
-        public long PostingsOffset { get; set; }
+        public IList<long> PostingsOffsets { get; set; }
         public float Score { get; set; }
         public Query Then { get; set; }
 
@@ -29,10 +29,6 @@ namespace Sir.Postings
 
             while (offset < stream.Length)
             {
-                var postingsOffset = BitConverter.ToInt64(stream, offset);
-
-                offset += sizeof(long);
-
                 var score = BitConverter.ToSingle(stream, offset);
 
                 offset += sizeof(float);
@@ -41,10 +37,23 @@ namespace Sir.Postings
 
                 offset += sizeof(byte);
 
+                var count = BitConverter.ToInt32(stream, offset);
+
+                offset += sizeof(int);
+
+                var postingsOffsets = new List<long>();
+
+                for (int i = 0; i < count; i++)
+                {
+                    postingsOffsets.Add(BitConverter.ToInt64(stream, offset));
+
+                    offset += sizeof(long);
+                }
+
                 var query = new Query
                 {
                     Score = score,
-                    PostingsOffset = postingsOffset,
+                    PostingsOffsets = postingsOffsets,
                     And = termOperator == 1 || termOperator == 101,
                     Or = termOperator == 2 || termOperator == 201,
                     Not = termOperator == 0 || termOperator == 100

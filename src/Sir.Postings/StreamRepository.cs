@@ -67,6 +67,21 @@ namespace Sir.Postings
             }
         }
 
+        public async Task<IList<long>> Read(ulong collectionId, IList<long> offsets)
+        {
+            var result = new List<long>();
+
+            foreach (var offset in offsets)
+            {
+                foreach (var x in await Read(collectionId, offset))
+                {
+                    result.Add(x);
+                }
+            }
+
+            return result;
+        }
+
         public async Task<IList<long>> Read(ulong collectionId, long offset)
         {
             var key = (collectionId, offset);

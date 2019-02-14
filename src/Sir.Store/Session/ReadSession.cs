@@ -109,8 +109,8 @@ namespace Sir.Store
         {
             this.Log("before: " + query.ToDiagram());
 
-            //foreach (var q in query.ToList())
-            Parallel.ForEach(query.ToList(), q =>
+            foreach (var q in query.ToList())
+            //Parallel.ForEach(query.ToList(), q =>
             {
                 // score each query term
 
@@ -133,12 +133,7 @@ namespace Sir.Store
                     var topHit = topHits.First();
 
                     q.Score = topHit.Score;
-                    q.PostingsOffset = topHit.PostingsOffsets[0];
-
-                    foreach (var offset in topHit.PostingsOffsets.Skip(1))
-                    {
-                        q.AddClause(new Query(topHit, offset));
-                    }
+                    q.PostingsOffsets.Add(topHit.PostingsOffsets[0]);
 
                     if (topHits.Count > 1)
                     {
@@ -148,13 +143,13 @@ namespace Sir.Store
                             {
                                 foreach (var offset in hit.PostingsOffsets)
                                 {
-                                    q.AddClause(new Query(hit, offset));
+                                    q.PostingsOffsets.Add(offset);
                                 }
                             }
                         }
                     }
                 }
-            });
+            }//);
 
             this.Log("after: " + query.ToDiagram());
         }

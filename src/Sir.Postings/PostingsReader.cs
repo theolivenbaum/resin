@@ -110,7 +110,7 @@ namespace Sir.Postings
 
                 while (cursor != null)
                 {
-                    var docIdList = await _data.Read(collectionId, cursor.PostingsOffset);
+                    var docIdList = await _data.Read(collectionId, cursor.PostingsOffsets);
                     var docIds = docIdList.ToDictionary(docId => docId, score => cursor.Score);
 
                     if (result == null)

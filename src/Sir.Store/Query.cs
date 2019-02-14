@@ -13,16 +13,15 @@ namespace Sir.Store
         public Query(Term term)
         {
             Term = term;
-            PostingsOffset = -1;
+            PostingsOffsets = new List<long>();
             Score = -1;
             Or = true;
         }
 
-        public Query(Hit hit, long postingsOffset)
+        public Query(float score, IList<long> postingsOffsets)
         {
-            Hit = hit;
-            Score = hit.Score;
-            PostingsOffset = postingsOffset;
+            Score = score;
+            PostingsOffsets = postingsOffsets;
             Or = true;
         }
 
@@ -35,20 +34,14 @@ namespace Sir.Store
         public Query Then { get; set; }
         public int Skip { get; set; }
         public int Take { get; set; }
-        public Hit Hit { get; private set; }
-        public long PostingsOffset { get; set; }
+        public IList<long> PostingsOffsets { get; set; }
         public float Score { get; set; }
 
         public override string ToString()
         {
             var op = And ? "AND " : Or ? "OR " : "NOT ";
 
-            if (Hit == null)
-            {
-                return string.Format("{0}{1} {2}", op, Term, Score);
-            }
-
-            return string.Format("{0}{1} {2}", op, Hit, Score);;
+            return string.Format("{0}{1} {2}", op, Term, Score);
         }
 
         public string ToDiagram()
@@ -82,17 +75,12 @@ namespace Sir.Store
 
         public byte[] ToStream()
         {
-            var list = ToList();
+            var clauses = ToList();
             var result = new MemoryStream();
 
-            for (int index = 0; index < list.Count; index++)
+            for (int index = 0; index < clauses.Count; index++)
             {
-                var q = list[index];
-
-                if (q.PostingsOffset < 0)
-                {
-                    continue;
-                }
+                var q = clauses[index];
 
                 byte termOperator = 0;
 
@@ -105,9 +93,14 @@ namespace Sir.Store
                     termOperator = 2;
                 }
 
-                result.Write(BitConverter.GetBytes(q.PostingsOffset));
                 result.Write(BitConverter.GetBytes(q.Score));
                 result.WriteByte(termOperator);
+                result.Write(BitConverter.GetBytes(q.PostingsOffsets.Count));
+
+                foreach(var offs in q.PostingsOffsets)
+                {
+                    result.Write(BitConverter.GetBytes(offs));
+                }
 
                 var then = q.Then;
 
@@ -124,9 +117,14 @@ namespace Sir.Store
                         termOperator = 102;
                     }
 
-                    result.Write(BitConverter.GetBytes(then.PostingsOffset));
                     result.Write(BitConverter.GetBytes(then.Score));
                     result.WriteByte(termOperator);
+                    result.Write(BitConverter.GetBytes(then.PostingsOffsets.Count));
+
+                    foreach (var offs in then.PostingsOffsets)
+                    {
+                        result.Write(BitConverter.GetBytes(offs));
+                    }
 
                     then = then.Then;
                 }
