@@ -46,6 +46,15 @@ namespace Sir.DbUtil
 
                 Validate(dir: args[1], collectionName: args[2], skip: int.Parse(args[3]), take: int.Parse(args[4]));
             }
+            else if (command == "warmup")
+            {
+                // example: warmup https://didyougogo.com/io/www
+
+                var uri = new Uri(args[1]);
+                var collectionName = args[1].Split('/').Last();
+
+                Warmup(uri, collectionName);
+            }
             else if (command == "optimize")
             {
                 // example: optimize C:\projects\resin\src\Sir.HttpServer\App_Data www
@@ -58,6 +67,11 @@ namespace Sir.DbUtil
             }
 
             Console.Read();
+        }
+
+        private static void Warmup(Uri uri, string collectionName)
+        {
+            throw new NotImplementedException();
         }
 
         private static async Task Optimize(string dir, string collectionName)
