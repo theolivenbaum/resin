@@ -133,7 +133,11 @@ namespace Sir.Store
                     var topHit = topHits.First();
 
                     q.Score = topHit.Score;
-                    q.PostingsOffsets.Add(topHit.PostingsOffsets[0]);
+
+                    foreach (var offs in topHit.PostingsOffsets)
+                    {
+                        q.PostingsOffsets.Add(offs);
+                    }
 
                     if (topHits.Count > 1)
                     {
