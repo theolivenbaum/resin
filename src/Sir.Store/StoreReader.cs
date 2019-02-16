@@ -37,84 +37,75 @@ namespace Sir.Store
 
         public async Task<ResponseModel> Read(string collectionName, HttpRequest request)
         {
-            try
+            var timer = Stopwatch.StartNew();
+
+            var vec1FileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.vec1", collectionName.ToHash()));
+
+            if (File.Exists(vec1FileName))
             {
-                var timer = Stopwatch.StartNew();
-
-                var vec1FileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.vec1", collectionName.ToHash()));
-
-                if (File.Exists(vec1FileName))
+                using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
+                using (var bowReadSession = _sessionFactory.CreateBOWReadSession(collectionName, collectionName.ToHash()))
                 {
-                    using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
-                    using (var bowReadSession = _sessionFactory.CreateBOWReadSession(collectionName, collectionName.ToHash()))
-                    {
-                        int skip = 0;
-                        int take = 10;
+                    int skip = 0;
+                    int take = 10;
 
-                        if (request.Query.ContainsKey("take"))
-                            take = int.Parse(request.Query["take"]);
+                    if (request.Query.ContainsKey("take"))
+                        take = int.Parse(request.Query["take"]);
 
-                        if (request.Query.ContainsKey("skip"))
-                            skip = int.Parse(request.Query["skip"]);
+                    if (request.Query.ContainsKey("skip"))
+                        skip = int.Parse(request.Query["skip"]);
 
-                        var query = _httpBowQueryParser.Parse(collectionName, request, readSession, _sessionFactory);
-                        var result = bowReadSession.Read(query, readSession, skip, take);
-                        var docs = result.Docs;
+                    var query = _httpBowQueryParser.Parse(collectionName, request, readSession, _sessionFactory);
+                    var result = bowReadSession.Read(query, readSession, skip, take);
+                    var docs = result.Docs;
 
-                        this.Log(string.Format("executed query {0} and read {1} docs from disk in {2}", query, docs.Count, timer.Elapsed));
+                    this.Log(string.Format("executed query {0} and read {1} docs from disk in {2}", query, docs.Count, timer.Elapsed));
 
-                        var stream = new MemoryStream();
+                    var stream = new MemoryStream();
 
-                        Serialize(docs, stream);
+                    Serialize(docs, stream);
 
-                        return new ResponseModel { MediaType = "application/json", Stream = stream, Documents = docs, Total = result.Total };
-                    }
-                }
-                else
-                {
-                    using (var session = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
-                    {
-                        IList<IDictionary> docs;
-                        long total;
-                        var stream = new MemoryStream();
-
-                        if (request.Query.ContainsKey("id"))
-                        {
-                            var ids = request.Query["id"].Select(s => long.Parse(s));
-
-                            docs = session.ReadDocs(ids);
-                            total = docs.Count;
-
-                            this.Log(string.Format("executed lookup by id in {0}", timer.Elapsed));
-                        }
-                        else
-                        {
-                            var query = _httpQueryParser.Parse(collectionName, request);
-
-                            if (query == null)
-                            {
-                                return new ResponseModel { MediaType = "application/json", Total = 0 };
-                            }
-
-                            var result = session.Read(query);
-
-                            docs = result.Docs;
-                            total = result.Total;
-
-                            this.Log(string.Format("executed query {0} in {1}", query, timer.Elapsed));
-                        }
-
-                        Serialize(docs, stream);
-
-                        return new ResponseModel { MediaType = "application/json", Stream = stream, Documents = docs, Total = total };
-                    }
+                    return new ResponseModel { MediaType = "application/json", Stream = stream, Documents = docs, Total = result.Total };
                 }
             }
-            catch (Exception ex)
+            else
             {
-                this.Log(ex);
+                using (var session = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
+                {
+                    IList<IDictionary> docs;
+                    long total;
+                    var stream = new MemoryStream();
 
-                throw;
+                    if (request.Query.ContainsKey("id"))
+                    {
+                        var ids = request.Query["id"].Select(s => long.Parse(s));
+
+                        docs = session.ReadDocs(ids);
+                        total = docs.Count;
+
+                        this.Log(string.Format("executed lookup by id in {0}", timer.Elapsed));
+                    }
+                    else
+                    {
+                        var query = _httpQueryParser.Parse(collectionName, request);
+
+                        if (query == null)
+                        {
+                            return new ResponseModel { MediaType = "application/json", Total = 0 };
+                        }
+
+                        var result = session.Read(query);
+
+                        docs = result.Docs;
+                        total = result.Total;
+
+                        this.Log(string.Format("executed query {0} in {1}", query, timer.Elapsed));
+                    }
+
+                    Serialize(docs, stream);
+
+                    return new ResponseModel { MediaType = "application/json", Stream = stream, Documents = docs, Total = total };
+                }
             }
         }
 
