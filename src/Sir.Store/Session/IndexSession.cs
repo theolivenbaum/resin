@@ -64,7 +64,7 @@ namespace Sir.Store
                 if (!key.StartsWith("__"))
                 {
                     var keyHash = key.ToHash();
-                    var keyId = SessionFactory.GetKeyId(keyHash);
+                    var keyId = SessionFactory.GetKeyId(CollectionId, keyHash);
                     var val = (IComparable)document[key];
                     var str = val as string;
 

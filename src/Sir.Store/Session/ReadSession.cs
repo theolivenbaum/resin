@@ -170,7 +170,7 @@ namespace Sir.Store
         public NodeReader CreateIndexReader(ulong keyHash)
         {
             long keyId;
-            if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
+            if (!SessionFactory.TryGetKeyId(CollectionId, keyHash, out keyId))
             {
                 return null;
             }

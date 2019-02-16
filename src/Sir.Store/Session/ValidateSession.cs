@@ -45,7 +45,7 @@ namespace Sir.Store
 
                     if (!strKey.StartsWith("__"))
                     {
-                        var keyId = SessionFactory.GetKeyId(strKey.ToHash());
+                        var keyId = SessionFactory.GetKeyId(CollectionId, strKey.ToHash());
 
                         if (excludeKeyIds.Contains(keyId))
                         {

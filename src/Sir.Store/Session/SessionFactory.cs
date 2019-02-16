@@ -14,70 +14,96 @@ namespace Sir.Store
     {
         private readonly ITokenizer _tokenizer;
         private readonly IConfigurationProvider _config;
-        private readonly ConcurrentDictionary<ulong, long> _keys;
+        private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>> _indexReaders;
-
-        private Stream _writableKeyMapStream { get; }
 
         public string Dir { get; }
 
         public SessionFactory(string dir, ITokenizer tokenizer, IConfigurationProvider config)
         {
             Dir = dir;
-            _keys = LoadKeyMap();
+            _keys = LoadKeys();
             _tokenizer = tokenizer;
             _config = config;
             _indexReaders = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>>();
-            _writableKeyMapStream = CreateAppendStream(Path.Combine(dir, "_.kmap"));
         }
 
-        private ConcurrentDictionary<ulong, long> LoadKeyMap()
+        private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> LoadKeys()
         {
             var timer = new Stopwatch();
             timer.Start();
 
-            var keys = new ConcurrentDictionary<ulong, long>();
+            var allkeys = new ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>>();
 
-            using (var stream = new FileStream(
-                Path.Combine(Dir, "_.kmap"), FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
+            foreach (var keyFile in Directory.GetFiles(Dir, "*.kmap"))
             {
-                long i = 0;
-                var buf = new byte[sizeof(ulong)];
-                var read = stream.Read(buf, 0, buf.Length);
+                var collectionId = ulong.Parse(Path.GetFileNameWithoutExtension(keyFile));
+                ConcurrentDictionary<ulong, long> keys;
 
-                while (read > 0)
+                if (!allkeys.TryGetValue(collectionId, out keys))
                 {
-                    keys.GetOrAdd(BitConverter.ToUInt64(buf, 0), i++);
+                    keys = new ConcurrentDictionary<ulong, long>();
+                    allkeys.GetOrAdd(collectionId, keys);
+                }
 
-                    read = stream.Read(buf, 0, buf.Length);
+                using (var stream = new FileStream(keyFile, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    long i = 0;
+                    var buf = new byte[sizeof(ulong)];
+                    var read = stream.Read(buf, 0, buf.Length);
+
+                    while (read > 0)
+                    {
+                        keys.GetOrAdd(BitConverter.ToUInt64(buf, 0), i++);
+
+                        read = stream.Read(buf, 0, buf.Length);
+                    }
                 }
             }
 
             this.Log("loaded keys into memory in {0}", timer.Elapsed);
 
-            return keys;
+            return allkeys;
         }
 
-        public void PersistKeyMapping(ulong keyHash, long keyId)
+        public void PersistKeyMapping(ulong collectionId, ulong keyHash, long keyId)
         {
-            if (!_keys.ContainsKey(keyHash))
+            var fileName = Path.Combine(Dir, string.Format("{0}.kmap", collectionId));
+            ConcurrentDictionary<ulong, long> keys;
+
+            if (!_keys.TryGetValue(collectionId, out keys))
             {
-                _keys.GetOrAdd(keyHash, keyId);
+                keys = new ConcurrentDictionary<ulong, long>();
+                _keys.GetOrAdd(collectionId, keys);
+            }
 
-                _writableKeyMapStream.Write(BitConverter.GetBytes(keyHash), 0, sizeof(ulong));
+            if (!keys.ContainsKey(keyHash))
+            {
+                keys.GetOrAdd(keyHash, keyId);
 
-                _writableKeyMapStream.Flush();
+                using (var stream = CreateAppendStream(fileName))
+                {
+                    stream.Write(BitConverter.GetBytes(keyHash), 0, sizeof(ulong));
+                }
             }
         }
 
-        public long GetKeyId(ulong keyHash)
+        public long GetKeyId(ulong collectionId, ulong keyHash)
         {
-            return _keys[keyHash];
+            return _keys[collectionId][keyHash];
         }
 
-        public bool TryGetKeyId(ulong keyHash, out long keyId)
+        public bool TryGetKeyId(ulong collectionId, ulong keyHash, out long keyId)
         {
-            if (!_keys.TryGetValue(keyHash, out keyId))
+            ConcurrentDictionary<ulong, long> keys;
+
+            if (!_keys.TryGetValue(collectionId, out keys))
+            {
+                keys = new ConcurrentDictionary<ulong, long>();
+                _keys.GetOrAdd(collectionId, keys);
+            }
+
+            if (!keys.TryGetValue(keyHash, out keyId))
             {
                 keyId = -1;
                 return false;
@@ -222,7 +248,6 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            _writableKeyMapStream.Dispose();
         }
     }
 }

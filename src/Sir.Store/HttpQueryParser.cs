@@ -79,7 +79,7 @@ namespace Sir.Store
         }
 
         public IDictionary<long, SortedList<int, byte>> Parse(
-            string collectionId, HttpRequest request, ReadSession readSession, SessionFactory sessionFactory)
+            string collectionName, HttpRequest request, ReadSession readSession, SessionFactory sessionFactory)
         {
             string[] fields;
             var docs = new Dictionary<long, SortedList<int, byte>>();
@@ -97,7 +97,7 @@ namespace Sir.Store
 
             foreach (var field in fields)
             {
-                var keyId = sessionFactory.GetKeyId(field.ToLower().ToHash());
+                var keyId = sessionFactory.GetKeyId(collectionName.ToHash(), field.ToLower().ToHash());
                 var vector = BOWWriteSession.CreateDocumentVector(phrase, readSession.CreateIndexReader(keyId), _tokenizer);
 
                 docs.Add(keyId, vector);

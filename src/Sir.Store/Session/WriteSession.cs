@@ -77,14 +77,14 @@ namespace Sir.Store
                 var str = val as string;
                 long keyId, valId;
 
-                if (!SessionFactory.TryGetKeyId(keyHash, out keyId))
+                if (!SessionFactory.TryGetKeyId(CollectionId, keyHash, out keyId))
                 {
                     // We have a new key!
 
                     // store key
                     var keyInfo = await _keys.Append(keyStr);
                     keyId = await _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
-                    SessionFactory.PersistKeyMapping(keyHash, keyId);
+                    SessionFactory.PersistKeyMapping(CollectionId, keyHash, keyId);
                 }
 
                 // store value
