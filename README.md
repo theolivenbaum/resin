@@ -6,24 +6,38 @@ A non-tracking [search](https://didyougogo.com) engine.
 
 ### Create your own collection
 
-#### HTTP POST a JSON document to the WRITE endpoint
+#### POST a JSON document to the WRITE endpoint
 
-	HTTP POST https://didyougogo.com/io/[collection_name]
+	HTTPS POST didyougogo.com/io/[collection_name]
 	Content-Type:application/json
 	[
 		{
 			"field1":"value1"
+		},
+		{
+			"field1":"value2"
 		}
 	]
 
-### Query your collection through the API
+	Server should respond with a list of document IDs:
+	[
+		0,
+		1
+	]
 
-	HTTP GET https://didyougogo.com/io/[collection_name]/?q=[phrase-or-term-query]&fields=field1&skip=0&take=10
+### GET document by ID
+
+	HTTPS GET didyougogo.com/io/[collection_name]/?id=[document_id]
 	Accept:application/json
 
-### Render your result human-friendly
+### Query collection through the API
 
-	HTTP GET https://didyougogo.com/?q=[phrase-or-term-query]&fields=field1&skip=0&take=10&collection=[collection_name]
+	HTTPS GET didyougogo.com/io/[collection_name]/?q=[phrase-or-term-query]&fields=title&skip=0&take=10
+	Accept:application/json
+
+### Render human-friendly result
+
+	HTTPS GET didyougogo.com/?q=[phrase-or-term-query]&fields=title&skip=0&take=10&collection=[collection_name]
 
 ### Read more
 
