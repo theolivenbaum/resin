@@ -71,12 +71,19 @@ namespace Sir.Store
         {
             foreach (var token in item.tokens.Tokens.Select(t => item.tokens.Original.Substring(t.offset, t.length)).Where(s => !string.IsNullOrWhiteSpace(s)))
             {
-                var url = string.Format("{0}/Search?q={1}OR=OR&skip=0&take=10&fields=title&fields=body&collection={2}",
-                    _baseUrl, token, CollectionName);
+                try
+                {
+                    var url = string.Format("{0}/Search?q={1}OR=OR&skip=0&take=10&fields=title&fields=body&collection={2}",
+                                        _baseUrl, token, CollectionName);
 
-                var res = _http.GetAsync(url).Result;
+                    var res = _http.GetAsync(url).Result;
 
-                res.EnsureSuccessStatusCode();
+                    res.EnsureSuccessStatusCode();
+                }
+                catch
+                {
+                    continue;
+                }
             }
 
             this.Log("queried doc {0}", item.docId);
