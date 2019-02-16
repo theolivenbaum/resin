@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
@@ -29,42 +30,35 @@ namespace Sir.Store
 
         public async Task<ResponseModel> Write(string collectionId, HttpRequest request)
         {
-            try
+            _timer.Restart();
+
+            var payload = new MemoryStream();
+
+            await request.Body.CopyToAsync(payload);
+
+            if (request.ContentLength.Value != payload.Length)
             {
-                _timer.Restart();
-
-                var payload = new MemoryStream();
-
-                await request.Body.CopyToAsync(payload);
-
-                if (request.ContentLength.Value != payload.Length)
-                {
-                    throw new DataMisalignedException();
-                }
-
-                var data = Deserialize<IEnumerable<IDictionary>>(payload);
-                var job = new WriteJob(collectionId, data);
-
-                this.Log("deserialized write job {0} for collection {1} in {2}", job.Id, collectionId, _timer.Elapsed);
-
-                var docIds = await ExecuteWrite(job);
-                var response = new MemoryStream();
-
-                Serialize(docIds, response);
-
-                return new ResponseModel { Stream = response, MediaType = "application/json" };
+                throw new DataMisalignedException();
             }
-            catch (Exception ex)
-            {
-                this.Log("write failed: {0}", ex);
 
-                throw;
-            }
+            payload.Position = 0;
+
+            var data = Deserialize<IEnumerable<IDictionary>>(payload);
+            var job = new WriteJob(collectionId, data);
+
+            this.Log("deserialized write job {0} for collection {1} in {2}", job.Id, collectionId, _timer.Elapsed);
+
+            var docIds = await ExecuteWrite(job);
+            var response = new MemoryStream();
+
+            Serialize(docIds, response);
+
+            return new ResponseModel { Stream = response, MediaType = "application/json" };
         }
 
         private static void Serialize(object value, Stream s)
         {
-            using (StreamWriter writer = new StreamWriter(s))
+            using (StreamWriter writer = new StreamWriter(s, Encoding.UTF8, 4096, true))
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
             {
                 JsonSerializer ser = new JsonSerializer();
@@ -81,12 +75,21 @@ namespace Sir.Store
 
                 IList<long> docIds;
 
-                using (var session = _sessionFactory.CreateWriteSession(job.CollectionName, job.CollectionName.ToHash()))
+                using (var write = _sessionFactory.CreateWriteSession(job.CollectionName, job.CollectionName.ToHash()))
                 {
-                    docIds = await session.Write(job);
+                    docIds = await write.Write(job);
                 }
 
-                this.Log("executed write job {0} in {1}", job.Id, _timer.Elapsed);
+                using (var index = _sessionFactory.CreateIndexSession(
+                    job.CollectionName, job.CollectionName.ToHash()))
+                {
+                    foreach (var doc in job.Documents)
+                    {
+                        index.EmbedTerms(doc);
+                    }
+                }
+
+                this.Log("executed write+index job {0} in {1}", job.Id, _timer.Elapsed);
 
                 return docIds;
             }

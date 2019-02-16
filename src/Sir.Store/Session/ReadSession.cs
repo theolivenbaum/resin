@@ -85,24 +85,15 @@ namespace Sir.Store
 
         private ScoredResult Execute(Query query)
         {
-            try
-            {
-                Map(query);
+            Map(query);
 
-                var timer = Stopwatch.StartNew();
+            var timer = Stopwatch.StartNew();
 
-                var result =  _postingsReader.Reduce(query);
+            var result = _postingsReader.Reduce(query);
 
-                this.Log("reducing {0} to {1} docs took {2}", query, result.Documents.Count, timer.Elapsed);
+            this.Log("reducing {0} to {1} docs took {2}", query, result.Documents.Count, timer.Elapsed);
 
-                return result;
-            }
-            catch (Exception ex)
-            {
-                this.Log(ex);
-
-                throw;
-            }
+            return result;
         }
 
         private void Map(Query query)
