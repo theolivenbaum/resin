@@ -18,12 +18,12 @@ A non-tracking [search](https://didyougogo.com) engine.
 
 ### Query your collection through the API
 
-HTTP GET https://didyougogo.com/io/[collection_name]/?q=[phrase-or-term-query]&skip=0&take=10
-Accept:application/json
+	HTTP GET https://didyougogo.com/io/[collection_name]/?q=[phrase-or-term-query]&skip=0&take=10
+	Accept:application/json
 
 ### Render your result human-friendly
 
-HTTP GET https://didyougogo.com/?q=[phrase-or-term-query]&skip=0&take=10&collection=[collection_name]
+	HTTP GET https://didyougogo.com/?q=[phrase-or-term-query]&skip=0&take=10&collection=[collection_name]
 
 ### Read more
 
