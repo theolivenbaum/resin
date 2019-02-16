@@ -74,7 +74,7 @@ namespace Sir.Store
 
             if (docIds.Count > 0)
             {
-                var skip = (int)docIds[0];
+                var skip = (int)docIds[0] - 1;
                 var take = docIds.Count;
 
                 using (var docs = _sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))

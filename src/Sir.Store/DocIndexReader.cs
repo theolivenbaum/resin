@@ -16,7 +16,7 @@ namespace Sir.Store
         {
             get
             {
-                return ((int)_stream.Length / _blockSize);
+                return ((int)_stream.Length / _blockSize) - 1;
             }
         }
 

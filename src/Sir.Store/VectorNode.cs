@@ -566,7 +566,7 @@ namespace Sir.Store
 
             while (node != null)
             {
-                if (node.PostingsOffset > 0)
+                if (node.PostingsOffset > -1)
                 {
                     yield return node.ShallowCopy();
                 }

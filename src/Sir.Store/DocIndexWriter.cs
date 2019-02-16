@@ -15,6 +15,12 @@ namespace Sir.Store
         public DocIndexWriter(Stream stream)
         {
             _stream = stream;
+
+            if (_stream.Length == 0)
+            {
+                _stream.SetLength(_blockSize);
+                _stream.Seek(0, SeekOrigin.End);
+            }
         }
 
         /// <summary>
