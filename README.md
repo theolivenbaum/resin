@@ -21,21 +21,21 @@ A non-tracking [search](https://didyougogo.com) engine.
 
 	Server should respond with a list of document IDs:
 	[
-		0,
-		1
+		1,
+		2
 	]
 
 ### GET document by ID
 
-	HTTPS GET didyougogo.com/io/[collection_name]/?id=[document_id]
+	HTTPS GET didyougogo.com/io/[collection_name]?id=[document_id]
 	Accept:application/json
 
 ### Query collection through the API
 
-	HTTPS GET didyougogo.com/io/[collection_name]/?q=[phrase-or-term-query]&fields=title&skip=0&take=10
+	HTTPS GET didyougogo.com/io/[collection_name]?q=[phrase-or-term-query]&fields=title&skip=0&take=10
 	Accept:application/json
 
-### Render human-friendly result
+### Human-friendly GUI
 
 	HTTPS GET didyougogo.com/?q=[phrase-or-term-query]&fields=title&skip=0&take=10&collection=[collection_name]
 
