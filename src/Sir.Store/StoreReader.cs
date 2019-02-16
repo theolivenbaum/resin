@@ -76,6 +76,7 @@ namespace Sir.Store
                     {
                         IList<IDictionary> docs;
                         long total;
+                        var stream = new MemoryStream();
 
                         if (request.Query.ContainsKey("id"))
                         {
@@ -89,6 +90,12 @@ namespace Sir.Store
                         else
                         {
                             var query = _httpQueryParser.Parse(collectionName, request);
+
+                            if (query == null)
+                            {
+                                return new ResponseModel { MediaType = "application/json", Total = 0 };
+                            }
+
                             var result = session.Read(query);
 
                             docs = result.Docs;
@@ -96,8 +103,6 @@ namespace Sir.Store
 
                             this.Log(string.Format("executed query {0} in {1}", query, timer.Elapsed));
                         }
-
-                        var stream = new MemoryStream();
 
                         Serialize(docs, stream);
 
