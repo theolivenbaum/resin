@@ -48,12 +48,15 @@ namespace Sir.DbUtil
             }
             else if (command == "warmup")
             {
-                // example: warmup https://didyougogo.com/io/www
+                // example: warmup C:\projects\resin\src\Sir.HttpServer\App_Data https://didyougogo.com www 0 3000
 
-                var uri = new Uri(args[1]);
-                var collectionName = args[1].Split('/').Last();
+                var dir = args[1];
+                var uri = new Uri(args[2]);
+                var collection = args[3];
+                var skip = int.Parse(args[4]);
+                var take = int.Parse(args[5]);
 
-                Warmup(uri, collectionName);
+                Warmup(dir, uri, collection, skip, take);
             }
             else if (command == "optimize")
             {
@@ -69,14 +72,22 @@ namespace Sir.DbUtil
             Console.Read();
         }
 
-        private static void Warmup(Uri uri, string collectionName)
+        private static void Warmup(string dir, Uri uri, string collectionName, int skip, int take)
         {
-            throw new NotImplementedException();
+            using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration("sir.ini")))
+            {
+                using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
+                {
+                    using (var session = sessionFactory.CreateWarmupSession(collectionName, collectionName.ToHash(), uri.ToString()))
+                    {
+                        session.Warmup(documentStreamSession.ReadDocs(skip, take), 0, 1, 2, 3, 6);
+                    }
+                }
+            }
         }
 
         private static async Task Optimize(string dir, string collectionName)
         {
-            var files = Directory.GetFiles(dir, "*.docs");
             var time = Stopwatch.StartNew();
 
             using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration("sir.ini")))

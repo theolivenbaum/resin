@@ -129,14 +129,16 @@ namespace Sir.Store
             return mmf;
         }
 
+        public WarmupSession CreateWarmupSession(string collectionName, ulong collectionId, string baseUrl)
+        {
+            var indexReaders = _indexReaders.GetOrAdd(collectionId, new ConcurrentDictionary<long, NodeReader>());
+
+            return new WarmupSession(collectionName, collectionId, this, _tokenizer, _config, indexReaders, baseUrl);
+        }
+
         public OptimizeSession CreateOptimizeSession(string collectionName, ulong collectionId)
         {
-            ConcurrentDictionary<long, NodeReader> indexReaders;
-
-            if (!_indexReaders.TryGetValue(collectionId, out indexReaders))
-            {
-                _indexReaders[collectionId] = indexReaders = new ConcurrentDictionary<long, NodeReader>();
-            }
+            var indexReaders = _indexReaders.GetOrAdd(collectionId, new ConcurrentDictionary<long, NodeReader>());
 
             return new OptimizeSession(collectionName, collectionId, this, _config, indexReaders);
         }

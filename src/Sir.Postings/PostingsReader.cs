@@ -47,6 +47,12 @@ namespace Sir.Postings
                     foreach (var idParam in request.Query["id"])
                     {
                         var offset = long.Parse(idParam);
+
+                        if (offset < 0)
+                        {
+                            throw new ArgumentOutOfRangeException("id");
+                        }
+
                         var subResult = await _data.Read(collectionId.ToHash(), offset);
 
                         foreach (var x in subResult)

@@ -41,7 +41,7 @@ namespace Sir.Store
         {
             var op = And ? "AND " : Or ? "OR " : "NOT ";
 
-            return string.Format("{0}{1} {2}", op, Term, Score);
+            return string.Format("{0}{1} {2} ", op, Term, Score);
         }
 
         public string ToDiagram()

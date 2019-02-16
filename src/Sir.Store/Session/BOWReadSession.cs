@@ -96,19 +96,19 @@ namespace Sir.Store
             //return new ReadResult { Docs = docs, Total = docIds.Count };
         }
 
-        private IList<Hit> Scan(long keyId, SortedList<int, byte> query)
-        {
-            IEnumerable<Hit> hits = null;
+        //private IList<Hit> Scan(long keyId, SortedList<int, byte> query)
+        //{
+        //    IEnumerable<Hit> hits = null;
 
-            var indexReader = CreateDocumentIndexReader(keyId);
+        //    var indexReader = CreateDocumentIndexReader(keyId);
 
-            if (indexReader != null)
-            {
-                hits = indexReader.ClosestMatch(query);
-            }
+        //    if (indexReader != null)
+        //    {
+        //        hits = indexReader.ClosestMatch(query);
+        //    }
 
-            return hits.OrderByDescending(x => x.Score).ToList();
-        }
+        //    return hits.OrderByDescending(x => x.Score).ToList();
+        //}
 
         public NodeReader CreateDocumentIndexReader(long keyId)
         {

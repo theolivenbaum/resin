@@ -112,9 +112,7 @@ namespace Sir.Store
             foreach (var q in query.ToList())
             //Parallel.ForEach(query.ToList(), q =>
             {
-                // score each query term
-
-                IEnumerable<Hit> hits = null;
+               Hit hit = null;
 
                 var indexReader = q.Term.KeyId.HasValue ? 
                     CreateIndexReader(q.Term.KeyId.Value) : 
@@ -124,33 +122,21 @@ namespace Sir.Store
                 {
                     var termVector = q.Term.ToCharVector();
 
-                    hits = indexReader.ClosestMatch(termVector);
+                    hit = indexReader.ClosestMatch(termVector);
                 }
 
-                if (hits != null)
+                if (hit != null)
                 {
-                    var topHits = hits.OrderByDescending(x => x.Score).ToList();
-                    var topHit = topHits.First();
+                    q.Score = hit.Score;
 
-                    q.Score = topHit.Score;
-
-                    foreach (var offs in topHit.PostingsOffsets)
+                    foreach (var offs in hit.PostingsOffsets)
                     {
-                        q.PostingsOffsets.Add(offs);
-                    }
-
-                    if (topHits.Count > 1)
-                    {
-                        foreach (var hit in topHits.Skip(1))
+                        if (offs < 0)
                         {
-                            if (hit.Score > VectorNode.TermFoldAngle)
-                            {
-                                foreach (var offset in hit.PostingsOffsets)
-                                {
-                                    q.PostingsOffsets.Add(offset);
-                                }
-                            }
+                            throw new DataMisalignedException();
                         }
+
+                        q.PostingsOffsets.Add(offs);
                     }
                 }
             }//);
@@ -158,25 +144,33 @@ namespace Sir.Store
             this.Log("after: " + query.ToDiagram());
         }
 
+        private static readonly object _syncIndexReaderCreation = new object();
+
         public NodeReader CreateIndexReader(long keyId)
         {
             NodeReader reader;
 
             if (!_indexReaders.TryGetValue(keyId, out reader))
             {
-                var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
-                var ixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", CollectionId, keyId));
-                var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId));
-
-                IList<(long, long)> pages;
-                using (var ixpStream = SessionFactory.CreateAsyncReadStream(ixpFileName))
+                lock (_syncIndexReaderCreation)
                 {
-                    pages = new PageIndexReader(ixpStream).ReadAll();
+                    if (!_indexReaders.TryGetValue(keyId, out reader))
+                    {
+                        var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
+                        var ixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", CollectionId, keyId));
+                        var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId));
+
+                        IList<(long, long)> pages;
+                        using (var ixpStream = SessionFactory.CreateAsyncReadStream(ixpFileName))
+                        {
+                            pages = new PageIndexReader(ixpStream).ReadAll();
+                        }
+
+                        reader = new NodeReader(ixFileName, vecFileName, SessionFactory, pages, _config);
+
+                        _indexReaders.GetOrAdd(keyId, reader);
+                    }
                 }
-
-                reader = new NodeReader(ixFileName, vecFileName, SessionFactory, pages, _config);
-
-                _indexReaders.GetOrAdd(keyId, reader);
             }
 
             return reader;

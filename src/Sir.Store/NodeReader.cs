@@ -14,12 +14,11 @@ namespace Sir.Store
     /// </summary>
     public class NodeReader : ILogger
     {
-        private readonly IList<(long offset, long length)> _pages;
+        private IList<(long offset, long length)> _pages;
         private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
-        private readonly object _sync = new object();
         private VectorNode _root;
 
         public NodeReader(string ixFileName, string vecFileName, SessionFactory sessionFactory, IList<(long, long)> pages, IConfigurationProvider config)
@@ -38,31 +37,25 @@ namespace Sir.Store
                 return _root;
             }
 
-            lock (_sync)
+            var time = Stopwatch.StartNew();
+
+            _root = new VectorNode();
+
+            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+            using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
+            using (var queue = new ProducerConsumerQueue<VectorNode>(Build, int.Parse(_config.Get("write_thread_count"))))
             {
-                if (_root == null)
+                foreach (var page in _pages)
                 {
-                    var time = Stopwatch.StartNew();
+                    ixStream.Seek(page.offset, SeekOrigin.Begin);
 
-                    _root = new VectorNode();
+                    var tree = VectorNode.DeserializeTree(ixStream, vectorStream, page.length);
 
-                    using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-                    using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
-                    using (var queue = new ProducerConsumerQueue<VectorNode>(Build, int.Parse(_config.Get("write_thread_count"))))
-                    {
-                        foreach (var page in _pages)
-                        {
-                            ixStream.Seek(page.offset, SeekOrigin.Begin);
-
-                            var tree = VectorNode.DeserializeTree(ixStream, vectorStream, page.length);
-
-                            queue.Enqueue(tree);
-                        }
-                    }
-
-                    this.Log("deserialized {0} index segments in {1}", _pages.Count, time.Elapsed);
+                    queue.Enqueue(tree);
                 }
             }
+
+            this.Log("deserialized {0} index segments in {1}", _pages.Count, time.Elapsed);
 
             return _root;
         }
@@ -77,12 +70,16 @@ namespace Sir.Store
             this.Log("deserialized page");
         }
 
-        public IEnumerable<Hit> ClosestMatch(SortedList<int, byte> vector)
+        public Hit ClosestMatch(SortedList<int, byte> vector)
         {
-            //var toplist = new ConcurrentBag<Hit>();
             var query = new VectorNode(vector);
+            var tree = ReadAllPages();
+            var hit = tree.ClosestMatch(query, VectorNode.TermFoldAngle);
 
-            yield return ReadAllPages().ClosestMatch(query, VectorNode.TermFoldAngle);
+            return hit;
+
+
+            //var toplist = new ConcurrentBag<Hit>();
 
             //Parallel.ForEach(ReadAllPages(), page =>
             //{
