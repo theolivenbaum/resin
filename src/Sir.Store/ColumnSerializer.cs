@@ -62,7 +62,11 @@ namespace Sir.Store
             {
                 var page = column.SerializeTree(_ixStream);
 
+                _ixStream.Flush();
+
                 _pageIndexWriter.Write(page.offset, page.length);
+
+                _pageIndexWriter.Flush();
             }
 
             var size = column.Size();

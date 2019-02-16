@@ -151,13 +151,7 @@ namespace Sir.Store
                         var ixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ixp", CollectionId, keyId));
                         var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId));
 
-                        IList<(long, long)> pages;
-                        using (var ixpStream = SessionFactory.CreateAsyncReadStream(ixpFileName))
-                        {
-                            pages = new PageIndexReader(ixpStream).ReadAll();
-                        }
-
-                        reader = new NodeReader(ixFileName, vecFileName, SessionFactory, pages, _config);
+                        reader = new NodeReader(ixFileName, ixpFileName, vecFileName, SessionFactory, _config);
 
                         _indexReaders.GetOrAdd(keyId, reader);
                     }

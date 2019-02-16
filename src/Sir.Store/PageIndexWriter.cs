@@ -28,6 +28,11 @@ namespace Sir.Store
             _stream.Write(BitConverter.GetBytes(length));
         }
 
+        public void Flush()
+        {
+            _stream.Flush();
+        }
+
         public void Dispose()
         {
             _stream.Dispose();

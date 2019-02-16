@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -17,20 +18,61 @@ namespace Sir.Store
         private IList<(long offset, long length)> _pages;
         private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
+        private readonly string _ixpFileName;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
         private VectorNode _root;
 
-        public NodeReader(string ixFileName, string vecFileName, SessionFactory sessionFactory, IList<(long, long)> pages, IConfigurationProvider config)
+        public NodeReader(string ixFileName, string ixpFileName, string vecFileName, SessionFactory sessionFactory, IConfigurationProvider config)
         {
             _vecFileName = vecFileName;
             _ixFileName = ixFileName;
-            _pages = pages;
             _sessionFactory = sessionFactory;
             _config = config;
+            _ixpFileName = ixpFileName;
+            _pages = ReadPageInfoFromDisk();
+
+            FileSystemWatcher watcher = new FileSystemWatcher();
+            watcher.Path = Directory.GetCurrentDirectory();
+            watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+            watcher.Filter = Path.GetFileName(_ixpFileName);
+            watcher.Changed += new FileSystemEventHandler(OnFileChanged);
+            watcher.EnableRaisingEvents = true;
         }
 
-        public VectorNode ReadAllPages()
+        private IList<(long, long)> ReadPageInfoFromDisk()
+        {
+            using (var ixpStream = _sessionFactory.CreateAsyncReadStream(_ixpFileName))
+            {
+                return new PageIndexReader(ixpStream).ReadAll();
+            }
+        }
+
+        private readonly object _reloadSync = new object();
+
+        private void OnFileChanged(object sender, FileSystemEventArgs e)
+        {
+            var newPages = ReadPageInfoFromDisk();
+
+            if (newPages.Count != _pages.Count)
+            {
+                lock (_reloadSync)
+                {
+                    newPages = ReadPageInfoFromDisk();
+
+                    if (newPages.Count != _pages.Count)
+                    {
+                        var skip = _pages.Count;
+
+                        _pages = newPages;
+
+                        ReadAllPages(skip);
+                    }
+                }
+            }
+        }
+
+        public VectorNode ReadAllPages(int skip = 0)
         {
             if (_root != null)
             {
@@ -45,11 +87,11 @@ namespace Sir.Store
             using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
             using (var queue = new ProducerConsumerQueue<VectorNode>(Build, int.Parse(_config.Get("write_thread_count"))))
             {
-                foreach (var page in _pages)
+                foreach (var (offset, length) in _pages.Skip(skip))
                 {
-                    ixStream.Seek(page.offset, SeekOrigin.Begin);
+                    ixStream.Seek(offset, SeekOrigin.Begin);
 
-                    var tree = VectorNode.DeserializeTree(ixStream, vectorStream, page.length);
+                    var tree = VectorNode.DeserializeTree(ixStream, vectorStream, length);
 
                     queue.Enqueue(tree);
                 }
