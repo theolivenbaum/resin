@@ -2,9 +2,11 @@
 
 ## What is this?
 
-A non-tracking [search](https://didyougogo.com) engine.
+A non-tracking [search](https://didyougogo.com) engine. Go ahead and try it! It contains the Swedish Wikipedia (dated ~ 2018).
 
 ### Create your own collection
+
+Go ahead and:  
 
 #### POST a JSON document to the WRITE endpoint
 
