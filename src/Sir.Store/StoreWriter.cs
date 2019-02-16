@@ -69,36 +69,33 @@ namespace Sir.Store
 
         private async Task<IList<long>> ExecuteWrite(WriteJob job)
         {
-            try
+            _timer.Restart();
+
+            IList<long> docIds;
+
+            using (var write = _sessionFactory.CreateWriteSession(job.CollectionName, job.CollectionName.ToHash()))
             {
-                _timer.Restart();
+                docIds = await write.Write(job);
+            }
 
-                IList<long> docIds;
+            if (docIds.Count > 0)
+            {
+                var skip = (int)docIds[0];
+                var take = docIds.Count;
 
-                using (var write = _sessionFactory.CreateWriteSession(job.CollectionName, job.CollectionName.ToHash()))
+                using (var docs = _sessionFactory.CreateDocumentStreamSession(job.CollectionName, job.CollectionName.ToHash()))
+                using (var index = _sessionFactory.CreateIndexSession(job.CollectionName, job.CollectionName.ToHash()))
                 {
-                    docIds = await write.Write(job);
-                }
-
-                using (var index = _sessionFactory.CreateIndexSession(
-                    job.CollectionName, job.CollectionName.ToHash()))
-                {
-                    foreach (var doc in job.Documents)
+                    foreach (var doc in docs.ReadDocs(skip, take))
                     {
                         index.EmbedTerms(doc);
                     }
                 }
-
-                this.Log("executed write+index job {0} in {1}", job.Id, _timer.Elapsed);
-
-                return docIds;
             }
-            catch (Exception ex)
-            {
-                this.Log("failed to write job {0}: {1}", job.Id, ex);
 
-                throw;
-            }
+            this.Log("executed write+index job {0} in {1}", job.Id, _timer.Elapsed);
+
+            return docIds;
         }
 
         private static T Deserialize<T>(Stream s)
