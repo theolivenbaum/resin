@@ -44,7 +44,7 @@ A non-tracking [search](https://didyougogo.com) engine.
 #### HTTP API and host of reader/writer plugins.
 https://github.com/kreeben/resin/tree/master/src/Sir.HttpServer
 
-#### A Int64/UInt64[] key/value writer and queryable map/reduce node. 
+#### A Int64/Int64[] key/value writer and queryable map/reduce node. 
 https://github.com/kreeben/resin/tree/master/src/Sir.Postings
 
 #### Document writer and queryable map/reduce orchestrator. 
