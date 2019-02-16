@@ -28,10 +28,8 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
-        public async Task<ResponseModel> Write(string collectionId, HttpRequest request)
+        public async Task<ResponseModel> Write(string collectionName, HttpRequest request)
         {
-            _timer.Restart();
-
             var payload = new MemoryStream();
 
             await request.Body.CopyToAsync(payload);
@@ -43,12 +41,8 @@ namespace Sir.Store
 
             payload.Position = 0;
 
-            var data = Deserialize<IEnumerable<IDictionary>>(payload);
-            var job = new WriteJob(collectionId, data);
-
-            this.Log("deserialized write job {0} for collection {1} in {2}", job.Id, collectionId, _timer.Elapsed);
-
-            var docIds = await ExecuteWrite(job);
+            var documents = Deserialize<IEnumerable<IDictionary>>(payload);
+            var docIds = await ExecuteWrite(collectionName, documents);
             var response = new MemoryStream();
 
             Serialize(docIds, response);
@@ -67,15 +61,15 @@ namespace Sir.Store
             s.Position = 0;
         }
 
-        private async Task<IList<long>> ExecuteWrite(WriteJob job)
+        private async Task<IList<long>> ExecuteWrite(string collectionName, IEnumerable<IDictionary> documents)
         {
             _timer.Restart();
 
             IList<long> docIds;
 
-            using (var write = _sessionFactory.CreateWriteSession(job.CollectionName, job.CollectionName.ToHash()))
+            using (var write = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash()))
             {
-                docIds = await write.Write(job);
+                docIds = await write.Write(documents);
             }
 
             if (docIds.Count > 0)
@@ -83,8 +77,8 @@ namespace Sir.Store
                 var skip = (int)docIds[0];
                 var take = docIds.Count;
 
-                using (var docs = _sessionFactory.CreateDocumentStreamSession(job.CollectionName, job.CollectionName.ToHash()))
-                using (var index = _sessionFactory.CreateIndexSession(job.CollectionName, job.CollectionName.ToHash()))
+                using (var docs = _sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
+                using (var index = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
                 {
                     foreach (var doc in docs.ReadDocs(skip, take))
                     {
@@ -93,7 +87,7 @@ namespace Sir.Store
                 }
             }
 
-            this.Log("executed write+index job {0} in {1}", job.Id, _timer.Elapsed);
+            this.Log("executed {0} write+index job in {1}", collectionName, _timer.Elapsed);
 
             return docIds;
         }

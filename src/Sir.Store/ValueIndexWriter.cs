@@ -10,17 +10,17 @@ namespace Sir.Store
     public class ValueIndexWriter
     {
         private readonly Stream _stream;
-        private static uint _blockSize = sizeof(long) + sizeof(int) + sizeof(byte);
+        private static int _blockSize = sizeof(long) + sizeof(int) + sizeof(byte);
 
         public ValueIndexWriter(Stream stream)
         {
             _stream = stream;
         }
 
-        public async Task<uint> Append(long offset, int len, byte dataType)
+        public async Task<long> Append(long offset, int len, byte dataType)
         {
             var position = _stream.Position;
-            var index = (uint)position / _blockSize;
+            var index = position == 0 ? 0 : position / _blockSize;
 
             await _stream.WriteAsync(BitConverter.GetBytes(offset), 0, sizeof(long));
             await _stream.WriteAsync(BitConverter.GetBytes(len), 0, sizeof(int));

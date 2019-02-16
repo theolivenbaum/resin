@@ -39,7 +39,7 @@ namespace Sir.Store
             _docIx = new DocIndexWriter(DocIndexStream);
         }
 
-        public async Task<IList<long>> Write(WriteJob job)
+        public async Task<IList<long>> Write(IEnumerable<IDictionary> docs)
         {
             var docIds = new List<long>();
             var docCount = 0;
@@ -47,8 +47,13 @@ namespace Sir.Store
 
             timer.Start();
 
-            foreach (var model in job.Documents)
+            foreach (var model in docs)
             {
+                if (!model.Contains("_created"))
+                {
+                    model["_created"] = DateTime.Now.ToBinary();
+                }
+
                 var docId = await Write(model);
 
                 docIds.Add(docId);

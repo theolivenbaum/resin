@@ -37,7 +37,7 @@ namespace Sir.Store
         {
             var numOfDocs = _docIx.NumOfDocs;
 
-            var docIds = Enumerable.Range(1, numOfDocs);
+            var docIds = Enumerable.Range(0, numOfDocs);
 
             if (skip > 0)
             {

@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 
 namespace Sir.Store
 {
@@ -111,18 +110,13 @@ namespace Sir.Store
 
         private void Serialize(IList<IDictionary> docs, Stream stream)
         {
-            var serializer = new DataContractJsonSerializer(typeof(IList<IDictionary>));
-
-            serializer.WriteObject(stream, docs);
-
-            //using (StreamWriter writer = new StreamWriter(stream))
-            //using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
-            //{
-            //    JsonSerializer ser = new JsonSerializer();
-            //    ser.Serialize(jsonWriter, docs);
-            //    jsonWriter.Flush();
-            //}
+            using (StreamWriter writer = new StreamWriter(stream))
+            using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
+            {
+                JsonSerializer ser = new JsonSerializer();
+                ser.Serialize(jsonWriter, docs);
+                jsonWriter.Flush();
+            }
         }
-
     }
 }
