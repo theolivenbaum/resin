@@ -1,4 +1,7 @@
-﻿@using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
+﻿@{ 
+    var collection = ViewData["collection"] ?? "www";
+}
+@using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
 {
     <input type="text" id="q" name="q" placeholder="Ask me anything." value="@ViewData["q"]" />
     <button type="submit" value="OR" name="OR" id="or" title="Go">Go <sup>OR</sup></button>
@@ -7,5 +10,5 @@
     <input type="hidden" value="10" name="take" id="take" />
     <input type="hidden" value="title" name="fields" />
     <input type="hidden" value="body" name="fields" />
-    <input type="hidden" value="www" name="collection" />
+    <input type="hidden" value="@collection" name="collection" />
 }
