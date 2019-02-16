@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="wwwroot\blog\" />
   </ItemGroup>
 
   <ItemGroup>

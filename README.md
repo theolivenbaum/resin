@@ -2,7 +2,28 @@
 
 ## What is this?
 
-[A search engine](https://didyougogo.com)
+A non-tracking [search](https://didyougogo.com) engine.
+
+### Create your own collection
+
+#### HTTP POST a JSON document to the WRITE endpoint
+
+	HTTP POST https://didyougogo.com/io/[collection_name]
+	Content-Type:application/json
+	[
+		{
+			"field1":"value1"
+		}
+	]
+
+### Query your collection through the API
+
+HTTP GET https://didyougogo.com/io/[collection_name]/?q=[phrase-or-term-query]&skip=0&take=10
+Accept:application/json
+
+### Render your result human-friendly
+
+HTTP GET https://didyougogo.com/?q=[phrase-or-term-query]&skip=0&take=10&collection=[collection_name]
 
 ### Read more
 
