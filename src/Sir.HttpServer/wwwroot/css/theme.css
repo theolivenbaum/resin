@@ -5,7 +5,7 @@
 }
 
 .sub {
-    font-size: 0.25em;
+    font-size: 0.2em;
     color: orangered;
     margin-left: 2px;
     margin-right: 2px;
@@ -21,57 +21,33 @@ a {
     color: gray;
 }
 
-    a h1 {
-        text-decoration: none;
-        color: orangered;
-    }
+a h1 {
+    text-decoration: none;
+    color: orangered;
+}
 
-    a:visited h1 {
-        color: orangered;
-    }
+a:visited h1 {
+    color: orangered;
+}
 
-    a:visited {
-        color: orangered;
-    }
+a:visited {
+    color: orangered;
+}
 
-    a.result-link {
-        color: mediumblue;
-    }
+a.result-link {
+    color: mediumblue;
+}
 
-        a.result-link:visited {
-            color: purple;
-        }
+a.result-link:visited {
+    color: purple;
+}
 
 input[type=text] {
-    width: 480px;
-}
-
-@@media only screen and (max-width: 700px) {
-    input[type=text] {
-        width: 70%;
-    }
-}
-
-@@media only screen and (max-width: 500px) {
-    input[type=text] {
-        width: 60%;
-    }
-}
-
-@@media only screen and (max-width: 400px) {
-    input[type=text] {
-        width: 50%;
-    }
-}
-
-@@media only screen and (max-width: 310px) {
-    input[type=text] {
-        width: 40%;
-    }
+    width: 50%;
 }
 
 textarea {
-    width: 250px;
+    width: 50%;
     height: 150px;
 }
 
@@ -98,6 +74,7 @@ div.upvote {
 
 h1.logo {
     margin-top: 0px;
+    letter-spacing: 0.01em;
 }
 
 #slogan {
@@ -111,21 +88,22 @@ h1.logo {
 
 footer {
     font-size: 10pt;
+    margin-top: 20px;
 }
 
-    footer span {
-        padding-top: 10px;
-    }
+footer span {
+    padding-top: 10px;
+}
 
-    footer a {
-        text-decoration: none;
-        color: gray;
-    }
+footer a {
+    text-decoration: none;
+    color: gray;
+}
 
-    footer p {
-        margin-top: 8px;
-        margin-bottom: 0px;
-    }
+footer p {
+    margin-top: 8px;
+    margin-bottom: 0px;
+}
 
 .document-body {
     margin-left: 18px;
