@@ -7,13 +7,13 @@
     <input type="text" id="q" name="q" placeholder="Ask me anything." value="@query" />
     <button type="submit" value="OR" name="OR" id="or" title="Go">Go <sup>OR</sup></button>
     <button type="submit" value="AND" name="AND" id="and" title="go!">go! <sup>AND</sup></button>
+    @if (!string.IsNullOrWhiteSpace(query))
+    {
+        <a class="advanced" href="/queryparser@(Context.Request.QueryString.ToString())">go! <sup>advanced</sup></a>
+    }
     <input type="hidden" value="0" name="skip" id="skip" />
     <input type="hidden" value="10" name="take" id="take" />
     <input type="hidden" value="title" name="fields" />
     <input type="hidden" value="body" name="fields" />
     <input type="hidden" value="@collection" name="collection" />
-}
-@if (!string.IsNullOrWhiteSpace(query))
-{
-    <a class="advanced" href="/queryparser@(Context.Request.QueryString.ToString())">go! advanced</a>
 }

@@ -85,9 +85,13 @@ namespace Sir.Store
 
             foreach (var line in lines)
             {
+                Query x = null;
+
                 var cleanLine = line
                     .Replace("(", "")
-                    .Replace(")", "");
+                    .Replace(")", "")
+                    .Replace("++", "+")
+                    .Replace("--", "-");
 
                 var terms = cleanLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
@@ -95,23 +99,32 @@ namespace Sir.Store
                 {
                     var query = _queryParser.Parse(term, _tokenizer);
 
-                    if (root == null)
+                    if (x == null)
                     {
-                        root = query;
+                        x = query;
                     }
                     else
                     {
-                        var last = root;
-                        var next = last.Next;
-
-                        while (next != null)
-                        {
-                            last = next;
-                            next = last.Next;
-                        }
-
-                        last.Next = query;
+                        x.AddClause(query);
                     }
+                }
+
+                if (root == null)
+                {
+                    root = x;
+                }
+                else
+                {
+                    var last = root;
+                    var next = last.Next;
+
+                    while (next != null)
+                    {
+                        last = next;
+                        next = last.Next;
+                    }
+
+                    last.Next = x;
                 }
             }
 

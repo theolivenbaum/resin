@@ -26,8 +26,7 @@ namespace Sir.HttpServer.Controllers
             var formatter = _serviceProvider.GetService<IQueryFormatter>();
             var formatted = qf ?? formatter.Format(collection, Request);
 
-            ViewData["q"] = q;
-            ViewData["qf"] = formatted;
+            ViewData["q"] = formatted;
 
             var reader = _plugins.Get<IReader>("application/json");
 

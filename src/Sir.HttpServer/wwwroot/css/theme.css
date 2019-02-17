@@ -22,26 +22,26 @@ a {
     color: gray;
 }
 
-a h1 {
-    text-decoration: none;
-    color: orangered;
-}
+    a h1 {
+        text-decoration: none;
+        color: orangered;
+    }
 
-a:visited h1 {
-    color: orangered;
-}
+    a:visited h1 {
+        color: orangered;
+    }
 
-a:visited {
-    color: orangered;
-}
+    a:visited {
+        color: orangered;
+    }
 
-a.result-link {
-    color: mediumblue;
-}
+    a.result-link {
+        color: mediumblue;
+    }
 
-a.result-link:visited {
-    color: purple;
-}
+        a.result-link:visited {
+            color: purple;
+        }
 
 input[type=text] {
     width: 50%;
@@ -64,6 +64,7 @@ h3 {
 }
 
 p {
+    margin-top: 25px;
     margin-bottom: 25px;
 }
 
@@ -93,19 +94,19 @@ footer {
     margin-top: 25px;
 }
 
-footer span {
-    padding-top: 10px;
-}
+    footer span {
+        padding-top: 10px;
+    }
 
-footer a {
-    text-decoration: none;
-    color: gray;
-}
+    footer a {
+        text-decoration: none;
+        color: gray;
+    }
 
-footer p {
-    margin-top: 8px;
-    margin-bottom: 0px;
-}
+    footer p {
+        margin-top: 8px;
+        margin-bottom: 0px;
+    }
 
 .document-body {
     margin-left: 18px;
@@ -122,6 +123,6 @@ button.queryparser {
     vertical-align: top;
 }
 
-.advanced{
+.advanced {
     font-size: small;
 }
