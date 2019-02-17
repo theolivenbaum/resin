@@ -1,5 +1,6 @@
 ﻿@{
-    var qf = ViewData["q"];
+    var qf = ViewData["qf"];
+    var q = ViewData["q"];
 }
 @using (Html.BeginRouteForm("default", new { controller = "QueryParser" }, FormMethod.Get))
 {
@@ -8,6 +9,7 @@
     <button class="queryparser" value="create" name="create" id="create" title="Save result as new collection">Create collection <sup>COMING SOON</sup></button>
     <a href="/search@(Context.Request.QueryString)">go! <sup>easy</sup></a>
     <input type="hidden" value="0" name="skip" id="skip" />
+    <input type="hidden" value="@q" name="q" id="q" />
     <input type="hidden" value="10" name="take" id="take" />
     <input type="hidden" value="title" name="fields" />
     <input type="hidden" value="body" name="fields" />
