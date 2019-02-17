@@ -17,7 +17,9 @@ namespace Sir.Store
         {
             Query root = null;
             Query cursor = null;
-            var lines = query.Split('\n');
+            var lines = query
+                .Replace("\r", "\n")
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var line in lines)
             {

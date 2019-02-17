@@ -11,15 +11,17 @@ namespace Sir.HttpServer.Controllers
     public class QueryParserController : UIController
     {
         private IServiceProvider _serviceProvider;
+        private readonly PluginsCollection _plugins;
 
-        public QueryParserController(IServiceProvider serviceProvider, IConfigurationProvider config) : base(config)
+        public QueryParserController(PluginsCollection plugins, IServiceProvider serviceProvider, IConfigurationProvider config) : base(config)
         {
             _serviceProvider = serviceProvider;
+            _plugins = plugins;
         }
 
         [HttpGet("/queryparser/")]
         [HttpPost("/queryparser/")]
-        public IActionResult Index(string q, string qf, string collection, string[] fields)
+        public async Task<IActionResult> Index(string q, string qf, string collection, string[] fields)
         {
             var formatter = _serviceProvider.GetService<IQueryFormatter>();
             var formatted = qf ?? formatter.Format(collection, Request);
@@ -27,37 +29,30 @@ namespace Sir.HttpServer.Controllers
             ViewData["q"] = q;
             ViewData["qf"] = formatted;
 
-            return View(new QueryParserModel[0]);
+            var reader = _plugins.Get<IReader>("application/json");
 
-            //var reader = _plugins.Get<IReader>("application/json");
+            if (reader == null)
+            {
+                throw new NotSupportedException();
+            }
 
-            //if (reader == null)
-            //{
-            //    throw new System.NotSupportedException();
-            //}
+            var timer = new Stopwatch();
+            timer.Start();
 
-            //var timer = new Stopwatch();
-            //timer.Start();
+            var result = await reader.Read(collection, Request);
 
-            //var result = await reader.Read(collection, Request);
+            ViewData["time_ms"] = timer.ElapsedMilliseconds;
+            ViewData["collection"] = collection;
+            ViewData["total"] = result.Total;
 
-            //ViewData["time_ms"] = timer.ElapsedMilliseconds;
-            //ViewData["collection"] = collection;
-            //ViewData["total"] = result.Total;
+            if (result.Total == 0)
+            {
+                return View(new SearchResultModel[0]);
+            }
 
-            //if (result.Total== 0)
-            //{
-            //    return View(new QueryParserModel[0]);
-            //}
+            var documents = result.Documents.Select(x => new SearchResultModel { Document = x });
 
-            //var documents = result.Documents.Select(x => new QueryParserModel { Document = x });
-
-            //return View(documents);
+            return View(documents);
         }
-    }
-
-    public class QueryParserModel
-    {
-        public IDictionary Document { get; set; }
     }
 }

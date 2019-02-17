@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 
 namespace Sir.Store
@@ -35,37 +36,86 @@ namespace Sir.Store
                 fields = new[] { "title", "body" };
             }
 
-            string queryFormat = string.Empty;
+            var isFormatted = request.Query.ContainsKey("qf");
 
-            if (request.Query.ContainsKey("format"))
+            if (isFormatted)
             {
-                queryFormat = request.Query["format"].ToArray()[0];
+                var formattedQuery = request.Query["qf"].ToString();
+                query = FromString(formattedQuery);
             }
             else
             {
-                foreach (var field in fields)
+                string queryFormat = string.Empty;
+
+                if (request.Query.ContainsKey("format"))
                 {
-                    queryFormat += (termOperator + field + ":{0}\n");
+                    queryFormat = request.Query["format"].ToArray()[0];
+                }
+                else
+                {
+                    foreach (var field in fields)
+                    {
+                        queryFormat += (termOperator + field + ":{0}\n");
+                    }
+
+                    queryFormat = queryFormat.Substring(0, queryFormat.Length - 1);
                 }
 
-                queryFormat = queryFormat.Substring(0, queryFormat.Length - 1);
-            }
+                var formattedQuery = string.Format(queryFormat, request.Query["q"]);
 
-            if (!string.IsNullOrWhiteSpace(request.Query["q"]))
-            {
-                var expandedQuery = string.Format(queryFormat, request.Query["q"]);
-
-                query = _queryParser.Parse(expandedQuery, _tokenizer);
+                query = _queryParser.Parse(formattedQuery, _tokenizer);
                 query.Collection = collectionId.ToHash();
-
-                if (request.Query.ContainsKey("take"))
-                    query.Take = int.Parse(request.Query["take"]);
-
-                if (request.Query.ContainsKey("skip"))
-                    query.Skip = int.Parse(request.Query["skip"]);
             }
+
+            if (request.Query.ContainsKey("take"))
+                query.Take = int.Parse(request.Query["take"]);
+
+            if (request.Query.ContainsKey("skip"))
+                query.Skip = int.Parse(request.Query["skip"]);
 
             return query;
+        }
+
+        private Query FromString(string formattedQuery)
+        {
+            Query root = null;
+            var lines = formattedQuery
+                .Replace("\r", "\n")
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var line in lines)
+            {
+                var cleanLine = line
+                    .Replace("(", "")
+                    .Replace(")", "");
+
+                var terms = cleanLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (var term in terms)
+                {
+                    var query = _queryParser.Parse(term, _tokenizer);
+
+                    if (root == null)
+                    {
+                        root = query;
+                    }
+                    else
+                    {
+                        var last = root;
+                        var next = last.Next;
+
+                        while (next != null)
+                        {
+                            last = next;
+                            next = last.Next;
+                        }
+
+                        last.Next = query;
+                    }
+                }
+            }
+
+            return root;
         }
     }
 
