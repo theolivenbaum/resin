@@ -1,7 +1,10 @@
-﻿@using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
+﻿@{ 
+    var qf = ViewData["qf"];
+}
+@using (Html.BeginRouteForm("default", new { controller = "QueryParser" }, FormMethod.Get))
 {
-    <textarea class="query"></textarea>
-    <button class="queryparser" type="submit" value="OR" name="OR" id="or" title="OR">go! <sup>BETA</sup></button> 
+    <textarea class="query" name="qf" id="qf">@qf</textarea>
+    <button class="queryparser" value="OR" name="OR" id="or" title="OR">go! <sup>COMING SOON</sup></button> 
     <input type="hidden" value="0" name="skip" id="skip" />
     <input type="hidden" value="10" name="take" id="take" />
     <input type="hidden" value="title" name="fields" />

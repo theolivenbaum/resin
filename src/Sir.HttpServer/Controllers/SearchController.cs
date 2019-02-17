@@ -19,12 +19,6 @@ namespace Sir.HttpServer.Controllers
         [HttpPost("/search/")]
         public async Task<IActionResult> Index(string q, string collection)
         {
-            if (Request.Query.ContainsKey("QP"))
-            {
-                var u = Request.Scheme + "://" + Request.Host + "/queryparser";
-                Response.Redirect(u);
-            }
-
             if (string.IsNullOrWhiteSpace(q)) return View();
 
             ViewData["q"] = q;

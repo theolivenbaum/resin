@@ -2,6 +2,7 @@
     padding: 10px 0px 0px 0px;
     margin: 0px 0px 0px 10px;
     font-family: sans-serif;
+    font-size: medium;
 }
 
 .sub {
@@ -44,6 +45,7 @@ a.result-link:visited {
 
 input[type=text] {
     width: 50%;
+    margin-bottom: 4px;
 }
 
 textarea {
@@ -118,4 +120,8 @@ textarea.query {
 
 button.queryparser {
     vertical-align: top;
+}
+
+.advanced{
+    font-size: small;
 }

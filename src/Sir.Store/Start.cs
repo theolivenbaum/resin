@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Sir.Store
 {
@@ -22,6 +23,15 @@ namespace Sir.Store
 
             services.AddSingleton(typeof(HttpQueryParser), new HttpQueryParser(new TermQueryParser(), tokenizer));
             services.AddSingleton(typeof(HttpBowQueryParser), new HttpBowQueryParser(tokenizer));
+            services.AddSingleton(typeof(IQueryFormatter), new QueryFormatter());
+        }
+    }
+
+    public class QueryFormatter : IQueryFormatter
+    {
+        public string Format(string collectionName, HttpRequest request)
+        {
+            return new HttpQueryParser(new TermQueryParser(), new LatinTokenizer()).Parse(collectionName, request).ToString();
         }
     }
 }
