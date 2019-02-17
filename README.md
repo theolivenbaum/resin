@@ -2,7 +2,7 @@
 
 ## What is this?
 
-A non-tracking [search](https://didyougogo.com) engine. Go ahead and try it! It contains the Swedish Wikipedia (dated ~ 2018).
+A non-tracking [boolean search](https://didyougogo.com) engine.
 
 ### Create your own collection
 
@@ -37,27 +37,29 @@ Go ahead and:
 	HTTPS GET didyougogo.com/io/[collection_name]?q=[phrase-or-term-query]&fields=title&skip=0&take=10
 	Accept:application/json
 
-### Human-friendly GUI
+### Human-friendly query GUI
 
 	HTTPS GET didyougogo.com/?q=[phrase-or-term-query]&fields=title&skip=0&take=10&collection=[collection_name]
 
 ### Read more
 
-#### HTTP API and host of reader/writer plugins.
+#### HTTP reader/writer micro-service framework.
+Create distributable readers and writer.
 https://github.com/kreeben/resin/tree/master/src/Sir.HttpServer
 
-#### A Int64/Int64[] key/value writer and queryable map/reduce node. 
+#### A Int64/Int64[] key/value writer service and queryable map/reduce reader. 
+Execute set operations over local lists of Int64's (document references).  
 https://github.com/kreeben/resin/tree/master/src/Sir.Postings
 
 #### Document writer and queryable map/reduce orchestrator. 
-Communicates over HTTP with one or more nodes.  
+Orchestrate set operations over remote lists of document references.   
 https://github.com/kreeben/resin/tree/master/src/Sir.Store
 
 ### Roadmap
 
 - [x] v0.1a - bag-of-characters term vector space language model
-- [x] v0.2a - HTTP API
-- [x] v0.3a - distributable search microservices
+- [x] v0.2a - HTTP API comprised of distributable search microservices
+- [x] v0.3a - boolean query language with support for AND ('+'), OR (' '), NOT ('-') and scope ('(', ')').
 - [ ] v0.4a - bag-of-words document vector space language model
 - [ ] v0.5b - semantic language model
 - [ ] v0.6b - local join between collections

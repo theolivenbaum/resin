@@ -6,6 +6,8 @@
 }
 @{await Html.RenderPartialAsync("QueryParserForm");}
 
+<p>While you wait: <a href="https://github.com/kreeben/resin/blob/master/README.md#create-your-own-collection">read/write/query collections API documentation</a></p>
+
 @if (ViewData["time_ms"] != null)
 {
     //await Html.RenderPartialAsync("DocumentList", docs);

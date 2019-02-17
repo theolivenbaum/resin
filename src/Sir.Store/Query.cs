@@ -39,9 +39,29 @@ namespace Sir.Store
 
         public override string ToString()
         {
-            var op = And ? "AND " : Or ? "OR " : "NOT ";
+            var result = new StringBuilder();
+            var query = this;
+            var queryop = And ? "+" : Or ? string.Empty : "-";
 
-            return string.Format("{0}{1} ", op, Term);
+            while (query != null)
+            {
+                var termResult = new StringBuilder();
+                var termop = And ? "+" : Or ? string.Empty : "-";
+                var term = query;
+
+                while (term != null)
+                {
+                    termResult.AppendFormat("{0}{1} ", termop, term.Term);
+
+                    term = term.Then;
+                }
+
+                result.AppendFormat("{0}({1})\n", queryop, termResult.ToString().TrimEnd());
+
+                query = query.Next;
+            }
+
+            return result.ToString();
         }
 
         public string ToDiagram()

@@ -98,41 +98,47 @@ namespace Sir.Store
 
         private void Map(Query query)
         {
-            this.Log("before: " + query.ToDiagram());
+            this.Log("before map: " + query.ToDiagram());
 
             foreach (var q in query.ToList())
-            //Parallel.ForEach(query.ToList(), q =>
             {
-               Hit hit = null;
+                var cursor = q;
 
-                var indexReader = q.Term.KeyId.HasValue ? 
-                    CreateIndexReader(q.Term.KeyId.Value) : 
-                    CreateIndexReader(q.Term.KeyHash);
-
-                if (indexReader != null)
+                while (cursor != null)
                 {
-                    var termVector = q.Term.ToCharVector();
+                    Hit hit = null;
 
-                    hit = indexReader.ClosestMatch(termVector);
-                }
+                    var indexReader = cursor.Term.KeyId.HasValue ?
+                        CreateIndexReader(cursor.Term.KeyId.Value) :
+                        CreateIndexReader(cursor.Term.KeyHash);
 
-                if (hit != null)
-                {
-                    q.Score = hit.Score;
-
-                    foreach (var offs in hit.PostingsOffsets)
+                    if (indexReader != null)
                     {
-                        if (offs < 0)
-                        {
-                            throw new DataMisalignedException();
-                        }
+                        var termVector = cursor.Term.ToCharVector();
 
-                        q.PostingsOffsets.Add(offs);
+                        hit = indexReader.ClosestMatch(termVector);
                     }
-                }
-            }//);
 
-            this.Log("after: " + query.ToDiagram());
+                    if (hit != null)
+                    {
+                        cursor.Score = hit.Score;
+
+                        foreach (var offs in hit.PostingsOffsets)
+                        {
+                            if (offs < 0)
+                            {
+                                throw new DataMisalignedException();
+                            }
+
+                            cursor.PostingsOffsets.Add(offs);
+                        }
+                    }
+
+                    cursor = cursor.Then;
+                }
+            }
+
+            this.Log("after map: " + query.ToDiagram());
         }
 
         private static readonly object _syncIndexReaderCreation = new object();

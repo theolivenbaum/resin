@@ -51,8 +51,8 @@ namespace Sir.Store
 
                 for (int i = 1; i < values.Tokens.Count; i++)
                 {
-                    qc.Next = new Query(new Term(key, values, i)) { And = and, Or = or, Not = not };
-                    qc = qc.Next;
+                    qc.Then = new Query(new Term(key, values, i)) { And = and, Or = or, Not = not };
+                    qc = qc.Then;
                 }
 
                 if (cursor == null)
