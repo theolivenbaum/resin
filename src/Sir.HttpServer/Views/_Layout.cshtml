@@ -8,7 +8,6 @@
 </head>
 <body>
     <a href="/" title="Go.go! v0.3a"><h1 class="logo">Go<span class="sub">&#9632;</span>go!</h1></a>
-    <p id="slogan">Another non-tracking search engine.</p>
     <div>
         @RenderBody()
     </div>
@@ -23,7 +22,8 @@
                 <p>Last crawled: <a href="@ViewData["last_processed_url"]">@ViewData["last_processed_title"]</a></p>
             }
             <p><a href="/queryparser?collection=www&q=trump%20tower&fields=title&fields=body&skip=0&take=10">Create</a> your own collection.</p>
-            <p>Powered by <a href="https://github.com/kreeben/resin">Resin</a>. Hosted by <a href="https://freenode.net/">freenode</a>.</p>
+            <p>Just another non-tracking search engine powered by <a href="https://github.com/kreeben/resin">Resin</a> on servers from <a href="https://freenode.net/">freenode</a>.</p>
+
             <p>Coming soon: NEAR operator, join between collections, semantic search, optional 100% PII-less personalized search</p>
         </div>
     </footer>

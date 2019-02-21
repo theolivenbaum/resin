@@ -77,12 +77,13 @@ div.upvote {
 
 h1.logo {
     margin-top: 0px;
+    margin-bottom: 20px;
     letter-spacing: 0.01em;
 }
 
 #slogan {
-    margin-top: 0px;
-    margin-bottom: 15px;
+    margin-top: 5px;
+    margin-bottom: 20px;
 }
 
 .medium-text {

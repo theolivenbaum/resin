@@ -9,7 +9,7 @@
     <button type="submit" value="AND" name="AND" id="and" title="go!">go! <sup>AND</sup></button>
     @if (!string.IsNullOrWhiteSpace(query))
     {
-        <a class="advanced" href="/queryparser@(Context.Request.QueryString.ToString())">go! <sup>advanced</sup></a>
+        <br /><a class="advanced" href="/queryparser@(Context.Request.QueryString.ToString())"><sup>advanced</sup></a>
     }
     <input type="hidden" value="0" name="skip" id="skip" />
     <input type="hidden" value="10" name="take" id="take" />
