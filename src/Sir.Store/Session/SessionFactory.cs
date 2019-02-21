@@ -214,12 +214,16 @@ namespace Sir.Store
 
         public Stream CreateAsyncReadStream(string fileName)
         {
-            return new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true);
+            return File.Exists(fileName)
+            ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true)
+            : null;
         }
 
         public Stream CreateReadStream(string fileName)
         {
-            return new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            return File.Exists(fileName)
+                ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+                : null;
         }
 
         public Stream CreateAsyncAppendStream(string fileName)
@@ -244,6 +248,11 @@ namespace Sir.Store
 
                 return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
             }
+        }
+
+        public bool CollectionExists(ulong collectionId)
+        {
+            return File.Exists(Path.Combine(Dir, collectionId + ".val"));
         }
 
         public void Dispose()

@@ -31,12 +31,12 @@ namespace Sir.Store
             ConcurrentDictionary<long, NodeReader> indexReaders) 
             : base(collectionName, collectionId, sessionFactory)
         {
-            ValueStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
-            KeyStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", CollectionId)));
-            DocStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", CollectionId)));
-            ValueIndexStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", CollectionId)));
-            KeyIndexStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", CollectionId)));
-            DocIndexStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
+            ValueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
+            KeyStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", CollectionId)));
+            DocStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", CollectionId)));
+            ValueIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", CollectionId)));
+            KeyIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", CollectionId)));
+            DocIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
 
             _docIx = new DocIndexReader(DocIndexStream);
             _docs = new DocMapReader(DocStream);
@@ -51,36 +51,40 @@ namespace Sir.Store
 
         public ReadResult Read(Query query)
         {
-            var result = Execute(query);
-
-            if (result == null)
+            if (SessionFactory.CollectionExists(query.Collection))
             {
-                this.Log("found nothing for query {0}", query);
+                var result = Execute(query);
 
-                return new ReadResult { Total = 0, Docs = new IDictionary[0] };
-            }
-            else
-            {
-                var docs = ReadDocs(result.Documents);
+                if (result != null)
+                {
+                    var docs = ReadDocs(result.Documents);
 
-                return new ReadResult { Total = result.Total, Docs = docs };
+                    return new ReadResult { Total = result.Total, Docs = docs };
+                }
             }
+
+            this.Log("found nothing for query {0}", query);
+
+            return new ReadResult { Total = 0, Docs = new IDictionary[0] };
         }
 
         public IEnumerable<long> ReadIds(Query query)
         {
-            var result = Execute(query);
-
-            if (result == null)
+            if (SessionFactory.CollectionExists(query.Collection))
             {
-                this.Log("found nothing for query {0}", query);
+                var result = Execute(query);
 
-                return Enumerable.Empty<long>();
-            }
-            else
-            {
+                if (result == null)
+                {
+                    this.Log("found nothing for query {0}", query);
+
+                    return Enumerable.Empty<long>();
+                }
+
                 return result.Documents.Keys;
             }
+
+            return new long[0];
         }
 
         private ScoredResult Execute(Query query)
