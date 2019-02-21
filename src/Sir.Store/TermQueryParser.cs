@@ -13,7 +13,7 @@ namespace Sir.Store
     {
         private static  char[] Operators = new char[] { ' ', '+', '-' };
 
-        public Query Parse(string query, ITokenizer tokenizer)
+        public Query Parse(ulong collectionId, string query, ITokenizer tokenizer)
         {
             Query root = null;
             Query cursor = null;
@@ -48,12 +48,12 @@ namespace Sir.Store
                     key = key.Substring(1);
                 }
 
-                var q = new Query(new Term(key, values, 0)) { And = and, Or = or, Not = not };
+                var q = new Query(collectionId, new Term(key, values, 0)) { And = and, Or = or, Not = not };
                 var qc = q;
 
                 for (int i = 1; i < values.Tokens.Count; i++)
                 {
-                    qc.Then = new Query(new Term(key, values, i)) { And = and, Or = or, Not = not };
+                    qc.Then = new Query(collectionId, new Term(key, values, i)) { And = and, Or = or, Not = not };
                     qc = qc.Then;
                 }
 

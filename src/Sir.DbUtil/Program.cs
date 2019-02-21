@@ -121,7 +121,7 @@ namespace Sir.DbUtil
                     break;
                 }
 
-                var q = qp.Parse(input, tokenizer);
+                var q = qp.Parse(collectionName.ToHash(), input, tokenizer);
                 q.Skip = 0;
                 q.Take = 100;
 

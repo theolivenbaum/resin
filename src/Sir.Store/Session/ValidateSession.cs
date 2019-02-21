@@ -105,7 +105,7 @@ namespace Sir.Store
 
             foreach (var node in docTree.All())
             {
-                var query = new Query(new Term(item.key, node));
+                var query = new Query(CollectionId, new Term(item.key, node));
                 bool valid = false;
 
                 foreach (var id in _readSession.ReadIds(query))

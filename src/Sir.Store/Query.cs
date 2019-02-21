@@ -10,22 +10,24 @@ namespace Sir.Store
     /// </summary>
     public class Query
     {
-        public Query(Term term)
+        public Query(ulong collectionId, Term term)
         {
             Term = term;
             PostingsOffsets = new List<long>();
             Score = -1;
             Or = true;
+            Collection = collectionId;
         }
 
-        public Query(float score, IList<long> postingsOffsets)
+        public Query(ulong collectionId, float score, IList<long> postingsOffsets)
         {
             Score = score;
             PostingsOffsets = postingsOffsets;
             Or = true;
+            Collection = collectionId;
         }
 
-        public ulong Collection { get; set; }
+        public ulong Collection { get; private set; }
         public bool And { get; set; }
         public bool Or { get; set; }
         public bool Not { get; set; }

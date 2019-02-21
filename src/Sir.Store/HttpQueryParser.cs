@@ -41,7 +41,7 @@ namespace Sir.Store
             if (isFormatted)
             {
                 var formattedQuery = request.Query["qf"].ToString();
-                query = FromString(formattedQuery);
+                query = FromString(collectionId.ToHash(), formattedQuery);
             }
             else
             {
@@ -63,8 +63,7 @@ namespace Sir.Store
 
                 var formattedQuery = string.Format(queryFormat, request.Query["q"]);
 
-                query = _queryParser.Parse(formattedQuery, _tokenizer);
-                query.Collection = collectionId.ToHash();
+                query = _queryParser.Parse(collectionId.ToHash(), formattedQuery, _tokenizer);
             }
 
             if (request.Query.ContainsKey("take"))
@@ -76,7 +75,7 @@ namespace Sir.Store
             return query;
         }
 
-        private Query FromString(string formattedQuery)
+        private Query FromString(ulong collectionId, string formattedQuery)
         {
             Query root = null;
             var lines = formattedQuery
@@ -97,7 +96,7 @@ namespace Sir.Store
 
                 foreach (var term in terms)
                 {
-                    var query = _queryParser.Parse(term, _tokenizer);
+                    var query = _queryParser.Parse(collectionId, term, _tokenizer);
 
                     if (x == null)
                     {
