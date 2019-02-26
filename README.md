@@ -6,7 +6,7 @@ A vector space model [search engine](https://didyougogo.com) with a simple boole
 
 ## Bag-of-characters model
 
-The first-level index is a graph of words embedded as bags-of-characters. Allthough not immediately noticable this model is a little inprecise.
+The first-level index is a graph of words embedded as bags-of-characters. Although not immediately noticable this model is a little inprecise.
 
 ## Vector space model
 
