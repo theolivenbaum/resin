@@ -2,13 +2,13 @@
 
 ## What is this?
 
-A semi-precise [search engine](https://didyougogo.com) with a simple boolean query language that handles big data with a breeze because of it's relatively simple language model.
+A vector space model [search engine](https://didyougogo.com) with a simple boolean query language that handles big data with a breeze because of it's relatively simple language model.
 
 ## Bag-of-characters model
 
 The first-level index is a graph of words embedded as bags-of-characters. Allthough not immediately noticable this model is a little inprecise.
 
-## Bag-of-words model
+##Vector space model
 
 The second-level index is a graph of documents embedded as bags-of-bags-of-characters. This model does not add preciseness but creates clusters of similar documents.
 
