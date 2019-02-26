@@ -2,7 +2,7 @@
 
 ## What is this?
 
-A vector space model [search engine](https://didyougogo.com) with a simple boolean query language that handles big data with a breeze because of it's relatively simple language model.
+A vector space model [search engine](https://didyougogo.com) with a simple boolean query language that handles big data well because of it's relatively simple language model.
 
 ## Bag-of-characters model
 
