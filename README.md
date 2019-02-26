@@ -8,13 +8,13 @@ A vector space model [search engine](https://didyougogo.com) with a simple boole
 
 The first-level index is a graph of words embedded as bags-of-characters. Allthough not immediately noticable this model is a little inprecise.
 
-##Vector space model
+## Vector space model
 
 The second-level index is a graph of documents embedded as bags-of-bags-of-characters. This model does not add preciseness but creates clusters of similar documents.
 
 ## Semantic model
 
-Coming soon.
+Coming soon. But it shall be something in the realms of a graph of bags-of-topics.
 
 ### Create your own collection and query it!
 
