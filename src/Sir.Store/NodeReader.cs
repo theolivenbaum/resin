@@ -72,6 +72,8 @@ namespace Sir.Store
             }
         }
 
+        private readonly object _syncInit = new object();
+
         public VectorNode ReadAllPages(int skip = 0)
         {
             if (_root != null)
@@ -79,27 +81,35 @@ namespace Sir.Store
                 return _root;
             }
 
-            var time = Stopwatch.StartNew();
-
-            _root = new VectorNode();
-
-            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-            using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
-            using (var queue = new ProducerConsumerQueue<VectorNode>(Build, int.Parse(_config.Get("write_thread_count"))))
+            lock (_syncInit)
             {
-                foreach (var (offset, length) in _pages.Skip(skip))
+                if (_root != null)
                 {
-                    ixStream.Seek(offset, SeekOrigin.Begin);
-
-                    var tree = VectorNode.DeserializeTree(ixStream, vectorStream, length);
-
-                    queue.Enqueue(tree);
+                    return _root;
                 }
+
+                var time = Stopwatch.StartNew();
+
+                _root = new VectorNode();
+
+                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
+                using (var queue = new ProducerConsumerQueue<VectorNode>(Build, int.Parse(_config.Get("write_thread_count"))))
+                {
+                    foreach (var (offset, length) in _pages.Skip(skip))
+                    {
+                        ixStream.Seek(offset, SeekOrigin.Begin);
+
+                        var tree = VectorNode.DeserializeTree(ixStream, vectorStream, length);
+
+                        queue.Enqueue(tree);
+                    }
+                }
+
+                this.Log("deserialized {0} index segments in {1}", _pages.Count, time.Elapsed);
+
+                return _root;
             }
-
-            this.Log("deserialized {0} index segments in {1}", _pages.Count, time.Elapsed);
-
-            return _root;
         }
 
         private void Build(VectorNode tree)
