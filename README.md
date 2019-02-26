@@ -2,11 +2,9 @@
 
 ## What is this?
 
-A non-tracking [boolean search](https://didyougogo.com) engine.
+A semi-precise [search engine](https://didyougogo.com) with a simple boolean query language.
 
-### Create your own collection
-
-Go ahead and:  
+### Create your own collection and query it!
 
 #### POST a JSON document to the WRITE endpoint
 
