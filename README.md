@@ -57,7 +57,7 @@ Coming soon. But it shall be something in the realms of a graph of bags-of-topic
 Create distributable readers and writer.
 https://github.com/kreeben/resin/tree/master/src/Sir.HttpServer
 
-### A Int64/Int64[] key/value writer service and queryable map/reduce reader. 
+### A key/value writer and queryable map/reduce reader. 
 Execute set operations over local lists of Int64's (document references).  
 https://github.com/kreeben/resin/tree/master/src/Sir.Postings
 
