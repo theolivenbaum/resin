@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -19,15 +20,25 @@ namespace Sir.Store
         private readonly SessionFactory _sessionFactory;
         private readonly HttpQueryParser _httpQueryParser;
         private readonly HttpBowQueryParser _httpBowQueryParser;
+        private readonly StoreWriter _storeWriter;
         private readonly ITokenizer _tokenizer;
 
         public StoreReader(
-            SessionFactory sessionFactory, HttpQueryParser httpQueryParser, HttpBowQueryParser httpDocumentQueryParser, ITokenizer tokenizer)
+            SessionFactory sessionFactory, HttpQueryParser httpQueryParser, HttpBowQueryParser httpDocumentQueryParser, ITokenizer tokenizer, IEnumerable<IWriter> storeWriters)
         {
             _sessionFactory = sessionFactory;
             _httpQueryParser = httpQueryParser;
             _tokenizer = tokenizer;
             _httpBowQueryParser = httpDocumentQueryParser;
+            
+            foreach (var writer in storeWriters)
+            {
+                if (writer is StoreWriter)
+                {
+                    _storeWriter = (StoreWriter)writer;
+                    break;
+                }
+            }
         }
 
         public void Dispose()
@@ -99,6 +110,18 @@ namespace Sir.Store
                         total = result.Total;
 
                         this.Log(string.Format("executed query {0} in {1}", query, timer.Elapsed));
+
+                        if (request.Query.ContainsKey("create"))
+                        {
+                            var newCollectionName = request.Query["newCollection"].ToString();
+
+                            if (string.IsNullOrWhiteSpace(newCollectionName))
+                            {
+                                newCollectionName = Guid.NewGuid().ToString();
+                            }
+
+                            await _storeWriter.ExecuteWrite(newCollectionName, docs);
+                        }
                     }
 
                     Serialize(docs, stream);

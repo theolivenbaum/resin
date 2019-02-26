@@ -62,12 +62,12 @@ namespace Sir.HttpServer
             // Create one instances each of all plugins and register them with the PluginCollection,
             // so that they can be fetched at runtime by Content-Type and System.Type.
 
-            foreach (var service in services.BuildServiceProvider().GetServices<IReader>())
+            foreach (var service in services.BuildServiceProvider().GetServices<IWriter>())
             {
                 plugins.Add(service.ContentType, service);
             }
 
-            foreach (var service in services.BuildServiceProvider().GetServices<IWriter>())
+            foreach (var service in services.BuildServiceProvider().GetServices<IReader>())
             {
                 plugins.Add(service.ContentType, service);
             }

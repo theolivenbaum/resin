@@ -43,11 +43,6 @@ a.result-link:visited {
     color: purple;
 }
 
-input[type=text] {
-    width: 50%;
-    margin-bottom: 4px;
-}
-
 textarea {
     width: 50%;
     height: 150px;
@@ -66,6 +61,11 @@ h3 {
 p {
     margin-top: 20px;
     margin-bottom: 15px;
+}
+
+.q {
+    width: 50%;
+    margin-bottom: 4px;
 }
 
 div.upvote {
@@ -120,11 +120,23 @@ textarea.query {
     margin-bottom: 0px;
 }
 
-button.queryparser {
+button.queryparser{
+    margin-right: 10px;
+}
+div.queryparser {
     vertical-align: top;
 }
 
 .advanced {
-    font-size: small;
     color: orangered;
+    font-size: 0.8em;
+}
+
+input[type=text].newCollection{
+    width: 398px;
+}
+
+div.newCollection{
+    margin-top: 20px;
+    width: 500px;
 }

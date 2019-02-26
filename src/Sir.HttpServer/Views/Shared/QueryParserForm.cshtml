@@ -1,13 +1,20 @@
 ﻿@{
     var qf = ViewData["qf"];
     var q = ViewData["q"];
+    var newCollection = ViewData["newCollection"];
 }
 @using (Html.BeginRouteForm("default", new { controller = "QueryParser" }, FormMethod.Get))
 {
-    <textarea class="query" name="qf" id="qf">@qf</textarea><br />
-    <button type="submit" class="queryparser" name="execute" id="execute" title="Execute query">Go</button>
-    <button class="queryparser" value="create" name="create" id="create" title="Save result as new collection">Create collection</button>
-    <a class="advanced" href="/search@(Context.Request.QueryString)">go! <sup>easy</sup></a>
+    <textarea class="query" name="qf" id="qf">@qf</textarea>
+    <div class="queryparser"><button type="submit" class="queryparser" name="execute" id="execute" title="Execute query">Go</button><a class="advanced" href="/search@(Context.Request.QueryString)">go! <sup>easy</sup></a></div>
+    <div class="newCollection">
+        <input type="text" name="newCollection" id="newCollection" class="newCollection" placeholder="Something easy to remember" />
+        <button class="queryparser" value="create" name="create" id="create" title="Save result as new collection">Create collection</button>
+    </div>
+    @if (newCollection != null)
+    {
+    <div class="newCollection">Your collection has been created. Human-friendly GUI is <a href="http://localhost:54865/?q=@q&collection=@newCollection">here</a>. HTTP API is here: didyougogo.com/io/@newCollection. HTTP API documentation is <a href="https://github.com/kreeben/resin#create-your-own-collection-and-query-it">here</a>.</div>
+    }
     <input type="hidden" value="0" name="skip" id="skip" />
     <input type="hidden" value="@q" name="q" id="q" />
     <input type="hidden" value="10" name="take" id="take" />

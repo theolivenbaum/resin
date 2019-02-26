@@ -49,10 +49,7 @@ namespace Sir.Store
 
             foreach (var model in docs)
             {
-                if (!model.Contains("_created"))
-                {
-                    model["_created"] = DateTime.Now.ToBinary();
-                }
+                model["_created"] = DateTime.Now.ToBinary();
 
                 var docId = await Write(model);
 
@@ -103,7 +100,7 @@ namespace Sir.Store
             var docMeta = await _docs.Append(docMap);
             await _docIx.Append(docMeta.offset, docMeta.length);
 
-            model.Add("__docid", docId);
+            model["__docid"] = docId;
 
             this.Log(string.Format("processed document {0} in {1}", docId, timer.Elapsed));
 

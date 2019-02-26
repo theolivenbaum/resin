@@ -21,7 +21,7 @@ namespace Sir.HttpServer.Controllers
 
         [HttpGet("/queryparser/")]
         [HttpPost("/queryparser/")]
-        public async Task<IActionResult> Index(string q, string qf, string collection, string[] fields)
+        public async Task<IActionResult> Index(string q, string qf, string collection, string newCollection, string[] fields)
         {
             var formatter = _serviceProvider.GetService<IQueryFormatter>();
             var formatted = qf ?? formatter.Format(collection, Request);
@@ -44,6 +44,7 @@ namespace Sir.HttpServer.Controllers
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
             ViewData["collection"] = collection;
             ViewData["total"] = result.Total;
+            ViewData["newCollection"] = newCollection;
 
             if (result.Total == 0)
             {

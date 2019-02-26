@@ -61,7 +61,7 @@ namespace Sir.Store
             s.Position = 0;
         }
 
-        private async Task<IList<long>> ExecuteWrite(string collectionName, IEnumerable<IDictionary> documents)
+        public async Task<IList<long>> ExecuteWrite(string collectionName, IEnumerable<IDictionary> documents)
         {
             _timer.Restart();
 
