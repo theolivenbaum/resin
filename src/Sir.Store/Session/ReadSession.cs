@@ -104,7 +104,9 @@ namespace Sir.Store
         {
             this.Log("before map: " + query.ToDiagram());
 
-            foreach (var q in query.ToList())
+            var clauses = query.ToList();
+
+            foreach (var q in clauses)
             {
                 var cursor = q;
 

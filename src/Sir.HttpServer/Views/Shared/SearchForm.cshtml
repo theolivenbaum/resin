@@ -1,6 +1,7 @@
 ﻿@{
-    var collection = ViewData["collection"] ?? "www";
-    var query = ViewData["q"] as string;
+    var col = Context.Request.Query["collection"].ToString();
+    var collection = string.IsNullOrWhiteSpace(col) ? "www" : col;
+    var query = Context.Request.Query["q"].ToString();
 }
 @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
 {
