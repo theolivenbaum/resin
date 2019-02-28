@@ -221,7 +221,10 @@ namespace Sir.Store
 
             this.Log("read {0} docs in {1}", result.Count, timer.Elapsed);
 
-            return result;
+            return result
+                .GroupBy(x => (long)x["__docid"])
+                .SelectMany(g=>g.OrderByDescending(x=>(long)x["_created"]).Take(1))
+                .ToList();
         }
 
         public IList<IDictionary> ReadDocs(IEnumerable<long> docs)

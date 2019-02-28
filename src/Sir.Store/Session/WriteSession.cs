@@ -63,6 +63,12 @@ namespace Sir.Store
             return docIds;
         }
 
+        /// <summary>
+        /// Fields prefixed with "__" will not be written.
+        /// The "__docid" field, if it exists, will be persisted as "_original".
+        /// The reason a model may already have a "__docid" field even before it has been persisted is that it originates from another collection.
+        /// </summary>
+        /// <returns>Document ID</returns>
         public async Task<long> Write(IDictionary model)
         {
             var timer = new Stopwatch();
@@ -71,9 +77,20 @@ namespace Sir.Store
             var docId = _docIx.GetNextDocId();
             var docMap = new List<(long keyId, long valId)>();
 
+            if (model.Contains("__docid") && !model.Contains("_original"))
+            {
+                model.Add("_original", model["__docid"]);
+            }
+
             foreach (var key in model.Keys)
             {
                 var keyStr = key.ToString();
+
+                if (keyStr.StartsWith("__"))
+                {
+                    continue;
+                }
+
                 var keyHash = keyStr.ToHash();
                 var val = (IComparable)model[key];
                 var str = val as string;

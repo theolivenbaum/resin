@@ -52,6 +52,11 @@ namespace Sir.Store
             Analyze(document);
         }
 
+        /// <summary>
+        /// Fields prefixed with "__" will not be analyzed.
+        /// Fields prefixed with "_" will be analyzed as a single token.
+        /// </summary>
+        /// <param name="document"></param>
         private void Analyze(IDictionary document)
         {
             var docId = (long)document["__docid"];
