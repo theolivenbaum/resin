@@ -22,6 +22,12 @@ The forth analysis pass will thus produce a bag-of-bag-of-bag-of-bag-of-characte
 
 Nobody shall ever run a fifth analysis pass. That door is strictly forbidden!
 
+## Scoped querying
+
+To find all documents with title "Rambo" or "First Blood" but only if the genre is "books":
+
+	+(title:rambo title:first blood) -(genre:books)
+
 ## Create your own collection and query it!
 
 ### POST a JSON document to the WRITE endpoint
