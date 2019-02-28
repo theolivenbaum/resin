@@ -8,19 +8,19 @@ The first analysis pass yields a graph of words embedded as bags-of-characters.
 
 ## Vector space model
 
-The second analysis pass yields a graph of documents embedded as continuous bags-of-words, or bag-of-bag-of-characters. This model creates clusters of similar documents. Let's call these clusters "topics".
+The second analysis pass yields a graph of documents embedded as continuous bags-of-words, or bags-of-bags-of-characters. This model creates clusters of similar documents. Let's call these clusters "topics".
 
 ## Semantic model
 
-The third analysis pass yields a graph of topics embedded as vectors as wide as there are topics (in the lexicon). They are bag-of-bag-of-bag-of-characters.
+The third analysis pass yields a graph of topics embedded as vectors as wide as there are topics in the lexicon. They are bags-of-bags-of-bags-of-characters.
 
 ## Forth pass
 
-The forth analysis pass will thus produce bag-of-bag-of-bag-of-bag-of-characters.
+The forth analysis pass will thus produce a bag-of-bag-of-bag-of-bag-of-characters model.
 
 ## The Forbidden Pass
 
-Nobody shall ever run a fifth analysis pass. It is strictly forbidden.
+Nobody shall ever run a fifth analysis pass. That door is strictly forbidden!
 
 ## Create your own collection and query it!
 
