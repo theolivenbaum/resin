@@ -54,19 +54,28 @@ To find all documents with title "Rambo" or "First Blood" but only if the genre 
 	HTTPS GET didyougogo.com/io/[collection_name]?id=[document_id]
 	Accept:application/json
 
-### Query collection through the API
+### Query collection with natural language through the API
 
-	HTTPS GET didyougogo.com/io/[collection_name]?q=[phrase-or-term-query]&fields=title&skip=0&take=10
+	HTTPS GET didyougogo.com/io/[collection_name]?q=[phrase-or-term]&fields=title&skip=0&take=10
+	Accept:application/json
+
+### Query collection with query language through the API
+
+	HTTPS GET didyougogo.com/io/[collection_name]?&qf=[scoped_query]&skip=0&take=10
 	Accept:application/json
 
 ### Human-friendly query GUI
 
 	HTTPS GET didyougogo.com/?q=[phrase-or-term-query]&fields=title&skip=0&take=10&collection=[collection_name]
 
+### Advanced query parser
+
+	HTTPS GET didyougogo.com/queryparser/?q=[phrase-or-term-query]&qf=[scoped_query]&fields=title&skip=0&take=10&collection=[collection_name]
+
 ## Read more
 
 ### HTTP reader/writer micro-service framework.
-Create distributable readers and writer.
+Create distributable readers and writers.
 https://github.com/kreeben/resin/tree/master/src/Sir.HttpServer
 
 ### A key/value writer and queryable map/reduce reader. 
