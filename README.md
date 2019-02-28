@@ -1,6 +1,6 @@
 # Sir.Resin
 
-This is a trainable vector space model based [search engine](https://didyougogo.com) with a simple boolean query language. 
+This is a trainable vector space model [search engine](https://didyougogo.com) with a simple boolean query language. 
 
 ## Bag-of-characters model
 
@@ -20,7 +20,9 @@ The forth analysis pass will thus produce a bag-of-bag-of-bag-of-bag-of-characte
 
 ## The Forbidden Pass
 
-Nobody shall ever run a fifth analysis pass. That door is strictly forbidden!
+Nobody shall pass here! But if you do, consider the circles in a kaleidoscope to be topics, 
+each training pass a rotation of a cell. Every once in a while you'll get nonsense but most of the time there 
+will be beautiful clear patterns.
 
 ## Scoped querying
 
@@ -28,7 +30,7 @@ To find all documents with title "Rambo" or "First Blood" but only if the genre 
 
 	+(title:rambo title:first blood) -(genre:books)
 
-## Create your own collection and query it!
+## Create your own collection and then query it.
 
 ### POST a JSON document to the WRITE endpoint
 
@@ -78,11 +80,11 @@ To find all documents with title "Rambo" or "First Blood" but only if the genre 
 Create distributable readers and writers.
 https://github.com/kreeben/resin/tree/master/src/Sir.HttpServer
 
-### A key/value writer and queryable map/reduce reader. 
+### A key/value writer and map/reduce node. 
 Execute set operations over local lists of Int64's (document references).  
 https://github.com/kreeben/resin/tree/master/src/Sir.Postings
 
-### Document writer and queryable map/reduce orchestrator. 
+### Document writer and map/reduce orchestrator. 
 Orchestrate set operations over remote lists of document references.   
 https://github.com/kreeben/resin/tree/master/src/Sir.Store
 
