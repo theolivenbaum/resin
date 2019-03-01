@@ -32,6 +32,8 @@ To find all documents with title "Rambo" or "First Blood" but only if the genre 
 
 ## Create your own collection and then query it.
 
+You may host one of these servers yourself, privately or publicly. Or you can use [https://didyougogo.com](this free search cloud).
+
 ### POST a JSON document to the WRITE endpoint
 
 	HTTPS POST didyougogo.com/io/[collection_name]
@@ -87,6 +89,10 @@ https://github.com/kreeben/resin/tree/master/src/Sir.Postings
 ### Document writer and map/reduce orchestrator. 
 On-disk database and in-memory index. Orchestrates remote set operations.   
 https://github.com/kreeben/resin/tree/master/src/Sir.Store
+
+## Data scope
+
+A private server can do set operations over its data as well as over all the public data, as if it was all one database.
 
 ### Roadmap
 
