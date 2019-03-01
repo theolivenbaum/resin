@@ -32,7 +32,7 @@ To find all documents with title "Rambo" or "First Blood" but only if the genre 
 
 ## Create your own collection and then query it.
 
-You may host one of these servers yourself, privately or publicly. Or you can use [https://didyougogo.com](this free search cloud).
+You may host one of these servers yourself, privately or publicly. Or you can use [this free search cloud](https://didyougogo.com).
 
 ### POST a JSON document to the WRITE endpoint
 
@@ -60,12 +60,12 @@ You may host one of these servers yourself, privately or publicly. Or you can us
 
 ### Query collection with natural language through the API
 
-	HTTPS GET didyougogo.com/io/[collection_name]?q=[phrase-or-term]&fields=title&skip=0&take=10
+	HTTPS GET didyougogo.com/io/[collection_name]?q=[phrase-or-term]&fields=title&skip=0&take=10  
 	Accept:application/json
 
 ### Query collection with query language through the API
 
-	HTTPS GET didyougogo.com/io/[collection_name]?&qf=[scoped_query]&skip=0&take=10
+	HTTPS GET didyougogo.com/io/[collection_name]?&qf=[scoped_query]&skip=0&take=10  
 	Accept:application/json
 
 ### Human-friendly query GUI
@@ -79,7 +79,7 @@ You may host one of these servers yourself, privately or publicly. Or you can us
 ## Read more
 
 ### HTTP reader/writer micro-service framework.
-Create distributable readers and writers.
+Create distributable readers and writers.  
 https://github.com/kreeben/resin/tree/master/src/Sir.HttpServer
 
 ### A key/value writer and map/reduce node. 
