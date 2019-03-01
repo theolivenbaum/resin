@@ -81,11 +81,11 @@ Create distributable readers and writers.
 https://github.com/kreeben/resin/tree/master/src/Sir.HttpServer
 
 ### A key/value writer and map/reduce node. 
-Execute set operations over local lists of Int64's (document references).  
+Execute AND, OR and NOT set operations over local lists of Int64's (e.g. document references).  
 https://github.com/kreeben/resin/tree/master/src/Sir.Postings
 
 ### Document writer and map/reduce orchestrator. 
-Orchestrate set operations over remote lists of document references.   
+On-disk database and in-memory index. Orchestrates remote set operations.   
 https://github.com/kreeben/resin/tree/master/src/Sir.Store
 
 ### Roadmap
