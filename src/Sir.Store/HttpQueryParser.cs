@@ -140,11 +140,11 @@ namespace Sir.Store
             _tokenizer = tokenizer;
         }
 
-        public IDictionary<long, SortedList<int, byte>> Parse(
+        public IDictionary<long, SortedList<long, byte>> Parse(
             string collectionName, HttpRequest request, ReadSession readSession, SessionFactory sessionFactory)
         {
             string[] fields;
-            var docs = new Dictionary<long, SortedList<int, byte>>();
+            var docs = new Dictionary<long, SortedList<long, byte>>();
 
             if (request.Query.ContainsKey("fields"))
             {

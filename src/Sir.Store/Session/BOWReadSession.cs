@@ -46,12 +46,12 @@ namespace Sir.Store
             _config = config;
         }
 
-        public ReadResult Read(IDictionary<long, SortedList<int, byte>> query, ReadSession readSession, int skip, int take)
+        public ReadResult Read(IDictionary<long, SortedList<long, byte>> query, ReadSession readSession, int skip, int take)
         {
             return Reduce(query, readSession, skip, take);
         }
 
-        private ReadResult Reduce(IDictionary<long, SortedList<int, byte>> query, ReadSession readSession, int skip, int take)
+        private ReadResult Reduce(IDictionary<long, SortedList<long, byte>> query, ReadSession readSession, int skip, int take)
         {
             throw new NotImplementedException();
 

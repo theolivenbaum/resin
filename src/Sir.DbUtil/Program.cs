@@ -19,7 +19,7 @@ namespace Sir.DbUtil
 
             if (command == "index")
             {
-                // example: index C:\projects\resin\src\Sir.HttpServer\App_Data www 0 10000 1000 true
+                // example: index C:\projects\resin\src\Sir.HttpServer\App_Data www 0 10000 1000
 
                 Index(
                     dir: args[1],
@@ -32,19 +32,29 @@ namespace Sir.DbUtil
             {
                 // example: query C:\projects\resin\src\Sir.HttpServer\App_Data www
 
-                Query(dir: args[1], collectionName: args[2]);
+                Query(
+                    dir: args[1], 
+                    collectionName: args[2]);
             }
             else if (command == "create-bow")
             {
                 // example: create-bow C:\projects\resin\src\Sir.HttpServer\App_Data www
 
-                CreateBOWModel(dir: args[1], collectionName: args[2], skip: int.Parse(args[3]), take: int.Parse(args[4]));
+                CreateBOWModel(
+                    dir: args[1], 
+                    collectionName: args[2], 
+                    skip: int.Parse(args[3]), 
+                    take: int.Parse(args[4]));
             }
             else if (command == "validate")
             {
                 // example: validate C:\projects\resin\src\Sir.HttpServer\App_Data www 0 3000
 
-                Validate(dir: args[1], collectionName: args[2], skip: int.Parse(args[3]), take: int.Parse(args[4]));
+                Validate(
+                    dir: args[1], 
+                    collectionName: args[2], 
+                    skip: int.Parse(args[3]), 
+                    take: int.Parse(args[4]));
             }
             else if (command == "warmup")
             {
@@ -56,13 +66,20 @@ namespace Sir.DbUtil
                 var skip = int.Parse(args[4]);
                 var take = int.Parse(args[5]);
 
-                Warmup(dir, uri, collection, skip, take);
+                Warmup(
+                    dir, 
+                    uri, 
+                    collection, 
+                    skip, 
+                    take);
             }
             else if (command == "optimize")
             {
                 // example: optimize C:\projects\resin\src\Sir.HttpServer\App_Data www
 
-                await Optimize(dir: args[1], collectionName: args[2]);
+                await Optimize(
+                    dir: args[1], 
+                    collectionName: args[2]);
             }
             else
             {

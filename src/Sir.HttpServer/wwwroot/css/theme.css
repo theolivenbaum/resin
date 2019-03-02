@@ -43,11 +43,6 @@ a.result-link:visited {
     color: purple;
 }
 
-textarea {
-    width: 50%;
-    height: 150px;
-}
-
 h1 {
     margin-top: 10px;
     margin-bottom: 12px;
@@ -114,14 +109,14 @@ footer p {
     margin-bottom: 15px;
 }
 
-textarea.query {
-    width: 516px;
+textarea.qf {
+    width: 75%;
     height: 100px;
-    margin-bottom: 0px;
 }
 
 button.queryparser{
     margin-right: 10px;
+    margin-top: 5px;
 }
 div.queryparser {
     vertical-align: top;
@@ -133,10 +128,9 @@ div.queryparser {
 }
 
 input[type=text].newCollection{
-    width: 398px;
+    width: 182px;
 }
 
 div.newCollection{
     margin-top: 20px;
-    width: 500px;
 }

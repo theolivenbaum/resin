@@ -11,20 +11,20 @@ namespace Sir
     /// </summary>
     public static class VectorOperations
     {
-        public static async Task<long> SerializeAsync(this SortedList<int, byte> vec, Stream stream)
+        public static async Task<long> SerializeAsync(this SortedList<long, byte> vec, Stream stream)
         {
             var pos = stream.Position;
 
             foreach (var kvp in vec)
             {
-                await stream.WriteAsync(BitConverter.GetBytes(kvp.Key), 0, sizeof(int));
+                await stream.WriteAsync(BitConverter.GetBytes(kvp.Key), 0, sizeof(long));
                 await stream.WriteAsync(new[] { kvp.Value }, 0, sizeof(byte));
             }
 
             return pos;
         }
 
-        public static long Serialize(this SortedList<int, byte> vec, Stream stream)
+        public static long Serialize(this SortedList<long, byte> vec, Stream stream)
         {
             lock (stream)
             {
@@ -32,7 +32,7 @@ namespace Sir
 
                 foreach (var kvp in vec)
                 {
-                    stream.Write(BitConverter.GetBytes(kvp.Key), 0, sizeof(int));
+                    stream.Write(BitConverter.GetBytes(kvp.Key), 0, sizeof(long));
                     stream.WriteByte(kvp.Value);
                 }
 
@@ -40,18 +40,18 @@ namespace Sir
             }
         }
 
-        public static float CosAngle(this SortedList<int, byte> vec1, SortedList<int, byte> vec2)
+        public static float CosAngle(this SortedList<long, byte> vec1, SortedList<long, byte> vec2)
         {
-            int dotProduct = Dot(vec1, vec2);
-            int dotSelf1 = vec1.DotSelf();
-            int dotSelf2 = vec2.DotSelf();
+            long dotProduct = Dot(vec1, vec2);
+            long dotSelf1 = vec1.DotSelf();
+            long dotSelf2 = vec2.DotSelf();
 
             return (float) (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
         }
 
-        public static int Dot(this SortedList<int, byte> vec1, SortedList<int, byte> vec2)
+        public static long Dot(this SortedList<long, byte> vec1, SortedList<long, byte> vec2)
         {
-            int product = 0;
+            long product = 0;
             int cursor1 = 0;
             int cursor2 = 0;
 
@@ -78,9 +78,9 @@ namespace Sir
             return product;
         }
 
-        public static int DotSelf(this SortedList<int, byte> vec)
+        public static long DotSelf(this SortedList<long, byte> vec)
         {
-            int product = 0;
+            long product = 0;
 
             foreach (var kvp in vec)
             {
@@ -101,9 +101,9 @@ namespace Sir
             return product;
         }
 
-        public static SortedList<int, byte> Add(this SortedList<int, byte> vec1, SortedList<int, byte> vec2)
+        public static SortedList<long, byte> Add(this SortedList<long, byte> vec1, SortedList<long, byte> vec2)
         {
-            var result = new SortedList<int, byte>();
+            var result = new SortedList<long, byte>();
 
             foreach (var x in vec1)
             {
@@ -129,14 +129,14 @@ namespace Sir
             return result;
         }
 
-        public static SortedList<int, byte> ToCharVector(this Term term)
+        public static SortedList<long, byte> ToCharVector(this Term term)
         {
             if (term.Node != null)
             {
                 return term.Node.Vector;
             }
 
-            var vec = new SortedList<int, byte>();
+            var vec = new SortedList<long, byte>();
             var span = term.TokenizedString.Tokens[term.Index];
 
             for (int i = 0; i < span.length; i++)
@@ -156,9 +156,9 @@ namespace Sir
             return vec;
         }
 
-        public static SortedList<int, byte> ToCharVector(this AnalyzedString term, int offset, int length)
+        public static SortedList<long, byte> ToCharVector(this AnalyzedString term, int offset, int length)
         {
-            var vec = new SortedList<int, byte>();
+            var vec = new SortedList<long, byte>();
 
             for (int i = 0; i < length; i++)
             {
@@ -177,9 +177,9 @@ namespace Sir
             return vec;
         }
 
-        public static SortedList<int, byte> ToCharVector(this string word)
+        public static SortedList<long, byte> ToCharVector(this string word)
         {
-            var vec = new SortedList<int, byte>();
+            var vec = new SortedList<long, byte>();
             TextElementEnumerator charEnum = StringInfo.GetTextElementEnumerator(word);
 
             while (charEnum.MoveNext())
@@ -204,7 +204,7 @@ namespace Sir
             return vec;
         }
 
-        public static float Magnitude(this SortedList<int, byte> vector)
+        public static float Magnitude(this SortedList<long, byte> vector)
         {
             return (float) Math.Sqrt(Dot(vector, vector));
         }

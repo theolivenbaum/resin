@@ -122,7 +122,7 @@ namespace Sir.Store
             this.Log("deserialized page");
         }
 
-        public Hit ClosestMatch(SortedList<int, byte> vector)
+        public BOCHit ClosestMatch(SortedList<long, byte> vector)
         {
             var query = new VectorNode(vector);
             var tree = ReadAllPages();
@@ -166,7 +166,7 @@ namespace Sir.Store
             //return toplist;
         }
 
-        private Hit ClosestMatchInPage(SortedList<int, byte> node, Stream indexStream, long endOfSegment, Stream vectorStream)
+        private BOCHit ClosestMatchInPage(SortedList<long, byte> node, Stream indexStream, long endOfSegment, Stream vectorStream)
         {
             var cursor = ReadNode(indexStream, vectorStream, endOfSegment);
 
@@ -239,7 +239,7 @@ namespace Sir.Store
                 }
             }
 
-            return new Hit
+            return new BOCHit
             {
                 Embedding = best.Vector,
                 Score = highscore,

@@ -14,7 +14,7 @@ namespace Sir.Store
     public class VectorNode
     {
         public const int NodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
-        public const int ComponentSize = sizeof(int) + sizeof(byte);
+        public const int ComponentSize = sizeof(long) + sizeof(byte);
         public const float TermIdenticalAngle = 0.999f;
         public const float TermFoldAngle = 0.65f;
         public const float DocIdenticalAngle = 0.97f;
@@ -28,7 +28,7 @@ namespace Sir.Store
         public long VectorOffset { get; private set; }
         public long PostingsOffset { get; set; }
         public float Angle { get; private set; }
-        public SortedList<int, byte> Vector { get; }
+        public SortedList<long, byte> Vector { get; }
         public VectorNode Ancestor { get; private set; }
         public int Weight
         {
@@ -82,14 +82,14 @@ namespace Sir.Store
         {
         }
 
-        public VectorNode(SortedList<int, byte> termVector)
+        public VectorNode(SortedList<long, byte> termVector)
         {
             Vector = termVector;
             PostingsOffset = -1;
             VectorOffset = -1;
         }
 
-        public VectorNode(SortedList<int, byte> termVector, long docId)
+        public VectorNode(SortedList<long, byte> termVector, long docId)
         {
             Vector = termVector;
             PostingsOffset = -1;
@@ -98,7 +98,7 @@ namespace Sir.Store
             DocIds.Add(docId);
         }
 
-        public Hit ClosestMatch(VectorNode node, float foldAngle)
+        public BOCHit ClosestMatch(VectorNode node, float foldAngle)
         {
             var best = this;
             var cursor = this;
@@ -128,7 +128,7 @@ namespace Sir.Store
                 }
             }
 
-            return new Hit
+            return new BOCHit
             {
                 Embedding = best.Vector,
                 Score = highscore,
@@ -480,7 +480,7 @@ namespace Sir.Store
             var weight = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int));
 
             // Deserialize term vector
-            var vec = new SortedList<int, byte>();
+            var vec = new SortedList<long, byte>();
             var vecBuf = new byte[vectorCount * ComponentSize];
 
             if (vecOffset < 0)
@@ -496,8 +496,8 @@ namespace Sir.Store
 
                 for (int i = 0; i < vectorCount; i++)
                 {
-                    var key = BitConverter.ToInt32(vecBuf, offs);
-                    var val = vecBuf[offs + sizeof(int)];
+                    var key = BitConverter.ToInt64(vecBuf, offs);
+                    var val = vecBuf[offs + sizeof(long)];
 
                     vec.Add(key, val);
 

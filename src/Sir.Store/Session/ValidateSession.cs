@@ -64,7 +64,7 @@ namespace Sir.Store
         {
             foreach (var vector in item.tokens.Embeddings)
             {
-                var hits = new SortedList<float, Hit>(); ;
+                var hits = new SortedList<float, BOCHit>(); ;
 
                 var hit = item.indexReader.ReadAllPages().ClosestMatch(new VectorNode(vector), VectorNode.TermFoldAngle);
 

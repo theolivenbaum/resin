@@ -112,7 +112,7 @@ namespace Sir.Store
 
                 while (cursor != null)
                 {
-                    Hit hit = null;
+                    BOCHit hit = null;
 
                     var indexReader = cursor.Term.KeyId.HasValue ?
                         CreateIndexReader(cursor.Term.KeyId.Value) :

@@ -15,7 +15,7 @@ namespace Sir.Store
         private readonly ReadSession _readSession;
         private readonly ITokenizer _tokenizer;
         private readonly ProducerConsumerQueue<(long docId, long keyId, object key, IDictionary doc)> _vectorCalculator;
-        private readonly ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)> _indexWriter;
+        private readonly ProducerConsumerQueue<(long docId, long keyId, SortedList<long, byte> vector)> _indexWriter;
         private readonly SortedList<long, VectorNode> _newColumns;
         private readonly Stream _documentVectorStream;
         private readonly object _writeSync = new object();
@@ -31,8 +31,13 @@ namespace Sir.Store
             _config = config;
             _readSession = new ReadSession(collectionName, collectionId, sessionFactory, config, indexReaders);
             _tokenizer = tokenizer;
-            _indexWriter = new ProducerConsumerQueue<(long docId, long keyId, SortedList<int, byte> vector)>(WriteToMemIndex, 2 * int.Parse(config.Get("write_thread_count")));
+
+            _indexWriter = new ProducerConsumerQueue<(
+                long docId, long keyId, SortedList<long, byte> vector)>(
+                    WriteToMemIndex, 2 * int.Parse(config.Get("write_thread_count")));
+
             _vectorCalculator = new ProducerConsumerQueue<(long docId, long keyId, object key, IDictionary doc)>(CreateVector, int.Parse(config.Get("write_thread_count")));
+
             _newColumns = new SortedList<long, VectorNode>();
 
             var docVecFileName = Path.Combine(SessionFactory.Dir, CollectionId + ".vec1");
@@ -44,10 +49,11 @@ namespace Sir.Store
         {
             var treeReader = _readSession.CreateIndexReader(item.keyId);
             var docVec = CreateDocumentVector(item.doc[item.key], treeReader, _tokenizer);
+
             _indexWriter.Enqueue((item.docId, item.keyId, docVec));
         }
 
-        private void WriteToMemIndex((long docId, long keyId, SortedList<int, byte> vector) item)
+        private void WriteToMemIndex((long docId, long keyId, SortedList<long, byte> vector) item)
         {
             VectorNode column;
 
@@ -58,7 +64,6 @@ namespace Sir.Store
                     if (!_newColumns.TryGetValue(item.keyId, out column))
                     {
                         column = new VectorNode();
-                        column.SerializeVector(_documentVectorStream);
                         _newColumns.Add(item.keyId, column);
                     }
                 }
@@ -98,10 +103,10 @@ namespace Sir.Store
             }
         }
 
-        public static SortedList<int, byte> CreateDocumentVector(
+        public static SortedList<long, byte> CreateDocumentVector(
             object value, NodeReader treeReader, ITokenizer tokenizer)
         {
-            var docVec = new SortedList<int, byte>();
+            var docVec = new SortedList<long, byte>();
             var terms = tokenizer.Tokenize(value.ToString());
 
             foreach (var vector in terms.Embeddings)
@@ -110,10 +115,10 @@ namespace Sir.Store
 
                 var termId = hit.NodeId;
 
-                //if (!docVec.ContainsKey(termId))
-                //{
-                //    docVec.Add(termId, 1);
-                //}
+                if (!docVec.ContainsKey(termId))
+                {
+                    docVec.Add(termId, 1);
+                }
             }
 
             return docVec;
