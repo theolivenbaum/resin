@@ -1,8 +1,8 @@
 # Sir.Resin
 
-This is a [search engine](https://didyougogo.com) and language model framework. Its graph (data structure) API that let you project a language model onto a search tree.
+This is a search engine and language model framework. Its graph (data structure) API that let you project a language model onto a search tree.
 
-It supports 64-bit wide vectors that may represent words, phrases, documents, topics, topics of topics or anything else really. What can't you represent in a 64-bit vector space?  
+It supports 64-bit wide vectors that may represent words, phrases, documents, topics, topics of topics or anything else really.
   
 Built-in capabilities include interfacing with your language model through natural language, 
 or by using a structured, boolean query language that supports AND, OR, NOT and (nested (scope)). 
