@@ -34,9 +34,12 @@ namespace Sir.Store
 
             _indexWriter = new ProducerConsumerQueue<(
                 long docId, long keyId, SortedList<long, byte> vector)>(
-                    WriteToMemIndex, 2 * int.Parse(config.Get("write_thread_count")));
+                    WriteToMemIndex, 
+                    int.Parse(config.Get("write_thread_count")));
 
-            _vectorCalculator = new ProducerConsumerQueue<(long docId, long keyId, object key, IDictionary doc)>(CreateVector, int.Parse(config.Get("write_thread_count")));
+            _vectorCalculator = new ProducerConsumerQueue<(long docId, long keyId, object key, IDictionary doc)>(
+                CreateVector, 
+                1);
 
             _newColumns = new SortedList<long, VectorNode>();
 

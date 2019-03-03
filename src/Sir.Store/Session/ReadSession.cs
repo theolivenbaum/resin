@@ -166,6 +166,9 @@ namespace Sir.Store
                         reader = new NodeReader(ixFileName, ixpFileName, vecFileName, SessionFactory, _config);
 
                         _indexReaders.GetOrAdd(keyId, reader);
+
+                        this.Log("created index reader for {0}", ixFileName);
+
                     }
                 }
             }

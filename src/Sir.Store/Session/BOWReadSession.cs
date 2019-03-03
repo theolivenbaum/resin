@@ -53,62 +53,50 @@ namespace Sir.Store
 
         private ReadResult Reduce(IDictionary<long, SortedList<long, byte>> query, ReadSession readSession, int skip, int take)
         {
-            throw new NotImplementedException();
+            IDictionary<long, BOCHit> scored = new Dictionary<long, BOCHit>();
 
-            //IDictionary<long, Hit> scored = null;
+            foreach (var term in query)
+            {
+                var hit = Scan(term.Key, term.Value);
 
-            //foreach (var term in query)
-            //{
-            //    var hits = Scan(term.Key, term.Value).ToDictionary(x => x.PostingsOffset, y => y);
+                BOCHit score;
 
-            //    if (scored == null)
-            //    {
-            //        scored = hits;
-            //    }
-            //    else
-            //    {
-            //        foreach (var hit in hits)
-            //        {
-            //            Hit score;
+                if (scored.TryGetValue(hit.PostingsOffsets.PostingsOffset, out score))
+                {
+                    scored[hit.Key].Score = score.Score + hit.Value.Score;
+                }
+                else
+                {
+                    scored.Add(hit.Key, hit.Value);
+                }
+            }
 
-            //            if (scored.TryGetValue(hit.Value.PostingsOffset, out score))
-            //            {
-            //                scored[hit.Key].Score = score.Score + hit.Value.Score;
-            //            }
-            //            else
-            //            {
-            //                scored.Add(hit.Key, hit.Value);
-            //            }
-            //        }
-            //    }
-            //}
+            var sortedHits = scored.Values.OrderByDescending(h => h.Score);
+            var offsets = sortedHits.Select(h => h.PostingsOffset).ToArray();
+            var docIds = _postingsReader.Read(skip, take, offsets);
+            var window = docIds.GroupBy(x => x).Select(x => (x.Key, x.Count()))
+                .OrderByDescending(x => x.Item2)
+                .Skip(skip)
+                .Take(take)
+                .Select(x => x.Key).ToList();
+            var docs = readSession.ReadDocs(window);
 
-            //var sortedHits = scored.Values.OrderByDescending(h => h.Score);
-            //var offsets = sortedHits.Select(h => h.PostingsOffset).ToArray();
-            //var docIds = _postingsReader.Read(skip, take, offsets);
-            //var window = docIds.GroupBy(x => x).Select(x => (x.Key, x.Count()))
-            //    .OrderByDescending(x => x.Item2)
-            //    .Skip(skip)
-            //    .Take(take)
-            //    .Select(x => x.Key).ToList();
-            //var docs = readSession.ReadDocs(window);
-
-            //return new ReadResult { Docs = docs, Total = docIds.Count };
+            return new ReadResult { Docs = docs, Total = docIds.Count };
         }
 
-        //private IList<Hit> Scan(long keyId, SortedList<int, byte> query)
-        //{
-        //    IEnumerable<Hit> hits = null;
+        private BOCHit Scan(long keyId, SortedList<long, byte> query)
+        {
+            BOCHit hit = null;
 
-        //    var indexReader = CreateDocumentIndexReader(keyId);
+            var indexReader = CreateDocumentIndexReader(keyId);
 
-        //    if (indexReader != null)
-        //    {
-        //        hits = indexReader.ClosestMatch(query);
-        //    }
+            if (indexReader != null)
+            {
+                return indexReader.ClosestMatch(query);
+            }
 
-        //    return hits.OrderByDescending(x => x.Score).ToList();
-        //}
+            return hit;
+        }
 
         public NodeReader CreateDocumentIndexReader(long keyId)
         {

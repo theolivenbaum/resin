@@ -38,7 +38,7 @@ namespace Sir.DbUtil
             }
             else if (command == "create-bow")
             {
-                // example: create-bow C:\projects\resin\src\Sir.HttpServer\App_Data www
+                // example: create-bow C:\projects\resin\src\Sir.HttpServer\App_Data www 0 1000
 
                 CreateBOWModel(
                     dir: args[1], 
