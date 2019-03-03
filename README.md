@@ -26,9 +26,9 @@ Because a document can have many phrases, it can be part of many topics.
 The third model is a graph of documents represented as vectors as wide as there are topics in the lexicon.
 This is a "bag-of-topics" model. 
 
-## Scoped querying
+## Natural, scoped querying
 
-To find all documents with title "Rambo" or "First Blood" but only if the genre isn't "books":
+Find documents with title "Rambo" or "First Blood" but only if the genre isn't "books":
 
 	+(title:rambo title:first blood) -(genre:books)
 
@@ -48,8 +48,8 @@ You may host one of these servers yourself, privately or publicly. Or you can us
 			"field1":"value2"
 		}
 	]
+###	Server should respond with a list of document IDs:
 
-	Server should respond with a list of document IDs:
 	[
 		1,
 		2
@@ -77,8 +77,6 @@ You may host one of these servers yourself, privately or publicly. Or you can us
 ### Advanced query parser
 
 	HTTPS GET didyougogo.com/queryparser/?q=[phrase-or-term-query]&qf=[scoped_query]&fields=title&skip=0&take=10&collection=[collection_name]
-
-## Read more
 
 ### HTTP reader/writer micro-service framework.
 Create distributable readers and writers.  
