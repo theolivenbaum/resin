@@ -1,6 +1,6 @@
 # Sir.Resin
 
-This is a search engine and language model framework. Its graph API lets you project a language model onto a search tree.
+This is a search engine and language model framework. Its API lets you project a language model onto a search tree.
 
 It supports 64-bit wide vectors that may represent words, phrases, documents, topics, topics of topics or anything else really.
   
@@ -23,12 +23,11 @@ Because a document can have many phrases, it can be part of many topics.
 
 ## Semantic model
 
-The third model is a graph of documents represented as vectors as wide as there are topics in the lexicon.
-This is a "bag-of-topics" model. 
+The third model is a graph of documents represented as vectors as wide as there are topics in the lexicon, a "bag-of-topics" model. 
 
-## Natural, scoped querying
+## Natural and scoped querying
 
-Find documents with title "Rambo" or "First Blood" but only if the genre isn't "books":
+Find documents with title "Rambo" or "First Blood" but only if the genre isn't "books", will be parsed into
 
 	+(title:rambo title:first blood) -(genre:books)
 
