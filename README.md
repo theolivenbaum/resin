@@ -1,12 +1,13 @@
 # Sir.Resin
 
-This is a [search engine](https://didyougogo.com) and language model framework.  
-It is a graph (data structure) API you may use to project language model onto.
-It supports 64-bit wide vectors that may represent words, phrases, documents, topics, topics of topics or anything else really.  
-What can you not represent in a 64-bit vector space?  
+This is a [search engine](https://didyougogo.com) and language model framework. Its graph (data structure) API that let you project a language model onto a search tree.
+
+It supports 64-bit wide vectors that may represent words, phrases, documents, topics, topics of topics or anything else really. What can't you represent in a 64-bit vector space?  
   
-Interface with that model through natural language, or use a structured, 
-boolean query language that supports AND, OR, NOT and (nested (scope)). 
+Built-in capabilities include interfacing with your language model through natural language, 
+or by using a structured, boolean query language that supports AND, OR, NOT and (nested (scope)). 
+
+Go crazy with your modelling, as long as you have an equally crazy query parser.
 
 There are a number of models included in the package.
 
@@ -90,10 +91,6 @@ https://github.com/kreeben/resin/tree/master/src/Sir.Postings
 ### Document writer and map/reduce orchestrator. 
 On-disk database and in-memory index. Orchestrates remote set operations.   
 https://github.com/kreeben/resin/tree/master/src/Sir.Store
-
-## Data scope
-
-A private server can do set operations over its data as well as over all the public data, as if it was all one database.
 
 ### Roadmap
 
