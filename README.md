@@ -1,28 +1,29 @@
 # Sir.Resin
 
-This is a trainable vector space model [search engine](https://didyougogo.com) with a simple boolean query language. 
+This is a [search engine](https://didyougogo.com) and language model framework.  
+It is a graph (data structure) API you may use to project language model onto.
+It supports 64-bit wide vectors that may represent words, phrases, documents, topics, topics of topics or anything else really.  
+What can you not represent in a 64-bit vector space?  
+  
+Interface with that model through natural language, or use a structured, 
+boolean query language that supports AND, OR, NOT and (nested (scope)). 
+
+There are a number of models included in the package.
 
 ## Bag-of-characters model
 
-The first analysis pass yields a graph of words embedded as bags-of-characters.
+The first model is a graph of words embedded as bags-of-characters. This model creates clusters of similar words.
 
-## Vector space model
+## Topical model
 
-The second analysis pass yields a graph of documents embedded as continuous bags-of-words, or bags-of-bags-of-characters. This model creates clusters of similar documents. Let's call these clusters "topics".
+The second model is a graph of documents embedded as continuous bags-of-words. 
+This model creates clusters of similar documents, "topics".
+Because a document can have many phrases, it can be part of many topics.
 
 ## Semantic model
 
-The third analysis pass yields a graph of topics embedded as vectors as wide as there are topics in the lexicon. They are bags-of-bags-of-bags-of-characters.
-
-## Forth pass
-
-The forth analysis pass will thus produce a bag-of-bag-of-bag-of-bag-of-characters model.
-
-## The Forbidden Pass
-
-Nobody shall pass here! But if you do, consider the circles in a kaleidoscope to be topics, 
-each training pass a rotation of a cell. Every once in a while you'll get nonsense but most of the time there 
-will be beautiful clear patterns.
+The third model is a graph of documents represented as vectors as wide as there are topics in the lexicon.
+This is a "bag-of-topics" model. 
 
 ## Scoped querying
 
