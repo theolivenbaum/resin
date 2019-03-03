@@ -1,6 +1,6 @@
 # Sir.Resin
 
-This is a search engine and language model framework. Its graph (data structure) API that let you project a language model onto a search tree.
+This is a search engine and language model framework. Its graph API lets you project a language model onto a search tree.
 
 It supports 64-bit wide vectors that may represent words, phrases, documents, topics, topics of topics or anything else really.
   
