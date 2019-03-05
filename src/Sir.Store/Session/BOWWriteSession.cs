@@ -14,7 +14,6 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly ReadSession _readSession;
         private readonly ITokenizer _tokenizer;
-        private readonly ProducerConsumerQueue<(long docId, long keyId, object key, IDictionary doc)> _vectorCalculator;
         private readonly ProducerConsumerQueue<(long docId, long keyId, SortedList<long, byte> vector)> _indexWriter;
         private readonly SortedList<long, VectorNode> _newColumns;
         private readonly Stream _documentVectorStream;
@@ -37,10 +36,6 @@ namespace Sir.Store
                     WriteToMemIndex, 
                     int.Parse(config.Get("write_thread_count")));
 
-            _vectorCalculator = new ProducerConsumerQueue<(long docId, long keyId, object key, IDictionary doc)>(
-                CreateVector, 
-                1);
-
             _newColumns = new SortedList<long, VectorNode>();
 
             var docVecFileName = Path.Combine(SessionFactory.Dir, CollectionId + ".vec1");
@@ -48,39 +43,8 @@ namespace Sir.Store
             _documentVectorStream = SessionFactory.CreateAppendStream(docVecFileName);
         }
 
-        private void CreateVector((long docId, long keyId, object key, IDictionary doc) item)
-        {
-            var treeReader = _readSession.CreateIndexReader(item.keyId);
-            var docVec = CreateDocumentVector(item.doc[item.key], treeReader, _tokenizer);
-
-            _indexWriter.Enqueue((item.docId, item.keyId, docVec));
-        }
-
-        private void WriteToMemIndex((long docId, long keyId, SortedList<long, byte> vector) item)
-        {
-            VectorNode column;
-
-            if (!_newColumns.TryGetValue(item.keyId, out column))
-            {
-                lock (_writeSync)
-                {
-                    if (!_newColumns.TryGetValue(item.keyId, out column))
-                    {
-                        column = new VectorNode();
-                        _newColumns.Add(item.keyId, column);
-                    }
-                }
-            }
-
-            column.Add(new VectorNode(item.vector, item.docId), VectorNode.DocIdenticalAngle, VectorNode.DocFoldAngle, _documentVectorStream);
-
-            this.Log("added doc field {0}.{1} to memory index", item.docId, item.keyId);
-        }
-
         public void Write(IEnumerable<IDictionary> documents, params long[] excludeKeyIds)
         {
-            // create document embeddings
-
             foreach (var doc in documents)
             {
                 var docId = (long)doc["__docid"];
@@ -101,9 +65,37 @@ namespace Sir.Store
                         continue;
                     }
 
-                    _vectorCalculator.Enqueue((docId, keyId, key, doc));
+                    var treeReader = _readSession.CreateIndexReader(keyId);
+                    var docVec = CreateDocumentVector(doc[key], treeReader, _tokenizer);
+
+                    _indexWriter.Enqueue((docId, keyId, docVec));
                 }
             }
+        }
+
+        private void WriteToMemIndex((long docId, long keyId, SortedList<long, byte> vector) item)
+        {
+            VectorNode column;
+
+            if (!_newColumns.TryGetValue(item.keyId, out column))
+            {
+                lock (_writeSync)
+                {
+                    if (!_newColumns.TryGetValue(item.keyId, out column))
+                    {
+                        column = new VectorNode();
+                        _newColumns.Add(item.keyId, column);
+                    }
+                }
+            }
+
+            column.Add(
+                new VectorNode(item.vector, item.docId), 
+                VectorNode.DocIdenticalAngle, 
+                VectorNode.DocFoldAngle, 
+                _documentVectorStream);
+
+            this.Log("added doc field {0}.{1} to memory index", item.docId, item.keyId);
         }
 
         public static SortedList<long, byte> CreateDocumentVector(
@@ -116,7 +108,7 @@ namespace Sir.Store
             {
                 var hit = treeReader.ReadAllPages().ClosestMatch(new VectorNode(vector), VectorNode.DocFoldAngle);
 
-                var termId = hit.NodeId;
+                var termId = hit.PostingsOffsets[0];
 
                 if (!docVec.ContainsKey(termId))
                 {
@@ -129,9 +121,8 @@ namespace Sir.Store
 
         private void Flush()
         {
-            _vectorCalculator.Dispose();
-            _indexWriter.Dispose();
             _documentVectorStream.Dispose();
+            _indexWriter.Dispose();
 
             var tasks = new List<Task>();
             var writers = new List<ColumnSerializer>();

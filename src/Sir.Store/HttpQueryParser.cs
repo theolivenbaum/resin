@@ -130,42 +130,4 @@ namespace Sir.Store
             return root;
         }
     }
-
-    public class HttpBowQueryParser
-    {
-        private readonly ITokenizer _tokenizer;
-
-        public HttpBowQueryParser(ITokenizer tokenizer)
-        {
-            _tokenizer = tokenizer;
-        }
-
-        public IDictionary<long, SortedList<long, byte>> Parse(
-            string collectionName, HttpRequest request, ReadSession readSession, SessionFactory sessionFactory)
-        {
-            string[] fields;
-            var docs = new Dictionary<long, SortedList<long, byte>>();
-
-            if (request.Query.ContainsKey("fields"))
-            {
-                fields = request.Query["fields"].ToArray();
-            }
-            else
-            {
-                fields = new[] { "title", "body" };
-            }
-
-            var phrase = request.Query["q"];
-
-            foreach (var field in fields)
-            {
-                var keyId = sessionFactory.GetKeyId(collectionName.ToHash(), field.ToLower().ToHash());
-                var vector = BOWWriteSession.CreateDocumentVector(phrase, readSession.CreateIndexReader(keyId), _tokenizer);
-
-                docs.Add(keyId, vector);
-            }
-
-            return docs;
-        }
-    }
 }

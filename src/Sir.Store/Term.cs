@@ -37,6 +37,12 @@ namespace Sir
             Node = node;
         }
 
+        public Term(long keyId, VectorNode node)
+        {
+            KeyId = keyId;
+            Node = node;
+        }
+
         private string GetDebugString()
         {
             if (Node != null)

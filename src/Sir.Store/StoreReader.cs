@@ -48,39 +48,39 @@ namespace Sir.Store
         public async Task<ResponseModel> Read(string collectionName, HttpRequest request)
         {
             var timer = Stopwatch.StartNew();
-
-            var vec1FileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.vec1", collectionName.ToHash()));
+            var collectionId = collectionName.ToHash();
+            var vec1FileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.vec1", collectionId));
 
             if (File.Exists(vec1FileName))
             {
-                using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
-                using (var bowReadSession = _sessionFactory.CreateBOWReadSession(collectionName, collectionName.ToHash()))
+                using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionId, "ix1", "ixp1"))
                 {
-                    int skip = 0;
-                    int take = 10;
+                    var query = _httpBowQueryParser.Parse(collectionId, request, readSession, _sessionFactory);
+                    var result = readSession.Read(query);
 
-                    if (request.Query.ContainsKey("take"))
-                        take = int.Parse(request.Query["take"]);
-
-                    if (request.Query.ContainsKey("skip"))
-                        skip = int.Parse(request.Query["skip"]);
-
-                    var query = _httpBowQueryParser.Parse(collectionName, request, readSession, _sessionFactory);
-                    var result = bowReadSession.Read(query, readSession, skip, take);
-                    var docs = result.Docs;
-
-                    this.Log(string.Format("executed query {0} and read {1} docs from disk in {2}", query, docs.Count, timer.Elapsed));
+                    this.Log(
+                        string.Format(
+                            "executed query {0} and read {1} docs from disk in {2}", 
+                            query, 
+                            result.Docs.Count, 
+                            timer.Elapsed));
 
                     var stream = new MemoryStream();
 
-                    Serialize(docs, stream);
+                    Serialize(result.Docs, stream);
 
-                    return new ResponseModel { MediaType = "application/json", Stream = stream, Documents = docs, Total = result.Total };
+                    return new ResponseModel
+                    {
+                        MediaType = "application/json",
+                        Stream = stream,
+                        Documents = result.Docs,
+                        Total = result.Total
+                    };
                 }
             }
             else
             {
-                using (var session = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
+                using (var session = _sessionFactory.CreateReadSession(collectionName, collectionId))
                 {
                     IList<IDictionary> docs;
                     long total;
@@ -126,7 +126,13 @@ namespace Sir.Store
 
                     Serialize(docs, stream);
 
-                    return new ResponseModel { MediaType = "application/json", Stream = stream, Documents = docs, Total = total };
+                    return new ResponseModel
+                    {
+                        MediaType = "application/json",
+                        Stream = stream,
+                        Documents = docs,
+                        Total = total
+                    };
                 }
             }
         }

@@ -200,16 +200,12 @@ namespace Sir.Store
             return new ValidateSession(collectionName, collectionId, this, _tokenizer, _config, indexReaders);
         }
 
-        public ReadSession CreateReadSession(string collectionName, ulong collectionId)
+        public ReadSession CreateReadSession(string collectionName, ulong collectionId, string ixFileExtension = "ix",
+            string ixpFileExtension = "ixp")
         {
             var indexReaders = _indexReaders.GetOrAdd(collectionId, new ConcurrentDictionary<long, NodeReader>());
 
-            return new ReadSession(collectionName, collectionId, this, _config, indexReaders);
-        }
-
-        public BOWReadSession CreateBOWReadSession(string collectionName, ulong collectionId)
-        {
-            return new BOWReadSession(collectionName, collectionId, this, _config);
+            return new ReadSession(collectionName, collectionId, this, _config, indexReaders, ixFileExtension, ixpFileExtension);
         }
 
         public Stream CreateAsyncReadStream(string fileName)

@@ -8,8 +8,7 @@ using System.Threading.Tasks;
 namespace Sir.Store
 {
     /// <summary>
-    /// Binary tree where the data is a vector and that is
-    /// balanced according to the cos angles between the vectors of the immediate neighbouring nodes.
+    /// Binary tree that is balanced according to the cos angles of the vectors that is each node's payload.
     /// </summary>
     public class VectorNode
     {
@@ -98,7 +97,7 @@ namespace Sir.Store
             DocIds.Add(docId);
         }
 
-        public BOCHit ClosestMatch(VectorNode node, float foldAngle)
+        public Hit ClosestMatch(VectorNode node, float foldAngle)
         {
             var best = this;
             var cursor = this;
@@ -128,7 +127,7 @@ namespace Sir.Store
                 }
             }
 
-            return new BOCHit
+            return new Hit
             {
                 Embedding = best.Vector,
                 Score = highscore,

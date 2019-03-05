@@ -79,7 +79,12 @@ namespace Sir.Store
 
                         if (!string.IsNullOrWhiteSpace(v))
                         {
-                            tokens = new AnalyzedString { Source = v.ToCharArray(), Tokens = new List<(int, int)> { (0, v.Length) } };
+                            tokens = new AnalyzedString
+                            {
+                                Original = v,
+                                Source = v.ToCharArray(),
+                                Tokens = new List<(int, int)> { (0, v.Length) }
+                            };
                         }
                     }
                     else
