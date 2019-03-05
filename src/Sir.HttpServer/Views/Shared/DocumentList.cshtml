@@ -1,10 +1,13 @@
 ﻿@model IEnumerable<Sir.HttpServer.Controllers.SearchResultModel>
+@{ 
+    var displayQ = ViewData["qf"] ?? ViewData["q"];
+}
 
 @{
     IList<Sir.HttpServer.Controllers.SearchResultModel> docs = Model == null ?
         new Sir.HttpServer.Controllers.SearchResultModel[0].ToList() : Model.ToList();
 }
-<h3>@docs.Count results of @ViewData["total"] for '@ViewData["q"]' in '@ViewData["collection"]' (@ViewData["time_ms"] ms)</h3>
+<h3>@docs.Count results of @ViewData["total"] for '@displayQ' in '@ViewData["collection"]' (@ViewData["time_ms"] ms)</h3>
 
 <div>
     <ol>
