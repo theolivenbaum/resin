@@ -12,7 +12,7 @@
     margin-right: 2px;
 }
 
-sup {
+sup, sub {
     font-size: xx-small;
     color: orangered;
 }
