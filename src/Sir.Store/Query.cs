@@ -14,7 +14,6 @@ namespace Sir.Store
         {
             Term = term;
             PostingsOffsets = new List<long>();
-            Score = -1;
             Or = true;
             Collection = collectionId;
         }

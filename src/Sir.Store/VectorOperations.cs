@@ -143,7 +143,11 @@ namespace Sir
             {
                 var codePoint = (int)term.TokenizedString.Source[span.offset + i];
 
-                if (!vec.ContainsKey(codePoint))
+                if (vec.ContainsKey(codePoint))
+                {
+                    if (vec[codePoint] < byte.MaxValue) vec[codePoint] += 1;
+                }
+                else
                 {
                     vec[codePoint] = 1;
                 }
@@ -160,7 +164,11 @@ namespace Sir
             {
                 var codePoint = (int)term.Source[offset + i];
 
-                if (!vec.ContainsKey(codePoint))
+                if (vec.ContainsKey(codePoint))
+                {
+                    if (vec[codePoint] < byte.MaxValue) vec[codePoint] += 1;
+                }
+                else
                 {
                     vec[codePoint] = 1;
                 }
@@ -184,7 +192,11 @@ namespace Sir
                     codePoint += c;
                 }
 
-                if (!vec.ContainsKey(codePoint))
+                if (vec.ContainsKey(codePoint))
+                {
+                    if (vec[codePoint] < byte.MaxValue) vec[codePoint] += 1;
+                }
+                else
                 {
                     vec[codePoint] = 1;
                 }

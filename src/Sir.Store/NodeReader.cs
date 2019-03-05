@@ -122,6 +122,15 @@ namespace Sir.Store
             this.Log("deserialized page");
         }
 
+        public IEnumerable<Hit> Intersecting(SortedList<long, byte> vector)
+        {
+            var query = new VectorNode(vector);
+            var tree = ReadAllPages();
+            var hits = tree.Intersecting(query, VectorNode.TermFoldAngle);
+
+            return hits;
+        }
+
         public Hit ClosestMatch(SortedList<long, byte> vector)
         {
             var query = new VectorNode(vector);

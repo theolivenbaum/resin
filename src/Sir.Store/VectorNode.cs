@@ -114,6 +114,7 @@ namespace Sir.Store
                         highscore = angle;
                         best = cursor;
                     }
+
                     cursor = cursor.Left;
                 }
                 else
@@ -134,6 +135,39 @@ namespace Sir.Store
                 PostingsOffsets = best.PostingsOffsets ?? new List<long> { best.PostingsOffset },
                 Ids = best.DocIds
             };
+        }
+
+        public IEnumerable<Hit> Intersecting(VectorNode node, float foldAngle)
+        {
+            var intersecting = new List<Hit>();
+            var cursor = this;
+
+            while (cursor != null)
+            {
+                var angle = node.Vector.CosAngle(cursor.Vector);
+
+                if (angle > 0)
+                {
+                    intersecting.Add(new Hit
+                    {
+                        Embedding = cursor.Vector,
+                        Score = angle,
+                        PostingsOffsets = cursor.PostingsOffsets ?? new List<long> { cursor.PostingsOffset },
+                        Ids = cursor.DocIds
+                    });
+                }
+
+                if (angle > foldAngle)
+                {
+                    cursor = cursor.Left;
+                }
+                else
+                {
+                    cursor = cursor.Right;
+                }
+            }
+
+            return intersecting.OrderByDescending(x => x.Score);
         }
 
         private readonly object _sync = new object();
