@@ -18,5 +18,10 @@ namespace Sir
                 }
             }
         }
+
+        public override string ToString()
+        {
+            return Original;
+        }
     }
 }
