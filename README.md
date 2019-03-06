@@ -18,7 +18,7 @@ This model creates clusters of documents that share similar words.
 
 Natural language queries are parsed into terms, then into bags-of-characters, 
 then into an expression tree, each node representing a AND, OR or NOT set operation, 
-then serialized and executed on a remote "postings server", producing a page of a distinct set of 
+then serialized and executed on a remote "postings server", producing a page from a distinct set of 
 document IDs that are sorted by score. 
 
 ## Document model
