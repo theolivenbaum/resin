@@ -25,7 +25,7 @@ The second model is a graph of documents embedded as bags-of-words.
 In this model documents gather around "topics". 
 
 Natural language queries are parsed into clauses and each clause into a vector. 
-A cluster of documents is located by reucing the clause vectors to a document 
+A cluster of documents is located by reducing the clause vectors to a document 
 by using vector addition/subtraction and then navigating the index graph by evaluating 
 the cos angle between the query and the clusters.
 
@@ -39,7 +39,7 @@ then mapped to a bags-of-topics space.
 
 ## Semantic model
 
-The final model projects each previous to a single dimension creating a small, topical search space.
+The final model projects each previous to a single dimension creating a smaller topical search space.
 
 ## Natural and scoped querying
 
