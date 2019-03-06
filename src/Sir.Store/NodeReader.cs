@@ -1,11 +1,11 @@
 ﻿using Sir.Core;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -22,6 +22,7 @@ namespace Sir.Store
         private readonly string _ixFileName;
         private readonly string _vecFileName;
         private VectorNode _root;
+        private bool _refreshing;
 
         public NodeReader(string ixFileName, string ixpFileName, string vecFileName, SessionFactory sessionFactory, IConfigurationProvider config)
         {
@@ -42,48 +43,49 @@ namespace Sir.Store
 
         private IList<(long, long)> ReadPageInfoFromDisk()
         {
-            using (var ixpStream = _sessionFactory.CreateAsyncReadStream(_ixpFileName))
+            if (!File.Exists(_ixpFileName))
+            {
+                Thread.Sleep(100);
+            }
+
+            using (var ixpStream = _sessionFactory.CreateReadStream(_ixpFileName))
             {
                 return new PageIndexReader(ixpStream).ReadAll();
             }
         }
 
-        private readonly object _reloadSync = new object();
-
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
+            if (_refreshing) return;
+
+            _refreshing = true;
+
             var newPages = ReadPageInfoFromDisk();
 
             if (newPages.Count != _pages.Count)
             {
-                lock (_reloadSync)
-                {
-                    newPages = ReadPageInfoFromDisk();
+                var skip = _pages.Count;
 
-                    if (newPages.Count != _pages.Count)
-                    {
-                        var skip = _pages.Count;
+                _pages = newPages;
 
-                        _pages = newPages;
-
-                        AllPages(skip);
-                    }
-                }
+                AllPages(skip);
             }
+
+            _refreshing = false;
         }
 
         private readonly object _syncInit = new object();
 
         public VectorNode AllPages(int skip = 0)
         {
-            if (_root != null)
+            if (skip == 0 && _root != null)
             {
                 return _root;
             }
 
             lock (_syncInit)
             {
-                if (_root != null)
+                if (skip == 0 && _root != null)
                 {
                     return _root;
                 }
@@ -108,7 +110,7 @@ namespace Sir.Store
                     }
                 }
 
-                this.Log("deserialized {0} index segments in {1}", _pages.Count, time.Elapsed);
+                this.Log($"deserialized {_pages.Count} index segments in {time.Elapsed}");
 
                 return _root;
             }

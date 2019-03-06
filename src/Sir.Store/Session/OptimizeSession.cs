@@ -25,13 +25,13 @@ namespace Sir.Store
             _postingsWriter = new RemotePostingsWriter(config, collectionName);
         }
 
-        public async Task Optimize()
+        public void Optimize()
         {
             var time = Stopwatch.StartNew();
-            var optimizedColumns = new List<(long keyId, VectorNode column)>();
+            var optimizedColumns = new ConcurrentBag<(long keyId, VectorNode column)>();
 
-            foreach(var ixFileName in Directory.GetFiles(
-                SessionFactory.Dir, string.Format("{0}.*.ix", CollectionId)))
+            Parallel.ForEach(Directory.GetFiles(
+                SessionFactory.Dir, string.Format("{0}.*.ix", CollectionId)), ixFileName =>
             {
                 var columnTime = Stopwatch.StartNew();
                 var keyId = long.Parse(Path.GetFileNameWithoutExtension(ixFileName).Split('.')[1]);
@@ -41,21 +41,21 @@ namespace Sir.Store
                 optimizedColumns.Add((keyId, optimized));
 
                 this.Log("optimized {0} in memory in {1}", keyId, columnTime.Elapsed);
-            }
+            });
 
-            foreach (var col in optimizedColumns)
-            { 
+            Parallel.ForEach(optimizedColumns, col =>
+            {
                 var columnTime = Stopwatch.StartNew();
 
-                await SerializeColumn(col.keyId, col.column);
+                SerializeColumn(col.keyId, col.column);
 
                 this.Log("serialized {0} in {1}", col.keyId, columnTime.Elapsed);
-            }
+            });
 
             this.Log("rebuilding {0} took {1}", CollectionId, time.Elapsed);
         }
 
-        private async Task SerializeColumn(long keyId, VectorNode column)
+        private void SerializeColumn(long keyId, VectorNode column)
         {
             using (var columnWriter = new ColumnSerializer(
                 CollectionId, 
@@ -65,7 +65,7 @@ namespace Sir.Store
                 ixFileExtension: "ixo", 
                 pageFileExtension: "ixop"))
             {
-                await columnWriter.ConcatenateColumnSegment(column);
+                columnWriter.ConcatenateColumnSegment(column);
             }
         }
 

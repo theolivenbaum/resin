@@ -49,11 +49,11 @@ namespace Sir.Store
             }
         }
 
-        public async Task ConcatenateColumnSegment(VectorNode column)
+        public void ConcatenateColumnSegment(VectorNode column)
         {
             var time = Stopwatch.StartNew();
 
-            await _postingsWriter.Concat(column);
+            _postingsWriter.Concat(column);
 
             lock (_indexFileSync)
             {

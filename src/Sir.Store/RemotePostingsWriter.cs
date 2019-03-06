@@ -35,7 +35,7 @@ namespace Sir.Store
         //    }
         //}
 
-        public async Task Concat(VectorNode rootNode)
+        public void Concat(VectorNode rootNode)
         {
             var offsets = new Dictionary<long, IList<long>>();
             var all = rootNode.All();
@@ -53,10 +53,10 @@ namespace Sir.Store
                 return;
             }
 
-            await Concat(offsets);
+            Concat(offsets);
         }
 
-        public async Task Concat(IDictionary<long, IList<long>> offsets)
+        public void Concat(IDictionary<long, IList<long>> offsets)
         {
             if (offsets == null) throw new ArgumentNullException(nameof(offsets));
 
@@ -89,11 +89,11 @@ namespace Sir.Store
             request.Method = WebRequestMethods.Http.Post;
             request.ContentType = "application/postings";
 
-            using (var requestBody = await request.GetRequestStreamAsync())
+            using (var requestBody = request.GetRequestStream())
             {
                 requestBody.Write(compressed, 0, compressed.Length);
 
-                using (var response = (HttpWebResponse) await request.GetResponseAsync())
+                using (var response = (HttpWebResponse) request.GetResponse())
                 {
                     this.Log(string.Format("{0} concat operation took {1}", _collectionName, timer.Elapsed));
                 }

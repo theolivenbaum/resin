@@ -28,6 +28,12 @@ namespace Sir.Store
             _indexReaders = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>>();
         }
 
+        public void PopIndexReaders(ulong collectionId)
+        {
+            ConcurrentDictionary<long, NodeReader> val;
+            _indexReaders.TryRemove(collectionId, out val);
+        }
+
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> LoadKeys()
         {
             var timer = new Stopwatch();
