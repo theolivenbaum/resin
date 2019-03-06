@@ -24,7 +24,11 @@ namespace Sir.Store
         private readonly ITokenizer _tokenizer;
 
         public StoreReader(
-            SessionFactory sessionFactory, HttpQueryParser httpQueryParser, HttpBowQueryParser httpDocumentQueryParser, ITokenizer tokenizer, IEnumerable<IWriter> storeWriters)
+            SessionFactory sessionFactory, 
+            HttpQueryParser httpQueryParser, 
+            HttpBowQueryParser httpDocumentQueryParser, 
+            ITokenizer tokenizer, 
+            IEnumerable<IWriter> storeWriters)
         {
             _sessionFactory = sessionFactory;
             _httpQueryParser = httpQueryParser;
