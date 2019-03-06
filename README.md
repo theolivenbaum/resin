@@ -42,7 +42,7 @@ then mapped to a bags-of-topics space.
 
 ## Semantic model
 
-The final model projects each previous to a single dimension creating a smaller topical search space.
+The final model projects each previous to a single dimension then combines them to create a smaller topical search space.
 
 ## Natural and scoped querying
 
