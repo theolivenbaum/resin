@@ -22,7 +22,6 @@ namespace Sir.Store
         private readonly string _ixFileName;
         private readonly string _vecFileName;
         private VectorNode _root;
-        private bool _refreshing;
 
         public NodeReader(string ixFileName, string ixpFileName, string vecFileName, SessionFactory sessionFactory, IConfigurationProvider config)
         {
@@ -43,11 +42,6 @@ namespace Sir.Store
 
         private IList<(long, long)> ReadPageInfoFromDisk()
         {
-            if (!File.Exists(_ixpFileName))
-            {
-                Thread.Sleep(100);
-            }
-
             using (var ixpStream = _sessionFactory.CreateReadStream(_ixpFileName))
             {
                 return new PageIndexReader(ixpStream).ReadAll();
@@ -56,36 +50,21 @@ namespace Sir.Store
 
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
-            if (_refreshing) return;
-
-            _refreshing = true;
-
-            var newPages = ReadPageInfoFromDisk();
-
-            if (newPages.Count != _pages.Count)
-            {
-                var skip = _pages.Count;
-
-                _pages = newPages;
-
-                AllPages(skip);
-            }
-
-            _refreshing = false;
+            _root = null;
         }
 
-        private readonly object _syncInit = new object();
+        private readonly object _syncRefresh = new object();
 
-        public VectorNode AllPages(int skip = 0)
+        public VectorNode AllPages()
         {
-            if (skip == 0 && _root != null)
+            if (_root != null)
             {
                 return _root;
             }
 
-            lock (_syncInit)
+            lock (_syncRefresh)
             {
-                if (skip == 0 && _root != null)
+                if (_root != null)
                 {
                     return _root;
                 }
@@ -96,15 +75,20 @@ namespace Sir.Store
 
                 using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
                 using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
-                using (var queue = new ProducerConsumerQueue<VectorNode>(Build, int.Parse(_config.Get("write_thread_count"))))
+                //using (var queue = new ProducerConsumerQueue<VectorNode>(Build, int.Parse(_config.Get("write_thread_count"))))
                 {
-                    foreach (var (offset, length) in _pages.Skip(skip))
+                    foreach (var (offset, length) in _pages)
                     {
                         ixStream.Seek(offset, SeekOrigin.Begin);
 
                         var tree = VectorNode.DeserializeTree(ixStream, vectorStream, length);
 
-                        queue.Enqueue(tree);
+                        foreach (var node in tree.All())
+                        {
+                            _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
+                        }
+
+                        //queue.Enqueue(tree);
 
                         this.Log($"deserialized tree at {offset}");
                     }
