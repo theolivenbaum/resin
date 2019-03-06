@@ -2,7 +2,8 @@
 
 This is a search engine and language model framework 
 with an API that lets you train and project a language model onto a search tree 
-that supports 64-bit wide vectors that in turn may represent words, phrases, documents, topics, topics of topics, or cluster IDs.
+that happens to supports 64-bit wide vectors that in turn may represent words, 
+phrases, documents, topics, topics of topics, or cluster IDs.
   
 Built-in capabilities include interfacing with your language model through natural language queries 
 or by using a structured, boolean query language that supports AND, OR, NOT and (nested (scope)). 
