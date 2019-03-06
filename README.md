@@ -1,7 +1,7 @@
 # Sir.Resin
 
-This is a search engine and language model framework. 
-Its API lets you train and project a language model onto a search tree.
+This is a search engine and language model framework 
+with an API that let you train and project a language model onto a search tree.
 
 The search tree supports 64-bit wide vectors that may represent words, phrases, documents, topics, topics of topics, or cluster IDs.
   
