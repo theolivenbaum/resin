@@ -110,12 +110,11 @@ namespace Sir
             {
                 byte val;
 
-                if (vec2.TryGetValue(x.Key, out val))
+                if (vec2.TryGetValue(x.Key, out val) && val < byte.MaxValue)
                 {
-                    var v = val + x.Value;
-                    int p = Math.Min(1, v);
+                    var v = (byte)(val + x.Value);
 
-                    result[x.Key] = Convert.ToByte(p);
+                    result[x.Key] = v;
                 }
                 else
                 {
@@ -125,11 +124,20 @@ namespace Sir
 
             foreach (var x in vec2)
             {
-                if (!vec1.ContainsKey(x.Key))
+                byte val;
+
+                if (vec1.TryGetValue(x.Key, out val) && val < byte.MaxValue)
+                {
+                    var v = (byte)(val + x.Value);
+
+                    result[x.Key] = v;
+                }
+                else
                 {
                     result[x.Key] = x.Value;
                 }
             }
+
             return result;
         }
 
@@ -159,7 +167,7 @@ namespace Sir
             return result;
         }
 
-        public static SortedList<long, byte> ToCharVector(this Term term)
+        public static SortedList<long, byte> ToVector(this Term term)
         {
             if (term.Node != null)
             {

@@ -130,7 +130,7 @@ namespace Sir.Store
 
                     if (indexReader != null)
                     {
-                        var termVector = cursor.Term.ToCharVector();
+                        var termVector = cursor.Term.ToVector();
 
                         hit = indexReader.ClosestMatch(termVector);
                     }
