@@ -103,6 +103,8 @@ namespace Sir.Store
                         var tree = VectorNode.DeserializeTree(ixStream, vectorStream, length);
 
                         queue.Enqueue(tree);
+
+                        this.Log($"deserialized tree at {offset}");
                     }
                 }
 
@@ -118,8 +120,6 @@ namespace Sir.Store
             {
                 _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
             }
-
-            this.Log("deserialized page");
         }
 
         public IEnumerable<Hit> Intersecting(SortedList<long, byte> vector)

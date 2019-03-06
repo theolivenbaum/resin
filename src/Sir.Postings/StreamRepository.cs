@@ -22,20 +22,23 @@ namespace Sir.Postings
 
         public async Task Concat(ulong collectionId, IDictionary<long, IList<long>> offsets)
         {
-            foreach (var list in offsets)
+            using (var data = CreateReadableWritableDataStream(collectionId))
             {
-                var canonical = list.Key;
-
-                foreach (var offset in list.Value)
+                foreach (var list in offsets)
                 {
-                    await Concat(collectionId, canonical, offset);
-                }
+                    var canonical = list.Key;
 
-                this.Log($"concatenated {canonical}");
+                    foreach (var offset in list.Value)
+                    {
+                        await Concat(canonical, offset, data);
+                    }
+
+                    this.Log($"concatenated {canonical}");
+                }
             }
         }
 
-        private async Task Concat(ulong collectionId, long offset1, long offset2)
+        private async Task Concat(long offset1, long offset2, Stream data)
         {
             if (offset1 == offset2)
             {
@@ -44,28 +47,25 @@ namespace Sir.Postings
 
             var offset2Buf = BitConverter.GetBytes(offset2);
 
-            using (var data = CreateReadableWritableDataStream(collectionId))
+            data.Seek(offset1 + (sizeof(long) * 2), SeekOrigin.Begin);
+
+            var lastPageBuf = new byte[sizeof(long)];
+            await data.ReadAsync(lastPageBuf);
+            var lastPage = BitConverter.ToInt64(lastPageBuf, 0);
+
+            if (lastPage == offset1)
             {
-                data.Seek(offset1 + (sizeof(long)*2), SeekOrigin.Begin);
+                data.Seek(offset1 + sizeof(ulong), SeekOrigin.Begin);
 
-                var lastPageBuf = new byte[sizeof(long)];
-                await data.ReadAsync(lastPageBuf);
-                var lastPage = BitConverter.ToInt64(lastPageBuf, 0);
+                await data.WriteAsync(offset2Buf);
+                await data.WriteAsync(offset2Buf);
+            }
+            else
+            {
+                data.Seek(lastPage + sizeof(ulong), SeekOrigin.Begin);
 
-                if (lastPage == offset1)
-                {
-                    data.Seek(offset1 + sizeof(ulong), SeekOrigin.Begin);
-
-                    await data.WriteAsync(offset2Buf);
-                    await data.WriteAsync(offset2Buf);
-                }
-                else
-                {
-                    data.Seek(lastPage + sizeof(ulong), SeekOrigin.Begin);
-
-                    await data.WriteAsync(offset2Buf);
-                    await data.WriteAsync(offset2Buf);
-                }
+                await data.WriteAsync(offset2Buf);
+                await data.WriteAsync(offset2Buf);
             }
         }
 
