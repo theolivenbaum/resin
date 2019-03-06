@@ -24,8 +24,8 @@ The second model is a graph of documents embedded as bags-of-words.
 In this model documents gather around "topics". 
 
 Natural language queries are parsed into clauses and each clause into a vector. 
-A cluster of documents is located by encoding the query expression tree itself as a document 
-through the use of vector addition/subtraction and then navigating the index graph by evaluating 
+A cluster of documents is located by reucing the clause vectors to a document 
+by using vector addition/subtraction and then navigating the index graph by evaluating 
 the cos angle between the query and the clusters.
 
 ## Topical model
