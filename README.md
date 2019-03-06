@@ -1,9 +1,10 @@
 # Sir.Resin
 
 This is a search engine and language model framework 
-with an API that lets you train and project a language model onto a search tree 
-that happens to supports 64-bit wide vectors that in turn may represent words, 
-phrases, documents, topics, topics of topics, or cluster IDs.
+with an API that lets you train and project a language model onto a search tree. 
+
+The index is serializable/deserializable and supports 64-bit wide vectors that may represent words, 
+phrases, documents, topics, topics of topics or, simply, cluster IDs.
   
 Built-in capabilities include interfacing with your language model through natural language queries 
 or by using a structured, boolean query language that supports AND, OR, NOT and (nested (scope)). 
@@ -17,17 +18,19 @@ This model creates clusters of documents that share similar words.
 
 Natural language queries are parsed into terms, then into bags-of-characters, 
 then into an expression tree, each node representing a AND, OR or NOT set operation, 
-then serialized and executed remotely. 
+then serialized and executed on a remote "postings server", producing a page of a distinct set of 
+document IDs that are sorted by score. 
 
 ## Document model
 
 The second model is a graph of documents embedded as bags-of-words. 
 In this model documents gather around "topics". 
 
-Natural language queries are parsed into clauses and each clause into a vector. 
-A cluster of documents is located by reducing the clause vectors to a document 
+Natural language queries are parsed into clauses, each clause into a vector. 
+A cluster (of documents) is located by reducing the clause vectors to a document 
 by using vector addition/subtraction and then navigating the index graph by evaluating 
-the cos angle between the query and the clusters.
+the cos angle between the query and the clusters. Then end-result of the scan is a cluster ID 
+that also corresponds to a postings list ID.
 
 ## Topical model
 
