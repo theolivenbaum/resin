@@ -66,7 +66,7 @@ namespace Sir.Store
 
                         _pages = newPages;
 
-                        ReadAllPages(skip);
+                        AllPages(skip);
                     }
                 }
             }
@@ -74,7 +74,7 @@ namespace Sir.Store
 
         private readonly object _syncInit = new object();
 
-        public VectorNode ReadAllPages(int skip = 0)
+        public VectorNode AllPages(int skip = 0)
         {
             if (_root != null)
             {
@@ -125,7 +125,7 @@ namespace Sir.Store
         public IEnumerable<Hit> Intersecting(SortedList<long, byte> vector)
         {
             var query = new VectorNode(vector);
-            var tree = ReadAllPages();
+            var tree = AllPages();
             var hits = tree.Intersecting(query, VectorNode.TermFoldAngle);
 
             return hits;
@@ -134,7 +134,7 @@ namespace Sir.Store
         public Hit ClosestMatch(SortedList<long, byte> vector)
         {
             var query = new VectorNode(vector);
-            var tree = ReadAllPages();
+            var tree = AllPages();
             var hit = tree.ClosestMatch(query, VectorNode.TermFoldAngle);
 
             return hit;

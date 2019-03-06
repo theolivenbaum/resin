@@ -35,6 +35,27 @@ namespace Sir.Store
         //    }
         //}
 
+        public async Task Concat(VectorNode rootNode)
+        {
+            var offsets = new Dictionary<long, IList<long>>();
+            var all = rootNode.All();
+
+            foreach (var node in all)
+            {
+                if (node.PostingsOffsets != null && node.PostingsOffsets.Count > 1)
+                {
+                    offsets.Add(node.PostingsOffset, node.PostingsOffsets);
+                }
+            }
+
+            if (offsets.Count == 0)
+            {
+                return;
+            }
+
+            await Concat(offsets);
+        }
+
         public async Task Concat(IDictionary<long, IList<long>> offsets)
         {
             if (offsets == null) throw new ArgumentNullException(nameof(offsets));
@@ -51,16 +72,16 @@ namespace Sir.Store
                 // write count
                 requestMessage.Write(BitConverter.GetBytes(offset.Value.Count));
 
+                // write data
                 foreach (var offs in offset.Value)
                 {
-                    // write data
                     requestMessage.Write(BitConverter.GetBytes(offs));
                 }
             }
 
             var messageBuf = requestMessage.ToArray();
             var compressed = QuickLZ.compress(messageBuf, 3);
-            var endpoint = string.Format("{0}{1}?concat=true", 
+            var endpoint = string.Format("{0}{1}?concat=concat", 
                 _config.Get("postings_endpoint"), _collectionName);
 
             var request = (HttpWebRequest)WebRequest.Create(endpoint);

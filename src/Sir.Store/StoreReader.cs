@@ -53,7 +53,7 @@ namespace Sir.Store
 
             if (File.Exists(vec1FileName))
             {
-                using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionId, "ix1", "ixp1"))
+                using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionId, "ix1", "ixp1", "vec1"))
                 {
                     var query = _httpBowQueryParser.Parse(collectionId, request, readSession, _sessionFactory);
                     var result = readSession.Read(query);

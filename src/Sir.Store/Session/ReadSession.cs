@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -25,6 +24,7 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly string _ixFileExtension;
         private readonly string _ixpFileExtension;
+        private readonly string _vecFileExtension;
 
         public ReadSession(string collectionName,
             ulong collectionId,
@@ -32,7 +32,8 @@ namespace Sir.Store
             IConfigurationProvider config,
             ConcurrentDictionary<long, NodeReader> indexReaders,
             string ixFileExtension = "ix",
-            string ixpFileExtension = "ixp") 
+            string ixpFileExtension = "ixp",
+            string vecFileExtension = "vec") 
             : base(collectionName, collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
@@ -53,6 +54,7 @@ namespace Sir.Store
             _config = config;
             _ixFileExtension = ixFileExtension;
             _ixpFileExtension = ixpFileExtension;
+            _vecFileExtension = vecFileExtension;
         }
 
         public ReadResult Read(Query query)
@@ -106,10 +108,12 @@ namespace Sir.Store
             return result;
         }
 
+        /// <summary>
+        /// Map query terms to index IDs.
+        /// </summary>
+        /// <param name="query">An un-mapped query</param>
         private void Map(Query query)
         {
-            this.Log("before map: " + query.ToDiagram());
-
             var clauses = query.ToList();
 
             foreach (var q in clauses)
@@ -149,8 +153,6 @@ namespace Sir.Store
                     cursor = cursor.Then;
                 }
             }
-
-            this.Log("after map: " + query.ToDiagram());
         }
 
         private static readonly object _syncIndexReaderCreation = new object();
@@ -167,7 +169,7 @@ namespace Sir.Store
                     {
                         var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixFileExtension));
                         var ixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixpFileExtension));
-                        var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId));
+                        var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}", CollectionId, _vecFileExtension));
 
                         reader = new NodeReader(ixFileName, ixpFileName, vecFileName, SessionFactory, _config);
 

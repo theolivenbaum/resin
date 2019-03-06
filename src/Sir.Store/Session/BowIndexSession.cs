@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Sir.Store
 {
-    public class BOWWriteSession : CollectionSession, IDisposable, ILogger
+    public class BowIndexSession : CollectionSession, IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
         private readonly ReadSession _readSession;
@@ -19,7 +19,7 @@ namespace Sir.Store
         private readonly Stream _documentVectorStream;
         private readonly object _writeSync = new object();
 
-        public BOWWriteSession(
+        public BowIndexSession(
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory,
@@ -106,7 +106,7 @@ namespace Sir.Store
 
             foreach (var vector in terms.Embeddings)
             {
-                var hit = treeReader.ReadAllPages().ClosestMatch(new VectorNode(vector), VectorNode.DocFoldAngle);
+                var hit = treeReader.AllPages().ClosestMatch(new VectorNode(vector), VectorNode.DocFoldAngle);
 
                 var termId = hit.PostingsOffsets[0];
 
@@ -121,8 +121,8 @@ namespace Sir.Store
 
         private void Flush()
         {
-            _documentVectorStream.Dispose();
             _indexWriter.Dispose();
+            _documentVectorStream.Dispose();
 
             var tasks = new List<Task>();
             var writers = new List<ColumnSerializer>();

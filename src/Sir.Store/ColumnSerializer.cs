@@ -16,7 +16,7 @@ namespace Sir.Store
         private readonly PageIndexWriter _pageIndexWriter;
         private readonly Stream _ixStream;
 
-        public ColumnSerializer(ulong collectionId, long keyId, SessionFactory sessionFactory, RemotePostingsWriter postingsWriter = null, string ixFileExtension = "ix", string pageFileExtension = "ixp")
+        public ColumnSerializer(ulong collectionId, long keyId, SessionFactory sessionFactory, RemotePostingsWriter postingsWriter, string ixFileExtension = "ix", string pageFileExtension = "ixp")
         {
             _keyId = keyId;
             _collectionId = collectionId;
@@ -49,14 +49,34 @@ namespace Sir.Store
             }
         }
 
+        public async Task ConcatenateColumnSegment(VectorNode column)
+        {
+            var time = Stopwatch.StartNew();
+
+            await _postingsWriter.Concat(column);
+
+            lock (_indexFileSync)
+            {
+                var page = column.SerializeTree(_ixStream);
+
+                _ixStream.Flush();
+
+                _pageIndexWriter.Write(page.offset, page.length);
+
+                _pageIndexWriter.Flush();
+            }
+
+            var size = column.Size();
+
+            this.Log("concatenated column {0} in {1}. weight {2} depth {3} width {4} (avg depth {5})",
+                _keyId, time.Elapsed, column.Weight, size.depth, size.width, size.avgDepth);
+        }
+
         public async Task SerializeColumnSegment(VectorNode column)
         {
             var time = Stopwatch.StartNew();
 
-            if (_postingsWriter != null)
-            {
-                await _postingsWriter.Write(column);
-            }
+            await _postingsWriter.Write(column);
 
             lock (_indexFileSync)
             {

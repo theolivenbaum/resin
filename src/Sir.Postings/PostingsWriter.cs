@@ -39,10 +39,9 @@ namespace Sir.Postings
                 var messageBuf = QuickLZ.decompress(compressed);
 
                 // A write request is either a request to write new data
-                // or a request to concat two existing pages.
+                // or a request to concat two or more existing pages.
 
-                if (request.Query.ContainsKey("concat") 
-                    && request.Query["concat"].ToArray()[0].ToLower() == "true")
+                if (request.Query.ContainsKey("concat"))
                 {
                     await _data.Concat(collectionId, Deserialize(messageBuf));
 
@@ -108,7 +107,7 @@ namespace Sir.Postings
                     read += sizeof(long);
                 }
 
-                result.Add(list[0], list);
+                result.Add(canonical, list);
             }
 
             return result;

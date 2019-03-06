@@ -35,7 +35,7 @@ namespace Sir.Store
             foreach (var field in fields)
             {
                 var keyId = sessionFactory.GetKeyId(collectionId, field.ToLower().ToHash());
-                var vector = BOWWriteSession.CreateDocumentVector(phrase, readSession.CreateIndexReader(keyId), _tokenizer);
+                var vector = BowIndexSession.CreateDocumentVector(phrase, readSession.CreateIndexReader(keyId), _tokenizer);
                 var q = new Query(collectionId, new Term(keyId, new VectorNode(vector)));
 
                 if (query == null)

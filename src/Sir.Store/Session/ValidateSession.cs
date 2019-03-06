@@ -66,7 +66,7 @@ namespace Sir.Store
             {
                 var hits = new SortedList<float, Hit>(); ;
 
-                var hit = item.indexReader.ReadAllPages().ClosestMatch(new VectorNode(vector), VectorNode.TermFoldAngle);
+                var hit = item.indexReader.AllPages().ClosestMatch(new VectorNode(vector), VectorNode.TermFoldAngle);
 
                 //hits.Add(hit.Score, hit);
 

@@ -37,7 +37,7 @@ namespace Sir.Postings
         {
             if (offset1 == offset2)
             {
-                throw new InvalidOperationException();
+                return;
             }
 
             var offset2Buf = BitConverter.GetBytes(offset2);

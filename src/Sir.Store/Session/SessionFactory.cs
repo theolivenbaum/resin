@@ -186,11 +186,11 @@ namespace Sir.Store
             return new IndexSession(collectionName, collectionId, this, _tokenizer, _config, indexReaders);
         }
 
-        public BOWWriteSession CreateBOWSession(string collectionName, ulong collectionId)
+        public BowIndexSession CreateBOWSession(string collectionName, ulong collectionId)
         {
             var indexReaders = _indexReaders.GetOrAdd(collectionId, new ConcurrentDictionary<long, NodeReader>());
 
-            return new BOWWriteSession(collectionName, collectionId, this, _config, _tokenizer, indexReaders);
+            return new BowIndexSession(collectionName, collectionId, this, _config, _tokenizer, indexReaders);
         }
 
         public ValidateSession CreateValidateSession(string collectionName, ulong collectionId)
@@ -201,11 +201,11 @@ namespace Sir.Store
         }
 
         public ReadSession CreateReadSession(string collectionName, ulong collectionId, string ixFileExtension = "ix",
-            string ixpFileExtension = "ixp")
+            string ixpFileExtension = "ixp", string vecFileExtension = "vec")
         {
             var indexReaders = _indexReaders.GetOrAdd(collectionId, new ConcurrentDictionary<long, NodeReader>());
 
-            return new ReadSession(collectionName, collectionId, this, _config, indexReaders, ixFileExtension, ixpFileExtension);
+            return new ReadSession(collectionName, collectionId, this, _config, indexReaders, ixFileExtension, ixpFileExtension, vecFileExtension);
         }
 
         public Stream CreateAsyncReadStream(string fileName)

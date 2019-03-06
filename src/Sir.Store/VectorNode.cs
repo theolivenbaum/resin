@@ -173,7 +173,10 @@ namespace Sir.Store
         private readonly object _sync = new object();
 
         public void Add(
-            VectorNode node, float identicalAngle, float foldAngle, Stream vectorStream = null, IDictionary<long, IList<long>> conflicts = null)
+            VectorNode node, 
+            float identicalAngle, 
+            float foldAngle, 
+            Stream vectorStream = null)
         {
             node.Ancestor = null;
             node._left = null;
@@ -192,7 +195,7 @@ namespace Sir.Store
 
                     lock (_sync)
                     {
-                        cursor.Merge(node, conflicts);
+                        cursor.Merge(node);
                     }
 
                     break;
@@ -267,7 +270,7 @@ namespace Sir.Store
             }
         }
 
-        private void Merge(VectorNode node, IDictionary<long, IList<long>> conflicts = null)
+        private void Merge(VectorNode node)
         {
             if (DocIds == null)
             {
@@ -287,39 +290,11 @@ namespace Sir.Store
                 {
                     if (PostingsOffsets == null)
                     {
-                        PostingsOffsets = new List<long> { PostingsOffset, node.PostingsOffset };
+                        PostingsOffsets = new List<long> { node.PostingsOffset };
                     }
                     else
                     {
-                        PostingsOffsets.Add(PostingsOffset);
                         PostingsOffsets.Add(node.PostingsOffset);
-                    }
-                }
-                else
-                {
-                    PostingsOffset = node.PostingsOffset;
-                }
-            }
-
-            if (conflicts == null)
-            {
-                return;
-            }
-
-            if (node.PostingsOffset >= 0)
-            {
-                if (PostingsOffset >= 0)
-                {
-                    IList<long> offs;
-
-                    if (conflicts.TryGetValue(PostingsOffset, out offs))
-                    {
-                        offs.Add(node.PostingsOffset);
-                    }
-                    else
-                    {
-                        offs = new List<long> { node.PostingsOffset };
-                        conflicts.Add(PostingsOffset, offs);
                     }
                 }
                 else
@@ -588,7 +563,8 @@ namespace Sir.Store
             return new VectorNode (Vector)
             {
                 VectorOffset = VectorOffset,
-                PostingsOffset = PostingsOffset
+                PostingsOffset = PostingsOffset,
+                PostingsOffsets = PostingsOffsets
             };
         }
 

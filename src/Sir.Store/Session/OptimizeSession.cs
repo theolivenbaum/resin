@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -23,7 +22,7 @@ namespace Sir.Store
         {
             _config = config;
             _readSession = new ReadSession(collectionName, collectionId, sessionFactory, config, indexReaders);
-            _postingsWriter= new RemotePostingsWriter(config, collectionName);
+            _postingsWriter = new RemotePostingsWriter(config, collectionName);
         }
 
         public async Task Optimize()
@@ -31,29 +30,42 @@ namespace Sir.Store
             var time = Stopwatch.StartNew();
             var optimizedColumns = new List<(long keyId, VectorNode column)>();
 
-            Parallel.ForEach(Directory.GetFiles(SessionFactory.Dir, string.Format("{0}.*.ix", CollectionId)), ixFileName =>
+            foreach(var ixFileName in Directory.GetFiles(
+                SessionFactory.Dir, string.Format("{0}.*.ix", CollectionId)))
             {
                 var columnTime = Stopwatch.StartNew();
                 var keyId = long.Parse(Path.GetFileNameWithoutExtension(ixFileName).Split('.')[1]);
                 var indexReader = _readSession.CreateIndexReader(keyId);
-                var optimized = indexReader.ReadAllPages();
+                var optimized = indexReader.AllPages();
 
-            });
+                optimizedColumns.Add((keyId, optimized));
 
-            this.Log("rebuilding {0} took {1}", CollectionId, time.Elapsed);
+                this.Log("optimized {0} in memory in {1}", keyId, columnTime.Elapsed);
+            }
 
             foreach (var col in optimizedColumns)
-            {
+            { 
+                var columnTime = Stopwatch.StartNew();
+
                 await SerializeColumn(col.keyId, col.column);
+
+                this.Log("serialized {0} in {1}", col.keyId, columnTime.Elapsed);
             }
+
+            this.Log("rebuilding {0} took {1}", CollectionId, time.Elapsed);
         }
 
         private async Task SerializeColumn(long keyId, VectorNode column)
         {
             using (var columnWriter = new ColumnSerializer(
-                CollectionId, keyId, SessionFactory, ixFileExtension: "ixo", pageFileExtension: "ixop"))
+                CollectionId, 
+                keyId, 
+                SessionFactory, 
+                postingsWriter: _postingsWriter,
+                ixFileExtension: "ixo", 
+                pageFileExtension: "ixop"))
             {
-                await columnWriter.SerializeColumnSegment(column);
+                await columnWriter.ConcatenateColumnSegment(column);
             }
         }
 
