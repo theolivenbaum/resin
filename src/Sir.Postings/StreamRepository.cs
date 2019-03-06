@@ -30,10 +30,12 @@ namespace Sir.Postings
                 {
                     await Concat(collectionId, canonical, offset);
                 }
+
+                this.Log($"concatenated {canonical}");
             }
         }
 
-        public async Task Concat(ulong collectionId, long offset1, long offset2)
+        private async Task Concat(ulong collectionId, long offset1, long offset2)
         {
             if (offset1 == offset2)
             {
