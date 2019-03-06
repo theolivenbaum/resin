@@ -50,6 +50,8 @@ namespace Sir.Store
 
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
+            this.Log($"to be refreshed: {_ixpFileName}");
+
             _root = null;
         }
 
@@ -73,26 +75,26 @@ namespace Sir.Store
 
                 _root = new VectorNode();
 
-                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-                using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
-                //using (var queue = new ProducerConsumerQueue<VectorNode>(Build, int.Parse(_config.Get("write_thread_count"))))
-                {
-                    foreach (var (offset, length) in _pages)
-                    {
-                        ixStream.Seek(offset, SeekOrigin.Begin);
+                this.Log($"refreshing {_ixpFileName}");
 
-                        var tree = VectorNode.DeserializeTree(ixStream, vectorStream, length);
+                Parallel.ForEach(_pages, page =>
+                {
+                    using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                    using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
+                    {
+                        ixStream.Seek(page.offset, SeekOrigin.Begin);
+
+                        var tree = VectorNode.DeserializeTree(ixStream, vectorStream, page.length);
 
                         foreach (var node in tree.All())
                         {
                             _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
                         }
 
-                        //queue.Enqueue(tree);
-
-                        this.Log($"deserialized tree at {offset}");
+                        this.Log($"deserialized tree at {page.offset}");
                     }
-                }
+                });
+                
 
                 this.Log($"deserialized {_pages.Count} index segments in {time.Elapsed}");
 
