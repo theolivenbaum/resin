@@ -132,7 +132,7 @@ namespace Sir.Store
             {
                 Embedding = best.Vector,
                 Score = highscore,
-                PostingsOffsets = best.PostingsOffsets ?? new List<long> { best.PostingsOffset },
+                PostingsOffsets = new List<long> { best.PostingsOffset },
                 Ids = best.DocIds
             };
         }
@@ -152,7 +152,7 @@ namespace Sir.Store
                     {
                         Embedding = cursor.Vector,
                         Score = angle,
-                        PostingsOffsets = cursor.PostingsOffsets ?? new List<long> { cursor.PostingsOffset },
+                        PostingsOffsets = new List<long> { cursor.PostingsOffset },
                         Ids = cursor.DocIds
                     });
                 }
