@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
-using System.Collections.Generic;
 
 namespace Sir.Store
 {
@@ -18,7 +17,7 @@ namespace Sir.Store
             _tokenizer = tokenizer;
         }
 
-        public Query Parse(string collectionId, HttpRequest request)
+        public Query Parse(ulong collectionId, HttpRequest request)
         {
             Query query = null;
 
@@ -41,7 +40,7 @@ namespace Sir.Store
             if (isFormatted)
             {
                 var formattedQuery = request.Query["qf"].ToString();
-                query = FromString(collectionId.ToHash(), formattedQuery);
+                query = FromString(collectionId, formattedQuery);
             }
             else
             {
@@ -63,7 +62,7 @@ namespace Sir.Store
 
                 var formattedQuery = string.Format(queryFormat, request.Query["q"]);
 
-                query = _queryParser.Parse(collectionId.ToHash(), formattedQuery, _tokenizer);
+                query = _queryParser.Parse(collectionId, formattedQuery, _tokenizer);
             }
 
             if (request.Query.ContainsKey("take"))
@@ -88,7 +87,7 @@ namespace Sir.Store
 
                 var cleanLine = line
                     .Replace("(", "")
-                    .Replace(")", "")
+                    .Replace(")", "\n")
                     .Replace("++", "+")
                     .Replace("--", "-");
 

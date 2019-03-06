@@ -53,16 +53,22 @@ namespace Sir.Store
 
             if (File.Exists(vec1FileName))
             {
+                Query query;
+
+                using (var mapSession = _sessionFactory.CreateReadSession(collectionName, collectionId))
+                {
+                    query = _httpBowQueryParser.Parse(collectionId, request, mapSession);
+                }
+
                 using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionId, "ix1", "ixp1", "vec1"))
                 {
-                    var query = _httpBowQueryParser.Parse(collectionId, request, readSession, _sessionFactory);
                     var result = readSession.Read(query);
 
                     this.Log(
                         string.Format(
-                            "executed query {0} and read {1} docs from disk in {2}", 
-                            query, 
-                            result.Docs.Count, 
+                            "executed query {0} and read {1} docs from disk in {2}",
+                            query,
+                            result.Docs.Count,
                             timer.Elapsed));
 
                     var stream = new MemoryStream();
@@ -77,6 +83,7 @@ namespace Sir.Store
                         Total = result.Total
                     };
                 }
+
             }
             else
             {
@@ -97,7 +104,7 @@ namespace Sir.Store
                     }
                     else
                     {
-                        var query = _httpQueryParser.Parse(collectionName, request);
+                        var query = _httpQueryParser.Parse(collectionId, request);
 
                         if (query == null)
                         {

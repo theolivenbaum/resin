@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sir.Store;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -108,9 +109,12 @@ namespace Sir
             foreach (var x in vec1)
             {
                 byte val;
+
                 if (vec2.TryGetValue(x.Key, out val))
                 {
-                    int p = Math.Min(byte.MaxValue, (val + x.Value));
+                    var v = val + x.Value;
+                    int p = Math.Min(1, v);
+
                     result[x.Key] = Convert.ToByte(p);
                 }
                 else
@@ -124,6 +128,32 @@ namespace Sir
                 if (!vec1.ContainsKey(x.Key))
                 {
                     result[x.Key] = x.Value;
+                }
+            }
+            return result;
+        }
+
+        public static SortedList<long, byte> Subtract(this SortedList<long, byte> vec1, SortedList<long, byte> vec2)
+        {
+            var result = new SortedList<long, byte>();
+
+            foreach (var x in vec1)
+            {
+                byte val;
+
+                if (vec2.TryGetValue(x.Key, out val) && val > 0)
+                {
+                    result[x.Key] = (byte)(val - 1);
+                }
+            }
+
+            foreach (var x in vec2)
+            {
+                byte val;
+
+                if (vec1.TryGetValue(x.Key, out val) && val > 0)
+                {
+                    result[x.Key] = (byte)(val - 1);
                 }
             }
             return result;
@@ -207,6 +237,37 @@ namespace Sir
         public static float Magnitude(this SortedList<long, byte> vector)
         {
             return (float) Math.Sqrt(Dot(vector, vector));
+        }
+
+        public static SortedList<long, byte> CreateDocumentVector(
+            IEnumerable<SortedList<long, byte>> termVectors, 
+            NodeReader treeReader, 
+            ITokenizer tokenizer)
+        {
+            var docVec = new SortedList<long, byte>();
+
+            foreach (var term in termVectors)
+            {
+                var hit = treeReader.AllPages().ClosestMatch(new VectorNode(term), VectorNode.DocFoldAngle);
+
+                if (hit.Score == 0 || hit.PostingsOffsets[0] < 0)
+                {
+                    throw new DataMisalignedException();
+                }
+
+                var termId = hit.PostingsOffsets[0];
+
+                if (docVec.ContainsKey(termId))
+                {
+                    if (docVec[termId] < byte.MaxValue) docVec[termId] += 1;
+                }
+                else
+                {
+                    docVec.Add(termId, 1);
+                }
+            }
+
+            return docVec;
         }
     }
 }

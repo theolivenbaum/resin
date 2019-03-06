@@ -66,7 +66,7 @@ namespace Sir.Store
                     }
 
                     var treeReader = _readSession.CreateIndexReader(keyId);
-                    var docVec = CreateDocumentVector(doc[key], treeReader, _tokenizer);
+                    var docVec = CreateDocumentVector(doc[key].ToString(), treeReader, _tokenizer);
 
                     _indexWriter.Enqueue((docId, keyId, docVec));
                 }
@@ -98,25 +98,12 @@ namespace Sir.Store
             this.Log("added doc field {0}.{1} to memory index", item.docId, item.keyId);
         }
 
-        public static SortedList<long, byte> CreateDocumentVector(
-            object value, NodeReader treeReader, ITokenizer tokenizer)
+        private static SortedList<long, byte> CreateDocumentVector(
+            string value, NodeReader treeReader, ITokenizer tokenizer)
         {
-            var docVec = new SortedList<long, byte>();
-            var terms = tokenizer.Tokenize(value.ToString());
+            var terms = tokenizer.Tokenize(value);
 
-            foreach (var vector in terms.Embeddings)
-            {
-                var hit = treeReader.AllPages().ClosestMatch(new VectorNode(vector), VectorNode.DocFoldAngle);
-
-                var termId = hit.PostingsOffsets[0];
-
-                if (!docVec.ContainsKey(termId))
-                {
-                    docVec.Add(termId, 1);
-                }
-            }
-
-            return docVec;
+            return VectorOperations.CreateDocumentVector(terms.Embeddings, treeReader, tokenizer);
         }
 
         private void Flush()

@@ -112,7 +112,7 @@ namespace Sir.Store
         /// Map query terms to index IDs.
         /// </summary>
         /// <param name="query">An un-mapped query</param>
-        private void Map(Query query)
+        public void Map(Query query)
         {
             var clauses = query.ToList();
 
@@ -135,7 +135,7 @@ namespace Sir.Store
                         hit = indexReader.ClosestMatch(termVector);
                     }
 
-                    if (hit != null)
+                    if (hit != null && hit.Score > 0)
                     {
                         cursor.Score = hit.Score;
 
