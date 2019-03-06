@@ -2,28 +2,38 @@
 
 This is a search engine and language model framework. Its API lets you project a language model onto a search tree.
 
-It supports 64-bit wide vectors that may represent words, phrases, documents, topics, topics of topics or anything else really.
+It supports 64-bit wide vectors that may represent words, phrases, documents, topics, topics of topics, or cluster IDs.
   
 Built-in capabilities include interfacing with your language model through natural language, 
 or by using a structured, boolean query language that supports AND, OR, NOT and (nested (scope)). 
-
-Go crazy with your modelling, as long as you have an equally crazy query parser.
 
 There are a number of models included in the package.
 
 ## Bag-of-characters model
 
-The first model is a graph of words embedded as bags-of-characters. This model creates clusters of similar words.
+The first model is a graph of words embedded as bags-of-characters. 
+This model creates clusters of documents that share similar words. 
+
+Natural language queries are parsed into bags-of-characters, one for each term in the search phrase. 
+
+## Document model
+
+The second model is a graph of documents embedded as bags-of-words. 
+In this model documents gather around "topics". 
+
+Natural language queries are parsed into bags-of-characters then into bags-of-words.
 
 ## Topical model
 
-The second model is a graph of documents embedded as continuous bags-of-words. 
-This model creates clusters of similar documents, "topics".
-Because a document can have many phrases, it can be part of many topics.
+The third model is a graph of documents represented as vectors, "bags-of-topics", 
+in a space as wide as there are topics in the lexicon. 
+
+Natural language queries are parsed into bags-of-characters, then into bags-of-words,
+then mapped to a bags-of-topics space.
 
 ## Semantic model
 
-The third model is a graph of documents represented as vectors as wide as there are topics in the lexicon, a "bag-of-topics" model. 
+The final model projects each previous to a single dimension creating a small, topical search space.
 
 ## Natural and scoped querying
 
