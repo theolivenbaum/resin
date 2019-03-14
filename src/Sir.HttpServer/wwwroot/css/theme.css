@@ -110,14 +110,16 @@ footer p {
 }
 
 textarea.qf {
-    width: 75%;
+    width: 85%;
     height: 100px;
 }
 
 button.queryparser{
     margin-right: 10px;
     margin-top: 5px;
+    margin-bottom: 5px;
 }
+
 div.queryparser {
     vertical-align: top;
 }
@@ -134,4 +136,12 @@ input[type=text].newCollection{
 
 div.newCollection{
     margin-top: 10px;
+}
+
+h3.querystats{
+    color:gray;
+}
+
+span.querystats {
+    color: black;
 }

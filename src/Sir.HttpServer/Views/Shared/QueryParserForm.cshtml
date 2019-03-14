@@ -6,7 +6,12 @@
 @using (Html.BeginRouteForm("default", new { controller = "QueryParser" }, FormMethod.Get))
 {
     <textarea class="qf" name="qf" id="qf">@qf</textarea>
-    <div class="queryparser"><button type="submit" class="queryparser" name="execute" id="execute" title="Execute query">Go</button><a class="advanced" href="/search@(Context.Request.QueryString)">go! <sup>easy</sup></a></div>
+    <div class="queryparser">
+        <button type="submit" class="queryparser" name="execute" id="execute" title="Execute query">Go</button>
+    </div>
+    <div>
+        <a class="advanced" href="/search@(Context.Request.QueryString)">Natural language</a>
+    </div>
     <div class="newCollection">
         <input type="text" name="newCollection" id="newCollection" class="newCollection" placeholder="Something easy to remember" />
         <button class="queryparser" value="create" name="create" id="create" title="Save result as new collection">Create collection</button>
