@@ -64,31 +64,18 @@ namespace Sir.Store
         {
             foreach (var vector in item.tokens.Embeddings)
             {
-                var hits = new SortedList<float, Hit>(); ;
-
                 var hit = item.indexReader.ClosestMatch(vector);
+                var postings = new HashSet<long>();
 
-                //hits.Add(hit.Score, hit);
+                foreach (var id in _postingsReader.Read(0, 0, hit.PostingsOffsets.ToArray()))
+                {
+                    postings.Add(id);
+                }
 
-                //if (hits.Keys[0] < VectorNode.TermIdenticalAngle)
-                //{
-                //    throw new DataMisalignedException();
-                //}
-
-                //var postings = new HashSet<long>();
-
-                //foreach (var hit in hits)
-                //{
-                //    foreach(var id in _postingsReader.Read(0, 0, hit.Value.PostingsOffset))
-                //    {
-                //        postings.Add(id);
-                //    }
-                //}
-
-                //if (!postings.Contains(item.docId))
-                //{
-                //    throw new DataMisalignedException();
-                //}
+                if (!postings.Contains(item.docId))
+                {
+                    throw new DataMisalignedException();
+                }
             }
 
             this.Log("validated doc {0}", item.docId);
