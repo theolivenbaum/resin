@@ -31,10 +31,9 @@ namespace Sir.Store
             _readSession = new ReadSession(collectionName, collectionId, sessionFactory, config, indexReaders);
             _tokenizer = tokenizer;
 
-            _indexWriter = new ProducerConsumerQueue<(
-                long docId, long keyId, SortedList<long, byte> vector)>(
-                    WriteToMemIndex, 
-                    int.Parse(config.Get("write_thread_count")));
+            _indexWriter = new ProducerConsumerQueue<(long docId, long keyId, SortedList<long, byte> vector)>(
+                WriteToMemIndex,
+                int.Parse(_config.Get("write_thread_count")));
 
             _newColumns = new SortedList<long, VectorNode>();
 

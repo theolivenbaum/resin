@@ -28,7 +28,7 @@ namespace Sir.Store
             _indexReaders = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>>();
         }
 
-        public void PopIndexReaders(ulong collectionId)
+        public void ReleaseIndexReaders(ulong collectionId)
         {
             ConcurrentDictionary<long, NodeReader> val;
             _indexReaders.TryRemove(collectionId, out val);

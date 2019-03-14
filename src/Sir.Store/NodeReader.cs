@@ -1,11 +1,8 @@
-﻿using Sir.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -15,32 +12,32 @@ namespace Sir.Store
     /// </summary>
     public class NodeReader : ILogger
     {
-        private IList<(long offset, long length)> _pages;
         private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
         private readonly string _ixpFileName;
+        private readonly string _ixMapName;
+        private VectorNode _root;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
-        private VectorNode _root;
+        private readonly object _syncRefresh = new object();
 
-        public NodeReader(string ixFileName, string ixpFileName, string vecFileName, SessionFactory sessionFactory, IConfigurationProvider config)
+        public NodeReader(
+            string ixFileName, 
+            string ixpFileName, 
+            string vecFileName, 
+            SessionFactory sessionFactory, 
+            IConfigurationProvider config)
         {
             _vecFileName = vecFileName;
             _ixFileName = ixFileName;
             _sessionFactory = sessionFactory;
             _config = config;
             _ixpFileName = ixpFileName;
-            _pages = ReadPageInfoFromDisk();
-
-            FileSystemWatcher watcher = new FileSystemWatcher();
-            watcher.Path = Directory.GetCurrentDirectory();
-            watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
-            watcher.Filter = Path.GetFileName(_ixpFileName);
-            watcher.Changed += new FileSystemEventHandler(OnFileChanged);
-            watcher.EnableRaisingEvents = true;
+            _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
+            _root = new VectorNode();
         }
 
-        private IList<(long, long)> ReadPageInfoFromDisk()
+        private IList<(long offset, long length)> ReadPageInfoFromDisk()
         {
             using (var ixpStream = _sessionFactory.CreateReadStream(_ixpFileName))
             {
@@ -48,122 +45,96 @@ namespace Sir.Store
             }
         }
 
-        private void OnFileChanged(object sender, FileSystemEventArgs e)
+        public VectorNode Optimized()
         {
-            this.Log($"to be refreshed: {_ixpFileName}");
+            var optimized = new VectorNode();
 
-            _root = null;
-        }
-
-        private readonly object _syncRefresh = new object();
-
-        public VectorNode AllPages()
-        {
-            if (_root != null)
+            Parallel.ForEach(ReadPageInfoFromDisk(), page =>
             {
-                return _root;
-            }
-
-            lock (_syncRefresh)
-            {
-                if (_root != null)
-                {
-                    return _root;
-                }
-
                 var time = Stopwatch.StartNew();
 
-                _root = new VectorNode();
-
-                this.Log($"refreshing {_ixpFileName}");
-
-                Parallel.ForEach(_pages, page =>
+                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
                 {
-                    using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-                    using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
+                    ixStream.Seek(page.offset, SeekOrigin.Begin);
+
+                    var tree = VectorNode.DeserializeTree(ixStream, vectorStream, page.length);
+
+                    foreach (var node in tree.All())
                     {
-                        ixStream.Seek(page.offset, SeekOrigin.Begin);
-
-                        var tree = VectorNode.DeserializeTree(ixStream, vectorStream, page.length);
-
-                        foreach (var node in tree.All())
-                        {
-                            _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
-                        }
-
-                        this.Log($"deserialized tree at {page.offset}");
+                        optimized.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
                     }
-                });
-                
 
-                this.Log($"deserialized {_pages.Count} index segments in {time.Elapsed}");
+                    this.Log($"added page {page.offset} to in-memory tree in {time.Elapsed}");
+                }
+            });
 
-                return _root;
-            }
+            return optimized;
         }
 
-        private void Build(VectorNode tree)
+        private IEnumerable<Stream> AllPages()
         {
-            foreach (var node in tree.All())
+            var time = Stopwatch.StartNew();
+
+            this.Log($"refreshing {_ixpFileName}");
+
+            var ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
+
+            using (var ixmmf = _sessionFactory.CreateMMF(_ixFileName, ixMapName))
             {
-                _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
+                foreach (var page in ReadPageInfoFromDisk())
+                {
+                    using (var indexStream = ixmmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
+                    {
+                        yield return indexStream;
+                    }
+                }
             }
-        }
 
-        public IEnumerable<Hit> Intersecting(SortedList<long, byte> vector)
-        {
-            var query = new VectorNode(vector);
-            var tree = AllPages();
-            var hits = tree.Intersecting(query, VectorNode.TermFoldAngle);
-
-            return hits;
+            this.Log($"refreshed index in {time.Elapsed}");
         }
 
         public Hit ClosestMatch(SortedList<long, byte> vector)
         {
-            var query = new VectorNode(vector);
-            var tree = AllPages();
-            var hit = tree.ClosestMatch(query, VectorNode.TermFoldAngle);
+            Hit high = _root.ClosestMatch(vector, VectorNode.TermFoldAngle);
 
-            return hit;
+            if (high.Score >= VectorNode.TermIdenticalAngle)
+            {
+                return high;
+            }
 
+            var time = Stopwatch.StartNew();
 
-            //var toplist = new ConcurrentBag<Hit>();
+            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+            {
+                foreach (var indexStream in AllPages())
+                {
+                    var hit = ClosestMatchInPage(vector, indexStream, indexStream.Length, vectorStream);
 
-            //Parallel.ForEach(ReadAllPages(), page =>
-            //{
-            //    var hit = page.ClosestMatch(query, VectorNode.TermFoldAngle);
+                    if (high == null || hit.Score > high.Score)
+                    {
+                        high = hit;
+                    }
+                    else if (hit.Score == high.Score)
+                    {
+                        foreach (var offs in hit.PostingsOffsets)
+                        {
+                            high.PostingsOffsets.Add(offs);
+                        }
+                    }
+                }
+            }
 
-            //    if (hit.Score > 0)
-            //    {
-            //        toplist.Add(hit);
-            //    }
-            //});
+            this.Log($"closest match took {time.Elapsed}");
 
-            //var toplist = new List<Hit>();
-            //var ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
-
-            //using (var ixmmf = _sessionFactory.CreateMMF(_ixFileName, ixMapName))
-            //{
-            //    foreach (var page in _pages)
-            //    {
-            //        using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-            //        using (var indexStream = ixmmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
-            //        {
-            //            var hit = ClosestMatchInPage(vector, indexStream, page.offset + page.length, vectorStream);
-
-            //            if (hit.Score > 0)
-            //            {
-            //                toplist.Add(hit);
-            //            }
-            //        }
-            //    }
-            //}
-
-            //return toplist;
+            return high;
         }
 
-        private Hit ClosestMatchInPage(SortedList<long, byte> node, Stream indexStream, long endOfSegment, Stream vectorStream)
+        private Hit ClosestMatchInPage(
+            SortedList<long, byte> node, 
+            Stream indexStream, 
+            long endOfSegment, 
+            Stream vectorStream)
         {
             var cursor = ReadNode(indexStream, vectorStream, endOfSegment);
 
@@ -236,6 +207,8 @@ namespace Sir.Store
                 }
             }
 
+            _root.Add(best, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
+
             return new Hit
             {
                 Embedding = best.Vector,
@@ -284,59 +257,6 @@ namespace Sir.Store
                     throw new InvalidOperationException();
                 }
             }
-        }
-
-        private void SkipTreeWithoutSeek(Stream indexStream, long endOfSegment)
-        {
-            var skipsNeeded = 1;
-            var buf = new byte[VectorNode.NodeSize];
-
-            while (skipsNeeded > 0)
-            {
-                var read = indexStream.Read(buf);
-
-                if (read == 0)
-                {
-                    throw new InvalidOperationException();
-                }
-
-                var terminator = buf[buf.Length - 1];
-
-                if (terminator == 0)
-                {
-                    skipsNeeded += 2;
-                }
-                else if (terminator < 3)
-                {
-                    skipsNeeded++;
-                }
-
-                skipsNeeded--;
-            }
-        }
-
-        private async Task<SortedList<int, byte>> ReadEmbedding(long offset, int numOfComponents, Stream vectorStream)
-        {
-            var vec = new SortedList<int, byte>();
-            var vecBuf = new byte[numOfComponents * VectorNode.ComponentSize];
-
-            vectorStream.Seek(offset, SeekOrigin.Begin);
-
-            await vectorStream.ReadAsync(vecBuf);
-
-            var offs = 0;
-
-            for (int i = 0; i < numOfComponents; i++)
-            {
-                var key = BitConverter.ToInt32(vecBuf, offs);
-                var val = vecBuf[offs + sizeof(int)];
-
-                vec.Add(key, val);
-
-                offs += VectorNode.ComponentSize;
-            }
-
-            return vec;
         }
     }
 }

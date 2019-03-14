@@ -39,9 +39,14 @@ namespace Sir.Store
 
             var numThreads = int.Parse(_config.Get("write_thread_count"));
 
-            _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>(BuildModel, numThreads);
+            _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>(
+                BuildModel,
+                numThreads);
 
-            _validator = new ProducerConsumerQueue<(long keyId, long docId, AnalyzedString tokens)>(Validate, numThreads, startConsumingImmediately: false);
+            _validator = new ProducerConsumerQueue<(long keyId, long docId, AnalyzedString tokens)>(
+                Validate,
+                numThreads, 
+                startConsumingImmediately: false);
 
             _validate = bool.Parse(config.Get("validate_when_indexing"));
             _indexReaders = indexReaders;
@@ -167,11 +172,7 @@ namespace Sir.Store
                 writer.Dispose();
             }
 
-            foreach (var column in _dirty)
-            {
-                NodeReader staleReader;
-                _indexReaders.TryRemove(column.Key, out staleReader);
-            }
+            SessionFactory.ReleaseIndexReaders(CollectionId);
 
             _flushed = true;
             _flushing = false;
@@ -187,7 +188,7 @@ namespace Sir.Store
 
                 foreach (var vector in item.tokens.Embeddings)
                 {
-                    var hit = tree.ClosestMatch(new VectorNode(vector), VectorNode.TermFoldAngle);
+                    var hit = tree.ClosestMatch(vector, VectorNode.TermFoldAngle);
 
                     if (hit.Score < VectorNode.TermIdenticalAngle)
                     {

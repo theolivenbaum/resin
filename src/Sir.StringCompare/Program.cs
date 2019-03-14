@@ -37,7 +37,7 @@ namespace Sir.StringCompare
                 foreach (var token in tokens2.Tokens)
                 {
                     var termVector = tokens.ToCharVector(token.offset, token.length);
-                    var node = index1.ClosestMatch(new VectorNode(termVector), VectorNode.TermFoldAngle);
+                    var node = index1.ClosestMatch(termVector, VectorNode.TermFoldAngle);
 
                     score += node.Score;
                     count++;

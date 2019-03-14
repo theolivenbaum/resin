@@ -25,6 +25,7 @@ namespace Sir.Store
         private readonly string _ixFileExtension;
         private readonly string _ixpFileExtension;
         private readonly string _vecFileExtension;
+        private static readonly object _syncIndexReaderCreation = new object();
 
         public ReadSession(string collectionName,
             ulong collectionId,
@@ -155,8 +156,6 @@ namespace Sir.Store
             }
         }
 
-        private static readonly object _syncIndexReaderCreation = new object();
-
         public NodeReader CreateIndexReader(long keyId)
         {
             NodeReader reader;
@@ -176,7 +175,6 @@ namespace Sir.Store
                         _indexReaders.GetOrAdd(keyId, reader);
 
                         this.Log("created index reader for {0}", ixFileName);
-
                     }
                 }
             }

@@ -256,7 +256,7 @@ namespace Sir
 
             foreach (var term in termVectors)
             {
-                var hit = treeReader.AllPages().ClosestMatch(new VectorNode(term), VectorNode.DocFoldAngle);
+                var hit = treeReader.ClosestMatch(term);
 
                 if (hit.Score == 0 || hit.PostingsOffsets[0] < 0)
                 {

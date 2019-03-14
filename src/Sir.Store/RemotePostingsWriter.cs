@@ -22,19 +22,6 @@ namespace Sir.Store
             _collectionName = collectionName;
         }
 
-        //public async Task Concat(IDictionary<long, IList<long>> offsets)
-        //{
-        //    foreach (var offset in offsets)
-        //    {
-        //        var canonical = offset.Key;
-        //        var batch = new Dictionary<long, IList<long>>();
-
-        //        batch.Add(canonical, offset.Value);
-
-        //        await ExecuteConcat(batch);
-        //    }
-        //}
-
         public void Concat(VectorNode rootNode)
         {
             var offsets = new Dictionary<long, IList<long>>();

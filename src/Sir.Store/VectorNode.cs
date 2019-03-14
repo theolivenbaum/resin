@@ -21,6 +21,8 @@ namespace Sir.Store
 
         private VectorNode _right;
         private VectorNode _left;
+        private VectorNode _ancestor;
+
         public HashSet<long> DocIds { get; private set; }
         private int _weight;
 
@@ -28,7 +30,7 @@ namespace Sir.Store
         public long PostingsOffset { get; set; }
         public float Angle { get; private set; }
         public SortedList<long, byte> Vector { get; }
-        public VectorNode Ancestor { get; private set; }
+
         public int Weight
         {
             get { return _weight; }
@@ -38,9 +40,14 @@ namespace Sir.Store
 
                 _weight = value;
 
-                if (Ancestor != null)
+                if (diff > 0)
                 {
-                    Ancestor.Weight += diff;
+                    var cursor = _ancestor;
+                    while (cursor != null)
+                    {
+                        cursor._weight += diff;
+                        cursor = cursor._ancestor;
+                    }
                 }
             }
         }
@@ -51,7 +58,7 @@ namespace Sir.Store
             set
             {
                 _right = value;
-                _right.Ancestor = this;
+                _right._ancestor = this;
                 Weight++;
             }
         }
@@ -62,7 +69,7 @@ namespace Sir.Store
             set
             {
                 _left = value;
-                _left.Ancestor = this;
+                _left._ancestor = this;
                 Weight++;
             }
         }
@@ -88,16 +95,16 @@ namespace Sir.Store
             VectorOffset = -1;
         }
 
-        public VectorNode(SortedList<long, byte> termVector, long docId)
+        public VectorNode(SortedList<long, byte> vector, long docId)
         {
-            Vector = termVector;
+            Vector = vector;
             PostingsOffset = -1;
             VectorOffset = -1;
             DocIds = new HashSet<long>();
             DocIds.Add(docId);
         }
 
-        public Hit ClosestMatch(VectorNode node, float foldAngle)
+        public Hit ClosestMatch(SortedList<long, byte> vector, float foldAngle)
         {
             var best = this;
             var cursor = this;
@@ -105,7 +112,7 @@ namespace Sir.Store
 
             while (cursor != null)
             {
-                var angle = node.Vector.CosAngle(cursor.Vector);
+                var angle = vector.CosAngle(cursor.Vector);
 
                 if (angle > foldAngle)
                 {
@@ -178,7 +185,7 @@ namespace Sir.Store
             float foldAngle, 
             Stream vectorStream = null)
         {
-            node.Ancestor = null;
+            node._ancestor = null;
             node._left = null;
             node._right = null;
             node._weight = 0;
@@ -257,19 +264,6 @@ namespace Sir.Store
             }
         }
 
-        public void Add(IEnumerable<long> docIds)
-        {
-            if (DocIds == null)
-            {
-                DocIds = new HashSet<long>();
-            }
-
-            foreach (var id in docIds)
-            {
-                DocIds.Add(id);
-            }
-        }
-
         private void Merge(VectorNode node)
         {
             if (DocIds == null)
@@ -306,7 +300,7 @@ namespace Sir.Store
 
         private byte[][] ToStream()
         {
-            if (Ancestor != null)
+            if (_ancestor != null)
             {
                 if (VectorOffset < 0)
                 {
@@ -473,9 +467,11 @@ namespace Sir.Store
                 read += NodeSize;
             }
 
-            root.Right.Ancestor = null;
+            var right = root.Right;
 
-            return root.Right;
+            right._ancestor = null;
+
+            return right;
         }
 
         public static VectorNode DeserializeNode(byte[] buf, Stream vectorStream, ref byte terminator)
@@ -552,8 +548,8 @@ namespace Sir.Store
             var cursor = this;
             while (cursor != null)
             {
-                if (cursor.Ancestor == null) break;
-                cursor = cursor.Ancestor;
+                if (cursor._ancestor == null) break;
+                cursor = cursor._ancestor;
             }
             return cursor;
         }
@@ -601,7 +597,7 @@ namespace Sir.Store
 
             float angle = 0;
 
-            if (node.Ancestor != null)
+            if (node._ancestor != null)
             {
                 angle = node.Angle;
             }
