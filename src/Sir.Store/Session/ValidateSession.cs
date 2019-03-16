@@ -66,8 +66,10 @@ namespace Sir.Store
             {
                 var hit = item.indexReader.ClosestMatch(vector);
                 var postings = new HashSet<long>();
+                var offsets = hit.Node.PostingsOffsets == null ? 
+                    new[] { hit.Node.PostingsOffset } : hit.Node.PostingsOffsets.ToArray();
 
-                foreach (var id in _postingsReader.Read(0, 0, hit.PostingsOffsets.ToArray()))
+                foreach (var id in _postingsReader.Read(0, 0, offsets))
                 {
                     postings.Add(id);
                 }

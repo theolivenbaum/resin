@@ -76,7 +76,7 @@ namespace Sir.Store
 
         public byte Terminator { get; set; }
 
-        public IList<long> PostingsOffsets { get; private set; }
+        public IList<long> PostingsOffsets { get; set; }
 
         public VectorNode()
             : this('\0'.ToString())
@@ -137,10 +137,8 @@ namespace Sir.Store
 
             return new Hit
             {
-                Embedding = best.Vector,
                 Score = highscore,
-                PostingsOffsets = new List<long> { best.PostingsOffset },
-                Ids = best.DocIds
+                Node = best
             };
         }
 
@@ -157,10 +155,8 @@ namespace Sir.Store
                 {
                     intersecting.Add(new Hit
                     {
-                        Embedding = cursor.Vector,
                         Score = angle,
-                        PostingsOffsets = new List<long> { cursor.PostingsOffset },
-                        Ids = cursor.DocIds
+                        Node = cursor
                     });
                 }
 
@@ -264,7 +260,7 @@ namespace Sir.Store
             }
         }
 
-        private void Merge(VectorNode node)
+        public void Merge(VectorNode node)
         {
             if (DocIds == null)
             {
@@ -282,9 +278,9 @@ namespace Sir.Store
             {
                 if (PostingsOffset >= 0)
                 {
-                    if (PostingsOffsets == null)
+                    if (PostingsOffsets == null)    
                     {
-                        PostingsOffsets = new List<long> { node.PostingsOffset };
+                        PostingsOffsets = new List<long> { PostingsOffset, node.PostingsOffset };
                     }
                     else
                     {

@@ -16,10 +16,10 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly string _ixpFileName;
         private readonly string _ixMapName;
-        private VectorNode _root;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
         private readonly object _syncRefresh = new object();
+        private readonly VectorNode _root;
 
         public NodeReader(
             string ixFileName, 
@@ -105,21 +105,23 @@ namespace Sir.Store
 
             var time = Stopwatch.StartNew();
 
+            high = null;
+
             using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
             {
                 foreach (var indexStream in AllPages())
                 {
-                    var hit = ClosestMatchInPage(vector, indexStream, indexStream.Length, vectorStream);
+                    using (indexStream)
+                    {
+                        var hit = ClosestMatchInPage(vector, indexStream, vectorStream);
 
-                    if (high == null || hit.Score > high.Score)
-                    {
-                        high = hit;
-                    }
-                    else if (hit.Score == high.Score)
-                    {
-                        foreach (var offs in hit.PostingsOffsets)
+                        if (high == null || hit.Score > high.Score)
                         {
-                            high.PostingsOffsets.Add(offs);
+                            high = hit;
+                        }
+                        else if (high != null && hit.Score == high.Score)
+                        {
+                            high.Node.Merge(hit.Node);
                         }
                     }
                 }
@@ -133,10 +135,9 @@ namespace Sir.Store
         private Hit ClosestMatchInPage(
             SortedList<long, byte> node, 
             Stream indexStream, 
-            long endOfSegment, 
             Stream vectorStream)
         {
-            var cursor = ReadNode(indexStream, vectorStream, endOfSegment);
+            var cursor = ReadNode(indexStream, vectorStream);
 
             if (cursor == null)
             {
@@ -157,18 +158,29 @@ namespace Sir.Store
                         highscore = angle;
                         best = cursor;
                     }
+                    else if (angle > 0 && angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, cursor.PostingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(cursor.PostingsOffset);
+                        }
+                    }
 
                     // we need to determine if we can traverse further left
                     bool canGoLeft = cursor.Terminator == 0 || cursor.Terminator == 1;
 
-                    if (canGoLeft) 
+                    if (canGoLeft)
                     {
                         // there is a left and a right child or simply a left child
                         // either way, next node in bitmap is the left child
 
-                        cursor = ReadNode(indexStream, vectorStream, endOfSegment);
+                        cursor = ReadNode(indexStream, vectorStream);
                     }
-                    else 
+                    else
                     {
                         // there is no left child
                         break;
@@ -181,24 +193,35 @@ namespace Sir.Store
                         highscore = angle;
                         best = cursor;
                     }
+                    else if (angle > 0 && angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, cursor.PostingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(cursor.PostingsOffset);
+                        }
+                    }
 
                     // we need to determine if we can traverse further to the right
 
-                    if (cursor.Terminator == 0) 
+                    if (cursor.Terminator == 0)
                     {
                         // there is a left and a right child
                         // next node in bitmap is the left child 
                         // to find cursor's right child we must skip over the left tree
 
-                        SkipTree(indexStream, endOfSegment);
+                        SkipTree(indexStream);
 
-                        cursor = ReadNode(indexStream, vectorStream, endOfSegment);
+                        cursor = ReadNode(indexStream, vectorStream);
                     }
                     else if (cursor.Terminator == 2)
                     {
                         // next node in bitmap is the right child
 
-                        cursor = ReadNode(indexStream, vectorStream, endOfSegment);
+                        cursor = ReadNode(indexStream, vectorStream);
                     }
                     else
                     {
@@ -211,27 +234,25 @@ namespace Sir.Store
 
             return new Hit
             {
-                Embedding = best.Vector,
                 Score = highscore,
-                PostingsOffsets = best.PostingsOffsets ?? new List<long> { best.PostingsOffset }
+                Node = best
             };
         }
 
-        private VectorNode ReadNode(Stream indexStream, Stream vectorStream, long endOfSegment)
+        private VectorNode ReadNode(Stream indexStream, Stream vectorStream)
         {
-            if (indexStream.Position + VectorNode.NodeSize >= endOfSegment)
-            {
-                return null;
-            }
-
             var buf = new byte[VectorNode.NodeSize];
             var read = indexStream.Read(buf);
-            var terminator = buf[buf.Length - 1];
 
-            return VectorNode.DeserializeNode(buf, vectorStream, ref terminator);
+            if (read == 0) return null;
+
+            var terminator = buf[buf.Length - 1];
+            var node = VectorNode.DeserializeNode(buf, vectorStream, ref terminator);
+
+            return node;
         }
 
-        private void SkipTree(Stream indexStream, long endOfSegment)
+        private void SkipTree(Stream indexStream)
         {
             var buf = new byte[VectorNode.NodeSize];
 
@@ -248,14 +269,7 @@ namespace Sir.Store
 
             if (distance > 0)
             {
-                if (endOfSegment - (indexStream.Position + distance) > 0)
-                {
-                    indexStream.Seek(distance, SeekOrigin.Current);
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
+                indexStream.Seek(distance, SeekOrigin.Current);
             }
         }
     }

@@ -140,14 +140,21 @@ namespace Sir.Store
                     {
                         cursor.Score = hit.Score;
 
-                        foreach (var offs in hit.PostingsOffsets)
+                        if (hit.Node.PostingsOffsets == null)
                         {
-                            if (offs < 0)
+                            cursor.PostingsOffsets.Add(hit.Node.PostingsOffset);
+                        }
+                        else
+                        {
+                            foreach (var offs in hit.Node.PostingsOffsets)
                             {
-                                throw new DataMisalignedException();
-                            }
+                                if (offs < 0)
+                                {
+                                    throw new DataMisalignedException();
+                                }
 
-                            cursor.PostingsOffsets.Add(offs);
+                                cursor.PostingsOffsets.Add(offs);
+                            }
                         }
                     }
 

@@ -197,7 +197,7 @@ namespace Sir.Store
 
                     var valid = false;
 
-                    foreach (var id in hit.Ids)
+                    foreach (var id in hit.Node.DocIds)
                     {
                         if (id == item.docId)
                         {

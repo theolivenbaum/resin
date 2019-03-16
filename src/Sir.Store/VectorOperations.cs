@@ -257,13 +257,14 @@ namespace Sir
             foreach (var term in termVectors)
             {
                 var hit = treeReader.ClosestMatch(term);
+                var offset = hit.Node.PostingsOffsets == null ? hit.Node.PostingsOffsets[0] : hit.Node.PostingsOffset;
 
-                if (hit.Score == 0 || hit.PostingsOffsets[0] < 0)
+                if (hit.Score == 0 || offset < 0)
                 {
                     throw new DataMisalignedException();
                 }
 
-                var termId = hit.PostingsOffsets[0];
+                var termId = offset;
 
                 if (docVec.ContainsKey(termId))
                 {

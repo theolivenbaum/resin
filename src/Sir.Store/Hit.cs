@@ -1,18 +1,15 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 
 namespace Sir.Store
 {
     public class Hit
     {
-        public SortedList<long, byte> Embedding { get; set; }
         public float Score { get; set; }
-        public IList<long> PostingsOffsets { get; set; }
-        public IEnumerable<long> Ids { get; set; }
+        public VectorNode Node { get; set; }
 
         public override string ToString()
         {
-            return string.Join(string.Empty, Embedding.Keys.Select(x => char.ConvertFromUtf32((int)x)).ToArray());
+            return string.Join(string.Empty, Node.Vector.Keys.Select(x => char.ConvertFromUtf32((int)x)).ToArray());
         }
     }
 }
