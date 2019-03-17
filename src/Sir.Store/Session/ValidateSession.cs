@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -30,7 +31,7 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, indexReaders);
             _validator = new ProducerConsumerQueue<(long docId, IComparable key, AnalyzedString tokens)>(
-                int.Parse(_config.Get("write_thread_count")), Validate);
+                int.Parse(_config.Get("write_thread_count")), callback: Validate);
             _postingsReader = new RemotePostingsReader(_config, collectionName);
         }
 
@@ -61,30 +62,7 @@ namespace Sir.Store
             }
         }
 
-        private void Validate((long docId, AnalyzedString tokens, NodeReader indexReader) item)
-        {
-            foreach (var vector in item.tokens.Embeddings)
-            {
-                var hit = item.indexReader.ClosestMatch(vector);
-                var postings = new HashSet<long>();
-                var offsets = hit.Node.PostingsOffsets == null ? 
-                    new[] { hit.Node.PostingsOffset } : hit.Node.PostingsOffsets.ToArray();
-
-                foreach (var id in _postingsReader.Read(0, 0, offsets))
-                {
-                    postings.Add(id);
-                }
-
-                if (!postings.Contains(item.docId))
-                {
-                    throw new DataMisalignedException();
-                }
-            }
-
-            this.Log("validated doc {0}", item.docId);
-        }
-
-        private void Validate((long docId, IComparable key, AnalyzedString tokens) item)
+        private async Task Validate((long docId, IComparable key, AnalyzedString tokens) item)
         {
             var docTree = new VectorNode();
 
@@ -98,7 +76,7 @@ namespace Sir.Store
                 var query = new Query(CollectionId, new Term(item.key, node));
                 bool valid = false;
 
-                foreach (var id in _readSession.ReadIds(query))
+                foreach (var id in await _readSession.ReadIds(query))
                 {
                     if (id == item.docId)
                     {

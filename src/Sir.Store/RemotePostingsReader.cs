@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -19,7 +20,7 @@ namespace Sir.Store
             _collectionName = collectionName;
         }
 
-        public ScoredResult Reduce(Query queryExpression)
+        public async Task<ScoredResult> Reduce(Query queryExpression)
         {
             var endpoint = _config.Get("postings_endpoint");
             var url = string.Format("{0}{1}?skip={2}&take={3}", 
@@ -33,11 +34,11 @@ namespace Sir.Store
             request.Method = WebRequestMethods.Http.Put;
             request.ContentLength = query.Length;
 
-            using (var requestBody = request.GetRequestStream())
+            using (var requestBody = await request.GetRequestStreamAsync())
             {
-                requestBody.Write(query, 0, query.Length);
+                await requestBody.WriteAsync(query, 0, query.Length);
 
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using (var response = (HttpWebResponse) await request.GetResponseAsync())
                 {
                     var result = new Dictionary<long, float>();
                     int total = 0;
@@ -45,7 +46,7 @@ namespace Sir.Store
                     using (var body = response.GetResponseStream())
                     {
                         var mem = new MemoryStream();
-                        body.CopyTo(mem);
+                        await body.CopyToAsync(mem);
 
                         var buf = mem.ToArray();
 
@@ -77,7 +78,7 @@ namespace Sir.Store
             }
         }
 
-        public ICollection<long> Read(int skip, int take, params long[] offsets)
+        public async Task<ICollection<long>> Read(int skip, int take, params long[] offsets)
         {
             var endpoint = string.Format("{0}{1}?skip={2}&take={3}", _config.Get("postings_endpoint"), _collectionName, skip, take);
 
@@ -91,14 +92,14 @@ namespace Sir.Store
             request.Accept = "application/postings";
             request.Method = WebRequestMethods.Http.Get;
 
-            using (var response = (HttpWebResponse)request.GetResponse())
+            using (var response = (HttpWebResponse) await request.GetResponseAsync())
             {
                 var result = new Dictionary<long, float>();
 
                 using (var body = response.GetResponseStream())
                 {
                     var mem = new MemoryStream();
-                    body.CopyTo(mem);
+                    await body.CopyToAsync(mem);
 
                     var buf = mem.ToArray();
 

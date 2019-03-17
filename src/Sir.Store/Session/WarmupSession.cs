@@ -37,7 +37,7 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, indexReaders);
             _httpQueue = new ProducerConsumerQueue<string>(
-                int.Parse(_config.Get("write_thread_count")), callback:Validate);
+                int.Parse(_config.Get("write_thread_count")), callback:SubmitQuery);
             _postingsReader = new RemotePostingsReader(_config, collectionName);
             _http = new HttpClient();
             _baseUrl = baseUrl;
@@ -49,8 +49,6 @@ namespace Sir.Store
         {
             foreach (var doc in documents)
             {
-                var docId = (long)doc["__docid"];
-
                 foreach (var key in doc.Keys)
                 {
                     var strKey = key.ToString();
@@ -66,11 +64,10 @@ namespace Sir.Store
 
                         var terms = _tokenizer.Tokenize(doc[key].ToString());
 
-                        foreach (var phrase in terms.Tokens
+                        foreach (var token in terms.Tokens
                             .Select(t => terms.Original.Substring(t.offset, t.length))
-                            .Where(s => !string.IsNullOrWhiteSpace(s)).Batch(3))
+                            .Where(s => !string.IsNullOrWhiteSpace(s)))
                         {
-                            var token = string.Join("+", phrase);
                             _httpQueue.Enqueue(token);
                         }
                     }       
@@ -78,7 +75,7 @@ namespace Sir.Store
             }
         }
 
-        private async Task Validate(string token)
+        private async Task SubmitQuery(string token)
         {
             try
             {

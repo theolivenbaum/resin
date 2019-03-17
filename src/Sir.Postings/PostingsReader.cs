@@ -14,12 +14,10 @@ namespace Sir.Postings
         public string ContentType => "application/postings";
 
         private readonly StreamRepository _data;
-        private readonly IDictionary<ulong, ResponseModel> _queryCache;
 
         public PostingsReader(StreamRepository data)
         {
             _data = data;
-            _queryCache = new Dictionary<ulong, ResponseModel>();
         }
 
         public async Task<ResponseModel> Read(string collectionId, HttpRequest request)
@@ -81,17 +79,11 @@ namespace Sir.Postings
             {
                 var queryHash = string.Format("{0}{1}{2}", Encoding.Unicode.GetString(buf), skip, take);
                 var key = queryHash.ToHash();
+                var query = Query.FromStream(buf);
 
-                if (!_queryCache.TryGetValue(key, out resultModel))
-                {
-                    var query = Query.FromStream(buf);
+                resultModel = await Reduce(collectionId.ToHash(), query, skip, take);
 
-                    resultModel = await Reduce(collectionId.ToHash(), query, skip, take);
-
-                    _queryCache.TryAdd(key, resultModel);
-
-                    this.Log("executed query in {0}", timer.Elapsed);
-                }
+                this.Log("executed query in {0}", timer.Elapsed);
             }
 
             return resultModel;

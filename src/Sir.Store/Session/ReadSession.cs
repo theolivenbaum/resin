@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -58,11 +59,11 @@ namespace Sir.Store
             _vecFileExtension = vecFileExtension;
         }
 
-        public ReadResult Read(Query query)
+        public async Task<ReadResult> Read(Query query)
         {
             if (SessionFactory.CollectionExists(query.Collection))
             {
-                var result = Execute(query);
+                var result = await Execute(query);
 
                 if (result != null)
                 {
@@ -77,11 +78,11 @@ namespace Sir.Store
             return new ReadResult { Total = 0, Docs = new IDictionary[0] };
         }
 
-        public IEnumerable<long> ReadIds(Query query)
+        public async Task<IEnumerable<long>> ReadIds(Query query)
         {
             if (SessionFactory.CollectionExists(query.Collection))
             {
-                var result = Execute(query);
+                var result = await Execute(query);
 
                 if (result == null)
                 {
@@ -96,13 +97,13 @@ namespace Sir.Store
             return new long[0];
         }
 
-        private ScoredResult Execute(Query query)
+        private async Task<ScoredResult> Execute(Query query)
         {
             Map(query);
 
             var timer = Stopwatch.StartNew();
 
-            var result = _postingsReader.Reduce(query);
+            var result = await _postingsReader.Reduce(query);
 
             this.Log("reducing {0} to {1} docs took {2}", query, result.Documents.Count, timer.Elapsed);
 

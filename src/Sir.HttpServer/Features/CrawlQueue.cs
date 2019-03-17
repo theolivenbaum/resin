@@ -80,7 +80,7 @@ namespace Sir.HttpServer.Features
                 }
 
                 var document = new Dictionary<string, object>();
-                var existing = GetDocument("www", url, doc.title);
+                var existing = await GetDocument("www", url, doc.title);
 
                 if (existing!= null)
                 {
@@ -103,7 +103,7 @@ namespace Sir.HttpServer.Features
             }
         }
 
-        private IDictionary GetDocument(string collectionName, string url, string title)
+        private async Task<IDictionary> GetDocument(string collectionName, string url, string title)
         {
             using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
             {
@@ -111,7 +111,7 @@ namespace Sir.HttpServer.Features
                 urlQuery.And = true;
                 urlQuery.Take = 1;
 
-                var result = readSession.Read(urlQuery);
+                var result = await readSession.Read(urlQuery);
             
                 return result.Total == 0 
                     ? null : (float)result.Docs[0]["__score"] >= VectorNode.TermIdenticalAngle 

@@ -66,7 +66,7 @@ namespace Sir.Store
 
                 using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionId, "ix1", "ixp1", "vec1"))
                 {
-                    var result = readSession.Read(query);
+                    var result = await readSession.Read(query);
 
                     this.Log(
                         string.Format(
@@ -115,7 +115,7 @@ namespace Sir.Store
                             return new ResponseModel { MediaType = "application/json", Total = 0 };
                         }
 
-                        var result = session.Read(query);
+                        var result = await session.Read(query);
 
                         docs = result.Docs;
                         total = result.Total;
