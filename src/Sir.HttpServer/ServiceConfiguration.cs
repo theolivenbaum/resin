@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Sir.HttpServer.Features;
+using Sir.Store;
 using System;
 using System.IO;
 using System.Linq;
@@ -8,6 +10,13 @@ namespace Sir.HttpServer
 {
     public static class ServiceConfiguration
     {
+        public static void RegisterComponents(IServiceCollection services, PluginsCollection plugins, IServiceProvider container)
+        {
+            var sessionFactory = container.GetService<SessionFactory>();
+
+            services.Add(new ServiceDescriptor(typeof(CrawlQueue), new CrawlQueue(sessionFactory)));
+        }
+
         public static IServiceProvider Configure(IServiceCollection services)
         {
             // register config
@@ -71,6 +80,8 @@ namespace Sir.HttpServer
             {
                 plugins.Add(service.ContentType, service);
             }
+
+            RegisterComponents(services, plugins, services.BuildServiceProvider());
 
             return services.BuildServiceProvider();
         }

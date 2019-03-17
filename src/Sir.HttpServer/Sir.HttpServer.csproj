@@ -18,11 +18,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Sir.Store\Sir.Store.csproj" />
     <ProjectReference Include="..\Sir\Sir.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="Views\Add\Error.cshtml">
+    <Content Update="Views\Submit\Error.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
     <Content Update="Views\QueryParser\Index.cshtml">

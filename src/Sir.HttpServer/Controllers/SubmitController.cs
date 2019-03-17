@@ -6,15 +6,13 @@ using Sir.HttpServer.Features;
 
 namespace Sir.HttpServer.Controllers
 {
-    public class AddController : UIController
+    public class SubmitController : UIController, ILogger
     {
-        private PluginsCollection _plugins;
         private readonly HtmlWeb _htmlParser;
         private readonly CrawlQueue _crawlQueue;
 
-        public AddController(PluginsCollection plugins, CrawlQueue crawlQueue, IConfigurationProvider config) : base(config)
+        public SubmitController(PluginsCollection plugins, CrawlQueue crawlQueue, IConfigurationProvider config) : base(config)
         {
-            _plugins = plugins;
             _htmlParser = new HtmlWeb();
             _crawlQueue = crawlQueue;
         }
@@ -24,7 +22,7 @@ namespace Sir.HttpServer.Controllers
             return View();
         }
 
-        [HttpGet("/add/page")]
+        [HttpGet("/submit/page")]
         public IActionResult Page(string url, string collectionId)
         {
             if (string.IsNullOrWhiteSpace(url))
@@ -42,18 +40,18 @@ namespace Sir.HttpServer.Controllers
             try
             {
                 _crawlQueue.Enqueue(new Uri(url));
-                
-                return Redirect("/add/thankyou");
+             
+                return Redirect("/submitpage/thankyou?url=" + url);
             }
             catch (Exception ex)
             {
-                // TODO: add logging framework
-                System.IO.File.WriteAllText(string.Format("_{0}_{1}.log", DateTime.Now.ToBinary(), WebUtility.UrlEncode(url)), ex.ToString());
+                this.Log("{0} {1}", WebUtility.UrlEncode(url), ex);
 
                 return View("Error");
             }
         }
 
+        [HttpGet("/submitpage/thankyou")]
         public ActionResult Thankyou()
         {
             return View();

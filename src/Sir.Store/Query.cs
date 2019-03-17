@@ -10,6 +10,10 @@ namespace Sir.Store
     /// </summary>
     public class Query
     {
+        private bool _and;
+        private bool _or;
+        private bool _not;
+
         public Query(ulong collectionId, Term term)
         {
             Term = term;
@@ -27,9 +31,48 @@ namespace Sir.Store
         }
 
         public ulong Collection { get; private set; }
-        public bool And { get; set; }
-        public bool Or { get; set; }
-        public bool Not { get; set; }
+        public bool And
+        {
+            get { return _and; }
+            set
+            {
+                _and = value;
+
+                if (value)
+                {
+                    Or = false;
+                    Not = false;
+                }
+            }
+        }
+        public bool Or
+        {
+            get { return _or; }
+            set
+            {
+                _or = value;
+
+                if (value)
+                {
+                    And = false;
+                    Not = false;
+                }
+            }
+        }
+        public bool Not
+        {
+            get { return _not; }
+            set
+            {
+                _not = value;
+
+                if (value)
+                {
+                    And = false;
+                    Or = false;
+                }
+            }
+        }
         public Term Term { get; private set; }
         public Query Next { get; set; }
         public Query Then { get; set; }
@@ -118,7 +161,7 @@ namespace Sir.Store
                 result.WriteByte(termOperator);
                 result.Write(BitConverter.GetBytes(q.PostingsOffsets.Count));
 
-                foreach(var offs in q.PostingsOffsets)
+                foreach (var offs in q.PostingsOffsets)
                 {
                     result.Write(BitConverter.GetBytes(offs));
                 }

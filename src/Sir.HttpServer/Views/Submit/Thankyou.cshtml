@@ -1,0 +1,15 @@
+﻿@{
+    ViewData["Title"] = "Thank you for submitting your page to the www index.";
+    Layout = "~/Views/_Layout.cshtml";
+
+    var url = Context.Request.Query["url"].ToString();
+}
+
+@{await Html.RenderPartialAsync("SearchForm");}
+
+<div>
+    <h2>Thank you for contributing to the "www" index.</h2>
+    <p>
+        The resource <a href="@url">@url</a> has been queued for processing.
+    </p>
+</div>

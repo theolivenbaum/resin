@@ -1,0 +1,14 @@
+﻿@{
+    ViewData["Title"] = "Add your page to the Go.go! index.";
+    Layout = "~/Views/_Layout.cshtml";
+}
+
+@using (Html.BeginRouteForm("default", new { controller = "Submit", action = "Page" }, FormMethod.Get))
+{
+    <div>
+        <label>Enter URL:</label>
+
+        <input type="text" name="url" class="submit" placeholder="https://yoursite.com/page.html" />
+        <input type="submit" value="Submit" />
+    </div>
+}

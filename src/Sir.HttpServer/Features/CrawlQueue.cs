@@ -1,24 +1,28 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Sir.Core;
+using Sir.Store;
 
 namespace Sir.HttpServer.Features
 {
     public class CrawlQueue : IDisposable, ILogger
     {
         private readonly ProducerConsumerQueue<Uri> _queue;
-        private readonly PluginsCollection _plugins;
+        private readonly SessionFactory _sessionFactory;
 
         public (Uri uri, string title) LastProcessed { get; private set; }
 
-        public CrawlQueue(PluginsCollection plugins)
+        public CrawlQueue(SessionFactory sessionFactory)
         {
-            _queue = new ProducerConsumerQueue<Uri>(1, Submit);
-            _plugins = plugins;
+            _queue = new ProducerConsumerQueue<Uri>(1, callback: Submit);
+            _sessionFactory = sessionFactory;
         }
 
         public void Enqueue(Uri uri)
@@ -26,10 +30,11 @@ namespace Sir.HttpServer.Features
             _queue.Enqueue(uri);
         }
 
-        private void Submit(Uri uri)
+        private async Task Submit(Uri uri)
         {
             try
             {
+                var url = uri.ToString().Replace(uri.Scheme + "://", string.Empty);
                 var robotTxt = GetWebString(new Uri(string.Format("{0}://{1}/robots.txt", uri.Scheme, uri.Host)));
                 var allowed = true;
 
@@ -50,7 +55,7 @@ namespace Sir.HttpServer.Features
 
                 if (!allowed)
                 {
-                    this.Log(string.Format("url forbidden by robot.txt {0}", uri));
+                    this.Log("url forbidden by robot.txt: {0}", uri);
 
                     return;
                 }
@@ -68,30 +73,74 @@ namespace Sir.HttpServer.Features
 
                 var doc = Parse(html, uri);
 
+                var existing = GetDocument("www", url, doc.title);
+
                 if (doc.title == null)
                 {
                     this.Log(string.Format("error processing {0} (no title)", uri));
                     return;
                 }
 
-                var url = uri.ToString().Replace(uri.Scheme + "://", string.Empty);
                 var document = new Dictionary<string, object>();
 
                 document["_site"] = uri.Host;
                 document["_url"] = url;
-                document["url"] = url;
-                document["body"] = doc.body;
                 document["title"] = doc.title;
+                document["body"] = doc.body;
                 document["_created"] = DateTime.Now.ToBinary();
 
-                //TODO: implement write to store + write to index
-
+                await ExecuteWrite("www", document);
+                
                 LastProcessed = (uri, (string)document["title"]);
             }
             catch (Exception ex)
             {
                 this.Log(string.Format("error processing {0} {1}", uri, ex));
             }
+        }
+
+        private IDictionary GetDocument(string collectionName, string url, string title)
+        {
+            using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
+            {
+                var urlQuery = new Query(collectionName.ToHash(), new Term("_url", new VectorNode(url)));
+                urlQuery.And = true;
+                urlQuery.Take = 1;
+
+                var result = readSession.Read(urlQuery);
+            
+                return result.Total == 0 ? null : result.Docs[0];
+            }
+        }
+
+        private async Task<IList<long>> ExecuteWrite(string collectionName, IDictionary document)
+        {
+            var time = Stopwatch.StartNew();
+            IList<long> docIds;
+
+            using (var write = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash()))
+            {
+                docIds = await write.Write(new[] { document });
+            }
+
+            if (docIds.Count > 0)
+            {
+                var skip = (int)docIds[0] - 1;
+                var take = docIds.Count;
+
+                using (var docs = _sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
+                using (var index = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
+                {
+                    foreach (var doc in docs.ReadDocs(skip, take))
+                    {
+                        index.EmbedTerms(doc);
+                    }
+                }
+            }
+
+            this.Log("executed {0} write+index job in {1}", collectionName, time.Elapsed);
+
+            return docIds;
         }
 
         private string GetWebString(Uri uri)
