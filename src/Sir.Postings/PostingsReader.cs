@@ -24,86 +24,77 @@ namespace Sir.Postings
 
         public async Task<ResponseModel> Read(string collectionId, HttpRequest request)
         {
-            try
+            // A read request is either a request to "lookup by ID" or to "execute query".
+
+            var timer = new Stopwatch();
+            timer.Start();
+
+            var stream = new MemoryStream();
+
+            request.Body.CopyTo(stream);
+
+            var buf = stream.ToArray();
+            var skip = int.Parse(request.Query["skip"]);
+            var take = int.Parse(request.Query["take"]);
+            ResponseModel resultModel;
+
+            if (buf.Length == 0)
             {
-                // A read request is either a request to "lookup by ID" or to "execute query".
+                var ids = new List<long>();
 
-                var timer = new Stopwatch();
-                timer.Start();
-
-                var stream = new MemoryStream();
-
-                request.Body.CopyTo(stream);
-
-                var buf = stream.ToArray();
-                var skip = int.Parse(request.Query["skip"]);
-                var take = int.Parse(request.Query["take"]);
-                ResponseModel resultModel;
-
-                if (buf.Length == 0)
+                foreach (var idParam in request.Query["id"])
                 {
-                    var ids = new List<long>();
+                    var offset = long.Parse(idParam);
 
-                    foreach (var idParam in request.Query["id"])
+                    if (offset < 0)
                     {
-                        var offset = long.Parse(idParam);
-
-                        if (offset < 0)
-                        {
-                            throw new ArgumentOutOfRangeException("id");
-                        }
-
-                        var subResult = await _data.Read(collectionId.ToHash(), offset);
-
-                        foreach (var x in subResult)
-                        {
-                            ids.Add(x);
-                        }
+                        throw new ArgumentOutOfRangeException("id");
                     }
 
-                    var sorted = ids
-                        .GroupBy(x => x)
-                        .Select(x => (x.Key, x.Count()))
-                        .OrderByDescending(x => x.Item2)
-                        .ToList();
+                    var subResult = await _data.Read(collectionId.ToHash(), offset);
 
-                    var window = sorted
-                        .Skip(skip)
-                        .Take(take == 0 ? sorted.Count : take)
-                        .Select(x => x.Item1)
-                        .ToList();
-
-                    var streamResult = StreamRepository.Serialize(window.ToDictionary(x => x, y => 0f));
-
-                    resultModel = new ResponseModel { Stream = streamResult, MediaType = "application/postings", Total = sorted.Count };
-
-                    this.Log("processed read request for {0} postings in {1}", ids.Count, timer.Elapsed);
-                }
-                else
-                {
-                    var queryHash = string.Format("{0}{1}{2}", Encoding.Unicode.GetString(buf), skip, take);
-                    var key = queryHash.ToHash();
-
-                    if (!_queryCache.TryGetValue(key, out resultModel))
+                    foreach (var x in subResult)
                     {
-                        var query = Query.FromStream(buf);
-
-                        resultModel = await Reduce(collectionId.ToHash(), query, skip, take);
-
-                        _queryCache.TryAdd(key, resultModel);
-
-                        this.Log("executed query in {0}", timer.Elapsed);
+                        ids.Add(x);
                     }
                 }
 
-                return resultModel;
-            }
-            catch (Exception ex)
-            {
-                this.Log(ex);
+                var sorted = ids
+                    .GroupBy(x => x)
+                    .Select(x => (x.Key, x.Count()))
+                    .OrderByDescending(x => x.Item2)
+                    .ToList();
 
-                throw;
+                var window = sorted
+                    .Skip(skip)
+                    .Take(take == 0 ? sorted.Count : take)
+                    .Select(x => x.Item1)
+                    .ToList();
+
+                var streamResult = StreamRepository.Serialize(window.ToDictionary(x => x, y => 0f));
+
+                resultModel = new ResponseModel { Stream = streamResult, MediaType = "application/postings", Total = sorted.Count };
+
+                this.Log("processed read request for {0} postings in {1}", ids.Count, timer.Elapsed);
             }
+            else
+            {
+                var queryHash = string.Format("{0}{1}{2}", Encoding.Unicode.GetString(buf), skip, take);
+                var key = queryHash.ToHash();
+
+                if (!_queryCache.TryGetValue(key, out resultModel))
+                {
+                    var query = Query.FromStream(buf);
+
+                    resultModel = await Reduce(collectionId.ToHash(), query, skip, take);
+
+                    _queryCache.TryAdd(key, resultModel);
+
+                    this.Log("executed query in {0}", timer.Elapsed);
+                }
+            }
+
+            return resultModel;
         }
 
         private async Task<ResponseModel> Reduce(ulong collectionId, IList<Query> query, int skip, int take)
