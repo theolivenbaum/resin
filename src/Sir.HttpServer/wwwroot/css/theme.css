@@ -49,18 +49,13 @@ h1 {
 }
 
 h3 {
-    margin-top: 20px;
+    margin-top: 10px;
     margin-bottom: 16px;
 }
 
 p {
     margin-top: 20px;
     margin-bottom: 15px;
-}
-
-.q {
-    width: 50%;
-    margin-bottom: 4px;
 }
 
 div.upvote {
@@ -109,13 +104,19 @@ footer p {
     margin-bottom: 15px;
 }
 
+input[type=text].q {
+    float: left;
+    width: 60%;
+    margin-bottom: 4px;
+}
+
+
 textarea.qf {
-    width: 85%;
+    width: 75%;
     height: 100px;
 }
 
 button.queryparser{
-    margin-right: 10px;
     margin-top: 5px;
     margin-bottom: 5px;
 }
@@ -144,4 +145,8 @@ h3.querystats{
 
 span.querystats {
     color: black;
+}
+
+div.buttons{
+
 }

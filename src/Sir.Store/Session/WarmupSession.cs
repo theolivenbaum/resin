@@ -70,7 +70,10 @@ namespace Sir.Store
 
         private void Validate((long docId, IComparable key, AnalyzedString tokens) item)
         {
-            foreach (var token in item.tokens.Tokens.Select(t => item.tokens.Original.Substring(t.offset, t.length)).Where(s => !string.IsNullOrWhiteSpace(s)))
+            foreach (var token in item.tokens.Tokens
+                .Select(t => item.tokens.Original.Substring(t.offset, t.length))
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Distinct())
             {
                 try
                 {
