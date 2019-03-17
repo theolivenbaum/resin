@@ -17,7 +17,7 @@ namespace Sir.HttpServer.Features
 
         public CrawlQueue(PluginsCollection plugins)
         {
-            _queue = new ProducerConsumerQueue<Uri>(Submit);
+            _queue = new ProducerConsumerQueue<Uri>(1, Submit);
             _plugins = plugins;
         }
 

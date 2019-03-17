@@ -20,8 +20,6 @@ namespace Sir.Store
         private bool _flushed;
         private bool _flushing;
         private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _modelBuilder;
-        private readonly ProducerConsumerQueue<(long keyId, long docId, AnalyzedString tokens)> _validator;
-        private readonly bool _validate;
         private readonly ConcurrentDictionary<long, NodeReader> _indexReaders;
 
         public IndexSession(
@@ -40,15 +38,9 @@ namespace Sir.Store
             var numThreads = int.Parse(_config.Get("write_thread_count"));
 
             _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>(
-                BuildModel,
-                numThreads);
+                numThreads, BuildModel);
 
-            _validator = new ProducerConsumerQueue<(long keyId, long docId, AnalyzedString tokens)>(
-                Validate,
-                numThreads, 
-                startConsumingImmediately: false);
 
-            _validate = bool.Parse(config.Get("validate_when_indexing"));
             _indexReaders = indexReaders;
         }
 
@@ -101,9 +93,6 @@ namespace Sir.Store
                     {
                         _modelBuilder.Enqueue((docId, keyId, tokens));
                     }
-
-                    if (_validate)
-                        _validator.Enqueue((keyId, docId, tokens));
                 }
             }
 
@@ -139,17 +128,6 @@ namespace Sir.Store
                 _vectorStream.Flush();
                 _vectorStream.Close();
             }
-
-            if (_validate)
-            {
-                this.Log("awaiting validation");
-
-                using (_validator)
-                {
-                    _validator.Start();
-                    _validator.Join();
-                }
-            }               
 
             var tasks = new Task[_dirty.Count];
             var taskId = 0;

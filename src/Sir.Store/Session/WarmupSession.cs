@@ -3,8 +3,10 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -16,7 +18,7 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
         private readonly ReadSession _readSession;
-        private readonly ProducerConsumerQueue<(long docId, IComparable key, AnalyzedString tokens)> _httpQueue;
+        private readonly ProducerConsumerQueue<string> _httpQueue;
         private readonly RemotePostingsReader _postingsReader;
         private readonly HttpClient _http;
         private readonly string _baseUrl;
@@ -34,11 +36,13 @@ namespace Sir.Store
             _config = config;
             _tokenizer = tokenizer;
             _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, indexReaders);
-            _httpQueue = new ProducerConsumerQueue<(long docId, IComparable key, AnalyzedString tokens)>(
-                Validate, int.Parse(_config.Get("write_thread_count")));
+            _httpQueue = new ProducerConsumerQueue<string>(
+                int.Parse(_config.Get("write_thread_count")), callback:Validate);
             _postingsReader = new RemotePostingsReader(_config, collectionName);
             _http = new HttpClient();
             _baseUrl = baseUrl;
+
+            this.Log("initiated warmup session");
         }
 
         public void Warmup(IEnumerable<IDictionary> documents, params long[] excludeKeyIds)
@@ -62,39 +66,43 @@ namespace Sir.Store
 
                         var terms = _tokenizer.Tokenize(doc[key].ToString());
 
-                        _httpQueue.Enqueue((docId, (IComparable)key, terms));
+                        foreach (var phrase in terms.Tokens
+                            .Select(t => terms.Original.Substring(t.offset, t.length))
+                            .Where(s => !string.IsNullOrWhiteSpace(s)).Batch(3))
+                        {
+                            var token = string.Join("+", phrase);
+                            _httpQueue.Enqueue(token);
+                        }
                     }       
                 }
             }
         }
 
-        private void Validate((long docId, IComparable key, AnalyzedString tokens) item)
+        private async Task Validate(string token)
         {
-            foreach (var token in item.tokens.Tokens
-                .Select(t => item.tokens.Original.Substring(t.offset, t.length))
-                .Where(s => !string.IsNullOrWhiteSpace(s))
-                .Distinct())
+            try
             {
-                try
-                {
-                    var url = string.Format("{0}/Search?q={1}OR=OR&skip=0&take=10&fields=title&fields=body&collection={2}",
-                                        _baseUrl, token, CollectionName);
+                var time = Stopwatch.StartNew();
 
-                    var res = _http.GetAsync(url).Result;
+                var url = string.Format("{0}Search?q={1}&OR=OR&skip=0&take=10&fields=title&fields=body&collection={2}",
+                                    _baseUrl, token, CollectionName);
 
-                    res.EnsureSuccessStatusCode();
-                }
-                catch
-                {
-                    continue;
-                }
+                var res = await _http.GetAsync(url);
+
+                res.EnsureSuccessStatusCode();
+
+                this.Log($"{time.Elapsed.TotalMilliseconds} ms len {_httpQueue.Count} {url}");
             }
-
-            this.Log("queried doc {0}.{1}", item.docId, item.key);
+            catch (Exception ex)
+            {
+                this.Log(ex);
+            }
         }
 
         public void Dispose()
         {
+            this.Log("waiting for warmup session to tear down");
+
             _httpQueue.Dispose();
             _readSession.Dispose();
             _http.Dispose();

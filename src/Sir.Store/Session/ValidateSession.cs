@@ -29,7 +29,8 @@ namespace Sir.Store
             _config = config;
             _tokenizer = tokenizer;
             _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, indexReaders);
-            _validator = new ProducerConsumerQueue<(long docId, IComparable key, AnalyzedString tokens)>(Validate, 8);
+            _validator = new ProducerConsumerQueue<(long docId, IComparable key, AnalyzedString tokens)>(
+                int.Parse(_config.Get("write_thread_count")), Validate);
             _postingsReader = new RemotePostingsReader(_config, collectionName);
         }
 

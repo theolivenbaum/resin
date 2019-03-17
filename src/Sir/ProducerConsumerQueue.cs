@@ -14,6 +14,7 @@ namespace Sir.Core
         private BlockingCollection<T> _queue;
         private readonly int _numOfConsumers;
         private readonly Action<T> _consumingAction;
+        private readonly Func<T, Task> _consumingFunc;
         private Task[] _consumers;
         private bool _completed;
         private bool _started;
@@ -23,42 +24,65 @@ namespace Sir.Core
 
         public bool IsCompleted { get { return _queue == null || _queue.IsCompleted; } }
 
-        public ProducerConsumerQueue(Action<T> consumingAction) : this(consumingAction, 1) { }
-
-        public ProducerConsumerQueue(Action<T> consumingAction, int numOfConsumers, bool startConsumingImmediately = true)
+        public ProducerConsumerQueue(int numOfConsumers, Action<T> consumingAction = null, Func<T, Task> callback = null)
         {
+            if (consumingAction == null && callback == null)
+            {
+                throw new ArgumentNullException(nameof(consumingAction));
+            }
+
             _queue = new BlockingCollection<T>();
             _numOfConsumers = numOfConsumers;
             _consumingAction = consumingAction;
+            _consumingFunc = callback;
 
-            if (startConsumingImmediately)
-            {
-                Start();
-            }
+            Start();
         }
 
-        public void Start()
+        private void Start()
         {
             if (_started)
                 return;
 
             _consumers = new Task[_numOfConsumers];
 
-            for (int i = 0; i < _numOfConsumers; i++)
+            if (_consumingAction != null)
             {
-                _consumers[i] = Task.Run(() =>
+                for (int i = 0; i < _numOfConsumers; i++)
                 {
-                    while (!_queue.IsCompleted)
+                    _consumers[i] = Task.Run(() =>
                     {
-                        try
+                        while (!_queue.IsCompleted)
                         {
-                            var item = _queue.Take();
+                            try
+                            {
+                                var item = _queue.Take();
 
-                            _consumingAction(item);
+                                _consumingAction(item);
+                            }
+                            catch (InvalidOperationException) { }
                         }
-                        catch (InvalidOperationException) { }
-                    }
-                });
+                    });
+                }
+            }
+            else
+            {
+                for (int i = 0; i < _numOfConsumers; i++)
+                {
+                    _consumers[i] = Task.Run(async() => 
+                    {
+                        while (!_queue.IsCompleted)
+                        {
+                            try
+                            {
+                                var item = _queue.Take();
+
+                                await _consumingFunc(item);
+                            }
+                            catch (InvalidOperationException) { }
+                        }
+                    });
+                }
             }
 
             _started = true;

@@ -32,8 +32,7 @@ namespace Sir.Store
             _tokenizer = tokenizer;
 
             _indexWriter = new ProducerConsumerQueue<(long docId, long keyId, SortedList<long, byte> vector)>(
-                WriteToMemIndex,
-                int.Parse(_config.Get("write_thread_count")));
+                int.Parse(_config.Get("write_thread_count")), WriteToMemIndex);
 
             _newColumns = new SortedList<long, VectorNode>();
 
