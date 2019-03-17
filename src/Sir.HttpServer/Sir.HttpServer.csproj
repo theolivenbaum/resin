@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Sir.Postings\Sir.Postings.csproj" />
     <ProjectReference Include="..\Sir.Store\Sir.Store.csproj" />
     <ProjectReference Include="..\Sir\Sir.Core.csproj" />
   </ItemGroup>
