@@ -110,22 +110,26 @@ footer p {
 
 input[type=text].q {
     float: left;
-    width: 60%;
-    margin-bottom: 4px;
+    width: 55%;
+    padding-left: 4px;
 }
 
 input[type=text].submit {
     width: 40%;
 }
 
-textarea.qf {
-    width: 75%;
-    height: 100px;
+button {
+    height: 25px;
 }
 
-button.queryparser{
-    margin-top: 5px;
-    margin-bottom: 5px;
+input[type=text] {
+    height: 19px;
+}
+
+textarea.qf {
+    float:left;
+    width: 55%;
+    height: 100px;
 }
 
 div.queryparser {
@@ -136,14 +140,17 @@ div.queryparser {
     color: orangered;
     font-size: 0.7em;
     margin-top:10px;
+    margin-left: 2px;
 }
 
 input[type=text].newCollection{
     width: 182px;
+    float:left;
 }
 
 div.newCollection{
-    margin-top: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 h3.querystats{
@@ -155,5 +162,6 @@ span.querystats {
 }
 
 div.buttons{
-
+    float:left;
+    width: 40%;
 }
