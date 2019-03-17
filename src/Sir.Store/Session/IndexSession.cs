@@ -50,8 +50,8 @@ namespace Sir.Store
         }
 
         /// <summary>
-        /// Fields prefixed with "__" will not be analyzed.
-        /// Fields prefixed with "_" will be analyzed as a single token.
+        /// Fields prefixed with "__" will not be indexed.
+        /// Fields prefixed with "_" will not be tokenized.
         /// </summary>
         /// <param name="document"></param>
         private void Analyze(IDictionary document)

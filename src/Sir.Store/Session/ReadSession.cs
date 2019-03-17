@@ -227,7 +227,9 @@ namespace Sir.Store
                     doc[key] = val;
                 }
 
-                doc["__docid"] = d.Key;
+                var docId = doc.ContainsKey("_original") ? long.Parse(doc["_original"].ToString()) : d.Key;
+
+                doc["__docid"] = docId;
                 doc["__score"] = d.Value;
 
                 result.Add(doc);
@@ -265,6 +267,8 @@ namespace Sir.Store
 
                     doc[key] = val;
                 }
+
+                var docId = doc.ContainsKey("_original") ? long.Parse(doc["_original"].ToString()) : d;
 
                 doc["__docid"] = d;
                 doc["__score"] = 1f;

@@ -2,7 +2,7 @@
   "profiles": {
     "Sir.DbUtil": {
       "commandName": "Project",
-      "commandLineArgs": "warmup c:\\temp\\app_data http://localhost:54865 www 0 10000"
+      "commandLineArgs": "index c:\\temp\\app_data www 0 10000 1000"
     }
   }
 }

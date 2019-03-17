@@ -73,8 +73,6 @@ namespace Sir.HttpServer.Features
 
                 var doc = Parse(html, uri);
 
-                var existing = GetDocument("www", url, doc.title);
-
                 if (doc.title == null)
                 {
                     this.Log(string.Format("error processing {0} (no title)", uri));
@@ -82,6 +80,12 @@ namespace Sir.HttpServer.Features
                 }
 
                 var document = new Dictionary<string, object>();
+                var existing = GetDocument("www", url, doc.title);
+
+                if (existing!= null)
+                {
+                    document["_original"] = existing["__docid"];
+                }
 
                 document["_site"] = uri.Host;
                 document["_url"] = url;
@@ -109,7 +113,9 @@ namespace Sir.HttpServer.Features
 
                 var result = readSession.Read(urlQuery);
             
-                return result.Total == 0 ? null : result.Docs[0];
+                return result.Total == 0 
+                    ? null : (float)result.Docs[0]["__score"] >= VectorNode.TermIdenticalAngle 
+                    ? result.Docs[0] : null;
             }
         }
 

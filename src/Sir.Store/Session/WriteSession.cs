@@ -64,9 +64,9 @@ namespace Sir.Store
         }
 
         /// <summary>
-        /// Fields prefixed with "__" will not be written.
-        /// The "__docid" field, if it exists, will be persisted as "_original".
-        /// A model may already have a "__docid" field because it originates from another collection.
+        /// Fields prefixed with "__" will not be stored.
+        /// The "__docid" field, if it exists, will be persisted as "_original", if that field doesn't exist.
+        /// A model may already have a "__docid" field when it originates from another collection.
         /// </summary>
         /// <returns>Document ID</returns>
         public async Task<long> Write(IDictionary model)
