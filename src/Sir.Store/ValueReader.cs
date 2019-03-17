@@ -10,25 +10,72 @@ namespace Sir.Store
     public class ValueReader
     {
         private readonly Stream _stream;
-        private readonly object _sync = new object();
 
         public ValueReader(Stream stream)
         {
             _stream = stream;
         }
 
+        public async Task<IComparable> ReadAsync(long offset, int len, byte dataType)
+        {
+            int read;
+            byte[] buf;
+
+            _stream.Seek(offset, SeekOrigin.Begin);
+            buf = new byte[len];
+            read = await _stream.ReadAsync(buf, 0, len);
+
+            if (read != len)
+            {
+                throw new InvalidDataException();
+            }
+
+            var typeId = Convert.ToInt32(dataType);
+
+            if (DataType.BOOL == typeId)
+            {
+                return Convert.ToBoolean(buf[0]);
+            }
+            else if (DataType.CHAR == typeId)
+            {
+                return BitConverter.ToChar(buf, 0);
+            }
+            else if (DataType.FLOAT == typeId)
+            {
+                return BitConverter.ToSingle(buf, 0);
+            }
+            else if (DataType.INT == typeId)
+            {
+                return BitConverter.ToInt32(buf, 0);
+            }
+            else if (DataType.DOUBLE == typeId)
+            {
+                return BitConverter.ToDouble(buf, 0);
+            }
+            else if (DataType.LONG == typeId)
+            {
+                return BitConverter.ToInt64(buf, 0);
+            }
+            else if (DataType.DATETIME == typeId)
+            {
+                return DateTime.FromBinary(BitConverter.ToInt64(buf, 0));
+            }
+            else
+            {
+                return new string(System.Text.Encoding.Unicode.GetChars(buf));
+            }
+        }
+
+
         public IComparable Read(long offset, int len, byte dataType)
         {
             int read;
             byte[] buf;
 
-            lock (_sync)
-            {
-                _stream.Seek(offset, SeekOrigin.Begin);
-                buf = new byte[len];
-                read = _stream.Read(buf, 0, len);
-            }
-            
+            _stream.Seek(offset, SeekOrigin.Begin);
+            buf = new byte[len];
+            read = _stream.Read(buf, 0, len);
+
             if (read != len)
             {
                 throw new InvalidDataException();

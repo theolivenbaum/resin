@@ -101,7 +101,7 @@ namespace Sir.Store
                     {
                         var ids = request.Query["id"].Select(s => long.Parse(s));
 
-                        docs = session.ReadDocs(ids);
+                        docs = await session.ReadDocs(ids);
                         total = docs.Count;
 
                         this.Log(string.Format("executed lookup by id in {0}", timer.Elapsed));

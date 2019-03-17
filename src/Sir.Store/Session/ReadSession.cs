@@ -38,12 +38,12 @@ namespace Sir.Store
             string vecFileExtension = "vec") 
             : base(collectionName, collectionId, sessionFactory)
         {
-            ValueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
-            KeyStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", CollectionId)));
-            DocStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", CollectionId)));
-            ValueIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", CollectionId)));
-            KeyIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", CollectionId)));
-            DocIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
+            ValueStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
+            KeyStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", CollectionId)));
+            DocStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", CollectionId)));
+            ValueIndexStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", CollectionId)));
+            KeyIndexStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", CollectionId)));
+            DocIndexStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
 
             _docIx = new DocIndexReader(DocIndexStream);
             _docs = new DocMapReader(DocStream);
@@ -67,7 +67,7 @@ namespace Sir.Store
 
                 if (result != null)
                 {
-                    var docs = ReadDocs(result.Documents);
+                    var docs = await ReadDocs(result.Documents);
 
                     return new ReadResult { Total = result.Total, Docs = docs };
                 }
@@ -201,29 +201,29 @@ namespace Sir.Store
             return CreateIndexReader(keyId);
         }
 
-        public IList<IDictionary> ReadDocs(IEnumerable<KeyValuePair<long, float>> docs)
+        public async Task<IList<IDictionary>> ReadDocs(IEnumerable<KeyValuePair<long, float>> docs)
         {
             var result = new List<IDictionary>();
 
             foreach (var d in docs)
             {
-                var docInfo = _docIx.Read(d.Key);
+                var docInfo = await _docIx.ReadAsync(d.Key);
 
                 if (docInfo.offset < 0)
                 {
                     continue;
                 }
 
-                var docMap = _docs.Read(docInfo.offset, docInfo.length);
+                var docMap = await _docs.ReadAsync(docInfo.offset, docInfo.length);
                 var doc = new Dictionary<IComparable, IComparable>();
 
                 for (int i = 0; i < docMap.Count; i++)
                 {
                     var kvp = docMap[i];
-                    var kInfo = _keyIx.Read(kvp.keyId);
-                    var vInfo = _valIx.Read(kvp.valId);
-                    var key = _keyReader.Read(kInfo.offset, kInfo.len, kInfo.dataType);
-                    var val = _valReader.Read(vInfo.offset, vInfo.len, vInfo.dataType);
+                    var kInfo = await _keyIx.ReadAsync(kvp.keyId);
+                    var vInfo = await _valIx.ReadAsync(kvp.valId);
+                    var key = await _keyReader.ReadAsync(kInfo.offset, kInfo.len, kInfo.dataType);
+                    var val = await _valReader.ReadAsync(vInfo.offset, vInfo.len, vInfo.dataType);
 
                     doc[key] = val;
                 }
@@ -242,29 +242,29 @@ namespace Sir.Store
                 .ToList();
         }
 
-        public IList<IDictionary> ReadDocs(IEnumerable<long> docs)
+        public async Task<IList<IDictionary>> ReadDocs(IEnumerable<long> docs)
         {
             var result = new List<IDictionary>();
 
             foreach (var d in docs)
             {
-                var docInfo = _docIx.Read(d);
+                var docInfo = await _docIx.ReadAsync(d);
 
                 if (docInfo.offset < 0)
                 {
                     continue;
                 }
 
-                var docMap = _docs.Read(docInfo.offset, docInfo.length);
+                var docMap = await _docs.ReadAsync(docInfo.offset, docInfo.length);
                 var doc = new Dictionary<IComparable, IComparable>();
 
                 for (int i = 0; i < docMap.Count; i++)
                 {
                     var kvp = docMap[i];
-                    var kInfo = _keyIx.Read(kvp.keyId);
-                    var vInfo = _valIx.Read(kvp.valId);
-                    var key = _keyReader.Read(kInfo.offset, kInfo.len, kInfo.dataType);
-                    var val = _valReader.Read(vInfo.offset, vInfo.len, vInfo.dataType);
+                    var kInfo = await _keyIx.ReadAsync(kvp.keyId);
+                    var vInfo = await _valIx.ReadAsync(kvp.valId);
+                    var key = await _keyReader.ReadAsync(kInfo.offset, kInfo.len, kInfo.dataType);
+                    var val = await _valReader.ReadAsync(vInfo.offset, vInfo.len, vInfo.dataType);
 
                     doc[key] = val;
                 }
