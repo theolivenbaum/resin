@@ -16,7 +16,7 @@ namespace Sir.Core
         private readonly Action<T> _consumingAction;
         private readonly Func<T, Task> _consumingFunc;
         private Task[] _consumers;
-        private bool _completed;
+        private bool _joined;
         private bool _started;
         private bool _joining;
 
@@ -95,7 +95,7 @@ namespace Sir.Core
 
         public void Join()
         {
-            if (_joining || _completed)
+            if (_joining || _joined)
                 return;
 
             if (!_started)
@@ -108,14 +108,13 @@ namespace Sir.Core
             Task.WaitAll(_consumers);
 
             _queue.Dispose();
-            _queue = null;
-            _completed = true;
+            _joined = true;
             _joining = false;
         }
 
         public void Dispose()
         {
-            if (!_completed)
+            if (!_joined)
             {
                 Join();
             }

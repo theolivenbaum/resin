@@ -70,34 +70,26 @@ namespace Sir.HttpServer.Controllers
                 throw new NotSupportedException(); // Media type not supported
             }
 
-            try
+            var timer = new Stopwatch();
+            timer.Start();
+
+            var result = await reader.Read(collectionName, Request);
+
+            this.Log("processed {0} request in {1}", mediaType, timer.Elapsed);
+
+            if (result.Stream == null)
             {
-                var timer = new Stopwatch();
-                timer.Start();
-
-                var result = await reader.Read(collectionName, Request);
-
-                this.Log("processed {0} request in {1}", mediaType, timer.Elapsed);
-
-                if (result.Stream == null)
-                {
-                    return new FileContentResult(new byte[0], result.MediaType);
-                }
-                else
-                {
-                    Response.Headers.Add("X-Total", result.Total.ToString());
-
-                    var buf = result.Stream.ToArray();
-
-                    this.Log("serialized {0} response in {1}", reader.GetType().ToString(), timer.Elapsed);
-
-                    return new FileContentResult(buf, result.MediaType);
-                }
+                return new FileContentResult(new byte[0], result.MediaType);
             }
-            catch (Exception ew)
+            else
             {
-                this.Log(ew);
-                throw ew;
+                Response.Headers.Add("X-Total", result.Total.ToString());
+
+                var buf = result.Stream.ToArray();
+
+                this.Log("serialized {0} response in {1}", reader.GetType().ToString(), timer.Elapsed);
+
+                return new FileContentResult(buf, result.MediaType);
             }
         }
     }

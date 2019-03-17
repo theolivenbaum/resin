@@ -90,7 +90,10 @@ namespace Sir.HttpServer
             }
             catch (Exception e)
             {
-                File.AppendAllText(Path.Combine(Directory.GetCurrentDirectory(), "log", "sir.httpserver.log.txt"), e.ToString());
+                File.AppendAllText(
+                    Path.Combine(Directory.GetCurrentDirectory(), "log", "sir.httpserver.log.txt"), 
+                    $"{DateTime.Now} {e}");
+
                 throw;
             }
         }

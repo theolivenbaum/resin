@@ -12,7 +12,7 @@ namespace Sir.Postings
     {
         private readonly IConfigurationProvider _config;
         private const string DataFileNameFormat = "{0}.pos";
-        private readonly IDictionary<(ulong, long), IList<long>> _cache;
+        private readonly ConcurrentDictionary<(ulong, long), IList<long>> _cache;
 
         public StreamRepository(IConfigurationProvider config)
         {
@@ -92,7 +92,7 @@ namespace Sir.Postings
             if (!_cache.TryGetValue(key, out result))
             {
                 result = await ReadFromDisk(collectionId, offset);
-                _cache[key] = result;
+                _cache.TryAdd(key, result);
             }
 
             return result;
@@ -101,7 +101,7 @@ namespace Sir.Postings
         private async Task<IList<long>> ReadFromDisk(ulong collectionId, long offset)
         {
             var timer = Stopwatch.StartNew();
-            var result = new HashSet<long>();
+            long[] result;
             var pageCount = 0;
 
             using (var data = CreateReadableDataStream(collectionId))
@@ -130,15 +130,13 @@ namespace Sir.Postings
 
                 await data.ReadAsync(pageBuf);
 
+                result = new long[pageDataCount];
+
                 for (int i = 0; i < pageDataCount; i++)
                 {
                     var entryOffset = sizeof(long) + (i * sizeof(long));
-                    var entry = BitConverter.ToInt64(pageBuf, entryOffset);
 
-                    if (!result.Add(entry))
-                    {
-                        throw new DataMisalignedException("first page is crap");
-                    }
+                    result[i] = BitConverter.ToInt64(pageBuf, entryOffset);
                 }
 
                 pageCount++;
@@ -163,19 +161,15 @@ namespace Sir.Postings
                     for (int i = 0; i < pageDataCount; i++)
                     {
                         var entryOffset = sizeof(long) + (i * sizeof(long));
-                        var entry = BitConverter.ToInt64(page, entryOffset);
 
-                        if (!result.Add(entry))
-                        {
-                            throw new DataMisalignedException("page is crap");
-                        }
+                        result[i] = BitConverter.ToInt64(page, entryOffset);
                     }
 
                     pageCount++;
                 }
             }
 
-            this.Log("read {0} postings from {1} pages in {2}", result.Count, pageCount, timer.Elapsed);
+            this.Log("read {0} postings from {1} pages in {2}", result.Length, pageCount, timer.Elapsed);
 
             return result.ToList();
         }
@@ -241,7 +235,7 @@ namespace Sir.Postings
                     var cacheKey = (collectionId, offset);
                     if (_cache.ContainsKey(cacheKey))
                     {
-                        _cache.Remove(cacheKey);
+                        _cache.TryRemove(cacheKey, out _);
                     }
 
                     if (offset < 0)

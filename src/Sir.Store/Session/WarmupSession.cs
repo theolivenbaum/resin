@@ -17,7 +17,6 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
-        private readonly ReadSession _readSession;
         private readonly ProducerConsumerQueue<string> _httpQueue;
         private readonly RemotePostingsReader _postingsReader;
         private readonly HttpClient _http;
@@ -35,7 +34,6 @@ namespace Sir.Store
         {
             _config = config;
             _tokenizer = tokenizer;
-            _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, indexReaders);
             _httpQueue = new ProducerConsumerQueue<string>(
                 int.Parse(_config.Get("write_thread_count")), callback:SubmitQuery);
             _postingsReader = new RemotePostingsReader(_config, collectionName);
@@ -100,8 +98,8 @@ namespace Sir.Store
         {
             this.Log("waiting for warmup session to tear down");
 
+            _httpQueue.Join();
             _httpQueue.Dispose();
-            _readSession.Dispose();
             _http.Dispose();
         }
     }
