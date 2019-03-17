@@ -34,7 +34,8 @@ namespace Sir.Store
             _config = config;
             _tokenizer = tokenizer;
             _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, indexReaders);
-            _httpQueue = new ProducerConsumerQueue<(long docId, IComparable key, AnalyzedString tokens)>(Validate, 4);
+            _httpQueue = new ProducerConsumerQueue<(long docId, IComparable key, AnalyzedString tokens)>(
+                Validate, int.Parse(_config.Get("write_thread_count")));
             _postingsReader = new RemotePostingsReader(_config, collectionName);
             _http = new HttpClient();
             _baseUrl = baseUrl;
@@ -86,7 +87,7 @@ namespace Sir.Store
                 }
             }
 
-            this.Log("queried doc {0}", item.docId);
+            this.Log("queried doc {0}.{1}", item.docId, item.key);
         }
 
         public void Dispose()
