@@ -72,22 +72,16 @@ namespace Sir.Store
             return optimized;
         }
 
-        private IEnumerable<Stream> AllPages()
+        private IEnumerable<Stream> AllPages(long len)
         {
             var time = Stopwatch.StartNew();
-
-            this.Log($"refreshing {_ixpFileName}");
-
             var ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
 
             using (var ixmmf = _sessionFactory.CreateMMF(_ixFileName, ixMapName))
             {
-                foreach (var page in ReadPageInfoFromDisk())
+                using (var indexStream = ixmmf.CreateViewStream(0, len, MemoryMappedFileAccess.Read))
                 {
-                    using (var indexStream = ixmmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
-                    {
-                        yield return indexStream;
-                    }
+                    yield return indexStream;
                 }
             }
 
@@ -104,16 +98,21 @@ namespace Sir.Store
             }
 
             var time = Stopwatch.StartNew();
-
-            high = null;
+            var pages = ReadPageInfoFromDisk();
+            var last = pages[pages.Count - 1];
+            var len = last.offset + last.length;
 
             using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
             {
-                foreach (var indexStream in AllPages())
+                foreach (var indexStream in AllPages(len))
                 {
                     using (indexStream)
                     {
-                        var hit = ClosestMatchInPage(vector, indexStream, vectorStream);
+                        var hit = ClosestMatchInPage(
+                            vector, 
+                            indexStream, 
+                            vectorStream, 
+                            new Queue<(long offset, long length)>(pages));
 
                         if (high == null || hit.Score > high.Score)
                         {
@@ -135,8 +134,11 @@ namespace Sir.Store
         private Hit ClosestMatchInPage(
             SortedList<long, byte> node, 
             Stream indexStream, 
-            Stream vectorStream)
+            Stream vectorStream,
+            Queue<(long offset, long length)> pages)
         {
+            pages.Dequeue();
+
             var cursor = ReadNode(indexStream, vectorStream);
 
             if (cursor == null)
@@ -182,8 +184,13 @@ namespace Sir.Store
                     }
                     else
                     {
-                        // there is no left child
-                        break;
+                        // there is no left child.
+
+                        if (pages.Count == 0) break;
+
+                        indexStream.Seek(pages.Dequeue().offset, SeekOrigin.Begin);
+
+                        cursor = ReadNode(indexStream, vectorStream);
                     }
                 }
                 else
@@ -225,7 +232,11 @@ namespace Sir.Store
                     }
                     else
                     {
-                        break;
+                        if (pages.Count == 0) break;
+
+                        indexStream.Seek(pages.Dequeue().offset, SeekOrigin.Begin);
+
+                        cursor = ReadNode(indexStream, vectorStream);
                     }
                 }
             }
