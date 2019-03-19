@@ -134,11 +134,11 @@ namespace Sir.Store
                         CreateIndexReader(cursor.Term.KeyId.Value) :
                         CreateIndexReader(cursor.Term.KeyHash);
 
-                    if (indexReader.indexStream != null)
+                    if (indexReader != null)
                     {
                         var termVector = cursor.Term.ToVector();
 
-                        hit = indexReader.reader.ClosestMatch(termVector, indexReader.indexStream, indexReader.pages);
+                        hit = indexReader.ClosestMatch(termVector);
                     }
 
                     if (hit != null && hit.Score > 0)
@@ -168,7 +168,7 @@ namespace Sir.Store
             }
         }
 
-        public (Stream indexStream, IList<(long, long)> pages, NodeReader reader) CreateIndexReader(long keyId)
+        public NodeReader CreateIndexReader(long keyId)
         {
             var time = Stopwatch.StartNew();
             var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixFileExtension));
@@ -185,6 +185,8 @@ namespace Sir.Store
                     {
                         reader = new NodeReader(ixFileName, ixpFileName, vecFileName, SessionFactory, _config);
 
+                        reader.Optimize();
+
                         _indexReaders.GetOrAdd(keyId, reader);
 
                         this.Log("created index reader {0} in {1}", ixFileName, time.Elapsed);
@@ -192,9 +194,8 @@ namespace Sir.Store
                 }
             }
 
-            var stream = CreateIndexStream(ixFileName, ixpFileName);
 
-            return (stream.indexStream, stream.pages, reader);
+            return reader;
         }
 
         private (Stream indexStream, IList<(long, long)> pages) CreateIndexStream(string ixFileName, string ixpFileName)
@@ -222,12 +223,12 @@ namespace Sir.Store
             return (indexStream, pages);
         }
 
-        public (Stream indexStream, IList<(long, long)> pages, NodeReader reader) CreateIndexReader(ulong keyHash)
+        public NodeReader CreateIndexReader(ulong keyHash)
         {
             long keyId;
             if (!SessionFactory.TryGetKeyId(CollectionId, keyHash, out keyId))
             {
-                return (null, null, null);
+                return null;
             }
 
             return CreateIndexReader(keyId);

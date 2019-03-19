@@ -97,11 +97,11 @@ namespace Sir.Store
         }
 
         private static SortedList<long, byte> CreateDocumentVector(
-            string value, (Stream indexStream, IList<(long, long)> pages, NodeReader reader) treeReader, ITokenizer tokenizer)
+            string value, NodeReader reader, ITokenizer tokenizer)
         {
             var terms = tokenizer.Tokenize(value);
 
-            return VectorOperations.CreateDocumentVector(terms.Embeddings, treeReader, tokenizer);
+            return VectorOperations.CreateDocumentVector(terms.Embeddings, reader, tokenizer);
         }
 
         private void Flush()

@@ -423,6 +423,25 @@ namespace Sir.Store
             return result;
         }
 
+        public static void DeserializeTree(Stream indexStream, Stream vectorStream, long indexLength, VectorNode root)
+        {
+            int read = 0;
+            var buf = new byte[NodeSize];
+
+            while (read < indexLength)
+            {
+                indexStream.Read(buf);
+
+                var terminator = new byte();
+                var node = DeserializeNode(buf, vectorStream, ref terminator);
+
+                if (node.VectorOffset > -1)
+                    root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
+
+                read += NodeSize;
+            }
+        }
+
         public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, long indexLength)
         {
             VectorNode root = new VectorNode();

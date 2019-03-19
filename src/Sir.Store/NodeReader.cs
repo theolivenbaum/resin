@@ -19,7 +19,7 @@ namespace Sir.Store
         private readonly string _ixFileName;
         private readonly string _vecFileName;
         private readonly object _syncRefresh = new object();
-        private readonly VectorNode _root;
+        private VectorNode _root;
 
         public NodeReader(
             string ixFileName, 
@@ -34,7 +34,11 @@ namespace Sir.Store
             _config = config;
             _ixpFileName = ixpFileName;
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
-            _root = new VectorNode();
+        }
+
+        public void Optimize()
+        {
+            _root = Optimized();
         }
 
         public VectorNode Optimized()
@@ -50,52 +54,44 @@ namespace Sir.Store
                 {
                     ixStream.Seek(page.offset, SeekOrigin.Begin);
 
-                    var tree = VectorNode.DeserializeTree(ixStream, vectorStream, page.length);
+                    VectorNode.DeserializeTree(ixStream, vectorStream, page.length, optimized);
 
-                    foreach (var node in tree.All())
-                    {
-                        optimized.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
-                    }
-
-                    this.Log($"added page {page.offset} to in-memory tree in {time.Elapsed}");
+                    this.Log($"optimized page {page.offset} in {time.Elapsed}");
                 }
             });
 
             return optimized;
         }
 
-        public Hit ClosestMatch(SortedList<long, byte> vector, Stream indexStream, IList<(long offset, long length)> pages)
+        public Hit ClosestMatch(SortedList<long, byte> vector)
         {
             Hit high = _root.ClosestMatch(vector, VectorNode.TermFoldAngle);
 
-            if (high.Score >= VectorNode.TermIdenticalAngle)
-            {
-                return high;
-            }
-
-            var time = Stopwatch.StartNew();
-
-            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-            {
-                var hit = ClosestMatchInPage(
-                            vector,
-                            indexStream,
-                            vectorStream,
-                            new Queue<(long offset, long length)>(pages));
-
-                if (high == null || hit.Score > high.Score)
-                {
-                    high = hit;
-                }
-                else if (high != null && hit.Score == high.Score)
-                {
-                    high.Node.Merge(hit.Node);
-                }
-            }
-
-            this.Log($"cache miss. scan took {time.Elapsed}");
-
             return high;
+
+            //var time = Stopwatch.StartNew();
+
+            //using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+            //{
+            //    var hit = ClosestMatchInPage(
+            //                vector,
+            //                indexStream,
+            //                vectorStream,
+            //                new Queue<(long offset, long length)>(pages));
+
+            //    if (high == null || hit.Score > high.Score)
+            //    {
+            //        high = hit;
+            //    }
+            //    else if (high != null && hit.Score == high.Score)
+            //    {
+            //        high.Node.Merge(hit.Node);
+            //    }
+            //}
+
+            //this.Log($"cache miss. scan took {time.Elapsed}");
+
+            //return high;
         }
 
         private Hit ClosestMatchInPage(
@@ -208,7 +204,7 @@ namespace Sir.Store
                 }
             }
 
-            _root.Add(best, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
+            //_root.Add(best, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
 
             return new Hit
             {
