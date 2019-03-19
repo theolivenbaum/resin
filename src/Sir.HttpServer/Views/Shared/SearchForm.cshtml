@@ -7,11 +7,10 @@
 {
     <input type="text" id="q" name="q" class="q" placeholder="Ask me anything." value="@query" />
     <div class="buttons">
-        <button type="submit" value="OR" name="OR" id="or" title="Go">Go <sup>OR</sup></button>
-        <button type="submit" value="AND" name="AND" id="and" title="go!">go! <sup>AND</sup></button>
+        <button type="submit" value="OR" name="OR" id="or" title="OR">Go <sup>OR</sup></button><button type="submit" value="AND" name="AND" id="and" title="AND">Go <sup>AND</sup></button>
         @if (!string.IsNullOrWhiteSpace(query))
         {
-            <br /><a class="advanced" href="/queryparser@(Context.Request.QueryString.ToString())">Structured language</a>
+            <br /><a class="advanced" href="/queryparser@(Context.Request.QueryString.ToString())">Structured query</a>
         }
     </div>
     <div style="clear:both;"></div>

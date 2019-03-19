@@ -7,13 +7,13 @@
     <link rel="stylesheet" type="text/css" href="/css/theme.css">
 </head>
 <body>
-    <a href="/" title="Did you go go! v0.3a"><h1 class="logo">Go<sup>didyou</sup>go!</h1></a>
+    <a href="/" title="DYGG v0.3a"><h1 class="logo">d<i><sup>\</sup>/g</i>g</h1></a>
     <div>
         @RenderBody()
     </div>
     <footer>
         <div>
-            <p>Independent, non-tracking search engine powered by <a href="https://github.com/kreeben/resin">Resin</a> on servers from <a href="https://freenode.net/">freenode</a>.</p>
+            <p>Independent, non-tracking search engine powered by <a href="https://github.com/kreeben/resin">Resin</a>.</p>
             @if (ViewData["doc_count"] != null)
             {
                 <p>Index size: @ViewData["doc_count"] documents</p>
@@ -22,7 +22,7 @@
             {
                 <p>Last crawled: <a href="@ViewData["last_processed_url"]">@ViewData["last_processed_title"]</a></p>
             }
-            <p><a href="/queryparser?collection=www&q=trump%20tower&fields=title&fields=body&skip=0&take=10">Create collection</a> | <a href="/submit/page">Submit URL</a></p>
+            <p><strong>Free services:</strong> <a href="/queryparser?collection=www&q=trump%20tower&fields=title&fields=body&skip=0&take=10&and=and">Create collection</a> | <a href="/submit/page">Submit URL</a></p>
         </div>
     </footer>
 </body>

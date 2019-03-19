@@ -15,6 +15,7 @@
 sup, sub {
     font-size: xx-small;
     color: orangered;
+    font-weight:600;
 }
 
 a {
@@ -108,21 +109,22 @@ footer p {
     margin-bottom: 15px;
 }
 
-input[type=text].q {
+input[type="text"].q {
     float: left;
     width: 55%;
     padding-left: 4px;
 }
 
-input[type=text].submit {
-    width: 40%;
+input[type="text"].submit {
+    float:left;
+    width: 55%;
 }
 
-button {
+button, input[type="submit"] {
     height: 25px;
 }
 
-input[type=text] {
+input[type="text"] {
     height: 19px;
 }
 
@@ -143,13 +145,13 @@ div.queryparser {
     margin-left: 2px;
 }
 
-input[type=text].newCollection{
-    width: 182px;
+input[type="text"].newCollection{
+    width: 55%;
     float:left;
 }
 
 div.newCollection{
-    padding-top: 10px;
+    padding-top: 20px;
     padding-bottom: 10px;
 }
 
