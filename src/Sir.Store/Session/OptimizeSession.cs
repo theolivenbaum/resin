@@ -36,7 +36,7 @@ namespace Sir.Store
                 var columnTime = Stopwatch.StartNew();
                 var keyId = long.Parse(Path.GetFileNameWithoutExtension(ixFileName).Split('.')[1]);
                 var indexReader = _readSession.CreateIndexReader(keyId);
-                var optimized = indexReader.Optimized();
+                var optimized = indexReader.reader.Optimized();
 
                 optimizedColumns.Add((keyId, optimized));
 

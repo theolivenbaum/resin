@@ -67,6 +67,9 @@ namespace Sir.Store
                 using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionId, "ix1", "ixp1", "vec1"))
                 {
                     var result = await readSession.Read(query);
+                    var stream = new MemoryStream();
+
+                    Serialize(result.Docs, stream);
 
                     this.Log(
                         string.Format(
@@ -74,10 +77,6 @@ namespace Sir.Store
                             query,
                             result.Docs.Count,
                             timer.Elapsed));
-
-                    var stream = new MemoryStream();
-
-                    Serialize(result.Docs, stream);
 
                     return new ResponseModel
                     {

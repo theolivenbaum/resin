@@ -97,7 +97,7 @@ namespace Sir.Store
         }
 
         private static SortedList<long, byte> CreateDocumentVector(
-            string value, NodeReader treeReader, ITokenizer tokenizer)
+            string value, (Stream indexStream, IList<(long, long)> pages, NodeReader reader) treeReader, ITokenizer tokenizer)
         {
             var terms = tokenizer.Tokenize(value);
 

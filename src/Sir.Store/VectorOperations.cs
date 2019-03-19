@@ -249,14 +249,14 @@ namespace Sir
 
         public static SortedList<long, byte> CreateDocumentVector(
             IEnumerable<SortedList<long, byte>> termVectors, 
-            NodeReader treeReader, 
+            (Stream indexStream, IList<(long, long)> pages, NodeReader reader) reader, 
             ITokenizer tokenizer)
         {
             var docVec = new SortedList<long, byte>();
 
             foreach (var term in termVectors)
             {
-                var hit = treeReader.ClosestMatch(term);
+                var hit = reader.reader.ClosestMatch(term, reader.indexStream, reader.pages);
                 var offset = hit.Node.PostingsOffsets == null ? hit.Node.PostingsOffsets[0] : hit.Node.PostingsOffset;
 
                 if (hit.Score == 0 || offset < 0)

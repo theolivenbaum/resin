@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
@@ -28,10 +29,28 @@ namespace Sir.Store
             _indexReaders = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>>();
         }
 
+        public IList<(long offset, long length)> ReadPageInfoFromDisk(string ixpFileName)
+        {
+            using (var ixpStream = CreateReadStream(ixpFileName))
+            {
+                return new PageIndexReader(ixpStream).ReadAll();
+            }
+        }
+
+        public long GetStreamLength(string ixpFileName)
+        {
+            var pages = ReadPageInfoFromDisk(ixpFileName);
+            var last = pages[pages.Count - 1];
+            var len = last.offset + last.length;
+
+            return len;
+        }
+
         public void ReleaseIndexReaders(ulong collectionId)
         {
             ConcurrentDictionary<long, NodeReader> val;
             _indexReaders.TryRemove(collectionId, out val);
+            this.Log("cleared {0} index reader cache", collectionId);
         }
 
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> LoadKeys()
@@ -119,18 +138,24 @@ namespace Sir.Store
 
         private readonly object _syncMMF = new object();
 
-        public MemoryMappedFile CreateMMF(string fileName, string mapName)
+        public MemoryMappedFile CreateMMF(string fileName)
         {
             MemoryMappedFile mmf;
+            var time = Stopwatch.StartNew();
+            var mapName = fileName.Replace(":", "").Replace("\\", "_");
 
             try
             {
                 mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+
+                this.Log($"opened existing mmf {mapName}");
             }
             catch (FileNotFoundException)
             {
                 lock (_syncMMF)
                 {
+                    this.Log($"needed to acquire lock to open mmf {mapName}");
+
                     try
                     {
                         mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
@@ -140,23 +165,31 @@ namespace Sir.Store
                         try
                         {
                             mmf = MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.Read);
+                            this.Log($"created new mmf {mapName}");
+
                         }
                         catch (IOException)
                         {
                             try
                             {
                                 mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+                                this.Log($"opened existing mmf {mapName}");
+
                             }
                             catch (FileNotFoundException)
                             {
                                 Thread.Sleep(100);
+                                this.Log($"needed to pause thread to open mmf {mapName}");
 
                                 mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+                                this.Log($"opened existing mmf {mapName}");
                             }
                         }
                     }
                 }
             }
+
+            this.Log($"mapping took {time.Elapsed}");
 
             return mmf;
         }

@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using System.IO.MemoryMappedFiles;
 
 namespace Sir.Store
 {
@@ -27,6 +28,8 @@ namespace Sir.Store
         private readonly string _ixpFileExtension;
         private readonly string _vecFileExtension;
         private static readonly object _syncIndexReaderCreation = new object();
+        private static readonly object _syncIndexStreamCreation = new object();
+        private readonly ConcurrentDictionary<string, (Stream indexStream, IList<(long, long)> pages)> _indexStreams;
 
         public ReadSession(string collectionName,
             ulong collectionId,
@@ -57,6 +60,7 @@ namespace Sir.Store
             _ixFileExtension = ixFileExtension;
             _ixpFileExtension = ixpFileExtension;
             _vecFileExtension = vecFileExtension;
+            _indexStreams = new ConcurrentDictionary<string, (Stream indexStream, IList<(long, long)> pages)>();
         }
 
         public async Task<ReadResult> Read(Query query)
@@ -105,7 +109,7 @@ namespace Sir.Store
 
             var result = await _postingsReader.Reduce(query);
 
-            this.Log("reducing {0} to {1} docs took {2}", query, result.Documents.Count, timer.Elapsed);
+            this.Log("remote reduce of {0} produced {1} docs and took {2}", query, result.Documents.Count, timer.Elapsed);
 
             return result;
         }
@@ -117,7 +121,7 @@ namespace Sir.Store
         public void Map(Query query)
         {
             var clauses = query.ToList();
-
+ 
             foreach (var q in clauses)
             {
                 var cursor = q;
@@ -130,11 +134,11 @@ namespace Sir.Store
                         CreateIndexReader(cursor.Term.KeyId.Value) :
                         CreateIndexReader(cursor.Term.KeyHash);
 
-                    if (indexReader != null)
+                    if (indexReader.indexStream != null)
                     {
                         var termVector = cursor.Term.ToVector();
 
-                        hit = indexReader.ClosestMatch(termVector);
+                        hit = indexReader.reader.ClosestMatch(termVector, indexReader.indexStream, indexReader.pages);
                     }
 
                     if (hit != null && hit.Score > 0)
@@ -164,8 +168,13 @@ namespace Sir.Store
             }
         }
 
-        public NodeReader CreateIndexReader(long keyId)
+        public (Stream indexStream, IList<(long, long)> pages, NodeReader reader) CreateIndexReader(long keyId)
         {
+            var time = Stopwatch.StartNew();
+            var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixFileExtension));
+            var ixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixpFileExtension));
+            var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}", CollectionId, _vecFileExtension));
+
             NodeReader reader;
 
             if (!_indexReaders.TryGetValue(keyId, out reader))
@@ -174,28 +183,51 @@ namespace Sir.Store
                 {
                     if (!_indexReaders.TryGetValue(keyId, out reader))
                     {
-                        var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixFileExtension));
-                        var ixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixpFileExtension));
-                        var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}", CollectionId, _vecFileExtension));
-
                         reader = new NodeReader(ixFileName, ixpFileName, vecFileName, SessionFactory, _config);
 
                         _indexReaders.GetOrAdd(keyId, reader);
 
-                        this.Log("created index reader for {0}", ixFileName);
+                        this.Log("created index reader {0} in {1}", ixFileName, time.Elapsed);
                     }
                 }
             }
 
-            return reader;
+            var stream = CreateIndexStream(ixFileName, ixpFileName);
+
+            return (stream.indexStream, stream.pages, reader);
         }
 
-        public NodeReader CreateIndexReader(ulong keyHash)
+        private (Stream indexStream, IList<(long, long)> pages) CreateIndexStream(string ixFileName, string ixpFileName)
+        {
+            (Stream indexStream, IList<(long, long)> pages) stream;
+
+            if (_indexStreams.TryGetValue(ixFileName, out stream))
+            {
+                stream.indexStream.Position = 0;
+                return stream;
+            }
+
+            var time = Stopwatch.StartNew();
+            var pages = SessionFactory.ReadPageInfoFromDisk(ixpFileName);
+            var last = pages[pages.Count - 1];
+            var len = last.offset + last.length;
+            Stream indexStream = SessionFactory.CreateReadStream(ixFileName);
+
+            this.Log($"created index stream in {time.Elapsed}");
+
+            stream = (indexStream, pages);
+
+            _indexStreams.TryAdd(ixFileName, stream);
+
+            return (indexStream, pages);
+        }
+
+        public (Stream indexStream, IList<(long, long)> pages, NodeReader reader) CreateIndexReader(ulong keyHash)
         {
             long keyId;
             if (!SessionFactory.TryGetKeyId(CollectionId, keyHash, out keyId))
             {
-                return null;
+                return (null, null, null);
             }
 
             return CreateIndexReader(keyId);

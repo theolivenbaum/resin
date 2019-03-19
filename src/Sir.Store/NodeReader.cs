@@ -37,19 +37,11 @@ namespace Sir.Store
             _root = new VectorNode();
         }
 
-        private IList<(long offset, long length)> ReadPageInfoFromDisk()
-        {
-            using (var ixpStream = _sessionFactory.CreateReadStream(_ixpFileName))
-            {
-                return new PageIndexReader(ixpStream).ReadAll();
-            }
-        }
-
         public VectorNode Optimized()
         {
             var optimized = new VectorNode();
 
-            Parallel.ForEach(ReadPageInfoFromDisk(), page =>
+            Parallel.ForEach(_sessionFactory.ReadPageInfoFromDisk(_ixpFileName), page =>
             {
                 var time = Stopwatch.StartNew();
 
@@ -72,23 +64,7 @@ namespace Sir.Store
             return optimized;
         }
 
-        private IEnumerable<Stream> AllPages(long len)
-        {
-            var time = Stopwatch.StartNew();
-            var ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
-
-            using (var ixmmf = _sessionFactory.CreateMMF(_ixFileName, ixMapName))
-            {
-                using (var indexStream = ixmmf.CreateViewStream(0, len, MemoryMappedFileAccess.Read))
-                {
-                    yield return indexStream;
-                }
-            }
-
-            this.Log($"refreshed index in {time.Elapsed}");
-        }
-
-        public Hit ClosestMatch(SortedList<long, byte> vector)
+        public Hit ClosestMatch(SortedList<long, byte> vector, Stream indexStream, IList<(long offset, long length)> pages)
         {
             Hit high = _root.ClosestMatch(vector, VectorNode.TermFoldAngle);
 
@@ -98,35 +74,26 @@ namespace Sir.Store
             }
 
             var time = Stopwatch.StartNew();
-            var pages = ReadPageInfoFromDisk();
-            var last = pages[pages.Count - 1];
-            var len = last.offset + last.length;
 
             using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
             {
-                foreach (var indexStream in AllPages(len))
-                {
-                    using (indexStream)
-                    {
-                        var hit = ClosestMatchInPage(
-                            vector, 
-                            indexStream, 
-                            vectorStream, 
+                var hit = ClosestMatchInPage(
+                            vector,
+                            indexStream,
+                            vectorStream,
                             new Queue<(long offset, long length)>(pages));
 
-                        if (high == null || hit.Score > high.Score)
-                        {
-                            high = hit;
-                        }
-                        else if (high != null && hit.Score == high.Score)
-                        {
-                            high.Node.Merge(hit.Node);
-                        }
-                    }
+                if (high == null || hit.Score > high.Score)
+                {
+                    high = hit;
+                }
+                else if (high != null && hit.Score == high.Score)
+                {
+                    high.Node.Merge(hit.Node);
                 }
             }
 
-            this.Log($"closest match took {time.Elapsed}");
+            this.Log($"cache miss. scan took {time.Elapsed}");
 
             return high;
         }
