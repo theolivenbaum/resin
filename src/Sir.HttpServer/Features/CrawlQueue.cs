@@ -157,7 +157,7 @@ namespace Sir.HttpServer.Features
             {
                 var req = (HttpWebRequest)WebRequest.Create(uri);
                 req.ReadWriteTimeout = 10 * 1000;
-                req.Headers.Add("User-Agent", "gogorobot/didyougogo.com");
+                req.Headers.Add("User-Agent", "dygg-robot/didyougogo.com");
                 req.Headers.Add("Accept", "text/html");
 
                 using (var response = (HttpWebResponse)req.GetResponse())
