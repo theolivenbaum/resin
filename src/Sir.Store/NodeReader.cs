@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -20,6 +21,8 @@ namespace Sir.Store
         private readonly string _vecFileName;
         private readonly object _syncRefresh = new object();
         private VectorNode _root;
+        private int _skip;
+        private bool _refreshing;
 
         public NodeReader(
             string ixFileName, 
@@ -34,6 +37,18 @@ namespace Sir.Store
             _config = config;
             _ixpFileName = ixpFileName;
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
+
+            FileSystemWatcher watcher = new FileSystemWatcher();
+            watcher.Path = Path.GetDirectoryName(_ixpFileName);
+            watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+            watcher.Filter = Path.GetFileName(_ixpFileName);
+            watcher.Changed += new FileSystemEventHandler(OnFileChanged);
+            watcher.EnableRaisingEvents = true;
+        }
+
+        public void Add(VectorNode node)
+        {
+            _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
         }
 
         public void Optimize()
@@ -41,11 +56,39 @@ namespace Sir.Store
             _root = Optimized();
         }
 
+        private void OnFileChanged(object sender, FileSystemEventArgs e)
+        {
+            if (_refreshing) return;
+
+            _refreshing = true;
+
+            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName).ToList();
+
+            foreach (var page in pages.Skip(_skip))
+            {
+                var time = Stopwatch.StartNew();
+
+                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
+                {
+                    ixStream.Seek(page.offset, SeekOrigin.Begin);
+
+                    VectorNode.DeserializeTree(ixStream, vectorStream, page.length, _root);
+
+                    this.Log($"refreshed page {page.offset} in {time.Elapsed}");
+                }
+            }
+
+            _skip = pages.Count;
+            _refreshing = false;
+        }
+
         public VectorNode Optimized()
         {
             var optimized = new VectorNode();
+            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName).ToList();
 
-            Parallel.ForEach(_sessionFactory.ReadPageInfoFromDisk(_ixpFileName), page =>
+            Parallel.ForEach(pages.Skip(_skip), page =>
             {
                 var time = Stopwatch.StartNew();
 
@@ -59,6 +102,8 @@ namespace Sir.Store
                     this.Log($"optimized page {page.offset} in {time.Elapsed}");
                 }
             });
+
+            _skip = pages.Count;
 
             return optimized;
         }

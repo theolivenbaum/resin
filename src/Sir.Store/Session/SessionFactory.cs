@@ -46,13 +46,6 @@ namespace Sir.Store
             return len;
         }
 
-        public void ReleaseIndexReaders(ulong collectionId)
-        {
-            ConcurrentDictionary<long, NodeReader> val;
-            _indexReaders.TryRemove(collectionId, out val);
-            this.Log("cleared {0} index reader cache", collectionId);
-        }
-
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> LoadKeys()
         {
             var timer = new Stopwatch();

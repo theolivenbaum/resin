@@ -65,7 +65,7 @@ namespace Sir.Store
                 ixFileExtension: "ixo", 
                 pageFileExtension: "ixop"))
             {
-                columnWriter.ConcatenateColumnSegment(column);
+                columnWriter.AppendColumnSegment(column);
             }
         }
 

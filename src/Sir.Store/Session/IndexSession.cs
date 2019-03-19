@@ -150,8 +150,6 @@ namespace Sir.Store
                 writer.Dispose();
             }
 
-            SessionFactory.ReleaseIndexReaders(CollectionId);
-
             _flushed = true;
             _flushing = false;
 

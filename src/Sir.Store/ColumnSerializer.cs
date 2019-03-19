@@ -49,7 +49,7 @@ namespace Sir.Store
             }
         }
 
-        public void ConcatenateColumnSegment(VectorNode column)
+        public void AppendColumnSegment(VectorNode column)
         {
             var time = Stopwatch.StartNew();
 
@@ -68,7 +68,7 @@ namespace Sir.Store
 
             var size = column.Size();
 
-            this.Log("concatenated column {0} in {1}. weight {2} depth {3} width {4} (avg depth {5})",
+            this.Log("appended page to column {0} in {1}. page.weight {2} page.depth {3} page.width {4} (avg depth {5})",
                 _keyId, time.Elapsed, column.Weight, size.depth, size.width, size.avgDepth);
         }
 
