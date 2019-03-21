@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -38,31 +37,16 @@ namespace Sir.Store
             _ixpFileName = ixpFileName;
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
 
-            FileSystemWatcher watcher = new FileSystemWatcher();
-            watcher.Path = Path.GetDirectoryName(_ixpFileName);
-            watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
-            watcher.Filter = Path.GetFileName(_ixpFileName);
-            watcher.Changed += new FileSystemEventHandler(OnFileChanged);
-            watcher.EnableRaisingEvents = true;
-        }
-
-        public void Add(VectorNode node)
-        {
-            _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
-        }
-
-        public void Optimize()
-        {
             _root = Optimized();
         }
 
-        private void OnFileChanged(object sender, FileSystemEventArgs e)
+        private async Task Refresh()
         {
             if (_refreshing) return;
 
             _refreshing = true;
 
-            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName).ToList();
+            var pages = (await _sessionFactory.ReadPageInfoFromDiskAsync(_ixpFileName)).ToList();
 
             foreach (var page in pages.Skip(_skip))
             {
@@ -88,7 +72,8 @@ namespace Sir.Store
             var optimized = new VectorNode();
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName).ToList();
 
-            Parallel.ForEach(pages.Skip(_skip), page =>
+            foreach(var page in pages.Skip(_skip))
+            //Parallel.ForEach(pages.Skip(_skip), page =>
             {
                 var time = Stopwatch.StartNew();
 
@@ -101,7 +86,7 @@ namespace Sir.Store
 
                     this.Log($"optimized page {page.offset} in {time.Elapsed}");
                 }
-            });
+            }//);
 
             _skip = pages.Count;
 
@@ -110,33 +95,43 @@ namespace Sir.Store
 
         public Hit ClosestMatch(SortedList<long, byte> vector)
         {
-            Hit high = _root.ClosestMatch(vector, VectorNode.TermFoldAngle);
+            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
+
+            var high = _root.ClosestMatch(vector, VectorNode.TermFoldAngle);
+
+            if (_skip == pages.Count)
+            {
+                return high;
+            }
+
+            var time = Stopwatch.StartNew();
+            var refreshTask = Refresh();
+
+            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+            using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
+            {
+                foreach (var page in pages.Skip(_skip))
+                {
+                    var hit = ClosestMatchInPage(
+                                vector,
+                                indexStream,
+                                vectorStream,
+                                new Queue<(long offset, long length)>(pages));
+
+                    if (high == null || hit.Score > high.Score)
+                    {
+                        high = hit;
+                    }
+                    else if (high != null && hit.Score == high.Score)
+                    {
+                        high.Node.Merge(hit.Node);
+                    }
+                }
+            }
+
+            this.Log($"index cache miss. scan took {time.Elapsed}");
 
             return high;
-
-            //var time = Stopwatch.StartNew();
-
-            //using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-            //{
-            //    var hit = ClosestMatchInPage(
-            //                vector,
-            //                indexStream,
-            //                vectorStream,
-            //                new Queue<(long offset, long length)>(pages));
-
-            //    if (high == null || hit.Score > high.Score)
-            //    {
-            //        high = hit;
-            //    }
-            //    else if (high != null && hit.Score == high.Score)
-            //    {
-            //        high.Node.Merge(hit.Node);
-            //    }
-            //}
-
-            //this.Log($"cache miss. scan took {time.Elapsed}");
-
-            //return high;
         }
 
         private Hit ClosestMatchInPage(
@@ -249,7 +244,7 @@ namespace Sir.Store
                 }
             }
 
-            //_root.Add(best, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
+            _root.Add(best, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
 
             return new Hit
             {

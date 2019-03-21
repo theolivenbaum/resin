@@ -30,6 +30,37 @@ namespace Sir.HttpServer.Features
             _queue.Enqueue(uri);
         }
 
+        public string GetTitle(Uri uri)
+        {
+            try
+            {
+                var url = uri.ToString().Replace(uri.Scheme + "://", string.Empty);
+                var str = GetWebString(uri);
+
+                if (str == null)
+                {
+                    return string.Empty;
+                }
+
+                var html = new HtmlDocument();
+
+                html.LoadHtml(str);
+
+                var doc = Parse(html, uri);
+
+                if (doc.title == null)
+                {
+                    return string.Empty;
+                }
+
+                return doc.title;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
         private async Task Submit(Uri uri)
         {
             try
@@ -121,32 +152,41 @@ namespace Sir.HttpServer.Features
 
         private async Task<IList<long>> ExecuteWrite(string collectionName, IDictionary document)
         {
-            var time = Stopwatch.StartNew();
-            IList<long> docIds;
-
-            using (var write = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash()))
+            try
             {
-                docIds = await write.Write(new[] { document });
-            }
+                var time = Stopwatch.StartNew();
+                IList<long> docIds;
 
-            if (docIds.Count > 0)
-            {
-                var skip = (int)docIds[0] - 1;
-                var take = docIds.Count;
-
-                using (var docs = _sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
-                using (var index = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
+                using (var write = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash()))
                 {
-                    foreach (var doc in docs.ReadDocs(skip, take))
+                    docIds = await write.Write(new[] { document });
+                }
+
+                if (docIds.Count > 0)
+                {
+                    var skip = (int)docIds[0] - 1;
+                    var take = docIds.Count;
+
+                    using (var docs = _sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
+                    using (var index = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
                     {
-                        index.EmbedTerms(doc);
+                        foreach (var doc in docs.ReadDocs(skip, take))
+                        {
+                            index.EmbedTerms(doc);
+                        }
                     }
                 }
+
+                this.Log("executed {0} write+index job in {1}", collectionName, time.Elapsed);
+
+                return docIds;
             }
-
-            this.Log("executed {0} write+index job in {1}", collectionName, time.Elapsed);
-
-            return docIds;
+            catch (Exception ex)
+            {
+                this.Log(ex);
+                throw;
+            }
+            
         }
 
         private string GetWebString(Uri uri)

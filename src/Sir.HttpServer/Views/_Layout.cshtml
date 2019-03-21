@@ -2,12 +2,12 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>@ViewBag.Title</title>
+    <title>@ViewBag.Title - dYGG</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="/css/theme.css">
 </head>
 <body>
-    <a href="/" title="DYGG v0.3a"><h1 class="logo">d<i><sup>\</sup>/g</i>g</h1></a>
+    <a href="/" title="dYGG v0.3a"><h1 class="logo">d<i><sup>\</sup>/<span style="font-size:0.7em;">GG</span></i></h1></a>
     <div>
         @RenderBody()
     </div>
@@ -22,7 +22,7 @@
             {
                 <p>Last crawled: <a href="@ViewData["last_processed_url"]">@ViewData["last_processed_title"]</a></p>
             }
-            <p><strong>Free services:</strong> <a href="/queryparser?collection=www&q=trump%20tower&fields=title&fields=body&skip=0&take=10&and=and">Create collection</a> | <a href="/submit/page">Submit URL</a></p>
+            <p><strong>Free services:</strong> <a href="/queryparser?collection=www&q=trump%20tower&fields=title&fields=body&skip=0&take=10&and=and">Create HTTP endpoint</a> | <a href="/submit/page">Submit URL</a></p>
         </div>
     </footer>
 </body>

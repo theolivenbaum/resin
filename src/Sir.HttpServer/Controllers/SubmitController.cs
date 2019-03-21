@@ -39,9 +39,12 @@ namespace Sir.HttpServer.Controllers
 
             try
             {
-                _crawlQueue.Enqueue(new Uri(url));
+                var uri = new Uri(url);
+                _crawlQueue.Enqueue(uri);
+
+                var q = Uri.EscapeDataString(_crawlQueue.GetTitle(uri));
              
-                return Redirect("/submitpage/thankyou?url=" + url);
+                return Redirect($"/submitpage/thankyou?url={url}&q={q}");
             }
             catch (Exception ex)
             {

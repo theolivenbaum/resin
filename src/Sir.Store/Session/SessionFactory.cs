@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -34,6 +35,14 @@ namespace Sir.Store
             using (var ixpStream = CreateReadStream(ixpFileName))
             {
                 return new PageIndexReader(ixpStream).ReadAll();
+            }
+        }
+
+        public async Task<IList<(long offset, long length)>> ReadPageInfoFromDiskAsync(string ixpFileName)
+        {
+            using (var ixpStream = CreateReadStream(ixpFileName))
+            {
+                return await new PageIndexReader(ixpStream).ReadAllAsync();
             }
         }
 
