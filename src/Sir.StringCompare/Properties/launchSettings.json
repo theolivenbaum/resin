@@ -2,7 +2,7 @@
   "profiles": {
     "Sir.StringCompare": {
       "commandName": "Project",
-      "commandLineArgs": "\"first blood\" \"rambo first blood part ii\""
+      "commandLineArgs": "\"when\" \"When should I change my oil\""
     }
   }
 }
