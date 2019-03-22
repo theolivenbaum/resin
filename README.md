@@ -7,7 +7,7 @@ A string database and language model framework:
 - to query a language model
 - to build models upon previous models
 - to get intents from utterances
-- as a search engine
+- a search engine
   
 Built-in capabilities include interfacing with your language model through natural language  
 or by using a structured, boolean query language that supports AND, OR, NOT and (nested (scope)). 
