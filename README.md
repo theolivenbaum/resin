@@ -1,4 +1,4 @@
-# Sir - System for string-based information retrieval
+# Resin - System for string-based information retrieval
 
 This is a string database and language model framework. Use it 
 
