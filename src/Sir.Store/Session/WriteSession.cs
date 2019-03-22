@@ -84,6 +84,13 @@ namespace Sir.Store
 
             foreach (var key in model.Keys)
             {
+                var val = (IComparable)model[key];
+
+                if (val == null)
+                {
+                    continue;
+                }
+
                 var keyStr = key.ToString();
 
                 if (keyStr.StartsWith("__"))
@@ -92,8 +99,6 @@ namespace Sir.Store
                 }
 
                 var keyHash = keyStr.ToHash();
-                var val = (IComparable)model[key];
-                var str = val as string;
                 long keyId, valId;
 
                 if (!SessionFactory.TryGetKeyId(CollectionId, keyHash, out keyId))
