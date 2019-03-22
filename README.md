@@ -1,6 +1,6 @@
-# Resin - System for information retrieval and supervised machine-learning
+# Resin
 
-This is a string database and language model framework. Use it 
+A string database and language model framework: 
 
 - to store documents
 - to create embeddings from text (a "language model")
@@ -9,7 +9,7 @@ This is a string database and language model framework. Use it
 - to get intents from utterances
 - as a search engine
   
-Built-in capabilities include interfacing with your language model through natural language queries 
+Built-in capabilities include interfacing with your language model through natural language  
 or by using a structured, boolean query language that supports AND, OR, NOT and (nested (scope)). 
 
 A number of models are included in the package.
