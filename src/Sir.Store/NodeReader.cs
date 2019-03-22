@@ -175,24 +175,26 @@ namespace Sir.Store
                         }
                     }
 
-                    // we need to determine if we can traverse further left
+                    // We need to determine if we can traverse further left.
                     bool canGoLeft = cursor.Terminator == 0 || cursor.Terminator == 1;
 
                     if (canGoLeft)
                     {
-                        // there is a left and a right child or simply a left child
-                        // either way, next node in bitmap is the left child
+                        // There exists a left and a right child or just a left child.
+                        // Either way, we want to go left and the next node in bitmap is the left child.
 
                         cursor = ReadNode(indexStream, vectorStream);
                     }
                     else
                     {
-                        // there is no left child.
+                        // There is no left child.
 
-                        if (pages.Count == 0) break;
+                        if (pages.Count == 0)
+                            break; // There are no more pages.
 
+                        // There are more pages.
+                        // We can continue scanning by picking up at the first node of the next page.
                         indexStream.Seek(pages.Dequeue().offset, SeekOrigin.Begin);
-
                         cursor = ReadNode(indexStream, vectorStream);
                     }
                 }
@@ -215,30 +217,34 @@ namespace Sir.Store
                         }
                     }
 
-                    // we need to determine if we can traverse further to the right
+                    // We need to determine if we can traverse further to the right.
 
                     if (cursor.Terminator == 0)
                     {
-                        // there is a left and a right child
-                        // next node in bitmap is the left child 
-                        // to find cursor's right child we must skip over the left tree
+                        // There exists a left and a right child.
+                        // Next node in bitmap is the left child. 
+                        // To find cursor's right child we must skip over the left tree.
 
                         SkipTree(indexStream);
-
                         cursor = ReadNode(indexStream, vectorStream);
                     }
                     else if (cursor.Terminator == 2)
                     {
-                        // next node in bitmap is the right child
+                        // Next node in bitmap is the right child,
+                        // which is good because we want to go right.
 
                         cursor = ReadNode(indexStream, vectorStream);
                     }
                     else
                     {
-                        if (pages.Count == 0) break;
+                        // There is no right child.
 
+                        if (pages.Count == 0)
+                            break; // There are no more pages.
+
+                        // There are more pages.
+                        // We can continue scanning by picking up at the first node of the next page.
                         indexStream.Seek(pages.Dequeue().offset, SeekOrigin.Begin);
-
                         cursor = ReadNode(indexStream, vectorStream);
                     }
                 }
