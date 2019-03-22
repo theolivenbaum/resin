@@ -1,18 +1,15 @@
 # Resin
 
-A string database and language model framework: 
+A string database and language model framework that: 
 
-- to store documents
-- to create embeddings from text (a "language model")
-- to query a language model
-- to build models upon previous models
-- to get intents from utterances
-- a search engine
-  
-Built-in capabilities include interfacing with your language model through natural language  
-or by using a structured, boolean query language that supports AND, OR, NOT and (nested (scope)). 
+- stores documents
+- creates embeddings from text (a "language model")
+- has an API that lets you query a model in dynamic (structured) or natural language
+- gets intents from utterances
+- is extendible in a way where you can build custom models, new vector spaces, based on previous models
+- is basically a multi-model search engine
 
-A number of models are included in the package.
+The models that are included in the package:
 
 ## Bag-of-characters model
 
@@ -24,7 +21,7 @@ then into an expression tree, each node representing a AND, OR or NOT set operat
 then serialized and executed on a remote "postings server", producing a page from a distinct set of 
 document IDs that are sorted by score. 
 
-## Document model
+## Document model (Not production-ready)
 
 A graph of documents embedded as bags-of-words. 
 In this model documents gather around "topics". 
@@ -34,14 +31,6 @@ A cluster (of documents) is located by reducing the clause vectors to a document
 by using vector addition/subtraction and then navigating the index graph by evaluating 
 the cos angle between the query and the clusters. Then end-result of the scan is a cluster ID 
 that also corresponds to a postings list ID.
-
-## Topical model
-
-A graph of documents represented as vectors or "bags-of-topics", 
-in a space as wide as there are topics in the lexicon. 
-
-Natural language queries are parsed into bags-of-characters, then into bags-of-words,
-then mapped to a bags-of-topics space.
 
 ## Natural and scoped querying
 
