@@ -180,7 +180,7 @@ namespace Sir.Store
 
                     if (canGoLeft)
                     {
-                        // There exists a left and a right child or just a left child.
+                        // There exists either a left and a right child or just a left child.
                         // Either way, we want to go left and the next node in bitmap is the left child.
 
                         cursor = ReadNode(indexStream, vectorStream);

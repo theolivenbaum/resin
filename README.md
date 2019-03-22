@@ -1,10 +1,13 @@
-# Sir.Resin
+# Sir - System for string-based information retrieval
 
-This is a search engine and language model framework 
-with an API that lets you train and project a language model onto a search tree. 
+This is a string database and language model framework. Use it 
 
-The index is serializable/deserializable and supports 64-bit wide vectors that may represent words, 
-phrases, documents, topics, topics of topics or, simply, cluster IDs.
+- to store documents
+- to create embeddings from text (a "language model")
+- to query a language model
+- to build models upon previous models
+- to get intents from utterances
+- as a search engine
   
 Built-in capabilities include interfacing with your language model through natural language queries 
 or by using a structured, boolean query language that supports AND, OR, NOT and (nested (scope)). 
@@ -13,7 +16,7 @@ A number of models are included in the package.
 
 ## Bag-of-characters model
 
-The first model is a graph of words embedded as bags-of-characters. 
+A graph of words embedded as bags-of-characters. 
 This model creates clusters of documents that share similar words. 
 
 Natural language queries are parsed into terms, then into bags-of-characters, 
@@ -23,7 +26,7 @@ document IDs that are sorted by score.
 
 ## Document model
 
-The second model is a graph of documents embedded as bags-of-words. 
+A graph of documents embedded as bags-of-words. 
 In this model documents gather around "topics". 
 
 Natural language queries are parsed into clauses, each clause into a vector. 
@@ -34,15 +37,11 @@ that also corresponds to a postings list ID.
 
 ## Topical model
 
-The third model is a graph of documents represented as vectors or "bags-of-topics", 
+A graph of documents represented as vectors or "bags-of-topics", 
 in a space as wide as there are topics in the lexicon. 
 
 Natural language queries are parsed into bags-of-characters, then into bags-of-words,
 then mapped to a bags-of-topics space.
-
-## Semantic model
-
-The final model projects each previous to a single dimension then combines them to create a smaller topical search space.
 
 ## Natural and scoped querying
 
