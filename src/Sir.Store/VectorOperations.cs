@@ -278,5 +278,17 @@ namespace Sir
 
             return docVec;
         }
+
+        public static bool ContainsMany(this string text, char c)
+        {
+            var vector = text.ToCharVector();
+
+            if (vector[c] > 1)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 }

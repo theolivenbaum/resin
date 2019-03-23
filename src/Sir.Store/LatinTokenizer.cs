@@ -59,7 +59,7 @@ namespace Sir.Store
             {
                 var len = index - offset;
 
-                if (len > 1)
+                if (len > 0)
                     tokens.Add((offset, index - offset));
             }
 

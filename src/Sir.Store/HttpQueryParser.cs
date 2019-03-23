@@ -91,11 +91,31 @@ namespace Sir.Store
                     .Replace("++", "+")
                     .Replace("--", "-");
 
-                var terms = cleanLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                string[] terms;
+                
+                if (cleanLine.ContainsMany(':'))
+                {
+                    terms = cleanLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                }
+                else
+                {
+                    terms = new string[] { cleanLine };
+                }
+
+                IComparable lastField = string.Empty;
 
                 foreach (var term in terms)
                 {
-                    var query = _queryParser.Parse(collectionId, term, _tokenizer);
+                    var t = term;
+
+                    if (!term.Contains(':'))
+                    {
+                        t = $"{lastField}:{term}";
+                    }
+
+                    var query = _queryParser.Parse(collectionId, t, _tokenizer);
+
+                    lastField = query.Term.Key;
 
                     if (x == null)
                     {
