@@ -499,7 +499,7 @@ namespace Sir.Store
             var weight = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int));
 
             // Deserialize term vector
-            var vec = new SortedList<long, byte>();
+            var vec = new SortedList<long, byte>(vectorCount);
             var vecBuf = new byte[vectorCount * ComponentSize];
 
             if (vecOffset < 0)
