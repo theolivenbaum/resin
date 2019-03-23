@@ -72,8 +72,8 @@ namespace Sir.Store
             var optimized = new VectorNode();
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName).ToList();
 
-            foreach(var page in pages.Skip(_skip))
-            //Parallel.ForEach(pages.Skip(_skip), page =>
+            //foreach(var page in pages.Skip(_skip))
+            Parallel.ForEach(pages.Skip(_skip), page =>
             {
                 var time = Stopwatch.StartNew();
 
@@ -86,7 +86,7 @@ namespace Sir.Store
 
                     this.Log($"optimized page {page.offset} in {time.Elapsed}");
                 }
-            }//);
+            });
 
             _skip = pages.Count;
 
