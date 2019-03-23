@@ -1,6 +1,6 @@
 # Resin
 
-Resin is a combination of two things:
+Resin is:
 
 - A vector database where the key is a 64-bit vector (that may or may not translate into a string, it's up to you) 
 and the payload is a list of Int64's.
@@ -19,11 +19,11 @@ On this architecture a language model framework has been built that carries a HT
 Included out-of-the-box is a web GUI where you can
 
 - query collections of documents with natural or structured queries
-- create slices of existing collections
+- create new collections from slices of existing collections
 
 and a HTTP API that let you
 
-- create new collections
+- create new collections from your data
 - query naturally/structured over HTTP with content type negotiation 
 
 The models included are:
