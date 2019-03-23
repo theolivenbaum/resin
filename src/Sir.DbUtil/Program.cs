@@ -88,6 +88,7 @@ namespace Sir.DbUtil
                 Console.WriteLine("unknown command: {0}", command);
             }
 
+            Console.WriteLine("press any key to exit");
             Console.Read();
         }
 
