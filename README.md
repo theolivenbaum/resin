@@ -21,7 +21,7 @@ that define set operations instead of keys.
 - query collections of documents with natural or structured queries
 - create new collections from slices of existing collections
 
-### and a HTTP API that let you
+### and a HTTP API that lets you
 
 - create new collections from your data
 - query naturally/structured over HTTP with content type negotiation 
@@ -35,13 +35,12 @@ This model creates clusters of documents that share similar words.
 
 Natural language queries are parsed into terms, then into bags-of-characters, 
 then into an expression tree, each node representing a AND, OR or NOT set operation, 
-then serialized and executed on a remote "postings server", producing a distinct set of document IDs 
-that includes documents from as many clusters as there are (distinct) terms in the query.  
+then serialized and executed on a remote "postings server", producing a set of IDs 
+of documents that came from as many clusters as there are (distinct) terms in the query.  
 
 That set is sorted by score and a window defined by skip and take parameters are returned to the orchestrating server, who 
-materializes the list of document IDs, i.e. reads and returns to the client 
-(e.g. a browser or just about any other type of HTTP client) documents that have been formatted 
-according to the HTTP clients "Accept" header.
+materializes the list of document IDs, i.e. reads and returns to the client a windows of those documents, formatted 
+according to the HTTP client's "Accept" header.
 
 ## Document model (Not production-ready)
 
