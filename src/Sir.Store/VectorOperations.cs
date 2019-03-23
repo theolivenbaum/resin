@@ -258,7 +258,7 @@ namespace Sir
             foreach (var term in termVectors)
             {
                 var hit = reader.ClosestMatch(term);
-                var offset = hit.Node.PostingsOffsets == null ? hit.Node.PostingsOffsets[0] : hit.Node.PostingsOffset;
+                var offset = hit.Node.PostingsOffsets != null ? hit.Node.PostingsOffsets[0] : hit.Node.PostingsOffset;
 
                 if (hit.Score == 0 || offset < 0)
                 {

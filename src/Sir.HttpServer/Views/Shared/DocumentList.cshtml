@@ -13,17 +13,19 @@
     <ol>
         @foreach (var item in docs)
         {
-            var url = item.Document.Contains("_url") ? item.Document["_url"].ToString() : "www.unknown.com";
-            var host = new Uri("https://" + url).Host.ToString();
+            var url = item.Document.Contains("_url") ? item.Document["_url"].ToString() : "www.unknownurl.com";
+            var prefix = url.StartsWith("http") ? string.Empty : "https://";
+            var uri = new Uri(prefix + url);
+            var host = uri.Host.ToString();
             var title = item.Document.Contains("title") ? item.Document["title"].ToString() : "Unknown title";
 
             <li>
                 <div>
                     <div class="document-header">
-                        <a href="/upvote/?url=@System.Web.HttpUtility.UrlEncode(url)&q=@ViewData["q"]&collection=@ViewBag.Collection">
+                        <a href="/upvote/?url=@System.Web.HttpUtility.UrlEncode(uri.ToString())&q=@ViewData["q"]&collection=@ViewBag.Collection">
                             <div class="upvote" title="upvote">&#9650;</div> 
                         </a>
-                        <span><a class="result-link" href="https://@url">@title</a></span>
+                        <span><a class="result-link" href="@uri.ToString()">@title</a></span>
                     </div>
                     <div class="document-body">
                         <span style="font-weight:bold;color:black;opacity:0.45;font-size:9pt;">@host</span><br />
