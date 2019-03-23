@@ -18,10 +18,6 @@ namespace Sir.Store
         private readonly string _ixMapName;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
-        private readonly object _syncRefresh = new object();
-        private VectorNode _root;
-        private int _skip;
-        private bool _refreshing;
 
         public NodeReader(
             string ixFileName, 
@@ -36,35 +32,6 @@ namespace Sir.Store
             _config = config;
             _ixpFileName = ixpFileName;
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
-
-            _root = Optimized();
-        }
-
-        private async Task Refresh()
-        {
-            if (_refreshing) return;
-
-            _refreshing = true;
-
-            var pages = (await _sessionFactory.ReadPageInfoFromDiskAsync(_ixpFileName)).ToList();
-
-            foreach (var page in pages.Skip(_skip))
-            {
-                var time = Stopwatch.StartNew();
-
-                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-                using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
-                {
-                    ixStream.Seek(page.offset, SeekOrigin.Begin);
-
-                    VectorNode.DeserializeTree(ixStream, vectorStream, page.length, _root);
-
-                    this.Log($"refreshed page {page.offset} in {time.Elapsed}");
-                }
-            }
-
-            _skip = pages.Count;
-            _refreshing = false;
         }
 
         public VectorNode Optimized()
@@ -72,8 +39,8 @@ namespace Sir.Store
             var optimized = new VectorNode();
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName).ToList();
 
-            //foreach(var page in pages.Skip(_skip))
-            Parallel.ForEach(pages.Skip(_skip), page =>
+            //foreach(var page in pages)
+            Parallel.ForEach(pages, page =>
             {
                 var time = Stopwatch.StartNew();
 
@@ -88,8 +55,6 @@ namespace Sir.Store
                 }
             });
 
-            _skip = pages.Count;
-
             return optimized;
         }
 
@@ -97,39 +62,30 @@ namespace Sir.Store
         {
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
 
-            var high = _root.ClosestMatch(vector, VectorNode.TermFoldAngle);
-
-            if (_skip == pages.Count)
-            {
-                return high;
-            }
+            Hit high = null;
 
             var time = Stopwatch.StartNew();
-            var refreshTask = Refresh();
 
             using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
             using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
             {
-                foreach (var page in pages.Skip(_skip))
-                {
-                    var hit = ClosestMatchInPage(
+                var hit = ClosestMatchInPage(
                                 vector,
                                 indexStream,
                                 vectorStream,
                                 new Queue<(long offset, long length)>(pages));
 
-                    if (high == null || hit.Score > high.Score)
-                    {
-                        high = hit;
-                    }
-                    else if (high != null && hit.Score == high.Score)
-                    {
-                        high.Node.Merge(hit.Node);
-                    }
+                if (high == null || hit.Score > high.Score)
+                {
+                    high = hit;
+                }
+                else if (high != null && hit.Score == high.Score)
+                {
+                    high.Node.Merge(hit.Node);
                 }
             }
 
-            this.Log($"index cache miss. scan took {time.Elapsed}");
+            this.Log($"scan took {time.Elapsed}");
 
             return high;
         }
@@ -140,8 +96,6 @@ namespace Sir.Store
             Stream vectorStream,
             Queue<(long offset, long length)> pages)
         {
-            pages.Dequeue();
-
             var cursor = ReadNode(indexStream, vectorStream);
 
             if (cursor == null)
@@ -249,8 +203,6 @@ namespace Sir.Store
                     }
                 }
             }
-
-            _root.Add(best, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
 
             return new Hit
             {
