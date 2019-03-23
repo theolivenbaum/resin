@@ -1,13 +1,13 @@
 # Resin
 
-A string database and language model framework that: 
+A string database, language model framework and HTTP API that you may use to: 
 
-- stores documents
-- creates embeddings from text (a "language model")
-- has an API that lets you query a model in dynamic (structured) or natural language
-- gets intents from utterances
-- is extendible in a way where you can build custom models, new vector spaces, based on previous models
-- is basically a multi-model search engine
+- store documents (in any format, JSON included out-of-the-box)
+- create embeddings from text (a "language model")
+- query a model in dynamic (structured) or natural language
+- get intents from utterances
+- build custom models, new vector spaces, based on previous models
+- plug in your own reader/writer logic
 
 The models that are included in the package:
 
@@ -34,13 +34,18 @@ that also corresponds to a postings list ID.
 
 ## Natural and scoped querying
 
-Find documents with title "Rambo" or "First Blood" but only if the genre isn't "books", will be parsed into
+To 
+
+	find documents (with title) Rambo or First Blood but only if the genre isn't "books"
+	
+you can use natural language or structured:
 
 	+(title:rambo title:first blood) -(genre:books)
 
-## Create your own collection and then query it.
+## Create your own collection/endpoint
 
-You may host one of these servers yourself, privately or publicly. Or you can use [this free search cloud](https://didyougogo.com).
+To create models from your data you may host one of these servers yourself, privately or publicly, 
+or you can use a [free search cloud](https://didyougogo.com).
 
 ### POST a JSON document to the WRITE endpoint
 
@@ -76,7 +81,7 @@ You may host one of these servers yourself, privately or publicly. Or you can us
 	HTTPS GET didyougogo.com/io/[collection_name]?&qf=[scoped_query]&skip=0&take=10  
 	Accept:application/json
 
-### Human-friendly query GUI
+### Query GUI
 
 	HTTPS GET didyougogo.com/?q=[phrase-or-term-query]&fields=title&skip=0&take=10&collection=[collection_name]
 
