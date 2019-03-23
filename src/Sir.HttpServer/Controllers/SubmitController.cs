@@ -23,7 +23,7 @@ namespace Sir.HttpServer.Controllers
         }
 
         [HttpGet("/submit/page")]
-        public IActionResult Page(string url, string collectionId)
+        public IActionResult Page(string url, string collection)
         {
             if (string.IsNullOrWhiteSpace(url))
             {
@@ -35,7 +35,7 @@ namespace Sir.HttpServer.Controllers
                 return View("Index");
             }
 
-            var collectionName = collectionId ?? Config.Get("default_collection");
+            var collectionName = collection ?? Config.Get("default_collection");
 
             try
             {

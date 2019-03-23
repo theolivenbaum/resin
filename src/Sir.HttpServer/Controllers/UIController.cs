@@ -24,9 +24,10 @@ namespace Sir.HttpServer.Controllers
                 docCount = new FileInfo(fileName).Length/111;
             }
             ViewData["doc_count"] = docCount;
+            ViewBag.DefaultCollection = _config.Get("default_collection");
             ViewBag.Collection = context.HttpContext.Request.Query.ContainsKey("collection") ?
                 context.HttpContext.Request.Query["collection"].ToString() :
-                _config.Get("default_collection");
+                ViewBag.DefaultCollection;
 
             base.OnActionExecuted(context);
         }
