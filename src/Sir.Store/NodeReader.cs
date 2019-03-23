@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -37,7 +36,7 @@ namespace Sir.Store
         public VectorNode Optimized()
         {
             var optimized = new VectorNode();
-            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName).ToList();
+            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
 
             //foreach(var page in pages)
             Parallel.ForEach(pages, page =>
