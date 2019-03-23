@@ -1,6 +1,6 @@
 # &#9084; Resin
 
-### Introduction
+## Introduction
 
 Resin is a
 
@@ -20,17 +20,17 @@ One application of such an architecture is a language model framework. Another i
 - Build custom models in new vector spaces, based on previous models
 - Plug in your own reader/writer filters
 
-### Included out-of-the-box is a web GUI where you can
+### Web GUI where you can
 
 - query collections of documents with natural or structured queries
 - create new collections from slices of existing collections
 
-### and a HTTP API that lets you
+### HTTP API that you can use to
 
 - create new collections from your data
-- query naturally/structured over HTTP with content type negotiation 
+- query naturally/structured over HTTP with content type negotiation
 
-### The models included are:
+The models included are:
 
 ## Bag-of-characters model
 
@@ -73,7 +73,7 @@ you can use natural language or structured:
 To create collections from your data you may host one of these servers yourself, privately or publicly, 
 or you can use a [free search cloud](https://didyougogo.com).
 
-### POST a JSON document to the WRITE endpoint
+#### POST a JSON document to the WRITE endpoint
 
 	HTTPS POST didyougogo.com/io/[collection_name]
 	Content-Type:application/json
@@ -85,49 +85,49 @@ or you can use a [free search cloud](https://didyougogo.com).
 			"field1":"value2"
 		}
 	]
-###	Server should respond with a list of document IDs:
+####	Server should respond with a list of document IDs:
 
 	[
 		1,
 		2
 	]
 
-### GET document by ID
+#### GET document by ID
 
 	HTTPS GET didyougogo.com/io/[collection_name]?id=[document_id]
 	Accept:application/json
 
-### Query collection with natural language through the API
+#### Query collection with natural language through the API
 
 	HTTPS GET didyougogo.com/io/[collection_name]?q=[phrase-or-term]&fields=title&skip=0&take=10  
 	Accept:application/json
 
-### Query collection with query language through the API
+#### Query collection with query language through the API
 
 	HTTPS GET didyougogo.com/io/[collection_name]?&qf=[scoped_query]&skip=0&take=10  
 	Accept:application/json
 
-### Query GUI
+#### Query GUI
 
 	HTTPS GET didyougogo.com/?q=[phrase-or-term-query]&fields=title&skip=0&take=10&collection=[collection_name]
 
-### Advanced query parser
+#### Advanced query parser
 
 	HTTPS GET didyougogo.com/queryparser/?q=[phrase-or-term-query]&qf=[scoped_query]&fields=title&skip=0&take=10&collection=[collection_name]
 
-### HTTP reader/writer micro-service framework.
+## HTTP reader/writer micro-service framework.
 Create distributable readers and writers. Splits a problem into two. 
 https://github.com/kreeben/resin/tree/master/src/Sir.HttpServer
 
-### A key/value writer and map/reduce node. 
+## A key/value writer and map/reduce node. 
 Execute AND, OR and NOT set operations over local lists of Int64's (e.g. document references).  
 https://github.com/kreeben/resin/tree/master/src/Sir.Postings
 
-### Document writer and map/reduce orchestrator. 
+## Document writer and map/reduce orchestrator. 
 On-disk database and in-memory index. Orchestrates remote set operations.   
 https://github.com/kreeben/resin/tree/master/src/Sir.Store
 
-### Roadmap
+## Roadmap
 
 - [x] v0.1a - bag-of-characters term vector space language model
 - [x] v0.2a - HTTP API comprised of distributable search microservices
