@@ -1,4 +1,4 @@
-# Resin
+# &#9084; Resin
 
 ### Resin is:
 
