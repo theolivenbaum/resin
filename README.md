@@ -3,10 +3,10 @@
 A string database, language model framework and HTTP API that you may use to: 
 
 - store documents (in any format, JSON included out-of-the-box)
-- create embeddings from text (a "language model")
+- create embeddings/language model from text
 - query a model in dynamic (structured) or natural language
 - get intents from utterances
-- build custom models, new vector spaces, based on previous models
+- build custom models in new vector spaces, based on previous models
 - plug in your own reader/writer logic
 
 The models that are included in the package:
