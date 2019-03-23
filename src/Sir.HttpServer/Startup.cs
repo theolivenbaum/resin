@@ -92,7 +92,7 @@ namespace Sir.HttpServer
             {
                 File.AppendAllText(
                     Path.Combine(Directory.GetCurrentDirectory(), "log", "sir.httpserver.log.txt"), 
-                    $"{DateTime.Now} {e}{Environment.NewLine}");
+                    $"{Environment.NewLine}{DateTime.Now} {e}{Environment.NewLine}");
 
                 throw;
             }
