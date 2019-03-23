@@ -1,15 +1,22 @@
 # Resin
 
-A string database, language model framework and HTTP API that you may use to: 
+This is a combination of three things:
 
-- store documents (in any format, JSON included out-of-the-box)
+- A vector database where the key is a 64-bit vector (that may or may not translate into a string) and the payload is a list of Int64's.
+- A remote execution node that stores lists of Int64 and where the key is a Int64 and that also accepts query expressions that define set operations 
+to be performed over the payload before being returned over the wire to the client.
+- A key/value store.
+
+On this a language model framework has been built. It carries a HTTP API that lets you: 
+
+- read and write documents (in any format, JSON included out-of-the-box)
 - create embeddings/language models from text
 - query a model in dynamic (structured) or natural language
 - get intents from utterances
 - build custom models in new vector spaces, based on previous models
 - plug in your own reader/writer logic
 
-The models that are included in the package:
+The models included out-of-the-box are:
 
 ## Bag-of-characters model
 
@@ -18,8 +25,13 @@ This model creates clusters of documents that share similar words.
 
 Natural language queries are parsed into terms, then into bags-of-characters, 
 then into an expression tree, each node representing a AND, OR or NOT set operation, 
-then serialized and executed on a remote "postings server", producing a page from a distinct set of 
-document IDs that are sorted by score. 
+then serialized and executed on a remote "postings server", producing a distinct set of document IDs 
+that includes documents from as many clusters as there are (distinct) terms in the query.  
+
+That set is sorted by score and a window defined by skip and take parameters are returned to the orchestrating server, who 
+materializes the list of document IDs, i.e. reads and returns to the client 
+(e.g. a browser or just about any other type of HTTP client) documents that have been formatted 
+according to the HTTP clients "Accept" header.
 
 ## Document model (Not production-ready)
 
@@ -27,16 +39,17 @@ A graph of documents embedded as bags-of-words.
 In this model documents gather around "topics". 
 
 Natural language queries are parsed into clauses, each clause into a document vector. 
-A cluster (of documents) is located by reducing the clause vectors to a document 
+A cluster (of documents) is then located by reducing the clause vectors to a single document 
 by using vector addition/subtraction and then navigating the index graph by evaluating 
 the cos angle between the query and the clusters. Then end-result of the scan is a cluster ID 
-that also corresponds to a postings list ID.
+that also corresponds to a postings list ID. If the topic is a big one, the result set will be large. 
+If you've managed to pinpoint a shallow cluster your result set will be smaller.
 
 ## Natural and scoped querying
 
 To 
 
-	find documents (with title) Rambo or First Blood but only if the genre isn't "books"
+	find documents (with title) Rambo or First Blood but only if the genre isn't books
 	
 you can use natural language or structured:
 
@@ -90,7 +103,7 @@ or you can use a [free search cloud](https://didyougogo.com).
 	HTTPS GET didyougogo.com/queryparser/?q=[phrase-or-term-query]&qf=[scoped_query]&fields=title&skip=0&take=10&collection=[collection_name]
 
 ### HTTP reader/writer micro-service framework.
-Create distributable readers and writers.  
+Create distributable readers and writers. Splits a problem into two. 
 https://github.com/kreeben/resin/tree/master/src/Sir.HttpServer
 
 ### A key/value writer and map/reduce node. 
