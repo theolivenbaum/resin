@@ -1,32 +1,32 @@
 # Resin
 
-Resin is:
+### Resin is:
 
 - A vector database where the key is a 64-bit vector (that may or may not translate into a string, it's up to you) 
 and the payload is a list of Int64's.
 - A remote execution node that stores lists of Int64 where the key is a Int64 and that also accepts query expressions 
 that define set operations instead of keys.
 
-On this architecture a language model framework has been built that carries a HTTP API that lets you: 
+### On this architecture a language model framework has been built that carries a HTTP API that lets you: 
 
-- read and write documents (in any format, JSON included out-of-the-box)
-- create embeddings/language models from text
+- read and write document collections (in any format, JSON included out-of-the-box)
+- create embeddings/language models from collections
 - query a model in dynamic (structured) or natural language
 - get intents from utterances (i.e. map phrases to keys)
 - build custom models in new vector spaces, based on previous models
 - plug in your own reader/writer logic
 
-Included out-of-the-box is a web GUI where you can
+### Included out-of-the-box is a web GUI where you can
 
 - query collections of documents with natural or structured queries
 - create new collections from slices of existing collections
 
-and a HTTP API that let you
+### and a HTTP API that let you
 
 - create new collections from your data
 - query naturally/structured over HTTP with content type negotiation 
 
-The models included are:
+### The models included are:
 
 ## Bag-of-characters model
 
@@ -65,9 +65,9 @@ you can use natural language or structured:
 
 	+(title:rambo title:first blood) -(genre:books)
 
-## Create your own collection/endpoint
+## Create your own collections
 
-To create models from your data you may host one of these servers yourself, privately or publicly, 
+To create collections from your data you may host one of these servers yourself, privately or publicly, 
 or you can use a [free search cloud](https://didyougogo.com).
 
 ### POST a JSON document to the WRITE endpoint
@@ -133,7 +133,7 @@ https://github.com/kreeben/resin/tree/master/src/Sir.Store
 - [ ] v0.5 - semantic language model
 - [ ] v0.6 - local join between collections
 - [ ] v0.7 - private online collections
-- [ ] v0.8 - join (orchestrate) over online/offline and private/public collections
+- [ ] v0.8 - join (orchestrate) over private/public collections
 - [ ] v0.9 - add support for voice models
 - [ ] v1.0 - add support for image models
 - [ ] v2.0 - implement text/image-model-to-voice
