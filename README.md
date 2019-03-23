@@ -1,20 +1,24 @@
 # &#9084; Resin
 
-### Resin is:
+### Introduction
 
-- A vector database where the key is a 64-bit vector (that may or may not translate into a string, it's up to you) 
+Resin is a
+
+- vector database where the key is a 64-bit vector that may or may not translate into a string  (it's up to you) 
 and the payload is a list of Int64's.
-- A remote execution node that stores lists of Int64 where the key is a Int64 and that also accepts query expressions 
-that define set operations instead of keys.
+- remote execution node that stores lists of Int64 where the key is a Int64 that allows lookup by key and also accepts 
+query expressions instead of keyed lookups, where each node in the expression tree defines either an AND, OR or NOT set operation.
 
-### On this architecture a language model framework has been built that carries a HTTP API that lets you: 
+One application of such an architecture is a language model framework. Another is a string database. Still too abstract? Let's get concrete!
 
-- read and write document collections (in any format, JSON included out-of-the-box)
-- create embeddings/language models from collections
-- query a model in dynamic (structured) or natural language
-- get intents from utterances (i.e. map phrases to keys)
-- build custom models in new vector spaces, based on previous models
-- plug in your own reader/writer logic
+### Features
+
+- Create, append to and query document collections (that are in any format, JSON included out-of-the-box)
+- Query a model in dynamic (structured) or natural language
+- Get intents from utterances (i.e. map phrases to keys)
+- Create embeddings/language models from collections
+- Build custom models in new vector spaces, based on previous models
+- Plug in your own reader/writer filters
 
 ### Included out-of-the-box is a web GUI where you can
 
