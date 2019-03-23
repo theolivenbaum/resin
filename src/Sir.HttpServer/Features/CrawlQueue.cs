@@ -14,20 +14,20 @@ namespace Sir.HttpServer.Features
 {
     public class CrawlQueue : IDisposable, ILogger
     {
-        private readonly ProducerConsumerQueue<Uri> _queue;
+        private readonly ProducerConsumerQueue<(string collection, Uri uri)> _queue;
         private readonly SessionFactory _sessionFactory;
 
         public (Uri uri, string title) LastProcessed { get; private set; }
 
         public CrawlQueue(SessionFactory sessionFactory)
         {
-            _queue = new ProducerConsumerQueue<Uri>(1, callback: Submit);
+            _queue = new ProducerConsumerQueue<(string,Uri)>(1, callback: Submit);
             _sessionFactory = sessionFactory;
         }
 
-        public void Enqueue(Uri uri)
+        public void Enqueue(string collection, Uri uri)
         {
-            _queue.Enqueue(uri);
+            _queue.Enqueue((collection, uri));
         }
 
         public string GetTitle(Uri uri)
@@ -61,18 +61,18 @@ namespace Sir.HttpServer.Features
             }
         }
 
-        private async Task Submit(Uri uri)
+        private async Task Submit((string collection, Uri uri) item)
         {
             try
             {
-                var url = uri.ToString().Replace(uri.Scheme + "://", string.Empty);
-                var robotTxt = GetWebString(new Uri(string.Format("{0}://{1}/robots.txt", uri.Scheme, uri.Host)));
+                var url = item.uri.ToString().Replace(item.uri.Scheme + "://", string.Empty);
+                var robotTxt = GetWebString(new Uri(string.Format("{0}://{1}/robots.txt", item.uri.Scheme, item.uri.Host)));
                 var allowed = true;
 
                 if (robotTxt != null)
                 {
                     var robotRules = GetForbiddenUrls(robotTxt);
-                    var uriStr = uri.ToString();
+                    var uriStr = item.uri.ToString();
 
                     foreach (var rule in robotRules)
                     {
@@ -86,12 +86,12 @@ namespace Sir.HttpServer.Features
 
                 if (!allowed)
                 {
-                    this.Log("url forbidden by robot.txt: {0}", uri);
+                    this.Log("url forbidden by robot.txt: {0}", item.uri);
 
                     return;
                 }
 
-                var str = GetWebString(uri);
+                var str = GetWebString(item.uri);
 
                 if (str == null)
                 {
@@ -102,35 +102,35 @@ namespace Sir.HttpServer.Features
 
                 html.LoadHtml(str);
 
-                var doc = Parse(html, uri);
+                var doc = Parse(html, item.uri);
 
                 if (doc.title == null)
                 {
-                    this.Log(string.Format("error processing {0} (no title)", uri));
+                    this.Log(string.Format("error processing {0} (no title)", item.uri));
                     return;
                 }
 
                 var document = new Dictionary<string, object>();
-                var existing = await GetDocument("www", url, doc.title);
+                var existing = await GetDocument(item.collection, url, doc.title);
 
                 if (existing!= null)
                 {
                     document["_original"] = existing["__docid"];
                 }
 
-                document["_site"] = uri.Host;
+                document["_site"] = item.uri.Host;
                 document["_url"] = url;
                 document["title"] = doc.title;
                 document["body"] = doc.body;
                 document["_created"] = DateTime.Now.ToBinary();
 
-                await ExecuteWrite("www", document);
+                await ExecuteWrite(item.collection, document);
                 
-                LastProcessed = (uri, (string)document["title"]);
+                LastProcessed = (item.uri, (string)document["title"]);
             }
             catch (Exception ex)
             {
-                this.Log(string.Format("error processing {0} {1}", uri, ex));
+                this.Log(string.Format("error processing {0} {1}", item.uri, ex));
             }
         }
 

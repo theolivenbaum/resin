@@ -35,12 +35,12 @@ namespace Sir.HttpServer.Controllers
                 return View("Index");
             }
 
-            var collectionName = collectionId ?? "www";
+            var collectionName = collectionId ?? Config.Get("default_collection");
 
             try
             {
                 var uri = new Uri(url);
-                _crawlQueue.Enqueue(uri);
+                _crawlQueue.Enqueue(collectionName, uri);
 
                 var q = Uri.EscapeDataString(_crawlQueue.GetTitle(uri));
              

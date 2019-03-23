@@ -7,22 +7,22 @@
     <link rel="stylesheet" type="text/css" href="/css/theme.css">
 </head>
 <body>
-    <a href="/" title="Did you &#484;&#485;?"><h1 class="logo">&#484;&#485;<span style="font-size:0.7em;"></span></h1></a>
+    <a href="/" title="Did you &#484;&#485;?"><h1 class="logo">&#484;o&#485;o<sup>@ViewBag.Collection</sup></h1></a>
     <div>
         @RenderBody()
     </div>
     <footer>
         <div>
-            <p>Independent, non-tracking search engine powered by <a href="https://github.com/kreeben/resin">Resin v0.3a</a>.</p>
+            <p>Independent, non-tracking search engine powered by <a href="https://github.com/kreeben/resin" title="Resin v0.3a">Resin</a>.</p>
             @if (ViewData["doc_count"] != null)
             {
-                <p>Index size: @ViewData["doc_count"] documents</p>
+                <p>Index size ~ @ViewData["doc_count"] documents</p>
             }
             @if (ViewData["last_processed_url"] != null)
             {
                 <p>Last crawled: <a href="@ViewData["last_processed_url"]">@ViewData["last_processed_title"]</a></p>
             }
-            <p><strong>Free services:</strong> <a href="/queryparser?collection=www&q=trump%20tower&fields=title&fields=body&skip=0&take=10&and=and">Create model</a> | <a href="/submit/page">Submit URL</a></p>
+            <p><strong>Free services:</strong> <a href="/queryparser?collection=@ViewBag.Collection&q=trump%20tower&fields=title&fields=body&skip=0&take=10&and=and">Create model</a> | <a href="/submit/page">Submit URL</a></p>
         </div>
     </footer>
 </body>

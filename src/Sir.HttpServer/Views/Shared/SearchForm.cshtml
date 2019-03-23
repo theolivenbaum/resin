@@ -1,6 +1,5 @@
 ﻿@{
     var col = Context.Request.Query["collection"].ToString();
-    var collection = string.IsNullOrWhiteSpace(col) ? "www" : col;
     var query = Context.Request.Query["q"].ToString();
 }
 @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
@@ -18,5 +17,5 @@
     <input type="hidden" value="10" name="take" id="take" />
     <input type="hidden" value="title" name="fields" />
     <input type="hidden" value="body" name="fields" />
-    <input type="hidden" value="@collection" name="collection" />
+    <input type="hidden" value="@ViewBag.Collection" name="collection" />
 }

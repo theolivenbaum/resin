@@ -36,7 +36,6 @@ namespace Sir.HttpServer.Controllers
             var result = await reader.Read(collection, Request);
 
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
-            ViewData["collection"] = collection;
             ViewData["total"] = result.Total;
 
             if (result.Total == 0)

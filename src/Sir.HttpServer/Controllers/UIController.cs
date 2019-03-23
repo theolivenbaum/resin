@@ -8,6 +8,8 @@ namespace Sir.HttpServer.Controllers
     {
         private readonly IConfigurationProvider _config;
 
+        protected IConfigurationProvider Config { get { return _config; } }
+
         public UIController(IConfigurationProvider config)
         {
             _config = config;
@@ -22,6 +24,10 @@ namespace Sir.HttpServer.Controllers
                 docCount = new FileInfo(fileName).Length/111;
             }
             ViewData["doc_count"] = docCount;
+            ViewBag.Collection = context.HttpContext.Request.Query.ContainsKey("collection") ?
+                context.HttpContext.Request.Query["collection"].ToString() :
+                _config.Get("default_collection");
+
             base.OnActionExecuted(context);
         }
     }

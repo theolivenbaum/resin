@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "There was an error and we couldn't add your page to the index.";
+    ViewData["Title"] = $"There was an error and we couldn't add your page to the {ViewBag.Collection} index.";
     Layout = "~/Views/_Layout.cshtml";
 }
 
@@ -8,7 +8,7 @@
 <div>
     <h2>An error occurred.</h2>
     <p>
-        There was an error and we couldn't add your page to the index.
+        There was an error and we couldn't add your page to the @ViewBag.Collection index.
     </p>
     <p><a href="/add">Submit another page</a></p>
 </div>
