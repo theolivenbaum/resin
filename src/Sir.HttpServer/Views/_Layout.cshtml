@@ -24,10 +24,10 @@
             }
             <p>
                 <a href="/queryparser?collection=@ViewBag.Collection&q=trump%20tower&fields=title&fields=body&skip=0&take=10&and=and">Create language model</a>
-                | <a href="/submit/page?collection=@ViewBag.Collection">Submit URL</a>
+                <span>&#8901;</span> <a href="/submit/page?collection=@ViewBag.Collection">Submit URL</a>
                 @if (!string.IsNullOrWhiteSpace(ViewBag.Collection as string) && ViewBag.Collection != ViewBag.DefaultCollection)
                 {
-                  <span>|</span> <a href="/">&#485;o|&#485;o<sup>@ViewBag.DefaultCollection</sup></a>
+                  <span>&#8901;</span> <a href="/">&#485;o|&#485;o<sup>@ViewBag.DefaultCollection</sup></a>
                 }
             </p>
         </div>
