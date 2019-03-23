@@ -83,16 +83,17 @@ namespace Sir
         {
             long product = 0;
 
-            foreach (var kvp in vec)
+            foreach (var component in vec.Values)
             {
-                product += (kvp.Value * kvp.Value);
+                product += (component * component);
             }
+
             return product;
         }
 
-        public static int Dot(this byte[] vec1, byte[] vec2)
+        public static long Dot(this byte[] vec1, byte[] vec2)
         {
-            int product = 0;
+            long product = 0;
 
             for (int i = 0; i < vec1.Length; i++)
             {
