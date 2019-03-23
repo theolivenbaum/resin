@@ -3,7 +3,7 @@
 A string database, language model framework and HTTP API that you may use to: 
 
 - store documents (in any format, JSON included out-of-the-box)
-- create embeddings/language model from text
+- create embeddings/language models from text
 - query a model in dynamic (structured) or natural language
 - get intents from utterances
 - build custom models in new vector spaces, based on previous models
@@ -26,7 +26,7 @@ document IDs that are sorted by score.
 A graph of documents embedded as bags-of-words. 
 In this model documents gather around "topics". 
 
-Natural language queries are parsed into clauses, each clause into a vector. 
+Natural language queries are parsed into clauses, each clause into a document vector. 
 A cluster (of documents) is located by reducing the clause vectors to a document 
 by using vector addition/subtraction and then navigating the index graph by evaluating 
 the cos angle between the query and the clusters. Then end-result of the scan is a cluster ID 
