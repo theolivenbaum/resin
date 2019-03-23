@@ -1,22 +1,32 @@
 # Resin
 
-This is a combination of three things:
+Resin is a combination of two things:
 
-- A vector database where the key is a 64-bit vector (that may or may not translate into a string) and the payload is a list of Int64's.
-- A remote execution node that stores lists of Int64 and where the key is a Int64 and that also accepts query expressions that define set operations 
-to be performed over the payload before being returned over the wire to the client.
-- A key/value store.
+- A vector database where the key is a 64-bit vector (that may or may not translate into a string, it's up to you) 
+and the payload is a list of Int64's.
+- A remote execution node that stores lists of Int64 where the key is a Int64 and that also accepts query expressions 
+that define set operations instead of keys.
 
-On this a language model framework has been built. It carries a HTTP API that lets you: 
+On this architecture a language model framework has been built that carries a HTTP API that lets you: 
 
 - read and write documents (in any format, JSON included out-of-the-box)
 - create embeddings/language models from text
 - query a model in dynamic (structured) or natural language
-- get intents from utterances
+- get intents from utterances (i.e. map phrases to keys)
 - build custom models in new vector spaces, based on previous models
 - plug in your own reader/writer logic
 
-The models included out-of-the-box are:
+Included out-of-the-box is a web GUI where you can
+
+- query collections of documents with natural or structured queries
+- create slices of existing collections
+
+and a HTTP API that let you
+
+- create new collections
+- query naturally/structured over HTTP with content type negotiation 
+
+The models included are:
 
 ## Bag-of-characters model
 
@@ -36,7 +46,7 @@ according to the HTTP clients "Accept" header.
 ## Document model (Not production-ready)
 
 A graph of documents embedded as bags-of-words. 
-In this model documents gather around "topics". 
+In this model documents gather around syntax "topics". 
 
 Natural language queries are parsed into clauses, each clause into a document vector. 
 A cluster (of documents) is then located by reducing the clause vectors to a single document 
@@ -45,7 +55,7 @@ the cos angle between the query and the clusters. Then end-result of the scan is
 that also corresponds to a postings list ID. If the topic is a big one, the result set will be large. 
 If you've managed to pinpoint a shallow cluster your result set will be smaller.
 
-## Natural and scoped querying
+## Natural and structured querying
 
 To 
 
