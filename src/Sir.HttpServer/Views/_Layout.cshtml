@@ -2,12 +2,12 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>@ViewBag.Title &#485;o&#485;o @ViewBag.Collection</title>
+    <title>@ViewBag.Title &#485;o|&#485;o @ViewBag.Collection</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="/css/theme.css">
 </head>
 <body>
-    <a href="/?collection=@ViewBag.Collection" title="Did you &#484;&#485;?"><h1 class="logo">&#485;o&#485;o<sup>@ViewBag.Collection</sup></h1></a>
+    <a href="/?collection=@ViewBag.Collection" title="&#484;|&#485; @ViewBag.Collection"><h1 class="logo">&#485;o<span style="color:silver;">|</span>&#485;o<sup style="color:silver;">@ViewBag.Collection</sup></h1></a>
     <div>
         @RenderBody()
     </div>
@@ -23,11 +23,11 @@
                 <p>Last crawled: <a href="@ViewData["last_processed_url"]">@ViewData["last_processed_title"]</a></p>
             }
             <p>
-                <a href="/queryparser?collection=@ViewBag.Collection&q=trump%20tower&fields=title&fields=body&skip=0&take=10&and=and">Create model</a>
+                <a href="/queryparser?collection=@ViewBag.Collection&q=trump%20tower&fields=title&fields=body&skip=0&take=10&and=and">Create language model</a>
                 | <a href="/submit/page?collection=@ViewBag.Collection">Submit URL</a>
                 @if (!string.IsNullOrWhiteSpace(ViewBag.Collection as string) && ViewBag.Collection != ViewBag.DefaultCollection)
                 {
-                  <span>|</span> <a href="/">&#485;o&#485;o<sup>@ViewBag.DefaultCollection</sup></a>
+                  <span>|</span> <a href="/">&#485;o|&#485;o<sup>@ViewBag.DefaultCollection</sup></a>
                 }
             </p>
         </div>
