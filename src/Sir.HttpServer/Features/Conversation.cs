@@ -1,50 +1,83 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Sir.Store;
 using System.Threading.Tasks;
 
 namespace Sir.HttpServer.Features
 {
     public class Conversation
     {
-        private readonly IReader _reader;
+        protected SessionFactory SessionFactory { get; }
 
-        public Conversation(IReader reader)
+        public Conversation(SessionFactory sessionFactory)
         {
-            _reader = reader;
+            SessionFactory = sessionFactory;
         }
 
-        public virtual string Start(string query)
+        public virtual async Task<string> Start(string query)
         {
-            string response;
+            string response = null;
+            var formattedQuery = $"body:{query.Replace("\r", "").Replace("\n", "")}";
 
-            if (query.Contains("teddy"))
+            var q = new HttpQueryParser(new TermQueryParser(), new LatinTokenizer())
+                .FromFormattedString("www".ToHash(), formattedQuery);
+            q.Take = 1;
+
+            using (var session = SessionFactory.CreateReadSession("www", "www".ToHash()))
             {
-                response = query.Replace("du", "").Replace("you", "").Replace("'re", "is").Replace("are", "is") + "?";
+                var result = await session.Read(q);
 
-                if (!response.Contains("teddy"))
+                if (result.Docs.Count > 0)
                 {
-                    response = $"teddy{response.Trim()}";
+                    var highscore = (float)result.Docs[0]["___score"] / q.Count();
+
+                    if (highscore > 0.8f)
+                    {
+                        response = result.Docs[0]["title"].ToString();
+                    }
                 }
-            }
-            else if (query.Contains("?"))
-            {
-                response = "Who knows, right? And who cares? Not me! Well, I gatz to go. Laters!";
-            }
-            else if (query.Contains("yes"))
-            {
-                response = "No, that's not right.";
-            }
-            else if (query.Contains("no"))
-            {
-                response = "No. I'm right, you're wrong. Probably. I'm pretty sure.";
-            }
-            else
-            {
-                response = "Not right now. I'm busy doing [insert_important_sounding_thing].";
             }
 
             return response;
+        }
+    }
+
+    public class D365Conversation : Conversation
+    {
+        public D365Conversation(SessionFactory sessionFactory) : base(sessionFactory)
+        {
+        }
+
+        public override async Task<string> Start(string query)
+        {
+            var baseResult = await base.Start(query);
+
+            if (baseResult == null)
+            {
+                string response = null;
+                var cleanQuery = query.Replace("\r", "").Replace("\n", "");
+                var formattedQuery = $"body:{cleanQuery} title:{cleanQuery}";
+
+                var q = new HttpQueryParser(new TermQueryParser(), new LatinTokenizer())
+                    .FromFormattedString("www".ToHash(), formattedQuery);
+                q.Take = 3;
+
+                using (var session = SessionFactory.CreateReadSession("www", "www".ToHash()))
+                {
+                    var result = await session.Read(q);
+
+                    if (result.Docs.Count > 0)
+                    {
+                        response = "";
+                        foreach(var doc in result.Docs)
+                        {
+                            response += $"{doc["title"]}: {doc["_imageUrl"]} ";
+                        }
+                    }
+                }
+
+                return response;
+            }
+
+            return baseResult;
         }
     }
 }

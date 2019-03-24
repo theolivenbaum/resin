@@ -2,11 +2,11 @@
 using Newtonsoft.Json;
 using Sir.Core;
 using Sir.HttpServer.Features;
+using Sir.Store;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Sir.HttpServer.Controllers
@@ -17,32 +17,36 @@ namespace Sir.HttpServer.Controllers
         private readonly string _postMessageUrl;
         private static string _token;
         private readonly ProducerConsumerQueue<dynamic> _queue;
-        private readonly PluginsCollection _plugins;
+        private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
 
-        public SlackController(PluginsCollection plugins, IConfigurationProvider config)
+        public SlackController(PluginsCollection plugins, IConfigurationProvider config, SessionFactory sessionFactory)
         {
             _postMessageUrl = "https://slack.com/api/chat.postMessage";
             _queue = new ProducerConsumerQueue<dynamic>(1, callback: Send);
-            _plugins = plugins;
+            _sessionFactory = sessionFactory;
             _config = config;
         }
 
         [HttpPost("challenge")]
-        public IActionResult Challenge([FromBody]dynamic model)
+        public async Task<IActionResult> Challenge([FromBody]dynamic model)
         {
             string type = model.type;
             string channel = model.channel;
 
             this.LogJ($"request {model}");
 
+            // TODO: validate request against verification token
+
             if (type == "event_callback")
             {
-                OnEvent(model.@event);
+                await OnEvent(model.@event);
             }
             else if (type == "url_verification")
             {
                 _token = model.token;
+
+                // TODO: store verification token
 
                 return new JsonResult(new { model.challenge });
             }
@@ -50,31 +54,25 @@ namespace Sir.HttpServer.Controllers
             return Ok();
         }
 
-        private void OnEvent(dynamic eventMessage)
+        private async Task OnEvent(dynamic eventMessage)
         {
             string type = eventMessage.type;
             string subType = eventMessage.subtype;
 
             if (subType == null)
             {
-                Act(eventMessage);
+                await Act(eventMessage);
             }
         }
 
-        private void Act(dynamic eventMessage)
+        private async Task Act(dynamic eventMessage)
         {
             string query = ((string)eventMessage.text).ToLowerInvariant();
-            var reader = _plugins.Get<IReader>("application/json");
+            var dialog = new D365Conversation(_sessionFactory);
+            var response = await dialog.Start(query);
 
-            if (reader == null)
-            {
-                throw new NotSupportedException();
-            }
-
-            var dialog = new Conversation(reader);
-            var response = dialog.Start(query);
-
-            _queue.Enqueue(new { eventMessage.channel, text = response });
+            if (response != null)
+                _queue.Enqueue(new { eventMessage.channel, text = response });
         }
 
         private async Task Send(dynamic eventMessage)

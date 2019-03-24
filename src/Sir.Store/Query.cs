@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Sir.Store
@@ -135,6 +136,33 @@ namespace Sir.Store
             }
 
             return list;
+        }
+
+        public int Count()
+        {
+            var count = 0;
+
+            Query q = this;
+
+            while (q != null)
+            {
+                if (!q.Not)
+                    count++;
+
+                var then = q.Then;
+
+                while (then != null)
+                {
+                    if (!then.Not)
+                        count++;
+
+                    then = then.Then;
+                }
+
+                q = q.Next;
+            }
+
+            return count;
         }
 
         public byte[] ToStream()

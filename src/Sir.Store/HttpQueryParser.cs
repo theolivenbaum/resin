@@ -40,7 +40,7 @@ namespace Sir.Store
             if (isFormatted)
             {
                 var formattedQuery = request.Query["qf"].ToString();
-                query = FromString(collectionId, formattedQuery);
+                query = FromFormattedString(collectionId, formattedQuery);
             }
             else
             {
@@ -74,7 +74,7 @@ namespace Sir.Store
             return query;
         }
 
-        private Query FromString(ulong collectionId, string formattedQuery)
+        public Query FromFormattedString(ulong collectionId, string formattedQuery)
         {
             Query root = null;
             var lines = formattedQuery
