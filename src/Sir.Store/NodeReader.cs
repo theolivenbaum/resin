@@ -67,7 +67,7 @@ namespace Sir.Store
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
             var mmf = _sessionFactory.CreateMMF(_ixFileName);
             var high = new ConcurrentBag<Hit>();
-
+            
             Parallel.ForEach(pages, page =>
             {
                 using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
@@ -77,8 +77,7 @@ namespace Sir.Store
                         var hit = ClosestMatchInPage(
                                     vector,
                                     indexStream,
-                                    vectorStream,
-                                    new Queue<(long offset, long length)>(pages));
+                                    vectorStream);
 
                         high.Add(hit);
                     }
