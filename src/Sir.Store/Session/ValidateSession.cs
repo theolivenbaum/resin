@@ -39,7 +39,7 @@ namespace Sir.Store
         {
             foreach (var doc in documents)
             {
-                var docId = (long)doc["__docid"];
+                var docId = (long)doc["___docid"];
 
                 foreach (var key in doc.Keys)
                 {

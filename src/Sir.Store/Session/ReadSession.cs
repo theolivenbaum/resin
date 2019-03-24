@@ -260,16 +260,16 @@ namespace Sir.Store
                     doc[key] = val;
                 }
 
-                var docId = doc.ContainsKey("_original") ? long.Parse(doc["_original"].ToString()) : d.Key;
+                var docId = doc.ContainsKey("__original") ? long.Parse(doc["__original"].ToString()) : d.Key;
 
-                doc["__docid"] = docId;
-                doc["__score"] = d.Value;
+                doc["___docid"] = docId;
+                doc["___score"] = d.Value;
 
                 result.Add(doc);
             }
 
             return result
-                .GroupBy(x => (long)x["__docid"])
+                .GroupBy(x => (long)x["___docid"])
                 .SelectMany(g=>g.OrderByDescending(x=>(long)x["_created"]).Take(1))
                 .ToList();
         }
@@ -303,15 +303,15 @@ namespace Sir.Store
 
                 var docId = doc.ContainsKey("_original") ? long.Parse(doc["_original"].ToString()) : d;
 
-                doc["__docid"] = d;
-                doc["__score"] = 1f;
+                doc["___docid"] = d;
+                doc["___score"] = 1f;
 
                 result.Add(doc);
             }
 
             return result
-                .GroupBy(x => (long)x["__docid"])
-                .SelectMany(g => g.OrderByDescending(x => (long)x["_created"]).Take(1))
+                .GroupBy(x => (long)x["___docid"])
+                .SelectMany(g => g.OrderByDescending(x => (long)x["__created"]).Take(1))
                 .ToList();
         }
     }

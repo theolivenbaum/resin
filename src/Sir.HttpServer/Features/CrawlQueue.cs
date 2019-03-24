@@ -115,14 +115,14 @@ namespace Sir.HttpServer.Features
 
                 if (existing!= null)
                 {
-                    document["_original"] = existing["__docid"];
+                    document["__original"] = existing["___docid"];
                 }
 
                 document["_site"] = item.uri.Host;
                 document["_url"] = url;
                 document["title"] = doc.title;
                 document["body"] = doc.body;
-                document["_created"] = DateTime.Now.ToBinary();
+                document["__created"] = DateTime.Now.ToBinary();
 
                 await ExecuteWrite(item.collection, document);
                 
@@ -145,7 +145,7 @@ namespace Sir.HttpServer.Features
                 var result = await readSession.Read(urlQuery);
             
                 return result.Total == 0 
-                    ? null : (float)result.Docs[0]["__score"] >= VectorNode.TermIdenticalAngle 
+                    ? null : (float)result.Docs[0]["___score"] >= VectorNode.TermIdenticalAngle 
                     ? result.Docs[0] : null;
             }
         }

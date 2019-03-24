@@ -182,7 +182,7 @@ namespace Sir.DbUtil
 
                         foreach (var doc in docs.Take(10))
                         {
-                            Console.WriteLine("{0} {1} {2}", index++, doc["__score"], doc["title"]);
+                            Console.WriteLine("{0} {1} {2}", index++, doc["___score"], doc["title"]);
                         }
                     }
                 }

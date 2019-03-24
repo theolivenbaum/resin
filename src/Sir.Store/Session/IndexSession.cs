@@ -50,13 +50,12 @@ namespace Sir.Store
         }
 
         /// <summary>
-        /// Fields prefixed with "__" will not be indexed.
+        /// Fields prefixed with "___" or "__" will not be indexed.
         /// Fields prefixed with "_" will not be tokenized.
         /// </summary>
-        /// <param name="document"></param>
         private void Analyze(IDictionary document)
         {
-            var docId = (long)document["__docid"];
+            var docId = (long)document["___docid"];
 
             foreach (var obj in document.Keys)
             {

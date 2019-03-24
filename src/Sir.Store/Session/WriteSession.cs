@@ -64,9 +64,8 @@ namespace Sir.Store
         }
 
         /// <summary>
-        /// Fields prefixed with "__" will not be stored.
-        /// The "__docid" field, if it exists, will be persisted as "_original", if that field doesn't exist.
-        /// A model may already have a "__docid" field when it originates from another collection.
+        /// Fields prefixed with "___" will not be stored.
+        /// The "___docid" field, if it exists, will be persisted as "__original", if that field doesn't already exist.
         /// </summary>
         /// <returns>Document ID</returns>
         public async Task<long> Write(IDictionary model)
@@ -77,9 +76,9 @@ namespace Sir.Store
             var docId = _docIx.GetNextDocId();
             var docMap = new List<(long keyId, long valId)>();
 
-            if (model.Contains("__docid") && !model.Contains("_original"))
+            if (model.Contains("___docid") && !model.Contains("__original"))
             {
-                model.Add("_original", model["__docid"]);
+                model.Add("__original", model["___docid"]);
             }
 
             foreach (var key in model.Keys)
@@ -93,7 +92,7 @@ namespace Sir.Store
 
                 var keyStr = key.ToString();
 
-                if (keyStr.StartsWith("__"))
+                if (keyStr.StartsWith("___"))
                 {
                     continue;
                 }
@@ -122,7 +121,7 @@ namespace Sir.Store
             var docMeta = await _docs.Append(docMap);
             await _docIx.Append(docMeta.offset, docMeta.length);
 
-            model["__docid"] = docId;
+            model["___docid"] = docId;
 
             this.Log(string.Format("processed document {0} in {1}", docId, timer.Elapsed));
 

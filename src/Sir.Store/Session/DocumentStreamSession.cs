@@ -79,8 +79,8 @@ namespace Sir.Store
                     doc[key] = val;
                 }
 
-                doc["__docid"] = d.Key;
-                doc["__score"] = d.Value;
+                doc["___docid"] = d.Key;
+                doc["___score"] = d.Value;
 
                 yield return doc;
             }
