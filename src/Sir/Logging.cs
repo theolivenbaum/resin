@@ -23,9 +23,14 @@ namespace Sir
             }
         }
 
+        public static void LogJ(this ILogger logger, object message)
+        {
+            Write(logger, $"{DateTime.Now} :: {logger?.GetType()} :: {message}");
+        }
+
         public static void Log(this ILogger logger, object message)
         {
-            Write(logger, string.Format("{0} :: {1} :: {2}", DateTime.Now, logger?.GetType(), message));
+            Write(logger, $"{DateTime.Now} :: {logger?.GetType()} :: {message}");
         }
 
         public static void Log(this ILogger logger, string format, params object[] args)
