@@ -148,7 +148,7 @@ namespace Sir.Store
 
             try
             {
-                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read, HandleInheritability.Inheritable);
 
                 this.Log($"opened existing mmf {mapName}");
             }
@@ -160,13 +160,13 @@ namespace Sir.Store
 
                     try
                     {
-                        mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+                        mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read, HandleInheritability.Inheritable);
                     }
                     catch (FileNotFoundException)
                     {
                         try
                         {
-                            mmf = MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.Read);
+                            mmf = MemoryMappedFile.CreateFromFile(File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), mapName, 0, MemoryMappedFileAccess.Read, HandleInheritability.Inheritable, false);
                             this.Log($"created new mmf {mapName}");
 
                         }

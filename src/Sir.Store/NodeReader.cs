@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -58,42 +59,54 @@ namespace Sir.Store
             return optimized;
         }
 
+        private readonly object _syncRead = new object();
+
         public Hit ClosestMatch(SortedList<long, byte> vector)
         {
-            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
-            var last = pages[pages.Count - 1];
-            var size = last.offset + last.length;
-
-            Hit high = null;
-
             var time = Stopwatch.StartNew();
+            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
+            var mmf = _sessionFactory.CreateMMF(_ixFileName);
+            var high = new ConcurrentBag<Hit>();
 
-            using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
-            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+            Parallel.ForEach(pages, page =>
             {
-                foreach (var page in pages)
+                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
                 {
-                    indexStream.Seek(page.offset, SeekOrigin.Begin);
-
-                    var hit = ClosestMatchInPage(
-                                        vector,
-                                        indexStream,
-                                        vectorStream);
-
-                    if (high == null || hit.Score > high.Score)
+                    using (var indexStream = mmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
                     {
-                        high = hit;
-                    }
-                    else if (high != null && hit.Score == high.Score)
-                    {
-                        high.Node.Merge(hit.Node);
+                        var hit = ClosestMatchInPage(
+                                    vector,
+                                    indexStream,
+                                    vectorStream,
+                                    new Queue<(long offset, long length)>(pages));
+
+                        high.Add(hit);
                     }
                 }
-            }
+
+            });
 
             this.Log($"scan took {time.Elapsed}");
 
-            return high;
+            time.Restart();
+
+            Hit best = null;
+
+            foreach (var hit in high)
+            {
+                if (best == null || hit.Score > best.Score)
+                {
+                    best = hit;
+                }
+                else if (high != null && hit.Score == best.Score)
+                {
+                    best.Node.Merge(hit.Node);
+                }
+            }
+
+            this.Log($"merge took {time.Elapsed}");
+
+            return best;
         }
 
         private Hit ClosestMatchInPage(
