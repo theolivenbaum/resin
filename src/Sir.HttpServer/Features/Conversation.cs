@@ -14,14 +14,15 @@ namespace Sir.HttpServer.Features
 
         public virtual async Task<string> Start(string query)
         {
+            const string modelName = "chitchat";
             string response = null;
             var formattedQuery = $"body:{query.Replace("\r", "").Replace("\n", "")}";
 
             var q = new HttpQueryParser(new TermQueryParser(), new LatinTokenizer())
-                .FromFormattedString("www".ToHash(), formattedQuery);
+                .FromFormattedString(modelName.ToHash(), formattedQuery);
             q.Take = 1;
 
-            using (var session = SessionFactory.CreateReadSession("www", "www".ToHash()))
+            using (var session = SessionFactory.CreateReadSession(modelName, modelName.ToHash()))
             {
                 var result = await session.Read(q);
 
@@ -52,15 +53,17 @@ namespace Sir.HttpServer.Features
 
             if (baseResult == null)
             {
+                const string modelName = "www";
+
                 string response = null;
                 var cleanQuery = query.Replace("\r", "").Replace("\n", "");
                 var formattedQuery = $"body:{cleanQuery} title:{cleanQuery}";
 
                 var q = new HttpQueryParser(new TermQueryParser(), new LatinTokenizer())
-                    .FromFormattedString("www".ToHash(), formattedQuery);
+                    .FromFormattedString(modelName.ToHash(), formattedQuery);
                 q.Take = 3;
 
-                using (var session = SessionFactory.CreateReadSession("www", "www".ToHash()))
+                using (var session = SessionFactory.CreateReadSession(modelName, modelName.ToHash()))
                 {
                     var result = await session.Read(q);
 
