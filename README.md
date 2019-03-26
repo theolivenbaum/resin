@@ -5,7 +5,7 @@
 Resin is a remote
 
 - vector database where the key is a 64-bit vector that may or may not translate into a string  (it's up to you) 
-and the payload is a list of Int64's. What the payload translates into is also your choice. I've chosen document IDs.
+and the payload is a list of Int64's. What the payload translates into is also your choice.
 - execution node that stores lists of Int64's where the key is either that size of a word or a query expression. Each node in an expression tree carries a key and also define either an AND, OR or NOT set operation.
 
 Locally it's a language model framework and remotely it's a search engine (not one of those dumb ones).
