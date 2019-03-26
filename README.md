@@ -14,7 +14,7 @@ One application of such an architecture is a language model framework. Another i
 
 ### Features
 
-- Create, append to and query document collections of any formats (JSON format included out-of-the-box)
+- Create, append to and query document collections of any format (JSON format included out-of-the-box)
 - Query in natural language or structured
 - Create 1-n relationships, e.g. one term to many documents
 - Create n-1 relationships, e.g. one intent to many utterances
