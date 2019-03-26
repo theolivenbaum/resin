@@ -33,6 +33,10 @@ One application of such an architecture is a language model framework. Another i
 - create new document collections
 - query naturally/structured over HTTP with content type negotiation
 
+## Install
+
+Download a clone of this repository, launch the solution in Visual Studio to build and publish it, then create a .Net Core IIS site that points to [path_of_clone]/src/publish. Make sure the app pool type is "unmanaged". Throw an array of JSON documents at it. Query it. Slice it. Before you start re-modelling your models, read about the current state of your data.
+
 ## Bag-of-characters model (included out-of-the-box)
 
 Resin creates a vector space of words embedded as bags-of-characters. This type of embedding was chosen for its encoding speed. You may alter this behaviour. 
