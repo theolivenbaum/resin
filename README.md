@@ -26,7 +26,7 @@ One application of such an architecture is a language model framework. Another i
 ### Resin includes a web GUI where you can
 
 - query collections of documents naturally or structured
-- create new collections from slices of existing collections
+- create new collections from slices of existing collections, slices that are defined by queries
 
 ### and a HTTP API that you can use to
 
