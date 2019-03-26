@@ -5,7 +5,7 @@
 Resin is a
 
 - vector database where the key is a 64-bit vector that may or may not translate into a string  (it's up to you) 
-and the payload is a list of Int64's. What they translate to is your choice.
+and the payload is a list of Int64's. What the payload translates into is also your choice.
 - remote execution node that stores lists of Int64's where the key is either a Int64 or a query expression. Each node in the expression tree defines either an AND, OR or NOT set operation.
 
 One application of such an architecture is a language model framework. Another is a string database. But what can you do with those?
