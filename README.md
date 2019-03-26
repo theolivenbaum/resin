@@ -12,8 +12,8 @@ One application of such an architecture is a language model framework. Another i
 
 ### Features
 
-- Create, append to and query document collections (in any format, JSON knowledge included out-of-the-box)
-- Query a model in dynamic (structured) or natural language
+- Create, append to and query document collection of any formats (JSON format included out-of-the-box)
+- Query in natural language or structured
 - Create 1-n relationships, e.g. one term to many documents
 - Create n-1 relationships, e.g. one intent to many utterances
 - Create embeddings/language models from collections
@@ -23,7 +23,7 @@ One application of such an architecture is a language model framework. Another i
 
 ### Resin includes a web GUI where you can
 
-- query collections of documents with natural or structured queries
+- query collections of documents naturally or structured
 - create new collections from slices of existing collections
 
 ### and a HTTP API that you can use to
