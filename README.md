@@ -8,7 +8,7 @@ Resin is a
 and the payload is a list of Int64's. What they translate to is your choice.
 - remote execution node that stores lists of Int64's where the key is either a Int64 or a query expression. Each node in the expression tree defines either an AND, OR or NOT set operation.
 
-One application of such an architecture is a language model framework. Another is a string database. But what can you do with that?
+One application of such an architecture is a language model framework. Another is a string database. But what can you do with those?
 
 ### Features
 
@@ -66,7 +66,7 @@ you can use natural language or structured:
 
 ## Create your own collections
 
-To create collections from your data you may host one of these servers yourself, privately or publicly, 
+To create collections from your favorite data you may host one of these servers yourself, privately or publicly, 
 or you can use a [free search cloud](https://didyougogo.com).
 
 #### POST a JSON document to the WRITE endpoint
@@ -116,11 +116,11 @@ Create distributable readers and writers. Splits a problem into two.
 https://github.com/kreeben/resin/tree/master/src/Sir.HttpServer
 
 ## A key/value writer and map/reduce node. 
-Execute AND, OR and NOT set operations over local lists of Int64's (e.g. document references).  
+Execute AND, OR and NOT set operations over local lists of Int64's.  
 https://github.com/kreeben/resin/tree/master/src/Sir.Postings
 
 ## Document writer and map/reduce orchestrator. 
-On-disk database and in-memory index. Orchestrates remote set operations.   
+Database and search index. Orchestrates remote set operations.   
 https://github.com/kreeben/resin/tree/master/src/Sir.Store
 
 ## Roadmap
