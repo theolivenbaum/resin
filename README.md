@@ -28,29 +28,28 @@ One application of such an architecture is a language model framework. Another i
 
 ### and a HTTP API that you can use to
 
-- create new collections from your data
+- create new document collections
 - query naturally/structured over HTTP with content type negotiation
 
-## Bag-of-characters model
+## Bag-of-characters model (included out-of-the-box)
 
-Resin creates a vector space of words embedded as bags-of-characters. This type of embedding was chosen for its encoding speed. You may alter this behaviour. With all embeddings aggregated as a graph you have a model that form clusters of documents that share similar words. 
+Resin creates a vector space of words embedded as bags-of-characters. This type of embedding was chosen for its encoding speed. You may alter this behaviour. 
 
-Natural language queries are parsed into terms, then into bags-of-characters, 
-then into an expression tree, each node representing a AND, OR or NOT set operation, 
-then serialized and executed on a remote "postings server", producing a set of IDs 
-of documents that came from as many clusters as there are (distinct) terms in the query.  
+With all embeddings aggregated as a [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs) graph you have a model that form clusters of documents that share similar words. 
+
+Natural language queries are parsed into expression trees with nodes of bags-of-characters that represent a words (or phrases, or something else, it's entirely up to you), each node also representing a AND, OR or NOT set operation. The expression is serialized and executed on a remote server, producing a set of IDs of documents that came from as many clusters as there are (distinct) additative terms in the query.  
 
 That set is sorted by score and a window defined by skip and take parameters are returned to the orchestrating server, who 
 materializes the list of document IDs, i.e. reads and returns to the client a windows of those documents, formatted 
 according to the HTTP client's "Accept" header.
 
-## Document model (Not production-ready)
+## Document model (not production-ready)
 
 The model is a graph of documents embedded as bags-of-words. Documents gather around syntactical topics. 
 
-Natural language queries are parsed into clauses, each clause into a document vector. 
-A cluster (of documents) is then located by reducing the clause vectors to a single document 
-by using vector addition/subtraction and then navigating the index graph by evaluating 
+Natural language queries are parsed into a tree of document-like vectors. 
+A cluster of documents is located by reducing the clause vectors to a single document 
+by using vector addition/subtraction and by navigating the index graph by evaluating 
 the cos angle between the query and the clusters. Then end-result of the scan is a cluster ID 
 that also corresponds to a postings list ID. If the topic is a big one, the result set will be large. 
 If you've managed to pinpoint a shallow cluster your result set will be smaller.
