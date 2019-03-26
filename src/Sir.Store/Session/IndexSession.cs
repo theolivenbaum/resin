@@ -40,7 +40,6 @@ namespace Sir.Store
             _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>(
                 numThreads, BuildModel);
 
-
             _indexReaders = indexReaders;
         }
 

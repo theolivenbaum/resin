@@ -2,7 +2,7 @@
   "profiles": {
     "Sir.DbUtil": {
       "commandName": "Project",
-      "commandLineArgs": "mmf c:\\temp\\app_data\\6604389855880847730.3.ix c:\\temp\\app_data\\6604389855880847730.4.ix c:\\temp\\app_data\\6604389855880847730.5.ix"
+      "commandLineArgs": "index c:\\temp\\app_data www 0 1000 1000"
     }
   }
 }

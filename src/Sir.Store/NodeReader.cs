@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -65,24 +64,22 @@ namespace Sir.Store
         {
             var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
-            var mmf = _sessionFactory.CreateMMF(_ixFileName);
             var high = new ConcurrentBag<Hit>();
-            
+
             Parallel.ForEach(pages, page =>
             {
                 using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName, FileOptions.SequentialScan))
                 {
-                    using (var indexStream = mmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
-                    {
-                        var hit = ClosestMatchInPage(
-                                    vector,
-                                    indexStream,
-                                    vectorStream);
+                    indexStream.Seek(page.offset, SeekOrigin.Begin);
 
-                        high.Add(hit);
-                    }
+                    var hit = ClosestMatchInPage(
+                                vector,
+                                indexStream,
+                                vectorStream);
+
+                    high.Add(hit);
                 }
-
             });
 
             this.Log($"scan took {time.Elapsed}");

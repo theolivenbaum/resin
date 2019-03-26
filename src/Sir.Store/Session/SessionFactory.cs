@@ -148,7 +148,7 @@ namespace Sir.Store
 
             try
             {
-                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read, HandleInheritability.Inheritable);
+                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.ReadWrite, HandleInheritability.Inheritable);
 
                 this.Log($"opened existing mmf {mapName}");
             }
@@ -160,13 +160,13 @@ namespace Sir.Store
 
                     try
                     {
-                        mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read, HandleInheritability.Inheritable);
+                        mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.ReadWrite, HandleInheritability.Inheritable);
                     }
                     catch (FileNotFoundException)
                     {
                         try
                         {
-                            mmf = MemoryMappedFile.CreateFromFile(File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), mapName, 0, MemoryMappedFileAccess.Read, HandleInheritability.Inheritable, false);
+                            mmf = MemoryMappedFile.CreateFromFile(File.Open(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite), mapName, 0, MemoryMappedFileAccess.Read, HandleInheritability.Inheritable, false);
                             this.Log($"created new mmf {mapName}");
 
                         }
@@ -174,7 +174,7 @@ namespace Sir.Store
                         {
                             try
                             {
-                                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+                                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.ReadWrite);
                                 this.Log($"opened existing mmf {mapName}");
 
                             }
@@ -183,7 +183,7 @@ namespace Sir.Store
                                 Thread.Sleep(100);
                                 this.Log($"needed to pause thread to open mmf {mapName}");
 
-                                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
+                                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.ReadWrite);
                                 this.Log($"opened existing mmf {mapName}");
                             }
                         }
@@ -256,10 +256,10 @@ namespace Sir.Store
             : null;
         }
 
-        public Stream CreateReadStream(string fileName)
+        public Stream CreateReadStream(string fileName, FileOptions fileOptions = FileOptions.RandomAccess)
         {
             return File.Exists(fileName)
-                ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+                ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, fileOptions)
                 : null;
         }
 
