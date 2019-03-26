@@ -5,37 +5,35 @@
 Resin is a
 
 - vector database where the key is a 64-bit vector that may or may not translate into a string  (it's up to you) 
-and the payload is a list of Int64's.
-- remote execution node that stores lists of Int64 where the key is a Int64 that allows lookup by key and also accepts 
-query expressions instead of keyed lookups, where each node in the expression tree defines either an AND, OR or NOT set operation.
+and the payload is a list of Int64's. What they translate to is your choice.
+- remote execution node that stores lists of Int64's where the key is either a Int64 or a query expression. Each node in the expression tree defines either an AND, OR or NOT set operation.
 
-One application of such an architecture is a language model framework. Another is a string database. Still too abstract? Let's get concrete!
+One application of such an architecture is a language model framework. Another is a string database. But what can you do with that?
 
 ### Features
 
-- Create, append to and query document collections (that are in any format, JSON included out-of-the-box)
+- Create, append to and query document collections (in any format, JSON knowledge included out-of-the-box)
 - Query a model in dynamic (structured) or natural language
-- Get intents from utterances (i.e. map phrases to keys)
+- Create 1-n relationships, e.g. one term to many documents
+- Create n-1 relationships, e.g. one intent to many utterances
 - Create embeddings/language models from collections
 - Build custom models in new vector spaces, based on previous models
 - Plug in your own reader/writer filters
+- Build digital conversationalists (e.g. chat bots)
 
-### Web GUI where you can
+### Resin includes a web GUI where you can
 
 - query collections of documents with natural or structured queries
 - create new collections from slices of existing collections
 
-### HTTP API that you can use to
+### and a HTTP API that you can use to
 
 - create new collections from your data
 - query naturally/structured over HTTP with content type negotiation
 
-The models included are:
-
 ## Bag-of-characters model
 
-A graph of words embedded as bags-of-characters. 
-This model creates clusters of documents that share similar words. 
+Resin creates a vector space of words embedded as bags-of-characters. This type of embedding was chosen for its encoding speed. You may alter this behaviour. With all embeddings aggregated as a graph you have a model that form clusters of documents that share similar words. 
 
 Natural language queries are parsed into terms, then into bags-of-characters, 
 then into an expression tree, each node representing a AND, OR or NOT set operation, 
@@ -48,8 +46,7 @@ according to the HTTP client's "Accept" header.
 
 ## Document model (Not production-ready)
 
-A graph of documents embedded as bags-of-words. 
-In this model documents gather around syntax "topics". 
+The model is a graph of documents embedded as bags-of-words. Documents gather around syntactical topics. 
 
 Natural language queries are parsed into clauses, each clause into a document vector. 
 A cluster (of documents) is then located by reducing the clause vectors to a single document 
