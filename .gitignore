@@ -16,3 +16,4 @@ log/*.*
 *.json
 *.zip
 *.pubxml
+src/*.ini
