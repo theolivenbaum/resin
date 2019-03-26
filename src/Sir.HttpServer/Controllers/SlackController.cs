@@ -7,6 +7,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Sir.HttpServer.Controllers
@@ -68,11 +69,26 @@ namespace Sir.HttpServer.Controllers
         private async Task Act(dynamic eventMessage)
         {
             string query = ((string)eventMessage.text).ToLowerInvariant();
+            var cleanQuery = query.Replace("\r", "").Replace("\n", "");
+            var formattedQuery = $"body:{cleanQuery} title:{cleanQuery}";
             var dialog = new D365Conversation(_sessionFactory);
-            var response = await dialog.Start(query);
+            var documents = await dialog.Evaluate(formattedQuery);
 
-            if (response != null)
-                _queue.Enqueue(new { eventMessage.channel, text = response });
+            if (documents.Count > 0)
+            {
+                var highscore = documents[documents.Keys[documents.Count - 1]];
+                var response = new StringBuilder();
+
+                foreach (var doc in highscore)
+                {
+                    var title = doc["title"];
+                    var imageUrl = doc.Contains("_imageUrl") ? doc["_imageUrl"] : string.Empty;
+
+                    response.Append($"{title} {imageUrl}  ");
+                }
+
+                _queue.Enqueue(new { eventMessage.channel, text = response.ToString() });
+            }
         }
 
         private async Task Send(dynamic eventMessage)

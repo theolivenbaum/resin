@@ -1,4 +1,6 @@
 ﻿using Sir.Store;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Sir.HttpServer.Features
@@ -12,32 +14,32 @@ namespace Sir.HttpServer.Features
             SessionFactory = sessionFactory;
         }
 
-        public virtual async Task<string> Start(string query)
+        public virtual async Task<SortedList<float, IList<IDictionary>>> Evaluate(string formattedQuery)
         {
             const string modelName = "chitchat";
-            string response = null;
-            var formattedQuery = $"body:{query.Replace("\r", "").Replace("\n", "")}";
-
+            var documents = new SortedList<float, IList<IDictionary>>();
             var q = new HttpQueryParser(new TermQueryParser(), new LatinTokenizer())
                 .FromFormattedString(modelName.ToHash(), formattedQuery);
-            q.Take = 1;
 
             using (var session = SessionFactory.CreateReadSession(modelName, modelName.ToHash()))
             {
                 var result = await session.Read(q);
 
-                if (result.Docs.Count > 0)
+                foreach (var document in result.Docs)
                 {
-                    var highscore = (float)result.Docs[0]["___score"] / q.Count();
+                    IList<IDictionary> list;
 
-                    if (highscore > 0.8f)
+                    if (!documents.TryGetValue((float)document["___score"], out list))
                     {
-                        response = result.Docs[0]["title"].ToString();
+                        list = new List<IDictionary>();
+                        documents.Add((float)document["___score"], list);
                     }
+
+                    list.Add(document);
                 }
             }
 
-            return response;
+            return documents;
         }
     }
 
@@ -47,40 +49,35 @@ namespace Sir.HttpServer.Features
         {
         }
 
-        public override async Task<string> Start(string query)
+        public override async Task<SortedList<float, IList<IDictionary>>> Evaluate(string formattedQuery)
         {
-            var baseResult = await base.Start(query);
+            var documents = await base.Evaluate(formattedQuery);
 
-            if (baseResult == null)
+            const string modelName = "www";
+
+            var q = new HttpQueryParser(new TermQueryParser(), new LatinTokenizer())
+                .FromFormattedString(modelName.ToHash(), formattedQuery);
+            q.Take = 10;
+
+            using (var session = SessionFactory.CreateReadSession(modelName, modelName.ToHash()))
             {
-                const string modelName = "www";
+                var result = await session.Read(q);
 
-                string response = null;
-                var cleanQuery = query.Replace("\r", "").Replace("\n", "");
-                var formattedQuery = $"body:{cleanQuery} title:{cleanQuery}";
-
-                var q = new HttpQueryParser(new TermQueryParser(), new LatinTokenizer())
-                    .FromFormattedString(modelName.ToHash(), formattedQuery);
-                q.Take = 3;
-
-                using (var session = SessionFactory.CreateReadSession(modelName, modelName.ToHash()))
+                foreach (var document in result.Docs)
                 {
-                    var result = await session.Read(q);
+                    IList<IDictionary> list;
 
-                    if (result.Docs.Count > 0)
+                    if (!documents.TryGetValue((float)document["___score"], out list))
                     {
-                        response = "";
-                        foreach(var doc in result.Docs)
-                        {
-                            response += $"{doc["title"]}: {doc["_imageUrl"]} ";
-                        }
+                        list = new List<IDictionary>();
+                        documents.Add((float)document["___score"], list);
                     }
-                }
 
-                return response;
+                    list.Add(document);
+                }
             }
 
-            return baseResult;
+            return documents;
         }
     }
 }
