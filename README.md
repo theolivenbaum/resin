@@ -5,8 +5,10 @@
 Resin is a remote
 
 - vector database where the key is a 64-bit vector that may or may not translate into a string  (it's up to you) 
-and the payload is a list of Int64's. What the payload translates into is also your choice. I've chosen document IDs. Locally it's a language model framework/search engine.
+and the payload is a list of Int64's. What the payload translates into is also your choice. I've chosen document IDs.
 - execution node that stores lists of Int64's where the key is either that size of a word or a query expression. Each node in an expression tree carries a key and also define either an AND, OR or NOT set operation.
+
+Locally it's a language model framework and remotely it's a search engine (not one of those dumb ones).
 
 The main culprit is (the embeddable) [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs). With it you can define and then traverse a 64-bit wide vector space containing anything that is willing to be constrained by it.
 
