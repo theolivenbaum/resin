@@ -8,7 +8,7 @@ Resin is a
 and the payload is a list of Int64's. What the payload translates into is also your choice. I've chosen document IDs.
 - remote execution node that stores lists of Int64's where the key is either a Int64 or a query expression. Each node in the expression tree carries a key and also define either an AND, OR or NOT set operation.
 
-The main culprit is [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs). With it you can define a 64-bit wide vector space containing anything that is willing to be constrained by it.
+The main culprit is [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs). With it you can define and then traverse a 64-bit wide vector space containing anything that is willing to be constrained by it.
 
 One application of such an architecture is a language model framework. Another is a string database. But what can you do with those?
 
