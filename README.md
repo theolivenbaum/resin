@@ -12,7 +12,7 @@ One application of such an architecture is a language model framework. Another i
 
 ### Features
 
-- Create, append to and query document collection of any formats (JSON format included out-of-the-box)
+- Create, append to and query document collections of any formats (JSON format included out-of-the-box)
 - Query in natural language or structured
 - Create 1-n relationships, e.g. one term to many documents
 - Create n-1 relationships, e.g. one intent to many utterances
@@ -50,7 +50,7 @@ The model is a graph of documents embedded as bags-of-words. Documents gather ar
 Natural language queries are parsed into a tree of document-like vectors. 
 A cluster of documents is located by reducing the clause vectors to a single document 
 by using vector addition/subtraction and by navigating the index graph by evaluating 
-the cos angle between the query and the clusters. Then end-result of the scan is a cluster ID 
+the cos angle between the query and the clusters. The end-result of the scan is a cluster ID 
 that also corresponds to a postings list ID. If the topic is a big one, the result set will be large. 
 If you've managed to pinpoint a shallow cluster your result set will be smaller.
 
