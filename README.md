@@ -10,11 +10,10 @@ the key is either a fixed length Int64 or a variable length query expression.
 Each node in such an expression tree carries a fixed length key and also define either an AND, OR or NOT set operation.
 - [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs). 
 With it you can define and then traverse a 64-bit wide vector space containing anything that is willing to be 
-constrained by it. The payload of each node is a list of Int64's.'
+constrained by it. The payload of each node is a list of Int64's.
 
 One application of such an architecture is a language model framework. Another is a string database. A third is 
-a kind of search engine that lets you talk to your data using natural language or structured queries 
-and that you can use as a vector space modelling tool.
+a kind of search engine that lets you talk to your data using natural language or structured queries.
 
 You can install it in the cloud, distributed onto many machines, each one carrying collections of collections and 
 indices for each (analyzed) key in each collection while running one central postings server. 
