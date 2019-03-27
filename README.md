@@ -93,14 +93,14 @@ Programatically, the word `pineapple` is represented as
 		{(long)'p', 3},
 		{(long)'i', 1},
 		{(long)'n', 1},
+		{(long)'e', 2}
 		{(long)'a', 1},
 		{(long)'l', 1},
-		{(long)'e', 2}
 	};
 
 Algebraically: 
 
-`pineapple` has six significant components: [3p][i][n][a][l][2e]
+`pineapple` has six significant components: [3p][i][n][2e][a][l]
 
 Thus:
 
