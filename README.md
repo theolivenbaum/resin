@@ -33,7 +33,7 @@ Here is a non-exhaustive list of features.
 - Build custom models in new vector spaces, based on previous models
 - Plug in your own reader/writer filters
 - Build digital conversationalists (e.g. chat bots, search engines, digital assistants)
-- All features are embeddable (use Resin as a library) but also distributable (talk to Resin over HTTP)
+- All features are embeddable (by using Resin as a library) but also distributable (by talking to Resin over HTTP)
 
 ### Resin includes a web GUI where you can
 
