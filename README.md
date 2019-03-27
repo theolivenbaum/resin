@@ -13,7 +13,8 @@ With it you can define and then traverse a 64-bit wide vector space containing a
 constrained by it. The payload of each node is a list of Int64's.
 
 One application of such an architecture is a language model framework. Another is a string database. A third is 
-a kind of search engine that lets you talk to your data using natural language or structured queries.
+a kind of search engine that lets you talk to your data using natural language or structured queries. 
+Resin is at least those three things but probably more.
 
 You can install it in the cloud, distributed onto many machines, each one carrying collections of collections and 
 indices for each (analyzed) key in each collection while running one central postings server. 
