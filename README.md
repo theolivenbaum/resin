@@ -60,9 +60,9 @@ This type of embedding was chosen for its encoding speed and low CPU pressure at
 With all embeddings aggregated as a [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs) 
 graph you have a model that form clusters of documents that share similar words. 
 
-Natural language queries are parsed into expression trees with nodes of bags-of-characters that represent words 
-(or phrases, or something else, it's entirely up to you), each node also representing a AND, OR or NOT set operation. 
-The expression is serialized and executed on a remote server, producing a set of IDs of documents that came from as 
+Natural language queries are parsed into expression trees with nodes of bags-of-characters that represent words  
+and a AND, OR or NOT set operation. 
+The expression is serialized and executed (reduced) on a remote server, producing a set of IDs of documents that came from as 
 many clusters as there are (distinct) additative terms in the query.  
 
 That set is sorted by score and a window defined by skip and take parameters are returned to the orchestrating server, 
