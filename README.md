@@ -52,7 +52,7 @@ you can use natural language or structured:
 
 	+(title:rambo title:first blood) -(genre:books)
 
-## Bag-of-characters model (included out-of-the-box)
+## Bag-of-characters ("BOC") model (included out-of-the-box)
 
 Resin creates a vector space of words embedded as bags-of-characters. 
 This type of embedding was chosen for its encoding speed and low CPU pressure at querying time.
@@ -79,6 +79,9 @@ by using vector addition/subtraction and by navigating the index graph by evalua
 the cos angle between the query and the clusters. The end-result of the scan is a cluster ID 
 that also corresponds to a postings list ID. If the topic is a big one, the result set will be large. 
 If you've managed to pinpoint a shallow cluster your result set will be smaller.
+
+The reasons for creating such a document model is to represent each document once per index 
+instead of once per term as is the case with the BOC model making it possible to find a topic with a single scan.
 
 ## Install
 
