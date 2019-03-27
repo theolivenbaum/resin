@@ -166,7 +166,7 @@ or you can use a [free search cloud](https://didyougogo.com).
 	HTTPS GET didyougogo.com/queryparser/?q=[phrase-or-term-query]&qf=[scoped_query]&fields=title&skip=0&take=10&collection=[collection_name]
 
 ## HTTP reader/writer micro-service framework.
-Create distributable readers and writers. Splits a problem into two. 
+Plug in your custom read and write filters here. 
 https://github.com/kreeben/resin/tree/master/src/Sir.HttpServer
 
 ## A key/value writer and map/reduce node. 
