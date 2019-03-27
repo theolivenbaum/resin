@@ -114,9 +114,9 @@ Natural language queries are parsed into expression trees with nodes carrying wo
 The expression is serialized and executed (reduced) on a remote server, producing a set of IDs of documents that came from as 
 many clusters as there are (distinct) additative terms in the query.  
 
-That set is sorted by score and a window defined by skip and take parameters are returned to the orchestrating server, 
-who materializes the list of document IDs, i.e. reads and returns to the client a windows of those documents, 
-formatted according to the HTTP client's "Accept" header.
+That set is sorted by score and a window defined by skip and take parameters is returned to the orchestrating server, 
+who materializes the list of document IDs, i.e. reads and returns to the client a document stream formatted according 
+to the HTTP client's "Accept" header.
 
 ## Document model (not production-ready)
 
