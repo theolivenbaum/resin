@@ -101,7 +101,7 @@ namespace Sir.Postings
         private async Task<IList<long>> ReadFromDisk(ulong collectionId, long offset)
         {
             var timer = Stopwatch.StartNew();
-            long[] result;
+            var result = new List<long>();
             var pageCount = 0;
 
             using (var data = CreateReadableDataStream(collectionId))
@@ -130,13 +130,11 @@ namespace Sir.Postings
 
                 await data.ReadAsync(pageBuf);
 
-                result = new long[pageDataCount];
-
                 for (int i = 0; i < pageDataCount; i++)
                 {
                     var entryOffset = sizeof(long) + (i * sizeof(long));
 
-                    result[i] = BitConverter.ToInt64(pageBuf, entryOffset);
+                    result.Add(BitConverter.ToInt64(pageBuf, entryOffset));
                 }
 
                 pageCount++;
@@ -162,14 +160,14 @@ namespace Sir.Postings
                     {
                         var entryOffset = sizeof(long) + (i * sizeof(long));
 
-                        result[i] = BitConverter.ToInt64(page, entryOffset);
+                        result.Add(BitConverter.ToInt64(page, entryOffset));
                     }
 
                     pageCount++;
                 }
             }
 
-            this.Log("read {0} postings from {1} pages in {2}", result.Length, pageCount, timer.Elapsed);
+            this.Log("read {0} postings from {1} pages in {2}", result.Count, pageCount, timer.Elapsed);
 
             return result.ToList();
         }

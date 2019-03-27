@@ -7,6 +7,9 @@ Resin is a remote
 - vector database where the key is a 64-bit vector that may or may not translate into a string  (it's up to you) 
 and the payload is a list of Int64's. What the payload translates into is also your choice.
 - execution node ("postings server") that stores lists of Int64's where the key is either that size of a word or a query expression. Each node in an expression tree carries a key and also define either an AND, OR or NOT set operation.
+- [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs). 
+With it you can define and then traverse a 64-bit wide vector space containing anything that is willing to be 
+constrained by it.
 
 Remotely it's the kind of search engine that lets you talk to your data 
 using natural language or structured queries. Locally it's a vector space modelling tool.
@@ -14,10 +17,6 @@ using natural language or structured queries. Locally it's a vector space modell
 You can install it in the cloud, distributed onto many machines, each one carrying collections of collections and 
 indices for each (analyzed) key in each collection while running one central postings server. 
 Or you can run it on your laptop.
-
-The main culprit is (the embeddable) [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs). 
-With it you can define and then traverse a 64-bit wide vector space containing anything that is willing to be 
-constrained by it.
 
 One application of such an architecture is a language model framework. Another is a string database. 
 Here is a non-exhaustive list of features.
@@ -31,7 +30,7 @@ Here is a non-exhaustive list of features.
 - Create embeddings/language models from collections
 - Build custom models in new vector spaces, based on previous models
 - Plug in your own reader/writer filters
-- Build digital conversationalists (e.g. chat bots)
+- Build digital conversationalists (e.g. chat bots, search engines, digital assistants)
 
 ### Resin includes a web GUI where you can
 
@@ -45,9 +44,9 @@ Here is a non-exhaustive list of features.
 
 ### Natural and structured querying
 
-To 
+To find
 
-	find documents (with title) Rambo or First Blood but only if the genre isn't books
+	documents where title is Rambo or First Blood but only if the genre isn't books
 	
 you can use natural language or structured:
 
@@ -55,7 +54,8 @@ you can use natural language or structured:
 
 ## Bag-of-characters model (included out-of-the-box)
 
-Resin creates a vector space of words embedded as bags-of-characters. This type of embedding was chosen for its encoding speed.
+Resin creates a vector space of words embedded as bags-of-characters. 
+This type of embedding was chosen for its encoding speed and low CPU pressure at querying time.
 
 With all embeddings aggregated as a [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs) 
 graph you have a model that form clusters of documents that share similar words. 
@@ -71,7 +71,7 @@ formatted according to the HTTP client's "Accept" header.
 
 ## Document model (not production-ready)
 
-The model is a graph of documents embedded as bags-of-words. Documents gather around syntactical topics. 
+The model is a graph of documents embedded as bags-of-words. Documents gather around topics. 
 
 Natural language queries are parsed into a tree of document-like vectors. 
 A cluster of documents is located by reducing the clause vectors to a single document 
@@ -86,8 +86,8 @@ Download a clone of this repository, launch the solution in Visual Studio to bui
 Then create a .Net Core IIS site that points to [path_of_clone]/src/publish. 
 Make sure the app pool type is "unmanaged".  
 
-Read below how to create document collections then use your favorite HTTP client to create a collection 
-from an array of JSON documents. Then read about how to query your data, how to slice and re-model it.
+Read below how to create document collections. Use your favorite HTTP client to create a collection 
+from an array of JSON documents. Read on to learn about querying your data, how to slice and then re-model it.
 
 ## Create your own collections
 
