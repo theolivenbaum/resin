@@ -102,8 +102,8 @@ Algebraically:
 
 Thus:
 
-`apple` - `ape` = [p][l] = pl
-`apple` + `ape` = [2*a][3*p][l][2*e] = aappplee
+`apple` - `ape` = pl
+`apple` + `ape` = aappplee
 
 With all embeddings aggregated as a [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs) 
 graph you have a model that form clusters of documents that share similar words. 
