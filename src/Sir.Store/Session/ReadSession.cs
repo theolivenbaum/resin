@@ -122,8 +122,8 @@ namespace Sir.Store
         {
             var clauses = query.ToList();
 
-            //Parallel.ForEach(clauses, q =>
-            foreach (var q in clauses)
+            Parallel.ForEach(clauses, q =>
+            //foreach (var q in clauses)
             {
                 var cursor = q;
 
@@ -166,7 +166,7 @@ namespace Sir.Store
 
                     cursor = cursor.Then;
                 }
-            }//);
+            });
         }
 
         public NodeReader CreateIndexReader(long keyId)
@@ -270,7 +270,7 @@ namespace Sir.Store
 
             return result
                 .GroupBy(x => (long)x["___docid"])
-                .SelectMany(g=>g.OrderByDescending(x=>(long)x["_created"]).Take(1))
+                .SelectMany(g=>g.OrderByDescending(x=>(long)x["__created"]).Take(1))
                 .ToList();
         }
 

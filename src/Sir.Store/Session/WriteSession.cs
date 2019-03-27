@@ -49,7 +49,7 @@ namespace Sir.Store
 
             foreach (var model in docs)
             {
-                model["_created"] = DateTime.Now.ToBinary();
+                model["__created"] = DateTime.Now.ToBinary();
 
                 var docId = await Write(model);
 
