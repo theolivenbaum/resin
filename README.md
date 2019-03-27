@@ -102,7 +102,7 @@ Algebraically:
 
 Thus:
 
-`apple` - `ape` = pl
+`apple` - `ape` = pl  
 `apple` + `ape` = aappplee
 
 With all embeddings aggregated as a [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs) 
