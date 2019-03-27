@@ -50,13 +50,13 @@ Here is a non-exhaustive list of features.
 [IReader](https://github.com/kreeben/resin/blob/master/src/Sir/IReader.cs) and 
 [IWriter](https://github.com/kreeben/resin/blob/master/src/Sir/IWriter.cs).
 
-To execute your your write filter
+To execute your write filter
 
 	HTTPS POST [hostname]/io/[collection_name]
 	Content-Type:[IWriter.ContentType]
 	Custom data payload
 
-To execute your your read filter
+To execute your read filter
 
 	HTTPS GET [hostname]/io/[collection_name?[Custom query payload]]
 	Content-Type:[IReader.ContentType]]
