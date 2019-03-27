@@ -58,7 +58,12 @@ To execute your your write filter
 
 To execute your your read filter
 
-	HTTPS GET [hostname]/io/[collection_name]
+	HTTPS GET [hostname]/io/[collection_name?[Custom query payload]]
+	Content-Type:[IReader.ContentType]]
+
+or when you have a larger query payload
+
+	HTTPS PUT [hostname]/io/[collection_name]
 	Content-Type:[IReader.ContentType]]
 	Custom query payload
 
