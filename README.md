@@ -101,6 +101,8 @@ Make sure the app pool type is "unmanaged".
 Read below how to create document collections. Use your favorite HTTP client to create a collection 
 from an array of JSON documents. Read on to learn about querying your data, how to slice and then re-model it.
 
+Come back to this page and [register any bugs or issues you might find](https://github.com/kreeben/resin/issues).
+
 ## Create your own collections
 
 To create collections from your favorite data you may host one of these servers yourself, privately or publicly, 
