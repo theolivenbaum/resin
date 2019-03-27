@@ -83,27 +83,29 @@ Resin creates a vector space of words embedded as bags-of-characters.
 This type of embedding was chosen for its encoding speed and low CPU pressure at querying time. 
 
 Strengths: fast to encode, fast querying even though it requires O(n) calculations to output a cosine similarity 
-where n is the number of non-zero components. ALso, it considers `the` to be the same word as `hte`.
+where n is the number of non-zero components. Also, it considers `the` to be the same word as `hte`.
 
 Weaknesses: It considers `the` to be the same word as `hte`.
 
-Programatically, the word `apple` is represented as 
+Programatically, the word `pineapple` is represented as 
 
 	SortedList<long, byte>{
+		{(long)'p', 3},
+		{(long)'i', 1},
+		{(long)'n', 1},
 		{(long)'a', 1},
-		{(long)'p', 2},
 		{(long)'l', 1},
-		{(long)'e', 1}
+		{(long)'e', 2}
 	};
 
 Algebraically: 
 
-`apple` has four significant components: [a][2*p][l][e]
+`pineapple` has six significant components: [3*p][i][n][a][l][2*e]
 
 Thus:
 
-`apple` - `ape` = pl  
-`apple` + `ape` = aappplee
+`pineapple` - `pen` = `iapple`
+`pineapple` + `pen` = `pineapplepen`
 
 With all embeddings aggregated as a [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs) 
 graph you have a model that form clusters of documents that share similar words. 
