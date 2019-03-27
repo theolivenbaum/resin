@@ -25,12 +25,14 @@ Here is a non-exhaustive list of features.
 
 - Create, append to and query document collections of any format (JSON format included out-of-the-box)
 - Query in natural language or structured
-- Create 1-n relationships, e.g. one term to many documents
-- Create n-1 relationships, e.g. one intent to many utterances
+- Create 1-n relationships, e.g. one utterance to many documents
+- Create n-1 relationships, e.g. many utterances to one intent
+- Create intent-based applications
 - Create embeddings/language models from collections
 - Build custom models in new vector spaces, based on previous models
 - Plug in your own reader/writer filters
 - Build digital conversationalists (e.g. chat bots, search engines, digital assistants)
+- All features are embeddable (use Resin as a library) but also distributable (talk to Resin over HTTP)
 
 ### Resin includes a web GUI where you can
 
