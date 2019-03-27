@@ -80,7 +80,30 @@ you can use natural language or structured:
 ## Bag-of-characters ("BOC") model (included out-of-the-box)
 
 Resin creates a vector space of words embedded as bags-of-characters. 
-This type of embedding was chosen for its encoding speed and low CPU pressure at querying time.
+This type of embedding was chosen for its encoding speed and low CPU pressure at querying time. 
+
+Strengths: fast to encode, fast querying even though it requires O(n) calculations to output a cosine similarity 
+where n is the number of non-zero components. ALso, it considers `the` to be the same word as `hte`.
+
+Weaknesses: It considers `the` to be the same word as `hte`.
+
+Programatically, the word `apple` is represented as 
+
+	SortedList<long, byte>{
+		{(long)'a', 1},
+		{(long)'p', 2},
+		{(long)'l', 1},
+		{(long)'e', 1}
+	};
+
+Algebraically: 
+
+`apple` has four significant components: [a][2*p][l][e]
+
+Thus:
+
+`apple` - `ape` = [p][l] = pl
+`apple` + `ape` = [2*a][3*p][l][2*e] = aappplee
 
 With all embeddings aggregated as a [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs) 
 graph you have a model that form clusters of documents that share similar words. 
