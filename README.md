@@ -45,7 +45,12 @@ Here is a non-exhaustive list of features.
 - create new document collections
 - query naturally/structured over HTTP with content type negotiation
 
-### Natural and structured querying
+### and a plugin system for read/write filters.
+
+[IReader](https://github.com/kreeben/resin/blob/master/src/Sir/IReader.cs) and 
+[IWriter](https://github.com/kreeben/resin/blob/master/src/Sir/IWriter.cs).
+
+## Natural and structured querying
 
 To find
 
