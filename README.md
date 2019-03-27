@@ -54,11 +54,13 @@ To execute your your write filter
 
 	HTTPS POST [hostname]/io/[collection_name]
 	Content-Type:[[IWriter.ContentType](https://github.com/kreeben/resin/blob/master/src/Sir/IPlugin.cs)]
+	Custom data payload
 
 To execute your your read filter
 
-	HTTPS POST [hostname]/io/[collection_name]
+	HTTPS GET [hostname]/io/[collection_name]
 	Content-Type:[[IReader.ContentType](https://github.com/kreeben/resin/blob/master/src/Sir/IPlugin.cs)]
+	Custom query payload
 
 ## Natural and structured querying
 
