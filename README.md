@@ -83,7 +83,7 @@ Resin creates a vector space of words embedded as bags-of-characters.
 This type of embedding was chosen for its encoding speed and low CPU pressure at querying time. 
 
 Strengths: fast to encode, fast querying even though it requires O(n) calculations to output a cosine similarity 
-where n is the number of non-zero components. Also, it considers `the` to be the same word as `hte`.
+where n is the number of significant components. Also, it considers `the` to be the same word as `hte`.
 
 Weaknesses: It considers `the` to be the same word as `hte`.
 
