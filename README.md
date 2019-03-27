@@ -16,10 +16,9 @@ One application of such an architecture is a language model framework. Another i
 a kind of search engine that lets you talk to your data using natural language or structured queries. 
 Resin is at least those three things but probably more.
 
-You can install it in the cloud, distributed onto many machines, each one carrying collections of collections and 
+You can install it in the cloud, distributed onto many machines each one carrying collections of collections and 
 indices for each (analyzed) key in each collection while running one central postings server. 
 Or you can run it on your laptop.
-
 
 Here is a non-exhaustive list of features.
 
@@ -51,6 +50,16 @@ Here is a non-exhaustive list of features.
 [IReader](https://github.com/kreeben/resin/blob/master/src/Sir/IReader.cs) and 
 [IWriter](https://github.com/kreeben/resin/blob/master/src/Sir/IWriter.cs).
 
+To execute your your write filter
+
+	HTTPS POST [hostname]/io/[collection_name]
+	Content-Type:[[IWriter.ContentType](https://github.com/kreeben/resin/blob/master/src/Sir/IPlugin.cs)]
+
+To execute your your read filter
+
+	HTTPS POST [hostname]/io/[collection_name]
+	Content-Type:[[IReader.ContentType](https://github.com/kreeben/resin/blob/master/src/Sir/IPlugin.cs)]
+
 ## Natural and structured querying
 
 To find
@@ -69,8 +78,7 @@ This type of embedding was chosen for its encoding speed and low CPU pressure at
 With all embeddings aggregated as a [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs) 
 graph you have a model that form clusters of documents that share similar words. 
 
-Natural language queries are parsed into expression trees with nodes of bags-of-characters that represent words  
-and a AND, OR or NOT set operation. 
+Natural language queries are parsed into expression trees with nodes carrying words and AND, OR or NOT set operations. 
 The expression is serialized and executed (reduced) on a remote server, producing a set of IDs of documents that came from as 
 many clusters as there are (distinct) additative terms in the query.  
 
