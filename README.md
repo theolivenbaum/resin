@@ -35,21 +35,31 @@ One application of such an architecture is a language model framework. Another i
 - create new document collections
 - query naturally/structured over HTTP with content type negotiation
 
-## Install
+### Natural and structured querying
 
-Download a clone of this repository, launch the solution in Visual Studio to build and publish it, then create a .Net Core IIS site that points to [path_of_clone]/src/publish. Make sure the app pool type is "unmanaged". Throw an array of JSON documents at it. Query it. Slice it. Before you start re-modelling your models, read about the current state of your data.
+To 
+
+	find documents (with title) Rambo or First Blood but only if the genre isn't books
+	
+you can use natural language or structured:
+
+	+(title:rambo title:first blood) -(genre:books)
 
 ## Bag-of-characters model (included out-of-the-box)
 
-Resin creates a vector space of words embedded as bags-of-characters. This type of embedding was chosen for its encoding speed. You may alter this behaviour. 
+Resin creates a vector space of words embedded as bags-of-characters. This type of embedding was chosen for its encoding speed.
 
-With all embeddings aggregated as a [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs) graph you have a model that form clusters of documents that share similar words. 
+With all embeddings aggregated as a [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs) 
+graph you have a model that form clusters of documents that share similar words. 
 
-Natural language queries are parsed into expression trees with nodes of bags-of-characters that represent words (or phrases, or something else, it's entirely up to you), each node also representing a AND, OR or NOT set operation. The expression is serialized and executed on a remote server, producing a set of IDs of documents that came from as many clusters as there are (distinct) additative terms in the query.  
+Natural language queries are parsed into expression trees with nodes of bags-of-characters that represent words 
+(or phrases, or something else, it's entirely up to you), each node also representing a AND, OR or NOT set operation. 
+The expression is serialized and executed on a remote server, producing a set of IDs of documents that came from as 
+many clusters as there are (distinct) additative terms in the query.  
 
-That set is sorted by score and a window defined by skip and take parameters are returned to the orchestrating server, who 
-materializes the list of document IDs, i.e. reads and returns to the client a windows of those documents, formatted 
-according to the HTTP client's "Accept" header.
+That set is sorted by score and a window defined by skip and take parameters are returned to the orchestrating server, 
+who materializes the list of document IDs, i.e. reads and returns to the client a windows of those documents, 
+formatted according to the HTTP client's "Accept" header.
 
 ## Document model (not production-ready)
 
@@ -62,15 +72,14 @@ the cos angle between the query and the clusters. The end-result of the scan is 
 that also corresponds to a postings list ID. If the topic is a big one, the result set will be large. 
 If you've managed to pinpoint a shallow cluster your result set will be smaller.
 
-## Natural and structured querying
+## Install
 
-To 
+Download a clone of this repository, launch the solution in Visual Studio to build and publish it. 
+Then create a .Net Core IIS site that points to [path_of_clone]/src/publish. 
+Make sure the app pool type is "unmanaged".  
 
-	find documents (with title) Rambo or First Blood but only if the genre isn't books
-	
-you can use natural language or structured:
-
-	+(title:rambo title:first blood) -(genre:books)
+Read below how to create document collections then use your favorite HTTP client to create a collection 
+from an array of JSON documents. Then read about how to query your data, how to slice and re-model it.
 
 ## Create your own collections
 
@@ -115,7 +124,7 @@ or you can use a [free search cloud](https://didyougogo.com).
 
 	HTTPS GET didyougogo.com/?q=[phrase-or-term-query]&fields=title&skip=0&take=10&collection=[collection_name]
 
-#### Advanced query parser
+#### Slice collections using structured queries with the advanced query parser
 
 	HTTPS GET didyougogo.com/queryparser/?q=[phrase-or-term-query]&qf=[scoped_query]&fields=title&skip=0&take=10&collection=[collection_name]
 
