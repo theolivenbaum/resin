@@ -53,13 +53,13 @@ Here is a non-exhaustive list of features.
 To execute your your write filter
 
 	HTTPS POST [hostname]/io/[collection_name]
-	Content-Type:[[IWriter.ContentType](https://github.com/kreeben/resin/blob/master/src/Sir/IPlugin.cs)]
+	Content-Type:[IWriter.ContentType]
 	Custom data payload
 
 To execute your your read filter
 
 	HTTPS GET [hostname]/io/[collection_name]
-	Content-Type:[[IReader.ContentType](https://github.com/kreeben/resin/blob/master/src/Sir/IPlugin.cs)]
+	Content-Type:[IReader.ContentType]]
 	Custom query payload
 
 ## Natural and structured querying
