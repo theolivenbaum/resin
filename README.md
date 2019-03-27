@@ -84,8 +84,8 @@ the cos angle between the query and the clusters. The end-result of the scan is 
 that also corresponds to a postings list ID. If the topic is a big one, the result set will be large. 
 If you've managed to pinpoint a shallow cluster your result set will be smaller.
 
-The reasons for creating such a document model is to represent each document once per index 
-instead of once per term as is the case with the BOC model making it possible to find a topic with a single scan.
+The reason for creating such a document model is to represent each document once per index 
+instead of once per term as is the case with the BOC model, making it possible to find a topic with a single scan.
 
 ## Install
 
