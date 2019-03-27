@@ -134,7 +134,7 @@ instead of once per term as is the case with the BOC model, making it possible t
 ## Install
 
 Download a clone of this repository, launch the solution in Visual Studio to build and publish it. 
-Then create a .Net Core IIS site that points to [path_of_clone]/src/publish. 
+Then create a IIS site that points to [path_of_repository]/src/publish. 
 Make sure the app pool type is "unmanaged".  
 
 Read below how to create document collections. Use your favorite HTTP client to create a collection 
