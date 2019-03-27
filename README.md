@@ -77,7 +77,7 @@ formatted according to the HTTP client's "Accept" header.
 
 The model is a graph of documents embedded as bags-of-words. Documents gather around topics. 
 
-Natural language queries are parsed into a tree of document-like vectors. 
+Natural language queries are parsed into a tree of document sized vectors. 
 A cluster of documents is located by reducing the clause vectors to a single document 
 by using vector addition/subtraction and by navigating the index graph by evaluating 
 the cos angle between the query and the clusters. The end-result of the scan is a cluster ID 
