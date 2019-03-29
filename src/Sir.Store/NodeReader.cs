@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sir.Core;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,8 +19,13 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly string _ixpFileName;
         private readonly string _ixMapName;
+        private VectorNode _root;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
+        private long _optimizedOffset;
+        private bool _optimizing;
+
+        public VectorNode Root { get { return _root; } }
 
         public NodeReader(
             string ixFileName, 
@@ -34,76 +40,65 @@ namespace Sir.Store
             _config = config;
             _ixpFileName = ixpFileName;
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
+            _root = new VectorNode();
+
+            Optimize();
         }
 
-        public VectorNode Optimized()
+        public void Optimize()
         {
-            var optimized = new VectorNode();
-            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
+            if (_optimizing)
+                return;
 
-            //foreach(var page in pages)
-            Parallel.ForEach(pages, page =>
+            _optimizing = true;
+
+            using (var writer = new ProducerConsumerQueue<VectorNode>(
+                int.Parse(_config.Get("write_thread_count")),
+                Build))
             {
-                var time = Stopwatch.StartNew();
-
                 using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
                 using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
                 {
-                    ixStream.Seek(page.offset, SeekOrigin.Begin);
+                    if (_optimizedOffset > 0)
+                    {
+                        ixStream.Seek(_optimizedOffset, SeekOrigin.Begin);
+                    }
 
-                    VectorNode.DeserializeTree(ixStream, vectorStream, page.length, optimized);
+                    var node = ReadNode(ixStream, vectorStream);
 
-                    this.Log($"optimized page {page.offset} in {time.Elapsed}");
+                    while (node != null)
+                    {
+                        if (node.VectorOffset > -1)
+                        {
+                            writer.Enqueue(node);
+                        }
+
+                        node = ReadNode(ixStream, vectorStream);
+                    }
+
+                    _optimizedOffset = ixStream.Position;
                 }
-            });
+            }
 
-            return optimized;
+            _optimizing = false;
+        }
+
+        private void Build(VectorNode node)
+        {
+            _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
         }
 
         public Hit ClosestMatch(SortedList<long, byte> vector)
         {
-            var time = Stopwatch.StartNew();
-            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
-            var high = new ConcurrentBag<Hit>();
-
-            using (var mmf = _sessionFactory.OpenMMF(_ixFileName))
+            using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
             {
-                Parallel.ForEach(pages, page =>
+                if (ixStream.Length > _optimizedOffset)
                 {
-                    using (var indexStream = mmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
-                    using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-                    {
-                        var hit = ClosestMatchInPage(
-                                    vector,
-                                    indexStream,
-                                    vectorStream);
-
-                        high.Add(hit);
-                    }
-                });
-            }
-
-            this.Log($"scan took {time.Elapsed}");
-
-            time.Restart();
-
-            Hit best = null;
-
-            foreach (var hit in high)
-            {
-                if (best == null || hit.Score > best.Score)
-                {
-                    best = hit;
-                }
-                else if (high != null && hit.Score == best.Score)
-                {
-                    best.Node.Merge(hit.Node);
+                    Task.Run(() => Optimize());
                 }
             }
 
-            this.Log($"merge took {time.Elapsed}");
-
-            return best;
+            return _root.ClosestMatch(vector, VectorNode.TermFoldAngle);
         }
 
         private Hit ClosestMatchInPage(

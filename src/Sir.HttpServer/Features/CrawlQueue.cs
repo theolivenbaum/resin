@@ -125,7 +125,14 @@ namespace Sir.HttpServer.Features
                 document["__created"] = DateTime.Now.ToBinary();
 
                 await ExecuteWrite(item.collection, document);
-                
+
+                existing = await GetDocument(item.collection, url, doc.title);
+
+                if (existing == null || (float)existing["___score"] < VectorNode.TermIdenticalAngle)
+                {
+                    throw new InvalidDataException();
+                }
+
                 LastProcessed = (item.uri, (string)document["title"]);
             }
             catch (Exception ex)
