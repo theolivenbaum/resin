@@ -50,23 +50,6 @@ Here is a non-exhaustive list of features.
 [IReader](https://github.com/kreeben/resin/blob/master/src/Sir/IReader.cs) and 
 [IWriter](https://github.com/kreeben/resin/blob/master/src/Sir/IWriter.cs).
 
-To execute your write filter
-
-	HTTPS POST [hostname]/io/[collection_name]
-	Content-Type:[IWriter.ContentType]
-	Custom data payload
-
-To execute your read filter
-
-	HTTPS GET [hostname]/io/[collection_name?[Custom query payload]]
-	Content-Type:[IReader.ContentType]]
-
-or when you have a larger query payload
-
-	HTTPS PUT [hostname]/io/[collection_name]
-	Content-Type:[IReader.ContentType]]
-	Custom query payload
-
 ## Natural and structured querying
 
 To find
@@ -178,7 +161,7 @@ or you can use a [free search cloud](https://didyougogo.com).
 
 #### Query collection with query language through the API
 
-	HTTPS GET didyougogo.com/io/[collection_name]?&qf=[scoped_query]&skip=0&take=10  
+	HTTPS GET didyougogo.com/io/[collection_name]?&qf=[structured_query]&skip=0&take=10  
 	Accept:application/json
 
 #### Query GUI
@@ -187,10 +170,27 @@ or you can use a [free search cloud](https://didyougogo.com).
 
 #### Slice collections using structured queries with the advanced query parser
 
-	HTTPS GET didyougogo.com/queryparser/?q=[phrase-or-term-query]&qf=[scoped_query]&fields=title&skip=0&take=10&collection=[collection_name]
+	HTTPS GET didyougogo.com/queryparser/?q=[phrase-or-term-query]&qf=[structured_query]&fields=title&skip=0&take=10&collection=[collection_name]
+
+#### To execute your write filter
+
+	HTTPS POST [hostname]/io/[collection_name]
+	Content-Type:[IWriter.ContentType]
+	Custom data payload
+
+#### To execute your read filter
+
+	HTTPS GET [hostname]/io/[collection_name?[Custom query payload]]
+	Content-Type:[IReader.ContentType]]
+
+or when you have a larger query payload
+
+	HTTPS PUT [hostname]/io/[collection_name]
+	Content-Type:[IReader.ContentType]]
+	Custom query payload
 
 ## HTTP reader/writer micro-service framework.
-Plug in your custom read and write filters here. 
+Plug in your custom read and write filters here.  
 https://github.com/kreeben/resin/tree/master/src/Sir.HttpServer
 
 ## A key/value writer and map/reduce node. 
@@ -198,7 +198,7 @@ Execute AND, OR and NOT set operations over local lists of Int64's.
 https://github.com/kreeben/resin/tree/master/src/Sir.Postings
 
 ## Document writer and map/reduce orchestrator. 
-Database and search index. Orchestrates remote set operations.   
+Database and search index. Orchestrates remote set operations.  
 https://github.com/kreeben/resin/tree/master/src/Sir.Store
 
 ## Roadmap
