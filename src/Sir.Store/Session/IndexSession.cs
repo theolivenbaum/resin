@@ -150,11 +150,6 @@ namespace Sir.Store
 
             Task.WaitAll(tasks);
 
-            foreach (var writer in columnWriters)
-            {
-                writer.Dispose();
-            }
-
             _flushed = true;
             _flushing = false;
 

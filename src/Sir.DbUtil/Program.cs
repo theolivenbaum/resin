@@ -106,7 +106,7 @@ namespace Sir.DbUtil
             using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration("sir.ini")))
             foreach (var file in files)
             {
-                mapped.Add(sessionFactory.CreateMMF(file));
+                mapped.Add(sessionFactory.OpenMMF(file));
             }
 
             Console.WriteLine("mapping complete.");

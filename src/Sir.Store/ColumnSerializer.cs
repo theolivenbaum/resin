@@ -1,12 +1,11 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Store
 {
-    public class ColumnSerializer : IDisposable, ILogger
+    public class ColumnSerializer : ILogger
     {
         private readonly long _keyId;
         private readonly ulong _collectionId;
@@ -66,6 +65,9 @@ namespace Sir.Store
                 _pageIndexWriter.Flush();
             }
 
+            _ixStream.Dispose();
+            _pageIndexWriter.Dispose();
+
             var size = column.Size();
 
             this.Log("appended page to column {0} in {1}. page.weight {2} page.depth {3} page.width {4} (avg depth {5})",
@@ -89,16 +91,13 @@ namespace Sir.Store
                 _pageIndexWriter.Flush();
             }
 
+            _ixStream.Dispose();
+            _pageIndexWriter.Dispose();
+
             var size = column.Size();
 
             this.Log("serialized column {0} in {1}. weight {2} depth {3} width {4} (avg depth {5})",
                 _keyId, time.Elapsed, column.Weight, size.depth, size.width, size.avgDepth);
-        }
-
-        public void Dispose()
-        {
-            _ixStream.Dispose();
-            _pageIndexWriter.Dispose();
         }
     }
 }

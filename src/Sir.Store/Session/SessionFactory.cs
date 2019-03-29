@@ -140,7 +140,7 @@ namespace Sir.Store
 
         private readonly object _syncMMF = new object();
 
-        public MemoryMappedFile CreateMMF(string fileName)
+        public MemoryMappedFile OpenMMF(string fileName)
         {
             MemoryMappedFile mmf;
             var time = Stopwatch.StartNew();
@@ -148,7 +148,7 @@ namespace Sir.Store
 
             try
             {
-                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.ReadWrite, HandleInheritability.Inheritable);
+                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read, HandleInheritability.Inheritable);
 
                 this.Log($"opened existing mmf {mapName}");
             }
@@ -156,17 +156,15 @@ namespace Sir.Store
             {
                 lock (_syncMMF)
                 {
-                    this.Log($"needed to acquire lock to open mmf {mapName}");
-
                     try
                     {
-                        mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.ReadWrite, HandleInheritability.Inheritable);
+                        mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read, HandleInheritability.Inheritable);
                     }
                     catch (FileNotFoundException)
                     {
                         try
                         {
-                            mmf = MemoryMappedFile.CreateFromFile(File.Open(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite), mapName, 0, MemoryMappedFileAccess.Read, HandleInheritability.Inheritable, false);
+                            mmf = MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.Read);
                             this.Log($"created new mmf {mapName}");
 
                         }
@@ -174,7 +172,7 @@ namespace Sir.Store
                         {
                             try
                             {
-                                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.ReadWrite);
+                                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
                                 this.Log($"opened existing mmf {mapName}");
 
                             }
@@ -183,7 +181,7 @@ namespace Sir.Store
                                 Thread.Sleep(100);
                                 this.Log($"needed to pause thread to open mmf {mapName}");
 
-                                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.ReadWrite);
+                                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
                                 this.Log($"opened existing mmf {mapName}");
                             }
                         }

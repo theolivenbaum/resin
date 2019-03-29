@@ -124,11 +124,6 @@ namespace Sir.Store
 
             Task.WaitAll(tasks.ToArray());
 
-            foreach (var writer in writers)
-            {
-                writer.Dispose();
-            }
-
             this.Log("***FLUSHED*** and completed building of model {0}", CollectionId);
         }
 

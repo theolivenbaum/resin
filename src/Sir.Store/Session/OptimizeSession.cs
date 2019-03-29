@@ -57,16 +57,15 @@ namespace Sir.Store
 
         private void SerializeColumn(long keyId, VectorNode column)
         {
-            using (var columnWriter = new ColumnSerializer(
-                CollectionId, 
-                keyId, 
-                SessionFactory, 
+            var columnWriter = new ColumnSerializer(
+                CollectionId,
+                keyId,
+                SessionFactory,
                 postingsWriter: _postingsWriter,
-                ixFileExtension: "ixo", 
-                pageFileExtension: "ixop"))
-            {
-                columnWriter.AppendColumnSegment(column);
-            }
+                ixFileExtension: "ixo",
+                pageFileExtension: "ixop");
+
+            columnWriter.AppendColumnSegment(column);
         }
 
         private void Publish()

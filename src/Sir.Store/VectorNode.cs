@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -487,6 +488,54 @@ namespace Sir.Store
             right._ancestor = null;
 
             return right;
+        }
+
+        public static VectorNode DeserializeNode(byte[] buf, MemoryMappedViewAccessor vectorView, ref byte terminator)
+        {
+            // Deserialize node
+            var angle = BitConverter.ToSingle(buf, 0);
+            var vecOffset = BitConverter.ToInt64(buf, sizeof(float));
+            var postingsOffset = BitConverter.ToInt64(buf, sizeof(float) + sizeof(long));
+            var vectorCount = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long));
+            var weight = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int));
+
+            // Deserialize term vector
+            var vec = new SortedList<long, byte>(vectorCount);
+            var vecBuf = new byte[vectorCount * ComponentSize];
+
+            if (vecOffset < 0)
+            {
+                vec.Add(0, 1);
+            }
+            else
+            {
+                vectorView.ReadArray(vecOffset, vecBuf, 0, vecBuf.Length);
+
+                var offs = 0;
+
+                for (int i = 0; i < vectorCount; i++)
+                {
+                    var key = BitConverter.ToInt64(vecBuf, offs);
+                    var val = vecBuf[offs + sizeof(long)];
+
+                    vec.Add(key, val);
+
+                    offs += ComponentSize;
+                }
+            }
+
+            // Create node
+            var node = new VectorNode(vec);
+
+            node.Angle = angle;
+            node.PostingsOffset = postingsOffset;
+            node.VectorOffset = vecOffset;
+            node.Terminator = terminator;
+            node.Weight = weight;
+
+            terminator = buf[buf.Length - 1];
+
+            return node;
         }
 
         public static VectorNode DeserializeNode(byte[] buf, Stream vectorStream, ref byte terminator)
