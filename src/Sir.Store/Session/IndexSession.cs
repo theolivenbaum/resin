@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -43,16 +44,16 @@ namespace Sir.Store
             _indexReaders = indexReaders;
         }
 
-        public void EmbedTerms(IDictionary document)
+        public void Index(IDictionary document, params long[] excludeKeyIds)
         {
-            Analyze(document);
+            Analyze(document, excludeKeyIds);
         }
 
         /// <summary>
         /// Fields prefixed with "___" or "__" will not be indexed.
         /// Fields prefixed with "_" will not be tokenized.
         /// </summary>
-        private void Analyze(IDictionary document)
+        private void Analyze(IDictionary document, params long[] excludeKeyIds)
         {
             var docId = (long)document["___docid"];
 
@@ -65,6 +66,12 @@ namespace Sir.Store
                 {
                     var keyHash = key.ToHash();
                     var keyId = SessionFactory.GetKeyId(CollectionId, keyHash);
+
+                    if (excludeKeyIds.Contains(keyId))
+                    {
+                        continue;
+                    }
+
                     var val = (IComparable)document[key];
                     var str = val as string;
 

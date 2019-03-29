@@ -2,6 +2,9 @@
 
 namespace Sir
 {
+    /// <summary>
+    /// An analyzed (tokenized) string.
+    /// </summary>
     public class AnalyzedString
     {
         public IList<(int offset, int length)> Tokens { get; set; }

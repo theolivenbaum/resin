@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace Sir.Store
 {
     /// <summary>
-    /// Write document meta-data (offset and length of document map) to the document index stream.
+    /// Write offset and length of document map to the document index stream.
     /// </summary>
     public class DocIndexWriter
     {

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace Sir.Store
 {
     /// <summary>
-    /// Read document meta-data (offset and length of document map) from the document index stream.
+    /// Lookup offset and length of a document map that consists of key IDs and value IDs.
     /// </summary>
     public class DocIndexReader
     {
