@@ -12,16 +12,16 @@
 <div>
     <ol>
         @foreach (var item in docs)
-        {
-            var url = item.Document.Contains("_url") ? item.Document["_url"].ToString() : "www.unknownurl.com";
-            var prefix = url.StartsWith("http") ? string.Empty : "https://";
-            var uri = new Uri(prefix + url);
-            var host = uri.Host.ToString();
-            var title = item.Document.Contains("title") ? item.Document["title"].ToString() : "Unknown title";
-
-            <li>
-                <div>
-                    <div class="document-header">
+            {
+                var url = item.Document.Contains("_url") ? item.Document["_url"].ToString() : "www.unknownurl.com";
+                var prefix = url.StartsWith("http") ? string.Empty : "https://";
+                var uri = new Uri(prefix + url);
+                var host = uri.Host.ToString();
+                var title = item.Document.Contains("title") ? item.Document["title"].ToString() : "Unknown title";
+                var created = item.Document.Contains("__created") ? (long)item.Document["__created"] : (long)item.Document["_created"];
+                <li>
+                    <div>
+                        <div class="document-header">
                         <a href="/upvote/?url=@System.Web.HttpUtility.UrlEncode(uri.ToString())&q=@ViewData["q"]&collection=@ViewBag.Collection">
                             <div class="upvote" title="upvote">&#9650;</div> 
                         </a>
@@ -30,7 +30,7 @@
                     <div class="document-body">
                         <span style="font-weight:bold;color:black;opacity:0.45;font-size:9pt;">@host</span><br />
                         <span class="medium-text">Score: @item.Document["___score"]</span><br />
-                        <span class="medium-text">Indexed @DateTime.FromBinary((long)(item.Document["__created"]))</span>
+                        <span class="medium-text">Indexed @DateTime.FromBinary(created)</span>
                     </div>
                 </div>
             </li>

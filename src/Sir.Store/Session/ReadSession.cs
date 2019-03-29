@@ -268,6 +268,14 @@ namespace Sir.Store
                 result.Add(doc);
             }
 
+            if (result.Count > 0 && result[0].Contains("__created") == false)
+            {
+                return result
+                .GroupBy(x => (long)x["___docid"])
+                .SelectMany(g => g.OrderByDescending(x => (long)x["_created"]).Take(1))
+                .ToList();
+            }
+
             return result
                 .GroupBy(x => (long)x["___docid"])
                 .SelectMany(g=>g.OrderByDescending(x=>(long)x["__created"]).Take(1))
