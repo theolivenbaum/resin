@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -58,8 +59,6 @@ namespace Sir.Store
             return optimized;
         }
 
-        private readonly object _syncRead = new object();
-
         public Hit ClosestMatch(SortedList<long, byte> vector)
         {
             var time = Stopwatch.StartNew();
@@ -81,6 +80,7 @@ namespace Sir.Store
                     high.Add(hit);
                 }
             });
+
 
             this.Log($"scan took {time.Elapsed}");
 
@@ -125,14 +125,41 @@ namespace Sir.Store
             {
                 var angle = cursor.Vector.CosAngle(node);
 
-                if (angle > VectorNode.TermFoldAngle)
+                if (angle >= VectorNode.TermIdenticalAngle)
                 {
                     if (angle > highscore)
                     {
                         highscore = angle;
                         best = cursor;
                     }
-                    else if (angle > 0 && angle == highscore)
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, cursor.PostingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(cursor.PostingsOffset);
+                        }
+                    }
+
+                    if (pages.Count == 0)
+                        break; // There are no more pages.
+
+                    // There are more pages.
+                    // We can continue scanning by picking up at the first node of the next page.
+                    indexStream.Seek(pages.Dequeue().offset, SeekOrigin.Begin);
+                    cursor = ReadNode(indexStream, vectorStream);
+                }
+                else if (angle > VectorNode.TermFoldAngle)
+                {
+                    if (angle > highscore)
+                    {
+                        highscore = angle;
+                        best = cursor;
+                    }
+                    else if (angle == highscore)
                     {
                         if (best.PostingsOffsets == null)
                         {
@@ -174,7 +201,7 @@ namespace Sir.Store
                         highscore = angle;
                         best = cursor;
                     }
-                    else if (angle > 0 && angle == highscore)
+                    else if (angle == highscore)
                     {
                         if (best.PostingsOffsets == null)
                         {
@@ -245,7 +272,28 @@ namespace Sir.Store
             {
                 var angle = cursor.Vector.CosAngle(node);
 
-                if (angle > VectorNode.TermFoldAngle)
+                if (angle >= VectorNode.TermIdenticalAngle)
+                {
+                    if (angle > highscore)
+                    {
+                        highscore = angle;
+                        best = cursor;
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, cursor.PostingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(cursor.PostingsOffset);
+                        }
+                    }
+
+                    break;
+                }
+                else if (angle > VectorNode.TermFoldAngle)
                 {
                     if (angle > highscore)
                     {

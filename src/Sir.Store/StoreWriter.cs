@@ -82,7 +82,7 @@ namespace Sir.Store
                 {
                     foreach (var doc in docs.ReadDocs(skip, take))
                     {
-                        index.EmbedTerms(doc);
+                        index.Index(doc);
                     }
                 }
             }
