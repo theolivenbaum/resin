@@ -108,7 +108,7 @@ namespace Sir.Store
         {
             var ix = GetOrCreateIndex(item.keyId);
 
-            foreach (var vector in item.tokens.Embeddings)
+            foreach (var vector in item.tokens.Embeddings())
             {
                 ix.Add(new VectorNode(vector, item.docId), VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle, _vectorStream);
             }
@@ -162,7 +162,7 @@ namespace Sir.Store
             {
                 var tree = GetOrCreateIndex(item.keyId);
 
-                foreach (var vector in item.tokens.Embeddings)
+                foreach (var vector in item.tokens.Embeddings())
                 {
                     var hit = tree.ClosestMatch(vector, VectorNode.TermFoldAngle);
 

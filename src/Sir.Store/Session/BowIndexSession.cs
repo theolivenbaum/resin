@@ -101,7 +101,7 @@ namespace Sir.Store
         {
             var terms = tokenizer.Tokenize(value);
 
-            return VectorOperations.CreateDocumentVector(terms.Embeddings, reader, tokenizer);
+            return VectorOperations.CreateDocumentVector(terms.Embeddings(), reader, tokenizer);
         }
 
         private void Flush()

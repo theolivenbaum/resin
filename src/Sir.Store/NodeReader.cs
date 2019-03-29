@@ -23,7 +23,7 @@ namespace Sir.Store
         private readonly string _ixFileName;
         private readonly string _vecFileName;
         private long _optimizedOffset;
-        private bool _optimizing;
+        private volatile bool _optimizing;
 
         public VectorNode Root { get { return _root; } }
 
