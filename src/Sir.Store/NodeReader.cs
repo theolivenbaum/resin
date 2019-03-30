@@ -52,6 +52,8 @@ namespace Sir.Store
 
             _optimizing = true;
 
+            var time = Stopwatch.StartNew();
+
             using (var writer = new ProducerConsumerQueue<VectorNode>(
                 int.Parse(_config.Get("write_thread_count")),
                 Build))
@@ -75,6 +77,8 @@ namespace Sir.Store
 
                         node = ReadNode(ixStream, vectorStream);
                     }
+
+                    this.Log($"optimized {ixStream.Position - _optimizedOffset} bytes in {time.Elapsed}");
 
                     _optimizedOffset = ixStream.Position;
                 }

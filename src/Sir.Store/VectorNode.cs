@@ -424,7 +424,12 @@ namespace Sir.Store
             return result;
         }
 
-        public static void DeserializeTree(Stream indexStream, Stream vectorStream, long indexLength, VectorNode root)
+        public static void DeserializeTree(
+            Stream indexStream, 
+            Stream vectorStream, 
+            long indexLength, 
+            VectorNode root,
+            (float identicalAngle, float foldAngle) config)
         {
             int read = 0;
             var buf = new byte[NodeSize];
@@ -437,7 +442,7 @@ namespace Sir.Store
                 var node = DeserializeNode(buf, vectorStream, ref terminator);
 
                 if (node.VectorOffset > -1)
-                    root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
+                    root.Add(node, config.identicalAngle, config.foldAngle);
 
                 read += NodeSize;
             }
@@ -731,5 +736,11 @@ namespace Sir.Store
 
             return payload.ToArray();
         }
+    }
+
+    public static class VectorSpaceConfigurations
+    {
+        public static readonly (float identicalAngle, float foldAngle) Term = (VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
+        public static readonly (float identicalAngle, float foldAngle) Document = (VectorNode.DocIdenticalAngle, VectorNode.DocFoldAngle);
     }
 }

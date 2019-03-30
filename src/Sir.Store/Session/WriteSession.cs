@@ -63,6 +63,8 @@ namespace Sir.Store
             return docIds;
         }
 
+        private static readonly object _syncNewKeys = new object();
+
         /// <summary>
         /// Fields prefixed with "___" will not be stored.
         /// The "___docid" field, if it exists, will be persisted as "__original", if that field doesn't already exist.
@@ -102,17 +104,23 @@ namespace Sir.Store
 
                 if (!SessionFactory.TryGetKeyId(CollectionId, keyHash, out keyId))
                 {
-                    // We have a new key!
+                    lock (_syncNewKeys)
+                    {
+                        if (!SessionFactory.TryGetKeyId(CollectionId, keyHash, out keyId))
+                        {
+                            // We have a new key!
 
-                    // store key
-                    var keyInfo = await _keys.Append(keyStr);
-                    keyId = await _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
-                    SessionFactory.PersistKeyMapping(CollectionId, keyHash, keyId);
+                            // store key
+                            var keyInfo = _keys.Append(keyStr);
+                            keyId = _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
+                            SessionFactory.PersistKeyMapping(CollectionId, keyHash, keyId);
+                        }
+                    }
                 }
 
                 // store value
-                var valInfo = await _vals.Append(val);
-                valId = await _valIx.Append(valInfo.offset, valInfo.len, valInfo.dataType);
+                var valInfo = await _vals.AppendAsync(val);
+                valId = await _valIx.AppendAsync(valInfo.offset, valInfo.len, valInfo.dataType);
 
                 // store refs to keys and values
                 docMap.Add((keyId, valId));

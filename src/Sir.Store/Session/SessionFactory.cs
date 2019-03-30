@@ -122,13 +122,7 @@ namespace Sir.Store
 
         public bool TryGetKeyId(ulong collectionId, ulong keyHash, out long keyId)
         {
-            ConcurrentDictionary<ulong, long> keys;
-
-            if (!_keys.TryGetValue(collectionId, out keys))
-            {
-                keys = new ConcurrentDictionary<ulong, long>();
-                _keys.GetOrAdd(collectionId, keys);
-            }
+            var keys = _keys.GetOrAdd(collectionId, new ConcurrentDictionary<ulong, long>());
 
             if (!keys.TryGetValue(keyHash, out keyId))
             {
@@ -218,11 +212,11 @@ namespace Sir.Store
             return new WriteSession(collectionName, collectionId, this);
         }
 
-        public IndexSession CreateIndexSession(string collectionName, ulong collectionId)
+        public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId)
         {
             var indexReaders = _indexReaders.GetOrAdd(collectionId, new ConcurrentDictionary<long, NodeReader>());
 
-            return new IndexSession(collectionName, collectionId, this, _tokenizer, _config, indexReaders);
+            return new TermIndexSession(collectionName, collectionId, this, _tokenizer, _config, indexReaders);
         }
 
         public BowIndexSession CreateBOWSession(string collectionName, ulong collectionId)

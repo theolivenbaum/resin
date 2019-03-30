@@ -65,10 +65,11 @@ namespace Sir.Store
         private async Task Validate((long docId, IComparable key, AnalyzedString tokens) item)
         {
             var docTree = new VectorNode();
+            var config = VectorSpaceConfigurations.Term;
 
             foreach (var vector in item.tokens.Embeddings())
             {
-                docTree.Add(new VectorNode(vector), VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
+                docTree.Add(new VectorNode(vector), config.identicalAngle, config.foldAngle);
             }
 
             foreach (var node in docTree.All())

@@ -118,11 +118,9 @@ namespace Sir.HttpServer.Features
                     document["__original"] = existing["___docid"];
                 }
 
-                document["_site"] = item.uri.Host;
                 document["_url"] = url;
                 document["title"] = doc.title;
                 document["body"] = doc.body;
-                document["__created"] = DateTime.Now.ToBinary();
 
                 await ExecuteWrite(item.collection, document);
 

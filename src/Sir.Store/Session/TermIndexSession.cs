@@ -12,7 +12,7 @@ namespace Sir.Store
     /// <summary>
     /// Indexing session targeting a single collection.
     /// </summary>
-    public class IndexSession : CollectionSession, IDisposable, ILogger
+    public class TermIndexSession : CollectionSession, IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
@@ -23,7 +23,7 @@ namespace Sir.Store
         private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _modelBuilder;
         private readonly ConcurrentDictionary<long, NodeReader> _indexReaders;
 
-        public IndexSession(
+        public TermIndexSession(
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
@@ -107,10 +107,11 @@ namespace Sir.Store
         private void BuildModel((long docId, long keyId, AnalyzedString tokens) item)
         {
             var ix = GetOrCreateIndex(item.keyId);
+            var config = VectorSpaceConfigurations.Term;
 
             foreach (var vector in item.tokens.Embeddings())
             {
-                ix.Add(new VectorNode(vector, item.docId), VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle, _vectorStream);
+                ix.Add(new VectorNode(vector, item.docId), config.identicalAngle, config.foldAngle, _vectorStream);
             }
         }
 
