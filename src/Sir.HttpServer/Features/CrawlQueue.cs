@@ -118,7 +118,7 @@ namespace Sir.HttpServer.Features
                     document["__original"] = existing["___docid"];
                 }
 
-                document["_url"] = url;
+                document["__url"] = url;
                 document["title"] = doc.title;
                 document["body"] = doc.body;
 
@@ -143,7 +143,7 @@ namespace Sir.HttpServer.Features
         {
             using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
             {
-                var urlQuery = new Query(collectionName.ToHash(), new Term("_url", new VectorNode(url)));
+                var urlQuery = new Query(collectionName.ToHash(), new Term("__url", new VectorNode(url)));
                 urlQuery.And = true;
                 urlQuery.Take = 1;
 
