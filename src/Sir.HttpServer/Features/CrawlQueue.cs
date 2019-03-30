@@ -118,18 +118,11 @@ namespace Sir.HttpServer.Features
                     document["__original"] = existing["___docid"];
                 }
 
-                document["__url"] = url;
+                document["_url"] = url;
                 document["title"] = doc.title;
                 document["body"] = doc.body;
 
                 await ExecuteWrite(item.collection, document);
-
-                existing = await GetDocument(item.collection, url, doc.title);
-
-                if (existing == null || (float)existing["___score"] < VectorNode.TermIdenticalAngle)
-                {
-                    throw new InvalidDataException();
-                }
 
                 LastProcessed = (item.uri, (string)document["title"]);
             }
@@ -143,7 +136,7 @@ namespace Sir.HttpServer.Features
         {
             using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
             {
-                var urlQuery = new Query(collectionName.ToHash(), new Term("__url", new VectorNode(url)));
+                var urlQuery = new Query(collectionName.ToHash(), new Term("_url", new VectorNode(url)));
                 urlQuery.And = true;
                 urlQuery.Take = 1;
 

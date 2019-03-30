@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
-using System.IO.MemoryMappedFiles;
 
 namespace Sir.Store
 {
@@ -28,7 +27,6 @@ namespace Sir.Store
         private readonly string _ixpFileExtension;
         private readonly string _vecFileExtension;
         private static readonly object _syncIndexReaderCreation = new object();
-        private static readonly object _syncIndexStreamCreation = new object();
         private readonly ConcurrentDictionary<string, (Stream indexStream, IList<(long, long)> pages)> _indexStreams;
 
         public ReadSession(string collectionName,
@@ -122,8 +120,8 @@ namespace Sir.Store
         {
             var clauses = query.ToList();
 
-            Parallel.ForEach(clauses, q =>
-            //foreach (var q in clauses)
+            //Parallel.ForEach(clauses, q =>
+            foreach (var q in clauses)
             {
                 var cursor = q;
 
@@ -166,7 +164,7 @@ namespace Sir.Store
 
                     cursor = cursor.Then;
                 }
-            });
+            }//);
         }
 
         public NodeReader CreateIndexReader(long keyId)
@@ -185,14 +183,13 @@ namespace Sir.Store
                     if (!_indexReaders.TryGetValue(keyId, out reader))
                     {
                         reader = new NodeReader(ixFileName, ixpFileName, vecFileName, SessionFactory, _config);
-
+                        reader.Optimize();
                         _indexReaders.GetOrAdd(keyId, reader);
 
                         this.Log("created index reader {0} in {1}", ixFileName, time.Elapsed);
                     }
                 }
             }
-
 
             return reader;
         }

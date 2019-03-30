@@ -28,10 +28,10 @@ namespace Sir.Store
         public VectorNode Root { get { return _root; } }
 
         public NodeReader(
-            string ixFileName, 
-            string ixpFileName, 
-            string vecFileName, 
-            SessionFactory sessionFactory, 
+            string ixFileName,
+            string ixpFileName,
+            string vecFileName,
+            SessionFactory sessionFactory,
             IConfigurationProvider config)
         {
             _vecFileName = vecFileName;
@@ -41,8 +41,6 @@ namespace Sir.Store
             _ixpFileName = ixpFileName;
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
             _root = new VectorNode();
-
-            Optimize();
         }
 
         public void Optimize()
@@ -52,44 +50,41 @@ namespace Sir.Store
 
             _optimizing = true;
 
-            var time = Stopwatch.StartNew();
+            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
+            var last = pages[pages.Count - 1];
+            var eof = last.offset + last.length;
 
-            using (var writer = new ProducerConsumerQueue<VectorNode>(
-                int.Parse(_config.Get("write_thread_count")),
-                Build))
+            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+            using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
             {
-                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-                using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
+                if (_optimizedOffset > 0)
                 {
-                    if (_optimizedOffset > 0)
+                    ixStream.Seek(_optimizedOffset, SeekOrigin.Begin);
+                }
+
+                var node = ReadNode(ixStream, vectorStream);
+
+                while (node != null)
+                {
+                    if (node.VectorOffset > -1)
                     {
-                        ixStream.Seek(_optimizedOffset, SeekOrigin.Begin);
+                        _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
                     }
 
-                    var node = ReadNode(ixStream, vectorStream);
-
-                    while (node != null)
+                    if (ixStream.Position < eof)
                     {
-                        if (node.VectorOffset > -1)
-                        {
-                            writer.Enqueue(node);
-                        }
-
                         node = ReadNode(ixStream, vectorStream);
                     }
-
-                    this.Log($"optimized {ixStream.Position - _optimizedOffset} bytes in {time.Elapsed}");
-
-                    _optimizedOffset = ixStream.Position;
+                    else
+                    {
+                        break;
+                    }
                 }
+
+                _optimizedOffset = ixStream.Position;
             }
 
             _optimizing = false;
-        }
-
-        private void Build(VectorNode node)
-        {
-            _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
         }
 
         public Hit ClosestMatch(SortedList<long, byte> vector)
