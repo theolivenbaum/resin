@@ -16,8 +16,8 @@ One application of such an architecture is a language model framework. Another i
 a kind of search engine that lets you talk to your data using natural language or structured queries. 
 Resin is at least those three things but probably more.
 
-You can install it in the cloud, distributed onto many machines each one carrying collections of collections and 
-indices for each (analyzed) key in each collection while running one central postings server. 
+You can install it in the cloud distributed onto many machines, each one carrying collections of collections and 
+indices for each (analyzed) key in each collection, while running one central postings server. 
 Or you can run it on your laptop.
 
 Here is a non-exhaustive list of features.
