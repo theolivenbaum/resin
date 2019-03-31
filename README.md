@@ -14,9 +14,9 @@ constrained by it. The payload of each node is a list of Int64's.
 
 One application of such an architecture is a language model framework. Another is a string database. A third is 
 a kind of search engine that lets you talk to your data using natural language or structured queries. 
-Resin is at least those three things but probably more.
+Resin is at least those things.
 
-You can install it in the cloud distributed onto many machines, each one carrying collections of collections and 
+You may install Resin in the cloud distributed onto many machines, each one carrying collections of collections and 
 indices for each (analyzed) key in each collection, while running one central postings server. 
 Or you can run it on your laptop.
 
@@ -33,7 +33,9 @@ Here is a non-exhaustive list of features.
 - Build custom models in new vector spaces, based on previous models
 - Plug in your own reader/writer filters
 - Build digital conversationalists (e.g. chat bots, search engines, digital assistants)
-- All features are embeddable (by using Resin as a library) but also distributable (by talking to Resin over HTTP)
+
+All features are embeddable (by using Resin as a library) but also distributable (by talking to Resin over HTTP).  
+What you can do locally you can usually also also do remotely.
 
 ### Resin includes a web GUI where you can
 
@@ -47,16 +49,16 @@ Here is a non-exhaustive list of features.
 
 ### and a plugin system for read/write filters.
 
-[IReader](https://github.com/kreeben/resin/blob/master/src/Sir/IReader.cs) and 
-[IWriter](https://github.com/kreeben/resin/blob/master/src/Sir/IWriter.cs).
+Implement [IReader](https://github.com/kreeben/resin/blob/master/src/Sir/IReader.cs) or 
+[IWriter](https://github.com/kreeben/resin/blob/master/src/Sir/IWriter.cs) to run your own logic before/after a read/write.
 
 ## Natural and structured querying
 
-To find
+To find documents where title is  
 
-	documents where title is Rambo or First Blood but only if the genre isn't books
+	Rambo or First Blood but only if the genre isn't books
 	
-you can use natural language or structured:
+you may use natural language or structured:
 
 	+(title:rambo title:first blood) -(genre:books)
 
@@ -65,11 +67,11 @@ you can use natural language or structured:
 Resin creates a vector space of words embedded as bags-of-characters. 
 This type of embedding was chosen for its encoding speed and low CPU pressure at querying time. 
 
-Strengths: fast to encode, fast querying. Also, it considers `the` to be the same word as `hte`.
+Strengths: fast to encode, fast (cosine simiarity) querying. Supports fuzzy queries since it considers `the` to be the same word as `hte`.
 
 Weaknesses: It considers `the` to be the same word as `hte`.
 
-Programatically, the word `pineapple` is represented as 
+Programatically, the word `pineapple` is represented as a sparse array:
 
 	SortedList<long, byte>{
 		{(long)'p', 3},
@@ -80,12 +82,12 @@ Programatically, the word `pineapple` is represented as
 		{(long)'l', 1},
 	};
 
-`pineapple` has six significant components: [3p][i][n][2e][a][l]
+`pineapple` has six significant components: [3][1][1][2][1][1]
 
 Thus:
 
-`pineapple` - `pen` = `iapple`  
-`pineapple` + `pen` = `pineapplepen`
+`pineapple` - `pen` = `iapple` or [2][1][0][1][1][1] 
+`pineapple` + `pen` = `pineapplepen` or [4][1][2][3][1][1]
 
 With all embeddings aggregated as a [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs) 
 graph you have a model that form clusters of documents that share similar words. 
