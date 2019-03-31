@@ -65,11 +65,13 @@ you may use natural language or structured:
 ## Bag-of-characters ("BOC") model (included out-of-the-box)
 
 Resin creates a vector space of words embedded as bags-of-characters. 
-This type of embedding was chosen for its encoding speed and low CPU pressure at querying time. 
+Variable length strings are encoded into a fixed-length Int64 vector space. 
+Even though such a space can be computationally heavy, this type of embedding was chosen for its 
+encoding speed and low CPU pressure at querying time. Read on to learn why.
 
 ### Strengths
 
-Fast to encode, fast (cosine simiarity) querying. 
+Fast to encode, fast to query. 
 Supports fuzzy queries since it considers `the` to be the same word as `hte`.
 
 ### Weaknesses
@@ -77,7 +79,7 @@ Supports fuzzy queries since it considers `the` to be the same word as `hte`.
 It considers `the` to be the same word as `hte`.  
 
 Operations such as dot product and cosine similarity on vectors in this model is O(n) 
-where n is the number of significant component pairs.
+where n is the number of significant component pairs. 
 
 ### Programatically
 
@@ -100,7 +102,12 @@ The word `pineapple` is represented as a sparse array with a maximum of Int64 co
 		{(long)'n', 1}
 	};
 
+To compare them using linear algebra we need both vectors to be of the same width and they are. 
+They are both Int64 bits wide. Thus we can compute on two vectors by pairing components by key.
+
 ### Algebraically
+
+Consider a six-dimensional vector space.  
 
 `pineapple` has six significant components: [3][1][1][2][1][1]   
 `pen` has three significant components: [1][0][1][1][0][0]   
