@@ -1,11 +1,9 @@
 ﻿using Sir.Core;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sir.Store
