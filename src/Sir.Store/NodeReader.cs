@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -49,9 +50,9 @@ namespace Sir.Store
             _optimizing = true;
 
             var time = Stopwatch.StartNew();
-            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
-            var last = pages[pages.Count - 1];
-            var eof = last.offset + last.length;
+            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName).Where(x => x.offset >= _optimizedOffset);
+            var nextPage = pages.First();
+            var eof = nextPage.offset + nextPage.length;
 
             using (var writer = new ProducerConsumerQueue<VectorNode>(
                 int.Parse(_config.Get("write_thread_count")),

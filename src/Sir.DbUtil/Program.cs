@@ -126,7 +126,7 @@ namespace Sir.DbUtil
                 {
                     using (var session = sessionFactory.CreateWarmupSession(collectionName, collectionName.ToHash(), uri.ToString()))
                     {
-                        session.Warmup(documentStreamSession.ReadDocs(skip, take), 0, 1, 2, 3, 6);
+                        session.Warmup(documentStreamSession.ReadDocs(skip, take), 0);
                     }
                 }
             }
