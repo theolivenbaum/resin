@@ -78,7 +78,7 @@ It considers `the` to be the same word as `hte`.
 
 ### Programatically
 
-The word `pineapple` is represented as a sparse array:
+The word `pineapple` is represented as a sparse array with a maximum of Int64 components:
 
 	SortedList<long, byte>{
 		{(long)'p', 3},
