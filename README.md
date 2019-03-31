@@ -84,7 +84,7 @@ where n is the number of significant component pairs.
 
 ### Programatically
 
-The word `pineapple` is represented as a sparse array with a maximum of Int64 number of components:
+The word `pineapple` is represented as a sparse array that can carry a maximum of Int64 number of components:
 
 	SortedList<long, byte>{
 		{(long)'p', 3},
