@@ -82,12 +82,12 @@ Programatically, the word `pineapple` is represented as a sparse array:
 		{(long)'l', 1},
 	};
 
-`pineapple` has six significant components: [3][1][1][2][1][1]
+`pineapple` has six significant components: [3][1][1][2][1][1]   
 
-Thus:
+Thus:  
 
-`pineapple` - `pen` = `iapple` or [2][1][0][1][1][1] 
-`pineapple` + `pen` = `pineapplepen` or [4][1][2][3][1][1]
+`pineapple` - `pen` = `iapple` or [2][1][0][1][1][1]  
+`pineapple` + `pen` = `pineapplepen` or [4][1][2][3][1][1]  
 
 With all embeddings aggregated as a [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs) 
 graph you have a model that form clusters of documents that share similar words. 
