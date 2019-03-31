@@ -74,7 +74,10 @@ Supports fuzzy queries since it considers `the` to be the same word as `hte`.
 
 ### Weaknesses
 
-It considers `the` to be the same word as `hte`.
+It considers `the` to be the same word as `hte`.  
+
+Operations such as dot product and cosine similarity on vectors in this model is O(n) 
+where n is the number of significant component pairs.
 
 ### Programatically
 
@@ -104,11 +107,6 @@ The word `pineapple` is represented as a sparse array with a maximum of Int64 co
 
 `pineapple` - `pen` = `iapple` because `[3][1][1][2][1][1]`  - `[1][0][1][1][0][0]`  = `[2][1][0][1][1][1]`  
 `pineapple` + `pen` = `pineapplepen` because `[3][1][1][2][1][1]` + `[1][0][1][1][0][0]` = `[4][1][2][3][1][1]`  
-
-### Dot product and cosine similarity
-
-Calculating the dot product or the cosine similarity of two SortedList<long, byte> is an O(n) operation 
-where n is the number of significant component pairs.
 
 ### Vector space
 
