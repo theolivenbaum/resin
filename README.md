@@ -89,6 +89,14 @@ The word `pineapple` is represented as a sparse array:
 		{(long)'l', 1},
 	};
 
+`pen` is represented as:
+
+	SortedList<long, byte>{
+		{(long)'p', 1},
+		{(long)'e', 1},
+		{(long)'n', 1}
+	};
+
 ### Algebraically
 
 `pineapple` has six significant components: [3][1][1][2][1][1]   
