@@ -50,41 +50,56 @@ namespace Sir.Store
 
             _optimizing = true;
 
+            var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
             var last = pages[pages.Count - 1];
             var eof = last.offset + last.length;
 
-            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-            using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
+            using (var writer = new ProducerConsumerQueue<VectorNode>(
+                int.Parse(_config.Get("write_thread_count")),
+                Build))
             {
-                if (_optimizedOffset > 0)
+                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
                 {
-                    ixStream.Seek(_optimizedOffset, SeekOrigin.Begin);
+                    if (_optimizedOffset > 0)
+                    {
+                        ixStream.Seek(_optimizedOffset, SeekOrigin.Begin);
+                    }
+
+                    var node = ReadNode(ixStream, vectorStream);
+
+                    while (node != null)
+                    {
+                        if (node.VectorOffset > -1)
+                        {
+                            writer.Enqueue(node);
+                        }
+
+                        if (ixStream.Position < eof)
+                        {
+                            node = ReadNode(ixStream, vectorStream);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    this.Log($"read {ixStream.Position - _optimizedOffset} bytes");
+
+                    _optimizedOffset = ixStream.Position;
                 }
-
-                var node = ReadNode(ixStream, vectorStream);
-
-                while (node != null)
-                {
-                    if (node.VectorOffset > -1)
-                    {
-                        _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
-                    }
-
-                    if (ixStream.Position < eof)
-                    {
-                        node = ReadNode(ixStream, vectorStream);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                _optimizedOffset = ixStream.Position;
             }
 
+            this.Log($"optimized {_ixFileName} in {time.Elapsed}");
+
             _optimizing = false;
+        }
+
+        private void Build(VectorNode node)
+        {
+            _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
         }
 
         public Hit ClosestMatch(SortedList<long, byte> vector)
