@@ -67,16 +67,17 @@ you may use natural language or structured:
 Resin creates a vector space of words embedded as bags-of-characters. 
 Variable length strings are encoded into a fixed-length Int64 vector space. 
 Even though such a space can be computationally heavy, this type of embedding was chosen for its 
-encoding speed and low CPU pressure at querying time. Read on to learn why.
+encoding speed and low CPU pressure at querying time. Read on to learn why it's fast.
 
 ### Strengths
 
 Fast to encode, fast to query. 
 Supports fuzzy queries since it considers `the` to be the same word as `hte`.
+Supports wildcard queries since it considers `te` to be similar to the word `the`.
 
 ### Weaknesses
 
-It considers `the` to be the same word as `hte`.  
+It considers `the` to be the same word as `hte`, i.e. does not encode order of characters, only their frequency.  
 
 Operations such as dot product and cosine similarity on vectors in this model is O(n) 
 where n is the number of significant component pairs. 
@@ -132,7 +133,7 @@ to the HTTP client's "Accept" header.
 
 ## Document model (not production-ready)
 
-The model is a graph of documents embedded as bags-of-words. Documents gather around topics. 
+The model is a graph of documents embedded as bags-of-words. Documents cluster around topics. 
 
 Natural language queries are parsed into a tree of document sized vectors. 
 A cluster of documents is located by reducing the clause vectors to a single document 
@@ -140,6 +141,18 @@ by using vector addition/subtraction and by navigating the index graph by evalua
 the cos angle between the query and the clusters. The end-result of the scan is a cluster ID 
 that also corresponds to a postings list ID. If the topic is a big one, the result set will be large. 
 If you've managed to pinpoint a shallow cluster your result set will be smaller.
+
+### Algebraically
+
+Consider a five-dimensional vector space.  
+
+`I have a pineapple` has four significant components: [1][1][1][1][0]   
+`pineapple pen` has two significant components: [0][0][0][1][1]   
+
+`I have a pineapple` - `pineapple pen` = `I have a` or [1][1][1][0][0]  
+`I have a pineapple` + `pineapple pen` = `I have a pineapple pineapple pen` or [1][1][1][2][1]  
+
+### Vector space
 
 The reason for creating such a document model is to represent each document once per index 
 instead of once per term as is the case with the BOC model, making it possible to find a topic with a single scan.
