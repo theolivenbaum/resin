@@ -22,7 +22,7 @@ Or you can run it on your laptop.
 
 Here is a non-exhaustive list of features.
 
-### Features
+## Features
 
 - Create, append to and query document collections of any format (JSON format included out-of-the-box)
 - Query in natural language or structured
@@ -37,17 +37,19 @@ Here is a non-exhaustive list of features.
 All features are embeddable (by using Resin as a library) but also distributable (by talking to Resin over HTTP).  
 What you can do locally you can usually also also do remotely.
 
-### Resin includes a web GUI where you can
+Resin includes  
+
+#### a web GUI where you can
 
 - query collections of documents naturally or structured
 - create new collections from slices of existing collections, slices that are defined by queries
 
-### and a HTTP API that you can use to
+#### and a HTTP API that you can use to
 
 - create new document collections
 - query naturally/structured over HTTP with content type negotiation
 
-### and a plugin system for read/write filters.
+#### and a plugin system for read/write filters.
 
 Implement [IReader](https://github.com/kreeben/resin/blob/master/src/Sir/IReader.cs) or 
 [IWriter](https://github.com/kreeben/resin/blob/master/src/Sir/IWriter.cs) to run your own logic before/after a read/write.
@@ -69,20 +71,20 @@ Variable length strings are encoded into a fixed-length Int64 vector space.
 Even though such a space can be computationally heavy, this type of embedding was chosen for its 
 encoding speed and low CPU pressure at querying time. Read on to learn why it's fast.
 
-### Strengths
+#### Strengths
 
 Fast to encode, fast to query. 
 Supports fuzzy queries since it considers `the` to be the same word as `hte`.
 Supports wildcard queries since it considers `te` to be similar to the word `the`.
 
-### Weaknesses
+#### Weaknesses
 
 It considers `the` to be the same word as `hte`, i.e. does not encode order of characters, only their frequency.  
 
 Operations such as dot product and cosine similarity on vectors in this model is O(n) 
 where n is the number of significant component pairs. 
 
-### Programatically
+#### Programatically
 
 The word `pineapple` is represented as a sparse array that can carry a maximum of Int64 number of components:
 
@@ -106,7 +108,7 @@ The word `pineapple` is represented as a sparse array that can carry a maximum o
 To compare them using linear algebra we need both vectors to be of the same width and they are. 
 They are both Int64 bits wide. Thus we can compute on two vectors by pairing components by key.
 
-### Algebraically
+#### Algebraically
 
 Consider a six-dimensional vector space.  
 
@@ -116,12 +118,12 @@ Consider a six-dimensional vector space.
 `pineapple` - `pen` = `iapple` because `[3][1][1][2][1][1]`  - `[1][0][1][1][0][0]`  = `[2][1][0][1][1][1]`  
 `pineapple` + `pen` = `pineapplepen` because `[3][1][1][2][1][1]` + `[1][0][1][1][0][0]` = `[4][1][2][3][1][1]`  
 
-### Vector space
+#### BOC vector space
 
 With all embeddings aggregated as a [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs) 
-graph you have a model that form clusters of documents that share similar words. 
+graph you have a model that form clusters of similar words, each cluster carrying a payload that is a list of document IDs. 
 
-### Querying
+#### Querying
 
 Natural language queries are parsed into expression trees with nodes carrying words and AND, OR or NOT set operations. 
 The expression is serialized and executed (reduced) on a remote server, producing a set of IDs of documents that came from as 
@@ -131,9 +133,11 @@ That set is sorted by score and a window defined by skip and take parameters is 
 who materializes the list of document IDs, i.e. reads and returns to the client a document stream formatted according 
 to the HTTP client's "Accept" header.
 
-## Document model (not production-ready)
+## Document ("DOC") model (not production-ready)
 
 The model is a graph of documents embedded as bags-of-words. Documents cluster around topics. 
+
+#### Querying
 
 Natural language queries are parsed into a tree of document sized vectors. 
 A cluster of documents is located by reducing the clause vectors to a single document 
@@ -142,7 +146,7 @@ the cos angle between the query and the clusters. The end-result of the scan is 
 that also corresponds to a postings list ID. If the topic is a big one, the result set will be large. 
 If you've managed to pinpoint a shallow cluster your result set will be smaller.
 
-### Algebraically
+#### Algebraically
 
 Consider a five-dimensional vector space.  
 
@@ -152,12 +156,12 @@ Consider a five-dimensional vector space.
 `I have a pineapple` - `pineapple pen` = `I have a` or [1][1][1][0][0]  
 `I have a pineapple` + `pineapple pen` = `I have a pineapple pineapple pen` or [1][1][1][2][1]  
 
-### Vector space
+#### DOC vector space
 
-The reason for creating such a document model is to represent each document once per index 
-instead of once per term as is the case with the BOC model, making it possible to find a topic with a single scan.
+We want a document vector space because we want to represent each document once and only once, 
+so that with a single scan of the index we can find a list of document IDs connected to a topic.
 
-## Install
+## Install Resin
 
 Download a clone of this repository, launch the solution in Visual Studio to build and publish it. 
 Then create a IIS site that points to [path_of_repository]/src/publish. 
