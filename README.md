@@ -92,8 +92,7 @@ The word `pineapple` is represented as a sparse array:
 ### Algebraically
 
 `pineapple` has six significant components: [3][1][1][2][1][1]   
-
-Thus:  
+`pen` has three significant components: [1][0][1][1][0][0]   
 
 `pineapple` - `pen` = `iapple` because `[3][1][1][2][1][1]`  - `[1][0][1][1][0][0]`  = `[2][1][0][1][1][1]`  
 `pineapple` + `pen` = `pineapplepen` because `[3][1][1][2][1][1]` + `[1][0][1][1][0][0]` = `[4][1][2][3][1][1]`  
