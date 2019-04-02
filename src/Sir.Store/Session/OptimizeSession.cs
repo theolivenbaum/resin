@@ -37,9 +37,9 @@ namespace Sir.Store
                 var keyId = long.Parse(Path.GetFileNameWithoutExtension(ixFileName).Split('.')[1]);
                 var indexReader = _readSession.CreateIndexReader(keyId);
 
-                indexReader.Optimize();
+                var root = indexReader.Optimized();
 
-                optimizedColumns.Add((keyId, indexReader.Root));
+                optimizedColumns.Add((keyId, root));
 
                 this.Log("optimized {0} in memory in {1}", keyId, columnTime.Elapsed);
             });

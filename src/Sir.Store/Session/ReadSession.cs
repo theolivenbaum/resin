@@ -183,7 +183,6 @@ namespace Sir.Store
                     if (!_indexReaders.TryGetValue(keyId, out reader))
                     {
                         reader = new NodeReader(ixFileName, ixpFileName, vecFileName, SessionFactory, _config);
-                        reader.Optimize();
                         _indexReaders.GetOrAdd(keyId, reader);
 
                         this.Log("created index reader {0} in {1}", ixFileName, time.Elapsed);

@@ -27,10 +27,11 @@ namespace Sir.Store
         public HashSet<long> DocIds { get; private set; }
         private int _weight;
 
+        public int ComponentCount { get; set; }
         public long VectorOffset { get; private set; }
         public long PostingsOffset { get; set; }
         public float Angle { get; private set; }
-        public SortedList<long, byte> Vector { get; }
+        public SortedList<long, byte> Vector { get; set; }
 
         public int Weight
         {
@@ -78,6 +79,10 @@ namespace Sir.Store
         public byte Terminator { get; set; }
 
         public IList<long> PostingsOffsets { get; set; }
+
+        public VectorNode(bool shallow)
+        {
+        }
 
         public VectorNode()
             : this('\0'.ToString())
@@ -552,22 +557,63 @@ namespace Sir.Store
             var vectorCount = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long));
             var weight = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int));
 
-            // Deserialize term vector
-            var vec = new SortedList<long, byte>(vectorCount);
-            var vecBuf = new byte[vectorCount * ComponentSize];
+            return DeserializeNode(angle, vecOffset, postingsOffset, vectorCount, weight, vectorStream, ref terminator);
+        }
 
-            if (vecOffset < 0)
+        public static VectorNode DeserializeNode(
+            float angle, 
+            long vecOffset, 
+            long postingsOffset, 
+            int componentCount, 
+            int weight, 
+            Stream vectorStream,
+            ref byte terminator)
+        {
+            // Create node
+            var node = new VectorNode(shallow:true);
+
+            node.Angle = angle;
+            node.PostingsOffset = postingsOffset;
+            node.VectorOffset = vecOffset;
+            node.Terminator = terminator;
+            node.Weight = weight;
+            node.ComponentCount = componentCount;
+
+            Load(node, vectorStream);
+
+            return node;
+        }
+
+        public static void Load(
+            VectorNode shallow,
+            Stream vectorStream = null)
+        {
+            if (shallow.Vector != null)
+            {
+                return;
+            }
+
+            if (vectorStream == null)
+            {
+                throw new ArgumentNullException(nameof(vectorStream));
+            }
+
+            // Deserialize term vector
+            var vec = new SortedList<long, byte>(shallow.ComponentCount);
+            var vecBuf = new byte[shallow.ComponentCount * ComponentSize];
+
+            if (shallow.VectorOffset < 0)
             {
                 vec.Add(0, 1);
             }
             else
             {
-                vectorStream.Seek(vecOffset, SeekOrigin.Begin);
+                vectorStream.Seek(shallow.VectorOffset, SeekOrigin.Begin);
                 vectorStream.Read(vecBuf, 0, vecBuf.Length);
 
                 var offs = 0;
 
-                for (int i = 0; i < vectorCount; i++)
+                for (int i = 0; i < shallow.ComponentCount; i++)
                 {
                     var key = BitConverter.ToInt64(vecBuf, offs);
                     var val = vecBuf[offs + sizeof(long)];
@@ -578,18 +624,7 @@ namespace Sir.Store
                 }
             }
 
-            // Create node
-            var node = new VectorNode(vec);
-
-            node.Angle = angle;
-            node.PostingsOffset = postingsOffset;
-            node.VectorOffset = vecOffset;
-            node.Terminator = terminator;
-            node.Weight = weight;
-
-            terminator = buf[buf.Length - 1];
-
-            return node;
+            shallow.Vector = vec;
         }
 
         public string Visualize()

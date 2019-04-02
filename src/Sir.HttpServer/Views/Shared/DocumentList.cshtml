@@ -13,7 +13,7 @@
     <ol>
         @foreach (var item in docs)
             {
-                var url = item.Document.Contains("_url") ? item.Document["_url"].ToString() : "www.unknownurl.com";
+                var url = item.Document.Contains("_url") ? item.Document["_url"].ToString() : item.Document.Contains("__url") ? item.Document["__url"].ToString() : "www.unknownurl.com";
                 var prefix = url.StartsWith("http") ? string.Empty : "https://";
                 var uri = new Uri(prefix + url);
                 var host = uri.Host.ToString();

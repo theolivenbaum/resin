@@ -1,11 +1,9 @@
-﻿using Sir.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
@@ -18,13 +16,10 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly string _ixpFileName;
         private readonly string _ixMapName;
-        private VectorNode _root;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
+        private readonly VectorNode _root;
         private long _optimizedOffset;
-        private volatile bool _optimizing;
-
-        public VectorNode Root { get { return _root; } }
 
         public NodeReader(
             string ixFileName,
@@ -39,80 +34,118 @@ namespace Sir.Store
             _config = config;
             _ixpFileName = ixpFileName;
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
-            _root = new VectorNode();
+            _root = Optimize();
         }
 
-        public void Optimize()
+        public VectorNode Optimized()
         {
-            if (_optimizing)
-                return;
+            return _root;
+        }
 
-            _optimizing = true;
-
+        private VectorNode Optimize()
+        {
             var time = Stopwatch.StartNew();
-            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName).Where(x => x.offset >= _optimizedOffset);
-            var nextPage = pages.First();
-            var eof = nextPage.offset + nextPage.length;
+            var root = new VectorNode();
+            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
 
-            using (var writer = new ProducerConsumerQueue<VectorNode>(
-                int.Parse(_config.Get("write_thread_count")),
-                Build))
+            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+            using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
             {
-                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-                using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
+                ixStream.Seek(_optimizedOffset, SeekOrigin.Begin);
+
+                foreach (var page in pages)
                 {
-                    if (_optimizedOffset > 0)
+                    var offset = page.offset + VectorNode.NodeSize;
+                    Span<byte> pageBuf = new byte[Convert.ToInt32(page.length)];
+
+                    ixStream.Seek(offset, SeekOrigin.Begin);
+
+                    var read = ixStream.Read(pageBuf);
+
+                    var position = 0;
+
+                    while (position < page.length)
                     {
-                        ixStream.Seek(_optimizedOffset, SeekOrigin.Begin);
+                        var buf = pageBuf.Slice(position, VectorNode.NodeSize);
+
+                        var terminator = buf[buf.Length - 1];
+                        var angle = MemoryMarshal.Cast<byte, float>(buf.Slice(0, sizeof(float)))[0];
+                        var vecOffset = MemoryMarshal.Cast<byte, long>(buf.Slice(sizeof(float), sizeof(long)))[0];
+                        var postingsOffset = MemoryMarshal.Cast<byte, long>(buf.Slice(sizeof(float) + sizeof(long), sizeof(long)))[0];
+                        var componentCount = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(float) + sizeof(long) + sizeof(long), sizeof(int)))[0];
+                        var weight = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int), sizeof(int)))[0];
+
+                        root.Add(
+                            VectorNode.DeserializeNode(
+                                angle,
+                                vecOffset,
+                                postingsOffset,
+                                componentCount,
+                                weight,
+                                vectorStream,
+                                ref terminator),
+                            VectorNode.TermIdenticalAngle, 
+                            VectorNode.TermFoldAngle);
+
+                        position += VectorNode.NodeSize;
                     }
-
-                    var node = ReadNode(ixStream, vectorStream);
-
-                    while (node != null)
-                    {
-                        if (node.VectorOffset > -1)
-                        {
-                            writer.Enqueue(node);
-                        }
-
-                        if (ixStream.Position < eof)
-                        {
-                            node = ReadNode(ixStream, vectorStream);
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    this.Log($"read {ixStream.Position - _optimizedOffset} bytes");
 
                     _optimizedOffset = ixStream.Position;
+
+                    this.Log($"optimized {page}");
                 }
             }
 
             this.Log($"optimized {_ixFileName} in {time.Elapsed}");
 
-            _optimizing = false;
-        }
-
-        private void Build(VectorNode node)
-        {
-            _root.Add(node, VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
+            return root;
         }
 
         public Hit ClosestMatch(SortedList<long, byte> vector)
         {
-            using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
-            {
-                if (ixStream.Length > _optimizedOffset)
-                {
-                    Task.Run(() => Optimize());
-                }
-            }
-
             return _root.ClosestMatch(vector, VectorNode.TermFoldAngle);
         }
+
+        //public Hit ClosestMatch(SortedList<long, byte> vector)
+        //{
+        //    var time = Stopwatch.StartNew();
+        //    var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
+        //    var high = new ConcurrentBag<Hit>();
+
+        //    using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
+        //    using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+        //    {
+        //        var hit = ClosestMatchInPage(
+        //                    vector,
+        //                    indexStream,
+        //                    vectorStream,
+        //                    new Queue<(long, long)>(pages));
+
+        //        high.Add(hit);
+        //    }
+
+        //    this.Log($"scan took {time.Elapsed}");
+
+        //    time.Restart();
+
+        //    Hit best = null;
+
+        //    foreach (var hit in high)
+        //    {
+        //        if (best == null || hit.Score > best.Score)
+        //        {
+        //            best = hit;
+        //        }
+        //        else if (high != null && hit.Score == best.Score)
+        //        {
+        //            best.Node.Merge(hit.Node);
+        //        }
+        //    }
+
+        //    this.Log($"merge took {time.Elapsed}");
+
+        //    return best;
+        //}
 
         private Hit ClosestMatchInPage(
             SortedList<long, byte> node,
@@ -120,6 +153,8 @@ namespace Sir.Store
             Stream vectorStream,
             Queue<(long offset, long length)> pages)
         {
+            pages.Dequeue();
+
             var cursor = ReadNode(indexStream, vectorStream);
 
             if (cursor == null)
