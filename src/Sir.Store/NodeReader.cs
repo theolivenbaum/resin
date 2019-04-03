@@ -110,7 +110,7 @@ namespace Sir.Store
         //{
         //    var time = Stopwatch.StartNew();
         //    var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
-        //    var high = new ConcurrentBag<Hit>();
+        //    var high = new List<Hit>();
 
         //    using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
         //    using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
@@ -566,15 +566,33 @@ namespace Sir.Store
 
         private VectorNode ReadNode(Stream indexStream, Stream vectorStream)
         {
-            var buf = new byte[VectorNode.NodeSize];
-            var read = indexStream.Read(buf);
+            //var buf = new byte[VectorNode.NodeSize];
+            //var read = indexStream.Read(buf);
 
-            if (read == 0) return null;
+            //if (read == 0) return null;
+
+            //var terminator = buf[buf.Length - 1];
+            //var node = VectorNode.DeserializeNode(buf, vectorStream, ref terminator);
+
+            //return node;
+
+            Span<byte> buf = new byte[VectorNode.NodeSize];
 
             var terminator = buf[buf.Length - 1];
-            var node = VectorNode.DeserializeNode(buf, vectorStream, ref terminator);
+            var angle = MemoryMarshal.Cast<byte, float>(buf.Slice(0, sizeof(float)))[0];
+            var vecOffset = MemoryMarshal.Cast<byte, long>(buf.Slice(sizeof(float), sizeof(long)))[0];
+            var postingsOffset = MemoryMarshal.Cast<byte, long>(buf.Slice(sizeof(float) + sizeof(long), sizeof(long)))[0];
+            var componentCount = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(float) + sizeof(long) + sizeof(long), sizeof(int)))[0];
+            var weight = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int), sizeof(int)))[0];
 
-            return node;
+            return VectorNode.DeserializeNode(
+                    angle,
+                    vecOffset,
+                    postingsOffset,
+                    componentCount,
+                    weight,
+                    vectorStream,
+                    ref terminator);
         }
 
         private void SkipTree(Stream indexStream)

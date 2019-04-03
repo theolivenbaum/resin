@@ -548,14 +548,14 @@ namespace Sir.Store
             return node;
         }
 
-        public static VectorNode DeserializeNode(byte[] buf, Stream vectorStream, ref byte terminator)
+        public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, ref byte terminator)
         {
             // Deserialize node
-            var angle = BitConverter.ToSingle(buf, 0);
-            var vecOffset = BitConverter.ToInt64(buf, sizeof(float));
-            var postingsOffset = BitConverter.ToInt64(buf, sizeof(float) + sizeof(long));
-            var vectorCount = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long));
-            var weight = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int));
+            var angle = BitConverter.ToSingle(nodeBuffer, 0);
+            var vecOffset = BitConverter.ToInt64(nodeBuffer, sizeof(float));
+            var postingsOffset = BitConverter.ToInt64(nodeBuffer, sizeof(float) + sizeof(long));
+            var vectorCount = BitConverter.ToInt32(nodeBuffer, sizeof(float) + sizeof(long) + sizeof(long));
+            var weight = BitConverter.ToInt32(nodeBuffer, sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int));
 
             return DeserializeNode(angle, vecOffset, postingsOffset, vectorCount, weight, vectorStream, ref terminator);
         }
