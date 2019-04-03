@@ -593,27 +593,32 @@ namespace Sir.Store
                 return;
             }
 
+            shallow.Vector = DeserializeVector(shallow.VectorOffset, shallow.ComponentCount, vectorStream);
+        }
+
+        public static SortedList<long, byte> DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
+        {
             if (vectorStream == null)
             {
                 throw new ArgumentNullException(nameof(vectorStream));
             }
 
             // Deserialize term vector
-            var vec = new SortedList<long, byte>(shallow.ComponentCount);
-            var vecBuf = new byte[shallow.ComponentCount * ComponentSize];
+            var vec = new SortedList<long, byte>(componentCount);
+            var vecBuf = new byte[componentCount * ComponentSize];
 
-            if (shallow.VectorOffset < 0)
+            if (vectorOffset < 0)
             {
                 vec.Add(0, 1);
             }
             else
             {
-                vectorStream.Seek(shallow.VectorOffset, SeekOrigin.Begin);
+                vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
                 vectorStream.Read(vecBuf, 0, vecBuf.Length);
 
                 var offs = 0;
 
-                for (int i = 0; i < shallow.ComponentCount; i++)
+                for (int i = 0; i < componentCount; i++)
                 {
                     var key = BitConverter.ToInt64(vecBuf, offs);
                     var val = vecBuf[offs + sizeof(long)];
@@ -624,7 +629,7 @@ namespace Sir.Store
                 }
             }
 
-            shallow.Vector = vec;
+            return vec;
         }
 
         public string Visualize()

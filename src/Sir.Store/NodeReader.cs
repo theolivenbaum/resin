@@ -113,7 +113,6 @@ namespace Sir.Store
             using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
             using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
             {
-                
                 var hit = ClosestMatchInPage(
                             vector,
                             indexStream,
@@ -154,36 +153,40 @@ namespace Sir.Store
         {
             pages.Dequeue();
 
-            var cursor = ReadNode(indexStream, vectorStream);
+            Span<byte> block = new byte[VectorNode.NodeSize];
 
-            if (cursor == null)
-            {
-                throw new InvalidOperationException();
-            }
+            var read = indexStream.Read(block);
 
-            var best = cursor;
+            VectorNode best = null;
             float highscore = 0;
 
-            while (cursor != null)
+            while (read > 0)
             {
-                var angle = cursor.Vector.CosAngle(node);
+                var vecOffset = MemoryMarshal.Cast<byte, long>(block.Slice(sizeof(float), sizeof(long)))[0];
+                var componentCount = MemoryMarshal.Cast<byte, int>(block.Slice(sizeof(float) + sizeof(long) + sizeof(long), sizeof(int)))[0];
+                var cursorVector = VectorNode.DeserializeVector(vecOffset, componentCount, vectorStream);
+                var cursorTerminator = block[block.Length - 1];
+                var postingsOffset = MemoryMarshal.Cast<byte, long>(block.Slice(sizeof(float) + sizeof(long), sizeof(long)))[0];
+
+                var angle = cursorVector.CosAngle(node);
 
                 if (angle >= VectorNode.TermIdenticalAngle)
                 {
-                    if (angle > highscore)
+                    if (best == null || angle > highscore)
                     {
                         highscore = angle;
-                        best = cursor;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
                     }
                     else if (angle == highscore)
                     {
                         if (best.PostingsOffsets == null)
                         {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, cursor.PostingsOffset };
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
                         }
                         else
                         {
-                            best.PostingsOffsets.Add(cursor.PostingsOffset);
+                            best.PostingsOffsets.Add(postingsOffset);
                         }
                     }
 
@@ -193,36 +196,38 @@ namespace Sir.Store
                     // There are more pages.
                     // We can continue scanning by picking up at the first node of the next page.
                     indexStream.Seek(pages.Dequeue().offset, SeekOrigin.Begin);
-                    cursor = ReadNode(indexStream, vectorStream);
+                    read = indexStream.Read(block);
                 }
                 else if (angle > VectorNode.TermFoldAngle)
                 {
-                    if (angle > highscore)
+                    if (best == null || angle > highscore)
                     {
                         highscore = angle;
-                        best = cursor;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
                     }
                     else if (angle == highscore)
                     {
+
                         if (best.PostingsOffsets == null)
                         {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, cursor.PostingsOffset };
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
                         }
                         else
                         {
-                            best.PostingsOffsets.Add(cursor.PostingsOffset);
+                            best.PostingsOffsets.Add(postingsOffset);
                         }
                     }
 
                     // We need to determine if we can traverse further left.
-                    bool canGoLeft = cursor.Terminator == 0 || cursor.Terminator == 1;
+                    bool canGoLeft = cursorTerminator == 0 || cursorTerminator == 1;
 
                     if (canGoLeft)
                     {
                         // There exists either a left and a right child or just a left child.
                         // Either way, we want to go left and the next node in bitmap is the left child.
 
-                        cursor = ReadNode(indexStream, vectorStream);
+                        read = indexStream.Read(block);
                     }
                     else
                     {
@@ -234,45 +239,46 @@ namespace Sir.Store
                         // There are more pages.
                         // We can continue scanning by picking up at the first node of the next page.
                         indexStream.Seek(pages.Dequeue().offset, SeekOrigin.Begin);
-                        cursor = ReadNode(indexStream, vectorStream);
+                        read = indexStream.Read(block);
                     }
                 }
                 else
                 {
-                    if (angle > highscore)
+                    if (best == null || angle > highscore)
                     {
                         highscore = angle;
-                        best = cursor;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
                     }
                     else if (angle == highscore)
                     {
                         if (best.PostingsOffsets == null)
                         {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, cursor.PostingsOffset };
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
                         }
                         else
                         {
-                            best.PostingsOffsets.Add(cursor.PostingsOffset);
+                            best.PostingsOffsets.Add(postingsOffset);
                         }
                     }
 
                     // We need to determine if we can traverse further to the right.
 
-                    if (cursor.Terminator == 0)
+                    if (cursorTerminator == 0)
                     {
                         // There exists a left and a right child.
                         // Next node in bitmap is the left child. 
                         // To find cursor's right child we must skip over the left tree.
 
                         SkipTree(indexStream);
-                        cursor = ReadNode(indexStream, vectorStream);
+                        read = indexStream.Read(block);
                     }
-                    else if (cursor.Terminator == 2)
+                    else if (cursorTerminator == 2)
                     {
                         // Next node in bitmap is the right child,
                         // which is good because we want to go right.
 
-                        cursor = ReadNode(indexStream, vectorStream);
+                        read = indexStream.Read(block);
                     }
                     else
                     {
@@ -284,7 +290,7 @@ namespace Sir.Store
                         // There are more pages.
                         // We can continue scanning by picking up at the first node of the next page.
                         indexStream.Seek(pages.Dequeue().offset, SeekOrigin.Begin);
-                        cursor = ReadNode(indexStream, vectorStream);
+                        read = indexStream.Read(block);
                     }
                 }
             }
