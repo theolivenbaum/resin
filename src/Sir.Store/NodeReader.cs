@@ -18,7 +18,6 @@ namespace Sir.Store
         private readonly string _ixMapName;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
-        private readonly VectorNode _root;
         private long _optimizedOffset;
 
         public NodeReader(
@@ -34,12 +33,11 @@ namespace Sir.Store
             _config = config;
             _ixpFileName = ixpFileName;
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
-            _root = Optimize();
         }
 
         public VectorNode Optimized()
         {
-            return _root;
+            return Optimize();
         }
 
         private VectorNode Optimize()
@@ -103,49 +101,50 @@ namespace Sir.Store
 
         public Hit ClosestMatch(SortedList<long, byte> vector)
         {
-            return _root.ClosestMatch(vector, VectorNode.TermFoldAngle);
+            return ClosestMatchOnDisk(vector);
         }
 
-        //public Hit ClosestMatch(SortedList<long, byte> vector)
-        //{
-        //    var time = Stopwatch.StartNew();
-        //    var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
-        //    var high = new List<Hit>();
+        public Hit ClosestMatchOnDisk(SortedList<long, byte> vector)
+        {
+            var time = Stopwatch.StartNew();
+            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
+            var high = new List<Hit>();
 
-        //    using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
-        //    using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-        //    {
-        //        var hit = ClosestMatchInPage(
-        //                    vector,
-        //                    indexStream,
-        //                    vectorStream,
-        //                    new Queue<(long, long)>(pages));
+            using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
+            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+            {
+                
+                var hit = ClosestMatchInPage(
+                            vector,
+                            indexStream,
+                            vectorStream,
+                            new Queue<(long, long)>(pages));
 
-        //        high.Add(hit);
-        //    }
+                high.Add(hit);
+            }
 
-        //    this.Log($"scan took {time.Elapsed}");
+            this.Log($"scan took {time.Elapsed}");
 
-        //    time.Restart();
+            time.Restart();
 
-        //    Hit best = null;
+            Hit best = null;
 
-        //    foreach (var hit in high)
-        //    {
-        //        if (best == null || hit.Score > best.Score)
-        //        {
-        //            best = hit;
-        //        }
-        //        else if (high != null && hit.Score == best.Score)
-        //        {
-        //            best.Node.Merge(hit.Node);
-        //        }
-        //    }
+            foreach (var hit in high)
+            {
+                if (best == null || hit.Score > best.Score)
+                {
+                    best = hit;
+                }
+                else if (high != null && hit.Score == best.Score)
+                {
+                    best.Node.Merge(hit.Node);
+                }
+            }
 
-        //    this.Log($"merge took {time.Elapsed}");
+            this.Log($"merge took {time.Elapsed}");
 
-        //    return best;
-        //}
+            return best;
+        }
 
         private Hit ClosestMatchInPage(
             SortedList<long, byte> node,
@@ -566,33 +565,15 @@ namespace Sir.Store
 
         private VectorNode ReadNode(Stream indexStream, Stream vectorStream)
         {
-            //var buf = new byte[VectorNode.NodeSize];
-            //var read = indexStream.Read(buf);
+            var buf = new byte[VectorNode.NodeSize];
+            var read = indexStream.Read(buf);
 
-            //if (read == 0) return null;
-
-            //var terminator = buf[buf.Length - 1];
-            //var node = VectorNode.DeserializeNode(buf, vectorStream, ref terminator);
-
-            //return node;
-
-            Span<byte> buf = new byte[VectorNode.NodeSize];
+            if (read == 0) return null;
 
             var terminator = buf[buf.Length - 1];
-            var angle = MemoryMarshal.Cast<byte, float>(buf.Slice(0, sizeof(float)))[0];
-            var vecOffset = MemoryMarshal.Cast<byte, long>(buf.Slice(sizeof(float), sizeof(long)))[0];
-            var postingsOffset = MemoryMarshal.Cast<byte, long>(buf.Slice(sizeof(float) + sizeof(long), sizeof(long)))[0];
-            var componentCount = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(float) + sizeof(long) + sizeof(long), sizeof(int)))[0];
-            var weight = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int), sizeof(int)))[0];
+            var node = VectorNode.DeserializeNode(buf, vectorStream, ref terminator);
 
-            return VectorNode.DeserializeNode(
-                    angle,
-                    vecOffset,
-                    postingsOffset,
-                    componentCount,
-                    weight,
-                    vectorStream,
-                    ref terminator);
+            return node;
         }
 
         private void SkipTree(Stream indexStream)
