@@ -13,7 +13,7 @@ namespace Sir.Store
     /// </summary>
     public class VectorNode
     {
-        public const int NodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
+        public const int BlockSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
         public const int ComponentSize = sizeof(long) + sizeof(byte);
 
         private VectorNode _right;
@@ -432,7 +432,7 @@ namespace Sir.Store
             (float identicalAngle, float foldAngle) similarity)
         {
             int read = 0;
-            var buf = new byte[NodeSize];
+            var buf = new byte[BlockSize];
 
             while (read < indexLength)
             {
@@ -444,7 +444,7 @@ namespace Sir.Store
                 if (node.VectorOffset > -1)
                     root.Add(node, similarity);
 
-                read += NodeSize;
+                read += BlockSize;
             }
         }
 
@@ -455,7 +455,7 @@ namespace Sir.Store
             var tail = new Stack<VectorNode>();
             byte terminator = 2;
             int read = 0;
-            var buf = new byte[NodeSize];
+            var buf = new byte[BlockSize];
 
             while (read < indexLength)
             {
@@ -485,7 +485,7 @@ namespace Sir.Store
                 }
 
                 cursor = node;
-                read += NodeSize;
+                read += BlockSize;
             }
 
             var right = root.Right;

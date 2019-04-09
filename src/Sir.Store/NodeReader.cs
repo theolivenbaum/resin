@@ -53,7 +53,7 @@ namespace Sir.Store
 
                 foreach (var page in pages)
                 {
-                    var offset = page.offset + VectorNode.NodeSize;
+                    var offset = page.offset + VectorNode.BlockSize;
                     Span<byte> pageBuf = new byte[Convert.ToInt32(page.length)];
 
                     ixStream.Seek(offset, SeekOrigin.Begin);
@@ -64,7 +64,7 @@ namespace Sir.Store
 
                     while (position < page.length)
                     {
-                        var buf = pageBuf.Slice(position, VectorNode.NodeSize);
+                        var buf = pageBuf.Slice(position, VectorNode.BlockSize);
 
                         var terminator = buf[buf.Length - 1];
                         var angle = MemoryMarshal.Cast<byte, float>(buf.Slice(0, sizeof(float)))[0];
@@ -84,7 +84,7 @@ namespace Sir.Store
                                 ref terminator),
                             similarity);
 
-                        position += VectorNode.NodeSize;
+                        position += VectorNode.BlockSize;
                     }
 
                     _optimizedOffset = ixStream.Position;
@@ -154,7 +154,7 @@ namespace Sir.Store
         {
             pages.Dequeue();
 
-            Span<byte> block = new byte[VectorNode.NodeSize];
+            Span<byte> block = new byte[VectorNode.BlockSize];
 
             var read = indexStream.Read(block);
 
@@ -561,7 +561,7 @@ namespace Sir.Store
 
         private VectorNode ReadNode(Stream indexStream, MemoryMappedViewAccessor vectorView)
         {
-            var buf = new byte[VectorNode.NodeSize];
+            var buf = new byte[VectorNode.BlockSize];
             var read = indexStream.Read(buf);
 
             if (read == 0) return null;
@@ -574,7 +574,7 @@ namespace Sir.Store
 
         private VectorNode ReadNode(Stream indexStream, Stream vectorStream)
         {
-            var buf = new byte[VectorNode.NodeSize];
+            var buf = new byte[VectorNode.BlockSize];
             var read = indexStream.Read(buf);
 
             if (read == 0) return null;
@@ -587,7 +587,7 @@ namespace Sir.Store
 
         private void SkipTree(Stream indexStream)
         {
-            var buf = new byte[VectorNode.NodeSize];
+            var buf = new byte[VectorNode.BlockSize];
 
             var read = indexStream.Read(buf);
 
@@ -596,9 +596,9 @@ namespace Sir.Store
                 throw new InvalidOperationException();
             }
 
-            var positionInBuffer = VectorNode.NodeSize - (sizeof(int) + sizeof(byte));
+            var positionInBuffer = VectorNode.BlockSize - (sizeof(int) + sizeof(byte));
             var weight = BitConverter.ToInt32(buf, positionInBuffer);
-            var distance = weight * VectorNode.NodeSize;
+            var distance = weight * VectorNode.BlockSize;
 
             if (distance > 0)
             {
