@@ -521,7 +521,7 @@ namespace Sir.Store
                 for (int i = 0; i < vectorCount; i++)
                 {
                     var key = BitConverter.ToInt64(vecBuf, offs);
-                    var val = vecBuf[offs + sizeof(long)];
+                    var val = BitConverter.ToInt32(vecBuf, offs + sizeof(long));
 
                     vec.Add(key, val);
 
@@ -616,7 +616,7 @@ namespace Sir.Store
                 for (int i = 0; i < componentCount; i++)
                 {
                     var key = BitConverter.ToInt64(vecBuf, offs);
-                    var val = vecBuf[offs + sizeof(long)];
+                    var val = BitConverter.ToInt32(vecBuf, offs + sizeof(long));
 
                     vec.Add(key, val);
 
