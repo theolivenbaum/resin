@@ -98,12 +98,12 @@ namespace Sir.Store
             return root;
         }
 
-        public Hit ClosestMatch(SortedList<long, byte> vector, (float identicalAngle, float foldAngle) similarity)
+        public Hit ClosestMatch(SortedList<long, int> vector, (float identicalAngle, float foldAngle) similarity)
         {
             return ClosestMatchOnDisk(vector, similarity);
         }
 
-        public Hit ClosestMatchOnDisk(SortedList<long, byte> vector, (float identicalAngle, float foldAngle) similarity)
+        public Hit ClosestMatchOnDisk(SortedList<long, int> vector, (float identicalAngle, float foldAngle) similarity)
         {
             var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
@@ -146,7 +146,7 @@ namespace Sir.Store
         }
 
         private Hit ClosestMatchInPage(
-            SortedList<long, byte> node,
+            SortedList<long, int> node,
             Stream indexStream,
             Stream vectorStream,
             (float identicalAngle, float foldAngle) similarity,
@@ -304,7 +304,7 @@ namespace Sir.Store
         }
 
         private Hit ClosestMatchInPage(
-            SortedList<long, byte> node,
+            SortedList<long, int> node,
             Stream indexStream,
             MemoryMappedViewAccessor vectorView,
             (float identicalAngle, float foldAngle) similarity)
@@ -432,7 +432,7 @@ namespace Sir.Store
         }
 
         private Hit ClosestMatchInPage(
-            SortedList<long, byte> node,
+            SortedList<long, int> node,
             Stream indexStream,
             Stream vectorStream,
             (float identicalAngle, float foldAngle) similarity)

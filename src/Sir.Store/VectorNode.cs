@@ -14,7 +14,7 @@ namespace Sir.Store
     public class VectorNode
     {
         public const int BlockSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
-        public const int ComponentSize = sizeof(long) + sizeof(byte);
+        public const int ComponentSize = sizeof(long) + sizeof(int);
 
         private VectorNode _right;
         private VectorNode _left;
@@ -27,7 +27,7 @@ namespace Sir.Store
         public long VectorOffset { get; private set; }
         public long PostingsOffset { get; set; }
         public float Angle { get; private set; }
-        public SortedList<long, byte> Vector { get; set; }
+        public SortedList<long, int> Vector { get; set; }
 
         public int Weight
         {
@@ -90,14 +90,14 @@ namespace Sir.Store
         {
         }
 
-        public VectorNode(SortedList<long, byte> termVector)
+        public VectorNode(SortedList<long, int> termVector)
         {
             Vector = termVector;
             PostingsOffset = -1;
             VectorOffset = -1;
         }
 
-        public VectorNode(SortedList<long, byte> vector, long docId)
+        public VectorNode(SortedList<long, int> vector, long docId)
         {
             Vector = vector;
             PostingsOffset = -1;
@@ -106,7 +106,7 @@ namespace Sir.Store
             DocIds.Add(docId);
         }
 
-        public Hit ClosestMatch(SortedList<long, byte> vector, float foldAngle)
+        public Hit ClosestMatch(SortedList<long, int> vector, float foldAngle)
         {
             var best = this;
             var cursor = this;
@@ -505,7 +505,7 @@ namespace Sir.Store
             var weight = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int));
 
             // Deserialize term vector
-            var vec = new SortedList<long, byte>(vectorCount);
+            var vec = new SortedList<long, int>(vectorCount);
             var vecBuf = new byte[vectorCount * ComponentSize];
 
             if (vecOffset < 0)
@@ -591,7 +591,7 @@ namespace Sir.Store
             shallow.Vector = DeserializeVector(shallow.VectorOffset, shallow.ComponentCount, vectorStream);
         }
 
-        public static SortedList<long, byte> DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
+        public static SortedList<long, int> DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
         {
             if (vectorStream == null)
             {
@@ -599,7 +599,7 @@ namespace Sir.Store
             }
 
             // Deserialize term vector
-            var vec = new SortedList<long, byte>(componentCount);
+            var vec = new SortedList<long, int>(componentCount);
             var vecBuf = new byte[componentCount * ComponentSize];
 
             if (vectorOffset < 0)

@@ -86,9 +86,9 @@ where n is the number of significant component pairs.
 
 #### Programatically
 
-The word `pineapple` is represented as a sparse array that can carry a maximum of Int64 number of components:
+The word `pineapple` is represented as a sparse array that can carry a maximum of Int64 number of components each the size of a Int32:
 
-	SortedList<long, byte>{
+	SortedList<long, int>{
 		{(long)'p', 3},
 		{(long)'i', 1},
 		{(long)'n', 1},
@@ -99,7 +99,7 @@ The word `pineapple` is represented as a sparse array that can carry a maximum o
 
 `pen` is represented as:
 
-	SortedList<long, byte>{
+	SortedList<long, int>{
 		{(long)'p', 1},
 		{(long)'e', 1},
 		{(long)'n', 1}

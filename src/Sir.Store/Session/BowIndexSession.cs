@@ -14,7 +14,7 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly ReadSession _readSession;
         private readonly ITokenizer _tokenizer;
-        private readonly ProducerConsumerQueue<(long docId, long keyId, SortedList<long, byte> vector)> _indexWriter;
+        private readonly ProducerConsumerQueue<(long docId, long keyId, SortedList<long, int> vector)> _indexWriter;
         private readonly SortedList<long, VectorNode> _newColumns;
         private readonly Stream _documentVectorStream;
         private readonly object _writeSync = new object();
@@ -31,7 +31,7 @@ namespace Sir.Store
             _readSession = new ReadSession(collectionName, collectionId, sessionFactory, config, indexReaders);
             _tokenizer = tokenizer;
 
-            _indexWriter = new ProducerConsumerQueue<(long docId, long keyId, SortedList<long, byte> vector)>(
+            _indexWriter = new ProducerConsumerQueue<(long docId, long keyId, SortedList<long, int> vector)>(
                 int.Parse(_config.Get("write_thread_count")), WriteToMemIndex);
 
             _newColumns = new SortedList<long, VectorNode>();
@@ -71,7 +71,7 @@ namespace Sir.Store
             }
         }
 
-        private void WriteToMemIndex((long docId, long keyId, SortedList<long, byte> vector) item)
+        private void WriteToMemIndex((long docId, long keyId, SortedList<long, int> vector) item)
         {
             VectorNode column;
 
@@ -95,7 +95,7 @@ namespace Sir.Store
             this.Log("added doc field {0}.{1} to memory index", item.docId, item.keyId);
         }
 
-        private static SortedList<long, byte> CreateDocumentVector(
+        private static SortedList<long, int> CreateDocumentVector(
             string value, NodeReader reader, ITokenizer tokenizer)
         {
             var terms = tokenizer.Tokenize(value);

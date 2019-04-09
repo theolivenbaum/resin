@@ -11,7 +11,7 @@ namespace Sir
         public char[] Source { get; set; }
         public string Original { get; set; }
 
-        public IEnumerable<SortedList<long, byte>> Embeddings()
+        public IEnumerable<SortedList<long, int>> Embeddings()
         {
             foreach (var token in Tokens)
             {

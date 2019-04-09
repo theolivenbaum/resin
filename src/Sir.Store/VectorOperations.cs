@@ -12,20 +12,20 @@ namespace Sir
     /// </summary>
     public static class VectorOperations
     {
-        public static async Task<long> SerializeAsync(this SortedList<long, byte> vec, Stream stream)
+        public static async Task<long> SerializeAsync(this SortedList<long, int> vec, Stream stream)
         {
             var pos = stream.Position;
 
             foreach (var kvp in vec)
             {
                 await stream.WriteAsync(BitConverter.GetBytes(kvp.Key), 0, sizeof(long));
-                await stream.WriteAsync(new[] { kvp.Value }, 0, sizeof(byte));
+                await stream.WriteAsync(BitConverter.GetBytes(kvp.Value), 0, sizeof(int));
             }
 
             return pos;
         }
 
-        public static long Serialize(this SortedList<long, byte> vec, Stream stream)
+        public static long Serialize(this SortedList<long, int> vec, Stream stream)
         {
             lock (stream)
             {
@@ -34,14 +34,14 @@ namespace Sir
                 foreach (var kvp in vec)
                 {
                     stream.Write(BitConverter.GetBytes(kvp.Key), 0, sizeof(long));
-                    stream.WriteByte(kvp.Value);
+                    stream.Write(BitConverter.GetBytes(kvp.Value), 0, sizeof(int));
                 }
 
                 return pos;
             }
         }
 
-        public static float CosAngle(this SortedList<long, byte> vec1, SortedList<long, byte> vec2)
+        public static float CosAngle(this SortedList<long, int> vec1, SortedList<long, int> vec2)
         {
             long dotProduct = Dot(vec1, vec2);
             long dotSelf1 = vec1.DotSelf();
@@ -50,7 +50,7 @@ namespace Sir
             return (float) (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
         }
 
-        public static long Dot(this SortedList<long, byte> vec1, SortedList<long, byte> vec2)
+        public static long Dot(this SortedList<long, int> vec1, SortedList<long, int> vec2)
         {
             long product = 0;
             int cursor1 = 0;
@@ -79,7 +79,7 @@ namespace Sir
             return product;
         }
 
-        public static long DotSelf(this SortedList<long, byte> vec)
+        public static long DotSelf(this SortedList<long, int> vec)
         {
             long product = 0;
 
@@ -91,7 +91,7 @@ namespace Sir
             return product;
         }
 
-        public static long Dot(this byte[] vec1, byte[] vec2)
+        public static long Dot(this int[] vec1, int[] vec2)
         {
             long product = 0;
 
@@ -103,17 +103,17 @@ namespace Sir
             return product;
         }
 
-        public static SortedList<long, byte> Add(this SortedList<long, byte> vec1, SortedList<long, byte> vec2)
+        public static SortedList<long, int> Add(this SortedList<long, int> vec1, SortedList<long, int> vec2)
         {
-            var result = new SortedList<long, byte>();
+            var result = new SortedList<long, int>();
 
             foreach (var x in vec1)
             {
-                byte val;
+                int val;
 
-                if (vec2.TryGetValue(x.Key, out val) && val < byte.MaxValue)
+                if (vec2.TryGetValue(x.Key, out val) && val < int.MaxValue)
                 {
-                    var v = (byte)(val + x.Value);
+                    var v = val + x.Value;
 
                     result[x.Key] = v;
                 }
@@ -125,11 +125,11 @@ namespace Sir
 
             foreach (var x in vec2)
             {
-                byte val;
+                int val;
 
-                if (vec1.TryGetValue(x.Key, out val) && val < byte.MaxValue)
+                if (vec1.TryGetValue(x.Key, out val) && val < int.MaxValue)
                 {
-                    var v = (byte)(val + x.Value);
+                    var v = (val + x.Value);
 
                     result[x.Key] = v;
                 }
@@ -142,23 +142,23 @@ namespace Sir
             return result;
         }
 
-        public static SortedList<long, byte> Subtract(this SortedList<long, byte> vec1, SortedList<long, byte> vec2)
+        public static SortedList<long, int> Subtract(this SortedList<long, int> vec1, SortedList<long, int> vec2)
         {
-            var result = new SortedList<long, byte>();
+            var result = new SortedList<long, int>();
 
             foreach (var x in vec1)
             {
-                byte val;
+                int val;
 
                 if (vec2.TryGetValue(x.Key, out val) && val > 0)
                 {
-                    result[x.Key] = (byte)(val - 1);
+                    result[x.Key] = (val - 1);
                 }
             }
 
             foreach (var x in vec2)
             {
-                byte val;
+                int val;
 
                 if (vec1.TryGetValue(x.Key, out val) && val > 0)
                 {
@@ -168,14 +168,14 @@ namespace Sir
             return result;
         }
 
-        public static SortedList<long, byte> ToVector(this Term term)
+        public static SortedList<long, int> ToVector(this Term term)
         {
             if (term.Node != null)
             {
                 return term.Node.Vector;
             }
 
-            var vec = new SortedList<long, byte>();
+            var vec = new SortedList<long, int>();
             var span = term.TokenizedString.Tokens[term.Index];
 
             for (int i = 0; i < span.length; i++)
@@ -184,7 +184,7 @@ namespace Sir
 
                 if (vec.ContainsKey(codePoint))
                 {
-                    if (vec[codePoint] < byte.MaxValue) vec[codePoint] += 1;
+                    if (vec[codePoint] < int.MaxValue) vec[codePoint] += 1;
                 }
                 else
                 {
@@ -195,9 +195,9 @@ namespace Sir
             return vec;
         }
 
-        public static SortedList<long, byte> ToCharVector(this AnalyzedString term, int offset, int length)
+        public static SortedList<long, int> ToCharVector(this AnalyzedString term, int offset, int length)
         {
-            var vec = new SortedList<long, byte>();
+            var vec = new SortedList<long, int>();
 
             for (int i = 0; i < length; i++)
             {
@@ -205,7 +205,7 @@ namespace Sir
 
                 if (vec.ContainsKey(codePoint))
                 {
-                    if (vec[codePoint] < byte.MaxValue) vec[codePoint] += 1;
+                    if (vec[codePoint] < int.MaxValue) vec[codePoint] += 1;
                 }
                 else
                 {
@@ -216,9 +216,9 @@ namespace Sir
             return vec;
         }
 
-        public static SortedList<long, byte> ToCharVector(this string word)
+        public static SortedList<long, int> ToCharVector(this string word)
         {
-            var vec = new SortedList<long, byte>();
+            var vec = new SortedList<long, int>();
             TextElementEnumerator charEnum = StringInfo.GetTextElementEnumerator(word);
 
             while (charEnum.MoveNext())
@@ -233,7 +233,7 @@ namespace Sir
 
                 if (vec.ContainsKey(codePoint))
                 {
-                    if (vec[codePoint] < byte.MaxValue) vec[codePoint] += 1;
+                    if (vec[codePoint] < int.MaxValue) vec[codePoint] += 1;
                 }
                 else
                 {
@@ -243,18 +243,18 @@ namespace Sir
             return vec;
         }
 
-        public static float Magnitude(this SortedList<long, byte> vector)
+        public static float Magnitude(this SortedList<long, int> vector)
         {
             return (float) Math.Sqrt(Dot(vector, vector));
         }
 
-        public static SortedList<long, byte> CreateDocumentVector(
-            IEnumerable<SortedList<long, byte>> termVectors, 
+        public static SortedList<long, int> CreateDocumentVector(
+            IEnumerable<SortedList<long, int>> termVectors, 
             (float identicalAngle, float foldAngle) similarity,
             NodeReader reader, 
             ITokenizer tokenizer)
         {
-            var docVec = new SortedList<long, byte>();
+            var docVec = new SortedList<long, int>();
 
             foreach (var term in termVectors)
             {
@@ -270,7 +270,7 @@ namespace Sir
 
                 if (docVec.ContainsKey(termId))
                 {
-                    if (docVec[termId] < byte.MaxValue) docVec[termId] += 1;
+                    if (docVec[termId] < int.MaxValue) docVec[termId] += 1;
                 }
                 else
                 {
