@@ -72,6 +72,11 @@ namespace Sir.Store
             }
         }
 
+        public VectorNode Ancestor
+        {
+            get { return _ancestor; }
+        }
+
         public byte Terminator { get; set; }
 
         public IList<long> PostingsOffsets { get; set; }
@@ -180,7 +185,8 @@ namespace Sir.Store
         public void Add(
             VectorNode node, 
             (float identicalAngle, float foldAngle) similarity, 
-            Stream vectorStream = null)
+            Stream vectorStream = null,
+            bool vectorAddition = false)
         {
             node._ancestor = null;
             node._left = null;
@@ -199,7 +205,7 @@ namespace Sir.Store
 
                     lock (_sync)
                     {
-                        cursor.Merge(node);
+                        cursor.Merge(node, vectorAddition);
                     }
 
                     break;
@@ -261,8 +267,13 @@ namespace Sir.Store
             }
         }
 
-        public void Merge(VectorNode node)
+        public void Merge(VectorNode node, bool vectorAddition)
         {
+            if (vectorAddition)
+            {
+                Vector = Vector.Add(node.Vector);
+            }
+
             if (DocIds == null)
             {
                 DocIds = node.DocIds;
@@ -295,7 +306,15 @@ namespace Sir.Store
             }
         }
 
-        private byte[][] ToStream()
+        public async Task Serialize(Stream stream)
+        {
+            foreach (var buf in ToStreams())
+            {
+                await stream.WriteAsync(buf, 0, buf.Length);
+            }
+        }
+
+        public byte[][] ToStreams()
         {
             if (_ancestor != null)
             {
@@ -349,7 +368,7 @@ namespace Sir.Store
 
             while (node != null)
             {
-                foreach (var buf in node.ToStream())
+                foreach (var buf in node.ToStreams())
                 {
                     indexStream.Write(buf, 0, buf.Length);
                 }
