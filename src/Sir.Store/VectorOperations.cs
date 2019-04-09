@@ -250,6 +250,7 @@ namespace Sir
 
         public static SortedList<long, byte> CreateDocumentVector(
             IEnumerable<SortedList<long, byte>> termVectors, 
+            (float identicalAngle, float foldAngle) similarity,
             NodeReader reader, 
             ITokenizer tokenizer)
         {
@@ -257,7 +258,7 @@ namespace Sir
 
             foreach (var term in termVectors)
             {
-                var hit = reader.ClosestMatch(term);
+                var hit = reader.ClosestMatch(term, similarity);
                 var offset = hit.Node.PostingsOffsets != null ? hit.Node.PostingsOffsets[0] : hit.Node.PostingsOffset;
 
                 if (hit.Score == 0 || offset < 0)

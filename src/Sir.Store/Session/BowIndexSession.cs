@@ -89,8 +89,7 @@ namespace Sir.Store
 
             column.Add(
                 new VectorNode(item.vector, item.docId), 
-                VectorNode.DocIdenticalAngle, 
-                VectorNode.DocFoldAngle, 
+                CosineSimilarity.Document, 
                 _documentVectorStream);
 
             this.Log("added doc field {0}.{1} to memory index", item.docId, item.keyId);
@@ -101,7 +100,7 @@ namespace Sir.Store
         {
             var terms = tokenizer.Tokenize(value);
 
-            return VectorOperations.CreateDocumentVector(terms.Embeddings(), reader, tokenizer);
+            return VectorOperations.CreateDocumentVector(terms.Embeddings(), CosineSimilarity.Document, reader, tokenizer);
         }
 
         private void Flush()

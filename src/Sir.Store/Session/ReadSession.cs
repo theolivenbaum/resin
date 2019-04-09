@@ -137,7 +137,7 @@ namespace Sir.Store
                     {
                         var termVector = cursor.Term.ToVector();
 
-                        hit = indexReader.ClosestMatch(termVector);
+                        hit = indexReader.ClosestMatch(termVector, CosineSimilarity.Term);
                     }
 
                     if (hit != null && hit.Score > 0)

@@ -107,11 +107,10 @@ namespace Sir.Store
         private void BuildModel((long docId, long keyId, AnalyzedString tokens) item)
         {
             var ix = GetOrCreateIndex(item.keyId);
-            var config = VectorSpaceConfigurations.Term;
 
             foreach (var vector in item.tokens.Embeddings())
             {
-                ix.Add(new VectorNode(vector, item.docId), config.identicalAngle, config.foldAngle, _vectorStream);
+                ix.Add(new VectorNode(vector, item.docId), CosineSimilarity.Term, _vectorStream);
             }
         }
 
@@ -165,9 +164,9 @@ namespace Sir.Store
 
                 foreach (var vector in item.tokens.Embeddings())
                 {
-                    var hit = tree.ClosestMatch(vector, VectorNode.TermFoldAngle);
+                    var hit = tree.ClosestMatch(vector, CosineSimilarity.Term.foldAngle);
 
-                    if (hit.Score < VectorNode.TermIdenticalAngle)
+                    if (hit.Score < CosineSimilarity.Term.identicalAngle)
                     {
                         throw new DataMisalignedException();
                     }

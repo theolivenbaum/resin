@@ -143,7 +143,7 @@ namespace Sir.HttpServer.Features
                 var result = await readSession.Read(urlQuery);
             
                 return result.Total == 0 
-                    ? null : (float)result.Docs[0]["___score"] >= VectorNode.TermIdenticalAngle 
+                    ? null : (float)result.Docs[0]["___score"] >= CosineSimilarity.Term.identicalAngle 
                     ? result.Docs[0] : null;
             }
         }

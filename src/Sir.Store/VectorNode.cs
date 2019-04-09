@@ -15,8 +15,6 @@ namespace Sir.Store
     {
         public const int NodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
         public const int ComponentSize = sizeof(long) + sizeof(byte);
-        public const float TermIdenticalAngle = 0.999f;
-        public const float TermFoldAngle = 0.65f;
         public const float DocIdenticalAngle = 0.97f;
         public const float DocFoldAngle = 0.65f;
 
@@ -183,8 +181,7 @@ namespace Sir.Store
 
         public void Add(
             VectorNode node, 
-            float identicalAngle, 
-            float foldAngle, 
+            (float identicalAngle, float foldAngle) similarity, 
             Stream vectorStream = null)
         {
             node._ancestor = null;
@@ -198,7 +195,7 @@ namespace Sir.Store
             {
                 var angle = node.Vector.CosAngle(cursor.Vector);
 
-                if (angle >= identicalAngle)
+                if (angle >= similarity.identicalAngle)
                 {
                     node.Angle = angle;
 
@@ -209,7 +206,7 @@ namespace Sir.Store
 
                     break;
                 }
-                else if (angle > foldAngle)
+                else if (angle > similarity.foldAngle)
                 {
                     if (cursor.Left == null)
                     {
@@ -434,7 +431,7 @@ namespace Sir.Store
             Stream vectorStream, 
             long indexLength, 
             VectorNode root,
-            (float identicalAngle, float foldAngle) config)
+            (float identicalAngle, float foldAngle) similarity)
         {
             int read = 0;
             var buf = new byte[NodeSize];
@@ -447,7 +444,7 @@ namespace Sir.Store
                 var node = DeserializeNode(buf, vectorStream, ref terminator);
 
                 if (node.VectorOffset > -1)
-                    root.Add(node, config.identicalAngle, config.foldAngle);
+                    root.Add(node, similarity);
 
                 read += NodeSize;
             }
@@ -776,11 +773,5 @@ namespace Sir.Store
 
             return payload.ToArray();
         }
-    }
-
-    public static class VectorSpaceConfigurations
-    {
-        public static readonly (float identicalAngle, float foldAngle) Term = (VectorNode.TermIdenticalAngle, VectorNode.TermFoldAngle);
-        public static readonly (float identicalAngle, float foldAngle) Document = (VectorNode.DocIdenticalAngle, VectorNode.DocFoldAngle);
     }
 }

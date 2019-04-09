@@ -35,12 +35,12 @@ namespace Sir.Store
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
         }
 
-        public VectorNode Optimized()
+        public VectorNode Optimized((float identicalAngle, float foldAngle) similarity)
         {
-            return Optimize();
+            return Optimize(similarity);
         }
 
-        private VectorNode Optimize()
+        private VectorNode Optimize((float identicalAngle, float foldAngle) similarity)
         {
             var time = Stopwatch.StartNew();
             var root = new VectorNode();
@@ -82,8 +82,7 @@ namespace Sir.Store
                                 weight,
                                 vectorStream,
                                 ref terminator),
-                            VectorNode.TermIdenticalAngle, 
-                            VectorNode.TermFoldAngle);
+                            similarity);
 
                         position += VectorNode.NodeSize;
                     }
@@ -99,12 +98,12 @@ namespace Sir.Store
             return root;
         }
 
-        public Hit ClosestMatch(SortedList<long, byte> vector)
+        public Hit ClosestMatch(SortedList<long, byte> vector, (float identicalAngle, float foldAngle) similarity)
         {
-            return ClosestMatchOnDisk(vector);
+            return ClosestMatchOnDisk(vector, similarity);
         }
 
-        public Hit ClosestMatchOnDisk(SortedList<long, byte> vector)
+        public Hit ClosestMatchOnDisk(SortedList<long, byte> vector, (float identicalAngle, float foldAngle) similarity)
         {
             var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
@@ -117,6 +116,7 @@ namespace Sir.Store
                             vector,
                             indexStream,
                             vectorStream,
+                            similarity,
                             new Queue<(long, long)>(pages));
 
                 high.Add(hit);
@@ -149,6 +149,7 @@ namespace Sir.Store
             SortedList<long, byte> node,
             Stream indexStream,
             Stream vectorStream,
+            (float identicalAngle, float foldAngle) similarity,
             Queue<(long offset, long length)> pages)
         {
             pages.Dequeue();
@@ -170,7 +171,7 @@ namespace Sir.Store
 
                 var angle = cursorVector.CosAngle(node);
 
-                if (angle >= VectorNode.TermIdenticalAngle)
+                if (angle >= similarity.identicalAngle)
                 {
                     if (best == null || angle > highscore)
                     {
@@ -198,7 +199,7 @@ namespace Sir.Store
                     indexStream.Seek(pages.Dequeue().offset, SeekOrigin.Begin);
                     read = indexStream.Read(block);
                 }
-                else if (angle > VectorNode.TermFoldAngle)
+                else if (angle > similarity.foldAngle)
                 {
                     if (best == null || angle > highscore)
                     {
@@ -305,7 +306,8 @@ namespace Sir.Store
         private Hit ClosestMatchInPage(
             SortedList<long, byte> node,
             Stream indexStream,
-            MemoryMappedViewAccessor vectorView)
+            MemoryMappedViewAccessor vectorView,
+            (float identicalAngle, float foldAngle) similarity)
         {
             var cursor = ReadNode(indexStream, vectorView);
 
@@ -321,7 +323,7 @@ namespace Sir.Store
             {
                 var angle = cursor.Vector.CosAngle(node);
 
-                if (angle >= VectorNode.TermIdenticalAngle)
+                if (angle >= similarity.identicalAngle)
                 {
                     if (angle > highscore)
                     {
@@ -342,7 +344,7 @@ namespace Sir.Store
 
                     break;
                 }
-                else if (angle > VectorNode.TermFoldAngle)
+                else if (angle > similarity.foldAngle)
                 {
                     if (angle > highscore)
                     {
@@ -432,7 +434,8 @@ namespace Sir.Store
         private Hit ClosestMatchInPage(
             SortedList<long, byte> node,
             Stream indexStream,
-            Stream vectorStream)
+            Stream vectorStream,
+            (float identicalAngle, float foldAngle) similarity)
         {
             var cursor = ReadNode(indexStream, vectorStream);
 
@@ -448,7 +451,7 @@ namespace Sir.Store
             {
                 var angle = cursor.Vector.CosAngle(node);
 
-                if (angle >= VectorNode.TermIdenticalAngle)
+                if (angle >= similarity.identicalAngle)
                 {
                     if (angle > highscore)
                     {
@@ -469,7 +472,7 @@ namespace Sir.Store
 
                     break;
                 }
-                else if (angle > VectorNode.TermFoldAngle)
+                else if (angle > similarity.foldAngle)
                 {
                     if (angle > highscore)
                     {
