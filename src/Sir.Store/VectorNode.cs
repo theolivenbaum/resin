@@ -15,8 +15,6 @@ namespace Sir.Store
     {
         public const int NodeSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
         public const int ComponentSize = sizeof(long) + sizeof(byte);
-        public const float DocIdenticalAngle = 0.97f;
-        public const float DocFoldAngle = 0.65f;
 
         private VectorNode _right;
         private VectorNode _left;
