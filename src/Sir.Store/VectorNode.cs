@@ -9,7 +9,8 @@ using System.Threading.Tasks;
 namespace Sir.Store
 {
     /// <summary>
-    /// Binary tree that is balanced according to the cos angles of the vectors that is each node's payload.
+    /// Binary tree that consists of nodes that carry vectors as their payload. 
+    /// Nodes are balanced according to the cosine similarity of their vectors.
     /// </summary>
     public class VectorNode
     {
@@ -182,7 +183,7 @@ namespace Sir.Store
 
         private readonly object _sync = new object();
 
-        public void Add(
+        public VectorNode Add(
             VectorNode node, 
             (float identicalAngle, float foldAngle) similarity, 
             Stream vectorStream = null,
@@ -194,6 +195,7 @@ namespace Sir.Store
             node._weight = 0;
 
             var cursor = this;
+            var junction = this;
 
             while (cursor != null)
             {
@@ -208,6 +210,7 @@ namespace Sir.Store
                         cursor.Merge(node, vectorAddition);
                     }
 
+                    junction = cursor;
                     break;
                 }
                 else if (angle > similarity.foldAngle)
@@ -224,6 +227,7 @@ namespace Sir.Store
                                 if (vectorStream != null)
                                     cursor.Left.SerializeVector(vectorStream);
 
+                                junction = node;
                                 break;
                             }
                             else
@@ -251,6 +255,7 @@ namespace Sir.Store
                                 if (vectorStream != null)
                                     cursor.Right.SerializeVector(vectorStream);
 
+                                junction = node;
                                 break;
                             }
                             else
@@ -265,6 +270,8 @@ namespace Sir.Store
                     }
                 }
             }
+
+            return junction;
         }
 
         public void Merge(VectorNode node, bool vectorAddition)

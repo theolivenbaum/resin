@@ -292,5 +292,18 @@ namespace Sir
 
             return false;
         }
+
+        public static int[] ToArray(this SortedList<long, int> vector)
+        {
+            var result = new int[vector.Count];
+            var index = 0;
+
+            foreach(var key in vector.Keys)
+            {
+                result[index++] = vector[key];
+            }
+
+            return result;
+        }
     }
 }
