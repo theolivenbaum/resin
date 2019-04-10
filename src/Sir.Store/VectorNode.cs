@@ -207,7 +207,7 @@ namespace Sir.Store
 
                     lock (_sync)
                     {
-                        cursor.Merge(node, vectorAddition);
+                        cursor.Merge(node, vectorAddition, vectorStream);
                     }
 
                     junction = cursor;
@@ -274,11 +274,13 @@ namespace Sir.Store
             return junction;
         }
 
-        public void Merge(VectorNode node, bool vectorAddition)
+        public void Merge(VectorNode node, bool vectorAddition, Stream vectorStream = null)
         {
             if (vectorAddition)
             {
                 Vector = Vector.Add(node.Vector);
+
+                SerializeVector(vectorStream);
             }
 
             if (DocIds == null)
@@ -323,19 +325,6 @@ namespace Sir.Store
 
         public byte[][] ToStreams()
         {
-            if (_ancestor != null)
-            {
-                if (VectorOffset < 0)
-                {
-                    throw new InvalidOperationException();
-                }
-
-                if (PostingsOffset < 0)
-                {
-                    throw new InvalidOperationException();
-                }
-            }
-
             var block = new byte[6][];
 
             byte[] terminator = new byte[1];
@@ -448,6 +437,27 @@ namespace Sir.Store
             }
 
             return result;
+        }
+
+        public static void DeserializeUnorderedFile(
+            Stream indexStream,
+            Stream vectorStream,
+            VectorNode root,
+            (float identicalAngle, float foldAngle) similarity)
+        {
+            var buf = new byte[BlockSize];
+            int read = indexStream.Read(buf); // skip first node in file (it's a null node)
+
+            while (read == BlockSize)
+            {
+                indexStream.Read(buf);
+
+                var terminator = new byte();
+                var node = DeserializeNode(buf, vectorStream, ref terminator);
+
+                if (node.VectorOffset > -1)
+                    root.Add(node, similarity);
+            }
         }
 
         public static void DeserializeTree(
