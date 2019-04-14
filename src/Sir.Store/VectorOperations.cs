@@ -119,25 +119,18 @@ namespace Sir
             var vec = new SortedList<long, int>(vectorCount);
             var vecBuf = new byte[vectorCount * VectorNode.ComponentSize];
 
-            if (vecOffset < 0)
+            vectorView.ReadArray(vecOffset, vecBuf, 0, vecBuf.Length);
+
+            var offs = 0;
+
+            for (int i = 0; i < vectorCount; i++)
             {
-                vec.Add(0, 1);
-            }
-            else
-            {
-                vectorView.ReadArray(vecOffset, vecBuf, 0, vecBuf.Length);
+                var key = BitConverter.ToInt64(vecBuf, offs);
+                var val = BitConverter.ToInt32(vecBuf, offs + sizeof(long));
 
-                var offs = 0;
+                vec.Add(key, val);
 
-                for (int i = 0; i < vectorCount; i++)
-                {
-                    var key = BitConverter.ToInt64(vecBuf, offs);
-                    var val = BitConverter.ToInt32(vecBuf, offs + sizeof(long));
-
-                    vec.Add(key, val);
-
-                    offs += VectorNode.ComponentSize;
-                }
+                offs += VectorNode.ComponentSize;
             }
 
             // Create node
@@ -213,26 +206,19 @@ namespace Sir
             var vec = new SortedList<long, int>(componentCount);
             var vecBuf = new byte[componentCount * VectorNode.ComponentSize];
 
-            if (vectorOffset < 0)
+            vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
+            vectorStream.Read(vecBuf, 0, vecBuf.Length);
+
+            var offs = 0;
+
+            for (int i = 0; i < componentCount; i++)
             {
-                vec.Add(0, 1);
-            }
-            else
-            {
-                vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
-                vectorStream.Read(vecBuf, 0, vecBuf.Length);
+                var key = BitConverter.ToInt64(vecBuf, offs);
+                var val = BitConverter.ToInt32(vecBuf, offs + sizeof(long));
 
-                var offs = 0;
+                vec.Add(key, val);
 
-                for (int i = 0; i < componentCount; i++)
-                {
-                    var key = BitConverter.ToInt64(vecBuf, offs);
-                    var val = BitConverter.ToInt32(vecBuf, offs + sizeof(long));
-
-                    vec.Add(key, val);
-
-                    offs += VectorNode.ComponentSize;
-                }
+                offs += VectorNode.ComponentSize;
             }
 
             return vec;

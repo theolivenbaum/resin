@@ -368,9 +368,12 @@ namespace Sir.Store
 
             while (node != null)
             {
-                foreach (var buf in node.ToStreams())
+                if (node.VectorOffset > -1)
                 {
-                    indexStream.Write(buf, 0, buf.Length);
+                    foreach (var buf in node.ToStreams())
+                    {
+                        indexStream.Write(buf, 0, buf.Length);
+                    }
                 }
 
                 if (node.Right != null)
