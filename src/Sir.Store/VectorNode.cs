@@ -13,7 +13,7 @@ namespace Sir.Store
     /// </summary>
     public class VectorNode
     {
-        public const int BlockSize = sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
+        public const int BlockSize = sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
         public const int ComponentSize = sizeof(long) + sizeof(int);
 
         private VectorNode _right;
@@ -26,7 +26,6 @@ namespace Sir.Store
         public int ComponentCount { get; set; }
         public long VectorOffset { get; set; }
         public long PostingsOffset { get; set; }
-        public float Angle { get; set; }
         public SortedList<long, int> Vector { get; set; }
 
         public int Weight
@@ -207,8 +206,6 @@ namespace Sir.Store
 
                 if (angle >= similarity.identicalAngle)
                 {
-                    node.Angle = angle;
-
                     lock (_sync)
                     {
                         cursor.Merge(node, vectorAddition, vectorStream);
@@ -225,7 +222,6 @@ namespace Sir.Store
                         {
                             if (cursor.Left == null)
                             {
-                                node.Angle = angle;
                                 cursor.Left = node;
 
                                 if (vectorStream != null)
@@ -253,7 +249,6 @@ namespace Sir.Store
                         {
                             if (cursor.Right == null)
                             {
-                                node.Angle = angle;
                                 cursor.Right = node;
 
                                 if (vectorStream != null)
@@ -329,7 +324,7 @@ namespace Sir.Store
 
         public byte[][] ToStreams()
         {
-            var block = new byte[6][];
+            var block = new byte[5][];
 
             byte[] terminator = new byte[1];
 
@@ -350,12 +345,11 @@ namespace Sir.Store
                 terminator[0] = 0;
             }
 
-            block[0] = BitConverter.GetBytes(Angle);
-            block[1] = BitConverter.GetBytes(VectorOffset);
-            block[2] = BitConverter.GetBytes(PostingsOffset);
-            block[3] = BitConverter.GetBytes(Vector.Count);
-            block[4] = BitConverter.GetBytes(Weight);
-            block[5] = terminator;
+            block[0] = BitConverter.GetBytes(VectorOffset);
+            block[1] = BitConverter.GetBytes(PostingsOffset);
+            block[2] = BitConverter.GetBytes(Vector.Count);
+            block[3] = BitConverter.GetBytes(Weight);
+            block[4] = terminator;
 
             return block;
         }
@@ -519,15 +513,8 @@ namespace Sir.Store
         {
             if (node == null) return;
 
-            float angle = 0;
-
-            if (node._ancestor != null)
-            {
-                angle = node.Angle;
-            }
-
             output.Append('\t', depth);
-            output.AppendFormat(".{0} ({1})", node.ToString(), angle);
+            output.AppendFormat(".{0} ({1})", node.ToString(), node.Weight);
             output.AppendLine();
 
             if (node.Left != null)

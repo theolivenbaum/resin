@@ -109,11 +109,10 @@ namespace Sir
         public static VectorNode DeserializeNode(byte[] buf, MemoryMappedViewAccessor vectorView, ref byte terminator)
         {
             // Deserialize node
-            var angle = BitConverter.ToSingle(buf, 0);
-            var vecOffset = BitConverter.ToInt64(buf, sizeof(float));
-            var postingsOffset = BitConverter.ToInt64(buf, sizeof(float) + sizeof(long));
-            var vectorCount = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long));
-            var weight = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int));
+            var vecOffset = BitConverter.ToInt64(buf, 0);
+            var postingsOffset = BitConverter.ToInt64(buf, sizeof(long));
+            var vectorCount = BitConverter.ToInt32(buf, sizeof(long) + sizeof(long));
+            var weight = BitConverter.ToInt32(buf, sizeof(long) + sizeof(long) + sizeof(int));
 
             // Deserialize term vector
             var vec = new SortedList<long, int>(vectorCount);
@@ -136,7 +135,6 @@ namespace Sir
             // Create node
             var node = new VectorNode(vec);
 
-            node.Angle = angle;
             node.PostingsOffset = postingsOffset;
             node.VectorOffset = vecOffset;
             node.Terminator = terminator;
@@ -150,17 +148,15 @@ namespace Sir
         public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, ref byte terminator)
         {
             // Deserialize node
-            var angle = BitConverter.ToSingle(nodeBuffer, 0);
-            var vecOffset = BitConverter.ToInt64(nodeBuffer, sizeof(float));
-            var postingsOffset = BitConverter.ToInt64(nodeBuffer, sizeof(float) + sizeof(long));
-            var vectorCount = BitConverter.ToInt32(nodeBuffer, sizeof(float) + sizeof(long) + sizeof(long));
-            var weight = BitConverter.ToInt32(nodeBuffer, sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int));
+            var vecOffset = BitConverter.ToInt64(nodeBuffer, 0);
+            var postingsOffset = BitConverter.ToInt64(nodeBuffer, sizeof(long));
+            var vectorCount = BitConverter.ToInt32(nodeBuffer, sizeof(long) + sizeof(long));
+            var weight = BitConverter.ToInt32(nodeBuffer, sizeof(long) + sizeof(long) + sizeof(int));
 
-            return DeserializeNode(angle, vecOffset, postingsOffset, vectorCount, weight, vectorStream, ref terminator);
+            return DeserializeNode(vecOffset, postingsOffset, vectorCount, weight, vectorStream, ref terminator);
         }
 
         public static VectorNode DeserializeNode(
-            float angle,
             long vecOffset,
             long postingsOffset,
             int componentCount,
@@ -171,7 +167,6 @@ namespace Sir
             // Create node
             var node = new VectorNode(shallow: true);
 
-            node.Angle = angle;
             node.PostingsOffset = postingsOffset;
             node.VectorOffset = vecOffset;
             node.Terminator = terminator;

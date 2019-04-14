@@ -67,15 +67,13 @@ namespace Sir.Store
                         var buf = pageBuf.Slice(position, VectorNode.BlockSize);
 
                         var terminator = buf[buf.Length - 1];
-                        var angle = MemoryMarshal.Cast<byte, float>(buf.Slice(0, sizeof(float)))[0];
-                        var vecOffset = MemoryMarshal.Cast<byte, long>(buf.Slice(sizeof(float), sizeof(long)))[0];
-                        var postingsOffset = MemoryMarshal.Cast<byte, long>(buf.Slice(sizeof(float) + sizeof(long), sizeof(long)))[0];
-                        var componentCount = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(float) + sizeof(long) + sizeof(long), sizeof(int)))[0];
-                        var weight = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int), sizeof(int)))[0];
+                        var vecOffset = MemoryMarshal.Cast<byte, long>(buf.Slice(0, sizeof(long)))[0];
+                        var postingsOffset = MemoryMarshal.Cast<byte, long>(buf.Slice(sizeof(long), sizeof(long)))[0];
+                        var componentCount = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(long) + sizeof(long), sizeof(int)))[0];
+                        var weight = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(long) + sizeof(long) + sizeof(int), sizeof(int)))[0];
 
                         root.Add(
                             VectorOperations.DeserializeNode(
-                                angle,
                                 vecOffset,
                                 postingsOffset,
                                 componentCount,
@@ -163,11 +161,11 @@ namespace Sir.Store
 
             while (read > 0)
             {
-                var vecOffset = MemoryMarshal.Cast<byte, long>(block.Slice(sizeof(float), sizeof(long)))[0];
-                var componentCount = MemoryMarshal.Cast<byte, int>(block.Slice(sizeof(float) + sizeof(long) + sizeof(long), sizeof(int)))[0];
+                var vecOffset = MemoryMarshal.Cast<byte, long>(block.Slice(0, sizeof(long)))[0];
+                var componentCount = MemoryMarshal.Cast<byte, int>(block.Slice(sizeof(long) + sizeof(long), sizeof(int)))[0];
                 var cursorVector = VectorOperations.DeserializeVector(vecOffset, componentCount, vectorStream);
                 var cursorTerminator = block[block.Length - 1];
-                var postingsOffset = MemoryMarshal.Cast<byte, long>(block.Slice(sizeof(float) + sizeof(long), sizeof(long)))[0];
+                var postingsOffset = MemoryMarshal.Cast<byte, long>(block.Slice(sizeof(long), sizeof(long)))[0];
 
                 var angle = cursorVector.CosAngle(node);
 
