@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,9 +24,9 @@ namespace Sir.Store
         private int _weight;
 
         public int ComponentCount { get; set; }
-        public long VectorOffset { get; private set; }
+        public long VectorOffset { get; set; }
         public long PostingsOffset { get; set; }
-        public float Angle { get; private set; }
+        public float Angle { get; set; }
         public SortedList<long, int> Vector { get; set; }
 
         public int Weight
@@ -110,6 +109,11 @@ namespace Sir.Store
             VectorOffset = -1;
             DocIds = new HashSet<long>();
             DocIds.Add(docId);
+        }
+
+        public void DetachFromParent()
+        {
+            _ancestor = null;
         }
 
         public Hit ClosestMatch(SortedList<long, int> vector, float foldAngle)
@@ -439,229 +443,6 @@ namespace Sir.Store
             return result;
         }
 
-        public static void DeserializeUnorderedFile(
-            Stream indexStream,
-            Stream vectorStream,
-            VectorNode root,
-            (float identicalAngle, float foldAngle) similarity)
-        {
-            var buf = new byte[BlockSize];
-            int read = indexStream.Read(buf); // skip first node in file (it's a null node)
-
-            while (read == BlockSize)
-            {
-                indexStream.Read(buf);
-
-                var terminator = new byte();
-                var node = DeserializeNode(buf, vectorStream, ref terminator);
-
-                if (node.VectorOffset > -1)
-                    root.Add(node, similarity);
-            }
-        }
-
-        public static void DeserializeTree(
-            Stream indexStream, 
-            Stream vectorStream, 
-            long indexLength, 
-            VectorNode root,
-            (float identicalAngle, float foldAngle) similarity)
-        {
-            int read = 0;
-            var buf = new byte[BlockSize];
-
-            while (read < indexLength)
-            {
-                indexStream.Read(buf);
-
-                var terminator = new byte();
-                var node = DeserializeNode(buf, vectorStream, ref terminator);
-
-                if (node.VectorOffset > -1)
-                    root.Add(node, similarity);
-
-                read += BlockSize;
-            }
-        }
-
-        public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, long indexLength)
-        {
-            VectorNode root = new VectorNode();
-            VectorNode cursor = root;
-            var tail = new Stack<VectorNode>();
-            byte terminator = 2;
-            int read = 0;
-            var buf = new byte[BlockSize];
-
-            while (read < indexLength)
-            {
-                indexStream.Read(buf);
-
-                var node = DeserializeNode(buf, vectorStream, ref terminator);
-
-                if (node.Terminator == 0) // there is both a left and a right child
-                {
-                    cursor.Left = node;
-                    tail.Push(cursor);
-                }
-                else if (node.Terminator == 1) // there is a left but no right child
-                {
-                    cursor.Left = node;
-                }
-                else if (node.Terminator == 2) // there is a right but no left child
-                {
-                    cursor.Right = node;
-                }
-                else // there are no children
-                {
-                    if (tail.Count > 0)
-                    {
-                        tail.Pop().Right = node;
-                    }
-                }
-
-                cursor = node;
-                read += BlockSize;
-            }
-
-            var right = root.Right;
-
-            right._ancestor = null;
-
-            return right;
-        }
-
-        public static VectorNode DeserializeNode(byte[] buf, MemoryMappedViewAccessor vectorView, ref byte terminator)
-        {
-            // Deserialize node
-            var angle = BitConverter.ToSingle(buf, 0);
-            var vecOffset = BitConverter.ToInt64(buf, sizeof(float));
-            var postingsOffset = BitConverter.ToInt64(buf, sizeof(float) + sizeof(long));
-            var vectorCount = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long));
-            var weight = BitConverter.ToInt32(buf, sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int));
-
-            // Deserialize term vector
-            var vec = new SortedList<long, int>(vectorCount);
-            var vecBuf = new byte[vectorCount * ComponentSize];
-
-            if (vecOffset < 0)
-            {
-                vec.Add(0, 1);
-            }
-            else
-            {
-                vectorView.ReadArray(vecOffset, vecBuf, 0, vecBuf.Length);
-
-                var offs = 0;
-
-                for (int i = 0; i < vectorCount; i++)
-                {
-                    var key = BitConverter.ToInt64(vecBuf, offs);
-                    var val = BitConverter.ToInt32(vecBuf, offs + sizeof(long));
-
-                    vec.Add(key, val);
-
-                    offs += ComponentSize;
-                }
-            }
-
-            // Create node
-            var node = new VectorNode(vec);
-
-            node.Angle = angle;
-            node.PostingsOffset = postingsOffset;
-            node.VectorOffset = vecOffset;
-            node.Terminator = terminator;
-            node.Weight = weight;
-
-            terminator = buf[buf.Length - 1];
-
-            return node;
-        }
-
-        public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, ref byte terminator)
-        {
-            // Deserialize node
-            var angle = BitConverter.ToSingle(nodeBuffer, 0);
-            var vecOffset = BitConverter.ToInt64(nodeBuffer, sizeof(float));
-            var postingsOffset = BitConverter.ToInt64(nodeBuffer, sizeof(float) + sizeof(long));
-            var vectorCount = BitConverter.ToInt32(nodeBuffer, sizeof(float) + sizeof(long) + sizeof(long));
-            var weight = BitConverter.ToInt32(nodeBuffer, sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int));
-
-            return DeserializeNode(angle, vecOffset, postingsOffset, vectorCount, weight, vectorStream, ref terminator);
-        }
-
-        public static VectorNode DeserializeNode(
-            float angle, 
-            long vecOffset, 
-            long postingsOffset, 
-            int componentCount, 
-            int weight, 
-            Stream vectorStream,
-            ref byte terminator)
-        {
-            // Create node
-            var node = new VectorNode(shallow:true);
-
-            node.Angle = angle;
-            node.PostingsOffset = postingsOffset;
-            node.VectorOffset = vecOffset;
-            node.Terminator = terminator;
-            node.Weight = weight;
-            node.ComponentCount = componentCount;
-
-            Load(node, vectorStream);
-
-            return node;
-        }
-
-        public static void Load(
-            VectorNode shallow,
-            Stream vectorStream = null)
-        {
-            if (shallow.Vector != null)
-            {
-                return;
-            }
-
-            shallow.Vector = DeserializeVector(shallow.VectorOffset, shallow.ComponentCount, vectorStream);
-        }
-
-        public static SortedList<long, int> DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
-        {
-            if (vectorStream == null)
-            {
-                throw new ArgumentNullException(nameof(vectorStream));
-            }
-
-            // Deserialize term vector
-            var vec = new SortedList<long, int>(componentCount);
-            var vecBuf = new byte[componentCount * ComponentSize];
-
-            if (vectorOffset < 0)
-            {
-                vec.Add(0, 1);
-            }
-            else
-            {
-                vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
-                vectorStream.Read(vecBuf, 0, vecBuf.Length);
-
-                var offs = 0;
-
-                for (int i = 0; i < componentCount; i++)
-                {
-                    var key = BitConverter.ToInt64(vecBuf, offs);
-                    var val = BitConverter.ToInt32(vecBuf, offs + sizeof(long));
-
-                    vec.Add(key, val);
-
-                    offs += ComponentSize;
-                }
-            }
-
-            return vec;
-        }
 
         public string Visualize()
         {

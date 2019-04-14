@@ -74,7 +74,7 @@ namespace Sir.Store
                         var weight = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(float) + sizeof(long) + sizeof(long) + sizeof(int), sizeof(int)))[0];
 
                         root.Add(
-                            VectorNode.DeserializeNode(
+                            VectorOperations.DeserializeNode(
                                 angle,
                                 vecOffset,
                                 postingsOffset,
@@ -165,7 +165,7 @@ namespace Sir.Store
             {
                 var vecOffset = MemoryMarshal.Cast<byte, long>(block.Slice(sizeof(float), sizeof(long)))[0];
                 var componentCount = MemoryMarshal.Cast<byte, int>(block.Slice(sizeof(float) + sizeof(long) + sizeof(long), sizeof(int)))[0];
-                var cursorVector = VectorNode.DeserializeVector(vecOffset, componentCount, vectorStream);
+                var cursorVector = VectorOperations.DeserializeVector(vecOffset, componentCount, vectorStream);
                 var cursorTerminator = block[block.Length - 1];
                 var postingsOffset = MemoryMarshal.Cast<byte, long>(block.Slice(sizeof(float) + sizeof(long), sizeof(long)))[0];
 
@@ -567,7 +567,7 @@ namespace Sir.Store
             if (read == 0) return null;
 
             var terminator = buf[buf.Length - 1];
-            var node = VectorNode.DeserializeNode(buf, vectorView, ref terminator);
+            var node = VectorOperations.DeserializeNode(buf, vectorView, ref terminator);
 
             return node;
         }
@@ -580,7 +580,7 @@ namespace Sir.Store
             if (read == 0) return null;
 
             var terminator = buf[buf.Length - 1];
-            var node = VectorNode.DeserializeNode(buf, vectorStream, ref terminator);
+            var node = VectorOperations.DeserializeNode(buf, vectorStream, ref terminator);
 
             return node;
         }
