@@ -260,29 +260,17 @@ namespace Sir
         public static long Dot(this SortedList<long, int> vec1, SortedList<long, int> vec2)
         {
             long product = 0;
-            int cursor1 = 0;
-            int cursor2 = 0;
 
-            while (cursor1 < vec1.Count && cursor2 < vec2.Count)
+            foreach (var component in vec1)
             {
-                var p1 = vec1.Keys[cursor1];
-                var p2 = vec2.Keys[cursor2];
+                int val;
 
-                if (p2 > p1)
+                if (vec2.TryGetValue(component.Key, out val))
                 {
-                    cursor1++;
-                }
-                else if (p1 > p2)
-                {
-                    cursor2++;
-                }
-                else
-                {
-                    product += vec1[p1] * vec2[p2];
-                    cursor1++;
-                    cursor2++;
+                    product += component.Value * val;
                 }
             }
+
             return product;
         }
 
@@ -334,13 +322,7 @@ namespace Sir
             {
                 int val;
 
-                if (vec1.TryGetValue(x.Key, out val) && val < int.MaxValue)
-                {
-                    var v = (val + x.Value);
-
-                    result[x.Key] = v;
-                }
-                else
+                if (!vec1.TryGetValue(x.Key, out val) && val < int.MaxValue)
                 {
                     result[x.Key] = x.Value;
                 }
@@ -363,15 +345,6 @@ namespace Sir
                 }
             }
 
-            foreach (var x in vec2)
-            {
-                int val;
-
-                if (vec1.TryGetValue(x.Key, out val) && val > 0)
-                {
-                    result[x.Key] = (byte)(val - 1);
-                }
-            }
             return result;
         }
 
@@ -452,7 +425,7 @@ namespace Sir
 
         public static float Magnitude(this SortedList<long, int> vector)
         {
-            return (float) Math.Sqrt(Dot(vector, vector));
+            return (float) Math.Sqrt(DotSelf(vector));
         }
 
         public static SortedList<long, int> CreateDocumentVector(
