@@ -380,7 +380,7 @@ namespace Sir
             return vec;
         }
 
-        public static SortedList<long, int> ToCharVector(this AnalyzedString term, int offset, int length)
+        public static SortedList<long, int> ToVector(this AnalyzedString term, int offset, int length)
         {
             var vec = new SortedList<long, int>();
 
@@ -401,7 +401,7 @@ namespace Sir
             return vec;
         }
 
-        public static SortedList<long, int> ToCharVector(this string word)
+        public static SortedList<long, int> ToVector(this string word)
         {
             var vec = new SortedList<long, int>();
             TextElementEnumerator charEnum = StringInfo.GetTextElementEnumerator(word);
@@ -468,7 +468,7 @@ namespace Sir
 
         public static bool ContainsMany(this string text, char c)
         {
-            var vector = text.ToCharVector();
+            var vector = text.ToVector();
 
             if (vector[c] > 1)
             {

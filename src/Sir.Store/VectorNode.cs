@@ -90,7 +90,7 @@ namespace Sir.Store
         }
 
         public VectorNode(string s)
-            : this(s.ToCharVector())
+            : this(s.ToVector())
         {
         }
 
@@ -189,8 +189,7 @@ namespace Sir.Store
         public VectorNode Add(
             VectorNode node, 
             (float identicalAngle, float foldAngle) similarity, 
-            Stream vectorStream = null,
-            bool vectorAddition = false)
+            Stream vectorStream = null)
         {
             node._ancestor = null;
             node._left = null;
@@ -208,7 +207,7 @@ namespace Sir.Store
                 {
                     lock (_sync)
                     {
-                        cursor.Merge(node, vectorAddition, vectorStream);
+                        cursor.Merge(node);
                     }
 
                     junction = cursor;
@@ -273,15 +272,8 @@ namespace Sir.Store
             return junction;
         }
 
-        public void Merge(VectorNode node, bool vectorAddition, Stream vectorStream = null)
+        public void Merge(VectorNode node)
         {
-            if (vectorAddition)
-            {
-                Vector = Vector.Add(node.Vector);
-
-                SerializeVector(vectorStream);
-            }
-
             if (DocIds == null)
             {
                 DocIds = node.DocIds;

@@ -134,7 +134,7 @@ namespace Sir.Store
                 }
                 else if (high != null && hit.Score == best.Score)
                 {
-                    best.Node.Merge(hit.Node, vectorAddition:false);
+                    best.Node.Merge(hit.Node);
                 }
             }
 

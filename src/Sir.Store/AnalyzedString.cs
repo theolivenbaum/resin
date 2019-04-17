@@ -15,7 +15,7 @@ namespace Sir
         {
             foreach (var token in Tokens)
             {
-                yield return this.ToCharVector(token.offset, token.length);
+                yield return this.ToVector(token.offset, token.length);
             }
         }
 
