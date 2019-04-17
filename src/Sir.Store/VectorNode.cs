@@ -544,7 +544,7 @@ namespace Sir.Store
 
             foreach (var c in Vector)
             {
-                w.Append(c.Key);
+                w.Append(c.Value);
             }
 
             return w.ToString();
