@@ -259,18 +259,35 @@ namespace Sir
 
         public static long Dot(this SortedList<long, int> vec1, SortedList<long, int> vec2)
         {
-            long product = 0;
-
-            foreach (var component in vec1)
+            if (ReferenceEquals(vec1, vec2))
             {
-                int val;
-
-                if (vec2.TryGetValue(component.Key, out val))
-                {
-                    product += component.Value * val;
-                }
+                return DotSelf(vec1);
             }
 
+            long product = 0;
+            int cursor1 = 0;
+            int cursor2 = 0;
+
+            while (cursor1 < vec1.Count && cursor2 < vec2.Count)
+            {
+                var p1 = vec1.Keys[cursor1];
+                var p2 = vec2.Keys[cursor2];
+
+                if (p2 > p1)
+                {
+                    cursor1++;
+                }
+                else if (p1 > p2)
+                {
+                    cursor2++;
+                }
+                else
+                {
+                    product += vec1[p1] * vec2[p2];
+                    cursor1++;
+                    cursor2++;
+                }
+            }
             return product;
         }
 
@@ -281,18 +298,6 @@ namespace Sir
             foreach (var component in vec.Values)
             {
                 product += (component * component);
-            }
-
-            return product;
-        }
-
-        public static long Dot(this int[] vec1, int[] vec2)
-        {
-            long product = 0;
-
-            for (int i = 0; i < vec1.Length; i++)
-            {
-                product += vec1[i] * vec2[i];
             }
 
             return product;
