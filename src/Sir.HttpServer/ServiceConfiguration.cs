@@ -19,15 +19,16 @@ namespace Sir.HttpServer
 
         public static IServiceProvider Configure(IServiceCollection services)
         {
-            // register config
-            services.Add(new ServiceDescriptor(typeof(IConfigurationProvider),
-                new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini"))));
-
-            // register plugins
             var assemblyPath = Directory.GetCurrentDirectory();
 
+            // register config
+            services.Add(new ServiceDescriptor(typeof(IConfigurationProvider),
+                new IniConfiguration(Path.Combine(assemblyPath, "sir.ini"))));
+
+            // register plugins
+
 #if DEBUG
-            assemblyPath = Path.Combine(Directory.GetCurrentDirectory(), "bin\\Debug\\netcoreapp2.1");
+            assemblyPath = Path.Combine(assemblyPath, "bin\\Debug\\netcoreapp2.1");
 #endif
 
             var files = Directory.GetFiles(assemblyPath, "*.plugin.dll");
