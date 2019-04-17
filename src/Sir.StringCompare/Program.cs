@@ -7,12 +7,11 @@ namespace Sir.StringCompare
     {
         static void Main(string[] args)
         {
-            var docNode1 = new VectorNode(args[0]);
-            var docNode2 = new VectorNode(args[1]);
-            var docAngle = docNode1.Vector.CosAngle(docNode2.Vector);
+            var doc1 = new VectorNode(args[0]);
+            var doc2 = new VectorNode(args[1]);
+            var angle = doc1.Vector.CosAngle(doc2.Vector);
 
-            Console.WriteLine($"similarity: {docAngle}");
-            Console.Read();
+            Console.WriteLine($"similarity: {angle}");
         }
     }
 }
