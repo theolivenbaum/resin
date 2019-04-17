@@ -13,7 +13,6 @@ namespace Sir
     /// </summary>
     public static class VectorOperations
     {
-
         public static void DeserializeUnorderedFile(
             Stream indexStream,
             Stream vectorStream,
