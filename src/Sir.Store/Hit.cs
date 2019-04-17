@@ -2,6 +2,7 @@
 
 namespace Sir.Store
 {
+    [System.Diagnostics.DebuggerDisplay("{Score} {Node}")]
     public class Hit
     {
         public float Score { get; set; }

@@ -432,14 +432,6 @@ namespace Sir.Store
             return result;
         }
 
-
-        public string Visualize()
-        {
-            StringBuilder output = new StringBuilder();
-            Visualize(this, output, 0);
-            return output.ToString();
-        }
-
         public int Depth()
         {
             var count = 0;
@@ -501,19 +493,23 @@ namespace Sir.Store
             }
         }
 
+        public string Visualize()
+        {
+            StringBuilder output = new StringBuilder();
+            Visualize(this, output, 0);
+            return output.ToString();
+        }
+
         private void Visualize(VectorNode node, StringBuilder output, int depth)
         {
             if (node == null) return;
 
             output.Append('\t', depth);
-            output.AppendFormat(".{0} ({1})", node.ToString(), node.Weight);
+            output.AppendFormat("|{0}| w:{1}", node.ToString(), node.Weight);
             output.AppendLine();
 
-            if (node.Left != null)
-                Visualize(node.Left, output, depth + 1);
-
-            if (node.Right != null)
-                Visualize(node.Right, output, depth);
+            Visualize(node.Left, output, depth + 1);
+            Visualize(node.Right, output, depth);
         }
 
         public (int depth, int width, int avgDepth) Size()
@@ -548,7 +544,7 @@ namespace Sir.Store
 
             foreach (var c in Vector)
             {
-                w.Append((char)c.Key);
+                w.Append(c.Key);
             }
 
             return w.ToString();
