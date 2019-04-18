@@ -19,9 +19,9 @@ namespace Sir.Store
         private VectorNode _right;
         private VectorNode _left;
         private VectorNode _ancestor;
+        private int _weight;
 
         public HashSet<long> DocIds { get; private set; }
-        private int _weight;
 
         public int ComponentCount { get; set; }
         public long VectorOffset { get; set; }
