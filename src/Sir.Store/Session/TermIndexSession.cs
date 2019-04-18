@@ -72,7 +72,7 @@ namespace Sir.Store
                         continue;
                     }
 
-                    var val = (IComparable)document[key];
+                    var val = document[key];
                     var str = val as string;
 
                     if (str == null || key[0] == '_')

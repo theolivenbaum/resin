@@ -16,10 +16,10 @@ namespace Sir.Store
             _stream = stream;
         }
 
-        public async Task<(long offset, int len, byte dataType)> AppendAsync(IComparable value)
+        public async Task<(long offset, int len, byte dataType)> AppendAsync(object value)
         {
             byte[] buffer;
-            byte dataType = 0;
+            byte dataType;
 
             if (value is bool)
             {
@@ -56,10 +56,15 @@ namespace Sir.Store
                 buffer = BitConverter.GetBytes(((DateTime)value).ToBinary());
                 dataType = DataType.DATETIME;
             }
-            else
+            else if (value is string)
             {
                 buffer = System.Text.Encoding.Unicode.GetBytes(value.ToString());
                 dataType = DataType.STRING;
+            }
+            else
+            {
+                buffer = (byte[])value;
+                dataType = DataType.STREAM;
             }
 
             var offset = _stream.Position;
@@ -69,10 +74,10 @@ namespace Sir.Store
             return (offset, buffer.Length, dataType);
         }
 
-        public (long offset, int len, byte dataType) Append(IComparable value)
+        public (long offset, int len, byte dataType) Append(object value)
         {
             byte[] buffer;
-            byte dataType = 0;
+            byte dataType;
 
             if (value is bool)
             {
@@ -109,10 +114,15 @@ namespace Sir.Store
                 buffer = BitConverter.GetBytes(((DateTime)value).ToBinary());
                 dataType = DataType.DATETIME;
             }
-            else
+            else if (value is string)
             {
                 buffer = System.Text.Encoding.Unicode.GetBytes(value.ToString());
                 dataType = DataType.STRING;
+            }
+            else
+            {
+                buffer = (byte[])value;
+                dataType = DataType.STREAM;
             }
 
             var offset = _stream.Position;

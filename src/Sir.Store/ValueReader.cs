@@ -16,7 +16,7 @@ namespace Sir.Store
             _stream = stream;
         }
 
-        public async Task<IComparable> ReadAsync(long offset, int len, byte dataType)
+        public async Task<object> ReadAsync(long offset, int len, byte dataType)
         {
             int read;
             byte[] buf;
@@ -60,14 +60,17 @@ namespace Sir.Store
             {
                 return DateTime.FromBinary(BitConverter.ToInt64(buf, 0));
             }
-            else
+            else if (DataType.STRING == typeId)
             {
                 return new string(System.Text.Encoding.Unicode.GetChars(buf));
             }
+            else
+            {
+                return buf;
+            }
         }
 
-
-        public IComparable Read(long offset, int len, byte dataType)
+        public object Read(long offset, int len, byte dataType)
         {
             int read;
             byte[] buf;
@@ -111,9 +114,13 @@ namespace Sir.Store
             {
                 return DateTime.FromBinary(BitConverter.ToInt64(buf, 0));
             }
-            else
+            else if (DataType.STRING == typeId)
             {
                 return new string(System.Text.Encoding.Unicode.GetChars(buf));
+            }
+            else
+            {
+                return buf;
             }
         }
     }

@@ -8,14 +8,14 @@ namespace Sir
     /// </summary>
     public class Term
     {
-        public IComparable Key { get; private set; }
+        public object Key { get; private set; }
         public AnalyzedString TokenizedString { get; private set; }
         public ulong KeyHash { get; private set; }
         public int Index { get; private set; }
         public long? KeyId { get; private set; }
         public VectorNode Node { get; private set; }
 
-        public Term(IComparable key, AnalyzedString tokenizedString, int index)
+        public Term(object key, AnalyzedString tokenizedString, int index)
         {
             Key = key;
             KeyHash = key.ToHash();
@@ -30,7 +30,7 @@ namespace Sir
             Index = index;
         }
 
-        public Term(IComparable key, VectorNode node)
+        public Term(object key, VectorNode node)
         {
             Key = key;
             KeyHash = key.ToHash();

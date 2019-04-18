@@ -85,7 +85,7 @@ namespace Sir.Store
 
             foreach (var key in model.Keys)
             {
-                var val = (IComparable)model[key];
+                var val = model[key];
 
                 if (val == null)
                 {

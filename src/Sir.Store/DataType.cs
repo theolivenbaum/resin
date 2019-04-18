@@ -13,5 +13,6 @@
         public static byte DOUBLE = 6;
         public static byte LONG = 7;
         public static byte DATETIME = 8;
+        public static byte STREAM = 9;
     }
 }

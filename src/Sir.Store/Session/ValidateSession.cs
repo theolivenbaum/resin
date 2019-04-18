@@ -16,7 +16,7 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
         private readonly ReadSession _readSession;
-        private readonly ProducerConsumerQueue<(long docId, IComparable key, AnalyzedString tokens)> _validator;
+        private readonly ProducerConsumerQueue<(long docId, object key, AnalyzedString tokens)> _validator;
         private readonly RemotePostingsReader _postingsReader;
 
         public ValidateSession(
@@ -30,7 +30,7 @@ namespace Sir.Store
             _config = config;
             _tokenizer = tokenizer;
             _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, indexReaders);
-            _validator = new ProducerConsumerQueue<(long docId, IComparable key, AnalyzedString tokens)>(
+            _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedString tokens)>(
                 int.Parse(_config.Get("write_thread_count")), callback: Validate);
             _postingsReader = new RemotePostingsReader(_config, collectionName);
         }
@@ -56,13 +56,13 @@ namespace Sir.Store
 
                         var terms = _tokenizer.Tokenize(doc[key].ToString());
 
-                        _validator.Enqueue((docId, (IComparable)key, terms));
+                        _validator.Enqueue((docId, key, terms));
                     }       
                 }
             }
         }
 
-        private async Task Validate((long docId, IComparable key, AnalyzedString tokens) item)
+        private async Task Validate((long docId, object key, AnalyzedString tokens) item)
         {
             var docTree = new VectorNode();
 

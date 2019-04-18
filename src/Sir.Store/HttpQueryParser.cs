@@ -102,7 +102,7 @@ namespace Sir.Store
                     terms = new string[] { cleanLine };
                 }
 
-                IComparable lastField = string.Empty;
+                object lastField = string.Empty;
 
                 foreach (var term in terms)
                 {

@@ -9,7 +9,7 @@ namespace Sir
             return ToHash((IComparable)text);
         }
 
-        public static ulong ToHash(this IComparable text)
+        public static ulong ToHash(this object text)
         {
             return CalculateKnuthHash(text.ToString());
         }

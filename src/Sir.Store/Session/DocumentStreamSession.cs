@@ -66,7 +66,7 @@ namespace Sir.Store
                 }
 
                 var docMap = _docs.Read(docInfo.offset, docInfo.length);
-                var doc = new Dictionary<IComparable, IComparable>();
+                var doc = new Dictionary<object, object>();
 
                 for (int i = 0; i < docMap.Count; i++)
                 {

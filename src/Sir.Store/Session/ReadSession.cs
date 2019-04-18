@@ -243,7 +243,7 @@ namespace Sir.Store
                 }
 
                 var docMap = await _docs.ReadAsync(docInfo.offset, docInfo.length);
-                var doc = new Dictionary<IComparable, IComparable>();
+                var doc = new Dictionary<object, object>();
 
                 for (int i = 0; i < docMap.Count; i++)
                 {
@@ -284,7 +284,7 @@ namespace Sir.Store
                 }
 
                 var docMap = await _docs.ReadAsync(docInfo.offset, docInfo.length);
-                var doc = new Dictionary<IComparable, IComparable>();
+                var doc = new Dictionary<object, object>();
 
                 for (int i = 0; i < docMap.Count; i++)
                 {
