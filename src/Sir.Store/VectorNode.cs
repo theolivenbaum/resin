@@ -28,6 +28,11 @@ namespace Sir.Store
         public long PostingsOffset { get; set; }
         public SortedList<long, int> Vector { get; set; }
 
+        public bool IsNull
+        {
+            get { return VectorOffset < 0; }
+        }
+
         public int Weight
         {
             get { return _weight; }
