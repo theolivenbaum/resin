@@ -20,17 +20,17 @@ namespace Sir
             (float identicalAngle, float foldAngle) similarity)
         {
             var buf = new byte[VectorNode.BlockSize];
-            int read = indexStream.Read(buf); // skip first node in file (it's a null node)
+            int read = indexStream.Read(buf);
 
             while (read == VectorNode.BlockSize)
             {
-                indexStream.Read(buf);
-
                 var terminator = new byte();
                 var node = DeserializeNode(buf, vectorStream, ref terminator);
 
                 if (node.VectorOffset > -1)
                     root.Add(node, similarity);
+
+                read = indexStream.Read(buf);
             }
         }
 
