@@ -39,7 +39,14 @@ namespace Sir.Store
             _docIx = new DocIndexWriter(DocIndexStream);
         }
 
-        public async Task<IList<long>> Write(IEnumerable<IDictionary> docs)
+        public async Task<long> Write(IDictionary doc)
+        {
+            doc["__created"] = DateTime.Now.ToBinary();
+
+            return await DoWrite(doc);
+        }
+
+        public async Task<IEnumerable<long>> Write(IEnumerable<IDictionary> docs)
         {
             var docIds = new List<long>();
             var docCount = 0;
@@ -70,7 +77,7 @@ namespace Sir.Store
         /// The "___docid" field, if it exists, will be persisted as "__original", if that field doesn't already exist.
         /// </summary>
         /// <returns>Document ID</returns>
-        public async Task<long> Write(IDictionary model)
+        public async Task<long> DoWrite(IDictionary model)
         {
             var timer = new Stopwatch();
             timer.Start();

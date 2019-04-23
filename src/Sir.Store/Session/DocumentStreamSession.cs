@@ -25,12 +25,12 @@ namespace Sir.Store
             KeyIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", CollectionId)));
             DocIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
 
-            _docIx = new DocIndexReader(DocIndexStream);
-            _docs = new DocMapReader(DocStream);
-            _keyIx = new ValueIndexReader(KeyIndexStream);
-            _valIx = new ValueIndexReader(ValueIndexStream);
-            _keyReader = new ValueReader(KeyStream);
-            _valReader = new ValueReader(ValueStream);
+            _docIx = new DocIndexReader(Stream.Synchronized(DocIndexStream));
+            _docs = new DocMapReader(Stream.Synchronized(DocStream));
+            _keyIx = new ValueIndexReader(Stream.Synchronized(KeyIndexStream));
+            _valIx = new ValueIndexReader(Stream.Synchronized(ValueIndexStream));
+            _keyReader = new ValueReader(Stream.Synchronized(KeyStream));
+            _valReader = new ValueReader(Stream.Synchronized(ValueStream));
         }
 
         public IEnumerable<IDictionary> ReadDocs(int skip = 0, int take = 0)

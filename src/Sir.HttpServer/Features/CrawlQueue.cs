@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -148,43 +149,18 @@ namespace Sir.HttpServer.Features
             }
         }
 
-        private async Task<IList<long>> ExecuteWrite(string collectionName, IDictionary document)
+        public async Task<long> ExecuteWrite(string collectionName, IDictionary doc)
         {
-            try
+            long docId;
+
+            using (var writeSession = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash()))
+            using (var indexSession = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
             {
-                var time = Stopwatch.StartNew();
-                IList<long> docIds;
-
-                using (var write = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash()))
-                {
-                    docIds = await write.Write(new[] { document });
-                }
-
-                if (docIds.Count > 0)
-                {
-                    var skip = (int)docIds[0] - 1;
-                    var take = docIds.Count;
-
-                    using (var docs = _sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
-                    using (var index = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
-                    {
-                        foreach (var doc in docs.ReadDocs(skip, take))
-                        {
-                            index.Index(doc);
-                        }
-                    }
-                }
-
-                this.Log("executed {0} write+index job in {1}", collectionName, time.Elapsed);
-
-                return docIds;
+                docId = await writeSession.Write(doc);
+                indexSession.Index(doc);
             }
-            catch (Exception ex)
-            {
-                this.Log(ex);
-                throw;
-            }
-            
+
+            return docId;
         }
 
         private string GetWebString(Uri uri)

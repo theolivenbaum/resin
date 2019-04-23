@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -61,29 +62,19 @@ namespace Sir.Store
             s.Position = 0;
         }
 
-        public async Task<IList<long>> ExecuteWrite(string collectionName, IEnumerable<IDictionary> documents)
+        public async Task<IEnumerable<long>> ExecuteWrite(string collectionName, IEnumerable<IDictionary> documents)
         {
             _timer.Restart();
 
-            IList<long> docIds;
+            var docIds = new ConcurrentBag<long>();
 
-            using (var write = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash()))
+            using (var writeSession = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash()))
+            using (var indexSession = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
             {
-                docIds = await write.Write(documents);
-            }
-
-            if (docIds.Count > 0)
-            {
-                var skip = (int)docIds[0] - 1;
-                var take = docIds.Count;
-
-                using (var docs = _sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
-                using (var index = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
+                foreach (var doc in documents)
                 {
-                    foreach (var doc in docs.ReadDocs(skip, take))
-                    {
-                        index.Index(doc);
-                    }
+                    docIds.Add(await writeSession.Write(doc));
+                    indexSession.Index(doc);
                 }
             }
 

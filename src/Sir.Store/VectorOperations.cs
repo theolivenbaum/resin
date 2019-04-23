@@ -13,6 +13,8 @@ namespace Sir
     /// </summary>
     public static class VectorOperations
     {
+        private static readonly object _crossDomainVectorFileSync = new object();
+
         public static void DeserializeUnorderedFile(
             Stream indexStream,
             Stream vectorStream,
@@ -233,7 +235,7 @@ namespace Sir
 
         public static long Serialize(this SortedList<long, int> vec, Stream stream)
         {
-            lock (stream)
+            lock (_crossDomainVectorFileSync)
             {
                 var pos = stream.Position;
 

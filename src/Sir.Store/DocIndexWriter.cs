@@ -11,6 +11,7 @@ namespace Sir.Store
     {
         private readonly Stream _stream;
         private static int _blockSize = sizeof(long)+sizeof(int);
+        private static object _crossDomainSync = new object();
 
         public DocIndexWriter(Stream stream)
         {
@@ -29,7 +30,10 @@ namespace Sir.Store
         /// <returns>The next auto-incrementing doc id</returns>
         public long GetNextDocId()
         {
-            return _stream.Position / _blockSize;
+            lock (_crossDomainSync)
+            {
+                return _stream.Position / _blockSize;
+            }
         }
 
         /// <summary>
