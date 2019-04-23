@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <AssemblyName>Sir.RocksDb.plugin</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="RocksDbNative" Version="5.17.2" />
+    <PackageReference Include="RocksDbSharp" Version="5.17.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sir\Sir.Core.csproj" />
+  </ItemGroup>
+
+</Project>
