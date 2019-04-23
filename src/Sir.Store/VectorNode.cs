@@ -76,11 +76,6 @@ namespace Sir.Store
             }
         }
 
-        public VectorNode Ancestor
-        {
-            get { return _ancestor; }
-        }
-
         public byte Terminator { get; set; }
 
         public IList<long> PostingsOffsets { get; set; }
@@ -311,19 +306,9 @@ namespace Sir.Store
             }
         }
 
-        public async Task Serialize(Stream stream)
+        public void Serialize(Stream stream)
         {
-            foreach (var buf in ToStreams())
-            {
-                await stream.WriteAsync(buf, 0, buf.Length);
-            }
-        }
-
-        public byte[][] ToStreams()
-        {
-            var block = new byte[5][];
-
-            byte[] terminator = new byte[1];
+            byte[] terminator = new byte[] { 1 };
 
             if (Left == null && Right == null) // there are no children
             {
@@ -342,13 +327,11 @@ namespace Sir.Store
                 terminator[0] = 0;
             }
 
-            block[0] = BitConverter.GetBytes(VectorOffset);
-            block[1] = BitConverter.GetBytes(PostingsOffset);
-            block[2] = BitConverter.GetBytes(Vector.Count);
-            block[3] = BitConverter.GetBytes(Weight);
-            block[4] = terminator;
-
-            return block;
+            stream.Write(BitConverter.GetBytes(VectorOffset));
+            stream.Write(BitConverter.GetBytes(PostingsOffset));
+            stream.Write(BitConverter.GetBytes(Vector.Count));
+            stream.Write(BitConverter.GetBytes(Weight));
+            stream.Write(terminator);
         }
 
         public (long offset, long length) SerializeTree(Stream indexStream)
@@ -361,10 +344,7 @@ namespace Sir.Store
             {
                 if (node.VectorOffset > -1)
                 {
-                    foreach (var buf in node.ToStreams())
-                    {
-                        indexStream.Write(buf, 0, buf.Length);
-                    }
+                    node.Serialize(indexStream);
                 }
 
                 if (node.Right != null)
