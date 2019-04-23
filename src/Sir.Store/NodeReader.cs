@@ -207,7 +207,6 @@ namespace Sir.Store
                     }
                     else if (angle == highscore)
                     {
-
                         if (best.PostingsOffsets == null)
                         {
                             best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
