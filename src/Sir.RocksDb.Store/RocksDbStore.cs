@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using RocksDbSharp;
 using Sir.Core;
 
-namespace Sir.RocksDb
+namespace Sir.RocksDb.Store
 {
     public class RocksDbStore : IKeyValueStore, IDisposable
     {
-        private readonly IConfigurationProvider _config;
         private readonly ProducerConsumerQueue<(byte[] key, byte[] value)> _writer;
         private readonly string _dir;
 

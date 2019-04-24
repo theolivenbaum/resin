@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Sir.RocksDb.Store;
 
 namespace Sir.RocksDb
 {

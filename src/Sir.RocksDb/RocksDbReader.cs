@@ -21,6 +21,7 @@ namespace Sir.RocksDb
 
         public void Dispose()
         {
+            _store.Dispose();
         }
 
         public async Task<ResponseModel> Read(string collectionId, HttpRequest request)
