@@ -1,20 +1,22 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using RocksDbSharp;
 
 namespace Sir.RocksDb
 {
     public class RocksDbReader : IReader
     {
         private readonly IConfigurationProvider _config;
+        private readonly IKeyValueStore _store;
 
         public string ContentType => "application/rocksdb+octet-stream";
 
-        public RocksDbReader(IConfigurationProvider config)
+        public RocksDbReader(IConfigurationProvider config, IKeyValueStore store)
         {
             _config = config;
+            _store = store;
         }
 
         public void Dispose()
@@ -23,20 +25,18 @@ namespace Sir.RocksDb
 
         public async Task<ResponseModel> Read(string collectionId, HttpRequest request)
         {
-            var type = request.Query["type"].ToString();
-            var typeId = type.ToHash();
-            var path = Path.Combine(_config.Get("data_dir"), $"{typeId}.{collectionId}.rocks");
-            var id = BitConverter.GetBytes(long.Parse(request.Query["id"]));
+            var typeId = request.Query["type"].ToString().ToHash();
+            var path = Path.Combine(_config.Get("data_dir"), $"{typeId}.{collectionId.ToHash()}.rocks");
+            var ids = request.Query["id"].ToArray().Select(s => BitConverter.GetBytes(long.Parse(s))).ToArray();
+            var payload = _store.GetMany(ids);
+            var response = new MemoryStream();
 
-            var options = new DbOptions().SetCreateIfMissing(true);
-            byte[] response;
-
-            using (var db = RocksDbSharp.RocksDb.Open(options, path))
+            foreach (var item in payload)
             {
-                response = db.Get(id);
+                await response.WriteAsync(item.Value);
             }
 
-            return new ResponseModel { Stream = new MemoryStream(response, false), MediaType = "application/rocksdb+octet-stream" };
+            return new ResponseModel { Stream = response, MediaType = "application/rocksdb+octet-stream" };
         }
     }
 }

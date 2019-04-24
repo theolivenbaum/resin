@@ -20,6 +20,7 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>> _indexReaders;
 
         public string Dir { get; }
+        public IConfigurationProvider Config { get { return _config; } }
 
         public SessionFactory(string dir, ITokenizer tokenizer, IConfigurationProvider config)
         {

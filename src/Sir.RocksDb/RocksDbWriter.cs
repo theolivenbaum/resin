@@ -2,23 +2,36 @@
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using RocksDbSharp;
+using Sir.Core;
 
 namespace Sir.RocksDb
 {
     public class RocksDbWriter : IWriter
     {
         private readonly IConfigurationProvider _config;
+        private readonly IKeyValueStore _store;
+        private readonly ProducerConsumerQueue<(ulong collection, ulong type, byte[] key, byte[] value)> _writer;
 
         public string ContentType => "application/rocksdb+octet-stream";
 
-        public RocksDbWriter(IConfigurationProvider config)
+        public RocksDbWriter(IConfigurationProvider config, IKeyValueStore store)
         {
             _config = config;
+            _store = store;
+            _writer = new ProducerConsumerQueue<(ulong collection, ulong type, byte[] key, byte[] value)>(1, DoWrite);
+        }
+
+        private void DoWrite((ulong collection, ulong type, byte[] key, byte[] value) data)
+        {
+            var fileId = $"{data.collection}.{data.type}";
+            var path = Path.Combine(_config.Get("data_dir"), fileId);
+
+            _store.Put(data.key, data.value);
         }
 
         public void Dispose()
         {
+            _writer.Dispose();
         }
 
         public async Task<ResponseModel> Write(string collectionId, HttpRequest request)
@@ -35,12 +48,7 @@ namespace Sir.RocksDb
 
             await request.Body.CopyToAsync(requestStream);
 
-            var options = new DbOptions().SetCreateIfMissing(true);
-
-            using (var db = RocksDbSharp.RocksDb.Open(options, path))
-            {
-                db.Put(id, requestStream.ToArray());
-            }
+            _writer.Enqueue((collectionId.ToHash(), typeId, id, requestStream.ToArray()));
 
             var response = new MemoryStream();
 
