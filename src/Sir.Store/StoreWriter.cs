@@ -43,7 +43,7 @@ namespace Sir.Store
             payload.Position = 0;
 
             var documents = Deserialize<IEnumerable<IDictionary>>(payload);
-            var docIds = await ExecuteWrite(collectionName, documents);
+            var docIds = ExecuteWrite(collectionName, documents);
             var response = new MemoryStream();
 
             Serialize(docIds, response);
@@ -62,7 +62,7 @@ namespace Sir.Store
             s.Position = 0;
         }
 
-        public async Task<IEnumerable<long>> ExecuteWrite(string collectionName, IEnumerable<IDictionary> documents)
+        public IEnumerable<long> ExecuteWrite(string collectionName, IEnumerable<IDictionary> documents)
         {
             _timer.Restart();
 
@@ -73,7 +73,7 @@ namespace Sir.Store
             {
                 foreach (var doc in documents)
                 {
-                    docIds.Add(await writeSession.Write(doc));
+                    docIds.Add(writeSession.Write(doc));
                     indexSession.Index(doc);
                 }
             }

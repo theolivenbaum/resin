@@ -130,7 +130,7 @@ namespace Sir.Store
                                 newCollectionName = Guid.NewGuid().ToString();
                             }
 
-                            await _storeWriter.ExecuteWrite(newCollectionName, docs);
+                            _storeWriter.ExecuteWrite(newCollectionName, docs);
                         }
                     }
 

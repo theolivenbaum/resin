@@ -10,9 +10,9 @@ namespace Sir.RocksDb.Store
         private readonly ProducerConsumerQueue<(byte[] key, byte[] value)> _writer;
         private readonly string _dir;
 
-        public RocksDbStore(IConfigurationProvider config)
+        public RocksDbStore(string dir)
         {
-            _dir = config.Get("data_dir");
+            _dir = dir;
             _writer = new ProducerConsumerQueue<(byte[] key, byte[] value)>(1, DoWrite);
         }
 

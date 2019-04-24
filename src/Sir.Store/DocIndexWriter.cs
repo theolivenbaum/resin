@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
     /// <summary>
-    /// Write offset and length of document map to the document index stream.
+    /// Write offset and length of document map to the document index store.
     /// </summary>
     public class DocIndexWriter
     {
@@ -28,23 +27,26 @@ namespace Sir.Store
         /// Get the next auto-incrementing doc id (peeking is allowed)
         /// </summary>
         /// <returns>The next auto-incrementing doc id</returns>
-        public long GetNextDocId()
+        private long GetNextDocId()
         {
-            lock (_crossDomainSync)
-            {
-                return _stream.Position / _blockSize;
-            }
+            return _stream.Position / _blockSize;
         }
 
         /// <summary>
         /// Add offset and length of doc map to index
         /// </summary>
-        /// <param name="offset">offset of doc map</param>
         /// <param name="len">length of doc map</param>
-        public async Task Append(long offset, int len)
+        public long Append(int len)
         {
-            await _stream.WriteAsync(BitConverter.GetBytes(offset), 0, sizeof(long));
-            await _stream.WriteAsync(BitConverter.GetBytes(len), 0, sizeof(int));
+            lock (_crossDomainSync)
+            {
+                var offset = GetNextDocId();
+
+                _stream.Write(BitConverter.GetBytes(offset), 0, sizeof(long));
+                _stream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
+
+                return offset;
+            }
         }
     }
 }

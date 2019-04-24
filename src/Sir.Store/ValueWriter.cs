@@ -1,77 +1,17 @@
 ﻿using System;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
     /// <summary>
-    /// Store a value on the file system.
+    /// Store a value on FS.
     /// </summary>
-    public class ValueWriter
+    public class ValueWriter : IDisposable
     {
-        private readonly Stream _stream;
+        private readonly IKeyValueStore _store;
 
-        public ValueWriter(Stream stream)
+        public ValueWriter(IKeyValueStore store)
         {
-            _stream = stream;
-        }
-
-        public async Task<(long offset, int len, byte dataType)> AppendAsync(object value)
-        {
-            byte[] buffer;
-            byte dataType;
-
-            if (value is bool)
-            {
-                buffer = BitConverter.GetBytes((bool)value);
-                dataType = DataType.BOOL;
-            }
-            else if (value is char)
-            {
-                buffer = BitConverter.GetBytes((char)value);
-                dataType = DataType.CHAR;
-            }
-            else if (value is float)
-            {
-                buffer = BitConverter.GetBytes((float)value);
-                dataType = DataType.FLOAT;
-            }
-            else if (value is int)
-            {
-                buffer = BitConverter.GetBytes((int)value);
-                dataType = DataType.INT;
-            }
-            else if (value is double)
-            {
-                buffer = BitConverter.GetBytes((double)value);
-                dataType = DataType.DOUBLE;
-            }
-            else if (value is long)
-            {
-                buffer = BitConverter.GetBytes((long)value);
-                dataType = DataType.LONG;
-            }
-            else if (value is DateTime)
-            {
-                buffer = BitConverter.GetBytes(((DateTime)value).ToBinary());
-                dataType = DataType.DATETIME;
-            }
-            else if (value is string)
-            {
-                buffer = System.Text.Encoding.Unicode.GetBytes(value.ToString());
-                dataType = DataType.STRING;
-            }
-            else
-            {
-                buffer = (byte[])value;
-                dataType = DataType.STREAM;
-            }
-
-            var offset = _stream.Position;
-
-            await _stream.WriteAsync(buffer, 0, buffer.Length);
-
-            return (offset, buffer.Length, dataType);
+            _store = store;
         }
 
         public (long offset, int len, byte dataType) Append(object value)
@@ -125,11 +65,18 @@ namespace Sir.Store
                 dataType = DataType.STREAM;
             }
 
-            var offset = _stream.Position;
+            var offset = Guid.NewGuid().ToHash().MapUlongToLong();
 
-            _stream.Write(buffer, 0, buffer.Length);
+            _store.Put(BitConverter.GetBytes(offset), buffer);
 
             return (offset, buffer.Length, dataType);
+
+            //TODO: get rid of the need to specify data length
+        }
+
+        public void Dispose()
+        {
+            _store.Dispose();
         }
     }
 }

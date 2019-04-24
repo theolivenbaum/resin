@@ -123,7 +123,7 @@ namespace Sir.HttpServer.Features
                 document["title"] = doc.title;
                 document["body"] = doc.body;
 
-                await ExecuteWrite(item.collection, document);
+                ExecuteWrite(item.collection, document);
 
                 LastProcessed = (item.uri, (string)document["title"]);
             }
@@ -149,14 +149,14 @@ namespace Sir.HttpServer.Features
             }
         }
 
-        public async Task<long> ExecuteWrite(string collectionName, IDictionary doc)
+        public long ExecuteWrite(string collectionName, IDictionary doc)
         {
             long docId;
 
             using (var writeSession = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash()))
             using (var indexSession = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
             {
-                docId = await writeSession.Write(doc);
+                docId = writeSession.Write(doc);
                 indexSession.Index(doc);
             }
 

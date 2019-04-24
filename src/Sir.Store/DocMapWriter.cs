@@ -1,35 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
     /// <summary>
-    /// Write document maps (key_id/val_id) to the document map stream.
+    /// Write document maps (key_id/val_id) to the document map store.
     /// </summary>
-    public class DocMapWriter
+    public class DocMapWriter : IDisposable
     {
-        private readonly Stream _stream;
+        private readonly IKeyValueStore _store;
 
-        public DocMapWriter(Stream stream)
+        public DocMapWriter(IKeyValueStore store)
         {
-            _stream = stream;
+            _store = store;
+
         }
 
-        public async Task<(long offset, int length)> Append(IList<(long keyId, long valId)> doc)
+        public (long offset, int length) Append(IList<(long keyId, long valId)> doc)
         {
-            var off = _stream.Position;
-            var len = 0;
+            var buf = new byte[doc.Count * sizeof(long) * 2];
+            var offset = Guid.NewGuid().ToHash().MapUlongToLong();
+            var len = buf.Length;
 
-            foreach (var kv in doc)
+            for (int i = 0; i < doc.Count; i++)
             {
-                await _stream.WriteAsync(BitConverter.GetBytes(kv.keyId), 0, sizeof(long));
-                await _stream.WriteAsync(BitConverter.GetBytes(kv.valId), 0, sizeof(long));
-                len += sizeof(long) * 2;
+                var pos = i * sizeof(long) * 2;
+                var data = doc[i];
+                var keyData = BitConverter.GetBytes(data.keyId);
+                var valData = BitConverter.GetBytes(data.valId);
+
+                Buffer.BlockCopy(keyData, 0, buf, pos, keyData.Length);
+                Buffer.BlockCopy(valData, 0, buf, pos + sizeof(long), valData.Length);
             }
+
+            _store.Put(BitConverter.GetBytes(offset), buf);
             
-            return (off, len);
+            return (offset, len);
+        }
+
+        public void Dispose()
+        {
+            _store.Dispose();
         }
     }
 }
