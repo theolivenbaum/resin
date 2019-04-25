@@ -6,7 +6,6 @@ namespace Sir.RocksDb
     {
         public void OnApplicationShutdown(IServiceProvider serviceProvider)
         {
-            ((IDisposable)serviceProvider.GetService(typeof(IKeyValueStore))).Dispose();
         }
     }
 }

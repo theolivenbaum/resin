@@ -16,14 +16,16 @@ namespace Sir.Store
 
         public long Append(long offset, int len, byte dataType)
         {
-            var offs = Guid.NewGuid().ToHash().MapUlongToLong();
+            var key = Guid.NewGuid().ToHash().MapUlongToLong();
             var buf = new byte[sizeof(long) + sizeof(int) + sizeof(byte)];
 
             Buffer.BlockCopy(BitConverter.GetBytes(offset), 0, buf, 0, sizeof(long));
             Buffer.BlockCopy(BitConverter.GetBytes(len), 0, buf, sizeof(long), sizeof(int));
             buf[buf.Length - 1] = dataType;
 
-            return offs;
+            _store.Put(BitConverter.GetBytes(key), buf);
+
+            return key;
         }
 
         public void Dispose()

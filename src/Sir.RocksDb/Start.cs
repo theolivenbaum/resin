@@ -7,8 +7,6 @@ namespace Sir.RocksDb
     {
         public void OnApplicationStartup(IServiceCollection services, ServiceProvider serviceProvider)
         {
-            services.AddSingleton(typeof(IKeyValueStore), 
-                new RocksDbStore(serviceProvider.GetService<IConfigurationProvider>().Get("data_dir")));
         }
     }
 }

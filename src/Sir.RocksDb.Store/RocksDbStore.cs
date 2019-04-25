@@ -7,53 +7,57 @@ namespace Sir.RocksDb.Store
 {
     public class RocksDbStore : IKeyValueStore, IDisposable
     {
-        private readonly ProducerConsumerQueue<(byte[] key, byte[] value)> _writer;
+        private readonly ProducerConsumerQueue<(byte[] key, byte[] value)> _writeQueue;
+        private readonly RocksDbSharp.RocksDb _db;
         private readonly string _dir;
 
         public RocksDbStore(string dir)
         {
             _dir = dir;
-            _writer = new ProducerConsumerQueue<(byte[] key, byte[] value)>(1, DoWrite);
+
+            var options = new DbOptions().SetCreateIfMissing(true)
+                .SetMaxBackgroundCompactions(10);
+
+            _db = RocksDbSharp.RocksDb.Open(options, _dir);
+            _writeQueue = new ProducerConsumerQueue<(byte[] key, byte[] value)>(1, DoWrite);
         }
 
         private void DoWrite((byte[] key, byte[] value) data)
         {
-            var options = new DbOptions().SetCreateIfMissing(true);
-
-            using (var db = RocksDbSharp.RocksDb.Open(options, _dir))
-            {
-                db.Put(data.key, data.value);
-            }
+            _db.Put(data.key, data.value);
         }
 
         public byte[] Get(byte[] key)
         {
-            var options = new DbOptions().SetCreateIfMissing(true);
-
-            using (var db = RocksDbSharp.RocksDb.OpenReadOnly(options, _dir, false))
-            {
-                return db.Get(key);
-            }
+            return _db.Get(key);
         }
 
         public IEnumerable<KeyValuePair<byte[], byte[]>> GetMany(byte[][] keys)
         {
-            var options = new DbOptions().SetCreateIfMissing(true);
+            return _db.MultiGet(keys);
+        }
 
-            using (var db = RocksDbSharp.RocksDb.OpenReadOnly(options, _dir, false))
+        public IEnumerable<KeyValuePair<byte[], byte[]>> GetAll()
+        {
+            var it = _db.NewIterator();
+
+            for (it = it.SeekToFirst(); it.Valid(); it.Next())
             {
-                return db.MultiGet(keys);
+                yield return new KeyValuePair<byte[], byte[]>(it.Key(), it.Value());
             }
+
+            it.Dispose();
         }
 
         public void Put(byte[] key, byte[] value)
         {
-            _writer.Enqueue((key, value));
+            _writeQueue.Enqueue((key, value));
         }
 
         public void Dispose()
         {
-            _writer.Dispose();
+            _writeQueue.Dispose();
+            _db.Dispose();
         }
     }
 }

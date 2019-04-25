@@ -127,6 +127,8 @@ namespace Sir.Store
             _docs.Dispose();
             _valIx.Dispose();
             _keyIx.Dispose();
+
+            base.Dispose();
         }
     }
 

@@ -8,5 +8,6 @@ namespace Sir
         void Put(byte[] key, byte[] value);
         byte[] Get(byte[] key);
         IEnumerable<KeyValuePair<byte[], byte[]>> GetMany(byte[][] keys);
+        IEnumerable<KeyValuePair<byte[], byte[]>> GetAll();
     }
 }
