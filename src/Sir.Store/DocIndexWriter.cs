@@ -11,7 +11,6 @@ namespace Sir.Store
     {
         private readonly Stream _stream;
         private static int _blockSize = sizeof(long)+sizeof(int);
-        private static object _crossDomainSync = new object();
 
         public DocIndexWriter(Stream stream)
         {
@@ -25,15 +24,12 @@ namespace Sir.Store
         }
 
         /// <summary>
-        /// Get the next auto-incrementing doc id (peeking is allowed)
+        /// Get the next auto-incrementing doc id
         /// </summary>
         /// <returns>The next auto-incrementing doc id</returns>
-        public long GetNextDocId()
+        private long GetNextDocId()
         {
-            lock (_crossDomainSync)
-            {
-                return _stream.Position / _blockSize;
-            }
+            return _stream.Position / _blockSize;
         }
 
         /// <summary>
@@ -41,10 +37,14 @@ namespace Sir.Store
         /// </summary>
         /// <param name="offset">offset of doc map</param>
         /// <param name="len">length of doc map</param>
-        public async Task Append(long offset, int len)
+        public async Task<long> Append(long offset, int len)
         {
+            var id = GetNextDocId();
+
             await _stream.WriteAsync(BitConverter.GetBytes(offset), 0, sizeof(long));
             await _stream.WriteAsync(BitConverter.GetBytes(len), 0, sizeof(int));
+
+            return id;
         }
     }
 }

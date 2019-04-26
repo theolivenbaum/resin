@@ -45,31 +45,7 @@ namespace Sir.Store
 
             return await DoWrite(doc);
         }
-
-        public async Task<IEnumerable<long>> Write(IEnumerable<IDictionary> docs)
-        {
-            var docIds = new List<long>();
-            var docCount = 0;
-            var timer = new Stopwatch();
-
-            timer.Start();
-
-            foreach (var model in docs)
-            {
-                model["__created"] = DateTime.Now.ToBinary();
-
-                var docId = await Write(model);
-
-                docIds.Add(docId);
-
-                docCount++;
-            }
-
-            this.Log(string.Format("processed {0} documents in {1}", docCount, timer.Elapsed));
-
-            return docIds;
-        }
-
+        
         private static readonly object _syncNewKeys = new object();
 
         /// <summary>
@@ -82,7 +58,6 @@ namespace Sir.Store
             var timer = new Stopwatch();
             timer.Start();
 
-            var docId = _docIx.GetNextDocId();
             var docMap = new List<(long keyId, long valId)>();
 
             if (model.Contains("___docid") && !model.Contains("__original"))
@@ -134,7 +109,7 @@ namespace Sir.Store
             }
 
             var docMeta = await _docs.Append(docMap);
-            await _docIx.Append(docMeta.offset, docMeta.length);
+            var docId = await _docIx.Append(docMeta.offset, docMeta.length);
 
             model["___docid"] = docId;
 
