@@ -10,12 +10,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\sir.ini" Link="sir.ini">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="HtmlAgilityPack.CssSelectors.NetCore" Version="1.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.1.4" />
     <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.4" />
@@ -50,6 +44,12 @@
     <Content Update="Views\Upvote\Index.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="sir.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
