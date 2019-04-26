@@ -46,8 +46,6 @@ namespace Sir.Store
             return await DoWrite(doc);
         }
         
-        private static readonly object _syncNewKeys = new object();
-
         /// <summary>
         /// Fields prefixed with "___" will not be stored.
         /// The "___docid" field, if it exists, will be persisted as "__original", if that field doesn't already exist.
@@ -86,18 +84,12 @@ namespace Sir.Store
 
                 if (!SessionFactory.TryGetKeyId(CollectionId, keyHash, out keyId))
                 {
-                    lock (_syncNewKeys)
-                    {
-                        if (!SessionFactory.TryGetKeyId(CollectionId, keyHash, out keyId))
-                        {
-                            // We have a new key!
+                    // We have a new key!
 
-                            // store key
-                            var keyInfo = _keys.Append(keyStr);
-                            keyId = _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
-                            SessionFactory.PersistKeyMapping(CollectionId, keyHash, keyId);
-                        }
-                    }
+                    // store key
+                    var keyInfo = await _keys.AppendAsync(keyStr);
+                    keyId = await _keyIx.AppendAsync(keyInfo.offset, keyInfo.len, keyInfo.dataType);
+                    SessionFactory.PersistKeyMapping(CollectionId, keyHash, keyId);
                 }
 
                 // store value
@@ -108,7 +100,7 @@ namespace Sir.Store
                 docMap.Add((keyId, valId));
             }
 
-            var docMeta = await _docs.Append(docMap);
+            var docMeta = await _docs.AppendAsync(docMap);
             var docId = await _docIx.Append(docMeta.offset, docMeta.length);
 
             model["___docid"] = docId;

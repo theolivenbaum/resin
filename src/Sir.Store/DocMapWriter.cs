@@ -17,7 +17,7 @@ namespace Sir.Store
             _stream = stream;
         }
 
-        public async Task<(long offset, int length)> Append(IList<(long keyId, long valId)> doc)
+        public async Task<(long offset, int length)> AppendAsync(IList<(long keyId, long valId)> doc)
         {
             var off = _stream.Position;
             var len = 0;
@@ -26,6 +26,7 @@ namespace Sir.Store
             {
                 await _stream.WriteAsync(BitConverter.GetBytes(kv.keyId), 0, sizeof(long));
                 await _stream.WriteAsync(BitConverter.GetBytes(kv.valId), 0, sizeof(long));
+
                 len += sizeof(long) * 2;
             }
             

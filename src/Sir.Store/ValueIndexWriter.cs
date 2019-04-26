@@ -28,17 +28,5 @@ namespace Sir.Store
 
             return index;
         }
-
-        public long Append(long offset, int len, byte dataType)
-        {
-            var position = _stream.Position;
-            var index = position == 0 ? 0 : position / _blockSize;
-
-            _stream.Write(BitConverter.GetBytes(offset), 0, sizeof(long));
-            _stream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
-            _stream.Write(new byte[] { dataType }, 0, sizeof(byte));
-
-            return index;
-        }
     }
 }
