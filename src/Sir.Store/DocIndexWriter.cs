@@ -6,11 +6,10 @@ namespace Sir.Store
     /// <summary>
     /// Write offset and length of document map to the document index store.
     /// </summary>
-    public class DocIndexWriter
+    public class DocIndexWriter : IDisposable
     {
         private readonly Stream _stream;
         private static int _blockSize = sizeof(long)+sizeof(int);
-        private static object _crossDomainSync = new object();
 
         public DocIndexWriter(Stream stream)
         {
@@ -38,15 +37,17 @@ namespace Sir.Store
         /// <param name="len">length of doc map</param>
         public long Append(int len)
         {
-            lock (_crossDomainSync)
-            {
-                var offset = GetNextDocId();
+            var offset = GetNextDocId();
 
-                _stream.Write(BitConverter.GetBytes(offset), 0, sizeof(long));
-                _stream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
+            _stream.Write(BitConverter.GetBytes(offset), 0, sizeof(long));
+            _stream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
 
-                return offset;
-            }
+            return offset;
+        }
+
+        public void Dispose()
+        {
+            _stream.Dispose();
         }
     }
 }

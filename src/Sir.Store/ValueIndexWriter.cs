@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace Sir.Store
 {
@@ -7,30 +8,29 @@ namespace Sir.Store
     /// </summary>
     public class ValueIndexWriter : IDisposable
     {
-        private readonly IKeyValueStore _store;
+        private readonly Stream _stream;
+        private static int _blockSize = sizeof(long) + sizeof(int) + sizeof(byte);
 
-        public ValueIndexWriter(IKeyValueStore store)
+        public ValueIndexWriter(Stream stream)
         {
-            _store = store;
+            _stream = stream;
         }
 
         public long Append(long offset, int len, byte dataType)
         {
-            var key = Guid.NewGuid().ToHash().MapUlongToLong();
-            var buf = new byte[sizeof(long) + sizeof(int) + sizeof(byte)];
+            var position = _stream.Position;
+            var index = position == 0 ? 0 : position / _blockSize;
 
-            Buffer.BlockCopy(BitConverter.GetBytes(offset), 0, buf, 0, sizeof(long));
-            Buffer.BlockCopy(BitConverter.GetBytes(len), 0, buf, sizeof(long), sizeof(int));
-            buf[buf.Length - 1] = dataType;
+            _stream.Write(BitConverter.GetBytes(offset));
+            _stream.Write(BitConverter.GetBytes(len));
+            _stream.WriteByte(dataType);
 
-            _store.Put(BitConverter.GetBytes(key), buf);
-
-            return key;
+            return index;
         }
 
         public void Dispose()
         {
-            _store.Dispose();
+            _stream.Dispose();
         }
     }
 }

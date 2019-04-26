@@ -15,8 +15,7 @@ namespace Sir.RocksDb.Store
         {
             _dir = dir;
 
-            var options = new DbOptions().SetCreateIfMissing(true)
-                .SetMaxBackgroundCompactions(10);
+            var options = new DbOptions().SetCreateIfMissing(true);
 
             _db = RocksDbSharp.RocksDb.Open(options, _dir);
             _writeQueue = new ProducerConsumerQueue<(byte[] key, byte[] value)>(1, DoWrite);

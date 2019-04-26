@@ -1,5 +1,4 @@
-﻿using Sir.RocksDb.Store;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,6 +16,7 @@ namespace Sir.Store
         private readonly ITokenizer _tokenizer;
         private readonly IConfigurationProvider _config;
         private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>> _indexReaders;
+        private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
 
         public string Dir { get; }
         public IConfigurationProvider Config { get { return _config; } }
@@ -24,6 +24,7 @@ namespace Sir.Store
         public SessionFactory(string dir, ITokenizer tokenizer, IConfigurationProvider config)
         {
             Dir = dir;
+            _keys = LoadKeys();
             _tokenizer = tokenizer;
             _config = config;
             _indexReaders = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>>();
@@ -55,11 +56,17 @@ namespace Sir.Store
                     allkeys.GetOrAdd(collectionId, keys);
                 }
 
-                using (var store = new RocksDbStore(keyFile))
+                using (var stream = new FileStream(keyFile, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    foreach (var kvp in store.GetAll())
+                    long i = 0;
+                    var buf = new byte[sizeof(ulong)];
+                    var read = stream.Read(buf, 0, buf.Length);
+
+                    while (read > 0)
                     {
-                        keys.GetOrAdd(BitConverter.ToUInt64(kvp.Key), BitConverter.ToInt64(kvp.Value));
+                        keys.GetOrAdd(BitConverter.ToUInt64(buf, 0), i++);
+
+                        read = stream.Read(buf, 0, buf.Length);
                     }
                 }
             }
@@ -72,48 +79,40 @@ namespace Sir.Store
         public void PersistKeyMapping(ulong collectionId, ulong keyHash, long keyId)
         {
             var fileName = Path.Combine(Dir, string.Format("{0}.kmap", collectionId));
+            ConcurrentDictionary<ulong, long> keys;
 
-            using (var store = new RocksDbStore(fileName))
+            if (!_keys.TryGetValue(collectionId, out keys))
             {
-                store.Put(BitConverter.GetBytes(keyHash), BitConverter.GetBytes(keyId));
+                keys = new ConcurrentDictionary<ulong, long>();
+                _keys.GetOrAdd(collectionId, keys);
+            }
+
+            if (!keys.ContainsKey(keyHash))
+            {
+                keys.GetOrAdd(keyHash, keyId);
+
+                using (var stream = CreateAppendStream(fileName))
+                {
+                    stream.Write(BitConverter.GetBytes(keyHash), 0, sizeof(ulong));
+                }
             }
         }
 
         public long GetKeyId(ulong collectionId, ulong keyHash)
         {
-            var fileName = Path.Combine(Dir, string.Format("{0}.kmap", collectionId));
-
-            using (var store = new RocksDbStore(fileName))
-            {
-                var keyId = store.Get(BitConverter.GetBytes(keyHash));
-
-                return BitConverter.ToInt64(keyId);
-            }
+            return _keys[collectionId][keyHash];
         }
 
         public bool TryGetKeyId(ulong collectionId, ulong keyHash, out long keyId)
         {
-            var dir = Path.Combine(Dir, string.Format("{0}.kmap", collectionId));
-            var currentFn = Path.Combine(dir, "CURRENT");
+            var keys = _keys.GetOrAdd(collectionId, new ConcurrentDictionary<ulong, long>());
 
-            if (!File.Exists(currentFn))
+            if (!keys.TryGetValue(keyHash, out keyId))
             {
                 keyId = -1;
                 return false;
             }
-            using (var store = new RocksDbStore(dir))
-            {
-                var keyIdBuf = store.Get(BitConverter.GetBytes(keyHash));
-
-                if (keyIdBuf == null)
-                {
-                    keyId = -1;
-                    return false;
-                }
-
-                keyId = BitConverter.ToInt64(keyIdBuf);
-                return true;
-            }
+            return true;
         }
 
         private readonly object _syncMMF = new object();

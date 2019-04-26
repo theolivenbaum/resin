@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Sir.Store
 {
@@ -8,39 +9,31 @@ namespace Sir.Store
     /// </summary>
     public class DocMapWriter : IDisposable
     {
-        private readonly IKeyValueStore _store;
-
-        public DocMapWriter(IKeyValueStore store)
+        private readonly Stream _stream;
+        
+        public DocMapWriter(Stream stream)
         {
-            _store = store;
-
+            _stream = stream;
         }
 
         public (long offset, int length) Append(IList<(long keyId, long valId)> doc)
         {
-            var buf = new byte[doc.Count * sizeof(long) * 2];
-            var offset = Guid.NewGuid().ToHash().MapUlongToLong();
-            var len = buf.Length;
+            var off = _stream.Position;
+            var len = 0;
 
-            for (int i = 0; i < doc.Count; i++)
+            foreach (var kv in doc)
             {
-                var pos = i * sizeof(long) * 2;
-                var data = doc[i];
-                var keyData = BitConverter.GetBytes(data.keyId);
-                var valData = BitConverter.GetBytes(data.valId);
-
-                Buffer.BlockCopy(keyData, 0, buf, pos, keyData.Length);
-                Buffer.BlockCopy(valData, 0, buf, pos + sizeof(long), valData.Length);
+                _stream.Write(BitConverter.GetBytes(kv.keyId), 0, sizeof(long));
+                _stream.Write(BitConverter.GetBytes(kv.valId), 0, sizeof(long));
+                len += sizeof(long) * 2;
             }
 
-            _store.Put(BitConverter.GetBytes(offset), buf);
-            
-            return (offset, len);
+            return (off, len);
         }
 
         public void Dispose()
         {
-            _store.Dispose();
+            _stream.Dispose();
         }
     }
 }

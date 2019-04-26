@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace Sir.Store
 {
@@ -7,11 +8,11 @@ namespace Sir.Store
     /// </summary>
     public class ValueWriter : IDisposable
     {
-        private readonly IKeyValueStore _store;
+        private readonly Stream _stream;
 
-        public ValueWriter(IKeyValueStore store)
+        public ValueWriter(Stream stream)
         {
-            _store = store;
+            _stream = stream;
         }
 
         public (long offset, int len, byte dataType) Append(object value)
@@ -65,18 +66,16 @@ namespace Sir.Store
                 dataType = DataType.STREAM;
             }
 
-            var offset = Guid.NewGuid().ToHash().MapUlongToLong();
+            var offset = _stream.Position;
 
-            _store.Put(BitConverter.GetBytes(offset), buffer);
+            _stream.Write(buffer);
 
             return (offset, buffer.Length, dataType);
-
-            //TODO: get rid of the need to specify data length
         }
 
         public void Dispose()
         {
-            _store.Dispose();
+            _stream.Dispose();
         }
     }
 }

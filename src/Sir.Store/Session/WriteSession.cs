@@ -1,5 +1,4 @@
-﻿using Sir.RocksDb.Store;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -31,14 +30,19 @@ namespace Sir.Store
             var keyIndexFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", CollectionId));
             var docIndexFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId));
 
-            DocIndexStream = sessionFactory.CreateAppendStream(docIndexFileName);
+            var valueStream = sessionFactory.CreateAppendStream(valueFileName);
+            var keyStream = sessionFactory.CreateAppendStream(keyFileName);
+            var docStream = sessionFactory.CreateAppendStream(docFileName);
+            var valueIndexStream = sessionFactory.CreateAppendStream(valueIndexFileName);
+            var keyIndexStream = sessionFactory.CreateAppendStream(keyIndexFileName);
+            var docIndexStream = sessionFactory.CreateAppendStream(docIndexFileName);
 
-            _vals = new ValueWriter(new RocksDbStore(valueFileName));
-            _keys = new ValueWriter(new RocksDbStore(keyFileName));
-            _docs = new DocMapWriter(new RocksDbStore(docFileName));
-            _valIx = new ValueIndexWriter(new RocksDbStore(valueIndexFileName));
-            _keyIx = new ValueIndexWriter(new RocksDbStore(keyIndexFileName));
-            _docIx = new DocIndexWriter(DocIndexStream);
+            _vals = new ValueWriter(valueStream);
+            _keys = new ValueWriter(keyStream);
+            _docs = new DocMapWriter(docStream);
+            _valIx = new ValueIndexWriter(valueIndexStream);
+            _keyIx = new ValueIndexWriter(keyIndexStream);
+            _docIx = new DocIndexWriter(docIndexStream);
         }
 
         public long Write(IDictionary doc)
@@ -127,18 +131,9 @@ namespace Sir.Store
             _docs.Dispose();
             _valIx.Dispose();
             _keyIx.Dispose();
+            _docIx.Dispose();
 
             base.Dispose();
         }
-    }
-
-    public static class FileType
-    {
-        public const string Keys = "Keys";
-        public const string Values = "Values";
-        public const string Docs = "Docs";
-        public const string KeyIndex = "KeyIndex";
-        public const string ValueIndex = "ValueIndex";
-        public const string DocIndex = "DocIndex";
     }
 }
