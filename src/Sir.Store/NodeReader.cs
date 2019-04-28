@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -105,20 +107,24 @@ namespace Sir.Store
         {
             var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
-            var high = new List<Hit>();
+            var high = new ConcurrentBag<Hit>();
 
-            using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
-            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+            Parallel.ForEach(pages, page =>
             {
-                var hit = ClosestMatchInPage(
-                            vector,
-                            indexStream,
-                            vectorStream,
-                            similarity,
-                            new Queue<(long, long)>(pages));
+                using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
+                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                {
+                    indexStream.Seek(page.offset, SeekOrigin.Begin);
 
-                high.Add(hit);
-            }
+                    var hit = ClosestMatchInPage(
+                                vector,
+                                indexStream,
+                                vectorStream,
+                                similarity);
+
+                    high.Add(hit);
+                }
+            });
 
             this.Log($"scan took {time.Elapsed}");
 
@@ -434,36 +440,40 @@ namespace Sir.Store
             Stream vectorStream,
             (float identicalAngle, float foldAngle) similarity)
         {
-            var cursor = ReadNode(indexStream, vectorStream);
+            Span<byte> block = new byte[VectorNode.BlockSize];
 
-            if (cursor == null)
-            {
-                throw new InvalidOperationException();
-            }
+            var read = indexStream.Read(block);
 
-            var best = cursor;
+            VectorNode best = null;
             float highscore = 0;
 
-            while (cursor != null)
+            while (read > 0)
             {
-                var angle = cursor.Vector.CosAngle(node);
+                var vecOffset = MemoryMarshal.Cast<byte, long>(block.Slice(0, sizeof(long)))[0];
+                var componentCount = MemoryMarshal.Cast<byte, int>(block.Slice(sizeof(long) + sizeof(long), sizeof(int)))[0];
+                var cursorVector = VectorOperations.DeserializeVector(vecOffset, componentCount, vectorStream);
+                var cursorTerminator = block[block.Length - 1];
+                var postingsOffset = MemoryMarshal.Cast<byte, long>(block.Slice(sizeof(long), sizeof(long)))[0];
+
+                var angle = cursorVector.CosAngle(node);
 
                 if (angle >= similarity.identicalAngle)
                 {
-                    if (angle > highscore)
+                    if (best == null || angle > highscore)
                     {
                         highscore = angle;
-                        best = cursor;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
                     }
                     else if (angle == highscore)
                     {
                         if (best.PostingsOffsets == null)
                         {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, cursor.PostingsOffset };
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
                         }
                         else
                         {
-                            best.PostingsOffsets.Add(cursor.PostingsOffset);
+                            best.PostingsOffsets.Add(postingsOffset);
                         }
                     }
 
@@ -471,79 +481,83 @@ namespace Sir.Store
                 }
                 else if (angle > similarity.foldAngle)
                 {
-                    if (angle > highscore)
+                    if (best == null || angle > highscore)
                     {
                         highscore = angle;
-                        best = cursor;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
                     }
-                    else if (angle > 0 && angle == highscore)
+                    else if (angle == highscore)
                     {
                         if (best.PostingsOffsets == null)
                         {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, cursor.PostingsOffset };
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
                         }
                         else
                         {
-                            best.PostingsOffsets.Add(cursor.PostingsOffset);
+                            best.PostingsOffsets.Add(postingsOffset);
                         }
                     }
 
                     // We need to determine if we can traverse further left.
-                    bool canGoLeft = cursor.Terminator == 0 || cursor.Terminator == 1;
+                    bool canGoLeft = cursorTerminator == 0 || cursorTerminator == 1;
 
                     if (canGoLeft)
                     {
                         // There exists either a left and a right child or just a left child.
                         // Either way, we want to go left and the next node in bitmap is the left child.
 
-                        cursor = ReadNode(indexStream, vectorStream);
+                        read = indexStream.Read(block);
                     }
                     else
                     {
                         // There is no left child.
+
                         break;
                     }
                 }
                 else
                 {
-                    if (angle > highscore)
+                    if (best == null || angle > highscore)
                     {
                         highscore = angle;
-                        best = cursor;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
                     }
-                    else if (angle > 0 && angle == highscore)
+                    else if (angle == highscore)
                     {
                         if (best.PostingsOffsets == null)
                         {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, cursor.PostingsOffset };
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
                         }
                         else
                         {
-                            best.PostingsOffsets.Add(cursor.PostingsOffset);
+                            best.PostingsOffsets.Add(postingsOffset);
                         }
                     }
 
                     // We need to determine if we can traverse further to the right.
 
-                    if (cursor.Terminator == 0)
+                    if (cursorTerminator == 0)
                     {
                         // There exists a left and a right child.
                         // Next node in bitmap is the left child. 
                         // To find cursor's right child we must skip over the left tree.
 
                         SkipTree(indexStream);
-                        cursor = ReadNode(indexStream, vectorStream);
+                        read = indexStream.Read(block);
                     }
-                    else if (cursor.Terminator == 2)
+                    else if (cursorTerminator == 2)
                     {
                         // Next node in bitmap is the right child,
                         // which is good because we want to go right.
 
-                        cursor = ReadNode(indexStream, vectorStream);
+                        read = indexStream.Read(block);
                     }
                     else
                     {
                         // There is no right child.
+
                         break;
                     }
                 }
