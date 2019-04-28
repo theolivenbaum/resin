@@ -69,7 +69,7 @@ namespace Sir.HttpServer
                 service.OnApplicationStartup(services, serviceProvider);
             }
 
-            // Create one instances each of all plugins and register them with the PluginCollection,
+            // Fetch one instance each of all plugins and register them with the PluginCollection
             // so that they can be fetched at runtime by Content-Type and System.Type.
 
             foreach (var service in services.BuildServiceProvider().GetServices<IWriter>())

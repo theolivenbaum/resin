@@ -18,6 +18,7 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>> _indexReaders;
+        private readonly ConcurrentDictionary<string, object> _collectionLocks;
 
         public string Dir { get; }
         public IConfigurationProvider Config { get { return _config; } }
@@ -29,6 +30,7 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _config = config;
             _indexReaders = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>>();
+            _collectionLocks = new ConcurrentDictionary<string, object>();
         }
 
         public IList<(long offset, long length)> ReadPageInfoFromDisk(string ixpFileName)
@@ -210,6 +212,9 @@ namespace Sir.Store
 
         public WriteSession CreateWriteSession(string collectionName, ulong collectionId)
         {
+            var sync = _collectionLocks.GetOrAdd(collectionName, new object());
+
+
             return new WriteSession(collectionName, collectionId, this);
         }
 

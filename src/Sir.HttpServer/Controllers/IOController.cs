@@ -32,17 +32,11 @@ namespace Sir.HttpServer.Controllers
 
             try
             {
-                var timer = new Stopwatch();
-                timer.Start();
-
                 ResponseModel result = await writer.Write(collectionName, Request);
-                this.Log("write took {0}", timer.Elapsed);
-                timer.Restart();
 
                 if (result.Stream != null)
                 {
                     var buf = result.Stream.ToArray();
-                    this.Log("serialized response in {0}", timer.Elapsed);
 
                     return new FileContentResult(buf, result.MediaType);
                 }
@@ -70,9 +64,7 @@ namespace Sir.HttpServer.Controllers
                 throw new NotSupportedException(); // Media type not supported
             }
 
-            var timer = new Stopwatch();
-            timer.Start();
-
+            var timer = Stopwatch.StartNew();
             var result = await reader.Read(collectionName, Request);
 
             this.Log("processed {0} request in {1}", mediaType, timer.Elapsed);

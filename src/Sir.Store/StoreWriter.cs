@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using Sir.Core;
 
 namespace Sir.Store
 {
@@ -21,12 +22,15 @@ namespace Sir.Store
         private readonly SessionFactory _sessionFactory;
         private readonly ITokenizer _tokenizer;
         private readonly Stopwatch _timer;
+        private readonly ProducerConsumerQueue<(string collection, IEnumerable<IDictionary> documents)> _writer;
 
         public StoreWriter(SessionFactory sessionFactory, ITokenizer analyzer)
         {
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;
             _timer = new Stopwatch();
+            _writer = new ProducerConsumerQueue<(string collection, IEnumerable<IDictionary> documents)>(
+                1, callback: ExecuteWrite);
         }
 
         public async Task<ResponseModel> Write(string collectionName, HttpRequest request)
@@ -43,12 +47,15 @@ namespace Sir.Store
             payload.Position = 0;
 
             var documents = Deserialize<IEnumerable<IDictionary>>(payload);
-            var docIds = await ExecuteWrite(collectionName, documents);
-            var response = new MemoryStream();
 
-            Serialize(docIds, response);
+            _writer.Enqueue((collectionName, documents));
 
-            return new ResponseModel { Stream = response, MediaType = "application/json" };
+            return new ResponseModel();
+        }
+
+        public void Enqueue((string collection, IEnumerable<IDictionary> documents) job)
+        {
+            _writer.Enqueue(job);
         }
 
         private static void Serialize(object value, Stream s)
@@ -62,25 +69,21 @@ namespace Sir.Store
             s.Position = 0;
         }
 
-        public async Task<IEnumerable<long>> ExecuteWrite(string collectionName, IEnumerable<IDictionary> documents)
+        public async Task ExecuteWrite((string collection, IEnumerable<IDictionary> documents) job)
         {
             _timer.Restart();
 
-            var docIds = new ConcurrentBag<long>();
-
-            using (var writeSession = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash()))
-            using (var indexSession = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
+            using (var writeSession = _sessionFactory.CreateWriteSession(job.collection, job.collection.ToHash()))
+            using (var indexSession = _sessionFactory.CreateIndexSession(job.collection, job.collection.ToHash()))
             {
-                foreach (var doc in documents)
+                foreach (var doc in job.documents)
                 {
-                    docIds.Add(await writeSession.Write(doc));
+                    await writeSession.Write(doc);
                     indexSession.Index(doc);
                 }
             }
 
-            this.Log("executed {0} write+index job in {1}", collectionName, _timer.Elapsed);
-
-            return docIds;
+            this.Log("executed {0} write+index job in {1}", job.collection, _timer.Elapsed);
         }
 
         private static T Deserialize<T>(Stream s)
