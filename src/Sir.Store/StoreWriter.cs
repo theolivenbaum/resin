@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using Sir.Core;
 
 namespace Sir.Store
 {
@@ -20,12 +22,14 @@ namespace Sir.Store
         private readonly SessionFactory _sessionFactory;
         private readonly ITokenizer _tokenizer;
         private readonly Stopwatch _timer;
+        private readonly ProducerConsumerQueue<Job> _writer;
 
         public StoreWriter(SessionFactory sessionFactory, ITokenizer analyzer)
         {
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;
             _timer = new Stopwatch();
+            _writer = new ProducerConsumerQueue<Job>(1, callback: ExecuteWrite);
         }
 
         public async Task<ResponseModel> Write(string collectionName, HttpRequest request)
@@ -42,10 +46,21 @@ namespace Sir.Store
             payload.Position = 0;
 
             var documents = Deserialize<IEnumerable<IDictionary>>(payload);
+            var job = new Job(collectionName, documents);
 
-            await ExecuteWrite(collectionName, documents);
+            _writer.Enqueue(job);
+
+            while (!job.Done)
+            {
+                Thread.Sleep(100);
+            }
 
             return new ResponseModel();
+        }
+
+        public void Push(Job job)
+        {
+            _writer.Enqueue(job);
         }
 
         private static void Serialize(object value, Stream s)
@@ -59,21 +74,25 @@ namespace Sir.Store
             s.Position = 0;
         }
 
-        public async Task ExecuteWrite(string collection, IEnumerable<IDictionary> documents)
+        public async Task ExecuteWrite(Job job)
         {
             _timer.Restart();
 
-            using (var writeSession = _sessionFactory.CreateWriteSession(collection, collection.ToHash()))
-            using (var indexSession = _sessionFactory.CreateIndexSession(collection, collection.ToHash()))
+            var colId = job.Collection.ToHash();
+
+            using (var writeSession = _sessionFactory.CreateWriteSession(job.Collection, colId))
+            using (var indexSession = _sessionFactory.CreateIndexSession(job.Collection, colId))
             {
-                foreach (var doc in documents)
+                foreach (var doc in job.Documents)
                 {
                     await writeSession.Write(doc);
                     indexSession.Index(doc);
                 }
             }
 
-            this.Log("executed {0} write+index job in {1}", collection, _timer.Elapsed);
+            job.Done = true;
+
+            this.Log("executed {0} write+index job in {1}", job.Collection, _timer.Elapsed);
         }
 
         private static T Deserialize<T>(Stream s)
@@ -88,6 +107,20 @@ namespace Sir.Store
 
         public void Dispose()
         {
+            _writer.Dispose();
+        }
+    }
+
+    public class Job
+    {
+        public string Collection { get; private set; }
+        public IEnumerable<IDictionary> Documents { get; private set; }
+        public bool Done { get; set; } 
+
+        public Job(string collection, IEnumerable<IDictionary> documents)
+        {
+            Collection = collection;
+            Documents = documents;
         }
     }
 }
