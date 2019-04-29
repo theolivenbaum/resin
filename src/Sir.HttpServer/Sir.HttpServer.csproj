@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Sir.Postings\Sir.Postings.csproj" />
-    <ProjectReference Include="..\Sir.RocksDb\Sir.RocksDb.csproj" />
     <ProjectReference Include="..\Sir.Store\Sir.Store.csproj" />
     <ProjectReference Include="..\Sir\Sir.Core.csproj" />
   </ItemGroup>

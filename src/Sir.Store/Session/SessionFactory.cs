@@ -218,11 +218,11 @@ namespace Sir.Store
             return new WriteSession(collectionName, collectionId, this);
         }
 
-        public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId)
+        public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId, params long[] excludeKeyIds)
         {
             var indexReaders = _indexReaders.GetOrAdd(collectionId, new ConcurrentDictionary<long, NodeReader>());
 
-            return new TermIndexSession(collectionName, collectionId, this, _tokenizer, _config, indexReaders);
+            return new TermIndexSession(collectionName, collectionId, this, _tokenizer, _config, indexReaders, excludeKeyIds);
         }
 
         public BowIndexSession CreateBOWSession(string collectionName, ulong collectionId)

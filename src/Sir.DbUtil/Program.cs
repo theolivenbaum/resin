@@ -214,11 +214,12 @@ namespace Sir.DbUtil
                             {
                                 var timer = Stopwatch.StartNew();
 
-                                using (var indexSession = sessionFactory.CreateIndexSession(collectionName, collectionId))
+                                using (var indexSession = sessionFactory.CreateIndexSession(
+                                    collectionName, collectionId, 0, 1, 2, 3, 6))
                                 {
                                     foreach (var doc in batch)
                                     {
-                                        indexSession.Index(doc, 0, 1, 2, 3, 6);
+                                        indexSession.Index(doc);
                                     }
                                 }
 
