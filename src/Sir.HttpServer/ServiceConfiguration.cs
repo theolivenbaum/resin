@@ -20,12 +20,12 @@ namespace Sir.HttpServer
         public static IServiceProvider Configure(IServiceCollection services)
         {
             var assemblyPath = Directory.GetCurrentDirectory();
+            var config = new IniConfiguration(Path.Combine(assemblyPath, "sir.ini"));
 
             // register config
-            services.Add(new ServiceDescriptor(typeof(IConfigurationProvider),
-                new IniConfiguration(Path.Combine(assemblyPath, "sir.ini"))));
+            services.Add(new ServiceDescriptor(typeof(IConfigurationProvider), config));
 
-            // register plugins
+            // register plugin startup and teardown handlers
 
 #if DEBUG
             assemblyPath = Path.Combine(assemblyPath, "bin\\Debug\\netcoreapp2.1");
@@ -37,21 +37,18 @@ namespace Sir.HttpServer
             {
                 foreach (var type in assembly.GetTypes())
                 {
-                    // search for concrete implementations
+                    // search for concrete types
                     if (!type.IsInterface)
                     {
                         var interfaces = type.GetInterfaces();
 
-                        if (interfaces.Contains(typeof(IPluginStop)) || 
-                            interfaces.Contains(typeof(IPluginStart)) ||
-                            interfaces.Contains(typeof(IPlugin)))
+                        if (interfaces.Contains(typeof(IPluginStop)))
                         {
-                            // register plugins, startup and teardown services
-                            foreach(var contract in interfaces.Where(t => t != typeof(IDisposable)))
-                            {
-                                services.Add(new ServiceDescriptor(
-                                    contract, type, ServiceLifetime.Singleton));
-                            }
+                            services.Add(new ServiceDescriptor(typeof(IPluginStop), type, ServiceLifetime.Singleton));
+                        }
+                        else if (interfaces.Contains(typeof(IPluginStart)))
+                        {
+                            services.Add(new ServiceDescriptor(typeof(IPluginStart), type, ServiceLifetime.Singleton));
                         }
                     }
                 }
@@ -63,10 +60,10 @@ namespace Sir.HttpServer
 
             var serviceProvider = services.BuildServiceProvider();
 
-            // initiate plugins
+            // raise startup event
             foreach (var service in serviceProvider.GetServices<IPluginStart>())
             {
-                service.OnApplicationStartup(services, serviceProvider);
+                service.OnApplicationStartup(services, serviceProvider, config);
             }
 
             // Fetch one instance each of all plugins and register them with the PluginCollection

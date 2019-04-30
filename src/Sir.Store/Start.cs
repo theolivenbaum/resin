@@ -7,24 +7,21 @@ namespace Sir.Store
     /// </summary>
     public class Start : IPluginStart
     {
-        public void OnApplicationStartup(IServiceCollection services, ServiceProvider serviceProvider)
+        public void OnApplicationStartup(IServiceCollection services, ServiceProvider serviceProvider, IConfigurationProvider config)
         {
             var tokenizer = new LatinTokenizer();
-            var config = serviceProvider.GetService<IConfigurationProvider>();
-
-            services.AddSingleton(typeof(SessionFactory), 
-                new SessionFactory(
-                    config.Get("data_dir"), 
-                    tokenizer,
-                    config));
+            var httpParser = new HttpQueryParser(new TermQueryParser(), tokenizer);
+            var httpBowParser = new HttpBowQueryParser(tokenizer, httpParser);
+            var sessionFactory = new SessionFactory(config.Get("data_dir"), tokenizer, config);
+            var writer = new StoreWriter(sessionFactory, tokenizer);
 
             services.AddSingleton(typeof(ITokenizer), tokenizer);
-
-            var httpParser = new HttpQueryParser(new TermQueryParser(), tokenizer);
-
+            services.AddSingleton(typeof(SessionFactory), sessionFactory);
             services.AddSingleton(typeof(HttpQueryParser), httpParser);
             services.AddSingleton(typeof(HttpBowQueryParser), new HttpBowQueryParser(tokenizer, httpParser));
             services.AddSingleton(typeof(IQueryFormatter), new QueryFormatter());
+            services.AddSingleton(typeof(IWriter), writer);
+            services.AddSingleton(typeof(IReader), new StoreReader(sessionFactory, httpParser, httpBowParser, tokenizer, writer));
         }
     }
 }

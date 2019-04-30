@@ -9,6 +9,7 @@ namespace Sir.Store
     {
         public void OnApplicationShutdown(IServiceProvider serviceProvider)
         {
+            ((SessionFactory)serviceProvider.GetService(typeof(SessionFactory))).Dispose();
         }
     }
 }

@@ -27,22 +27,14 @@ namespace Sir.Store
             SessionFactory sessionFactory, 
             HttpQueryParser httpQueryParser, 
             HttpBowQueryParser httpDocumentQueryParser, 
-            ITokenizer tokenizer, 
-            IEnumerable<IWriter> storeWriters)
+            ITokenizer tokenizer,
+            StoreWriter storeWriter)
         {
             _sessionFactory = sessionFactory;
             _httpQueryParser = httpQueryParser;
             _tokenizer = tokenizer;
             _httpBowQueryParser = httpDocumentQueryParser;
-            
-            foreach (var writer in storeWriters)
-            {
-                if (writer is StoreWriter)
-                {
-                    _storeWriter = (StoreWriter)writer;
-                    break;
-                }
-            }
+            _storeWriter = storeWriter;
         }
 
         public void Dispose()
