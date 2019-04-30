@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -22,14 +21,12 @@ namespace Sir.Store
         private readonly SessionFactory _sessionFactory;
         private readonly ITokenizer _tokenizer;
         private readonly Stopwatch _timer;
-        private readonly ProducerConsumerQueue<Job> _writer;
 
         public StoreWriter(SessionFactory sessionFactory, ITokenizer analyzer)
         {
             _tokenizer = analyzer;
             _sessionFactory = sessionFactory;
             _timer = new Stopwatch();
-            _writer = new ProducerConsumerQueue<Job>(1, callback: ExecuteWrite);
         }
 
         public async Task<ResponseModel> Write(string collectionName, HttpRequest request)
@@ -37,19 +34,9 @@ namespace Sir.Store
             var documents = Deserialize<IEnumerable<IDictionary>>(request.Body);
             var job = new Job(collectionName, documents);
 
-            _writer.Enqueue(job);
-
-            while (!job.Done)
-            {
-                Thread.Sleep(10);
-            }
+            await _sessionFactory.Write(job);
 
             return new ResponseModel();
-        }
-
-        public void Push(Job job)
-        {
-            _writer.Enqueue(job);
         }
 
         private static void Serialize(object value, Stream stream)
@@ -96,7 +83,6 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            _writer.Dispose();
         }
     }
 

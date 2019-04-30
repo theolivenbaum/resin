@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sir.Core;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,6 +20,7 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>> _indexReaders;
         private readonly ConcurrentDictionary<string, object> _collectionLocks;
+        private readonly Semaphore _writeSync;
 
         public string Dir { get; }
         public IConfigurationProvider Config { get { return _config; } }
@@ -31,6 +33,41 @@ namespace Sir.Store
             _config = config;
             _indexReaders = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>>();
             _collectionLocks = new ConcurrentDictionary<string, object>();
+
+            bool createdSystemWideSem;
+
+            _writeSync = new Semaphore(1, 2, "Sir.Store.SessionFactory", out createdSystemWideSem);
+
+            if (!createdSystemWideSem)
+            {
+                _writeSync.Dispose();
+                _writeSync = Semaphore.OpenExisting("Sir.Store.SessionFactory");
+            }
+        }
+
+        public async Task Write(Job job)
+        {
+            _writeSync.WaitOne();
+
+            var timer = Stopwatch.StartNew();
+
+            var colId = job.Collection.ToHash();
+
+            using (var writeSession = CreateWriteSession(job.Collection, colId))
+            using (var indexSession = CreateIndexSession(job.Collection, colId))
+            {
+                foreach (var doc in job.Documents)
+                {
+                    await writeSession.Write(doc);
+                    indexSession.Index(doc);
+                }
+            }
+
+            _writeSync.Release();
+
+            job.Done = true;
+
+            this.Log("executed {0} write+index job in {1}", job.Collection, timer.Elapsed);
         }
 
         public IList<(long offset, long length)> ReadPageInfoFromDisk(string ixpFileName)
@@ -285,6 +322,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
+            _writeSync.Dispose();
         }
     }
 }

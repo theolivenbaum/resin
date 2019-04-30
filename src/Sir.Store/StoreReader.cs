@@ -20,21 +20,18 @@ namespace Sir.Store
         private readonly SessionFactory _sessionFactory;
         private readonly HttpQueryParser _httpQueryParser;
         private readonly HttpBowQueryParser _httpBowQueryParser;
-        private readonly StoreWriter _storeWriter;
         private readonly ITokenizer _tokenizer;
 
         public StoreReader(
             SessionFactory sessionFactory, 
             HttpQueryParser httpQueryParser, 
             HttpBowQueryParser httpDocumentQueryParser, 
-            ITokenizer tokenizer,
-            StoreWriter storeWriter)
+            ITokenizer tokenizer)
         {
             _sessionFactory = sessionFactory;
             _httpQueryParser = httpQueryParser;
             _tokenizer = tokenizer;
             _httpBowQueryParser = httpDocumentQueryParser;
-            _storeWriter = storeWriter;
         }
 
         public void Dispose()
@@ -122,7 +119,7 @@ namespace Sir.Store
                                 newCollectionName = Guid.NewGuid().ToString();
                             }
 
-                            _storeWriter.Push(new Job(newCollectionName, docs));
+                            _sessionFactory.Write(new Job(newCollectionName, docs));
                         }
                     }
 
