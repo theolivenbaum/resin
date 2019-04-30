@@ -47,7 +47,14 @@ namespace Sir
 
         public string Get(string key)
         {
-            return _doc[key];
+            string val;
+
+            if (!_doc.TryGetValue(key, out val))
+            {
+                return null;
+            }
+
+            return val;
         }
     }
 }

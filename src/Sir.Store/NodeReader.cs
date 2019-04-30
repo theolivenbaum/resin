@@ -47,9 +47,10 @@ namespace Sir.Store
             var time = Stopwatch.StartNew();
             var root = new VectorNode();
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
+            var bufferSize = int.Parse(_config.Get("read_buffer_size") ?? "4096");
 
             using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-            using (var ixStream = new BufferedStream(_sessionFactory.CreateReadStream(_ixFileName), 4096000))
+            using (var ixStream = new BufferedStream(_sessionFactory.CreateReadStream(_ixFileName), bufferSize))
             {
                 ixStream.Seek(_optimizedOffset, SeekOrigin.Begin);
 
@@ -108,11 +109,12 @@ namespace Sir.Store
             var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
             var high = new ConcurrentBag<Hit>();
+            var bufferSize = int.Parse(_config.Get("read_buffer_size") ?? "4096");
 
             Parallel.ForEach(pages, page =>
             {
                 using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
-                using (var vectorStream = new BufferedStream(_sessionFactory.CreateReadStream(_vecFileName), 409600))
+                using (var vectorStream = new BufferedStream(_sessionFactory.CreateReadStream(_vecFileName), bufferSize))
                 {
                     indexStream.Seek(page.offset, SeekOrigin.Begin);
 
