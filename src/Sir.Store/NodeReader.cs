@@ -49,7 +49,7 @@ namespace Sir.Store
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
 
             using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-            using (var ixStream = _sessionFactory.CreateReadStream(_ixFileName))
+            using (var ixStream = new BufferedStream(_sessionFactory.CreateReadStream(_ixFileName), 4096000))
             {
                 ixStream.Seek(_optimizedOffset, SeekOrigin.Begin);
 
@@ -112,7 +112,7 @@ namespace Sir.Store
             Parallel.ForEach(pages, page =>
             {
                 using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
-                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                using (var vectorStream = new BufferedStream(_sessionFactory.CreateReadStream(_vecFileName), 409600))
                 {
                     indexStream.Seek(page.offset, SeekOrigin.Begin);
 
