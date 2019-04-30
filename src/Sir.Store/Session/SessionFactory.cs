@@ -198,13 +198,6 @@ namespace Sir.Store
             return new WarmupSession(collectionName, collectionId, this, _tokenizer, _config, indexReaders, baseUrl);
         }
 
-        public OptimizeSession CreateOptimizeSession(string collectionName, ulong collectionId)
-        {
-            var indexReaders = _indexReaders.GetOrAdd(collectionId, new ConcurrentDictionary<long, NodeReader>());
-
-            return new OptimizeSession(collectionName, collectionId, this, _config, indexReaders);
-        }
-
         public DocumentStreamSession CreateDocumentStreamSession(string collectionName, ulong collectionId)
         {
             return new DocumentStreamSession(collectionName, collectionId, this);

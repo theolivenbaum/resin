@@ -33,6 +33,11 @@ namespace Sir.Store
             _stream.Flush();
         }
 
+        public async Task FlushAsync()
+        {
+            await _stream.FlushAsync();
+        }
+
         public void Dispose()
         {
             _stream.Dispose();

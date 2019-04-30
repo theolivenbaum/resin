@@ -75,20 +75,6 @@ namespace Sir.DbUtil
                     skip, 
                     take);
             }
-            else if (command == "optimize")
-            {
-                // example: optimize C:\projects\resin\src\Sir.HttpServer\App_Data www
-
-                Optimize(
-                    dir: args[1], 
-                    collectionName: args[2]);
-            }
-            else if (command == "mmf")
-            {
-                // example: mmf C:\projects\resin\src\Sir.HttpServer\App_Data\6604389855880847730.3 C:\projects\resin\src\Sir.HttpServer\App_Data\6604389855880847730.4
-
-                MMF(args.Skip(1).ToArray());
-            }
             else
             {
                 Console.WriteLine("unknown command: {0}", command);
@@ -96,26 +82,6 @@ namespace Sir.DbUtil
 
             Console.WriteLine("press any key to exit");
             Console.Read();
-        }
-
-        private static void MMF(params string[] files)
-        {
-            var dir = Path.GetDirectoryName(files[0]);
-            var mapped = new List<MemoryMappedFile>();
-
-            using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration("sir.ini")))
-            foreach (var file in files)
-            {
-                mapped.Add(sessionFactory.OpenMMF(file));
-            }
-
-            Console.WriteLine("mapping complete.");
-            Console.Read();
-
-            foreach(var mmf in mapped)
-            {
-                mmf.Dispose();
-            }
         }
 
         private static void Warmup(string dir, Uri uri, string collectionName, int skip, int take)
@@ -130,21 +96,6 @@ namespace Sir.DbUtil
                     }
                 }
             }
-        }
-
-        private static void Optimize(string dir, string collectionName)
-        {
-            var time = Stopwatch.StartNew();
-
-            using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration("sir.ini")))
-            {
-                using (var optimizeSession = sessionFactory.CreateOptimizeSession(collectionName, collectionName.ToHash()))
-                {
-                    optimizeSession.Optimize();
-                }
-            }
-
-            Logging.Log(null, string.Format("{0} optimize operation took {1}", collectionName, time.Elapsed));
         }
 
         private static async Task Query(string dir, string collectionName)

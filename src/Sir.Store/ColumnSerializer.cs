@@ -1,11 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Store
 {
-    public class ColumnSerializer : ILogger
+    public class ColumnSerializer : ILogger, IDisposable
     {
         private readonly long _keyId;
         private readonly ulong _collectionId;
@@ -25,79 +25,32 @@ namespace Sir.Store
             var pixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}", _collectionId, keyId, pageFileExtension));
             var ixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}", _collectionId, keyId, ixFileExtension));
 
-            try
-            {
-                _pageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(pixFileName));
-                _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
-            }
-            catch (IOException)
-            {
-                Thread.Sleep(100);
-
-                if (_pageIndexWriter != null)
-                {
-                    _pageIndexWriter.Dispose();
-                }
-                if (_ixStream != null)
-                {
-                    _ixStream.Dispose();
-                }
-
-                _pageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(pixFileName));
-                _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
-            }
+            _pageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAsyncAppendStream(pixFileName));
+            _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
         }
 
-        public void AppendColumnSegment(VectorNode column)
-        {
-            var time = Stopwatch.StartNew();
-
-            _postingsWriter.Concat(column);
-
-            lock (_indexFileSync)
-            {
-                var page = column.SerializeTree(_ixStream);
-
-                _ixStream.Flush();
-
-                _pageIndexWriter.Write(page.offset, page.length);
-
-                _pageIndexWriter.Flush();
-            }
-
-            _ixStream.Dispose();
-            _pageIndexWriter.Dispose();
-
-            var size = column.Size();
-
-            this.Log("appended page to column {0} in {1}. page.weight {2} page.depth {3} page.width {4} (avg depth {5})",
-                _keyId, time.Elapsed, column.Weight, size.depth, size.width, size.avgDepth);
-        }
-
-        public async Task SerializeColumnSegment(VectorNode column)
+        public async Task CreateColumnSegment(VectorNode column)
         {
             var time = Stopwatch.StartNew();
 
             await _postingsWriter.Write(column);
 
-            lock (_indexFileSync)
-            {
-                var page = column.SerializeTree(_ixStream);
+            var page = column.SerializeTree(_ixStream);
 
-                _ixStream.Flush();
-
-                _pageIndexWriter.Write(page.offset, page.length);
-
-                _pageIndexWriter.Flush();
-            }
-
-            _ixStream.Dispose();
-            _pageIndexWriter.Dispose();
+            await _ixStream.FlushAsync();
+            await _pageIndexWriter.WriteAsync(page.offset, page.length);
+            await _pageIndexWriter.FlushAsync();
 
             var size = column.Size();
 
             this.Log("serialized column {0} in {1}. weight {2} depth {3} width {4} (avg depth {5})",
                 _keyId, time.Elapsed, column.Weight, size.depth, size.width, size.avgDepth);
+        }
+
+        public void Dispose()
+        {
+            _ixStream.Dispose();
+            _pageIndexWriter.Dispose();
         }
     }
 }

@@ -52,7 +52,7 @@ namespace Sir.Store
 
             while (!job.Done)
             {
-                Thread.Sleep(100);
+                Thread.Sleep(10);
             }
 
             return new ResponseModel();

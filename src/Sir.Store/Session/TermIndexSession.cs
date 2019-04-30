@@ -135,19 +135,24 @@ namespace Sir.Store
 
             var tasks = new Task[_dirty.Count];
             var taskId = 0;
-            var columnWriters = new List<ColumnSerializer>();
+            var writers = new List<ColumnSerializer>();
 
             foreach (var column in _dirty)
             {
                 var columnWriter = new ColumnSerializer(
                     CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config, CollectionName));
 
-                columnWriters.Add(columnWriter);
+                writers.Add(columnWriter);
 
-                tasks[taskId++] = columnWriter.SerializeColumnSegment(column.Value);
+                tasks[taskId++] = columnWriter.CreateColumnSegment(column.Value);
             }
 
             Task.WaitAll(tasks);
+
+            foreach (var w in writers)
+            {
+                w.Dispose();
+            }
 
             _flushed = true;
             _flushing = false;

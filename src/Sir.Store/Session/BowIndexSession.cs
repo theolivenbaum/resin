@@ -116,12 +116,16 @@ namespace Sir.Store
                 var columnWriter = new ColumnSerializer(
                     CollectionId, model.Key, SessionFactory, new RemotePostingsWriter(_config, CollectionName), "ix1", "ixp1");
 
-                tasks.Add(columnWriter.SerializeColumnSegment(model.Value));
-
                 writers.Add(columnWriter);
+                tasks.Add(columnWriter.CreateColumnSegment(model.Value));
             }
 
             Task.WaitAll(tasks.ToArray());
+
+            foreach(var w in writers)
+            {
+                w.Dispose();
+            }
 
             this.Log("***FLUSHED*** and completed building of model {0}", CollectionId);
         }
