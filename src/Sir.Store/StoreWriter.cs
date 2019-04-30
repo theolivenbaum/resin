@@ -34,18 +34,7 @@ namespace Sir.Store
 
         public async Task<ResponseModel> Write(string collectionName, HttpRequest request)
         {
-            var payload = new MemoryStream();
-
-            await request.Body.CopyToAsync(payload);
-
-            if (request.ContentLength.Value != payload.Length)
-            {
-                throw new DataMisalignedException();
-            }
-
-            payload.Position = 0;
-
-            var documents = Deserialize<IEnumerable<IDictionary>>(payload);
+            var documents = Deserialize<IEnumerable<IDictionary>>(request.Body);
             var job = new Job(collectionName, documents);
 
             _writer.Enqueue(job);
@@ -63,15 +52,15 @@ namespace Sir.Store
             _writer.Enqueue(job);
         }
 
-        private static void Serialize(object value, Stream s)
+        private static void Serialize(object value, Stream stream)
         {
-            using (StreamWriter writer = new StreamWriter(s, Encoding.UTF8, 4096, true))
+            using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8, 4096, true))
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
             {
                 JsonSerializer ser = new JsonSerializer();
                 ser.Serialize(jsonWriter, value);
             }
-            s.Position = 0;
+            stream.Position = 0;
         }
 
         public async Task ExecuteWrite(Job job)
@@ -95,9 +84,9 @@ namespace Sir.Store
             this.Log("executed {0} write+index job in {1}", job.Collection, _timer.Elapsed);
         }
 
-        private static T Deserialize<T>(Stream s)
+        private static T Deserialize<T>(Stream stream)
         {
-            using (StreamReader reader = new StreamReader(s))
+            using (StreamReader reader = new StreamReader(stream))
             using (JsonTextReader jsonReader = new JsonTextReader(reader))
             {
                 JsonSerializer ser = new JsonSerializer();
