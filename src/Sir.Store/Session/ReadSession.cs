@@ -172,31 +172,6 @@ namespace Sir.Store
             return new NodeReader(ixFileName, ixpFileName, vecFileName, SessionFactory, _config);
         }
 
-        private (Stream indexStream, IList<(long, long)> pages) CreateIndexStream(string ixFileName, string ixpFileName)
-        {
-            (Stream indexStream, IList<(long, long)> pages) stream;
-
-            if (_indexStreams.TryGetValue(ixFileName, out stream))
-            {
-                stream.indexStream.Position = 0;
-                return stream;
-            }
-
-            var time = Stopwatch.StartNew();
-            var pages = SessionFactory.ReadPageInfoFromDisk(ixpFileName);
-            var last = pages[pages.Count - 1];
-            var len = last.offset + last.length;
-            Stream indexStream = SessionFactory.CreateReadStream(ixFileName);
-
-            this.Log($"created index stream in {time.Elapsed}");
-
-            stream = (indexStream, pages);
-
-            _indexStreams.TryAdd(ixFileName, stream);
-
-            return (indexStream, pages);
-        }
-
         public NodeReader CreateIndexReader(ulong keyHash)
         {
             long keyId;
