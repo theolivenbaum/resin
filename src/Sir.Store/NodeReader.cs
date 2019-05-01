@@ -101,38 +101,16 @@ namespace Sir.Store
 
         public Hit ClosestMatch(SortedList<long, int> vector, (float identicalAngle, float foldAngle) similarity)
         {
-            return ClosestMatchOnDisk(vector, similarity);
-        }
+            var readSetting = _config.Get("read_mode") ?? "false";
+            var readonlyMode = readSetting.Equals("true");
 
-        public Hit ClosestMatchOnDisk(SortedList<long, int> vector, (float identicalAngle, float foldAngle) similarity)
-        {
-            var time = Stopwatch.StartNew();
-            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
-            var hits = new ConcurrentBag<Hit>();
-            var bufferSize = int.Parse(_config.Get("read_buffer_size") ?? "4096");
-
-            Parallel.ForEach(pages, page =>
-            {
-                using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
-                using (var vectorStream = new BufferedStream(_sessionFactory.CreateReadStream(_vecFileName), bufferSize))
-                {
-                    indexStream.Seek(page.offset, SeekOrigin.Begin);
-
-                    var hit = ClosestMatchInPage(
-                                vector,
-                                indexStream,
-                                vectorStream,
-                                similarity);
-
-                    hits.Add(hit);
-                }
-            });
-
-            this.Log($"scan took {time.Elapsed}");
+            var hits = readonlyMode ? 
+                ClosestMatchInMemoryMap(vector, similarity) : 
+                ClosestMatchOnDisk(vector, similarity);
 
             // find best hit
 
-            time.Restart();
+            var time = Stopwatch.StartNew();
 
             Hit best = null;
 
@@ -151,6 +129,65 @@ namespace Sir.Store
             this.Log($"merge took {time.Elapsed}");
 
             return best;
+        }
+
+        private ConcurrentBag<Hit> ClosestMatchInMemoryMap(SortedList<long, int> vector, (float identicalAngle, float foldAngle) similarity)
+        {
+            var time = Stopwatch.StartNew();
+            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
+            var hits = new ConcurrentBag<Hit>();
+            var bufferSize = int.Parse(_config.Get("read_buffer_size") ?? "4096");
+
+            using (var mmf = _sessionFactory.OpenMMF(_ixFileName))
+            {
+                Parallel.ForEach(pages, page =>
+                {
+                    using (var indexStream = mmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
+                    using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                    {
+                        var hit = ClosestMatchInPage(
+                                    vector,
+                                    indexStream,
+                                    vectorStream,
+                                    similarity);
+
+                        hits.Add(hit);
+                    }
+                });
+            }
+
+            this.Log($"scan took {time.Elapsed}");
+
+            return hits;
+        }
+
+        private ConcurrentBag<Hit> ClosestMatchOnDisk(SortedList<long, int> vector, (float identicalAngle, float foldAngle) similarity)
+        {
+            var time = Stopwatch.StartNew();
+            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
+            var hits = new ConcurrentBag<Hit>();
+            var ixbufferSize = int.Parse(_config.Get("index_read_buffer_size") ?? "4096");
+
+            Parallel.ForEach(pages, page =>
+            {
+                using (var indexStream = new BufferedStream(_sessionFactory.CreateReadStream(_ixFileName), ixbufferSize))
+                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                {
+                    indexStream.Seek(page.offset, SeekOrigin.Begin);
+
+                    var hit = ClosestMatchInPage(
+                                vector,
+                                indexStream,
+                                vectorStream,
+                                similarity);
+
+                    hits.Add(hit);
+                }
+            });
+
+            this.Log($"scan took {time.Elapsed}");
+
+            return hits;
         }
 
         private Hit ClosestMatchInPage(

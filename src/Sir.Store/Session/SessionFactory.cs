@@ -21,6 +21,7 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>> _indexReaders;
         private readonly ConcurrentDictionary<string, object> _collectionLocks;
         private readonly Semaphore _writeSync;
+        private readonly ConcurrentBag<MemoryMappedFile> _mmfs;
 
         public string Dir { get; }
         public IConfigurationProvider Config { get { return _config; } }
@@ -33,6 +34,7 @@ namespace Sir.Store
             _config = config;
             _indexReaders = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>>();
             _collectionLocks = new ConcurrentDictionary<string, object>();
+            _mmfs = new ConcurrentBag<MemoryMappedFile>();
 
             bool createdSystemWideSem;
 
@@ -193,37 +195,21 @@ namespace Sir.Store
                     try
                     {
                         mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read, HandleInheritability.Inheritable);
+
+                        this.Log($"opened existing mmf {mapName} on second attempt");
                     }
                     catch (FileNotFoundException)
                     {
-                        try
-                        {
-                            mmf = MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.Read);
-                            this.Log($"created new mmf {mapName}");
+                        mmf = MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.Read);
 
-                        }
-                        catch (IOException)
-                        {
-                            try
-                            {
-                                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
-                                this.Log($"opened existing mmf {mapName}");
+                        _mmfs.Add(MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read, HandleInheritability.Inheritable));
 
-                            }
-                            catch (FileNotFoundException)
-                            {
-                                Thread.Sleep(100);
-                                this.Log($"needed to pause thread to open mmf {mapName}");
-
-                                mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read);
-                                this.Log($"opened existing mmf {mapName}");
-                            }
-                        }
+                        this.Log($"created new mmf {mapName}");
                     }
                 }
             }
 
-            this.Log($"mapping took {time.Elapsed}");
+            this.Log($"creating mmf instance took {time.Elapsed}");
 
             return mmf;
         }
@@ -323,6 +309,11 @@ namespace Sir.Store
         public void Dispose()
         {
             _writeSync.Dispose();
+
+            foreach(var mmf in _mmfs)
+            {
+                mmf.Dispose();
+            }
         }
     }
 }
