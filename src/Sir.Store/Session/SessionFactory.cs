@@ -49,6 +49,11 @@ namespace Sir.Store
 
         public async Task Write(Job job)
         {
+            if (_mmfs.Count > 0)
+            {
+                throw new InvalidOperationException("wrinting while in readonly mode");
+            }
+
             _writeSync.WaitOne();
 
             var timer = Stopwatch.StartNew();
