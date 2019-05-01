@@ -21,19 +21,16 @@ namespace Sir.Store
         private readonly ValueReader _keyReader;
         private readonly ValueReader _valReader;
         private readonly RemotePostingsReader _postingsReader;
-        private readonly ConcurrentDictionary<long, NodeReader> _indexReaders;
         private readonly IConfigurationProvider _config;
         private readonly string _ixFileExtension;
         private readonly string _ixpFileExtension;
         private readonly string _vecFileExtension;
-        private static readonly object _syncIndexReaderCreation = new object();
         private readonly ConcurrentDictionary<string, (Stream indexStream, IList<(long, long)> pages)> _indexStreams;
 
         public ReadSession(string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
             IConfigurationProvider config,
-            ConcurrentDictionary<long, NodeReader> indexReaders,
             string ixFileExtension = "ix",
             string ixpFileExtension = "ixp",
             string vecFileExtension = "vec") 
@@ -53,7 +50,6 @@ namespace Sir.Store
             _keyReader = new ValueReader(KeyStream);
             _valReader = new ValueReader(ValueStream);
             _postingsReader = new RemotePostingsReader(config, collectionName);
-            _indexReaders = indexReaders;
             _config = config;
             _ixFileExtension = ixFileExtension;
             _ixpFileExtension = ixpFileExtension;
@@ -169,28 +165,11 @@ namespace Sir.Store
 
         public NodeReader CreateIndexReader(long keyId)
         {
-            var time = Stopwatch.StartNew();
             var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixFileExtension));
             var ixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixpFileExtension));
             var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}", CollectionId, _vecFileExtension));
 
-            NodeReader reader;
-
-            if (!_indexReaders.TryGetValue(keyId, out reader))
-            {
-                lock (_syncIndexReaderCreation)
-                {
-                    if (!_indexReaders.TryGetValue(keyId, out reader))
-                    {
-                        reader = new NodeReader(ixFileName, ixpFileName, vecFileName, SessionFactory, _config);
-                        _indexReaders.GetOrAdd(keyId, reader);
-
-                        this.Log("created index reader {0} in {1}", ixFileName, time.Elapsed);
-                    }
-                }
-            }
-
-            return reader;
+            return new NodeReader(ixFileName, ixpFileName, vecFileName, SessionFactory, _config);
         }
 
         private (Stream indexStream, IList<(long, long)> pages) CreateIndexStream(string ixFileName, string ixpFileName)

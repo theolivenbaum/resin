@@ -18,7 +18,6 @@ namespace Sir.Store
         private readonly ITokenizer _tokenizer;
         private readonly IConfigurationProvider _config;
         private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
-        private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>> _indexReaders;
         private readonly ConcurrentDictionary<string, object> _collectionLocks;
         private readonly Semaphore _writeSync;
         private readonly ConcurrentBag<MemoryMappedFile> _mmfs;
@@ -32,7 +31,6 @@ namespace Sir.Store
             _keys = LoadKeys();
             _tokenizer = tokenizer;
             _config = config;
-            _indexReaders = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, NodeReader>>();
             _collectionLocks = new ConcurrentDictionary<string, object>();
             _mmfs = new ConcurrentBag<MemoryMappedFile>();
 
@@ -221,9 +219,7 @@ namespace Sir.Store
 
         public WarmupSession CreateWarmupSession(string collectionName, ulong collectionId, string baseUrl)
         {
-            var indexReaders = _indexReaders.GetOrAdd(collectionId, new ConcurrentDictionary<long, NodeReader>());
-
-            return new WarmupSession(collectionName, collectionId, this, _tokenizer, _config, indexReaders, baseUrl);
+            return new WarmupSession(collectionName, collectionId, this, _tokenizer, _config, baseUrl);
         }
 
         public DocumentStreamSession CreateDocumentStreamSession(string collectionName, ulong collectionId)
@@ -241,31 +237,23 @@ namespace Sir.Store
 
         public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId, params long[] excludeKeyIds)
         {
-            var indexReaders = _indexReaders.GetOrAdd(collectionId, new ConcurrentDictionary<long, NodeReader>());
-
-            return new TermIndexSession(collectionName, collectionId, this, _tokenizer, _config, indexReaders, excludeKeyIds);
+            return new TermIndexSession(collectionName, collectionId, this, _tokenizer, _config, excludeKeyIds);
         }
 
         public BowIndexSession CreateBOWSession(string collectionName, ulong collectionId)
         {
-            var indexReaders = _indexReaders.GetOrAdd(collectionId, new ConcurrentDictionary<long, NodeReader>());
-
-            return new BowIndexSession(collectionName, collectionId, this, _config, _tokenizer, indexReaders);
+            return new BowIndexSession(collectionName, collectionId, this, _config, _tokenizer);
         }
 
         public ValidateSession CreateValidateSession(string collectionName, ulong collectionId)
         {
-            var indexReaders = _indexReaders.GetOrAdd(collectionId, new ConcurrentDictionary<long, NodeReader>());
-
-            return new ValidateSession(collectionName, collectionId, this, _tokenizer, _config, indexReaders);
+            return new ValidateSession(collectionName, collectionId, this, _tokenizer, _config);
         }
 
         public ReadSession CreateReadSession(string collectionName, ulong collectionId, string ixFileExtension = "ix",
             string ixpFileExtension = "ixp", string vecFileExtension = "vec")
         {
-            var indexReaders = _indexReaders.GetOrAdd(collectionId, new ConcurrentDictionary<long, NodeReader>());
-
-            return new ReadSession(collectionName, collectionId, this, _config, indexReaders, ixFileExtension, ixpFileExtension, vecFileExtension);
+            return new ReadSession(collectionName, collectionId, this, _config, ixFileExtension, ixpFileExtension, vecFileExtension);
         }
 
         public Stream CreateAsyncReadStream(string fileName)

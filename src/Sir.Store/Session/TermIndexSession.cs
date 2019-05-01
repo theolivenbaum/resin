@@ -21,7 +21,6 @@ namespace Sir.Store
         private bool _flushed;
         private bool _flushing;
         private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _modelBuilder;
-        private readonly ConcurrentDictionary<long, NodeReader> _indexReaders;
         private readonly long[] _excludeKeyIds;
 
         public TermIndexSession(
@@ -30,7 +29,6 @@ namespace Sir.Store
             SessionFactory sessionFactory, 
             ITokenizer tokenizer,
             IConfigurationProvider config,
-            ConcurrentDictionary<long, NodeReader> indexReaders,
             params long[] excludeKeyIds) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
@@ -42,8 +40,6 @@ namespace Sir.Store
 
             _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>(
                 numThreads, BuildModel);
-
-            _indexReaders = indexReaders;
 
             _excludeKeyIds = excludeKeyIds;
         }

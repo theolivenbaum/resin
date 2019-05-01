@@ -1,7 +1,6 @@
 ﻿using Sir.Core;
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,11 +23,11 @@ namespace Sir.Store
             ulong collectionId,
             SessionFactory sessionFactory,
             IConfigurationProvider config,
-            ITokenizer tokenizer,
-            ConcurrentDictionary<long, NodeReader> indexReaders) : base(collectionName, collectionId, sessionFactory)
+            ITokenizer tokenizer
+            ) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
-            _readSession = new ReadSession(collectionName, collectionId, sessionFactory, config, indexReaders);
+            _readSession = new ReadSession(collectionName, collectionId, sessionFactory, config);
             _tokenizer = tokenizer;
 
             _indexWriter = new ProducerConsumerQueue<(long docId, long keyId, SortedList<long, int> vector)>(

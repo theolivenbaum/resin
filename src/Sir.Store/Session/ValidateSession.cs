@@ -1,7 +1,6 @@
 ﻿using Sir.Core;
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,12 +23,12 @@ namespace Sir.Store
             ulong collectionId,
             SessionFactory sessionFactory, 
             ITokenizer tokenizer,
-            IConfigurationProvider config,
-            ConcurrentDictionary<long, NodeReader> indexReaders) : base(collectionName, collectionId, sessionFactory)
+            IConfigurationProvider config
+            ) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
             _tokenizer = tokenizer;
-            _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, indexReaders);
+            _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config);
             _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedString tokens)>(
                 int.Parse(_config.Get("write_thread_count")), callback: Validate);
             _postingsReader = new RemotePostingsReader(_config, collectionName);

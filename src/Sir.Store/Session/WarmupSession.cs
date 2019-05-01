@@ -1,7 +1,6 @@
 ﻿using Sir.Core;
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -28,8 +27,6 @@ namespace Sir.Store
             SessionFactory sessionFactory, 
             ITokenizer tokenizer,
             IConfigurationProvider config,
-            ConcurrentDictionary<long, 
-            NodeReader> indexReaders,
             string baseUrl) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
