@@ -18,6 +18,8 @@ namespace Sir.Store
         private readonly ITokenizer _tokenizer;
         private readonly IDictionary<long, VectorNode> _dirty;
         private readonly Stream _vectorStream;
+        private readonly long _vectorPageOffset;
+        private readonly string _vectorPageIndexStreamFileName;
         private bool _flushed;
         private bool _flushing;
         private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _modelBuilder;
@@ -35,6 +37,8 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _dirty = new ConcurrentDictionary<long, VectorNode>();
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId)));
+            _vectorPageOffset = _vectorStream.Position;
+            _vectorPageIndexStreamFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.vecixp", CollectionId));
 
             var numThreads = int.Parse(_config.Get("write_thread_count"));
 
@@ -123,10 +127,21 @@ namespace Sir.Store
                 _modelBuilder.Join();
             }
 
+            long vectorPageLength;
+
             using (_vectorStream)
             {
                 _vectorStream.Flush();
+
+                vectorPageLength = _vectorStream.Position - _vectorPageOffset;
+
                 _vectorStream.Close();
+            }
+
+            using (var vecPageIndexStream = SessionFactory.CreateAppendStream(_vectorPageIndexStreamFileName))
+            using (var vecPageIndexWriter = new PageIndexWriter(vecPageIndexStream))
+            {
+                vecPageIndexWriter.Write(_vectorPageOffset, vectorPageLength);
             }
 
             var tasks = new Task[_dirty.Count];

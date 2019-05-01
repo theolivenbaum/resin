@@ -25,6 +25,7 @@ namespace Sir.Store
         private readonly string _ixFileExtension;
         private readonly string _ixpFileExtension;
         private readonly string _vecFileExtension;
+        private readonly string _vecixpFileExtension;
         private readonly ConcurrentDictionary<string, (Stream indexStream, IList<(long, long)> pages)> _indexStreams;
 
         public ReadSession(string collectionName,
@@ -33,7 +34,8 @@ namespace Sir.Store
             IConfigurationProvider config,
             string ixFileExtension = "ix",
             string ixpFileExtension = "ixp",
-            string vecFileExtension = "vec") 
+            string vecFileExtension = "vec",
+            string vecixpFileExtension = "vecixp") 
             : base(collectionName, collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
@@ -54,6 +56,7 @@ namespace Sir.Store
             _ixFileExtension = ixFileExtension;
             _ixpFileExtension = ixpFileExtension;
             _vecFileExtension = vecFileExtension;
+            _vecixpFileExtension = vecixpFileExtension;
             _indexStreams = new ConcurrentDictionary<string, (Stream indexStream, IList<(long, long)> pages)>();
         }
 
@@ -168,8 +171,9 @@ namespace Sir.Store
             var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixFileExtension));
             var ixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixpFileExtension));
             var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}", CollectionId, _vecFileExtension));
+            var vecixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}", CollectionId, _vecixpFileExtension));
 
-            return new NodeReader(ixFileName, ixpFileName, vecFileName, SessionFactory, _config);
+            return new NodeReader(ixFileName, ixpFileName, vecFileName, vecixpFileName, SessionFactory, _config);
         }
 
         public NodeReader CreateIndexReader(ulong keyHash)

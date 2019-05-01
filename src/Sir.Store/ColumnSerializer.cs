@@ -12,7 +12,7 @@ namespace Sir.Store
         private readonly RemotePostingsWriter _postingsWriter;
         private readonly SessionFactory _sessionFactory;
         private static readonly object _indexFileSync = new object();
-        private readonly PageIndexWriter _pageIndexWriter;
+        private readonly PageIndexWriter _ixPageIndexWriter;
         private readonly Stream _ixStream;
 
         public ColumnSerializer(ulong collectionId, long keyId, SessionFactory sessionFactory, RemotePostingsWriter postingsWriter, string ixFileExtension = "ix", string pageFileExtension = "ixp")
@@ -25,7 +25,7 @@ namespace Sir.Store
             var pixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}", _collectionId, keyId, pageFileExtension));
             var ixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}", _collectionId, keyId, ixFileExtension));
 
-            _pageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAsyncAppendStream(pixFileName));
+            _ixPageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAsyncAppendStream(pixFileName));
             _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
         }
 
@@ -38,8 +38,8 @@ namespace Sir.Store
             var page = column.SerializeTree(_ixStream);
 
             await _ixStream.FlushAsync();
-            await _pageIndexWriter.WriteAsync(page.offset, page.length);
-            await _pageIndexWriter.FlushAsync();
+            await _ixPageIndexWriter.WriteAsync(page.offset, page.length);
+            await _ixPageIndexWriter.FlushAsync();
 
             var size = column.Size();
 
@@ -50,7 +50,7 @@ namespace Sir.Store
         public void Dispose()
         {
             _ixStream.Dispose();
-            _pageIndexWriter.Dispose();
+            _ixPageIndexWriter.Dispose();
         }
     }
 }

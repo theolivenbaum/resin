@@ -17,6 +17,7 @@ namespace Sir.Store
         private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
         private readonly string _ixpFileName;
+        private readonly string _vecixpFileName;
         private readonly string _ixMapName;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
@@ -26,6 +27,7 @@ namespace Sir.Store
             string ixFileName,
             string ixpFileName,
             string vecFileName,
+            string vecixpFileName,
             SessionFactory sessionFactory,
             IConfigurationProvider config)
         {
@@ -34,6 +36,7 @@ namespace Sir.Store
             _sessionFactory = sessionFactory;
             _config = config;
             _ixpFileName = ixpFileName;
+            _vecixpFileName = vecixpFileName;
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
         }
 
@@ -134,22 +137,36 @@ namespace Sir.Store
         private ConcurrentBag<Hit> ClosestMatchInMemoryMap(SortedList<long, int> vector, (float identicalAngle, float foldAngle) similarity)
         {
             var time = Stopwatch.StartNew();
-            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
+            var ixPages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
+            var vecixPages = _sessionFactory.ReadPageInfoFromDisk(_vecixpFileName);
+            var pages = new ((long offset, long length) ixPage, (long offset, long length) vecixPage)[ixPages.Count];
+
+            for (int i = 0; i < ixPages.Count; i++)
+            {
+                pages[i] = (ixPages[i], vecixPages[i]);
+            }
+
             var hits = new ConcurrentBag<Hit>();
             var bufferSize = int.Parse(_config.Get("read_buffer_size") ?? "4096");
 
             using (var mmf = _sessionFactory.OpenMMF(_ixFileName))
+            using (var vmmf = _sessionFactory.OpenMMF(_vecFileName))
             {
+                //foreach(var page in pages)
                 Parallel.ForEach(pages, page =>
                 {
-                    using (var indexStream = mmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
-                    using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                    var ixpage = page.ixPage;
+                    var vpage = page.vecixPage;
+
+                    using (var indexStream = mmf.CreateViewStream(ixpage.offset, ixpage.length, MemoryMappedFileAccess.Read))
+                    using (var vectorStream = vmmf.CreateViewStream(vpage.offset, vpage.length, MemoryMappedFileAccess.Read))
                     {
                         var hit = ClosestMatchInPage(
                                     vector,
                                     indexStream,
                                     vectorStream,
-                                    similarity);
+                                    similarity,
+                                    vpage.offset);
 
                         hits.Add(hit);
                     }
@@ -479,7 +496,9 @@ namespace Sir.Store
             SortedList<long, int> node,
             Stream indexStream,
             Stream vectorStream,
-            (float identicalAngle, float foldAngle) similarity)
+            (float identicalAngle, float foldAngle) similarity,
+            long offset = 0
+        )
         {
             Span<byte> block = new byte[VectorNode.BlockSize];
 
@@ -490,7 +509,7 @@ namespace Sir.Store
 
             while (read > 0)
             {
-                var vecOffset = MemoryMarshal.Cast<byte, long>(block.Slice(0, sizeof(long)))[0];
+                var vecOffset = MemoryMarshal.Cast<byte, long>(block.Slice(0, sizeof(long)))[0] - offset;
                 var componentCount = MemoryMarshal.Cast<byte, int>(block.Slice(sizeof(long) + sizeof(long), sizeof(int)))[0];
                 var cursorVector = VectorOperations.DeserializeVector(vecOffset, componentCount, vectorStream);
                 var cursorTerminator = block[block.Length - 1];

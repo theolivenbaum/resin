@@ -48,7 +48,7 @@ namespace Sir.Store
         {
             if (_mmfs.Count > 0)
             {
-                throw new InvalidOperationException("wrinting while in readonly mode");
+                throw new InvalidOperationException("writing while in readonly mode");
             }
 
             _writeSync.WaitOne();
