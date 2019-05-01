@@ -108,7 +108,7 @@ namespace Sir.Store
         {
             var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
-            var high = new ConcurrentBag<Hit>();
+            var hits = new ConcurrentBag<Hit>();
             var bufferSize = int.Parse(_config.Get("read_buffer_size") ?? "4096");
 
             Parallel.ForEach(pages, page =>
@@ -124,23 +124,25 @@ namespace Sir.Store
                                 vectorStream,
                                 similarity);
 
-                    high.Add(hit);
+                    hits.Add(hit);
                 }
             });
 
             this.Log($"scan took {time.Elapsed}");
 
+            // find best hit
+
             time.Restart();
 
             Hit best = null;
 
-            foreach (var hit in high)
+            foreach (var hit in hits)
             {
                 if (best == null || hit.Score > best.Score)
                 {
                     best = hit;
                 }
-                else if (high != null && hit.Score == best.Score)
+                else if (hit.Score == best.Score)
                 {
                     best.Node.Merge(hit.Node);
                 }
