@@ -22,7 +22,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Postings", "Sir.Posting
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.RocksDb", "Sir.RocksDb\Sir.RocksDb.csproj", "{B19F4DE3-E10F-4001-9922-EA18BEAE4592}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sir.RocksDb.Store", "Sir.RocksDb.Store\Sir.RocksDb.Store.csproj", "{1D2C0491-A825-4429-8635-E3B0093DF7BA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.RocksDb.Store", "Sir.RocksDb.Store\Sir.RocksDb.Store.csproj", "{1D2C0491-A825-4429-8635-E3B0093DF7BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -6,7 +6,7 @@ namespace Sir.Store
 {
     public class RemoteRocksDbReader
     {
-        public async Task<byte[]> Read(string url)
+        public async Task<byte[]> Get(string url)
         {
             var request = (HttpWebRequest)WebRequest.Create(url);
 

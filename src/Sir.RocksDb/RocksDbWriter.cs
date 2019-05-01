@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Sir.Core;
@@ -10,7 +11,7 @@ namespace Sir.RocksDb
     {
         private readonly IConfigurationProvider _config;
         private readonly IKeyValueStore _store;
-        private readonly ProducerConsumerQueue<(ulong collection, ulong type, byte[] key, byte[] value)> _writer;
+        private readonly Semaphore _writeLock;
 
         public string ContentType => "application/rocksdb+octet-stream";
 
@@ -18,21 +19,7 @@ namespace Sir.RocksDb
         {
             _config = config;
             _store = store;
-            _writer = new ProducerConsumerQueue<(ulong collection, ulong type, byte[] key, byte[] value)>(1, DoWrite);
-        }
-
-        private void DoWrite((ulong collection, ulong type, byte[] key, byte[] value) data)
-        {
-            var fileId = $"{data.collection}.{data.type}";
-            var path = Path.Combine(_config.Get("data_dir"), fileId);
-
-            _store.Put(data.key, data.value);
-        }
-
-        public void Dispose()
-        {
-            _writer.Dispose();
-            _store.Dispose();
+            _writeLock = new Semaphore(1, 2, "Sir.RocksDb");
         }
 
         public async Task<ResponseModel> Write(string collectionId, HttpRequest request)
@@ -41,7 +28,7 @@ namespace Sir.RocksDb
             var typeId = type.ToHash();
             var path = Path.Combine(_config.Get("data_dir"), $"{typeId}.{collectionId}.rocks");
 
-            var id = request.Query.ContainsKey("id") ? 
+            var id = request.Query.ContainsKey("id") ?
                 BitConverter.GetBytes(long.Parse(request.Query["id"])) :
                 BitConverter.GetBytes(Guid.NewGuid().ToString().ToHash());
 
@@ -49,13 +36,31 @@ namespace Sir.RocksDb
 
             await request.Body.CopyToAsync(requestStream);
 
-            _writer.Enqueue((collectionId.ToHash(), typeId, id, requestStream.ToArray()));
+            _writeLock.WaitOne();
+
+            DoWrite(collectionId.ToHash(), typeId, id, requestStream.ToArray());
+
+            _writeLock.Release();
 
             var response = new MemoryStream();
 
             await response.WriteAsync(id);
 
             return new ResponseModel { Stream = response, MediaType = "application/octet-stream" };
+        }
+
+        private void DoWrite(ulong collection, ulong type, byte[] key, byte[] value)
+        {
+            var fileId = $"{collection}.{type}";
+            var path = Path.Combine(_config.Get("data_dir"), fileId);
+
+            _store.Put(key, value);
+        }
+
+        public void Dispose()
+        {
+            _writeLock.Dispose();
+            _store.Dispose();
         }
     }
 }

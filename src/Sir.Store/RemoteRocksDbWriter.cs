@@ -7,11 +7,9 @@ namespace Sir.Store
 {
     public class RemoteRocksDbWriter : ILogger
     {
-        public async Task<long> Send(byte[] payload, string url)
+        public async Task<long> Put(byte[] payload, string url)
         {
-            var timer = new Stopwatch();
-            timer.Start();
-
+            var timer = Stopwatch.StartNew();
             var request = (HttpWebRequest)WebRequest.Create(url);
 
             request.ContentType = "application/rocksdb+octet-stream";
