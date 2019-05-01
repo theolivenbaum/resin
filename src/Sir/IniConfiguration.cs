@@ -11,20 +11,25 @@ namespace Sir
         public IniConfiguration(string fileName)
         {
             _doc = new Dictionary<string, string>();
-            _fileName = Path.Combine(Directory.GetCurrentDirectory(), "sir.ini");
+            _fileName = Path.Combine(Directory.GetCurrentDirectory(), fileName);
 
             OnFileChanged(null, null);
 
             FileSystemWatcher watcher = new FileSystemWatcher();
             watcher.Path = Directory.GetCurrentDirectory();
             watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
-            watcher.Filter = "*.ini";
+            watcher.Filter = $"*{Path.GetExtension(fileName)}";
             watcher.Changed += new FileSystemEventHandler(OnFileChanged);
             watcher.EnableRaisingEvents = true;
         }
 
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
+            if (e != null && e.FullPath != _fileName)
+            {
+                return;
+            }
+
             var dic = new Dictionary<string, string>();
 
             string text;
