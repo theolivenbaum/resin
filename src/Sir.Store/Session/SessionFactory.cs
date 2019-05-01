@@ -46,12 +46,17 @@ namespace Sir.Store
 
         public async Task Write(Job job)
         {
+            _writeSync.WaitOne();
+
             if (_mmfs.Count > 0)
             {
-                throw new InvalidOperationException("writing while in readonly mode");
-            }
+                foreach (var mmf in _mmfs)
+                {
+                    mmf.Dispose();
+                }
 
-            _writeSync.WaitOne();
+                _mmfs.Clear();
+            }
 
             var timer = Stopwatch.StartNew();
 
@@ -192,22 +197,25 @@ namespace Sir.Store
             }
             catch (FileNotFoundException)
             {
-                lock (_syncMMF)
+                try
                 {
-                    try
-                    {
-                        mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read, HandleInheritability.Inheritable);
+                    _writeSync.WaitOne();
 
-                        this.Log($"opened existing mmf {mapName} on second attempt");
-                    }
-                    catch (FileNotFoundException)
-                    {
-                        mmf = MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.Read);
+                    mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read, HandleInheritability.Inheritable);
 
-                        _mmfs.Add(MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read, HandleInheritability.Inheritable));
+                    this.Log($"opened existing mmf {mapName} on second attempt");
+                }
+                catch (FileNotFoundException)
+                {
+                    mmf = MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.Read);
 
-                        this.Log($"created new mmf {mapName}");
-                    }
+                    _mmfs.Add(MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.Read, HandleInheritability.Inheritable));
+
+                    this.Log($"created new mmf {mapName}");
+                }
+                finally
+                {
+                    _writeSync.Release();
                 }
             }
 
