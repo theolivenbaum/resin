@@ -13,8 +13,6 @@ namespace Sir
     /// </summary>
     public static class VectorOperations
     {
-        private static readonly object _crossDomainVectorFileSync = new object();
-
         public static void DeserializeUnorderedFile(
             Stream indexStream,
             Stream vectorStream,
@@ -146,6 +144,22 @@ namespace Sir
             return node;
         }
 
+        public static async Task<VectorNode> DeserializeNodeAsync(Stream indexStream, Stream vectorStream)
+        {
+            var nodeBuffer = new byte[VectorNode.BlockSize];
+            var read = await indexStream.ReadAsync(nodeBuffer);
+
+            if (read == 0) return null;
+
+            var vecOffset = BitConverter.ToInt64(nodeBuffer, 0);
+            var postingsOffset = BitConverter.ToInt64(nodeBuffer, sizeof(long));
+            var vectorCount = BitConverter.ToInt32(nodeBuffer, sizeof(long) + sizeof(long));
+            var weight = BitConverter.ToInt32(nodeBuffer, sizeof(long) + sizeof(long) + sizeof(int));
+            var terminator = nodeBuffer[nodeBuffer.Length - 1];
+
+            return DeserializeNode(vecOffset, postingsOffset, vectorCount, weight, vectorStream, ref terminator);
+        }
+
         public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, ref byte terminator)
         {
             // Deserialize node
@@ -220,6 +234,34 @@ namespace Sir
             return vec;
         }
 
+        public static async Task<SortedList<long, int>> DeserializeVectorAsync(long vectorOffset, Stream vectorStream)
+        {
+            if (vectorStream == null)
+            {
+                throw new ArgumentNullException(nameof(vectorStream));
+            }
+
+            var vec = new SortedList<long, int>();
+
+            if (vectorOffset > 0)
+            {
+                vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
+            }
+
+            var buf = new byte[sizeof(long) + sizeof(int)];
+
+            var read = await vectorStream.ReadAsync(buf);
+
+            while (read > 0)
+            {
+                vec.Add(BitConverter.ToInt64(buf), BitConverter.ToInt32(buf, sizeof(long)));
+
+                read = await vectorStream.ReadAsync(buf);
+            }
+
+            return vec;
+        }
+
         public static async Task<long> SerializeAsync(this SortedList<long, int> vec, Stream stream)
         {
             var pos = stream.Position;
@@ -235,18 +277,15 @@ namespace Sir
 
         public static long Serialize(this SortedList<long, int> vec, Stream stream)
         {
-            lock (_crossDomainVectorFileSync)
+            var pos = stream.Position;
+
+            foreach (var kvp in vec)
             {
-                var pos = stream.Position;
-
-                foreach (var kvp in vec)
-                {
-                    stream.Write(BitConverter.GetBytes(kvp.Key), 0, sizeof(long));
-                    stream.Write(BitConverter.GetBytes(kvp.Value), 0, sizeof(int));
-                }
-
-                return pos;
+                stream.Write(BitConverter.GetBytes(kvp.Key), 0, sizeof(long));
+                stream.Write(BitConverter.GetBytes(kvp.Value), 0, sizeof(int));
             }
+
+            return pos;
         }
 
         public static float CosAngle(this SortedList<long, int> vec1, SortedList<long, int> vec2)

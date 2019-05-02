@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Sir.RocksDb.Store\Sir.RocksDb.Store.csproj" />
     <ProjectReference Include="..\Sir\Sir.Core.csproj" />
   </ItemGroup>
 
