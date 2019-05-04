@@ -35,7 +35,7 @@ namespace Sir.Store
             string ixFileExtension = "ix",
             string ixpFileExtension = "ixp",
             string vecFileExtension = "vec",
-            string vecixpFileExtension = "vecixp") 
+            string vecixpFileExtension = "vixp") 
             : base(collectionName, collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.CreateAsyncReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
@@ -119,8 +119,8 @@ namespace Sir.Store
         {
             var clauses = query.ToList();
 
-            Parallel.ForEach(clauses, q =>
-            //foreach (var q in clauses)
+            //Parallel.ForEach(clauses, q =>
+            foreach (var q in clauses)
             {
                 var cursor = q;
 
@@ -163,17 +163,17 @@ namespace Sir.Store
 
                     cursor = cursor.Then;
                 }
-            });
+            }//);
         }
 
         public NodeReader CreateIndexReader(long keyId)
         {
             var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixFileExtension));
             var ixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixpFileExtension));
-            var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}", CollectionId, _vecFileExtension));
-            var vecixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}", CollectionId, _vecixpFileExtension));
+            var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _vecFileExtension));
+            var vixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _vecixpFileExtension));
 
-            return new NodeReader(ixFileName, ixpFileName, vecFileName, vecixpFileName, SessionFactory, _config);
+            return new NodeReader(ixFileName, ixpFileName, vecFileName, vixpFileName, SessionFactory, _config);
         }
 
         public NodeReader CreateIndexReader(ulong keyHash)

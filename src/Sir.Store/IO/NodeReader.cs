@@ -17,7 +17,7 @@ namespace Sir.Store
         private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
         private readonly string _ixpFileName;
-        private readonly string _vecixpFileName;
+        private readonly string _vixpFileName;
         private readonly string _ixMapName;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
@@ -36,7 +36,7 @@ namespace Sir.Store
             _sessionFactory = sessionFactory;
             _config = config;
             _ixpFileName = ixpFileName;
-            _vecixpFileName = vecixpFileName;
+            _vixpFileName = vecixpFileName;
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
         }
 
@@ -138,13 +138,7 @@ namespace Sir.Store
         {
             var time = Stopwatch.StartNew();
             var ixPages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
-            var vecixPages = _sessionFactory.ReadPageInfoFromDisk(_vecixpFileName);
-            var pages = new ((long offset, long length) ixPage, (long offset, long length) vecixPage)[ixPages.Count];
-
-            for (int i = 0; i < ixPages.Count; i++)
-            {
-                pages[i] = (ixPages[i], vecixPages[i]);
-            }
+            var vixPages = _sessionFactory.ReadPageInfoFromDisk(_vixpFileName);
 
             var hits = new ConcurrentBag<Hit>();
             var bufferSize = int.Parse(_config.Get("read_buffer_size") ?? "4096");
@@ -152,11 +146,11 @@ namespace Sir.Store
             using (var mmf = _sessionFactory.OpenMMF(_ixFileName))
             using (var vmmf = _sessionFactory.OpenMMF(_vecFileName))
             {
-                //foreach(var page in pages)
-                Parallel.ForEach(pages, page =>
+                for(int i = 0; i < ixPages.Count; i++)
+                //Parallel.ForEach(ixPages, (ixpage, state, i) =>
                 {
-                    var ixpage = page.ixPage;
-                    var vpage = page.vecixPage;
+                    var ixpage = ixPages[i];
+                    var vpage = vixPages[i];
 
                     using (var indexStream = mmf.CreateViewStream(ixpage.offset, ixpage.length, MemoryMappedFileAccess.Read))
                     using (var vectorStream = vmmf.CreateViewStream(vpage.offset, vpage.length, MemoryMappedFileAccess.Read))
@@ -170,7 +164,7 @@ namespace Sir.Store
 
                         hits.Add(hit);
                     }
-                });
+                }//);
             }
 
             this.Log($"scan took {time.Elapsed}");

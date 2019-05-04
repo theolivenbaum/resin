@@ -10,13 +10,12 @@ namespace Sir.Store
     public class DocIndexReader
     {
         private readonly Stream _stream;
-        private static int _blockSize = sizeof(long) + sizeof(int);
 
         public int NumOfDocs
         {
             get
             {
-                return ((int)_stream.Length / _blockSize) - 1;
+                return ((int)_stream.Length / DocIndexWriter.BlockSize) - 1;
             }
         }
 
@@ -32,12 +31,12 @@ namespace Sir.Store
         /// <returns>The offset and length of a document's key_id/value_id map</returns>
         public async Task<(long offset, int length)> ReadAsync(long docId)
         {
-            var offs = docId * _blockSize;
+            var offs = docId * DocIndexWriter.BlockSize;
 
             _stream.Seek(offs, SeekOrigin.Begin);
 
-            var buf = new byte[_blockSize];
-            var read = await _stream.ReadAsync(buf, 0, _blockSize);
+            var buf = new byte[DocIndexWriter.BlockSize];
+            var read = await _stream.ReadAsync(buf, 0, DocIndexWriter.BlockSize);
 
             if (read == 0)
             {
@@ -49,12 +48,12 @@ namespace Sir.Store
 
         public (long offset, int length) Read(long docId)
         {
-            var offs = docId * _blockSize;
+            var offs = docId * DocIndexWriter.BlockSize;
 
             _stream.Seek(offs, SeekOrigin.Begin);
 
-            var buf = new byte[_blockSize];
-            var read = _stream.Read(buf, 0, _blockSize);
+            var buf = new byte[DocIndexWriter.BlockSize];
+            var read = _stream.Read(buf, 0, DocIndexWriter.BlockSize);
 
             if (read == 0)
             {

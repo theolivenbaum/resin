@@ -16,10 +16,9 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
-        private readonly IDictionary<long, VectorNode> _dirty;
-        private readonly Stream _vectorStream;
-        private readonly long _vectorPageOffset;
-        private readonly string _vectorPageIndexStreamFileName;
+        private readonly ConcurrentDictionary<long, VectorNode> _dirty;
+        private readonly ConcurrentDictionary<long, Stream> _vectorStreams;
+        private readonly ConcurrentDictionary<long, long> _vectorStreamStartPositions;
         private bool _flushed;
         private bool _flushing;
         private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _modelBuilder;
@@ -36,9 +35,8 @@ namespace Sir.Store
             _config = config;
             _tokenizer = tokenizer;
             _dirty = new ConcurrentDictionary<long, VectorNode>();
-            _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, string.Format("{0}.vec", CollectionId)));
-            _vectorPageOffset = _vectorStream.Position;
-            _vectorPageIndexStreamFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.vecixp", CollectionId));
+            _vectorStreams = new ConcurrentDictionary<long, Stream>();
+            _vectorStreamStartPositions = new ConcurrentDictionary<long, long>();
 
             var numThreads = int.Parse(_config.Get("write_thread_count"));
 
@@ -106,10 +104,11 @@ namespace Sir.Store
         private void BuildModel((long docId, long keyId, AnalyzedString tokens) item)
         {
             var ix = GetOrCreateIndex(item.keyId);
+            var vectorStream = GetOrCreateVectorStream(item.keyId);
 
             foreach (var vector in item.tokens.Embeddings())
             {
-                ix.Add(new VectorNode(vector, item.docId), CosineSimilarity.Term, _vectorStream);
+                ix.Add(new VectorNode(vector, item.docId), CosineSimilarity.Term, vectorStream);
             }
         }
 
@@ -127,42 +126,40 @@ namespace Sir.Store
                 _modelBuilder.Join();
             }
 
-            long vectorPageLength;
-
-            using (_vectorStream)
-            {
-                _vectorStream.Flush();
-
-                vectorPageLength = _vectorStream.Position - _vectorPageOffset;
-
-                _vectorStream.Close();
-            }
-
-            using (var vecPageIndexStream = SessionFactory.CreateAppendStream(_vectorPageIndexStreamFileName))
-            using (var vecPageIndexWriter = new PageIndexWriter(vecPageIndexStream))
-            {
-                vecPageIndexWriter.Write(_vectorPageOffset, vectorPageLength);
-            }
-
-            var tasks = new Task[_dirty.Count];
-            var taskId = 0;
-            var writers = new List<ColumnSerializer>();
+            var columnTasks = new ConcurrentBag<Task>();
+            var columnWriters = new ConcurrentBag<ColumnSerializer>();
 
             foreach (var column in _dirty)
             {
-                var columnWriter = new ColumnSerializer(
+                var writer = new ColumnSerializer(
                     CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config, CollectionName));
 
-                writers.Add(columnWriter);
+                columnWriters.Add(writer);
 
-                tasks[taskId++] = columnWriter.CreateColumnSegment(column.Value);
+                columnTasks.Add(writer.CreateColumnSegment(column.Value));
+
+                var vixpFileName = Path.Combine(
+                    SessionFactory.Dir,
+                    $"{CollectionId}.{column.Key}.vixp");
+
+                using (var vectorStream = _vectorStreams[column.Key])
+                using (var vixpStream = SessionFactory.CreateAppendStream(vixpFileName))
+                using (var vixpWriter = new PageIndexWriter(vixpStream))
+                {
+                    vectorStream.Flush();
+
+                    var offset = _vectorStreamStartPositions[column.Key];
+                    var length = vectorStream.Length - offset;
+
+                    vixpWriter.Write(offset, length);
+                }
             }
 
-            Task.WaitAll(tasks);
+            Task.WaitAll(columnTasks.ToArray());
 
-            foreach (var w in writers)
+            foreach(var writer in columnWriters)
             {
-                w.Dispose();
+                writer.Dispose();
             }
 
             _flushed = true;
@@ -205,25 +202,22 @@ namespace Sir.Store
             }
         }
 
-        private static readonly object _syncIndexAccess = new object();
-
         private VectorNode GetOrCreateIndex(long keyId)
         {
-            VectorNode root;
+            return _dirty.GetOrAdd(keyId, new VectorNode());
+        }
 
-            if (!_dirty.TryGetValue(keyId, out root))
-            {
-                lock (_syncIndexAccess)
+        private Stream GetOrCreateVectorStream(long keyId)
+        {
+            return _vectorStreams.GetOrAdd(keyId, key =>
                 {
-                    if (!_dirty.TryGetValue(keyId, out root))
-                    {
-                        root = new VectorNode();
-                        _dirty.Add(keyId, root);
-                    }
-                }
-            }
+                    var stream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.{keyId}.vec"));
 
-            return root;
+                    _vectorStreamStartPositions[keyId] = stream.Position;
+
+                    return stream;
+                }
+            );
         }
 
         public void Dispose()
