@@ -157,7 +157,8 @@ namespace Sir.HttpServer.Features
             using (var indexSession = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
             {
                 docId = await writeSession.Write(doc);
-                indexSession.Index(doc);
+                indexSession.Put(doc);
+                indexSession.Commit();
             }
 
             return docId;

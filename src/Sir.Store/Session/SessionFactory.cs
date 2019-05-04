@@ -68,8 +68,10 @@ namespace Sir.Store
                 foreach (var doc in job.Documents)
                 {
                     await writeSession.Write(doc);
-                    indexSession.Index(doc);
+                    indexSession.Put(doc);
                 }
+
+                await indexSession.Commit();
             }
 
             _writeSync.Release();
@@ -242,9 +244,9 @@ namespace Sir.Store
             return new WriteSession(collectionName, collectionId, this);
         }
 
-        public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId, params long[] excludeKeyIds)
+        public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId)
         {
-            return new TermIndexSession(collectionName, collectionId, this, _tokenizer, _config, excludeKeyIds);
+            return new TermIndexSession(collectionName, collectionId, this, _tokenizer, _config);
         }
 
         public BowIndexSession CreateBOWSession(string collectionName, ulong collectionId)

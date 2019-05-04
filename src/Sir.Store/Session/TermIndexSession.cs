@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -19,18 +18,16 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<long, VectorNode> _dirty;
         private readonly ConcurrentDictionary<long, Stream> _vectorStreams;
         private readonly ConcurrentDictionary<long, long> _vectorStreamStartPositions;
-        private bool _flushed;
-        private bool _flushing;
+        private bool _committed;
+        private bool _committing;
         private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _modelBuilder;
-        private readonly long[] _excludeKeyIds;
 
         public TermIndexSession(
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
             ITokenizer tokenizer,
-            IConfigurationProvider config,
-            params long[] excludeKeyIds) : base(collectionName, collectionId, sessionFactory)
+            IConfigurationProvider config) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
             _tokenizer = tokenizer;
@@ -41,16 +38,14 @@ namespace Sir.Store
             var numThreads = int.Parse(_config.Get("write_thread_count"));
 
             _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>(
-                numThreads, BuildModel);
-
-            _excludeKeyIds = excludeKeyIds;
+                numThreads, BuildModel);;
         }
 
         /// <summary>
         /// Fields prefixed with "___" or "__" will not be indexed.
         /// Fields prefixed with "_" will not be tokenized.
         /// </summary>
-        public void Index(IDictionary document)
+        public void Put(IDictionary document)
         {
             var docId = (long)document["___docid"];
 
@@ -63,12 +58,6 @@ namespace Sir.Store
                 {
                     var keyHash = key.ToHash();
                     var keyId = SessionFactory.GetKeyId(CollectionId, keyHash);
-
-                    if (_excludeKeyIds.Contains(keyId))
-                    {
-                        continue;
-                    }
-
                     var val = document[key];
                     var str = val as string;
 
@@ -112,12 +101,12 @@ namespace Sir.Store
             }
         }
 
-        public void Flush()
+        public async Task Commit()
         {
-            if (_flushing || _flushed)
+            if (_committing || _committed)
                 return;
 
-            _flushing = true;
+            _committing = true;
 
             this.Log("waiting for model builder");
 
@@ -126,44 +115,35 @@ namespace Sir.Store
                 _modelBuilder.Join();
             }
 
-            var columnTasks = new ConcurrentBag<Task>();
-            var columnWriters = new ConcurrentBag<ColumnSerializer>();
-
             foreach (var column in _dirty)
             {
-                var writer = new ColumnSerializer(
-                    CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config, CollectionName));
-
-                columnWriters.Add(writer);
-
-                columnTasks.Add(writer.CreateColumnSegment(column.Value));
-
-                var vixpFileName = Path.Combine(
-                    SessionFactory.Dir,
-                    $"{CollectionId}.{column.Key}.vixp");
-
-                using (var vectorStream = _vectorStreams[column.Key])
-                using (var vixpStream = SessionFactory.CreateAppendStream(vixpFileName))
-                using (var vixpWriter = new PageIndexWriter(vixpStream))
+                using (var writer = new ColumnSerializer(
+                    CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config, CollectionName)))
                 {
-                    vectorStream.Flush();
+                    var wt = writer.CreateColumnSegment(column.Value);
 
-                    var offset = _vectorStreamStartPositions[column.Key];
-                    var length = vectorStream.Length - offset;
+                    var vixpFileName = Path.Combine(
+                        SessionFactory.Dir,
+                        $"{CollectionId}.{column.Key}.vixp");
 
-                    vixpWriter.Write(offset, length);
+                    using (var vectorStream = _vectorStreams[column.Key])
+                    using (var vixpStream = SessionFactory.CreateAppendStream(vixpFileName))
+                    using (var vixpWriter = new PageIndexWriter(vixpStream))
+                    {
+                        vectorStream.Flush();
+
+                        var offset = _vectorStreamStartPositions[column.Key];
+                        var length = vectorStream.Length - offset;
+
+                        vixpWriter.Write(offset, length);
+                    }
+
+                    await wt;
                 }
             }
 
-            Task.WaitAll(columnTasks.ToArray());
-
-            foreach(var writer in columnWriters)
-            {
-                writer.Dispose();
-            }
-
-            _flushed = true;
-            _flushing = false;
+            _committed = true;
+            _committing = false;
 
             this.Log(string.Format("***FLUSHED***"));
         }
@@ -222,7 +202,6 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            Flush();
         }
     }
 }

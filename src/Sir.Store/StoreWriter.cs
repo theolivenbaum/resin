@@ -60,8 +60,10 @@ namespace Sir.Store
                 foreach (var doc in job.Documents)
                 {
                     await writeSession.Write(doc);
-                    indexSession.Index(doc);
+                    indexSession.Put(doc);
                 }
+
+                await indexSession.Commit();
             }
 
             job.Done = true;

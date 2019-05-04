@@ -23,7 +23,7 @@ namespace Sir.DbUtil
             {
                 // example: index C:\projects\resin\src\Sir.HttpServer\App_Data www 0 10000 1000
 
-                Index(
+                await Index(
                     dir: args[1],
                     collectionName: args[2],
                     skip: int.Parse(args[3]),
@@ -140,7 +140,7 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void Index(string dir, string collectionName, int skip, int take, int batchSize)
+        private static async Task Index(string dir, string collectionName, int skip, int take, int batchSize)
         {
             var files = Directory.GetFiles(dir, "*.docs");
             var fullTime = Stopwatch.StartNew();
@@ -166,12 +166,14 @@ namespace Sir.DbUtil
                                 var timer = Stopwatch.StartNew();
 
                                 using (var indexSession = sessionFactory.CreateIndexSession(
-                                    collectionName, collectionId, 0, 1, 2, 3, 6))
+                                    collectionName, collectionId))
                                 {
                                     foreach (var doc in batch)
                                     {
-                                        indexSession.Index(doc);
+                                        indexSession.Put(doc);
                                     }
+
+                                    await indexSession.Commit();
                                 }
 
                                 Logging.Log(null, string.Format("indexed batch #{0} in {1}", batchCount++, timer.Elapsed));
