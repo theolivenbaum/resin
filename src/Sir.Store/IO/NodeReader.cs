@@ -146,11 +146,11 @@ namespace Sir.Store
             using (var mmf = _sessionFactory.OpenMMF(_ixFileName))
             using (var vmmf = _sessionFactory.OpenMMF(_vecFileName))
             {
-                for(int i = 0; i < ixPages.Count; i++)
-                //Parallel.ForEach(ixPages, (ixpage, state, i) =>
+                //for(int i = 0; i < ixPages.Count; i++)
+                Parallel.ForEach(ixPages, (ixpage, state, i) =>
                 {
-                    var ixpage = ixPages[i];
-                    var vpage = vixPages[i];
+                    //var ixpage = ixPages[i];
+                    var vpage = vixPages[(int)i];
 
                     using (var indexStream = mmf.CreateViewStream(ixpage.offset, ixpage.length, MemoryMappedFileAccess.Read))
                     using (var vectorStream = vmmf.CreateViewStream(vpage.offset, vpage.length, MemoryMappedFileAccess.Read))
@@ -164,7 +164,7 @@ namespace Sir.Store
 
                         hits.Add(hit);
                     }
-                }//);
+                });
             }
 
             this.Log($"scan took {time.Elapsed}");
