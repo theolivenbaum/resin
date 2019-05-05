@@ -44,8 +44,6 @@ namespace Sir.Store
         /// <returns>Document ID</returns>
         public void Write(IDictionary model)
         {
-            model["__created"] = DateTime.Now.ToBinary();
-
             var docMap = new List<(long keyId, long valId)>();
 
             if (model.Contains("___docid") && !model.Contains("__original"))
@@ -90,10 +88,11 @@ namespace Sir.Store
                 docMap.Add((keyId, valId));
             }
 
-            var docMeta = _docs.Append(docMap);
-            var docId = _docIx.Append(docMeta.offset, docMeta.length);
+            model["__created"] = DateTime.Now.ToBinary();
 
-            model["___docid"] = docId;
+            var docMeta = _docs.Append(docMap);
+
+            model["___docid"] = _docIx.Append(docMeta.offset, docMeta.length);
         }
     }
 }
