@@ -137,18 +137,18 @@ namespace Sir.Store
         private ConcurrentBag<Hit> ClosestMatchInMemoryMap(SortedList<long, int> vector, (float identicalAngle, float foldAngle) similarity)
         {
             var time = Stopwatch.StartNew();
-            var ixPages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
+            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
             var hits = new ConcurrentBag<Hit>();
 
             using (var mmf = _sessionFactory.OpenMMF(_ixFileName))
             using (var vmmf = _sessionFactory.OpenMMF(_vecFileName))
             {
-                for (int i = 0; i < ixPages.Count; i++)
+                for (int i = 0; i < pages.Count; i++)
                 //Parallel.ForEach(ixPages, ixpage =>
                 {
-                    var ixpage = ixPages[i];
+                    var page = pages[i];
 
-                    using (var indexStream = mmf.CreateViewStream(ixpage.offset, ixpage.length, MemoryMappedFileAccess.Read))
+                    using (var indexStream = mmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
                     using (var vectorView = vmmf.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read))
                     {
                         var hit = ClosestMatchInPage(
@@ -340,7 +340,134 @@ namespace Sir.Store
             (float identicalAngle, float foldAngle) similarity
         )
         {
-            throw new NotImplementedException();
+            Span<byte> block = new byte[VectorNode.BlockSize];
+
+            var read = indexStream.Read(block);
+
+            VectorNode best = null;
+            float highscore = 0;
+
+            while (read > 0)
+            {
+                var vecOffset = BitConverter.ToInt64(block.Slice(0, sizeof(long)));
+                var componentCount = BitConverter.ToInt32(block.Slice(sizeof(long) + sizeof(long), sizeof(int)));
+                var cursorVector = VectorOperations.DeserializeVector(vecOffset, componentCount, vectorView);
+                var cursorTerminator = block[block.Length - 1];
+                var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));
+
+                var angle = cursorVector.CosAngle(node);
+
+                if (angle >= similarity.identicalAngle)
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    break;
+                }
+                else if (angle > similarity.foldAngle)
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    // We need to determine if we can traverse further left.
+                    bool canGoLeft = cursorTerminator == 0 || cursorTerminator == 1;
+
+                    if (canGoLeft)
+                    {
+                        // There exists either a left and a right child or just a left child.
+                        // Either way, we want to go left and the next node in bitmap is the left child.
+
+                        read = indexStream.Read(block);
+                    }
+                    else
+                    {
+                        // There is no left child.
+
+                        break;
+                    }
+                }
+                else
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    // We need to determine if we can traverse further to the right.
+
+                    if (cursorTerminator == 0)
+                    {
+                        // There exists a left and a right child.
+                        // Next node in bitmap is the left child. 
+                        // To find cursor's right child we must skip over the left tree.
+
+                        SkipTree(indexStream);
+                        read = indexStream.Read(block);
+                    }
+                    else if (cursorTerminator == 2)
+                    {
+                        // Next node in bitmap is the right child,
+                        // which is good because we want to go right.
+
+                        read = indexStream.Read(block);
+                    }
+                    else
+                    {
+                        // There is no right child.
+
+                        break;
+                    }
+                }
+            }
+
+            return new Hit
+            {
+                Score = highscore,
+                Node = best
+            };
         }
 
         private void SkipTree(Stream indexStream)

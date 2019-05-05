@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Sir
@@ -40,7 +41,7 @@ namespace Sir
                 text = r.ReadToEnd();
             }
 
-            foreach (var line in text.Split('\n'))
+            foreach (var line in text.Split('\n', StringSplitOptions.RemoveEmptyEntries))
             {
                 var segs = line.Split('=');
 

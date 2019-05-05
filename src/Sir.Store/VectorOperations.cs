@@ -241,7 +241,32 @@ namespace Sir
 
         public static SortedList<long, int> DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView)
         {
-            throw new NotImplementedException();
+            if (vectorOffset < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(vectorOffset));
+            }
+
+            if (vectorView == null)
+            {
+                throw new ArgumentNullException(nameof(vectorView));
+            }
+
+            // Deserialize term vector
+            var vec = new SortedList<long, int>(componentCount);
+            Span<byte> vecBuf = stackalloc byte[componentCount * VectorNode.ComponentSize];
+            var offs = vectorOffset;
+
+            for (int i = 0; i < componentCount; i++)
+            {
+                var key = vectorView.ReadInt64(offs);
+                var val = vectorView.ReadInt32(offs + sizeof(long));
+
+                vec.Add(key, val);
+
+                offs += VectorNode.ComponentSize;
+            }
+
+            return vec;
         }
 
         public static async Task<SortedList<long, int>> DeserializeVectorAsync(long vectorOffset, Stream vectorStream)
