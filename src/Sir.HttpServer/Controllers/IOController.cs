@@ -16,7 +16,7 @@ namespace Sir.HttpServer.Controllers
         }
 
         [HttpPost("{*collectionName}")]
-        public IActionResult Post(string collectionName)
+        public async Task<IActionResult> Post(string collectionName)
         {
             if (collectionName == null)
             {
@@ -32,7 +32,7 @@ namespace Sir.HttpServer.Controllers
 
             try
             {
-                ResponseModel result = writer.Write(collectionName, Request);
+                ResponseModel result = await writer.Write(collectionName, Request);
 
                 if (result.Stream != null)
                 {

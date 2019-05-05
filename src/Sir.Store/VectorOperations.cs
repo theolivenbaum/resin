@@ -207,6 +207,10 @@ namespace Sir
 
         public static SortedList<long, int> DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
         {
+            if (vectorOffset < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(vectorOffset));
+            }
             if (vectorStream == null)
             {
                 throw new ArgumentNullException(nameof(vectorStream));

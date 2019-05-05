@@ -189,7 +189,7 @@ namespace Sir.Store
         {
             return _vectorStreams.GetOrAdd(keyId, key =>
                 {
-                    var stream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.{keyId}.vec"));
+                    var stream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.{key}.vec"));
 
                     _vectorStreamStartPositions[keyId] = stream.Position;
 

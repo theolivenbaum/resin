@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
@@ -25,12 +26,12 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
-        public ResponseModel Write(string collectionName, HttpRequest request)
+        public async Task<ResponseModel> Write(string collectionName, HttpRequest request)
         {
             var documents = Deserialize<IEnumerable<IDictionary>>(request.Body);
             var job = new Job(collectionName, documents);
 
-            _sessionFactory.Write(job);
+            await _sessionFactory.Write(job);
 
             return new ResponseModel();
         }

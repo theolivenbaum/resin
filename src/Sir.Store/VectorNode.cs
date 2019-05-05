@@ -186,7 +186,7 @@ namespace Sir.Store
 
         private readonly object _sync = new object();
 
-        public VectorNode Add(
+        public void Add(
             VectorNode node, 
             (float identicalAngle, float foldAngle) similarity, 
             Stream vectorStream = null)
@@ -197,7 +197,6 @@ namespace Sir.Store
             node._weight = 0;
 
             var cursor = this;
-            var junction = this;
 
             while (cursor != null)
             {
@@ -210,7 +209,6 @@ namespace Sir.Store
                         cursor.Merge(node);
                     }
 
-                    junction = cursor;
                     break;
                 }
                 else if (angle > similarity.foldAngle)
@@ -226,7 +224,6 @@ namespace Sir.Store
                                 if (vectorStream != null)
                                     cursor.Left.SerializeVector(vectorStream);
 
-                                junction = node;
                                 break;
                             }
                             else
@@ -253,7 +250,6 @@ namespace Sir.Store
                                 if (vectorStream != null)
                                     cursor.Right.SerializeVector(vectorStream);
 
-                                junction = node;
                                 break;
                             }
                             else
@@ -268,8 +264,6 @@ namespace Sir.Store
                     }
                 }
             }
-
-            return junction;
         }
 
         public void Merge(VectorNode node)

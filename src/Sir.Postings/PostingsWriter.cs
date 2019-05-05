@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Sir.Postings
 {
@@ -19,7 +20,7 @@ namespace Sir.Postings
 
         private static object Sync = new object();
 
-        public ResponseModel Write(string collectionName, HttpRequest request)
+        public async Task<ResponseModel> Write(string collectionName, HttpRequest request)
         {
             try
             {
@@ -27,7 +28,8 @@ namespace Sir.Postings
                 var timer = Stopwatch.StartNew();
 
                 var payload = new MemoryStream();
-                request.Body.CopyTo(payload);
+
+                await request.Body.CopyToAsync(payload);
 
                 if (request.ContentLength.Value != payload.Length)
                 {

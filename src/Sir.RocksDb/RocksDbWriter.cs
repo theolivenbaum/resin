@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 namespace Sir.RocksDb
@@ -20,7 +21,7 @@ namespace Sir.RocksDb
             _writeLock = new Semaphore(1, 2, "Sir.RocksDb");
         }
 
-        public ResponseModel Write(string collectionId, HttpRequest request)
+        public async Task<ResponseModel> Write(string collectionId, HttpRequest request)
         {
             var type = request.Query["type"].ToString();
             var typeId = type.ToHash();
@@ -32,7 +33,7 @@ namespace Sir.RocksDb
 
             var requestStream = new MemoryStream();
 
-            request.Body.CopyTo(requestStream);
+            await request.Body.CopyToAsync(requestStream);
 
             _writeLock.WaitOne();
 

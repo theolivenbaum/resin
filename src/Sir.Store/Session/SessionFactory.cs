@@ -17,7 +17,7 @@ namespace Sir.Store
         private readonly ITokenizer _tokenizer;
         private readonly IConfigurationProvider _config;
         private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
-        private readonly ConcurrentDictionary<string, object> _collectionLocks;
+        private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private readonly Semaphore _writeSync;
         private readonly ConcurrentBag<MemoryMappedFile> _mmfs;
 
@@ -30,7 +30,7 @@ namespace Sir.Store
             _keys = LoadKeys();
             _tokenizer = tokenizer;
             _config = config;
-            _collectionLocks = new ConcurrentDictionary<string, object>();
+            _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _mmfs = new ConcurrentBag<MemoryMappedFile>();
 
             bool createdSystemWideSem;
@@ -44,7 +44,7 @@ namespace Sir.Store
             }
         }
 
-        public void Write(Job job)
+        public async Task Write(Job job)
         {
             _writeSync.WaitOne();
 
@@ -63,16 +63,18 @@ namespace Sir.Store
             var colId = job.Collection.ToHash();
 
             using (var writeSession = CreateWriteSession(job.Collection, colId))
-            //using (var indexSession = CreateIndexSession(job.Collection, colId))
+            using (var indexSession = CreateIndexSession(job.Collection, colId))
             {
                 foreach (var doc in job.Documents)
                 {
                     writeSession.Write(doc);
-                    //indexSession.Put(doc);
+                    indexSession.Put(doc);
                 }
 
-                //await indexSession.Commit();
+                await indexSession.Commit();
             }
+
+            _pageInfo.Clear();
 
             _writeSync.Release();
 
@@ -83,27 +85,13 @@ namespace Sir.Store
 
         public IList<(long offset, long length)> ReadPageInfoFromDisk(string ixpFileName)
         {
-            using (var ixpStream = CreateReadStream(ixpFileName))
+            return _pageInfo.GetOrAdd(ixpFileName, key =>
             {
-                return new PageIndexReader(ixpStream).ReadAll();
-            }
-        }
-
-        public async Task<IList<(long offset, long length)>> ReadPageInfoFromDiskAsync(string ixpFileName)
-        {
-            using (var ixpStream = CreateReadStream(ixpFileName))
-            {
-                return await new PageIndexReader(ixpStream).ReadAllAsync();
-            }
-        }
-
-        public long GetStreamLength(string ixpFileName)
-        {
-            var pages = ReadPageInfoFromDisk(ixpFileName);
-            var last = pages[pages.Count - 1];
-            var len = last.offset + last.length;
-
-            return len;
+                using (var ixpStream = CreateReadStream(key))
+                {
+                    return new PageIndexReader(ixpStream).ReadAll();
+                }
+            });
         }
 
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> LoadKeys()
@@ -238,9 +226,6 @@ namespace Sir.Store
 
         public WriteSession CreateWriteSession(string collectionName, ulong collectionId)
         {
-            var sync = _collectionLocks.GetOrAdd(collectionName, new object());
-
-
             return new WriteSession(collectionName, collectionId, this);
         }
 

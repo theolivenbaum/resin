@@ -37,7 +37,7 @@ namespace Sir.Store
 
             var page = column.SerializeTree(_ixStream);
 
-            await _ixStream.FlushAsync();
+            _ixStream.Flush();
             _ixPageIndexWriter.Write(page.offset, page.length);
             _ixPageIndexWriter.Flush();
 

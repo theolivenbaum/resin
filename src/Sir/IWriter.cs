@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 
 namespace Sir
 {
@@ -7,6 +8,6 @@ namespace Sir
     /// </summary>
     public interface IWriter : IPlugin
     {
-        ResponseModel Write(string collectionId, HttpRequest request);
+        Task<ResponseModel> Write(string collectionId, HttpRequest request);
     }
 }
