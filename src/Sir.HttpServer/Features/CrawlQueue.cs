@@ -147,19 +147,15 @@ namespace Sir.HttpServer.Features
             }
         }
 
-        public async Task<long> ExecuteWrite(string collectionName, IDictionary doc)
+        public async Task ExecuteWrite(string collectionName, IDictionary doc)
         {
-            long docId;
-
             using (var writeSession = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash()))
             using (var indexSession = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
             {
-                docId = writeSession.Write(doc);
+                writeSession.Write(doc);
                 indexSession.Put(doc);
                 await indexSession.Commit();
             }
-
-            return docId;
         }
 
         private string GetWebString(Uri uri)

@@ -120,20 +120,9 @@ namespace Sir.Store
                 {
                     var wt = writer.CreateColumnSegment(column.Value);
 
-                    var vixpFileName = Path.Combine(
-                        SessionFactory.Dir,
-                        $"{CollectionId}.{column.Key}.vixp");
-
                     using (var vectorStream = _vectorStreams[column.Key])
-                    using (var vixpStream = SessionFactory.CreateAppendStream(vixpFileName))
-                    using (var vixpWriter = new PageIndexWriter(vixpStream))
                     {
                         vectorStream.Flush();
-
-                        var offset = _vectorStreamStartPositions[column.Key];
-                        var length = vectorStream.Length - offset;
-
-                        vixpWriter.Write(offset, length);
                     }
 
                     await wt;

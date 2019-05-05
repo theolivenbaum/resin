@@ -138,7 +138,6 @@ namespace Sir.Store
         {
             var time = Stopwatch.StartNew();
             var ixPages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
-            var vixPages = _sessionFactory.ReadPageInfoFromDisk(_vixpFileName);
             var hits = new ConcurrentBag<Hit>();
 
             using (var mmf = _sessionFactory.OpenMMF(_ixFileName))
@@ -148,17 +147,15 @@ namespace Sir.Store
                 //Parallel.ForEach(ixPages, ixpage =>
                 {
                     var ixpage = ixPages[i];
-                    var vixpage = vixPages[i];
 
                     using (var indexStream = mmf.CreateViewStream(ixpage.offset, ixpage.length, MemoryMappedFileAccess.Read))
-                    using (var vectorStream = vmmf.CreateViewStream(vixpage.offset, vixpage.length, MemoryMappedFileAccess.Read))
+                    using (var vectorView = vmmf.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read))
                     {
                         var hit = ClosestMatchInPage(
                                     vector,
                                     indexStream,
-                                    vectorStream,
-                                    similarity,
-                                    vixpage.offset);
+                                    vectorView,
+                                    similarity);
 
                         hits.Add(hit);
                     }
@@ -203,8 +200,7 @@ namespace Sir.Store
             SortedList<long, int> node,
             Stream indexStream,
             Stream vectorStream,
-            (float identicalAngle, float foldAngle) similarity,
-            long offset = 0
+            (float identicalAngle, float foldAngle) similarity
         )
         {
             Span<byte> block = new byte[VectorNode.BlockSize];
@@ -216,7 +212,7 @@ namespace Sir.Store
 
             while (read > 0)
             {
-                var vecOffset = BitConverter.ToInt64(block.Slice(0, sizeof(long))) - offset;
+                var vecOffset = BitConverter.ToInt64(block.Slice(0, sizeof(long)));
                 var componentCount = BitConverter.ToInt32(block.Slice(sizeof(long) + sizeof(long), sizeof(int)));
                 var cursorVector = VectorOperations.DeserializeVector(vecOffset, componentCount, vectorStream);
                 var cursorTerminator = block[block.Length - 1];
@@ -335,6 +331,16 @@ namespace Sir.Store
                 Score = highscore,
                 Node = best
             };
+        }
+
+        private Hit ClosestMatchInPage(
+            SortedList<long, int> node,
+            Stream indexStream,
+            MemoryMappedViewAccessor vectorView,
+            (float identicalAngle, float foldAngle) similarity
+        )
+        {
+            throw new NotImplementedException();
         }
 
         private VectorNode ReadNode(Stream indexStream, Stream vectorStream)

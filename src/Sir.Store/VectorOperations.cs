@@ -211,24 +211,20 @@ namespace Sir
             {
                 throw new ArgumentOutOfRangeException(nameof(vectorOffset));
             }
-            if (vectorStream == null)
-            {
-                throw new ArgumentNullException(nameof(vectorStream));
-            }
 
             // Deserialize term vector
             var vec = new SortedList<long, int>(componentCount);
-            var vecBuf = new byte[componentCount * VectorNode.ComponentSize];
+            Span<byte> vecBuf = stackalloc byte[componentCount * VectorNode.ComponentSize];
 
             vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
-            vectorStream.Read(vecBuf, 0, vecBuf.Length);
+            vectorStream.Read(vecBuf);
 
             var offs = 0;
 
             for (int i = 0; i < componentCount; i++)
             {
-                var key = BitConverter.ToInt64(vecBuf, offs);
-                var val = BitConverter.ToInt32(vecBuf, offs + sizeof(long));
+                var key = BitConverter.ToInt64(vecBuf.Slice(offs, sizeof(long)));
+                var val = BitConverter.ToInt32(vecBuf.Slice(offs + sizeof(long), sizeof(int)));
 
                 vec.Add(key, val);
 
@@ -236,6 +232,11 @@ namespace Sir
             }
 
             return vec;
+        }
+
+        public static SortedList<long, int> DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView)
+        {
+            throw new NotImplementedException();
         }
 
         public static async Task<SortedList<long, int>> DeserializeVectorAsync(long vectorOffset, Stream vectorStream)

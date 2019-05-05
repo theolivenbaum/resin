@@ -42,7 +42,7 @@ namespace Sir.Store
         /// The "___docid" field, if it exists, will be persisted as "__original", if that field doesn't already exist.
         /// </summary>
         /// <returns>Document ID</returns>
-        public long Write(IDictionary model)
+        public void Write(IDictionary model)
         {
             model["__created"] = DateTime.Now.ToBinary();
 
@@ -94,8 +94,6 @@ namespace Sir.Store
             var docId = _docIx.Append(docMeta.offset, docMeta.length);
 
             model["___docid"] = docId;
-
-            return docId;
         }
     }
 }

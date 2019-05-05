@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Sir.Core;
+using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -65,10 +67,13 @@ namespace Sir.Store
             using (var writeSession = CreateWriteSession(job.Collection, colId))
             using (var indexSession = CreateIndexSession(job.Collection, colId))
             {
-                foreach (var doc in job.Documents)
+                using (var queue = new ProducerConsumerQueue<IDictionary>(1, indexSession.Put))
                 {
-                    writeSession.Write(doc);
-                    indexSession.Put(doc);
+                    foreach (var doc in job.Documents)
+                    {
+                        queue.Enqueue(doc);
+                        writeSession.Write(doc);
+                    }
                 }
 
                 await indexSession.Commit();
