@@ -86,8 +86,6 @@ namespace Sir.Store
                     }
                 }
             }
-
-            this.Log("analyzed document {0} ", docId);
         }
 
         private void BuildModel((long docId, long keyId, AnalyzedString tokens) item)

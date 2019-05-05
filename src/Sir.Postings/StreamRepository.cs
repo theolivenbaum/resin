@@ -20,55 +20,6 @@ namespace Sir.Postings
             _cache = new ConcurrentDictionary<(ulong, long), IList<long>>();
         }
 
-        public async Task Concat(ulong collectionId, IDictionary<long, IList<long>> offsets)
-        {
-            using (var data = CreateReadableWritableDataStream(collectionId))
-            {
-                foreach (var list in offsets)
-                {
-                    var canonical = list.Key;
-
-                    foreach (var offset in list.Value)
-                    {
-                        await Concat(canonical, offset, data);
-                    }
-
-                    this.Log($"concatenated {canonical}");
-                }
-            }
-        }
-
-        private async Task Concat(long offset1, long offset2, Stream data)
-        {
-            if (offset1 == offset2)
-            {
-                return;
-            }
-
-            var offset2Buf = BitConverter.GetBytes(offset2);
-
-            data.Seek(offset1 + (sizeof(long) * 2), SeekOrigin.Begin);
-
-            var lastPageBuf = new byte[sizeof(long)];
-            await data.ReadAsync(lastPageBuf);
-            var lastPage = BitConverter.ToInt64(lastPageBuf, 0);
-
-            if (lastPage == offset1)
-            {
-                data.Seek(offset1 + sizeof(ulong), SeekOrigin.Begin);
-
-                await data.WriteAsync(offset2Buf);
-                await data.WriteAsync(offset2Buf);
-            }
-            else
-            {
-                data.Seek(lastPage + sizeof(ulong), SeekOrigin.Begin);
-
-                await data.WriteAsync(offset2Buf);
-                await data.WriteAsync(offset2Buf);
-            }
-        }
-
         public async Task<IEnumerable<long>> Read(ulong collectionId, IList<long> offsets)
         {
             var result = new HashSet<long>();

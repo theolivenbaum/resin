@@ -44,7 +44,7 @@ namespace Sir.Store
             }
         }
 
-        public async Task Write(Job job)
+        public void Write(Job job)
         {
             _writeSync.WaitOne();
 
@@ -63,15 +63,15 @@ namespace Sir.Store
             var colId = job.Collection.ToHash();
 
             using (var writeSession = CreateWriteSession(job.Collection, colId))
-            using (var indexSession = CreateIndexSession(job.Collection, colId))
+            //using (var indexSession = CreateIndexSession(job.Collection, colId))
             {
                 foreach (var doc in job.Documents)
                 {
-                    await writeSession.Write(doc);
-                    indexSession.Put(doc);
+                    writeSession.Write(doc);
+                    //indexSession.Put(doc);
                 }
 
-                await indexSession.Commit();
+                //await indexSession.Commit();
             }
 
             _writeSync.Release();

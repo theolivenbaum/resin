@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -156,9 +154,9 @@ namespace Sir.HttpServer.Features
             using (var writeSession = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash()))
             using (var indexSession = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
             {
-                docId = await writeSession.Write(doc);
+                docId = writeSession.Write(doc);
                 indexSession.Put(doc);
-                indexSession.Commit();
+                await indexSession.Commit();
             }
 
             return docId;

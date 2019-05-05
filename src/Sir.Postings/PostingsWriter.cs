@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Postings
 {
@@ -20,7 +19,7 @@ namespace Sir.Postings
 
         private static object Sync = new object();
 
-        public async Task<ResponseModel> Write(string collectionName, HttpRequest request)
+        public ResponseModel Write(string collectionName, HttpRequest request)
         {
             try
             {
@@ -28,7 +27,7 @@ namespace Sir.Postings
                 var timer = Stopwatch.StartNew();
 
                 var payload = new MemoryStream();
-                await request.Body.CopyToAsync(payload);
+                request.Body.CopyTo(payload);
 
                 if (request.ContentLength.Value != payload.Length)
                 {
@@ -41,39 +40,30 @@ namespace Sir.Postings
                 // A write request is either a request to write new data
                 // or a request to concat two or more existing pages.
 
-                if (request.Query.ContainsKey("concat"))
-                {
-                    await _data.Concat(collectionId, Deserialize(messageBuf));
+                this.Log(string.Format("serialized {0} bytes in {1}", messageBuf.Length, timer.Elapsed));
 
-                    return new ResponseModel();
-                }
-                else
+                timer.Restart();
+
+                MemoryStream responseStream;
+
+                lock (Sync)
                 {
-                    this.Log(string.Format("serialized {0} bytes in {1}", messageBuf.Length, timer.Elapsed));
+                    this.Log("waited for synchronization for {0}", timer.Elapsed);
 
                     timer.Restart();
 
-                    MemoryStream responseStream;
+                    responseStream = _data.Write(collectionId, messageBuf);
 
-                    lock (Sync)
-                    {
-                        this.Log("waited for synchronization for {0}", timer.Elapsed);
+                    timer.Stop();
 
-                        timer.Restart();
+                    var t = timer.ElapsedMilliseconds > 0 ? timer.ElapsedMilliseconds : 1;
 
-                        responseStream = _data.Write(collectionId, messageBuf);
-
-                        timer.Stop();
-
-                        var t = timer.ElapsedMilliseconds > 0 ? timer.ElapsedMilliseconds : 1;
-
-                        this.Log(string.Format(
-                            "wrote {0} bytes in {1}: {2} bytes/ms",
-                            messageBuf.Length, timer.Elapsed, messageBuf.Length / t));
-                    }
-
-                    return new ResponseModel { Stream = responseStream, MediaType = "application/octet-stream" };
+                    this.Log(string.Format(
+                        "wrote {0} bytes in {1}: {2} bytes/ms",
+                        messageBuf.Length, timer.Elapsed, messageBuf.Length / t));
                 }
+
+                return new ResponseModel { Stream = responseStream, MediaType = "application/octet-stream" };
             }
             catch (Exception ex)
             {

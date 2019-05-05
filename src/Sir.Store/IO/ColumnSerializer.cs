@@ -25,7 +25,7 @@ namespace Sir.Store
             var pixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}", _collectionId, keyId, pageFileExtension));
             var ixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}", _collectionId, keyId, ixFileExtension));
 
-            _ixPageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAsyncAppendStream(pixFileName));
+            _ixPageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(pixFileName));
             _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
         }
 
@@ -38,8 +38,8 @@ namespace Sir.Store
             var page = column.SerializeTree(_ixStream);
 
             await _ixStream.FlushAsync();
-            await _ixPageIndexWriter.WriteAsync(page.offset, page.length);
-            await _ixPageIndexWriter.FlushAsync();
+            _ixPageIndexWriter.Write(page.offset, page.length);
+            _ixPageIndexWriter.Flush();
 
             var size = column.Size();
 

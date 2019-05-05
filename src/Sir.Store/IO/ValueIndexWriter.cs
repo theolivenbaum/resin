@@ -17,6 +17,18 @@ namespace Sir.Store
             _stream = stream;
         }
 
+        public long Append(long offset, int len, byte dataType)
+        {
+            var position = _stream.Position;
+            var index = position == 0 ? 0 : position / _blockSize;
+
+            _stream.Write(BitConverter.GetBytes(offset));
+            _stream.Write(BitConverter.GetBytes(len));
+            _stream.WriteByte(dataType);
+
+            return index;
+        }
+
         public async Task<long> AppendAsync(long offset, int len, byte dataType)
         {
             var position = _stream.Position;
@@ -24,7 +36,7 @@ namespace Sir.Store
 
             await _stream.WriteAsync(BitConverter.GetBytes(offset), 0, sizeof(long));
             await _stream.WriteAsync(BitConverter.GetBytes(len), 0, sizeof(int));
-            await _stream.WriteAsync(new byte[] { dataType }, 0, sizeof(byte));
+            _stream.WriteByte(dataType);
 
             return index;
         }

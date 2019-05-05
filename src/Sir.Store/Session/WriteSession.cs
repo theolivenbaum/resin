@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -24,12 +22,12 @@ namespace Sir.Store
             ulong collectionId,
             SessionFactory sessionFactory) : base(collectionName, collectionId, sessionFactory)
         {
-            ValueStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
-            KeyStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", CollectionId)));
-            DocStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", CollectionId)));
-            ValueIndexStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", CollectionId)));
-            KeyIndexStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", CollectionId)));
-            DocIndexStream = sessionFactory.CreateAsyncAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
+            ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
+            KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", CollectionId)));
+            DocStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", CollectionId)));
+            ValueIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", CollectionId)));
+            KeyIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", CollectionId)));
+            DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
 
             _vals = new ValueWriter(ValueStream);
             _keys = new ValueWriter(KeyStream);
@@ -39,22 +37,14 @@ namespace Sir.Store
             _docIx = new DocIndexWriter(DocIndexStream);
         }
 
-        public async Task<long> Write(IDictionary doc)
-        {
-            doc["__created"] = DateTime.Now.ToBinary();
-
-            return await DoWrite(doc);
-        }
-        
         /// <summary>
         /// Fields prefixed with "___" will not be stored.
         /// The "___docid" field, if it exists, will be persisted as "__original", if that field doesn't already exist.
         /// </summary>
         /// <returns>Document ID</returns>
-        public async Task<long> DoWrite(IDictionary model)
+        public long Write(IDictionary model)
         {
-            var timer = new Stopwatch();
-            timer.Start();
+            model["__created"] = DateTime.Now.ToBinary();
 
             var docMap = new List<(long keyId, long valId)>();
 
@@ -87,25 +77,23 @@ namespace Sir.Store
                     // We have a new key!
 
                     // store key
-                    var keyInfo = await _keys.AppendAsync(keyStr);
-                    keyId = await _keyIx.AppendAsync(keyInfo.offset, keyInfo.len, keyInfo.dataType);
+                    var keyInfo = _keys.Append(keyStr);
+                    keyId = _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
                     SessionFactory.PersistKeyMapping(CollectionId, keyHash, keyId);
                 }
 
                 // store value
-                var valInfo = await _vals.AppendAsync(val);
-                valId = await _valIx.AppendAsync(valInfo.offset, valInfo.len, valInfo.dataType);
+                var valInfo = _vals.Append(val);
+                valId = _valIx.Append(valInfo.offset, valInfo.len, valInfo.dataType);
 
                 // store refs to keys and values
                 docMap.Add((keyId, valId));
             }
 
-            var docMeta = await _docs.AppendAsync(docMap);
-            var docId = await _docIx.Append(docMeta.offset, docMeta.length);
+            var docMeta = _docs.Append(docMap);
+            var docId = _docIx.Append(docMeta.offset, docMeta.length);
 
             model["___docid"] = docId;
-
-            this.Log(string.Format("processed document {0} in {1}", docId, timer.Elapsed));
 
             return docId;
         }

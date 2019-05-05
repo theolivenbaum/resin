@@ -37,12 +37,22 @@ namespace Sir.Store
         /// </summary>
         /// <param name="offset">offset of doc map</param>
         /// <param name="len">length of doc map</param>
-        public async Task<long> Append(long offset, int len)
+        public async Task<long> AppendAsync(long offset, int len)
         {
             var id = GetNextDocId();
 
             await _stream.WriteAsync(BitConverter.GetBytes(offset), 0, sizeof(long));
             await _stream.WriteAsync(BitConverter.GetBytes(len), 0, sizeof(int));
+
+            return id;
+        }
+
+        public long Append(long offset, int len)
+        {
+            var id = GetNextDocId();
+
+            _stream.Write(BitConverter.GetBytes(offset));
+            _stream.Write(BitConverter.GetBytes(len));
 
             return id;
         }

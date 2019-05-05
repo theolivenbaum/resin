@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Sir.Core;
 
 namespace Sir.RocksDb
 {
@@ -22,7 +20,7 @@ namespace Sir.RocksDb
             _writeLock = new Semaphore(1, 2, "Sir.RocksDb");
         }
 
-        public async Task<ResponseModel> Write(string collectionId, HttpRequest request)
+        public ResponseModel Write(string collectionId, HttpRequest request)
         {
             var type = request.Query["type"].ToString();
             var typeId = type.ToHash();
@@ -34,7 +32,7 @@ namespace Sir.RocksDb
 
             var requestStream = new MemoryStream();
 
-            await request.Body.CopyToAsync(requestStream);
+            request.Body.CopyTo(requestStream);
 
             _writeLock.WaitOne();
 
@@ -44,7 +42,7 @@ namespace Sir.RocksDb
 
             var response = new MemoryStream();
 
-            await response.WriteAsync(id);
+            response.Write(id);
 
             return new ResponseModel { Stream = response, MediaType = "application/octet-stream" };
         }

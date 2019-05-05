@@ -16,7 +16,29 @@ namespace Sir.Store
             _stream = stream;
         }
 
+        public (long offset, int len, byte dataType) Append(object value)
+        {
+            var data = ToByteArray(value);
+
+            var offset = _stream.Position;
+
+            _stream.Write(data.buffer);
+
+            return (offset, data.buffer.Length, data.dataType);
+        }
+
         public async Task<(long offset, int len, byte dataType)> AppendAsync(object value)
+        {
+            var data = ToByteArray(value);
+
+            var offset = _stream.Position;
+
+            await _stream.WriteAsync(data.buffer);
+
+            return (offset, data.buffer.Length, data.dataType);
+        }
+
+        public static (byte[] buffer, byte dataType) ToByteArray(object value)
         {
             byte[] buffer;
             byte dataType;
@@ -67,11 +89,7 @@ namespace Sir.Store
                 dataType = DataType.STREAM;
             }
 
-            var offset = _stream.Position;
-
-            await _stream.WriteAsync(buffer, 0, buffer.Length);
-
-            return (offset, buffer.Length, dataType);
+            return (buffer, dataType);
         }
     }
 }

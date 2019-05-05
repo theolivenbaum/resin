@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
@@ -27,48 +25,14 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
-        public async Task<ResponseModel> Write(string collectionName, HttpRequest request)
+        public ResponseModel Write(string collectionName, HttpRequest request)
         {
             var documents = Deserialize<IEnumerable<IDictionary>>(request.Body);
             var job = new Job(collectionName, documents);
 
-            await _sessionFactory.Write(job);
+            _sessionFactory.Write(job);
 
             return new ResponseModel();
-        }
-
-        private static void Serialize(object value, Stream stream)
-        {
-            using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8, 4096, true))
-            using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
-            {
-                JsonSerializer ser = new JsonSerializer();
-                ser.Serialize(jsonWriter, value);
-            }
-            stream.Position = 0;
-        }
-
-        public async Task ExecuteWrite(Job job)
-        {
-            _timer.Restart();
-
-            var colId = job.Collection.ToHash();
-
-            using (var writeSession = _sessionFactory.CreateWriteSession(job.Collection, colId))
-            using (var indexSession = _sessionFactory.CreateIndexSession(job.Collection, colId))
-            {
-                foreach (var doc in job.Documents)
-                {
-                    await writeSession.Write(doc);
-                    indexSession.Put(doc);
-                }
-
-                await indexSession.Commit();
-            }
-
-            job.Done = true;
-
-            this.Log("executed {0} write+index job in {1}", job.Collection, _timer.Elapsed);
         }
 
         private static T Deserialize<T>(Stream stream)
