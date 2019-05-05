@@ -212,6 +212,11 @@ namespace Sir
                 throw new ArgumentOutOfRangeException(nameof(vectorOffset));
             }
 
+            if (vectorStream == null)
+            {
+                throw new ArgumentNullException(nameof(vectorStream));
+            }
+
             // Deserialize term vector
             var vec = new SortedList<long, int>(componentCount);
             Span<byte> vecBuf = stackalloc byte[componentCount * VectorNode.ComponentSize];

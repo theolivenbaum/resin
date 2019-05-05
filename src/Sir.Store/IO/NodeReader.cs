@@ -343,19 +343,6 @@ namespace Sir.Store
             throw new NotImplementedException();
         }
 
-        private VectorNode ReadNode(Stream indexStream, Stream vectorStream)
-        {
-            var buf = new byte[VectorNode.BlockSize];
-            var read = indexStream.Read(buf);
-
-            if (read == 0) return null;
-
-            var terminator = buf[buf.Length - 1];
-            var node = VectorOperations.DeserializeNode(buf, vectorStream, ref terminator);
-
-            return node;
-        }
-
         private void SkipTree(Stream indexStream)
         {
             Span<byte> buf = new byte[VectorNode.BlockSize];
