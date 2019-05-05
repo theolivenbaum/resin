@@ -110,12 +110,6 @@ namespace Sir.HttpServer.Features
                 }
 
                 var document = new Dictionary<string, object>();
-                var existing = await GetDocument(item.collection, url, doc.title);
-
-                if (existing!= null)
-                {
-                    document["__original"] = existing["___docid"];
-                }
 
                 document["_url"] = url;
                 document["title"] = doc.title;

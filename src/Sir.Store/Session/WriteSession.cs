@@ -39,21 +39,17 @@ namespace Sir.Store
 
         /// <summary>
         /// Fields prefixed with "___" will not be stored.
-        /// The "___docid" field, if it exists, will be persisted as "__original", if that field doesn't already exist.
         /// </summary>
         /// <returns>Document ID</returns>
-        public void Write(IDictionary model)
+        public void Write(IDictionary document)
         {
+            document["__created"] = DateTime.Now.ToBinary();
+
             var docMap = new List<(long keyId, long valId)>();
 
-            if (model.Contains("___docid") && !model.Contains("__original"))
+            foreach (var key in document.Keys)
             {
-                model.Add("__original", model["___docid"]);
-            }
-
-            foreach (var key in model.Keys)
-            {
-                var val = model[key];
+                var val = document[key];
 
                 if (val == null)
                 {
@@ -88,11 +84,9 @@ namespace Sir.Store
                 docMap.Add((keyId, valId));
             }
 
-            model["__created"] = DateTime.Now.ToBinary();
-
             var docMeta = _docs.Append(docMap);
 
-            model["___docid"] = _docIx.Append(docMeta.offset, docMeta.length);
+            document["___docid"] = _docIx.Append(docMeta.offset, docMeta.length);
         }
     }
 }

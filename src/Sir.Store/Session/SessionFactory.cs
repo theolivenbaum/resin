@@ -71,8 +71,8 @@ namespace Sir.Store
                 {
                     foreach (var doc in job.Documents)
                     {
-                        queue.Enqueue(doc);
                         writeSession.Write(doc);
+                        queue.Enqueue(doc);
                     }
                 }
 

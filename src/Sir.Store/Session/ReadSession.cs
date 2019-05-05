@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
@@ -89,7 +88,7 @@ namespace Sir.Store
                 {
                     this.Log("found nothing for query {0}", query);
 
-                    return Enumerable.Empty<long>();
+                    return new long[0];
                 }
 
                 return result.Documents.Keys;
@@ -214,18 +213,13 @@ namespace Sir.Store
                     doc[key] = val;
                 }
 
-                var docId = doc.ContainsKey("__original") ? long.Parse(doc["__original"].ToString()) : d.Key;
-
-                doc["___docid"] = docId;
+                doc["___docid"] = d.Key;
                 doc["___score"] = d.Value;
 
                 result.Add(doc);
             }
 
-            return result
-                .GroupBy(x => (long)x["___docid"])
-                .SelectMany(g=>g.OrderByDescending(x=>(long)x["__created"]).Take(1))
-                .ToList();
+            return result;
         }
 
         public async Task<IList<IDictionary>> ReadDocs(IEnumerable<long> docs)
@@ -263,10 +257,7 @@ namespace Sir.Store
                 result.Add(doc);
             }
 
-            return result
-                .GroupBy(x => (long)x["___docid"])
-                .SelectMany(g => g.OrderByDescending(x => (long)x["__created"]).Take(1))
-                .ToList();
+            return result;
         }
     }
 }
