@@ -119,7 +119,7 @@ namespace Sir.Store
                                 newCollectionName = Guid.NewGuid().ToString();
                             }
 
-                            await _sessionFactory.Write(new Job(newCollectionName, docs));
+                            await _sessionFactory.Commit(new Job(newCollectionName, docs));
                         }
                     }
 

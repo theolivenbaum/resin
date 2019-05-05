@@ -31,7 +31,7 @@ namespace Sir.Store
             var documents = Deserialize<IEnumerable<IDictionary>>(request.Body);
             var job = new Job(collectionName, documents);
 
-            await _sessionFactory.Write(job);
+            await _sessionFactory.Commit(job);
 
             return new ResponseModel();
         }

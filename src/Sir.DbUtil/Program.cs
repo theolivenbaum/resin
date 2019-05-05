@@ -17,18 +17,7 @@ namespace Sir.DbUtil
 
             var command = args[0].ToLower();
 
-            if (command == "index")
-            {
-                // example: index C:\projects\resin\src\Sir.HttpServer\App_Data www 0 10000 1000
-
-                await Index(
-                    dir: args[1],
-                    collectionName: args[2],
-                    skip: int.Parse(args[3]),
-                    take: int.Parse(args[4]),
-                    batchSize: int.Parse(args[5]));
-            }
-            else if (command == "query")
+            if (command == "query")
             {
                 // example: query C:\projects\resin\src\Sir.HttpServer\App_Data www
 
@@ -137,55 +126,7 @@ namespace Sir.DbUtil
                 }
             }
         }
-
-        private static async Task Index(string dir, string collectionName, int skip, int take, int batchSize)
-        {
-            var files = Directory.GetFiles(dir, "*.docs");
-            var fullTime = Stopwatch.StartNew();
-            var batchCount = 0;
-
-            using (var sessionFactory = new SessionFactory(dir, new LatinTokenizer(), new IniConfiguration("sir.ini")))
-            {
-                foreach (var docFileName in files)
-                {
-                    var name = Path.GetFileNameWithoutExtension(docFileName)
-                        .Split(".", StringSplitOptions.RemoveEmptyEntries);
-
-                    var collectionId = ulong.Parse(name[0]);
-
-                    if (collectionId == collectionName.ToHash())
-                    {
-                        using (var readSession = sessionFactory.CreateDocumentStreamSession(name[0], collectionId))
-                        {
-                            var docs = readSession.ReadDocs(skip, take);
-
-                            foreach (var batch in docs.Batch(batchSize))
-                            {
-                                var timer = Stopwatch.StartNew();
-
-                                using (var indexSession = sessionFactory.CreateIndexSession(
-                                    collectionName, collectionId))
-                                {
-                                    foreach (var doc in batch)
-                                    {
-                                        indexSession.Put(doc);
-                                    }
-
-                                    await indexSession.Commit();
-                                }
-
-                                Logging.Log(null, string.Format("indexed batch #{0} in {1}", batchCount++, timer.Elapsed));
-                            }
-                        }
-
-                        break;
-                    }
-                }
-            }
-
-            Logging.Log(null, string.Format("indexed {0} batches in {1}", batchCount, fullTime.Elapsed));
-        }
-
+        
         private static void CreateBOWModel(string dir, string collectionName, int skip, int take)
         {
             var files = Directory.GetFiles(dir, "*.docs");

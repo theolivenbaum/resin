@@ -46,8 +46,10 @@ namespace Sir.Store
             }
         }
 
-        public async Task Write(Job job)
+        public async Task Commit(Job job)
         {
+            var timer = Stopwatch.StartNew();
+
             _writeSync.WaitOne();
 
             if (_mmfs.Count > 0)
@@ -60,20 +62,14 @@ namespace Sir.Store
                 _mmfs.Clear();
             }
 
-            var timer = Stopwatch.StartNew();
-
             var colId = job.Collection.ToHash();
 
             using (var writeSession = CreateWriteSession(job.Collection, colId))
             using (var indexSession = CreateIndexSession(job.Collection, colId))
             {
-                using (var queue = new ProducerConsumerQueue<IDictionary>(1, indexSession.Put))
+                foreach (var doc in job.Documents)
                 {
-                    foreach (var doc in job.Documents)
-                    {
-                        writeSession.Write(doc);
-                        queue.Enqueue(doc);
-                    }
+                    writeSession.Write(doc, indexSession);
                 }
 
                 await indexSession.Commit();

@@ -41,7 +41,7 @@ namespace Sir.Store
         /// Fields prefixed with "___" will not be stored.
         /// </summary>
         /// <returns>Document ID</returns>
-        public void Write(IDictionary document)
+        public void Write(IDictionary document, TermIndexSession indexSession)
         {
             document["__created"] = DateTime.Now.ToBinary();
 
@@ -85,8 +85,9 @@ namespace Sir.Store
             }
 
             var docMeta = _docs.Append(docMap);
+            var docId = _docIx.Append(docMeta.offset, docMeta.length);
 
-            document["___docid"] = _docIx.Append(docMeta.offset, docMeta.length);
+            indexSession.Put(docId, document);
         }
     }
 }

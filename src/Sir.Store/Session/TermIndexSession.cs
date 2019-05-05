@@ -20,7 +20,7 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<long, long> _vectorStreamStartPositions;
         private bool _committed;
         private bool _committing;
-        private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _modelBuilder;
+        private readonly ProducerConsumerQueue<(long docId, IDictionary doc)> _indexBuilder;
 
         public TermIndexSession(
             string collectionName,
@@ -37,19 +37,22 @@ namespace Sir.Store
 
             var numThreads = int.Parse(_config.Get("write_thread_count"));
 
-            _modelBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>(
-                numThreads, BuildModel);;
+            _indexBuilder = new ProducerConsumerQueue<(long docId, IDictionary doc)>(
+                numThreads, ProcessDocument);;
         }
 
         /// <summary>
         /// Fields prefixed with "___" or "__" will not be indexed.
         /// Fields prefixed with "_" will not be tokenized.
         /// </summary>
-        public void Put(IDictionary document)
+        public void Put(long docId, IDictionary document)
         {
-            var docId = (long)document["___docid"];
+            _indexBuilder.Enqueue((docId, document));
+        }
 
-            foreach (var obj in document.Keys)
+        private void ProcessDocument((long docId, IDictionary doc) item)
+        {
+            foreach (var obj in item.doc.Keys)
             {
                 var key = (string)obj;
                 AnalyzedString tokens = null;
@@ -58,7 +61,7 @@ namespace Sir.Store
                 {
                     var keyHash = key.ToHash();
                     var keyId = SessionFactory.GetKeyId(CollectionId, keyHash);
-                    var val = document[key];
+                    var val = item.doc[key];
                     var str = val as string;
 
                     if (str == null || key[0] == '_')
@@ -80,22 +83,19 @@ namespace Sir.Store
                         tokens = _tokenizer.Tokenize(str);
                     }
 
-                    if (tokens != null)
-                    {
-                        _modelBuilder.Enqueue((docId, keyId, tokens));
-                    }
+                    BuildModel(item.docId, keyId, tokens);
                 }
             }
         }
 
-        private void BuildModel((long docId, long keyId, AnalyzedString tokens) item)
+        private void BuildModel(long docId, long keyId, AnalyzedString tokens)
         {
-            var ix = GetOrCreateIndex(item.keyId);
-            var vectorStream = GetOrCreateVectorStream(item.keyId);
+            var ix = GetOrCreateIndex(keyId);
+            var vectorStream = GetOrCreateVectorStream(keyId);
 
-            foreach (var vector in item.tokens.Embeddings())
+            foreach (var vector in tokens.Embeddings())
             {
-                ix.Add(new VectorNode(vector, item.docId), CosineSimilarity.Term, vectorStream);
+                ix.Add(new VectorNode(vector, docId), CosineSimilarity.Term, vectorStream);
             }
         }
 
@@ -108,9 +108,9 @@ namespace Sir.Store
 
             this.Log("waiting for model builder");
 
-            using (_modelBuilder)
+            using (_indexBuilder)
             {
-                _modelBuilder.Join();
+                _indexBuilder.Join();
             }
 
             foreach (var column in _dirty)
