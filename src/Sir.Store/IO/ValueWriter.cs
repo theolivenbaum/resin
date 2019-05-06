@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -18,29 +17,7 @@ namespace Sir.Store
 
         public (long offset, int len, byte dataType) Append(object value)
         {
-            var data = ToByteArray(value);
-
-            var offset = _stream.Position;
-
-            _stream.Write(data.buffer);
-
-            return (offset, data.buffer.Length, data.dataType);
-        }
-
-        public async Task<(long offset, int len, byte dataType)> AppendAsync(object value)
-        {
-            var data = ToByteArray(value);
-
-            var offset = _stream.Position;
-
-            await _stream.WriteAsync(data.buffer);
-
-            return (offset, data.buffer.Length, data.dataType);
-        }
-
-        public static (byte[] buffer, byte dataType) ToByteArray(object value)
-        {
-            byte[] buffer;
+            Span<byte> buffer;
             byte dataType;
 
             if (value is bool)
@@ -89,7 +66,11 @@ namespace Sir.Store
                 dataType = DataType.STREAM;
             }
 
-            return (buffer, dataType);
+            var offset = _stream.Position;
+
+            _stream.Write(buffer);
+
+            return (offset, buffer.Length, dataType);
         }
     }
 }
