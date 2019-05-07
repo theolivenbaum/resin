@@ -148,8 +148,8 @@ namespace Sir.Store
                 {
                     var page = pages[i];
 
-                    using (var indexStream = mmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.Read))
-                    using (var vectorView = vmmf.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read))
+                    using (var indexStream = mmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.ReadWrite))
+                    using (var vectorView = vmmf.CreateViewAccessor(0, 0, MemoryMappedFileAccess.ReadWrite))
                     {
                         var hit = ClosestMatchInPage(
                                     vector,

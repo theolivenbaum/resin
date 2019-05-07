@@ -364,11 +364,6 @@ namespace Sir.Store
             VectorOffset = Vector.Serialize(vectorStream);
         }
 
-        private async Task SerializeVectorAsync(Stream vectorStream)
-        {
-            VectorOffset = await Vector.SerializeAsync(vectorStream);
-        }
-
         public IList<VectorNode> SerializePostings(Stream lengths, Stream offsets, Stream lists)
         {
             var node = this;

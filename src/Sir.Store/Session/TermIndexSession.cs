@@ -20,7 +20,7 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<long, long> _vectorStreamStartPositions;
         private bool _committed;
         private bool _committing;
-        private readonly ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)> _indexBuilder;
+        private readonly ProducerConsumerQueue<(long docId, IDictionary doc)> _indexBuilder;
 
         public TermIndexSession(
             string collectionName,
@@ -35,10 +35,11 @@ namespace Sir.Store
             _vectorStreams = new ConcurrentDictionary<long, Stream>();
             _vectorStreamStartPositions = new ConcurrentDictionary<long, long>();
 
+
             var numThreads = int.Parse(_config.Get("write_thread_count"));
 
-            _indexBuilder = new ProducerConsumerQueue<(long docId, long keyId, AnalyzedString tokens)>(
-                numThreads, BuildModel);;
+            _indexBuilder = new ProducerConsumerQueue<(long docId, IDictionary doc)>(
+                numThreads, ProcessDocument);
         }
 
         /// <summary>
@@ -47,17 +48,22 @@ namespace Sir.Store
         /// </summary>
         public void Put(long docId, IDictionary doc)
         {
-            foreach (var obj in doc.Keys)
+            _indexBuilder.Enqueue((docId, doc));
+        }
+
+        public void ProcessDocument((long docId, IDictionary doc) workItem)
+        {
+            foreach (var obj in workItem.doc.Keys)
             {
-                var key = (string)obj;
-                AnalyzedString tokens = null;
+                var key = obj.ToString();
 
                 if (!key.StartsWith("__"))
                 {
                     var keyHash = key.ToHash();
                     var keyId = SessionFactory.GetKeyId(CollectionId, keyHash);
-                    var val = doc[key];
+                    var val = workItem.doc[key];
                     var str = val as string;
+                    AnalyzedString tokens = null;
 
                     if (str == null || key[0] == '_')
                     {
@@ -76,19 +82,19 @@ namespace Sir.Store
                         tokens = _tokenizer.Tokenize(str);
                     }
 
-                    _indexBuilder.Enqueue((docId, keyId, tokens));
+                    BuildModel(workItem.docId, keyId, tokens);
                 }
             }
         }
 
-        private void BuildModel((long docId, long keyId, AnalyzedString tokens) workItem)
+        private void BuildModel(long docId, long keyId, AnalyzedString tokens)
         {
-            var ix = GetOrCreateIndex(workItem.keyId);
-            var vectorStream = GetOrCreateVectorStream(workItem.keyId);
+            var ix = GetOrCreateIndex(keyId);
+            var vectorStream = GetOrCreateVectorStream(keyId);
 
-            foreach (var vector in workItem.tokens.Embeddings)
+            foreach (var vector in tokens.Embeddings)
             {
-                ix.Add(new VectorNode(vector, workItem.docId), CosineSimilarity.Term, vectorStream);
+                ix.Add(new VectorNode(vector, docId), CosineSimilarity.Term, vectorStream);
             }
         }
 

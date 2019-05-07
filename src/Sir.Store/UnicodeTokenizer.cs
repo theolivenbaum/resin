@@ -7,16 +7,15 @@ namespace Sir.Store
         public AnalyzedString Tokenize(string text)
         {
             var normalized = text.ToLower();
-            var chars = normalized.ToCharArray();
             var offset = 0;
             bool word = false;
             int index = 0;
             var tokens = new List<(int, int)>();
             var embeddings = new List<SortedList<long, int>>();
 
-            for (; index < chars.Length; index++)
+            for (; index < normalized.Length; index++)
             {
-                char c = chars[index];
+                char c = normalized[index];
 
                 if (word)
                 {
@@ -28,7 +27,6 @@ namespace Sir.Store
                         {
                             tokens.Add((offset, index - offset));
                             embeddings.Add(normalized.ToVector(offset, len));
-
                         }
 
                         offset = index;

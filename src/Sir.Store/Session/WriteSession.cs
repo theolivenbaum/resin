@@ -43,6 +43,13 @@ namespace Sir.Store
         /// <returns>Document ID</returns>
         public void Write(IDictionary document, TermIndexSession indexSession)
         {
+            var docId = Write(document);
+
+            indexSession.Put(docId, document);
+        }
+
+        public long Write(IDictionary document)
+        {
             document["__created"] = DateTime.Now.ToBinary();
 
             var docMap = new List<(long keyId, long valId)>();
@@ -85,9 +92,7 @@ namespace Sir.Store
             }
 
             var docMeta = _docs.Append(docMap);
-            var docId = _docIx.Append(docMeta.offset, docMeta.length);
-
-            indexSession.Put(docId, document);
+            return _docIx.Append(docMeta.offset, docMeta.length);
         }
     }
 }

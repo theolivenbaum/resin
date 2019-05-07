@@ -7,7 +7,6 @@ namespace Sir.Store
     {
         public string Collection { get; private set; }
         public IEnumerable<IDictionary> Documents { get; private set; }
-        public bool Done { get; set; } 
 
         public Job(string collection, IEnumerable<IDictionary> documents)
         {
