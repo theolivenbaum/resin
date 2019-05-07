@@ -1,5 +1,5 @@
 ﻿using Sir.Store;
-using System;
+using System.Collections.Generic;
 
 namespace Sir
 {
@@ -41,6 +41,13 @@ namespace Sir
         {
             KeyId = keyId;
             Node = node;
+        }
+
+        public SortedList<long, int> AsVector()
+        {
+            return Node == null
+                ? TokenizedString.Embeddings[Index]
+                : Node.Vector;
         }
 
         private string GetDebugString()

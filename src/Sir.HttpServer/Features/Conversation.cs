@@ -18,7 +18,7 @@ namespace Sir.HttpServer.Features
         {
             const string modelName = "chitchat";
             var documents = new SortedList<float, IList<IDictionary>>();
-            var q = new HttpQueryParser(new TermQueryParser(), new LatinTokenizer())
+            var q = new HttpQueryParser(new TermQueryParser(), new UnicodeTokenizer())
                 .FromFormattedString(modelName.ToHash(), formattedQuery);
 
             using (var session = SessionFactory.CreateReadSession(modelName, modelName.ToHash()))
@@ -55,7 +55,7 @@ namespace Sir.HttpServer.Features
 
             const string modelName = "www";
 
-            var q = new HttpQueryParser(new TermQueryParser(), new LatinTokenizer())
+            var q = new HttpQueryParser(new TermQueryParser(), new UnicodeTokenizer())
                 .FromFormattedString(modelName.ToHash(), formattedQuery);
             q.Take = 10;
 

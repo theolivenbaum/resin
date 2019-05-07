@@ -34,10 +34,12 @@ namespace Sir.Store
                 var value = parts[1];
 
                 var values = key[0] == '_' ?
-                    new AnalyzedString { Source = value.ToCharArray(), Tokens = new List<(int, int)> { (0, value.Length) } } :
-                    tokenizer.Tokenize(value);
+                    new AnalyzedString(
+                        new List<(int, int)> { (0, value.Length) }, 
+                        new List<SortedList<long, int>> { value.ToVector() }, 
+                        value) :
 
-                values.Original = value;
+                    tokenizer.Tokenize(value);
 
                 var or = key[0] != '+' && key[0] != '-';
                 var not = key[0] == '-';

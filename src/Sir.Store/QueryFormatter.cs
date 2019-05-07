@@ -6,7 +6,7 @@ namespace Sir.Store
     {
         public string Format(string collectionName, HttpRequest request)
         {
-            return new HttpQueryParser(new TermQueryParser(), new LatinTokenizer()).Parse(collectionName.ToHash(), request).ToString();
+            return new HttpQueryParser(new TermQueryParser(), new UnicodeTokenizer()).Parse(collectionName.ToHash(), request).ToString();
         }
     }
 }

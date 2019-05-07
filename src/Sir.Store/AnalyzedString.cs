@@ -7,16 +7,15 @@ namespace Sir
     /// </summary>
     public class AnalyzedString
     {
-        public IList<(int offset, int length)> Tokens { get; set; }
-        public char[] Source { get; set; }
-        public string Original { get; set; }
+        public IList<(int offset, int length)> Tokens { get; private set; }
+        public IList<SortedList<long, int>> Embeddings { get; private set; }
+        public string Original { get; private set; }
 
-        public IEnumerable<SortedList<long, int>> Embeddings()
+        public AnalyzedString(IList<(int offset, int length)> tokens, IList<SortedList<long, int>> embeddings, string original)
         {
-            foreach (var token in Tokens)
-            {
-                yield return this.ToVector(token.offset, token.length);
-            }
+            Tokens = tokens;
+            Embeddings = embeddings;
+            Original = original;
         }
 
         public override string ToString()

@@ -10,7 +10,7 @@ namespace Sir.Store
         public void OnApplicationStartup(
             IServiceCollection services, ServiceProvider serviceProvider, IConfigurationProvider config)
         {
-            var tokenizer = new LatinTokenizer();
+            var tokenizer = new UnicodeTokenizer();
             var httpParser = new HttpQueryParser(new TermQueryParser(), tokenizer);
             var httpBowParser = new HttpBowQueryParser(tokenizer, httpParser);
             var sessionFactory = new SessionFactory(config.Get("data_dir"), tokenizer, config);

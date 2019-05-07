@@ -70,12 +70,10 @@ namespace Sir.Store
 
                         if (!string.IsNullOrWhiteSpace(v))
                         {
-                            tokens = new AnalyzedString
-                            {
-                                Original = v,
-                                Source = v.ToCharArray(),
-                                Tokens = new List<(int, int)> { (0, v.Length) }
-                            };
+                            tokens = new AnalyzedString(
+                                new List<(int, int)> { (0, v.Length) }, 
+                                new List<SortedList<long, int>> { v.ToVector() }, 
+                                v);
                         }
                     }
                     else
@@ -93,7 +91,7 @@ namespace Sir.Store
             var ix = GetOrCreateIndex(keyId);
             var vectorStream = GetOrCreateVectorStream(keyId);
 
-            foreach (var vector in tokens.Embeddings())
+            foreach (var vector in tokens.Embeddings)
             {
                 ix.Add(new VectorNode(vector, docId), CosineSimilarity.Term, vectorStream);
             }
@@ -141,7 +139,7 @@ namespace Sir.Store
             {
                 var tree = GetOrCreateIndex(item.keyId);
 
-                foreach (var vector in item.tokens.Embeddings())
+                foreach (var vector in item.tokens.Embeddings)
                 {
                     var hit = tree.ClosestMatch(vector, CosineSimilarity.Term.foldAngle);
 

@@ -65,7 +65,7 @@ namespace Sir.Store
         {
             var docTree = new VectorNode();
 
-            foreach (var vector in item.tokens.Embeddings())
+            foreach (var vector in item.tokens.Embeddings)
             {
                 docTree.Add(new VectorNode(vector), CosineSimilarity.Term);
             }

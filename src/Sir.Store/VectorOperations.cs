@@ -428,40 +428,13 @@ namespace Sir
             return result;
         }
 
-        public static SortedList<long, int> ToVector(this Term term)
-        {
-            if (term.Node != null)
-            {
-                return term.Node.Vector;
-            }
-
-            var vec = new SortedList<long, int>();
-            var span = term.TokenizedString.Tokens[term.Index];
-
-            for (int i = 0; i < span.length; i++)
-            {
-                var codePoint = (int)term.TokenizedString.Source[span.offset + i];
-
-                if (vec.ContainsKey(codePoint))
-                {
-                    if (vec[codePoint] < int.MaxValue) vec[codePoint] += 1;
-                }
-                else
-                {
-                    vec[codePoint] = 1;
-                }
-            }
-            
-            return vec;
-        }
-
-        public static SortedList<long, int> ToVector(this AnalyzedString term, int offset, int length)
+        public static SortedList<long, int> ToVector(this string word, int offset, int length)
         {
             var vec = new SortedList<long, int>();
 
-            for (int i = 0; i < length; i++)
+            foreach (var c in word.AsSpan(offset, length))
             {
-                var codePoint = (int)term.Source[offset + i];
+                var codePoint = (int)c;
 
                 if (vec.ContainsKey(codePoint))
                 {
@@ -479,17 +452,10 @@ namespace Sir
         public static SortedList<long, int> ToVector(this string word)
         {
             var vec = new SortedList<long, int>();
-            TextElementEnumerator charEnum = StringInfo.GetTextElementEnumerator(word);
 
-            while (charEnum.MoveNext())
+            foreach (var c in word.ToCharArray())
             {
-                var element = charEnum.GetTextElement().ToCharArray();
-                int codePoint = 0;
-
-                foreach (char c in element)
-                {
-                    codePoint += c;
-                }
+                var codePoint = (int)c;
 
                 if (vec.ContainsKey(codePoint))
                 {
@@ -500,6 +466,7 @@ namespace Sir
                     vec[codePoint] = 1;
                 }
             }
+
             return vec;
         }
 
