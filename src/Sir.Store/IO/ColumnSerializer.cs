@@ -29,13 +29,13 @@ namespace Sir.Store
             _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
         }
 
-        public async Task CreateColumnSegment(VectorNode column)
+        public async Task CreateColumnSegment(VectorNode column, Stream vectorStream)
         {
             var time = Stopwatch.StartNew();
 
             await _postingsWriter.Write(column);
 
-            var page = column.SerializeTree(_ixStream);
+            var page = column.SerializeTree(_ixStream, vectorStream);
 
             _ixStream.Flush();
             _ixPageIndexWriter.Write(page.offset, page.length);

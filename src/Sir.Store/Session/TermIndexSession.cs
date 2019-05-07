@@ -16,8 +16,6 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
         private readonly ConcurrentDictionary<long, VectorNode> _dirty;
-        private readonly ConcurrentDictionary<long, Stream> _vectorStreams;
-        private readonly ConcurrentDictionary<long, long> _vectorStreamStartPositions;
         private bool _committed;
         private bool _committing;
         private readonly ProducerConsumerQueue<(long docId, IDictionary doc)> _indexBuilder;
@@ -32,9 +30,6 @@ namespace Sir.Store
             _config = config;
             _tokenizer = tokenizer;
             _dirty = new ConcurrentDictionary<long, VectorNode>();
-            _vectorStreams = new ConcurrentDictionary<long, Stream>();
-            _vectorStreamStartPositions = new ConcurrentDictionary<long, long>();
-
 
             var numThreads = int.Parse(_config.Get("write_thread_count"));
 
@@ -90,11 +85,10 @@ namespace Sir.Store
         private void BuildModel(long docId, long keyId, AnalyzedString tokens)
         {
             var ix = GetOrCreateIndex(keyId);
-            var vectorStream = GetOrCreateVectorStream(keyId);
 
             foreach (var vector in tokens.Embeddings)
             {
-                ix.Add(new VectorNode(vector, docId), CosineSimilarity.Term, vectorStream);
+                ix.Add(new VectorNode(vector, docId), CosineSimilarity.Term);
             }
         }
 
@@ -114,17 +108,14 @@ namespace Sir.Store
 
             foreach (var column in _dirty)
             {
-                using (var writer = new ColumnSerializer(
-                    CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config, CollectionName)))
+                using (var vectorStream = SessionFactory.CreateAppendStream(
+                    Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.vec")))
                 {
-                    var wt = writer.CreateColumnSegment(column.Value);
-
-                    using (var vectorStream = _vectorStreams[column.Key])
+                    using (var writer = new ColumnSerializer(
+                        CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config, CollectionName)))
                     {
-                        vectorStream.Flush();
+                        await writer.CreateColumnSegment(column.Value, vectorStream);
                     }
-
-                    await wt;
                 }
             }
 
@@ -171,19 +162,6 @@ namespace Sir.Store
         private VectorNode GetOrCreateIndex(long keyId)
         {
             return _dirty.GetOrAdd(keyId, new VectorNode());
-        }
-
-        private Stream GetOrCreateVectorStream(long keyId)
-        {
-            return _vectorStreams.GetOrAdd(keyId, key =>
-                {
-                    var stream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.{key}.vec"));
-
-                    _vectorStreamStartPositions[keyId] = stream.Position;
-
-                    return stream;
-                }
-            );
         }
 
         public void Dispose()

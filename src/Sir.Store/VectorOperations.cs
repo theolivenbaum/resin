@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -313,18 +314,15 @@ namespace Sir
 
         public static long Serialize(this SortedList<long, int> vec, Stream stream)
         {
-            lock (stream)
+            var pos = stream.Position;
+
+            foreach (var kvp in vec)
             {
-                var pos = stream.Position;
-
-                foreach (var kvp in vec)
-                {
-                    stream.Write(BitConverter.GetBytes(kvp.Key), 0, sizeof(long));
-                    stream.Write(BitConverter.GetBytes(kvp.Value), 0, sizeof(int));
-                }
-
-                return pos;
+                stream.Write(BitConverter.GetBytes(kvp.Key));
+                stream.Write(BitConverter.GetBytes(kvp.Value));
             }
+
+            return pos;
         }
 
         public static float CosAngle(this SortedList<long, int> vec1, SortedList<long, int> vec2)

@@ -184,17 +184,12 @@ namespace Sir.Store
             return intersecting.OrderByDescending(x => x.Score);
         }
 
-        private readonly object _sync = new object();
-
-        public void Add(
-            VectorNode node, 
-            (float identicalAngle, float foldAngle) similarity, 
-            Stream vectorStream = null)
+        public void Add(VectorNode node, (float identicalAngle, float foldAngle) similarity)
         {
-            node._ancestor = null;
-            node._left = null;
-            node._right = null;
-            node._weight = 0;
+            //node._ancestor = null;
+            //node._left = null;
+            //node._right = null;
+            //node._weight = 0;
 
             var cursor = this;
 
@@ -204,7 +199,7 @@ namespace Sir.Store
 
                 if (angle >= similarity.identicalAngle)
                 {
-                    lock (_sync)
+                    lock (this)
                     {
                         cursor.Merge(node);
                     }
@@ -215,14 +210,11 @@ namespace Sir.Store
                 {
                     if (cursor.Left == null)
                     {
-                        lock (_sync)
+                        lock (this)
                         {
                             if (cursor.Left == null)
                             {
                                 cursor.Left = node;
-
-                                if (vectorStream != null)
-                                    cursor.Left.SerializeVector(vectorStream);
 
                                 break;
                             }
@@ -241,14 +233,11 @@ namespace Sir.Store
                 {
                     if (cursor.Right == null)
                     {
-                        lock (_sync)
+                        lock (this)
                         {
                             if (cursor.Right == null)
                             {
                                 cursor.Right = node;
-
-                                if (vectorStream != null)
-                                    cursor.Right.SerializeVector(vectorStream);
 
                                 break;
                             }
@@ -302,33 +291,33 @@ namespace Sir.Store
 
         public void Serialize(Stream stream)
         {
-            byte[] terminator = new byte[] { 1 };
+            byte terminator = 1;
 
             if (Left == null && Right == null) // there are no children
             {
-                terminator[0] = 3;
+                terminator = 3;
             }
             else if (Left == null) // there is a right but no left
             {
-                terminator[0] = 2;
+                terminator = 2;
             }
             else if (Right == null) // there is a left but no right
             {
-                terminator[0] = 1;
+                terminator = 1;
             }
             else // there is a left and a right
             {
-                terminator[0] = 0;
+                terminator = 0;
             }
 
             stream.Write(BitConverter.GetBytes(VectorOffset));
             stream.Write(BitConverter.GetBytes(PostingsOffset));
             stream.Write(BitConverter.GetBytes(Vector.Count));
             stream.Write(BitConverter.GetBytes(Weight));
-            stream.Write(terminator);
+            stream.WriteByte(terminator);
         }
 
-        public (long offset, long length) SerializeTree(Stream indexStream)
+        public (long offset, long length) SerializeTree(Stream indexStream, Stream vectorStream)
         {
             var node = this;
             var stack = new Stack<VectorNode>();
@@ -336,10 +325,9 @@ namespace Sir.Store
 
             while (node != null)
             {
-                if (node.VectorOffset > -1)
-                {
-                    node.Serialize(indexStream);
-                }
+                node.SerializeVector(vectorStream);
+
+                node.Serialize(indexStream);
 
                 if (node.Right != null)
                 {
@@ -527,15 +515,42 @@ namespace Sir.Store
 
     public static class StreamHelper
     {
-        public static byte[] ToStream(this IEnumerable<long> docIds)
+        public static byte[] ToStream(this IEnumerable<long> items)
         {
             var payload = new MemoryStream();
 
-            foreach (var id in docIds)
+            foreach (var item in items)
             {
-                var buf = BitConverter.GetBytes(id);
+                var buf = BitConverter.GetBytes(item);
 
                 payload.Write(buf, 0, buf.Length);
+            }
+
+            return payload.ToArray();
+        }
+
+        public static byte[] ToStream(this IEnumerable<int> items)
+        {
+            var payload = new MemoryStream();
+
+            foreach (var item in items)
+            {
+                var buf = BitConverter.GetBytes(item);
+
+                payload.Write(buf, 0, buf.Length);
+            }
+
+            return payload.ToArray();
+        }
+
+        public static byte[] ToStream(this IEnumerable<KeyValuePair<long, int>> items)
+        {
+            var payload = new MemoryStream();
+
+            foreach (var item in items)
+            {
+                payload.Write(BitConverter.GetBytes(item.Key));
+                payload.Write(BitConverter.GetBytes(item.Value));
             }
 
             return payload.ToArray();

@@ -72,26 +72,7 @@ namespace Sir.Store
 
         private void WriteToMemIndex((long docId, long keyId, SortedList<long, int> vector) item)
         {
-            VectorNode column;
-
-            if (!_newColumns.TryGetValue(item.keyId, out column))
-            {
-                lock (_writeSync)
-                {
-                    if (!_newColumns.TryGetValue(item.keyId, out column))
-                    {
-                        column = new VectorNode();
-                        _newColumns.Add(item.keyId, column);
-                    }
-                }
-            }
-
-            column.Add(
-                new VectorNode(item.vector, item.docId), 
-                CosineSimilarity.Document, 
-                _documentVectorStream);
-
-            this.Log("added doc field {0}.{1} to memory index", item.docId, item.keyId);
+            throw new NotImplementedException();
         }
 
         private static SortedList<long, int> CreateDocumentVector(
@@ -104,27 +85,7 @@ namespace Sir.Store
 
         private void Flush()
         {
-            _indexWriter.Dispose();
-            _documentVectorStream.Dispose();
-
-            var tasks = new List<Task>();
-            var writers = new List<ColumnSerializer>();
-
-            foreach (var model in _newColumns)
-            {
-                var columnWriter = new ColumnSerializer(
-                    CollectionId, model.Key, SessionFactory, new RemotePostingsWriter(_config, CollectionName), "ix1", "ixp1");
-
-                writers.Add(columnWriter);
-                tasks.Add(columnWriter.CreateColumnSegment(model.Value));
-            }
-
-            Task.WaitAll(tasks.ToArray());
-
-            foreach(var w in writers)
-            {
-                w.Dispose();
-            }
+            throw new NotImplementedException();
 
             this.Log("***FLUSHED*** and completed building of model {0}", CollectionId);
         }
