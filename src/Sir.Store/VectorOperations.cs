@@ -340,29 +340,17 @@ namespace Sir
             }
 
             long product = 0;
-            int cursor1 = 0;
-            int cursor2 = 0;
 
-            while (cursor1 < vec1.Count && cursor2 < vec2.Count)
+            foreach (var component1 in vec1)
             {
-                var p1 = vec1.Keys[cursor1];
-                var p2 = vec2.Keys[cursor2];
+                int component2;
 
-                if (p2 > p1)
+                if (vec2.TryGetValue(component1.Key, out component2))
                 {
-                    cursor1++;
-                }
-                else if (p1 > p2)
-                {
-                    cursor2++;
-                }
-                else
-                {
-                    product += vec1[p1] * vec2[p2];
-                    cursor1++;
-                    cursor2++;
+                    product += (component1.Value * component2);
                 }
             }
+            
             return product;
         }
 
