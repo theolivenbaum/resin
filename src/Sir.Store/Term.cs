@@ -50,7 +50,7 @@ namespace Sir
                 : Node.Vector;
         }
 
-        private string GetDebugString()
+        private string CreateString()
         {
             if (Node != null)
                 return Node.ToString();
@@ -61,7 +61,7 @@ namespace Sir
 
         public override string ToString()
         {
-            return string.Format("{0}:{1}", Key, GetDebugString());
+            return string.Format("{0}:{1}", Key, CreateString());
         }
     }
 }
