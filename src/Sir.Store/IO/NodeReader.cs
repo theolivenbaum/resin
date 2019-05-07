@@ -203,7 +203,7 @@ namespace Sir.Store
             (float identicalAngle, float foldAngle) similarity
         )
         {
-            Span<byte> block = new byte[VectorNode.BlockSize];
+            Span<byte> block = stackalloc byte[VectorNode.BlockSize];
 
             var read = indexStream.Read(block);
 
