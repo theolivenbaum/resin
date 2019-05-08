@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -76,13 +75,14 @@ namespace Sir.Store
             }
         }
 
+        public VectorNode Ancestor
+        {
+            get { return _ancestor; }
+        }
+
         public byte Terminator { get; set; }
 
         public IList<long> PostingsOffsets { get; set; }
-
-        public VectorNode(bool shallow)
-        {
-        }
 
         public VectorNode()
             : this('\0'.ToString())
@@ -110,9 +110,13 @@ namespace Sir.Store
             DocIds.Add(docId);
         }
 
-        public void DetachFromParent()
+        public VectorNode(long postingsOffset, long vecOffset, byte terminator, int weight, int componentCount)
         {
-            _ancestor = null;
+            PostingsOffset = postingsOffset;
+            VectorOffset = vecOffset;
+            Terminator = terminator;
+            Weight = weight;
+            ComponentCount = componentCount;
         }
 
         public Hit ClosestMatch(SortedList<long, int> vector, float foldAngle)
@@ -153,44 +157,23 @@ namespace Sir.Store
             };
         }
 
-        public IEnumerable<Hit> Intersecting(VectorNode node, float foldAngle)
+        public VectorNode Detach()
         {
-            var intersecting = new List<Hit>();
-            var cursor = this;
+            _ancestor = null;
+            _left = null;
+            _right = null;
+            _weight = 0;
 
-            while (cursor != null)
-            {
-                var angle = node.Vector.CosAngle(cursor.Vector);
+            return this;
+        }
 
-                if (angle > 0)
-                {
-                    intersecting.Add(new Hit
-                    {
-                        Score = angle,
-                        Node = cursor
-                    });
-                }
-
-                if (angle > foldAngle)
-                {
-                    cursor = cursor.Left;
-                }
-                else
-                {
-                    cursor = cursor.Right;
-                }
-            }
-
-            return intersecting.OrderByDescending(x => x.Score);
+        public void DetachFromAncestor()
+        {
+            _ancestor = null;
         }
 
         public void Add(VectorNode node, (float identicalAngle, float foldAngle) similarity)
         {
-            //node._ancestor = null;
-            //node._left = null;
-            //node._right = null;
-            //node._weight = 0;
-
             var cursor = this;
 
             while (cursor != null)
@@ -418,16 +401,6 @@ namespace Sir.Store
             return cursor;
         }
 
-        public VectorNode ShallowCopy()
-        {
-            return new VectorNode (Vector)
-            {
-                VectorOffset = VectorOffset,
-                PostingsOffset = PostingsOffset,
-                PostingsOffsets = PostingsOffsets
-            };
-        }
-
         public IEnumerable<VectorNode> All()
         {
             var node = this;
@@ -435,9 +408,9 @@ namespace Sir.Store
 
             while (node != null)
             {
-                if (node.PostingsOffset > -1)
+                if (node._ancestor != null)
                 {
-                    yield return node.ShallowCopy();
+                    yield return node;
                 }
 
                 if (node.Right != null)
@@ -453,6 +426,18 @@ namespace Sir.Store
                         node = stack.Pop();
                 }
             }
+        }
+
+        public SortedList<long, int> Compress()
+        {
+            var vector = new SortedList<long, int>();
+
+            foreach(var node in All())
+            {
+                vector = VectorOperations.Add(vector, node.Vector);
+            }
+
+            return vector;
         }
 
         public string Visualize()

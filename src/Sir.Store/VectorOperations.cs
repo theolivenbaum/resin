@@ -26,7 +26,7 @@ namespace Sir
 
             while (read == VectorNode.BlockSize)
             {
-                var terminator = new byte();
+                byte terminator = 2;
                 var node = DeserializeNode(buf, vectorStream, ref terminator);
 
                 if (node.VectorOffset > -1)
@@ -50,7 +50,7 @@ namespace Sir
             {
                 indexStream.Read(buf);
 
-                var terminator = new byte();
+                byte terminator = 2;
                 var node = DeserializeNode(buf, vectorStream, ref terminator);
 
                 if (node.VectorOffset > -1)
@@ -102,7 +102,7 @@ namespace Sir
 
             var right = root.Right;
 
-            right.DetachFromParent();
+            right.DetachFromAncestor();
 
             return right;
         }
@@ -146,22 +146,6 @@ namespace Sir
             return node;
         }
 
-        public static async Task<VectorNode> DeserializeNodeAsync(Stream indexStream, Stream vectorStream)
-        {
-            var nodeBuffer = new byte[VectorNode.BlockSize];
-            var read = await indexStream.ReadAsync(nodeBuffer);
-
-            if (read == 0) return null;
-
-            var vecOffset = BitConverter.ToInt64(nodeBuffer, 0);
-            var postingsOffset = BitConverter.ToInt64(nodeBuffer, sizeof(long));
-            var vectorCount = BitConverter.ToInt32(nodeBuffer, sizeof(long) + sizeof(long));
-            var weight = BitConverter.ToInt32(nodeBuffer, sizeof(long) + sizeof(long) + sizeof(int));
-            var terminator = nodeBuffer[nodeBuffer.Length - 1];
-
-            return DeserializeNode(vecOffset, postingsOffset, vectorCount, weight, vectorStream, ref terminator);
-        }
-
         public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, ref byte terminator)
         {
             // Deserialize node
@@ -182,29 +166,11 @@ namespace Sir
             ref byte terminator)
         {
             // Create node
-            var node = new VectorNode(shallow: true);
+            var node = new VectorNode(postingsOffset, vecOffset, terminator, weight, componentCount);
 
-            node.PostingsOffset = postingsOffset;
-            node.VectorOffset = vecOffset;
-            node.Terminator = terminator;
-            node.Weight = weight;
-            node.ComponentCount = componentCount;
-
-            Load(node, vectorStream);
+            node.Vector = DeserializeVector(node.VectorOffset, node.ComponentCount, vectorStream);
 
             return node;
-        }
-
-        public static void Load(
-            VectorNode shallow,
-            Stream vectorStream = null)
-        {
-            if (shallow.Vector != null)
-            {
-                return;
-            }
-
-            shallow.Vector = DeserializeVector(shallow.VectorOffset, shallow.ComponentCount, vectorStream);
         }
 
         public static SortedList<long, int> DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
