@@ -428,7 +428,7 @@ namespace Sir.Store
             }
         }
 
-        public SortedList<long, int> Compress()
+        public SortedList<long, int> Sum()
         {
             var vector = new SortedList<long, int>();
 
