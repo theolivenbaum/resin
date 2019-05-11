@@ -30,7 +30,7 @@ namespace Sir
                 var node = DeserializeNode(buf, vectorStream, ref terminator);
 
                 if (node.VectorOffset > -1)
-                    root.Add(node, similarity);
+                    VectorNodeWriter.Add(root, node, similarity);
 
                 read = indexStream.Read(buf);
             }
@@ -54,7 +54,7 @@ namespace Sir
                 var node = DeserializeNode(buf, vectorStream, ref terminator);
 
                 if (node.VectorOffset > -1)
-                    root.Add(node, similarity);
+                    VectorNodeWriter.Add(root, node, similarity);
 
                 read += VectorNode.BlockSize;
             }

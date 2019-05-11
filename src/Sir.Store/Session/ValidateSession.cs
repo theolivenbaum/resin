@@ -67,10 +67,10 @@ namespace Sir.Store
 
             foreach (var vector in item.tokens.Embeddings)
             {
-                docTree.Add(new VectorNode(vector), Similarity.Term);
+                VectorNodeWriter.Add(docTree, new VectorNode(vector), Similarity.Term);
             }
 
-            foreach (var node in docTree.All())
+            foreach (var node in VectorNodeReader.All(docTree))
             {
                 var query = new Query(CollectionId, new Term(item.key, node));
                 bool valid = false;

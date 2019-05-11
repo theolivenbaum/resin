@@ -78,7 +78,8 @@ namespace Sir.Store
                         var componentCount = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(long) + sizeof(long), sizeof(int)))[0];
                         var weight = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(long) + sizeof(long) + sizeof(int), sizeof(int)))[0];
 
-                        root.Add(
+                        VectorNodeWriter.Add(
+                            root,
                             VectorOperations.DeserializeNode(
                                 vecOffset,
                                 postingsOffset,
@@ -125,7 +126,7 @@ namespace Sir.Store
                 }
                 else if (hit.Score == best.Score)
                 {
-                    best.Node.Merge(hit.Node);
+                    VectorNodeWriter.Merge(best.Node, hit.Node);
                 }
             }
 

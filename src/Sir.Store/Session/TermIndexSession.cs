@@ -88,7 +88,7 @@ namespace Sir.Store
 
             foreach (var vector in tokens.Embeddings)
             {
-                ix.Add(new VectorNode(vector, docId), Similarity.Term);
+                VectorNodeWriter.Add(ix, new VectorNode(vector, docId), Similarity.Term);
             }
         }
 
@@ -133,7 +133,7 @@ namespace Sir.Store
 
                 foreach (var vector in item.tokens.Embeddings)
                 {
-                    var hit = tree.ClosestMatch(vector, Similarity.Term.foldAngle);
+                    var hit = VectorNodeReader.ClosestMatch(tree, vector, Similarity.Term.foldAngle);
 
                     if (hit.Score < Similarity.Term.identicalAngle)
                     {

@@ -35,13 +35,13 @@ namespace Sir.Store
 
             await _postingsWriter.Write(column);
 
-            var page = column.SerializeTree(_ixStream, vectorStream);
+            var page = VectorNodeWriter.SerializeTree(column, _ixStream, vectorStream);
 
             _ixStream.Flush();
             _ixPageIndexWriter.Write(page.offset, page.length);
             _ixPageIndexWriter.Flush();
 
-            var size = column.Size();
+            var size = VectorNodeReader.Size(column);
 
             this.Log("serialized column {0} in {1}. weight {2} depth {3} width {4} (avg depth {5})",
                 _keyId, time.Elapsed, column.Weight, size.depth, size.width, size.avgDepth);

@@ -25,7 +25,7 @@ namespace Sir.Store
         public void Concat(VectorNode rootNode)
         {
             var offsets = new Dictionary<long, IList<long>>();
-            var all = rootNode.All();
+            var all = VectorNodeReader.All(rootNode);
 
             foreach (var node in all)
             {
@@ -104,7 +104,7 @@ namespace Sir.Store
                 // Write length of word (i.e. length of list of postings) to header stream,
                 // postings offsets to offset stream,
                 // and word itself to documents stream.
-                nodes = rootNode.SerializePostings(lengths, offsets, documents);
+                nodes = VectorNodeWriter.SerializePostings(rootNode, lengths, offsets, documents);
 
                 if (nodes.Count == 0)
                     return;
