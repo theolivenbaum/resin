@@ -80,7 +80,7 @@ namespace Sir.Store
         {
             var terms = tokenizer.Tokenize(value);
 
-            return VectorOperations.CreateDocumentVector(terms.Embeddings, CosineSimilarity.Document, reader, tokenizer);
+            return VectorOperations.CreateDocumentVector(terms.Embeddings, Similarity.Document, reader, tokenizer);
         }
 
         private void Flush()

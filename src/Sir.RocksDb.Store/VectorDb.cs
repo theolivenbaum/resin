@@ -1,18 +1,17 @@
-﻿using Sir.RocksDb.Store;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Sir.Store
+namespace Sir.RockDb.Store
 {
     public class VectorDb : IDisposable
     {
         private IKeyValueStore _db;
 
-        public VectorDb(IConfigurationProvider config)
+        public VectorDb(IConfigurationProvider config, IKeyValueStore db)
         {
-            _db = new RocksDbStore(config);
+            _db = db;
         }
 
         public async Task<long> Put(SortedList<long, int> vector)

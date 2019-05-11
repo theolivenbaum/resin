@@ -19,6 +19,7 @@ namespace Sir.Store
         private VectorNode _left;
         private VectorNode _ancestor;
         private int _weight;
+        private float _angleWhenAdded;
 
         public HashSet<long> DocIds { get; private set; }
 
@@ -26,11 +27,6 @@ namespace Sir.Store
         public long VectorOffset { get; set; }
         public long PostingsOffset { get; set; }
         public SortedList<long, int> Vector { get; set; }
-
-        public bool IsNull
-        {
-            get { return VectorOffset < 0; }
-        }
 
         public int Weight
         {
@@ -157,6 +153,36 @@ namespace Sir.Store
             };
         }
 
+        public Hit FindFirstNonSimilar(SortedList<long, int> vector, float foldAngle)
+        {
+            var cursor = this;
+
+            while (cursor != null)
+            {
+                var angle = vector.CosAngle(cursor.Vector);
+
+                if (angle < foldAngle)
+                {
+                    return new Hit
+                    {
+                        Score = angle,
+                        Node = cursor
+                    };
+
+                }
+                else if (cursor.Right != null)
+                {
+                    cursor = cursor.Right;
+                }
+                else
+                {
+                    cursor = cursor.Left;
+                }
+            }
+
+            return new Hit();
+        }
+
         public VectorNode Detach()
         {
             _ancestor = null;
@@ -179,6 +205,8 @@ namespace Sir.Store
             while (cursor != null)
             {
                 var angle = node.Vector.CosAngle(cursor.Vector);
+
+                cursor._angleWhenAdded = angle;
 
                 if (angle >= similarity.identicalAngle)
                 {
@@ -428,13 +456,13 @@ namespace Sir.Store
             }
         }
 
-        public SortedList<long, int> Sum()
+        public SortedList<long, int> Compress()
         {
             var vector = new SortedList<long, int>();
 
             foreach(var node in All())
             {
-                vector = VectorOperations.Add(vector, node.Vector);
+                vector = VectorOperations.Merge(vector, node.Vector);
             }
 
             return vector;
@@ -452,7 +480,7 @@ namespace Sir.Store
             if (node == null) return;
 
             output.Append('\t', depth);
-            output.AppendFormat("|{0}| w:{1}", node.ToString(), node.Weight);
+            output.AppendFormat($"{node._angleWhenAdded} {node} w:{node.Weight}");
             output.AppendLine();
 
             Visualize(node.Left, output, depth + 1);
@@ -491,7 +519,8 @@ namespace Sir.Store
 
             foreach (var c in Vector)
             {
-                w.Append(c.Value);
+                w.Append(c.Key);
+                w.Append('.');
             }
 
             return w.ToString();

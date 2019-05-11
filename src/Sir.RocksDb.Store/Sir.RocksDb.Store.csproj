@@ -13,4 +13,10 @@
     <ProjectReference Include="..\Sir\Sir.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="Sir.Store.plugin">
+      <HintPath>..\..\..\unifiedair\lib\Sir.Store.plugin.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

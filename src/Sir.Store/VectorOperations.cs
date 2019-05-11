@@ -369,6 +369,23 @@ namespace Sir
             return result;
         }
 
+        public static SortedList<long, int> Merge(this SortedList<long, int> vec1, SortedList<long, int> vec2)
+        {
+            var result = new SortedList<long, int>();
+
+            foreach (var x in vec1)
+            {
+                result[x.Key] = 1;
+            }
+
+            foreach (var x in vec2)
+            {
+                result[x.Key] = 1;
+            }
+
+            return result;
+        }
+
         public static SortedList<long, int> Subtract(this SortedList<long, int> vec1, SortedList<long, int> vec2)
         {
             var result = new SortedList<long, int>();
