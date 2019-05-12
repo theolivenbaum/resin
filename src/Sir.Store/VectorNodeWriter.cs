@@ -7,7 +7,7 @@ namespace Sir.Store
 {
     public static class VectorNodeWriter
     {
-        public static void Add(VectorNode root, VectorNode node, (float identicalAngle, float foldAngle) similarity)
+        public static bool Add(VectorNode root, VectorNode node, (float identicalAngle, float foldAngle) similarity)
         {
             var cursor = root;
 
@@ -22,9 +22,9 @@ namespace Sir.Store
                     lock (cursor.Sync)
                     {
                         Merge(cursor, node);
-                    }
 
-                    break;
+                        return false;
+                    }
                 }
                 else if (angle > similarity.foldAngle)
                 {
@@ -36,7 +36,7 @@ namespace Sir.Store
                             {
                                 cursor.Left = node;
 
-                                break;
+                                return true;
                             }
                             else
                             {
@@ -59,7 +59,7 @@ namespace Sir.Store
                             {
                                 cursor.Right = node;
 
-                                break;
+                                return true;
                             }
                             else
                             {
@@ -73,6 +73,8 @@ namespace Sir.Store
                     }
                 }
             }
+
+            return false;
         }
 
         public static void Merge(VectorNode target, VectorNode node)

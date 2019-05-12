@@ -308,14 +308,14 @@ namespace Sir
             }
 
             long product = 0;
-            var source = vec1.Count < vec2.Count ? vec1 : vec2;
-            var target = ReferenceEquals(vec1, source) ? vec2 : vec1;
+            var shortest = vec1.Count < vec2.Count ? vec1 : vec2;
+            var other = ReferenceEquals(vec1, shortest) ? vec2 : vec1;
 
-            foreach (var component1 in source)
+            foreach (var component1 in shortest)
             {
                 int component2;
 
-                if (target.TryGetValue(component1.Key, out component2))
+                if (other.TryGetValue(component1.Key, out component2))
                 {
                     product += (component1.Value * component2);
                 }
