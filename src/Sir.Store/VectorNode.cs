@@ -153,6 +153,8 @@ namespace Sir.Store
         {
             var w = new StringBuilder();
 
+            w.Append('.');
+
             foreach (var c in Vector)
             {
                 w.Append(c.Key);
