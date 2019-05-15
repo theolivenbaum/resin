@@ -175,7 +175,8 @@ namespace Sir.Store
             var hits = new ConcurrentBag<Hit>();
             var ixbufferSize = int.Parse(_config.Get("index_read_buffer_size") ?? "4096");
 
-            Parallel.ForEach(pages, page =>
+            foreach(var page in pages)
+            //Parallel.ForEach(pages, page =>
             {
                 using (var indexStream = new BufferedStream(_sessionFactory.CreateReadStream(_ixFileName), ixbufferSize))
                 using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
@@ -190,7 +191,7 @@ namespace Sir.Store
 
                     hits.Add(hit);
                 }
-            });
+            }//);
 
             this.Log($"scan took {time.Elapsed}");
 
@@ -215,6 +216,13 @@ namespace Sir.Store
             {
                 var vecOffset = BitConverter.ToInt64(block.Slice(0, sizeof(long)));
                 var componentCount = BitConverter.ToInt32(block.Slice(sizeof(long) + sizeof(long), sizeof(int)));
+
+                if (componentCount == 0)
+                {
+                    read = indexStream.Read(block);
+                    continue;
+                }
+
                 var cursorVector = VectorOperations.DeserializeVector(vecOffset, componentCount, vectorStream);
                 var cursorTerminator = block[block.Length - 1];
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));
