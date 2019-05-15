@@ -17,19 +17,17 @@ and that is powered by the same toolbox uses a node's external reference abiliti
 (i.e. document references).
 
 The highest level API in Resin is its HTTP read/write API that you can use as a document database and search engine. 
-Or, you can run your own reader/writer using the same IReader/IWriter plugin system as the buily-in 
-search engine uses.
+Or, you can run your own reader/writer using the same IReader/IWriter plugin system as the built-in 
+search engine does.
  
 Resin includes APIs for
 
 - building queryable graphs from vectors that are (max) 64 bits wide
-- querying document collections using natural language or with the built-in query language 
 - visualizing graphs
 - writing/analyzing/tokenizing/vectorizing documents
-- querying documents
+- querying document collections using natural language or with the built-in query language 
 - adding support for your favorite type of document format
 - serialization of documents/vectors/graphs
-- creating log-structured representations of graphs
 
 [VectorNode](https://github.com/kreeben/resin/blob/master/src/Sir.Store/VectorNode.cs)
 [IReader](https://github.com/kreeben/resin/blob/master/src/Sir/IReader.cs)  
