@@ -70,18 +70,13 @@ namespace Sir.Store
             }
         }
 
-        public VectorNode Ancestor
-        {
-            get { return _ancestor; }
-        }
-
         public byte Terminator { get; set; }
 
         public IList<long> PostingsOffsets { get; set; }
         public float AngleWhenAdded { get => _angleWhenAdded; set => _angleWhenAdded = value; }
 
         public VectorNode()
-            : this('\0'.ToString())
+            : this(string.Empty)
         {
         }
 
@@ -153,12 +148,12 @@ namespace Sir.Store
         {
             var w = new StringBuilder();
 
-            w.Append('.');
+            w.Append('|');
 
             foreach (var c in Vector)
             {
                 w.Append(c.Key);
-                w.Append('.');
+                w.Append('|');
             }
 
             return w.ToString();
