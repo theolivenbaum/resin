@@ -73,7 +73,7 @@ namespace Sir.DbUtil
 
         private static void Warmup(string dir, Uri uri, string collectionName, int skip, int take)
         {
-            using (var sessionFactory = new SessionFactory(dir, new UnicodeTokenizer(), new IniConfiguration("sir.ini")))
+            using (var sessionFactory = new SessionFactory(new UnicodeTokenizer(), new IniConfiguration("sir.ini")))
             {
                 using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
                 {
@@ -90,7 +90,6 @@ namespace Sir.DbUtil
             var tokenizer = new UnicodeTokenizer();
             var qp = new TermQueryParser();
             var sessionFactory = new SessionFactory(
-                dir,
                 tokenizer,
                 new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini")));
 
@@ -132,7 +131,7 @@ namespace Sir.DbUtil
             var files = Directory.GetFiles(dir, "*.docs");
             var time = Stopwatch.StartNew();
 
-            using (var sessionFactory = new SessionFactory(dir, new UnicodeTokenizer(), new IniConfiguration("sir.ini")))
+            using (var sessionFactory = new SessionFactory(new UnicodeTokenizer(), new IniConfiguration("sir.ini")))
             {
                 using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
                 using (var bowSession = sessionFactory.CreateBOWSession(collectionName, collectionName.ToHash()))
@@ -149,7 +148,7 @@ namespace Sir.DbUtil
             var files = Directory.GetFiles(dir, "*.docs");
             var time = Stopwatch.StartNew();
 
-            using (var sessionFactory = new SessionFactory(dir, new UnicodeTokenizer(), new IniConfiguration("sir.ini")))
+            using (var sessionFactory = new SessionFactory(new UnicodeTokenizer(), new IniConfiguration("sir.ini")))
             {
                 using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
                 using (var validateSession = sessionFactory.CreateValidateSession(collectionName, collectionName.ToHash()))

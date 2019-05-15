@@ -23,9 +23,9 @@ namespace Sir.Store
         public string Dir { get; }
         public IConfigurationProvider Config { get { return _config; } }
 
-        public SessionFactory(string dir, ITokenizer tokenizer, IConfigurationProvider config)
+        public SessionFactory(ITokenizer tokenizer, IConfigurationProvider config)
         {
-            Dir = dir;
+            Dir = config.Get("data_dir");
             _keys = LoadKeys();
             _tokenizer = tokenizer;
             _config = config;

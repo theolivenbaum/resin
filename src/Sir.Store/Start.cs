@@ -13,7 +13,7 @@ namespace Sir.Store
             var tokenizer = new UnicodeTokenizer();
             var httpParser = new HttpQueryParser(new TermQueryParser(), tokenizer);
             var httpBowParser = new HttpBowQueryParser(tokenizer, httpParser);
-            var sessionFactory = new SessionFactory(config.Get("data_dir"), tokenizer, config);
+            var sessionFactory = new SessionFactory(tokenizer, config);
 
             services.AddSingleton(typeof(ITokenizer), tokenizer);
             services.AddSingleton(typeof(SessionFactory), sessionFactory);
