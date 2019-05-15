@@ -428,17 +428,20 @@ namespace Sir
         {
             var vec = new SortedList<long, int>();
 
-            foreach (var c in word.ToCharArray())
+            if (word.Length > 0)
             {
-                var codePoint = (int)c;
+                foreach (var c in word.ToCharArray())
+                {
+                    var codePoint = (int)c;
 
-                if (vec.ContainsKey(codePoint))
-                {
-                    if (vec[codePoint] < int.MaxValue) vec[codePoint] += 1;
-                }
-                else
-                {
-                    vec[codePoint] = 1;
+                    if (vec.ContainsKey(codePoint))
+                    {
+                        if (vec[codePoint] < int.MaxValue) vec[codePoint] += 1;
+                    }
+                    else
+                    {
+                        vec[codePoint] = 1;
+                    }
                 }
             }
 

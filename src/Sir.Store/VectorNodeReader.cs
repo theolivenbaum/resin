@@ -80,10 +80,7 @@ namespace Sir.Store
 
             while (node != null)
             {
-                if (node.Ancestor != null)
-                {
-                    yield return node;
-                }
+                yield return node;
 
                 if (node.Right != null)
                 {
