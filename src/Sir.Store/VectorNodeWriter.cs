@@ -111,7 +111,7 @@ namespace Sir.Store
             }
         }
 
-        public static void Serialize(VectorNode node, Stream stream)
+        public static void SerializeNode(VectorNode node, Stream stream)
         {
             byte terminator = 1;
 
@@ -148,7 +148,7 @@ namespace Sir.Store
             {
                 SerializeVector(node, vectorStream);
 
-                Serialize(node, indexStream);
+                SerializeNode(node, indexStream);
 
                 if (node.Right != null)
                 {
@@ -166,6 +166,15 @@ namespace Sir.Store
             var length = indexStream.Position - offset;
 
             return (offset, length);
+        }
+
+        public static void SerializePostings(VectorNode node, Stream postingsStream)
+        {
+            var offset = postingsStream.Position;
+
+            postingsStream.Write(node.DocIds.ToStream());
+
+            node.PostingsOffset = postingsStream.Position;
         }
 
         public static void SerializeVector(VectorNode node, Stream vectorStream)
