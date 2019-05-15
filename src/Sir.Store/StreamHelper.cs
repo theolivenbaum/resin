@@ -6,6 +6,22 @@ namespace Sir.Store
 {
     public static class StreamHelper
     {
+        public static byte[] ToStreamWithHeader(this IEnumerable<long> items, long header)
+        {
+            var payload = new MemoryStream();
+
+            payload.Write(BitConverter.GetBytes(header));
+
+            foreach (var item in items)
+            {
+                var buf = BitConverter.GetBytes(item);
+
+                payload.Write(buf);
+            }
+
+            return payload.ToArray();
+        }
+
         public static byte[] ToStream(this IEnumerable<long> items)
         {
             var payload = new MemoryStream();

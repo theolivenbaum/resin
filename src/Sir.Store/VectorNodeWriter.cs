@@ -172,9 +172,9 @@ namespace Sir.Store
         {
             var offset = postingsStream.Position;
 
-            postingsStream.Write(node.DocIds.ToStream());
+            postingsStream.Write(node.DocIds.ToStreamWithHeader(node.DocIds.Count));
 
-            node.PostingsOffset = postingsStream.Position;
+            node.PostingsOffset = offset;
         }
 
         public static void SerializeVector(VectorNode node, Stream vectorStream)
