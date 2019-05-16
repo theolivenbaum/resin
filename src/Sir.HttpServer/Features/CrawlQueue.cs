@@ -143,10 +143,12 @@ namespace Sir.HttpServer.Features
 
         public async Task ExecuteWrite(string collectionName, IDictionary doc)
         {
-            using (var writeSession = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash()))
             using (var indexSession = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
+            using (var writeSession = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash(), indexSession))
             {
-                writeSession.Write(doc, indexSession);
+                writeSession.Write(doc);
+
+                writeSession.Commit();
                 await indexSession.Commit();
             }
         }

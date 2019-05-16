@@ -45,25 +45,21 @@ namespace Sir.Store
         public async Task Commit(Job job)
         {
             var timer = Stopwatch.StartNew();
-
-            _writeSync.WaitOne();
-
             var colId = job.Collection.ToHash();
 
-            using (var writeSession = CreateWriteSession(job.Collection, colId))
             using (var indexSession = CreateIndexSession(job.Collection, colId))
+            using (var writeSession = CreateWriteSession(job.Collection, colId, indexSession))
             {
                 foreach (var doc in job.Documents)
                 {
-                    writeSession.Write(doc, indexSession);
+                    writeSession.Write(doc);
                 }
 
+                writeSession.Commit();
                 await indexSession.Commit();
             }
 
             _pageInfo.Clear();
-
-            _writeSync.Release();
 
             this.Log("executed {0} write+index job in {1}", job.Collection, timer.Elapsed);
         }
@@ -205,9 +201,10 @@ namespace Sir.Store
             return new DocumentStreamSession(collectionName, collectionId, this);
         }
 
-        public WriteSession CreateWriteSession(string collectionName, ulong collectionId)
+        public WriteSession CreateWriteSession(string collectionName, ulong collectionId, TermIndexSession indexSession)
         {
-            return new WriteSession(collectionName, collectionId, this);
+            return new WriteSession(
+                collectionName, collectionId, this, indexSession, _config);
         }
 
         public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId)

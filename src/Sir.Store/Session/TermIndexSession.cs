@@ -1,5 +1,4 @@
-﻿using Sir.Core;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,7 +17,6 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<long, VectorNode> _dirty;
         private bool _committed;
         private bool _committing;
-        private readonly ProducerConsumerQueue<(long docId, IDictionary doc)> _indexBuilder;
         private long _merges;
 
         public TermIndexSession(
@@ -33,9 +31,6 @@ namespace Sir.Store
             _dirty = new ConcurrentDictionary<long, VectorNode>();
 
             var numThreads = int.Parse(_config.Get("write_thread_count"));
-
-            _indexBuilder = new ProducerConsumerQueue<(long docId, IDictionary doc)>(
-                numThreads, ProcessDocument);
         }
 
         /// <summary>
@@ -44,12 +39,7 @@ namespace Sir.Store
         /// </summary>
         public void Put(long docId, IDictionary doc)
         {
-            _indexBuilder.Enqueue((docId, doc));
-        }
-
-        public void ProcessDocument((long docId, IDictionary doc) workItem)
-        {
-            foreach (var obj in workItem.doc.Keys)
+            foreach (var obj in doc.Keys)
             {
                 var key = obj.ToString();
 
@@ -57,7 +47,7 @@ namespace Sir.Store
                 {
                     var keyHash = key.ToHash();
                     var keyId = SessionFactory.GetKeyId(CollectionId, keyHash);
-                    var val = workItem.doc[key];
+                    var val = doc[key];
                     var str = val as string;
                     AnalyzedString tokens = null;
 
@@ -78,7 +68,7 @@ namespace Sir.Store
                         tokens = _tokenizer.Tokenize(str);
                     }
 
-                    BuildModel(workItem.docId, keyId, tokens);
+                    BuildModel(docId, keyId, tokens);
                 }
             }
         }
@@ -103,15 +93,7 @@ namespace Sir.Store
 
             _committing = true;
 
-            this.Log("waiting for model builder");
-
-            using (_indexBuilder)
-            {
-                _indexBuilder.Join();
-            }
-
             this.Log($"merges: {_merges}");
-
 
             foreach (var column in _dirty)
             {

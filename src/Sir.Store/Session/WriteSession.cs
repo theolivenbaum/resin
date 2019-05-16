@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sir.Core;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -10,17 +11,22 @@ namespace Sir.Store
     /// </summary>
     public class WriteSession : DocumentSession, ILogger
     {
+        private readonly IConfigurationProvider _config;
         private readonly ValueWriter _vals;
         private readonly ValueWriter _keys;
         private readonly DocMapWriter _docs;
         private readonly ValueIndexWriter _valIx;
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
+        private readonly TermIndexSession _indexSession;
+        private readonly ProducerConsumerQueue<IDictionary> _writer;
 
         public WriteSession(
             string collectionName,
             ulong collectionId,
-            SessionFactory sessionFactory) : base(collectionName, collectionId, sessionFactory)
+            SessionFactory sessionFactory,
+            TermIndexSession indexSession,
+            IConfigurationProvider config) : base(collectionName, collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
             KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", CollectionId)));
@@ -29,26 +35,46 @@ namespace Sir.Store
             KeyIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", CollectionId)));
             DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
 
+            _config = config;
             _vals = new ValueWriter(ValueStream);
             _keys = new ValueWriter(KeyStream);
             _docs = new DocMapWriter(DocStream);
             _valIx = new ValueIndexWriter(ValueIndexStream);
             _keyIx = new ValueIndexWriter(KeyIndexStream);
             _docIx = new DocIndexWriter(DocIndexStream);
+            _indexSession = indexSession;
+
+            var numThreads = int.Parse(_config.Get("write_thread_count"));
+            _writer = new ProducerConsumerQueue<IDictionary>(numThreads, DoWrite);
+        }
+
+        public override void Dispose()
+        {
+            _keys.Dispose();
+            _vals.Dispose();
+            _keyIx.Dispose();
+            _valIx.Dispose();
+            _docs.Dispose();
+            _docIx.Dispose();
+
+            base.Dispose();
+        }
+
+        public void Commit()
+        {
+            _writer.Dispose();
         }
 
         /// <summary>
         /// Fields prefixed with "___" will not be stored.
         /// </summary>
         /// <returns>Document ID</returns>
-        public void Write(IDictionary document, TermIndexSession indexSession)
+        public void Write(IDictionary document)
         {
-            var docId = Write(document);
-
-            indexSession.Put(docId, document);
+            _writer.Enqueue(document);
         }
 
-        public long Write(IDictionary document)
+        public void DoWrite(IDictionary document)
         {
             document["__created"] = DateTime.Now.ToBinary();
 
@@ -92,7 +118,9 @@ namespace Sir.Store
             }
 
             var docMeta = _docs.Append(docMap);
-            return _docIx.Append(docMeta.offset, docMeta.length);
+            var docId = _docIx.Append(docMeta.offset, docMeta.length);
+
+            _indexSession.Put(docId, document);
         }
     }
 }
