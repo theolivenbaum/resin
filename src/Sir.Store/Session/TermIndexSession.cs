@@ -19,6 +19,7 @@ namespace Sir.Store
         private bool _committed;
         private bool _committing;
         private readonly ProducerConsumerQueue<(long docId, IDictionary doc)> _indexBuilder;
+        private long _merges;
 
         public TermIndexSession(
             string collectionName,
@@ -88,7 +89,10 @@ namespace Sir.Store
 
             foreach (var vector in tokens.Embeddings)
             {
-                VectorNodeWriter.Add(ix, new VectorNode(vector, docId), Similarity.Term);
+                if (!VectorNodeWriter.Add(ix, new VectorNode(vector, docId), Similarity.Term))
+                {
+                    _merges++;
+                }
             }
         }
 
@@ -105,6 +109,9 @@ namespace Sir.Store
             {
                 _indexBuilder.Join();
             }
+
+            this.Log($"merges: {_merges}");
+
 
             foreach (var column in _dirty)
             {
