@@ -15,8 +15,6 @@ namespace Sir.Store
             {
                 var angle = node.Vector.CosAngle(cursor.Vector);
 
-                cursor.AngleWhenAdded = angle;
-
                 if (angle >= similarity.identicalAngle)
                 {
                     lock (cursor.Sync)
@@ -34,6 +32,7 @@ namespace Sir.Store
                         {
                             if (cursor.Left == null)
                             {
+                                node.AngleWhenAdded = angle;
                                 cursor.Left = node;
 
                                 return true;
@@ -57,6 +56,7 @@ namespace Sir.Store
                         {
                             if (cursor.Right == null)
                             {
+                                node.AngleWhenAdded = angle;
                                 cursor.Right = node;
 
                                 return true;
