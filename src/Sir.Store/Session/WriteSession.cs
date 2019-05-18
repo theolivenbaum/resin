@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -19,7 +20,6 @@ namespace Sir.Store
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
         private readonly TermIndexSession _indexSession;
-        private readonly ProducerConsumerQueue<IDictionary> _writer;
 
         public WriteSession(
             string collectionName,
@@ -45,7 +45,6 @@ namespace Sir.Store
             _indexSession = indexSession;
 
             var numThreads = int.Parse(_config.Get("write_thread_count"));
-            _writer = new ProducerConsumerQueue<IDictionary>(numThreads, DoWrite);
         }
 
         public override void Dispose()
@@ -60,9 +59,9 @@ namespace Sir.Store
             base.Dispose();
         }
 
-        public void Commit()
+        public async Task Commit()
         {
-            _writer.Dispose();
+            await _indexSession.Commit();
         }
 
         /// <summary>
@@ -70,11 +69,6 @@ namespace Sir.Store
         /// </summary>
         /// <returns>Document ID</returns>
         public void Write(IDictionary document)
-        {
-            _writer.Enqueue(document);
-        }
-
-        public void DoWrite(IDictionary document)
         {
             document["__created"] = DateTime.Now.ToBinary();
 

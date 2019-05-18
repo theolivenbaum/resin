@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -18,7 +17,7 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
-        private readonly Semaphore _writeSync;
+        private readonly object _writeSync = new object();
 
         public string Dir { get; }
         public IConfigurationProvider Config { get { return _config; } }
@@ -30,16 +29,6 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _config = config;
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
-
-            bool createdSystemWideSem;
-
-            _writeSync = new Semaphore(1, 2, "Sir.Store.SessionFactory", out createdSystemWideSem);
-
-            if (!createdSystemWideSem)
-            {
-                _writeSync.Dispose();
-                _writeSync = Semaphore.OpenExisting("Sir.Store.SessionFactory");
-            }
         }
 
         public async Task Commit(Job job)
@@ -55,8 +44,7 @@ namespace Sir.Store
                     writeSession.Write(doc);
                 }
 
-                writeSession.Commit();
-                await indexSession.Commit();
+                await writeSession.Commit();
             }
 
             _pageInfo.Clear();
@@ -166,23 +154,20 @@ namespace Sir.Store
             }
             catch (FileNotFoundException)
             {
-                try
+                lock (_writeSync)
                 {
-                    _writeSync.WaitOne();
+                    try
+                    {
+                        mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.ReadWrite, HandleInheritability.Inheritable);
 
-                    mmf = MemoryMappedFile.OpenExisting(mapName, MemoryMappedFileRights.ReadWrite, HandleInheritability.Inheritable);
+                        this.Log($"opened existing mmf {mapName} on second attempt");
+                    }
+                    catch (FileNotFoundException)
+                    {
+                        mmf = MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.ReadWrite);
 
-                    this.Log($"opened existing mmf {mapName} on second attempt");
-                }
-                catch (FileNotFoundException)
-                {
-                    mmf = MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.ReadWrite);
-
-                    this.Log($"created new mmf {mapName}");
-                }
-                finally
-                {
-                    _writeSync.Release();
+                        this.Log($"created new mmf {mapName}");
+                    }
                 }
             }
 
@@ -259,7 +244,6 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            _writeSync.Dispose();
         }
     }
 }

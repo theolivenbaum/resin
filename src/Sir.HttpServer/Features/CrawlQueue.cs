@@ -148,8 +148,7 @@ namespace Sir.HttpServer.Features
             {
                 writeSession.Write(doc);
 
-                writeSession.Commit();
-                await indexSession.Commit();
+                await writeSession.Commit();
             }
         }
 

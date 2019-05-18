@@ -10,7 +10,7 @@ namespace Sir.RocksDb
     {
         private readonly IConfigurationProvider _config;
         private readonly IKeyValueStore _store;
-        private readonly Semaphore _writeLock;
+        private readonly object _writeLock = new object();
 
         public string ContentType => "application/rocksdb+octet-stream";
 
@@ -18,7 +18,6 @@ namespace Sir.RocksDb
         {
             _config = config;
             _store = store;
-            _writeLock = new Semaphore(1, 2, "Sir.RocksDb");
         }
 
         public async Task<ResponseModel> Write(string collectionId, HttpRequest request)
@@ -35,11 +34,7 @@ namespace Sir.RocksDb
 
             await request.Body.CopyToAsync(requestStream);
 
-            _writeLock.WaitOne();
-
             DoWrite(collectionId.ToHash(), typeId, id, requestStream.ToArray());
-
-            _writeLock.Release();
 
             var response = new MemoryStream();
 
@@ -53,12 +48,14 @@ namespace Sir.RocksDb
             var fileId = $"{collection}.{type}";
             var path = Path.Combine(_config.Get("data_dir"), fileId);
 
-            _store.Put(key, value);
+            lock (_writeLock)
+            {
+                _store.Put(key, value);
+            }
         }
 
         public void Dispose()
         {
-            _writeLock.Dispose();
             _store.Dispose();
         }
     }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
 
 namespace Sir.Store
 {
@@ -10,21 +9,10 @@ namespace Sir.Store
     public class ValueWriter : IDisposable
     {
         private readonly Stream _stream;
-        private readonly Semaphore _writeSync;
 
         public ValueWriter(Stream stream)
         {
             _stream = stream;
-
-            bool createdSystemWideSem;
-
-            _writeSync = new Semaphore(1, 2, "Sir.Store.ValueWriter", out createdSystemWideSem);
-
-            if (!createdSystemWideSem)
-            {
-                _writeSync.Dispose();
-                _writeSync = Semaphore.OpenExisting("Sir.Store.ValueWriter");
-            }
         }
 
         public (long offset, int len, byte dataType) Append(object value)
@@ -78,20 +66,15 @@ namespace Sir.Store
                 dataType = DataType.STREAM;
             }
 
-            _writeSync.WaitOne();
-
             var offset = _stream.Position;
 
             _stream.Write(buffer);
-
-            _writeSync.Release();
 
             return (offset, buffer.Length, dataType);
         }
 
         public void Dispose()
         {
-            _writeSync.Dispose();
         }
     }
 }
