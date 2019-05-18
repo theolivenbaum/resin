@@ -26,7 +26,7 @@ namespace Sir.Store
         /// Get the next auto-incrementing doc id
         /// </summary>
         /// <returns>The next auto-incrementing doc id</returns>
-        private long GetNextDocId()
+        public long GetNextDocId()
         {
             return _stream.Position / BlockSize;
         }
@@ -36,14 +36,10 @@ namespace Sir.Store
         /// </summary>
         /// <param name="offset">offset of doc map</param>
         /// <param name="len">length of doc map</param>
-        public long Append(long offset, int len)
+        public void Append(long offset, int len)
         {
-            var id = GetNextDocId();
-
             _stream.Write(BitConverter.GetBytes(offset));
             _stream.Write(BitConverter.GetBytes(len));
-
-            return id;
         }
 
         public void Dispose()

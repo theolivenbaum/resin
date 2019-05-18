@@ -73,6 +73,7 @@ namespace Sir.Store
             document["__created"] = DateTime.Now.ToBinary();
 
             var docMap = new List<(long keyId, long valId)>();
+            var docId = _docIx.GetNextDocId();
 
             foreach (var key in document.Keys)
             {
@@ -112,7 +113,7 @@ namespace Sir.Store
             }
 
             var docMeta = _docs.Append(docMap);
-            var docId = _docIx.Append(docMeta.offset, docMeta.length);
+            _docIx.Append(docMeta.offset, docMeta.length);
 
             _indexSession.Put(docId, document);
         }
