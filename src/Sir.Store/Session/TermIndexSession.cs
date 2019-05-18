@@ -33,44 +33,11 @@ namespace Sir.Store
             var numThreads = int.Parse(_config.Get("write_thread_count"));
         }
 
-        /// <summary>
-        /// Fields prefixed with "___" or "__" will not be indexed.
-        /// Fields prefixed with "_" will not be tokenized.
-        /// </summary>
-        public void Put(long docId, IDictionary doc)
+        public void Put(long docId, long keyId, string value)
         {
-            foreach (var obj in doc.Keys)
-            {
-                var key = obj.ToString();
+            AnalyzedString tokens = _tokenizer.Tokenize(value);
 
-                if (!key.StartsWith("__"))
-                {
-                    var keyHash = key.ToHash();
-                    var keyId = SessionFactory.GetKeyId(CollectionId, keyHash);
-                    var val = doc[key];
-                    var str = val as string;
-                    AnalyzedString tokens = null;
-
-                    if (str == null || key[0] == '_')
-                    {
-                        var v = val.ToString();
-
-                        if (!string.IsNullOrWhiteSpace(v))
-                        {
-                            tokens = new AnalyzedString(
-                                new List<(int, int)> { (0, v.Length) },
-                                new List<SortedList<long, int>> { v.ToVector() },
-                                v);
-                        }
-                    }
-                    else
-                    {
-                        tokens = _tokenizer.Tokenize(str);
-                    }
-
-                    BuildModel(docId, keyId, tokens);
-                }
-            }
+            BuildModel(docId, keyId, tokens);
         }
 
         private void BuildModel(long docId, long keyId, AnalyzedString tokens)

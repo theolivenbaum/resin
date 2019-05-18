@@ -100,22 +100,29 @@ namespace Sir.Store
 
                     // store key
                     var keyInfo = _keys.Append(keyStr);
+
                     keyId = _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
                     SessionFactory.PersistKeyMapping(CollectionId, keyHash, keyId);
                 }
 
                 // store value
                 var valInfo = _vals.Append(val);
+
                 valId = _valIx.Append(valInfo.offset, valInfo.len, valInfo.dataType);
 
                 // store refs to keys and values
                 docMap.Add((keyId, valId));
+
+                // index
+                if (!keyStr.StartsWith("_") && valInfo.dataType == DataType.STRING)
+                {
+                    _indexSession.Put(docId, keyId, (string) val);
+                }
             }
 
             var docMeta = _docs.Append(docMap);
-            _docIx.Append(docMeta.offset, docMeta.length);
 
-            _indexSession.Put(docId, document);
+            _docIx.Append(docMeta.offset, docMeta.length);
         }
     }
 }

@@ -118,8 +118,8 @@ namespace Sir.Store
         {
             var clauses = query.ToList();
 
-            //Parallel.ForEach(clauses, q =>
-            foreach (var q in clauses)
+            Parallel.ForEach(clauses, q =>
+            //foreach (var q in clauses)
             {
                 var cursor = q;
 
@@ -162,7 +162,7 @@ namespace Sir.Store
 
                     cursor = cursor.Then;
                 }
-            }//);
+            });
         }
 
         public NodeReader CreateIndexReader(long keyId)
