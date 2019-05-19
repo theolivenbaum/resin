@@ -87,34 +87,31 @@ namespace Sir.Store
 
         private void Validate((long keyId, long docId, AnalyzedString tokens) item)
         {
-            if (item.keyId == 4 || item.keyId == 5)
+            var tree = GetOrCreateIndex(item.keyId);
+
+            foreach (var vector in item.tokens.Embeddings)
             {
-                var tree = GetOrCreateIndex(item.keyId);
+                var hit = VectorNodeReader.ClosestMatch(tree, vector, Similarity.Term.foldAngle);
 
-                foreach (var vector in item.tokens.Embeddings)
+                if (hit.Score < Similarity.Term.identicalAngle)
                 {
-                    var hit = VectorNodeReader.ClosestMatch(tree, vector, Similarity.Term.foldAngle);
+                    throw new DataMisalignedException();
+                }
 
-                    if (hit.Score < Similarity.Term.identicalAngle)
+                var valid = false;
+
+                foreach (var id in hit.Node.DocIds)
+                {
+                    if (id == item.docId)
                     {
-                        throw new DataMisalignedException();
+                        valid = true;
+                        break;
                     }
+                }
 
-                    var valid = false;
-
-                    foreach (var id in hit.Node.DocIds)
-                    {
-                        if (id == item.docId)
-                        {
-                            valid = true;
-                            break;
-                        }
-                    }
-
-                    if (!valid)
-                    {
-                        throw new DataMisalignedException();
-                    }
+                if (!valid)
+                {
+                    throw new DataMisalignedException();
                 }
             }
         }
