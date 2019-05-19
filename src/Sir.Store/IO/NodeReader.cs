@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -105,17 +104,8 @@ namespace Sir.Store
 
         public Hit ClosestMatch(SortedList<long, int> vector, (float identicalAngle, float foldAngle) similarity)
         {
-            var readSetting = _config.Get("read_mode") ?? "false";
-            var readonlyMode = readSetting.Equals("true");
-
-            var hits = readonlyMode ? 
-                ClosestMatchInMemoryMap(vector, similarity) : 
-                ClosestMatchOnDisk(vector, similarity);
-
-            // find best hit
-
+            var hits = ClosestMatchOnDisk(vector, similarity);
             var time = Stopwatch.StartNew();
-
             Hit best = null;
 
             foreach (var hit in hits)
@@ -133,39 +123,6 @@ namespace Sir.Store
             this.Log($"merge took {time.Elapsed}");
 
             return best;
-        }
-
-        private ConcurrentBag<Hit> ClosestMatchInMemoryMap(SortedList<long, int> vector, (float identicalAngle, float foldAngle) similarity)
-        {
-            var time = Stopwatch.StartNew();
-            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
-            var hits = new ConcurrentBag<Hit>();
-
-            using (var mmf = _sessionFactory.OpenMMF(_ixFileName))
-            using (var vmmf = _sessionFactory.OpenMMF(_vecFileName))
-            {
-                for (int i = 0; i < pages.Count; i++)
-                //Parallel.ForEach(ixPages, ixpage =>
-                {
-                    var page = pages[i];
-
-                    using (var indexStream = mmf.CreateViewStream(page.offset, page.length, MemoryMappedFileAccess.ReadWrite))
-                    using (var vectorView = vmmf.CreateViewAccessor(0, 0, MemoryMappedFileAccess.ReadWrite))
-                    {
-                        var hit = ClosestMatchInPage(
-                                    vector,
-                                    indexStream,
-                                    vectorView,
-                                    similarity);
-
-                        hits.Add(hit);
-                    }
-                }//);
-            }
-
-            this.Log($"scan took {time.Elapsed}");
-
-            return hits;
         }
 
         private ConcurrentBag<Hit> ClosestMatchOnDisk(SortedList<long, int> vector, (float identicalAngle, float foldAngle) similarity)
@@ -224,143 +181,6 @@ namespace Sir.Store
                 }
 
                 var cursorVector = VectorOperations.DeserializeVector(vecOffset, componentCount, vectorStream);
-                var cursorTerminator = block[block.Length - 1];
-                var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));
-
-                var angle = cursorVector.CosAngle(node);
-
-                if (angle >= similarity.identicalAngle)
-                {
-                    if (best == null || angle > highscore)
-                    {
-                        highscore = angle;
-                        best = new VectorNode(cursorVector);
-                        best.PostingsOffset = postingsOffset;
-                    }
-                    else if (angle == highscore)
-                    {
-                        if (best.PostingsOffsets == null)
-                        {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
-                        }
-                        else
-                        {
-                            best.PostingsOffsets.Add(postingsOffset);
-                        }
-                    }
-
-                    break;
-                }
-                else if (angle > similarity.foldAngle)
-                {
-                    if (best == null || angle > highscore)
-                    {
-                        highscore = angle;
-                        best = new VectorNode(cursorVector);
-                        best.PostingsOffset = postingsOffset;
-                    }
-                    else if (angle == highscore)
-                    {
-                        if (best.PostingsOffsets == null)
-                        {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
-                        }
-                        else
-                        {
-                            best.PostingsOffsets.Add(postingsOffset);
-                        }
-                    }
-
-                    // We need to determine if we can traverse further left.
-                    bool canGoLeft = cursorTerminator == 0 || cursorTerminator == 1;
-
-                    if (canGoLeft)
-                    {
-                        // There exists either a left and a right child or just a left child.
-                        // Either way, we want to go left and the next node in bitmap is the left child.
-
-                        read = indexStream.Read(block);
-                    }
-                    else
-                    {
-                        // There is no left child.
-
-                        break;
-                    }
-                }
-                else
-                {
-                    if (best == null || angle > highscore)
-                    {
-                        highscore = angle;
-                        best = new VectorNode(cursorVector);
-                        best.PostingsOffset = postingsOffset;
-                    }
-                    else if (angle == highscore)
-                    {
-                        if (best.PostingsOffsets == null)
-                        {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
-                        }
-                        else
-                        {
-                            best.PostingsOffsets.Add(postingsOffset);
-                        }
-                    }
-
-                    // We need to determine if we can traverse further to the right.
-
-                    if (cursorTerminator == 0)
-                    {
-                        // There exists a left and a right child.
-                        // Next node in bitmap is the left child. 
-                        // To find cursor's right child we must skip over the left tree.
-
-                        SkipTree(indexStream);
-                        read = indexStream.Read(block);
-                    }
-                    else if (cursorTerminator == 2)
-                    {
-                        // Next node in bitmap is the right child,
-                        // which is good because we want to go right.
-
-                        read = indexStream.Read(block);
-                    }
-                    else
-                    {
-                        // There is no right child.
-
-                        break;
-                    }
-                }
-            }
-
-            return new Hit
-            {
-                Score = highscore,
-                Node = best
-            };
-        }
-
-        private Hit ClosestMatchInPage(
-            SortedList<long, int> node,
-            Stream indexStream,
-            MemoryMappedViewAccessor vectorView,
-            (float identicalAngle, float foldAngle) similarity
-        )
-        {
-            Span<byte> block = new byte[VectorNode.BlockSize];
-
-            var read = indexStream.Read(block);
-
-            VectorNode best = null;
-            float highscore = 0;
-
-            while (read > 0)
-            {
-                var vecOffset = BitConverter.ToInt64(block.Slice(0, sizeof(long)));
-                var componentCount = BitConverter.ToInt32(block.Slice(sizeof(long) + sizeof(long), sizeof(int)));
-                var cursorVector = VectorOperations.DeserializeVector(vecOffset, componentCount, vectorView);
                 var cursorTerminator = block[block.Length - 1];
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));
 

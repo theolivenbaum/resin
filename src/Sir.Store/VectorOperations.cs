@@ -1,11 +1,7 @@
 ﻿using Sir.Store;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.IO.MemoryMappedFiles;
-using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir
@@ -107,45 +103,6 @@ namespace Sir
             return right;
         }
 
-        public static VectorNode DeserializeNode(byte[] buf, MemoryMappedViewAccessor vectorView, ref byte terminator)
-        {
-            // Deserialize node
-            var vecOffset = BitConverter.ToInt64(buf, 0);
-            var postingsOffset = BitConverter.ToInt64(buf, sizeof(long));
-            var vectorCount = BitConverter.ToInt32(buf, sizeof(long) + sizeof(long));
-            var weight = BitConverter.ToInt32(buf, sizeof(long) + sizeof(long) + sizeof(int));
-
-            // Deserialize term vector
-            var vec = new SortedList<long, int>(vectorCount);
-            var vecBuf = new byte[vectorCount * VectorNode.ComponentSize];
-
-            vectorView.ReadArray(vecOffset, vecBuf, 0, vecBuf.Length);
-
-            var offs = 0;
-
-            for (int i = 0; i < vectorCount; i++)
-            {
-                var key = BitConverter.ToInt64(vecBuf, offs);
-                var val = BitConverter.ToInt32(vecBuf, offs + sizeof(long));
-
-                vec.Add(key, val);
-
-                offs += VectorNode.ComponentSize;
-            }
-
-            // Create node
-            var node = new VectorNode(vec);
-
-            node.PostingsOffset = postingsOffset;
-            node.VectorOffset = vecOffset;
-            node.Terminator = terminator;
-            node.Weight = weight;
-
-            terminator = buf[buf.Length - 1];
-
-            return node;
-        }
-
         public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, ref byte terminator)
         {
             // Deserialize node
@@ -198,36 +155,6 @@ namespace Sir
             {
                 var key = BitConverter.ToInt64(vecBuf.Slice(offs, sizeof(long)));
                 var val = BitConverter.ToInt32(vecBuf.Slice(offs + sizeof(long), sizeof(int)));
-
-                vec.Add(key, val);
-
-                offs += VectorNode.ComponentSize;
-            }
-
-            return vec;
-        }
-
-        public static SortedList<long, int> DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView)
-        {
-            if (vectorOffset < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(vectorOffset));
-            }
-
-            if (vectorView == null)
-            {
-                throw new ArgumentNullException(nameof(vectorView));
-            }
-
-            // Deserialize term vector
-            var vec = new SortedList<long, int>(componentCount);
-            Span<byte> vecBuf = stackalloc byte[componentCount * VectorNode.ComponentSize];
-            var offs = vectorOffset;
-
-            for (int i = 0; i < componentCount; i++)
-            {
-                var key = vectorView.ReadInt64(offs);
-                var val = vectorView.ReadInt32(offs + sizeof(long));
 
                 vec.Add(key, val);
 
