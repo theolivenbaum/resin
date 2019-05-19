@@ -15,5 +15,5 @@ Non-strings are ToString-ed into a single string token. This behavior might chan
 
 ## Tokens
 
-Tokens are embedded into a 32-bit wide vectorspace that is represented as a binary search index. 
+Tokens are embedded into a 64-bit wide vectorspace that is represented as a binary search index. 
 There is one index per analyzed key.
