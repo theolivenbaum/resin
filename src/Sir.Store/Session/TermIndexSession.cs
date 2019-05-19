@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sir.Core;
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace Sir.Store
         private bool _committed;
         private bool _committing;
         private long _merges;
+        private readonly ProducerConsumerQueue<(long, long, AnalyzedString)> _builder;
 
         public TermIndexSession(
             string collectionName,
@@ -29,22 +31,24 @@ namespace Sir.Store
             _dirty = new ConcurrentDictionary<long, VectorNode>();
 
             var numThreads = int.Parse(_config.Get("write_thread_count"));
+
+            _builder = new ProducerConsumerQueue<(long, long, AnalyzedString)>(numThreads, BuildModel);
         }
 
         public void Put(long docId, long keyId, string value)
         {
             AnalyzedString tokens = _tokenizer.Tokenize(value);
 
-            BuildModel(docId, keyId, tokens);
+            _builder.Enqueue((docId, keyId, tokens));
         }
 
-        private void BuildModel(long docId, long keyId, AnalyzedString tokens)
+        private void BuildModel((long docId, long keyId, AnalyzedString tokens) workItem)
         {
-            var ix = GetOrCreateIndex(keyId);
+            var ix = GetOrCreateIndex(workItem.keyId);
 
-            foreach (var vector in tokens.Embeddings)
+            foreach (var vector in workItem.tokens.Embeddings)
             {
-                if (!VectorNodeWriter.Add(ix, new VectorNode(vector, docId), Similarity.Term))
+                if (!VectorNodeWriter.Add(ix, new VectorNode(vector, workItem.docId), Similarity.Term))
                 {
                     _merges++;
                 }
@@ -57,6 +61,8 @@ namespace Sir.Store
                 return;
 
             _committing = true;
+
+            _builder.Dispose();
 
             this.Log($"merges: {_merges}");
 
