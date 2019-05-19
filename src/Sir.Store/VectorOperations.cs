@@ -164,47 +164,6 @@ namespace Sir
             return vec;
         }
 
-        public static async Task<SortedList<long, int>> DeserializeVectorAsync(long vectorOffset, Stream vectorStream)
-        {
-            if (vectorStream == null)
-            {
-                throw new ArgumentNullException(nameof(vectorStream));
-            }
-
-            var vec = new SortedList<long, int>();
-
-            if (vectorOffset > 0)
-            {
-                vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
-            }
-
-            var buf = new byte[sizeof(long) + sizeof(int)];
-
-            var read = await vectorStream.ReadAsync(buf);
-
-            while (read > 0)
-            {
-                vec.Add(BitConverter.ToInt64(buf), BitConverter.ToInt32(buf, sizeof(long)));
-
-                read = await vectorStream.ReadAsync(buf);
-            }
-
-            return vec;
-        }
-
-        public static async Task<long> SerializeAsync(this SortedList<long, int> vec, Stream stream)
-        {
-            var pos = stream.Position;
-
-            foreach (var kvp in vec)
-            {
-                await stream.WriteAsync(BitConverter.GetBytes(kvp.Key), 0, sizeof(long));
-                await stream.WriteAsync(BitConverter.GetBytes(kvp.Value), 0, sizeof(int));
-            }
-
-            return pos;
-        }
-
         public static long Serialize(this SortedList<long, int> vec, Stream stream)
         {
             var pos = stream.Position;
