@@ -36,7 +36,7 @@ namespace Sir.Store
                 var values = key[0] == '_' ?
                     new AnalyzedString(
                         new List<(int, int)> { (0, value.Length) }, 
-                        new List<SortedList<long, int>> { value.ToVector() }, 
+                        new List<SortedList<long, int>> { value.ToVector(0, value.Length) }, 
                         value) :
 
                     tokenizer.Tokenize(value);

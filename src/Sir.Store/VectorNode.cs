@@ -81,7 +81,7 @@ namespace Sir.Store
         }
 
         public VectorNode(string s)
-            : this(s.ToVector())
+            : this(s.ToVector(0, s.Length))
         {
         }
 

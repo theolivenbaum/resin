@@ -310,30 +310,6 @@ namespace Sir
             return vec;
         }
 
-        public static SortedList<long, int> ToVector(this string word)
-        {
-            var vec = new SortedList<long, int>();
-
-            if (word.Length > 0)
-            {
-                foreach (var c in word.ToCharArray())
-                {
-                    var codePoint = (int)c;
-
-                    if (vec.ContainsKey(codePoint))
-                    {
-                        if (vec[codePoint] < int.MaxValue) vec[codePoint] += 1;
-                    }
-                    else
-                    {
-                        vec[codePoint] = 1;
-                    }
-                }
-            }
-
-            return vec;
-        }
-
         public static float Magnitude(this SortedList<long, int> vector)
         {
             return (float) Math.Sqrt(DotSelf(vector));
@@ -374,7 +350,7 @@ namespace Sir
 
         public static bool ContainsMany(this string text, char c)
         {
-            var vector = text.ToVector();
+            var vector = text.ToVector(0, text.Length);
 
             if (vector[c] > 1)
             {
