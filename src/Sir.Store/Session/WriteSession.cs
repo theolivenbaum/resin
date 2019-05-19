@@ -1,5 +1,4 @@
-﻿using Sir.Core;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -43,8 +42,6 @@ namespace Sir.Store
             _keyIx = new ValueIndexWriter(KeyIndexStream);
             _docIx = new DocIndexWriter(DocIndexStream);
             _indexSession = indexSession;
-
-            var numThreads = int.Parse(_config.Get("write_thread_count"));
         }
 
         public override void Dispose()
@@ -91,8 +88,12 @@ namespace Sir.Store
                     continue;
                 }
 
+                // store value
+                var valInfo = _vals.Append(val);
+                var valId = _valIx.Append(valInfo.offset, valInfo.len, valInfo.dataType);
+
                 var keyHash = keyStr.ToHash();
-                long keyId, valId;
+                long keyId;
 
                 if (!SessionFactory.TryGetKeyId(CollectionId, keyHash, out keyId))
                 {
@@ -104,11 +105,6 @@ namespace Sir.Store
                     keyId = _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
                     SessionFactory.PersistKeyMapping(CollectionId, keyHash, keyId);
                 }
-
-                // store value
-                var valInfo = _vals.Append(val);
-
-                valId = _valIx.Append(valInfo.offset, valInfo.len, valInfo.dataType);
 
                 // store refs to keys and values
                 docMap.Add((keyId, valId));
