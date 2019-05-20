@@ -56,9 +56,9 @@ namespace Sir.Store
             base.Dispose();
         }
 
-        public async Task Commit()
+        public void Commit()
         {
-            await _indexSession.Commit();
+            _indexSession.Commit();
         }
 
         /// <summary>

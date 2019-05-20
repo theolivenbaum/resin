@@ -17,7 +17,6 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly ITokenizer _tokenizer;
         private readonly ProducerConsumerQueue<string> _httpQueue;
-        private readonly RemotePostingsReader _postingsReader;
         private readonly HttpClient _http;
         private readonly string _baseUrl;
 
@@ -33,7 +32,6 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _httpQueue = new ProducerConsumerQueue<string>(
                 int.Parse(_config.Get("write_thread_count")), callback:SubmitQuery);
-            _postingsReader = new RemotePostingsReader(_config, collectionName);
             _http = new HttpClient();
             _baseUrl = baseUrl;
 

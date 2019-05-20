@@ -139,13 +139,18 @@ namespace Sir.Store
             stream.WriteByte(terminator);
         }
 
-        public static (long offset, long length) SerializeTree(VectorNode node, Stream indexStream, Stream vectorStream)
+        public static (long offset, long length) SerializeTree(VectorNode node, Stream indexStream, Stream vectorStream, Stream postingsStream)
         {
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;
 
             while (node != null)
             {
+                if (node.DocIds != null)
+                {
+                    SerializePostings(node, postingsStream);
+                }
+
                 SerializeVector(node, vectorStream);
 
                 SerializeNode(node, indexStream);
@@ -181,46 +186,6 @@ namespace Sir.Store
         {
             node.VectorOffset = node.Vector.Serialize(vectorStream);
         }
-
-        public static IList<VectorNode> SerializePostings(VectorNode node, Stream lengths, Stream offsets, Stream lists)
-        {
-            var stack = new Stack<VectorNode>();
-            var result = new List<VectorNode>();
-
-            while (node != null)
-            {
-                if (node.DocIds != null)
-                {
-                    // dirty node
-
-                    var list = node.DocIds.ToArray();
-
-                    node.DocIds.Clear();
-
-                    var buf = list.ToStream();
-
-                    lists.Write(buf);
-                    lengths.Write(BitConverter.GetBytes(buf.Length));
-                    offsets.Write(BitConverter.GetBytes(node.PostingsOffset));
-
-                    result.Add(node);
-                }
-
-                if (node.Right != null)
-                {
-                    stack.Push(node.Right);
-                }
-
-                node = node.Left;
-
-                if (node == null)
-                {
-                    if (stack.Count > 0)
-                        node = stack.Pop();
-                }
-            }
-
-            return result;
-        }
+        
     }
 }

@@ -55,7 +55,7 @@ namespace Sir.Store
             }
         }
 
-        public async Task Commit()
+        public void Commit()
         {
             if (_committing || _committed)
                 return;
@@ -66,15 +66,16 @@ namespace Sir.Store
 
             this.Log($"merges: {_merges}");
 
-            foreach (var column in _dirty)
+            using (var postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos")))
             {
-                using (var vectorStream = SessionFactory.CreateAppendStream(
-                    Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.vec")))
+                foreach (var column in _dirty)
                 {
-                    using (var writer = new ColumnSerializer(
-                        CollectionId, column.Key, SessionFactory, new RemotePostingsWriter(_config, CollectionName)))
+                    using (var vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.vec")))
                     {
-                        await writer.CreateColumnSegment(column.Value, vectorStream);
+                        using (var writer = new ColumnSerializer(CollectionId, column.Key, SessionFactory))
+                        {
+                            writer.CreateColumnSegment(column.Value, vectorStream, postingsStream);
+                        }
                     }
                 }
             }

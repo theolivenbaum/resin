@@ -20,7 +20,7 @@ namespace Sir.HttpServer.Features
 
         public CrawlQueue(SessionFactory sessionFactory)
         {
-            _queue = new ProducerConsumerQueue<(string,Uri)>(1, callback: Submit);
+            _queue = new ProducerConsumerQueue<(string,Uri)>(1, Submit);
             _sessionFactory = sessionFactory;
         }
 
@@ -60,7 +60,7 @@ namespace Sir.HttpServer.Features
             }
         }
 
-        private async Task Submit((string collection, Uri uri) item)
+        private void Submit((string collection, Uri uri) item)
         {
             try
             {
@@ -115,7 +115,7 @@ namespace Sir.HttpServer.Features
                 document["title"] = doc.title;
                 document["body"] = doc.body;
 
-                await ExecuteWrite(item.collection, document);
+                ExecuteWrite(item.collection, document);
 
                 LastProcessed = (item.uri, (string)document["title"]);
             }
@@ -141,14 +141,13 @@ namespace Sir.HttpServer.Features
             }
         }
 
-        public async Task ExecuteWrite(string collectionName, IDictionary doc)
+        public void ExecuteWrite(string collectionName, IDictionary doc)
         {
             using (var indexSession = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
             using (var writeSession = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash(), indexSession))
             {
                 writeSession.Write(doc);
-
-                await writeSession.Commit();
+                writeSession.Commit();
             }
         }
 

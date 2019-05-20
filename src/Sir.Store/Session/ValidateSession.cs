@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -16,7 +15,6 @@ namespace Sir.Store
         private readonly ITokenizer _tokenizer;
         private readonly ReadSession _readSession;
         private readonly ProducerConsumerQueue<(long docId, object key, AnalyzedString tokens)> _validator;
-        private readonly RemotePostingsReader _postingsReader;
 
         public ValidateSession(
             string collectionName,
@@ -30,8 +28,7 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config);
             _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedString tokens)>(
-                int.Parse(_config.Get("write_thread_count")), callback: Validate);
-            _postingsReader = new RemotePostingsReader(_config, collectionName);
+                int.Parse(_config.Get("write_thread_count")), Validate);
         }
 
         public void Validate(IEnumerable<IDictionary> documents, params long[] excludeKeyIds)
@@ -61,7 +58,7 @@ namespace Sir.Store
             }
         }
 
-        private async Task Validate((long docId, object key, AnalyzedString tokens) item)
+        private void Validate((long docId, object key, AnalyzedString tokens) item)
         {
             var docTree = new VectorNode();
 
@@ -75,7 +72,7 @@ namespace Sir.Store
                 var query = new Query(CollectionId, new Term(item.key, node));
                 bool valid = false;
 
-                foreach (var id in await _readSession.ReadIds(query))
+                foreach (var id in _readSession.ReadIds(query))
                 {
                     if (id == item.docId)
                     {

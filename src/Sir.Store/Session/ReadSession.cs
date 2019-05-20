@@ -19,7 +19,6 @@ namespace Sir.Store
         private readonly ValueIndexReader _valIx;
         private readonly ValueReader _keyReader;
         private readonly ValueReader _valReader;
-        private readonly RemotePostingsReader _postingsReader;
         private readonly IConfigurationProvider _config;
         private readonly string _ixFileExtension;
         private readonly string _ixpFileExtension;
@@ -49,7 +48,6 @@ namespace Sir.Store
             _valIx = new ValueIndexReader(ValueIndexStream);
             _keyReader = new ValueReader(KeyStream);
             _valReader = new ValueReader(ValueStream);
-            _postingsReader = new RemotePostingsReader(config, collectionName);
             _config = config;
             _ixFileExtension = ixFileExtension;
             _ixpFileExtension = ixpFileExtension;
@@ -61,11 +59,11 @@ namespace Sir.Store
         {
             if (SessionFactory.CollectionExists(query.Collection))
             {
-                var result = await Execute(query);
+                var result = Execute(query);
 
                 if (result != null)
                 {
-                    var docs = await ReadDocs(result.Documents);
+                    var docs = await ReadDocs(result.SortedDocuments);
 
                     return new ReadResult { Total = result.Total, Docs = docs };
                 }
@@ -76,11 +74,11 @@ namespace Sir.Store
             return new ReadResult { Total = 0, Docs = new IDictionary[0] };
         }
 
-        public async Task<IEnumerable<long>> ReadIds(Query query)
+        public IEnumerable<long> ReadIds(Query query)
         {
             if (SessionFactory.CollectionExists(query.Collection))
             {
-                var result = await Execute(query);
+                var result = Execute(query);
 
                 if (result == null)
                 {
@@ -95,17 +93,20 @@ namespace Sir.Store
             return new long[0];
         }
 
-        private async Task<ScoredResult> Execute(Query query)
+        private ScoredResult Execute(Query query)
         {
             Map(query);
 
             var timer = Stopwatch.StartNew();
 
-            var result = await _postingsReader.Reduce(query);
+            using (var postingsStream = SessionFactory.CreateReadStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos")))
+            {
+                var result = new PostingsReader(postingsStream).Reduce(query.ToList(), query.Skip, query.Take);
 
-            this.Log("remote reduce of {0} produced {1} docs and took {2}", query, result.Documents.Count, timer.Elapsed);
+                this.Log("reduction of {0} produced {1} docs and took {2}", query, result.Documents.Count, timer.Elapsed);
 
-            return result;
+                return result;
+            }
         }
 
         /// <summary>

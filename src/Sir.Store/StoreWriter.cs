@@ -26,12 +26,12 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
-        public async Task<ResponseModel> Write(string collectionName, HttpRequest request)
+        public ResponseModel Write(string collectionName, HttpRequest request)
         {
             var documents = Deserialize<IEnumerable<IDictionary>>(request.Body);
             var job = new Job(collectionName, documents);
 
-            await _sessionFactory.Commit(job);
+            _sessionFactory.Commit(job);
 
             return new ResponseModel();
         }

@@ -23,6 +23,12 @@ namespace Sir.Store
         public SessionFactory(ITokenizer tokenizer, IConfigurationProvider config)
         {
             Dir = config.Get("data_dir");
+
+            if (!Directory.Exists(Dir))
+            {
+                Directory.CreateDirectory(Dir);
+            }
+
             _keys = LoadKeys();
             _tokenizer = tokenizer;
             _config = config;
@@ -37,7 +43,7 @@ namespace Sir.Store
             }
         }
 
-        public async Task Commit(Job job)
+        public void Commit(Job job)
         {
             var timer = Stopwatch.StartNew();
             var colId = job.Collection.ToHash();
@@ -50,7 +56,7 @@ namespace Sir.Store
                     writeSession.Write(doc);
                 }
 
-                await writeSession.Commit();
+                writeSession.Commit();
             }
 
             _pageInfo.Clear();

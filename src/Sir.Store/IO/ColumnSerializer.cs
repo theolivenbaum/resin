@@ -9,17 +9,15 @@ namespace Sir.Store
     {
         private readonly long _keyId;
         private readonly ulong _collectionId;
-        private readonly RemotePostingsWriter _postingsWriter;
         private readonly SessionFactory _sessionFactory;
         private static readonly object _indexFileSync = new object();
         private readonly PageIndexWriter _ixPageIndexWriter;
         private readonly Stream _ixStream;
 
-        public ColumnSerializer(ulong collectionId, long keyId, SessionFactory sessionFactory, RemotePostingsWriter postingsWriter, string ixFileExtension = "ix", string pageFileExtension = "ixp")
+        public ColumnSerializer(ulong collectionId, long keyId, SessionFactory sessionFactory, string ixFileExtension = "ix", string pageFileExtension = "ixp")
         {
             _keyId = keyId;
             _collectionId = collectionId;
-            _postingsWriter = postingsWriter;
             _sessionFactory = sessionFactory;
 
             var pixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}", _collectionId, keyId, pageFileExtension));
@@ -29,13 +27,11 @@ namespace Sir.Store
             _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
         }
 
-        public async Task CreateColumnSegment(VectorNode column, Stream vectorStream)
+        public void CreateColumnSegment(VectorNode column, Stream vectorStream, Stream postingsStream)
         {
             var time = Stopwatch.StartNew();
 
-            await _postingsWriter.Write(column);
-
-            var page = VectorNodeWriter.SerializeTree(column, _ixStream, vectorStream);
+            var page = VectorNodeWriter.SerializeTree(column, _ixStream, vectorStream, postingsStream);
 
             _ixStream.Flush();
             _ixPageIndexWriter.Write(page.offset, page.length);
