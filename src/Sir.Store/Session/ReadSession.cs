@@ -25,7 +25,6 @@ namespace Sir.Store
         private readonly string _ixpFileExtension;
         private readonly string _vecFileExtension;
         private readonly string _vecixpFileExtension;
-        private readonly ConcurrentDictionary<string, (Stream indexStream, IList<(long, long)> pages)> _indexStreams;
 
         public ReadSession(string collectionName,
             ulong collectionId,
@@ -56,7 +55,6 @@ namespace Sir.Store
             _ixpFileExtension = ixpFileExtension;
             _vecFileExtension = vecFileExtension;
             _vecixpFileExtension = vecixpFileExtension;
-            _indexStreams = new ConcurrentDictionary<string, (Stream indexStream, IList<(long, long)> pages)>();
         }
 
         public async Task<ReadResult> Read(Query query)
