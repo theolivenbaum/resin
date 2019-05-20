@@ -15,15 +15,17 @@ namespace Sir.Store
         private bool _or;
         private bool _not;
 
-        public Query(ulong collectionId, Term term)
+        public Query(ulong collectionId, Term term, bool and = false, bool or = true, bool not = false)
         {
             Term = term;
             PostingsOffsets = new List<long>();
-            Or = true;
+            And = and;
+            Or = or;
+            Not = not;
             Collection = collectionId;
         }
 
-        public Query(ulong collectionId, float score, IList<long> postingsOffsets)
+        public Query(ulong collectionId, float score, IList<long> postingsOffsets, bool and = false, bool or = true, bool not = false)
         {
             Score = score;
             PostingsOffsets = postingsOffsets;
@@ -225,7 +227,7 @@ namespace Sir.Store
             return result.ToArray();
         }
 
-        public void AddClause(Query query)
+        public Query AddClause(Query query)
         {
             if (Then == null)
             {
@@ -235,6 +237,8 @@ namespace Sir.Store
             {
                 Then.AddClause(query);
             }
+
+            return this;
         }
     }
 }
