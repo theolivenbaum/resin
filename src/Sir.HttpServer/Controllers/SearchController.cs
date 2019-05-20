@@ -17,7 +17,7 @@ namespace Sir.HttpServer.Controllers
 
         [HttpGet("/search/")]
         [HttpPost("/search/")]
-        public async Task<IActionResult> Index(string q, string collection)
+        public IActionResult Index(string q, string collection)
         {
             if (string.IsNullOrWhiteSpace(q)) return View();
 
@@ -33,7 +33,7 @@ namespace Sir.HttpServer.Controllers
             var timer = new Stopwatch();
             timer.Start();
 
-            var result = await reader.Read(collection, Request);
+            var result = reader.Read(collection, Request);
 
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
             ViewData["total"] = result.Total;

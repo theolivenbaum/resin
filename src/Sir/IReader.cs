@@ -8,6 +8,6 @@ namespace Sir
     /// </summary>
     public interface IReader : IPlugin
     {
-       Task<ResponseModel> Read(string collectionId, HttpRequest request);
+       ResponseModel Read(string collectionId, HttpRequest request);
     }
 }

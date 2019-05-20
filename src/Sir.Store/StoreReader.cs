@@ -38,7 +38,7 @@ namespace Sir.Store
         {
         }
 
-        public async Task<ResponseModel> Read(string collectionName, HttpRequest request)
+        public ResponseModel Read(string collectionName, HttpRequest request)
         {
             var timer = Stopwatch.StartNew();
             var collectionId = collectionName.ToHash();
@@ -55,7 +55,7 @@ namespace Sir.Store
 
                 using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionId, "ix1", "ixp1", "vec1"))
                 {
-                    var result = await readSession.Read(query);
+                    var result = readSession.Read(query);
                     var stream = new MemoryStream();
 
                     Serialize(result.Docs, stream);
@@ -89,7 +89,7 @@ namespace Sir.Store
                     {
                         var ids = request.Query["id"].Select(s => long.Parse(s));
 
-                        docs = await session.ReadDocs(ids);
+                        docs = session.ReadDocs(ids);
                         total = docs.Count;
 
                         this.Log(string.Format("executed lookup by id in {0}", timer.Elapsed));
@@ -103,7 +103,7 @@ namespace Sir.Store
                             return new ResponseModel { MediaType = "application/json", Total = 0 };
                         }
 
-                        var result = await session.Read(query);
+                        var result = session.Read(query);
 
                         docs = result.Docs;
                         total = result.Total;

@@ -125,7 +125,7 @@ namespace Sir.HttpServer.Features
             }
         }
 
-        private async Task<IDictionary> GetDocument(string collectionName, string url, string title)
+        private IDictionary GetDocument(string collectionName, string url, string title)
         {
             using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
             {
@@ -133,7 +133,7 @@ namespace Sir.HttpServer.Features
                 urlQuery.And = true;
                 urlQuery.Take = 1;
 
-                var result = await readSession.Read(urlQuery);
+                var result = readSession.Read(urlQuery);
             
                 return result.Total == 0 
                     ? null : (float)result.Docs[0]["___score"] >= Similarity.Term.identicalAngle 

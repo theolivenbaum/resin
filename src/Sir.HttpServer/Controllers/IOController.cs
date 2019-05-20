@@ -54,7 +54,7 @@ namespace Sir.HttpServer.Controllers
 
         [HttpGet("{*collectionName}")]
         [HttpPut("{*collectionName}")]
-        public async Task<IActionResult> Get(string collectionName)
+        public IActionResult Get(string collectionName)
         {
             var mediaType = Request.Headers["Accept"].ToArray()[0];
             var reader = _plugins.Get<IReader>(mediaType);
@@ -65,7 +65,7 @@ namespace Sir.HttpServer.Controllers
             }
 
             var timer = Stopwatch.StartNew();
-            var result = await reader.Read(collectionName, Request);
+            var result = reader.Read(collectionName, Request);
 
             this.Log("processed {0} request in {1}", mediaType, timer.Elapsed);
 

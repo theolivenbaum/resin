@@ -21,7 +21,7 @@ namespace Sir.DbUtil
             {
                 // example: query C:\projects\resin\src\Sir.HttpServer\App_Data www
 
-                await Query(
+                Query(
                     dir: args[1], 
                     collectionName: args[2]);
             }
@@ -85,7 +85,7 @@ namespace Sir.DbUtil
             }
         }
 
-        private static async Task Query(string dir, string collectionName)
+        private static void Query(string dir, string collectionName)
         {
             var tokenizer = new UnicodeTokenizer();
             var qp = new TermQueryParser();
@@ -110,7 +110,7 @@ namespace Sir.DbUtil
 
                 using (var session = sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
                 {
-                    var result = await session.Read(q);
+                    var result = session.Read(q);
                     var docs = result.Docs;
 
                     if (docs.Count > 0)
