@@ -29,6 +29,14 @@ namespace Sir.Store
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
         }
 
+        public void Truncate(ulong collectionId)
+        {
+            foreach (var file in Directory.GetFiles(Dir, $"{collectionId}*"))
+            {
+                File.Delete(file);
+            }
+        }
+
         public async Task Commit(Job job)
         {
             var timer = Stopwatch.StartNew();
