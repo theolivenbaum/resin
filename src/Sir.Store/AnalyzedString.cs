@@ -22,5 +22,13 @@ namespace Sir
         {
             return Original;
         }
+
+        public static AnalyzedString AsSingleToken(string text)
+        {
+            var tokens = new List<(int, int)> { (0, text.Length) };
+            var vectors = new List<SortedList<long, int>> { text.ToVector(0, text.Length) };
+
+            return new AnalyzedString(tokens, vectors, text);
+        }
     }
 }
