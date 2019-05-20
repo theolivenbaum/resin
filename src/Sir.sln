@@ -20,10 +20,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.DbUtil", "Sir.DbUtil\Si
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Postings", "Sir.Postings\Sir.Postings.csproj", "{5514C8B0-01D2-489C-8632-A30944E51948}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.RocksDb", "Sir.RocksDb\Sir.RocksDb.csproj", "{B19F4DE3-E10F-4001-9922-EA18BEAE4592}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.RocksDb.Store", "Sir.RocksDb.Store\Sir.RocksDb.Store.csproj", "{1D2C0491-A825-4429-8635-E3B0093DF7BA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,14 +50,6 @@ Global
 		{5514C8B0-01D2-489C-8632-A30944E51948}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5514C8B0-01D2-489C-8632-A30944E51948}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5514C8B0-01D2-489C-8632-A30944E51948}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B19F4DE3-E10F-4001-9922-EA18BEAE4592}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B19F4DE3-E10F-4001-9922-EA18BEAE4592}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B19F4DE3-E10F-4001-9922-EA18BEAE4592}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B19F4DE3-E10F-4001-9922-EA18BEAE4592}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1D2C0491-A825-4429-8635-E3B0093DF7BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1D2C0491-A825-4429-8635-E3B0093DF7BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1D2C0491-A825-4429-8635-E3B0093DF7BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1D2C0491-A825-4429-8635-E3B0093DF7BA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
