@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -51,6 +52,6 @@ namespace Sir.HttpServer.Controllers
 
     public class SearchResultModel
     {
-        public IDictionary Document { get; set; }
+        public IDictionary<string, object> Document { get; set; }
     }
 }

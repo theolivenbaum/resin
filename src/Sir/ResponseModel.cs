@@ -9,7 +9,7 @@ namespace Sir
     /// </summary>
     public class ResponseModel
     {
-        public IList<IDictionary> Documents { get; set; }
+        public IList<IDictionary<string, object>> Documents { get; set; }
         public MemoryStream Stream { get; set; }
         public long Total { get; set; }
         public string MediaType { get; set; }

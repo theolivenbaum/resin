@@ -71,7 +71,7 @@ namespace Sir.Store
 
             this.Log("found nothing for query {0}", query);
 
-            return new ReadResult { Total = 0, Docs = new IDictionary[0] };
+            return new ReadResult { Total = 0, Docs = new IDictionary<string, object>[0] };
         }
 
         public IEnumerable<long> ReadIds(Query query)
@@ -189,9 +189,9 @@ namespace Sir.Store
             return CreateIndexReader(keyId);
         }
 
-        public IList<IDictionary> ReadDocs(IEnumerable<KeyValuePair<long, float>> docs)
+        public IList<IDictionary<string, object>> ReadDocs(IEnumerable<KeyValuePair<long, float>> docs)
         {
-            var result = new List<IDictionary>();
+            var result = new List<IDictionary<string, object>>();
 
             foreach (var d in docs)
             {
@@ -203,7 +203,7 @@ namespace Sir.Store
                 }
 
                 var docMap = _docs.Read(docInfo.offset, docInfo.length);
-                var doc = new Dictionary<object, object>();
+                var doc = new Dictionary<string, object>();
 
                 for (int i = 0; i < docMap.Count; i++)
                 {
@@ -213,7 +213,7 @@ namespace Sir.Store
                     var key = _keyReader.Read(kInfo.offset, kInfo.len, kInfo.dataType);
                     var val = _valReader.Read(vInfo.offset, vInfo.len, vInfo.dataType);
 
-                    doc[key] = val;
+                    doc[key.ToString()] = val;
                 }
 
                 doc["___docid"] = d.Key;
@@ -225,9 +225,9 @@ namespace Sir.Store
             return result;
         }
 
-        public IList<IDictionary> ReadDocs(IEnumerable<long> docs)
+        public IList<IDictionary<string, object>> ReadDocs(IEnumerable<long> docs)
         {
-            var result = new List<IDictionary>();
+            var result = new List<IDictionary<string, object>>();
 
             foreach (var d in docs)
             {
@@ -239,7 +239,7 @@ namespace Sir.Store
                 }
 
                 var docMap = _docs.Read(docInfo.offset, docInfo.length);
-                var doc = new Dictionary<object, object>();
+                var doc = new Dictionary<string, object>();
 
                 for (int i = 0; i < docMap.Count; i++)
                 {
@@ -249,7 +249,7 @@ namespace Sir.Store
                     var key = _keyReader.Read(kInfo.offset, kInfo.len, kInfo.dataType);
                     var val = _valReader.Read(vInfo.offset, vInfo.len, vInfo.dataType);
 
-                    doc[key] = val;
+                    doc[key.ToString()] = val;
                 }
 
                 var docId = doc.ContainsKey("_original") ? long.Parse(doc["_original"].ToString()) : d;

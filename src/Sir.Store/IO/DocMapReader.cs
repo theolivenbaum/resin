@@ -48,36 +48,5 @@ namespace Sir.Store
 
             return docMapping;
         }
-
-        public async Task<IList<(long keyId, long valId)>> ReadAsync(long offset, int length)
-        {
-            byte[] buf;
-            int read;
-
-            _stream.Seek(offset, SeekOrigin.Begin);
-
-            buf = new byte[length];
-            read = await _stream.ReadAsync(buf, 0, length);
-
-            if (read != length)
-            {
-                throw new InvalidDataException();
-            }
-
-            const int blockSize = sizeof(long) + sizeof(long);
-            var blockCount = length / blockSize;
-            var docMapping = new List<(long, long)>();
-
-            for (int i = 0; i < blockCount; i++)
-            {
-                var offs = i * blockSize;
-                var key = BitConverter.ToInt64(buf, offs);
-                var val = BitConverter.ToInt64(buf, offs + sizeof(long));
-
-                docMapping.Add((key, val));
-            }
-
-            return docMapping;
-        }
     }
 }

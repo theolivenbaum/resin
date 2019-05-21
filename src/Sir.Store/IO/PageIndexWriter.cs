@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -16,12 +15,6 @@ namespace Sir.Store
             _stream = stream;
         }
 
-        public async Task WriteAsync(long offset, long length)
-        {
-            await _stream.WriteAsync(BitConverter.GetBytes(offset));
-            await _stream.WriteAsync(BitConverter.GetBytes(length));
-        }
-
         public void Write(long offset, long length)
         {
             _stream.Write(BitConverter.GetBytes(offset));
@@ -31,11 +24,6 @@ namespace Sir.Store
         public void Flush()
         {
             _stream.Flush();
-        }
-
-        public async Task FlushAsync()
-        {
-            await _stream.FlushAsync();
         }
 
         public void Dispose()

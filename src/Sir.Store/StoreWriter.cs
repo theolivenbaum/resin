@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
@@ -28,7 +27,7 @@ namespace Sir.Store
 
         public ResponseModel Write(string collectionName, HttpRequest request)
         {
-            var documents = Deserialize<IEnumerable<IDictionary>>(request.Body);
+            var documents = Deserialize<IEnumerable<IDictionary<string, object>>>(request.Body);
             var job = new Job(collectionName, documents);
 
             _sessionFactory.Commit(job);

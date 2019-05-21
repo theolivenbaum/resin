@@ -65,7 +65,7 @@ namespace Sir.Store
         /// Fields prefixed with "___" will not be stored.
         /// </summary>
         /// <returns>Document ID</returns>
-        public long Write(IDictionary document)
+        public long Write(IDictionary<string, object> document)
         {
             document["__created"] = DateTime.Now.ToBinary();
 
@@ -88,10 +88,6 @@ namespace Sir.Store
                     continue;
                 }
 
-                // store value
-                var valInfo = _vals.Append(val);
-                var valId = _valIx.Append(valInfo.offset, valInfo.len, valInfo.dataType);
-
                 var keyHash = keyStr.ToHash();
                 long keyId;
 
@@ -105,6 +101,10 @@ namespace Sir.Store
                     keyId = _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
                     SessionFactory.PersistKeyMapping(CollectionId, keyHash, keyId);
                 }
+
+                // store value
+                var valInfo = _vals.Append(val);
+                var valId = _valIx.Append(valInfo.offset, valInfo.len, valInfo.dataType);
 
                 // store refs to keys and values
                 docMap.Add((keyId, valId));

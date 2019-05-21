@@ -81,7 +81,7 @@ namespace Sir.Store
             {
                 using (var session = _sessionFactory.CreateReadSession(collectionName, collectionId))
                 {
-                    IList<IDictionary> docs;
+                    IList<IDictionary<string, object>> docs;
                     long total;
                     var stream = new MemoryStream();
 
@@ -136,7 +136,7 @@ namespace Sir.Store
             }
         }
 
-        private void Serialize(IList<IDictionary> docs, Stream stream)
+        private void Serialize(IList<IDictionary<string, object>> docs, Stream stream)
         {
             using (StreamWriter writer = new StreamWriter(stream))
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
