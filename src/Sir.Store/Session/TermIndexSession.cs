@@ -17,7 +17,7 @@ namespace Sir.Store
         private bool _committed;
         private bool _committing;
         private long _merges;
-        private readonly ProducerConsumerQueue<(long, long, AnalyzedString)> _builder;
+        private readonly ProducerConsumerQueue<(long, long, string)> _builder;
 
         public TermIndexSession(
             string collectionName,
@@ -32,21 +32,20 @@ namespace Sir.Store
 
             var numThreads = int.Parse(_config.Get("write_thread_count"));
 
-            _builder = new ProducerConsumerQueue<(long, long, AnalyzedString)>(numThreads, BuildModel);
+            _builder = new ProducerConsumerQueue<(long, long, string)>(numThreads, BuildModel);
         }
 
         public void Put(long docId, long keyId, string value)
         {
-            AnalyzedString tokens = _tokenizer.Tokenize(value);
-
-            _builder.Enqueue((docId, keyId, tokens));
+            _builder.Enqueue((docId, keyId, value));
         }
 
-        private void BuildModel((long docId, long keyId, AnalyzedString tokens) workItem)
+        private void BuildModel((long docId, long keyId, string value) workItem)
         {
             var ix = GetOrCreateIndex(workItem.keyId);
+            var tokens = _tokenizer.Tokenize(workItem.value);
 
-            foreach (var vector in workItem.tokens.Embeddings)
+            foreach (var vector in tokens.Embeddings)
             {
                 if (!VectorNodeWriter.Add(ix, new VectorNode(vector, workItem.docId), Similarity.Term))
                 {
