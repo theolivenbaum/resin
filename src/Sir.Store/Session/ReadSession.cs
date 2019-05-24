@@ -59,7 +59,7 @@ namespace Sir.Store
         {
             if (SessionFactory.CollectionExists(query.Collection))
             {
-                var result = Execute(query);
+                var result = MapReduce(query);
 
                 if (result != null)
                 {
@@ -78,7 +78,7 @@ namespace Sir.Store
         {
             if (SessionFactory.CollectionExists(query.Collection))
             {
-                var result = Execute(query);
+                var result = MapReduce(query);
 
                 if (result == null)
                 {
@@ -93,7 +93,11 @@ namespace Sir.Store
             return new long[0];
         }
 
-        private ScoredResult Execute(Query query)
+        /// <summary>
+        /// Find each query term's corresponding index node and postings list and perform "AND", "OR" or "NOT" set operations on them.
+        /// </summary>
+        /// <param name="query"></param>
+        private ScoredResult MapReduce(Query query)
         {
             Map(query);
 
@@ -103,7 +107,7 @@ namespace Sir.Store
             {
                 var result = new PostingsReader(postingsStream).Reduce(query.ToList(), query.Skip, query.Take);
 
-                this.Log("reduction of {0} produced {1} docs and took {2}", query, result.Documents.Count, timer.Elapsed);
+                this.Log("reducing {0} into {1} docs took {2}", query, result.Documents.Count, timer.Elapsed);
 
                 return result;
             }
@@ -115,10 +119,12 @@ namespace Sir.Store
         /// <param name="query">An un-mapped query</param>
         public void Map(Query query)
         {
+            var timer = Stopwatch.StartNew();
+
             var clauses = query.ToList();
 
-            Parallel.ForEach(clauses, q =>
-            //foreach (var q in clauses)
+            //Parallel.ForEach(clauses, q =>
+            foreach (var q in clauses)
             {
                 var cursor = q;
 
@@ -161,7 +167,9 @@ namespace Sir.Store
 
                     cursor = cursor.Then;
                 }
-            });
+            }//);
+
+            this.Log("mapping {0} took {1}", query, timer.Elapsed);
         }
 
         public NodeReader CreateIndexReader(long keyId)
@@ -229,9 +237,9 @@ namespace Sir.Store
         {
             var result = new List<IDictionary<string, object>>();
 
-            foreach (var d in docs)
+            foreach (var docId in docs)
             {
-                var docInfo = _docIx.Read(d);
+                var docInfo = _docIx.Read(docId);
 
                 if (docInfo.offset < 0)
                 {
@@ -252,9 +260,7 @@ namespace Sir.Store
                     doc[key.ToString()] = val;
                 }
 
-                var docId = doc.ContainsKey("_original") ? long.Parse(doc["_original"].ToString()) : d;
-
-                doc["___docid"] = d;
+                doc["___docid"] = docId;
                 doc["___score"] = 1f;
 
                 result.Add(doc);
