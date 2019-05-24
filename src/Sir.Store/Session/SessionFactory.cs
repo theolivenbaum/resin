@@ -183,10 +183,9 @@ namespace Sir.Store
             return new ValidateSession(collectionName, collectionId, this, _tokenizer, _config);
         }
 
-        public ReadSession CreateReadSession(string collectionName, ulong collectionId, string ixFileExtension = "ix",
-            string ixpFileExtension = "ixp", string vecFileExtension = "vec")
+        public ReadSession CreateReadSession(string collectionName, ulong collectionId)
         {
-            return new ReadSession(collectionName, collectionId, this, _config, ixFileExtension, ixpFileExtension, vecFileExtension);
+            return new ReadSession(collectionName, collectionId, this, _config);
         }
 
         public Stream CreateAsyncReadStream(string fileName)

@@ -20,19 +20,11 @@ namespace Sir.Store
         private readonly ValueReader _keyReader;
         private readonly ValueReader _valReader;
         private readonly IConfigurationProvider _config;
-        private readonly string _ixFileExtension;
-        private readonly string _ixpFileExtension;
-        private readonly string _vecFileExtension;
-        private readonly string _vecixpFileExtension;
 
         public ReadSession(string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
-            IConfigurationProvider config,
-            string ixFileExtension = "ix",
-            string ixpFileExtension = "ixp",
-            string vecFileExtension = "vec",
-            string vecixpFileExtension = "vixp") 
+            IConfigurationProvider config) 
             : base(collectionName, collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
@@ -49,10 +41,6 @@ namespace Sir.Store
             _keyReader = new ValueReader(KeyStream);
             _valReader = new ValueReader(ValueStream);
             _config = config;
-            _ixFileExtension = ixFileExtension;
-            _ixpFileExtension = ixpFileExtension;
-            _vecFileExtension = vecFileExtension;
-            _vecixpFileExtension = vecixpFileExtension;
         }
 
         public ReadResult Read(Query query)
@@ -174,16 +162,12 @@ namespace Sir.Store
 
         public NodeReader CreateIndexReader(long keyId)
         {
-            var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixFileExtension));
+            var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
 
             if (!File.Exists(ixFileName))
                 return null;
 
-            var ixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _ixpFileExtension));
-            var vecFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _vecFileExtension));
-            var vixpFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.{2}", CollectionId, keyId, _vecixpFileExtension));
-
-            return new NodeReader(ixFileName, ixpFileName, vecFileName, vixpFileName, SessionFactory, _config);
+            return new NodeReader(CollectionId, keyId, SessionFactory, _config);
         }
 
         public NodeReader CreateIndexReader(ulong keyHash)
