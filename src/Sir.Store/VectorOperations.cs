@@ -289,6 +289,14 @@ namespace Sir
             return result;
         }
 
+        public static void AddOrAppendToComponent(this SortedList<long, int> vec, long key, int value)
+        {
+            if (vec.ContainsKey(key))
+                vec[key] += value;
+            else
+                vec.Add(key, value);
+        }
+
         public static SortedList<long, int> ToVector(this string word, int offset, int length)
         {
             var vec = new SortedList<long, int>();
@@ -298,8 +306,10 @@ namespace Sir
             {
                 var codePoint = (int)span[i];
 
-                if (!vec.TryAdd(codePoint, 1))
+                if (vec.ContainsKey(codePoint))
                     vec[codePoint] += 1;
+                else
+                    vec.Add(codePoint, 1);
             }
 
             return vec;

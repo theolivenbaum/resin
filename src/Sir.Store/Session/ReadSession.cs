@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -108,8 +109,8 @@ namespace Sir.Store
 
             var clauses = query.ToList();
 
-            //Parallel.ForEach(clauses, q =>
-            foreach (var q in clauses)
+            Parallel.ForEach(clauses, q =>
+            //foreach (var q in clauses)
             {
                 var cursor = q;
 
@@ -152,7 +153,7 @@ namespace Sir.Store
 
                     cursor = cursor.Then;
                 }
-            }//);
+            });
 
             this.Log("mapping {0} took {1}", query, timer.Elapsed);
         }

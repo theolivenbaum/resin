@@ -6,16 +6,16 @@ namespace Sir.Store
     {
         public AnalyzedString Tokenize(string text)
         {
-            var normalized = text.ToLower();
             var offset = 0;
             bool word = false;
             int index = 0;
             var tokens = new List<(int, int)>();
             var embeddings = new List<SortedList<long, int>>();
+            var embedding = new SortedList<long, int>();
 
-            for (; index < normalized.Length; index++)
+            for (; index < text.Length; index++)
             {
-                char c = normalized[index];
+                char c = char.ToLower(text[index]);
 
                 if (word)
                 {
@@ -26,12 +26,16 @@ namespace Sir.Store
                         if (len > 0)
                         {
                             tokens.Add((offset, index - offset));
-                            embeddings.Add(normalized.ToVector(offset, len));
+                            embeddings.Add(embedding);
+                            embedding = new SortedList<long, int>();
                         }
 
                         offset = index;
-
                         word = false;
+                    }
+                    else
+                    {
+                        embedding.AddOrAppendToComponent(c, 1);
                     }
                 }
                 else
@@ -40,6 +44,7 @@ namespace Sir.Store
                     {
                         word = true;
                         offset = index;
+                        embedding.AddOrAppendToComponent(c, 1);
                     }
                     else
                     {
@@ -55,12 +60,12 @@ namespace Sir.Store
                 if (len > 0)
                 {
                     tokens.Add((offset, index - offset));
-                    embeddings.Add(normalized.ToVector(offset, len));
+                    embeddings.Add(embedding);
 
                 }
             }
 
-            return new AnalyzedString(tokens, embeddings, normalized);
+            return new AnalyzedString(tokens, embeddings, text);
         }
     }
 }

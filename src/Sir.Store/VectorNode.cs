@@ -135,7 +135,6 @@ namespace Sir.Store
         private void Visualize(VectorNode node, StringBuilder output, int depth)
         {
             if (node == null) return;
-
             output.Append('\t', depth);
             output.AppendFormat($"{node.AngleWhenAdded} {node} w:{node.Weight}");
             output.AppendLine();
@@ -153,6 +152,16 @@ namespace Sir.Store
             foreach (var c in Vector)
             {
                 w.Append(c.Key);
+
+                if (c.Value == 2)
+                {
+                    w.Append(char.ConvertFromUtf32(178));
+                }
+                else if (c.Value > 2)
+                {
+                    w.Append(char.ConvertFromUtf32(179));
+                }
+
                 w.Append('|');
             }
 

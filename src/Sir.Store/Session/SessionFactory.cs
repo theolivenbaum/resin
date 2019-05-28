@@ -13,7 +13,7 @@ namespace Sir.Store
     {
         private readonly ITokenizer _tokenizer;
         private readonly IConfigurationProvider _config;
-        private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
+        private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
 
         public string Dir { get; }
@@ -40,6 +40,10 @@ namespace Sir.Store
             {
                 File.Delete(file);
             }
+
+            _pageInfo.Clear();
+
+            _keys.Clear();
         }
 
         public void Commit(Job job)
@@ -74,7 +78,12 @@ namespace Sir.Store
             });
         }
 
-        private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> LoadKeys()
+        public void LoadAllKeys()
+        {
+            _keys = LoadKeys();
+        }
+
+        public ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> LoadKeys()
         {
             var timer = new Stopwatch();
             timer.Start();

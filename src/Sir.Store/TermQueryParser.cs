@@ -32,15 +32,7 @@ namespace Sir.Store
                 var parts = line.Split(':');
                 var key = parts[0];
                 var value = parts[1];
-
-                var values = key[0] == '_' ?
-                    new AnalyzedString(
-                        new List<(int, int)> { (0, value.Length) }, 
-                        new List<SortedList<long, int>> { value.ToVector(0, value.Length) }, 
-                        value) :
-
-                    tokenizer.Tokenize(value);
-
+                var values = key[0] == '_' ? AnalyzedString.AsSingleToken(value) : tokenizer.Tokenize(value);
                 var or = key[0] != '+' && key[0] != '-';
                 var not = key[0] == '-';
                 var and = !or && !not;
