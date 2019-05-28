@@ -28,7 +28,7 @@ namespace Sir.Store
                 while (cursor != null)
                 {
                     var docIdList = Read(cursor.PostingsOffsets);
-                    var docIds = docIdList.ToDictionary(docId => docId, score => cursor.Score);
+                    var docIds = docIdList.Distinct().ToDictionary(docId => docId, score => cursor.Score);
 
                     if (result == null)
                     {
