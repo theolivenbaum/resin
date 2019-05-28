@@ -232,9 +232,7 @@ namespace Sir
 
                 if (vec2.TryGetValue(x.Key, out val) && val < int.MaxValue)
                 {
-                    var v = val + x.Value;
-
-                    result[x.Key] = v;
+                    result[x.Key] = val + x.Value;
                 }
                 else
                 {

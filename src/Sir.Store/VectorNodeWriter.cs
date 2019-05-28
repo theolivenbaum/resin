@@ -110,6 +110,18 @@ namespace Sir.Store
             }
         }
 
+        public static SortedList<long, int> Compress(VectorNode root)
+        {
+            var vector = new SortedList<long, int>();
+
+            foreach (var node in VectorNodeReader.All(root))
+            {
+                vector = vector.Add(node.Vector);
+            }
+
+            return vector;
+        }
+
         public static void SerializeNode(VectorNode node, Stream stream)
         {
             byte terminator = 1;

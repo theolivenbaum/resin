@@ -20,7 +20,7 @@ namespace Sir.Store
         private object _sync = new object();
 
         public HashSet<long> DocIds { get; set; }
-
+        public VectorNode Ancestor { get { return _ancestor; } }
         public int ComponentCount { get; set; }
         public long VectorOffset { get; set; }
         public long PostingsOffset { get; set; }

@@ -97,18 +97,6 @@ namespace Sir.Store
             }
         }
 
-        public static SortedList<long, int> Compress(VectorNode root)
-        {
-            var vector = new SortedList<long, int>();
-
-            foreach (var node in All(root))
-            {
-                vector = VectorOperations.Merge(vector, node.Vector);
-            }
-
-            return vector;
-        }
-
         public static string Visualize(VectorNode root)
         {
             StringBuilder output = new StringBuilder();
