@@ -1,8 +1,5 @@
-﻿using System.Linq;
-
-namespace Sir.Store
+﻿namespace Sir.Store
 {
-    [System.Diagnostics.DebuggerDisplay("{Score} {Node}")]
     public class Hit
     {
         public float Score { get; set; }
@@ -10,7 +7,7 @@ namespace Sir.Store
 
         public override string ToString()
         {
-            return string.Join(string.Empty, Node.Vector.Keys.Select(x => char.ConvertFromUtf32((int)x)).ToArray());
+            return $"{Score} {Node}";
         }
     }
 }
