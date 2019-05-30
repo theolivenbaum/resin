@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Sir.Store
 {
-    public static class VectorNodeReader
+    public static class PathFinder
     {
         public static Hit ClosestMatch(VectorNode root, SortedList<long, int> vector, float foldAngle)
         {

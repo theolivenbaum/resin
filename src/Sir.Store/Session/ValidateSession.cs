@@ -64,10 +64,10 @@ namespace Sir.Store
 
             foreach (var vector in item.tokens.Embeddings)
             {
-                VectorNodeWriter.Add(docTree, new VectorNode(vector), Similarity.Term);
+                GraphBuilder.Add(docTree, new VectorNode(vector), Similarity.Term);
             }
 
-            foreach (var node in VectorNodeReader.All(docTree))
+            foreach (var node in PathFinder.All(docTree))
             {
                 var query = new Query(CollectionId, new Term(item.key, node));
                 bool valid = false;

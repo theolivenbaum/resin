@@ -47,7 +47,7 @@ namespace Sir.Store
 
             foreach (var vector in tokens.Embeddings)
             {
-                if (!VectorNodeWriter.Add(ix, new VectorNode(vector, workItem.docId), Similarity.Term))
+                if (!GraphBuilder.Add(ix, new VectorNode(vector, workItem.docId), Similarity.Term))
                 {
                     _merges++;
                 }
@@ -91,7 +91,7 @@ namespace Sir.Store
 
             foreach (var vector in item.tokens.Embeddings)
             {
-                var hit = VectorNodeReader.ClosestMatch(tree, vector, Similarity.Term.foldAngle);
+                var hit = PathFinder.ClosestMatch(tree, vector, Similarity.Term.foldAngle);
 
                 if (hit.Score < Similarity.Term.identicalAngle)
                 {

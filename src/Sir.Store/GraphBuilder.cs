@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Sir.Store
 {
-    public static class VectorNodeWriter
+    public static class GraphBuilder
     {
         public static bool Add(VectorNode root, VectorNode node, (float identicalAngle, float foldAngle) similarity)
         {
@@ -114,7 +114,7 @@ namespace Sir.Store
         {
             var vector = new SortedList<long, int>();
 
-            foreach (var node in VectorNodeReader.All(root))
+            foreach (var node in PathFinder.All(root))
             {
                 vector = vector.Add(node.Vector);
             }

@@ -77,7 +77,7 @@ namespace Sir.Store
                         var componentCount = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(long) + sizeof(long), sizeof(int)))[0];
                         var weight = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(long) + sizeof(long) + sizeof(int), sizeof(int)))[0];
 
-                        VectorNodeWriter.Add(
+                        GraphBuilder.Add(
                             root,
                             VectorOperations.DeserializeNode(
                                 vecOffset,
@@ -116,7 +116,7 @@ namespace Sir.Store
                 }
                 else if (hit.Score == best.Score)
                 {
-                    VectorNodeWriter.Merge(best.Node, hit.Node);
+                    GraphBuilder.Merge(best.Node, hit.Node);
                 }
             }
 
