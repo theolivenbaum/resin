@@ -181,11 +181,6 @@ namespace Sir.Store
             return new TermIndexSession(collectionName, collectionId, this, _tokenizer, _config);
         }
 
-        public BowIndexSession CreateBOWSession(string collectionName, ulong collectionId)
-        {
-            return new BowIndexSession(collectionName, collectionId, this, _config, _tokenizer);
-        }
-
         public ValidateSession CreateValidateSession(string collectionName, ulong collectionId)
         {
             return new ValidateSession(collectionName, collectionId, this, _tokenizer, _config);

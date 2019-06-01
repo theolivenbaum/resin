@@ -128,19 +128,7 @@ namespace Sir.DbUtil
         
         private static void CreateBOWModel(string dir, string collectionName, int skip, int take)
         {
-            var files = Directory.GetFiles(dir, "*.docs");
-            var time = Stopwatch.StartNew();
-
-            using (var sessionFactory = new SessionFactory(new UnicodeTokenizer(), new IniConfiguration("sir.ini")))
-            {
-                using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
-                using (var bowSession = sessionFactory.CreateBOWSession(collectionName, collectionName.ToHash()))
-                {
-                    bowSession.Write(documentStreamSession.ReadDocs(skip, take), 0, 1, 2, 3, 6);
-                }
-            }
-
-            Logging.Log(null, string.Format("{0} BOW operation took {1}", collectionName, time.Elapsed));
+            throw new NotImplementedException();
         }
 
         private static void Validate(string dir, string collectionName, int skip, int take)
