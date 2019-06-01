@@ -78,18 +78,22 @@ namespace Sir.Store
 
         public static void Merge(VectorNode target, VectorNode node)
         {
-            if (target.DocIds == null)
+            MergeDocIds(target, node);
+            MergePostings(target, node);
+        }
+
+        public static void MergeDocIds(VectorNode target, VectorNode node)
+        {
+            foreach (var docId in node.DocIds)
             {
-                target.DocIds = node.DocIds;
-            }
-            else
-            {
-                foreach (var id in node.DocIds)
-                {
-                    target.DocIds.Add(id);
-                }
+                target.DocIds.Add(docId);
             }
 
+            MergePostings(target, node);
+        }
+
+        public static void MergePostings(VectorNode target, VectorNode node)
+        {
             if (node.PostingsOffset >= 0)
             {
                 if (target.PostingsOffset >= 0)

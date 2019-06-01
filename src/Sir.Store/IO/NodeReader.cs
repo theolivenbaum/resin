@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -39,69 +38,6 @@ namespace Sir.Store
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
         }
 
-        public VectorNode Optimized((float identicalAngle, float foldAngle) similarity)
-        {
-            return Optimize(similarity);
-        }
-
-        private VectorNode Optimize((float identicalAngle, float foldAngle) similarity)
-        {
-            var time = Stopwatch.StartNew();
-            var root = new VectorNode();
-            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
-            var bufferSize = int.Parse(_config.Get("read_buffer_size") ?? "4096");
-
-            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-            using (var ixStream = new BufferedStream(_sessionFactory.CreateReadStream(_ixFileName), bufferSize))
-            {
-                ixStream.Seek(_optimizedOffset, SeekOrigin.Begin);
-
-                foreach (var page in pages)
-                {
-                    var offset = page.offset + VectorNode.BlockSize;
-                    Span<byte> pageBuf = new byte[Convert.ToInt32(page.length)];
-
-                    ixStream.Seek(offset, SeekOrigin.Begin);
-
-                    var read = ixStream.Read(pageBuf);
-
-                    var position = 0;
-
-                    while (position < page.length)
-                    {
-                        var buf = pageBuf.Slice(position, VectorNode.BlockSize);
-
-                        var terminator = buf[buf.Length - 1];
-                        var vecOffset = MemoryMarshal.Cast<byte, long>(buf.Slice(0, sizeof(long)))[0];
-                        var postingsOffset = MemoryMarshal.Cast<byte, long>(buf.Slice(sizeof(long), sizeof(long)))[0];
-                        var componentCount = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(long) + sizeof(long), sizeof(int)))[0];
-                        var weight = MemoryMarshal.Cast<byte, int>(buf.Slice(sizeof(long) + sizeof(long) + sizeof(int), sizeof(int)))[0];
-
-                        GraphBuilder.Add(
-                            root,
-                            VectorOperations.DeserializeNode(
-                                vecOffset,
-                                postingsOffset,
-                                componentCount,
-                                weight,
-                                vectorStream,
-                                ref terminator),
-                            similarity);
-
-                        position += VectorNode.BlockSize;
-                    }
-
-                    _optimizedOffset = ixStream.Position;
-
-                    this.Log($"optimized {page}");
-                }
-            }
-
-            this.Log($"optimized {_ixFileName} in {time.Elapsed}");
-
-            return root;
-        }
-
         public Hit ClosestMatch(SortedList<long, int> vector, (float identicalAngle, float foldAngle) similarity)
         {
             var hits = ClosestMatchOnDisk(vector, similarity);
@@ -116,7 +52,7 @@ namespace Sir.Store
                 }
                 else if (hit.Score == best.Score)
                 {
-                    GraphBuilder.Merge(best.Node, hit.Node);
+                    GraphBuilder.MergePostings(best.Node, hit.Node);
                 }
             }
 
