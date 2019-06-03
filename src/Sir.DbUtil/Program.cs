@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Sir.Store;
 
 namespace Sir.DbUtil
@@ -62,6 +66,30 @@ namespace Sir.DbUtil
                     skip, 
                     take);
             }
+            else if (command == "submit")
+            {
+                var fileName = args[1];
+                var url = args[2];
+                var count = int.Parse(args[3]);
+                var batchSize = int.Parse(args[4]);
+                var fullTime = Stopwatch.StartNew();
+
+                foreach (var batch in ReadFile(fileName, count)
+                    .Where(x => x.Contains("title"))
+                    .Select(x => new Dictionary<string, object>
+                            {
+                                { "_language", x["language"].ToString() },
+                                { "_url", string.Format("www.wikipedia.org/search-redirect.php?family=wikipedia&language={0}&search={1}", x["language"], x["title"]) },
+                                { "title", x["title"] },
+                                { "body", x["text"] }
+                            })
+                    .Batch(batchSize))
+                {
+                    Submit((batch, url));
+                }
+
+                Console.WriteLine("write took {0}", fullTime.Elapsed);
+            }
             else
             {
                 Console.WriteLine("unknown command: {0}", command);
@@ -69,6 +97,74 @@ namespace Sir.DbUtil
 
             Console.WriteLine("press any key to exit");
             Console.Read();
+        }
+
+        private static IEnumerable<IDictionary> ReadFile(string fileName, int count)
+        {
+            var read = 0;
+
+            using (var stream = File.OpenRead(fileName))
+            using (var reader = new StreamReader(stream))
+            {
+                var line = reader.ReadLine();
+
+                while (!string.IsNullOrWhiteSpace(line))
+                {
+                    line = reader.ReadLine();
+
+                    if (line == null)
+                        break;
+
+                    read++;
+
+                    if (line.StartsWith("]") || read == count)
+                    {
+                        break;
+                    }
+                    else if (line.StartsWith("["))
+                    {
+                        continue;
+                    }
+
+                    yield return JsonConvert.DeserializeObject<IDictionary>(line);
+                }
+            }
+        }
+
+        private static void Submit((IEnumerable<object> documents, string url) job)
+        {
+            var time = Stopwatch.StartNew();
+
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(job.url);
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "POST";
+
+            var json = JsonConvert.SerializeObject(job.documents);
+
+            using (var stream = httpWebRequest.GetRequestStream())
+            {
+                Serialize(job.documents, stream);
+            }
+
+            var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+            if (httpResponse.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception();
+            }
+
+            Console.WriteLine($"{DateTime.Now.ToLongTimeString()} submitted batch took {time.Elapsed}");
+        }
+
+        private static void Serialize(IEnumerable<object> docs, Stream stream)
+        {
+            using (StreamWriter writer = new StreamWriter(stream))
+            using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
+            {
+                JsonSerializer ser = new JsonSerializer();
+                ser.Serialize(jsonWriter, docs);
+                jsonWriter.Flush();
+            }
         }
 
         private static void Warmup(string dir, Uri uri, string collectionName, int skip, int take)
