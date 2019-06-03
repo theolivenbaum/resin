@@ -2,7 +2,7 @@
 
 ## Introduction
 
-### Do you need to solve a wide problem?
+Read [Guide To Vector Space Search and Computational Language Models](https://github.com/kreeben/vectorspacesearchguide).
 
 Resin is a toolbox for those who want a simple way to program, analyze and deploy a vector space model. 
 You may serve it documents (non-nested JSON is supported out-of-the-box) 
