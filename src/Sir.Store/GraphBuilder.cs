@@ -76,10 +76,21 @@ namespace Sir.Store
             return false;
         }
 
+        public static void MergePostings(VectorNode target, VectorNode node)
+        {
+            if (target.PostingsOffsets == null)
+            {
+                target.PostingsOffsets = new List<long> { target.PostingsOffset, node.PostingsOffset };
+            }
+            else
+            {
+                target.PostingsOffsets.Add(node.PostingsOffset);
+            }
+        }
+
         public static void Merge(VectorNode target, VectorNode node)
         {
             MergeDocIds(target, node);
-            MergePostings(target, node);
         }
 
         public static void MergeDocIds(VectorNode target, VectorNode node)
@@ -87,30 +98,6 @@ namespace Sir.Store
             foreach (var docId in node.DocIds)
             {
                 target.DocIds.Add(docId);
-            }
-
-            MergePostings(target, node);
-        }
-
-        public static void MergePostings(VectorNode target, VectorNode node)
-        {
-            if (node.PostingsOffset >= 0)
-            {
-                if (target.PostingsOffset >= 0)
-                {
-                    if (target.PostingsOffsets == null)
-                    {
-                        target.PostingsOffsets = new List<long> { target.PostingsOffset, node.PostingsOffset };
-                    }
-                    else
-                    {
-                        target.PostingsOffsets.Add(node.PostingsOffset);
-                    }
-                }
-                else
-                {
-                    target.PostingsOffset = node.PostingsOffset;
-                }
             }
         }
 
