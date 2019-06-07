@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir
 {
@@ -22,8 +21,7 @@ namespace Sir
 
             while (read == VectorNode.BlockSize)
             {
-                byte terminator = 2;
-                var node = DeserializeNode(buf, vectorStream, ref terminator);
+                var node = DeserializeNode(buf, vectorStream);
 
                 if (node.VectorOffset > -1)
                     GraphBuilder.Add(root, node, similarity);
@@ -46,8 +44,7 @@ namespace Sir
             {
                 indexStream.Read(buf);
 
-                byte terminator = 2;
-                var node = DeserializeNode(buf, vectorStream, ref terminator);
+                var node = DeserializeNode(buf, vectorStream);
 
                 if (node.VectorOffset > -1)
                     GraphBuilder.Add(root, node, similarity);
@@ -61,7 +58,6 @@ namespace Sir
             VectorNode root = new VectorNode();
             VectorNode cursor = root;
             var tail = new Stack<VectorNode>();
-            byte terminator = 2;
             int read = 0;
             var buf = new byte[VectorNode.BlockSize];
 
@@ -69,7 +65,7 @@ namespace Sir
             {
                 indexStream.Read(buf);
 
-                var node = DeserializeNode(buf, vectorStream, ref terminator);
+                var node = DeserializeNode(buf, vectorStream);
 
                 if (node.Terminator == 0) // there is both a left and a right child
                 {
@@ -103,15 +99,16 @@ namespace Sir
             return right;
         }
 
-        public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, ref byte terminator)
+        public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream)
         {
             // Deserialize node
             var vecOffset = BitConverter.ToInt64(nodeBuffer, 0);
             var postingsOffset = BitConverter.ToInt64(nodeBuffer, sizeof(long));
             var vectorCount = BitConverter.ToInt32(nodeBuffer, sizeof(long) + sizeof(long));
             var weight = BitConverter.ToInt32(nodeBuffer, sizeof(long) + sizeof(long) + sizeof(int));
+            var terminator = nodeBuffer[VectorNode.BlockSize - 2];
 
-            return DeserializeNode(vecOffset, postingsOffset, vectorCount, weight, vectorStream, ref terminator);
+            return DeserializeNode(vecOffset, postingsOffset, vectorCount, weight, terminator, vectorStream);
         }
 
         public static VectorNode DeserializeNode(
@@ -119,13 +116,11 @@ namespace Sir
             long postingsOffset,
             int componentCount,
             int weight,
-            Stream vectorStream,
-            ref byte terminator)
+            byte terminator,
+            Stream vectorStream)
         {
-            // Create node
-            var node = new VectorNode(postingsOffset, vecOffset, terminator, weight, componentCount);
-
-            node.Vector = DeserializeVector(node.VectorOffset, node.ComponentCount, vectorStream);
+            var vector = DeserializeVector(vecOffset, componentCount, vectorStream);
+            var node = new VectorNode(postingsOffset, vecOffset, terminator, weight, componentCount, vector);
 
             return node;
         }

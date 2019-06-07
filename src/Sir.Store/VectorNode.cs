@@ -101,13 +101,14 @@ namespace Sir.Store
             DocIds.Add(docId);
         }
 
-        public VectorNode(long postingsOffset, long vecOffset, byte terminator, int weight, int componentCount)
+        public VectorNode(long postingsOffset, long vecOffset, byte terminator, int weight, int componentCount, SortedList<long, int> vector)
         {
             PostingsOffset = postingsOffset;
             VectorOffset = vecOffset;
             Terminator = terminator;
             Weight = weight;
             ComponentCount = componentCount;
+            Vector = vector;
         }
 
         public VectorNode Detach()
