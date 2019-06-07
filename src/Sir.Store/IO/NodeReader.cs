@@ -52,7 +52,7 @@ namespace Sir.Store
                 }
                 else if (hit.Score == best.Score)
                 {
-                    GraphBuilder.MergePostings(best.Node, hit.Node);
+                    GraphSerializer.MergePostings(best.Node, hit.Node);
                 }
             }
 
@@ -109,7 +109,7 @@ namespace Sir.Store
             {
                 var vecOffset = BitConverter.ToInt64(block.Slice(0, sizeof(long)));
                 var componentCount = BitConverter.ToInt32(block.Slice(sizeof(long) + sizeof(long), sizeof(int)));
-                var cursorVector = VectorOperations.DeserializeVector(vecOffset, componentCount, vectorStream);
+                var cursorVector = GraphSerializer.DeserializeVector(vecOffset, componentCount, vectorStream);
                 var cursorTerminator = block[block.Length - 1];
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));
 

@@ -31,7 +31,7 @@ namespace Sir.Store
         {
             var time = Stopwatch.StartNew();
 
-            var page = GraphBuilder.SerializeTree(column, _ixStream, vectorStream, postingsStream);
+            var page = GraphSerializer.SerializeTree(column, _ixStream, vectorStream, postingsStream);
 
             _ixStream.Flush();
             _ixPageIndexWriter.Write(page.offset, page.length);

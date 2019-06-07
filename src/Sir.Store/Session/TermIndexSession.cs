@@ -47,7 +47,7 @@ namespace Sir.Store
 
             foreach (var vector in tokens.Embeddings)
             {
-                if (!GraphBuilder.Add(ix, new VectorNode(vector, workItem.docId), Similarity.Term))
+                if (!GraphSerializer.Add(ix, new VectorNode(vector, workItem.docId), Similarity.Term))
                 {
                     _merges++;
                 }

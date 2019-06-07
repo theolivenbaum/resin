@@ -22,7 +22,7 @@ namespace Sir.StringCompare
                         break;
                     }
 
-                    GraphBuilder.Add(root, new VectorNode(command.ToVector(0, command.Length)), Similarity.Term);
+                    GraphSerializer.Add(root, new VectorNode(command.ToVector(0, command.Length)), Similarity.Term);
                 }
 
                 Console.WriteLine(root.Visualize());

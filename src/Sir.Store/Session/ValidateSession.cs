@@ -64,7 +64,7 @@ namespace Sir.Store
 
             foreach (var vector in item.tokens.Embeddings)
             {
-                GraphBuilder.Add(docTree, new VectorNode(vector, item.docId), Similarity.Term);
+                GraphSerializer.Add(docTree, new VectorNode(vector, item.docId), Similarity.Term);
             }
 
             foreach (var node in PathFinder.All(docTree))
