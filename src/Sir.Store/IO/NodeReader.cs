@@ -98,7 +98,7 @@ namespace Sir.Store
             (float identicalAngle, float foldAngle) similarity
         )
         {
-            Span<byte> block = stackalloc byte[VectorNode.BlockSize];
+            Span<byte> block = new byte[VectorNode.BlockSize];
 
             var read = indexStream.Read(block);
 
@@ -109,13 +109,6 @@ namespace Sir.Store
             {
                 var vecOffset = BitConverter.ToInt64(block.Slice(0, sizeof(long)));
                 var componentCount = BitConverter.ToInt32(block.Slice(sizeof(long) + sizeof(long), sizeof(int)));
-
-                if (componentCount == 0)
-                {
-                    read = indexStream.Read(block);
-                    continue;
-                }
-
                 var cursorVector = VectorOperations.DeserializeVector(vecOffset, componentCount, vectorStream);
                 var cursorTerminator = block[block.Length - 1];
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));

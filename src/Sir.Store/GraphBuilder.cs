@@ -146,15 +146,15 @@ namespace Sir.Store
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;
 
+            if (node.Vector.Count == 0)
+            {
+                node = node.Right;
+            }
+
             while (node != null)
             {
-                if (node.DocIds != null)
-                {
-                    SerializePostings(node, postingsStream);
-                }
-
+                SerializePostings(node, postingsStream);
                 SerializeVector(node, vectorStream);
-
                 SerializeNode(node, indexStream);
 
                 if (node.Right != null)
