@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Sir
 {
@@ -39,8 +41,8 @@ namespace Sir
 
             while (cursor1 < vec1.Count && cursor2 < vec2.Count)
             {
-                var i1 = vec1.Index[cursor1];
-                var i2 = vec2.Index[cursor2];
+                var i1 = vec1.Index.Span[cursor1];
+                var i2 = vec2.Index.Span[cursor2];
 
                 if (i2 > i1)
                 {
@@ -52,7 +54,7 @@ namespace Sir
                 }
                 else
                 {
-                    product += vec1.Values[cursor1++] * vec2.Values[cursor2++];
+                    product += vec1.Values.Span[cursor1++] * vec2.Values.Span[cursor2++];
                 }
             }
 
@@ -87,7 +89,7 @@ namespace Sir
         {
             long product = 0;
 
-            foreach (var component in vec.Values)
+            foreach (var component in vec.Values.ToArray())
             {
                 product += (component * component);
             }
@@ -110,35 +112,39 @@ namespace Sir
         public static Vector Add(this Vector vec1, Vector vec2)
         {
             var len = Math.Max(vec1.Count, vec2.Count);
-            var index = new long[len];
+            var index = new int[len];
             var values = new int[len];
 
             var cursor1 = 0;
             var cursor2 = 0;
+            var arr1 = vec1.Index.ToArray();
+            var arr2 = vec2.Index.ToArray();
+            var vals1 = vec1.Values.ToArray();
+            var vals2 = vec2.Values.ToArray();
 
             while (cursor1 < vec1.Count && cursor2 < vec2.Count)
             {
-                var i1 = vec1.Index[cursor1];
-                var i2 = vec2.Index[cursor2];
+                var i1 = arr1[cursor1];
+                var i2 = arr2[cursor2];
 
                 if (i2 > i1)
                 {
-                    index[cursor1] = vec1.Index[cursor1];
-                    values[cursor1] = vec1.Values[cursor1];
+                    index[cursor1] = arr1[cursor1];
+                    values[cursor1] = vals1[cursor1];
 
                     cursor1++;
                 }
                 else if (i1 > i2)
                 {
-                    index[cursor2] = vec2.Index[cursor2];
-                    values[cursor2] = vec2.Values[cursor2];
+                    index[cursor2] = arr2[cursor2];
+                    values[cursor2] = vals2[cursor2];
 
                     cursor2++;
                 }
                 else
                 {
-                    index[cursor1] = vec1.Index[cursor1];
-                    values[cursor1] = vec1.Values[cursor1++] + vec2.Values[cursor2++];
+                    index[cursor1] = arr1[cursor1];
+                    values[cursor1] = vals1[cursor1++] + vals2[cursor2++];
                 }
             }
 
@@ -179,7 +185,7 @@ namespace Sir
             return result;
         }
 
-        public static void AddOrAppendToComponent(this SortedList<long, int> vec, long key, int value)
+        public static void AddOrAppendToComponent(this SortedList<int, int> vec, int key, int value)
         {
             if (vec.ContainsKey(key))
                 vec[key] += value;
@@ -207,7 +213,7 @@ namespace Sir
 
         public static Vector ToSparseVector(this string word, int offset, int length)
         {
-            var vec = new SortedList<long, int>();
+            var vec = new SortedList<int, int>();
             var span = word.AsSpan(offset, length);
 
             for (int i = 0; i < span.Length; i++)
@@ -220,7 +226,7 @@ namespace Sir
                     vec.Add(codePoint, 1);
             }
 
-            return new Vector(vec.Keys, vec.Values);
+            return new Vector(vec.Keys.ToArray().AsMemory(), vec.Values.ToArray().AsMemory());
         }
 
         public static float Magnitude(this SortedList<long, int> vector)

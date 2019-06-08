@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Buffers;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
@@ -6,16 +10,17 @@ namespace Sir.Store
     {
         public AnalyzedString Tokenize(string text)
         {
+            var source = text.AsMemory();
             var offset = 0;
             bool word = false;
             int index = 0;
             var tokens = new List<(int, int)>();
             var embeddings = new List<Vector>();
-            var embedding = new SortedList<long, int>();
+            var embedding = new SortedList<int, int>();
 
-            for (; index < text.Length; index++)
+            for (; index < source.Length; index++)
             {
-                char c = char.ToLower(text[index]);
+                char c = char.ToLower(source.Span[index]);
 
                 if (word)
                 {
@@ -26,8 +31,8 @@ namespace Sir.Store
                         if (len > 0)
                         {
                             tokens.Add((offset, index - offset));
-                            embeddings.Add(new Vector(embedding.Keys, embedding.Values));
-                            embedding = new SortedList<long, int>();
+                            embeddings.Add(new Vector(embedding.Keys.ToArray().AsMemory(), embedding.Values.ToArray().AsMemory()));
+                            embedding = new SortedList<int, int>();
                         }
 
                         offset = index;
@@ -60,11 +65,11 @@ namespace Sir.Store
                 if (len > 0)
                 {
                     tokens.Add((offset, index - offset));
-                    embeddings.Add(new Vector(embedding.Keys, embedding.Values));
+                    embeddings.Add(new Vector(embedding.Keys.ToArray().AsMemory(), embedding.Values.ToArray().AsMemory()));
                 }
             }
 
-            return new AnalyzedString(tokens, embeddings, text);
+            return new AnalyzedString(tokens, embeddings, source);
         }
     }
 }

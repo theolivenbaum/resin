@@ -10,7 +10,7 @@ namespace Sir.Store
     public class VectorNode
     {
         public const int BlockSize = sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
-        public const int ComponentSize = sizeof(long) + sizeof(int);
+        public const int ComponentSize = sizeof(int) + sizeof(int);
 
         private VectorNode _right;
         private VectorNode _left;
@@ -146,15 +146,18 @@ namespace Sir.Store
 
         public override string ToString()
         {
+            var ix = Vector.Index.ToArray();
+            var vals = Vector.Values.ToArray();
+
             var w = new StringBuilder();
 
             w.Append('|');
 
             for (int i = 0; i < Vector.Count;i++)
             {
-                w.Append(Vector.Index[i]);
+                w.Append(ix[i]);
 
-                var value = Vector.Values[i];
+                var value = vals[i];
 
                 if (value == 2)
                 {

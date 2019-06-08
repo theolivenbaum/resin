@@ -55,7 +55,7 @@ namespace Sir
                 return Node.ToString();
 
             var token = TokenizedString.Tokens[Index];
-            return TokenizedString.Original.Substring(token.offset, token.length);
+            return new string(TokenizedString.Original.Span.Slice(token.offset, token.length));
         }
 
         public override string ToString()

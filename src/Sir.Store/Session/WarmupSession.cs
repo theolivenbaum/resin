@@ -58,8 +58,7 @@ namespace Sir.Store
                         var terms = _tokenizer.Tokenize(doc[key].ToString());
 
                         foreach (var token in terms.Tokens
-                            .Select(t => terms.Original.Substring(t.offset, t.length))
-                            .Where(s => !string.IsNullOrWhiteSpace(s)))
+                            .Select(t => new string(terms.Original.Span.Slice(t.offset, t.length))))
                         {
                             _httpQueue.Enqueue(token);
                         }

@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
@@ -103,7 +106,7 @@ namespace Sir.Store
 
         public static Vector Compress(VectorNode root)
         {
-            var vector = new Vector(new long[0], new int[0]);
+            var vector = new Vector(new int[0], new int[0]);
 
             foreach (var node in PathFinder.All(root))
             {
@@ -186,20 +189,13 @@ namespace Sir.Store
 
         public static void SerializeVector(VectorNode node, Stream vectorStream)
         {
-            node.VectorOffset = node.Vector.Serialize(vectorStream);
-        }
+            Span<byte> index = MemoryMarshal.Cast<int, byte>(node.Vector.Index.Span);
+            Span<byte> values = MemoryMarshal.Cast<int, byte>(node.Vector.Values.Span);
 
-        public static long Serialize(this Vector vec, Stream stream)
-        {
-            var pos = stream.Position;
+            node.VectorOffset = vectorStream.Position;
 
-            for (int i = 0; i < vec.Count;i++)
-            {
-                stream.Write(BitConverter.GetBytes(vec.Index[i]));
-                stream.Write(BitConverter.GetBytes(vec.Values[i]));
-            }
-
-            return pos;
+            vectorStream.Write(index);
+            vectorStream.Write(values);
         }
 
         public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream)
@@ -235,28 +231,17 @@ namespace Sir.Store
                 throw new ArgumentNullException(nameof(vectorStream));
             }
 
-            // Deserialize term vector
-            var index = new long[componentCount];
-            var values = new int[componentCount];
-            Span<byte> vecBuf = new byte[componentCount * VectorNode.ComponentSize];
+            Span<byte> indexBuf = new byte[componentCount * sizeof(int)];
+            Span<byte> valuesBuf = new byte[componentCount * sizeof(int)];
 
             vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
-            vectorStream.Read(vecBuf);
+            vectorStream.Read(indexBuf);
+            vectorStream.Read(valuesBuf);
 
-            var offs = 0;
+            Span<int> index = MemoryMarshal.Cast<byte, int>(indexBuf);
+            Span<int> values = MemoryMarshal.Cast<byte, int>(valuesBuf);
 
-            for (int i = 0; i < componentCount; i++)
-            {
-                var key = BitConverter.ToInt64(vecBuf.Slice(offs, sizeof(long)));
-                var val = BitConverter.ToInt32(vecBuf.Slice(offs + sizeof(long), sizeof(int)));
-
-                index[i] = key;
-                values[i] = val;
-
-                offs += VectorNode.ComponentSize;
-            }
-
-            return new Vector(index, values);
+            return new Vector(index.ToArray(), values.ToArray());
         }
 
         public static void DeserializeUnorderedFile(
