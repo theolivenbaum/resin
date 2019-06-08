@@ -10,7 +10,7 @@ namespace Sir.Store
             bool word = false;
             int index = 0;
             var tokens = new List<(int, int)>();
-            var embeddings = new List<SortedList<long, int>>();
+            var embeddings = new List<Vector>();
             var embedding = new SortedList<long, int>();
 
             for (; index < text.Length; index++)
@@ -26,7 +26,7 @@ namespace Sir.Store
                         if (len > 0)
                         {
                             tokens.Add((offset, index - offset));
-                            embeddings.Add(embedding);
+                            embeddings.Add(new Vector(embedding.Keys, embedding.Values));
                             embedding = new SortedList<long, int>();
                         }
 
@@ -60,8 +60,7 @@ namespace Sir.Store
                 if (len > 0)
                 {
                     tokens.Add((offset, index - offset));
-                    embeddings.Add(embedding);
-
+                    embeddings.Add(new Vector(embedding.Keys, embedding.Values));
                 }
             }
 

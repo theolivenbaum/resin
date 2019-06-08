@@ -5,7 +5,7 @@ namespace Sir.Store
 {
     public static class PathFinder
     {
-        public static Hit ClosestMatch(VectorNode root, SortedList<long, int> vector, float foldAngle)
+        public static Hit ClosestMatch(VectorNode root, Vector vector, float foldAngle)
         {
             var best = root;
             var cursor = root;
@@ -43,7 +43,7 @@ namespace Sir.Store
             };
         }
 
-        public static Hit FindFirstNonSimilar(VectorNode root, SortedList<long, int> vector, float foldAngle)
+        public static Hit FindFirstNonSimilar(VectorNode root, Vector vector, float foldAngle)
         {
             var cursor = root;
 

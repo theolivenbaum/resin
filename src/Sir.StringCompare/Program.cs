@@ -22,7 +22,7 @@ namespace Sir.StringCompare
                         break;
                     }
 
-                    GraphSerializer.Add(root, new VectorNode(command.ToVector(0, command.Length)), Similarity.Term);
+                    GraphSerializer.Add(root, new VectorNode(command.ToSparseVector(0, command.Length)), Similarity.Term);
                 }
 
                 Console.WriteLine(root.Visualize());
@@ -38,7 +38,7 @@ namespace Sir.StringCompare
                         break;
                     }
 
-                    var hit = PathFinder.ClosestMatch(root, command.ToVector(0, command.Length), Similarity.Term.foldAngle);
+                    var hit = PathFinder.ClosestMatch(root, command.ToSparseVector(0, command.Length), Similarity.Term.foldAngle);
 
                     Console.WriteLine($"{hit.Score} {hit.Node}");
                 }

@@ -24,7 +24,7 @@ namespace Sir.Store
         public int ComponentCount { get; set; }
         public long VectorOffset { get; set; }
         public long PostingsOffset { get; set; }
-        public SortedList<long, int> Vector { get; set; }
+        public Vector Vector { get; set; }
         public object Sync { get { return _sync; } }
 
         public int Weight
@@ -81,18 +81,18 @@ namespace Sir.Store
         }
 
         public VectorNode(string s)
-            : this(s.ToVector(0, s.Length))
+            : this(s.ToSparseVector(0, s.Length))
         {
         }
 
-        public VectorNode(SortedList<long, int> termVector)
+        public VectorNode(Vector vector)
         {
-            Vector = termVector;
+            Vector = vector;
             PostingsOffset = -1;
             VectorOffset = -1;
         }
 
-        public VectorNode(SortedList<long, int> vector, long docId)
+        public VectorNode(Vector vector, long docId)
         {
             Vector = vector;
             PostingsOffset = -1;
@@ -101,7 +101,7 @@ namespace Sir.Store
             DocIds.Add(docId);
         }
 
-        public VectorNode(long postingsOffset, long vecOffset, byte terminator, int weight, int componentCount, SortedList<long, int> vector)
+        public VectorNode(long postingsOffset, long vecOffset, byte terminator, int weight, int componentCount, Vector vector)
         {
             PostingsOffset = postingsOffset;
             VectorOffset = vecOffset;
@@ -150,15 +150,17 @@ namespace Sir.Store
 
             w.Append('|');
 
-            foreach (var c in Vector)
+            for (int i = 0; i < Vector.Count;i++)
             {
-                w.Append(c.Key);
+                w.Append(Vector.Index[i]);
 
-                if (c.Value == 2)
+                var value = Vector.Values[i];
+
+                if (value == 2)
                 {
                     w.Append(char.ConvertFromUtf32(178));
                 }
-                else if (c.Value > 2)
+                else if (value > 2)
                 {
                     w.Append(char.ConvertFromUtf32(179));
                 }

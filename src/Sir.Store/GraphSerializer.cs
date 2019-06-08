@@ -101,9 +101,9 @@ namespace Sir.Store
             }
         }
 
-        public static SortedList<long, int> Compress(VectorNode root)
+        public static Vector Compress(VectorNode root)
         {
-            var vector = new SortedList<long, int>();
+            var vector = new Vector(new long[0], new int[0]);
 
             foreach (var node in PathFinder.All(root))
             {
@@ -189,14 +189,14 @@ namespace Sir.Store
             node.VectorOffset = node.Vector.Serialize(vectorStream);
         }
 
-        public static long Serialize(this SortedList<long, int> vec, Stream stream)
+        public static long Serialize(this Vector vec, Stream stream)
         {
             var pos = stream.Position;
 
-            foreach (var kvp in vec)
+            for (int i = 0; i < vec.Count;i++)
             {
-                stream.Write(BitConverter.GetBytes(kvp.Key));
-                stream.Write(BitConverter.GetBytes(kvp.Value));
+                stream.Write(BitConverter.GetBytes(vec.Index[i]));
+                stream.Write(BitConverter.GetBytes(vec.Values[i]));
             }
 
             return pos;
@@ -228,7 +228,7 @@ namespace Sir.Store
             return node;
         }
 
-        public static SortedList<long, int> DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
+        public static Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
         {
             if (vectorStream == null)
             {
@@ -236,7 +236,8 @@ namespace Sir.Store
             }
 
             // Deserialize term vector
-            var vec = new SortedList<long, int>(componentCount);
+            var index = new long[componentCount];
+            var values = new int[componentCount];
             Span<byte> vecBuf = new byte[componentCount * VectorNode.ComponentSize];
 
             vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
@@ -249,12 +250,13 @@ namespace Sir.Store
                 var key = BitConverter.ToInt64(vecBuf.Slice(offs, sizeof(long)));
                 var val = BitConverter.ToInt32(vecBuf.Slice(offs + sizeof(long), sizeof(int)));
 
-                vec.Add(key, val);
+                index[i] = key;
+                values[i] = val;
 
                 offs += VectorNode.ComponentSize;
             }
 
-            return vec;
+            return new Vector(index, values);
         }
 
         public static void DeserializeUnorderedFile(

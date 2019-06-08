@@ -8,13 +8,55 @@ namespace Sir
     /// </summary>
     public static class VectorOperations
     {
-        public static float CosAngle(this SortedList<long, int> vec1, SortedList<long, int> vec2)
+        public static float CosAngle(this Vector vec1, Vector vec2)
         {
             long dotProduct = Dot(vec1, vec2);
             long dotSelf1 = vec1.DotSelf();
             long dotSelf2 = vec2.DotSelf();
 
             return (float) (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
+        }
+
+        public static float CosAngle(this SortedList<long, int> vec1, SortedList<long, int> vec2)
+        {
+            long dotProduct = Dot(vec1, vec2);
+            long dotSelf1 = vec1.DotSelf();
+            long dotSelf2 = vec2.DotSelf();
+
+            return (float)(dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
+        }
+
+        public static long Dot(this Vector vec1, Vector vec2)
+        {
+            if (ReferenceEquals(vec1, vec2))
+            {
+                return DotSelf(vec1);
+            }
+
+            long product = 0;
+            var cursor1 = 0;
+            var cursor2 = 0;
+
+            while (cursor1 < vec1.Count && cursor2 < vec2.Count)
+            {
+                var i1 = vec1.Index[cursor1];
+                var i2 = vec2.Index[cursor2];
+
+                if (i2 > i1)
+                {
+                    cursor1++;
+                }
+                else if (i1 > i2)
+                {
+                    cursor2++;
+                }
+                else
+                {
+                    product += vec1.Values[cursor1++] * vec2.Values[cursor2++];
+                }
+            }
+
+            return product;
         }
 
         public static long Dot(this SortedList<long, int> vec1, SortedList<long, int> vec2)
@@ -41,6 +83,18 @@ namespace Sir
             return product;
         }
 
+        public static long DotSelf(this Vector vec)
+        {
+            long product = 0;
+
+            foreach (var component in vec.Values)
+            {
+                product += (component * component);
+            }
+
+            return product;
+        }
+
         public static long DotSelf(this SortedList<long, int> vec)
         {
             long product = 0;
@@ -53,35 +107,42 @@ namespace Sir
             return product;
         }
 
-        public static SortedList<long, int> Add(this SortedList<long, int> vec1, SortedList<long, int> vec2)
+        public static Vector Add(this Vector vec1, Vector vec2)
         {
-            var result = new SortedList<long, int>();
+            var len = Math.Max(vec1.Count, vec2.Count);
+            var index = new long[len];
+            var values = new int[len];
 
-            foreach (var x in vec1)
+            var cursor1 = 0;
+            var cursor2 = 0;
+
+            while (cursor1 < vec1.Count && cursor2 < vec2.Count)
             {
-                int val;
+                var i1 = vec1.Index[cursor1];
+                var i2 = vec2.Index[cursor2];
 
-                if (vec2.TryGetValue(x.Key, out val) && val < int.MaxValue)
+                if (i2 > i1)
                 {
-                    result[x.Key] = val + x.Value;
+                    index[cursor1] = vec1.Index[cursor1];
+                    values[cursor1] = vec1.Values[cursor1];
+
+                    cursor1++;
+                }
+                else if (i1 > i2)
+                {
+                    index[cursor2] = vec2.Index[cursor2];
+                    values[cursor2] = vec2.Values[cursor2];
+
+                    cursor2++;
                 }
                 else
                 {
-                    result[x.Key] = x.Value;
+                    index[cursor1] = vec1.Index[cursor1];
+                    values[cursor1] = vec1.Values[cursor1++] + vec2.Values[cursor2++];
                 }
             }
 
-            foreach (var x in vec2)
-            {
-                int val;
-
-                if (!vec1.TryGetValue(x.Key, out val) && val < int.MaxValue)
-                {
-                    result[x.Key] = x.Value;
-                }
-            }
-
-            return result;
+            return new Vector(index, values);
         }
 
         public static SortedList<long, int> Merge(this SortedList<long, int> vec1, SortedList<long, int> vec2)
@@ -142,6 +203,24 @@ namespace Sir
             }
 
             return vec;
+        }
+
+        public static Vector ToSparseVector(this string word, int offset, int length)
+        {
+            var vec = new SortedList<long, int>();
+            var span = word.AsSpan(offset, length);
+
+            for (int i = 0; i < span.Length; i++)
+            {
+                var codePoint = (int)span[i];
+
+                if (vec.ContainsKey(codePoint))
+                    vec[codePoint] += 1;
+                else
+                    vec.Add(codePoint, 1);
+            }
+
+            return new Vector(vec.Keys, vec.Values);
         }
 
         public static float Magnitude(this SortedList<long, int> vector)

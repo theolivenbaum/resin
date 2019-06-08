@@ -38,7 +38,7 @@ namespace Sir.Store
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
         }
 
-        public Hit ClosestMatch(SortedList<long, int> vector, (float identicalAngle, float foldAngle) similarity)
+        public Hit ClosestMatch(Vector vector, (float identicalAngle, float foldAngle) similarity)
         {
             var hits = ClosestMatchOnDisk(vector, similarity);
             var time = Stopwatch.StartNew();
@@ -61,7 +61,7 @@ namespace Sir.Store
             return best;
         }
 
-        private ConcurrentBag<Hit> ClosestMatchOnDisk(SortedList<long, int> vector, (float identicalAngle, float foldAngle) similarity)
+        private ConcurrentBag<Hit> ClosestMatchOnDisk(Vector vector, (float identicalAngle, float foldAngle) similarity)
         {
             var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
@@ -92,7 +92,7 @@ namespace Sir.Store
         }
 
         private Hit ClosestMatchInPage(
-            SortedList<long, int> node,
+            Vector vector,
             Stream indexStream,
             Stream vectorStream,
             (float identicalAngle, float foldAngle) similarity
@@ -113,7 +113,7 @@ namespace Sir.Store
                 var cursorTerminator = block[block.Length - 1];
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));
 
-                var angle = cursorVector.CosAngle(node);
+                var angle = cursorVector.CosAngle(vector);
 
                 if (angle >= similarity.identicalAngle)
                 {
