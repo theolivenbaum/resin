@@ -64,7 +64,8 @@ namespace Sir.DbUtil
                     uri, 
                     collection, 
                     skip, 
-                    take);
+                    take,
+                    new LbocModel());
             }
             else if (command == "submit")
             {
@@ -167,13 +168,13 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void Warmup(string dir, Uri uri, string collectionName, int skip, int take)
+        private static void Warmup(string dir, Uri uri, string collectionName, int skip, int take, IModel tokenizer)
         {
-            using (var sessionFactory = new SessionFactory(new UnicodeTokenizer(), new IniConfiguration("sir.ini")))
+            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini")))
             {
                 using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
                 {
-                    using (var session = sessionFactory.CreateWarmupSession(collectionName, collectionName.ToHash(), uri.ToString()))
+                    using (var session = sessionFactory.CreateWarmupSession(collectionName, collectionName.ToHash(), uri.ToString(), tokenizer))
                     {
                         session.Warmup(documentStreamSession.ReadDocs(skip, take), 0);
                     }
@@ -183,10 +184,9 @@ namespace Sir.DbUtil
 
         private static void Query(string dir, string collectionName)
         {
-            var tokenizer = new UnicodeTokenizer();
-            var qp = new TermQueryParser();
+            var tokenizer = new LbocModel();
+            var qp = new QueryParser();
             var sessionFactory = new SessionFactory(
-                tokenizer,
                 new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini")));
 
             while (true)
@@ -204,7 +204,7 @@ namespace Sir.DbUtil
                 q.Skip = 0;
                 q.Take = 100;
 
-                using (var session = sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
+                using (var session = sessionFactory.CreateReadSession(collectionName, collectionName.ToHash(), new BocModel()))
                 {
                     var result = session.Read(q);
                     var docs = result.Docs;
@@ -232,10 +232,10 @@ namespace Sir.DbUtil
             var files = Directory.GetFiles(dir, "*.docs");
             var time = Stopwatch.StartNew();
 
-            using (var sessionFactory = new SessionFactory(new UnicodeTokenizer(), new IniConfiguration("sir.ini")))
+            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini")))
             {
                 using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
-                using (var validateSession = sessionFactory.CreateValidateSession(collectionName, collectionName.ToHash()))
+                using (var validateSession = sessionFactory.CreateValidateSession(collectionName, collectionName.ToHash(), new LbocModel()))
                 {
                     validateSession.Validate(documentStreamSession.ReadDocs(skip, take), 0, 1, 2, 3, 6);
                 }

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Sir.Store
 {
@@ -7,11 +6,13 @@ namespace Sir.Store
     {
         public string Collection { get; private set; }
         public IEnumerable<IDictionary<string, object>> Documents { get; private set; }
+        public IModel Tokenizer { get; }
 
-        public Job(string collection, IEnumerable<IDictionary<string, object>> documents)
+        public Job(string collection, IEnumerable<IDictionary<string, object>> documents, IModel tokenizer)
         {
             Collection = collection;
             Documents = documents;
+            Tokenizer = tokenizer;
         }
     }
 }

@@ -1,30 +1,32 @@
 ﻿using System;
-using System.Collections;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Sir.HttpServer.Controllers
 {
     public class QueryParserController : UIController
     {
-        private IServiceProvider _serviceProvider;
+        private readonly IQueryFormatter _queryFormatter;
         private readonly PluginsCollection _plugins;
+        private readonly IModel _model;
 
-        public QueryParserController(PluginsCollection plugins, IServiceProvider serviceProvider, IConfigurationProvider config) : base(config)
+        public QueryParserController(
+            PluginsCollection plugins,
+            IQueryFormatter queryFormatter, 
+            IConfigurationProvider config,
+            IModel tokenizer) : base(config)
         {
-            _serviceProvider = serviceProvider;
+            _queryFormatter = queryFormatter;
             _plugins = plugins;
+            _model = tokenizer;
         }
 
         [HttpGet("/queryparser/")]
         [HttpPost("/queryparser/")]
         public IActionResult Index(string q, string qf, string collection, string newCollection, string[] fields)
         {
-            var formatter = _serviceProvider.GetService<IQueryFormatter>();
-            var formatted = qf ?? formatter.Format(collection, Request);
+            var formatted = qf ?? _queryFormatter.Format(collection, _model, Request);
 
             ViewData["qf"] = formatted;
             ViewData["q"] = q;
@@ -39,7 +41,7 @@ namespace Sir.HttpServer.Controllers
             var timer = new Stopwatch();
             timer.Start();
 
-            var result = reader.Read(collection, Request);
+            var result = reader.Read(collection, _model, Request);
 
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
             ViewData["collection"] = collection;

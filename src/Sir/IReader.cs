@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 
 namespace Sir
 {
@@ -8,6 +7,6 @@ namespace Sir
     /// </summary>
     public interface IReader : IPlugin
     {
-       ResponseModel Read(string collectionId, HttpRequest request);
+       ResponseModel Read(string collectionId, IModel model, HttpRequest request);
     }
 }

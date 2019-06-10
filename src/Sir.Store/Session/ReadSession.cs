@@ -18,11 +18,13 @@ namespace Sir.Store
         private readonly ValueReader _keyReader;
         private readonly ValueReader _valReader;
         private readonly IConfigurationProvider _config;
+        private readonly IModel _tokenizer;
 
         public ReadSession(string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
-            IConfigurationProvider config) 
+            IConfigurationProvider config,
+            IModel tokenizer) 
             : base(collectionName, collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
@@ -39,6 +41,7 @@ namespace Sir.Store
             _keyReader = new ValueReader(KeyStream);
             _valReader = new ValueReader(ValueStream);
             _config = config;
+            _tokenizer = tokenizer;
         }
 
         public ReadResult Read(Query query)
@@ -109,8 +112,8 @@ namespace Sir.Store
 
             var clauses = query.ToClauses();
 
-            Parallel.ForEach(clauses, q =>
-            //foreach (var q in clauses)
+            //Parallel.ForEach(clauses, q =>
+            foreach (var q in clauses)
             {
                 var cursor = q;
 
@@ -124,7 +127,7 @@ namespace Sir.Store
 
                     if (indexReader != null)
                     {
-                        hit = indexReader.ClosestMatch(cursor.Term.Vector, Similarity.Term);
+                        hit = indexReader.ClosestMatch(cursor.Term.Vector, _tokenizer);
                     }
 
                     if (hit != null && hit.Score > 0)
@@ -139,7 +142,7 @@ namespace Sir.Store
 
                     cursor = cursor.NextTermInClause;
                 }
-            });
+            }//);
 
             this.Log("mapping {0} took {1}", query, timer.Elapsed);
         }

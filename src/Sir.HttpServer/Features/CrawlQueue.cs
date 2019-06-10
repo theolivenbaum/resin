@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Sir.Core;
 using Sir.Store;
@@ -15,13 +13,15 @@ namespace Sir.HttpServer.Features
     {
         private readonly ProducerConsumerQueue<(string collection, Uri uri)> _queue;
         private readonly SessionFactory _sessionFactory;
+        private readonly IModel _model;
 
         public (Uri uri, string title) LastProcessed { get; private set; }
 
-        public CrawlQueue(SessionFactory sessionFactory)
+        public CrawlQueue(SessionFactory sessionFactory, IModel tokenizer)
         {
             _queue = new ProducerConsumerQueue<(string,Uri)>(1, Submit);
             _sessionFactory = sessionFactory;
+            _model = tokenizer;
         }
 
         public void Enqueue(string collection, Uri uri)
@@ -127,23 +127,23 @@ namespace Sir.HttpServer.Features
 
         private IDictionary<string, object> GetDocument(string collectionName, string url, string title)
         {
-            using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
+            using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash(), _model))
             {
-                var urlQuery = new Query(collectionName.ToHash(), new Term("_url", new VectorNode(new UnicodeTokenizer().Tokenize(url).Embeddings[0])));
+                var urlQuery = new Query(collectionName.ToHash(), new Term("_url", new VectorNode(_model.Tokenize(url).Embeddings[0])));
                 urlQuery.And = true;
                 urlQuery.Take = 1;
 
                 var result = readSession.Read(urlQuery);
             
                 return result.Total == 0 
-                    ? null : (float)result.Docs[0]["___score"] >= Similarity.Term.identicalAngle 
+                    ? null : (float)result.Docs[0]["___score"] >= _model.Similarity().identicalAngle 
                     ? result.Docs[0] : null;
             }
         }
 
         public void ExecuteWrite(string collectionName, IDictionary<string, object> doc)
         {
-            using (var indexSession = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
+            using (var indexSession = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash(), _model))
             using (var writeSession = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash(), indexSession))
             {
                 writeSession.Write(doc);

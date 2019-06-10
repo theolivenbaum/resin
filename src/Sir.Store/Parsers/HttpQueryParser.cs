@@ -8,16 +8,14 @@ namespace Sir.Store
     /// </summary>
     public class HttpQueryParser
     {
-        private readonly TermQueryParser _queryParser;
-        private readonly ITokenizer _tokenizer;
+        private readonly QueryParser _queryParser;
 
-        public HttpQueryParser(TermQueryParser queryParser, ITokenizer tokenizer)
+        public HttpQueryParser(QueryParser queryParser)
         {
             _queryParser = queryParser;
-            _tokenizer = tokenizer;
         }
 
-        public Query Parse(ulong collectionId, HttpRequest request)
+        public Query Parse(ulong collectionId, IModel tokenizer, HttpRequest request)
         {
             Query query = null;
 
@@ -40,7 +38,7 @@ namespace Sir.Store
             if (isFormatted)
             {
                 var formattedQuery = request.Query["qf"].ToString();
-                query = FromFormattedString(collectionId, formattedQuery);
+                query = FromFormattedString(collectionId, formattedQuery, tokenizer);
             }
             else
             {
@@ -62,7 +60,7 @@ namespace Sir.Store
 
                 var formattedQuery = string.Format(queryFormat, request.Query["q"]);
 
-                query = _queryParser.Parse(collectionId, formattedQuery, _tokenizer);
+                query = _queryParser.Parse(collectionId, formattedQuery, tokenizer);
             }
 
             if (request.Query.ContainsKey("take"))
@@ -74,7 +72,7 @@ namespace Sir.Store
             return query;
         }
 
-        public Query FromFormattedString(ulong collectionId, string formattedQuery)
+        public Query FromFormattedString(ulong collectionId, string formattedQuery, IModel tokenizer)
         {
             Query root = null;
             var lines = formattedQuery
@@ -113,7 +111,7 @@ namespace Sir.Store
                         t = $"{lastField}:{term}";
                     }
 
-                    var query = _queryParser.Parse(collectionId, t, _tokenizer);
+                    var query = _queryParser.Parse(collectionId, t, tokenizer);
 
                     lastField = query.Term.Key;
 

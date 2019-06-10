@@ -154,7 +154,7 @@ namespace Sir.Store
                 w.Append('|');
             }
 
-            w.Append(Vector.AsString());
+            w.Append(Vector.ToString());
 
             return w.ToString();
         }

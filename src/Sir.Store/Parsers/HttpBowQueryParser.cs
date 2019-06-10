@@ -4,22 +4,21 @@ namespace Sir.Store
 {
     public class HttpBowQueryParser
     {
-        private readonly ITokenizer _tokenizer;
         private readonly HttpQueryParser _httpQueryParser;
 
-        public HttpBowQueryParser(ITokenizer tokenizer, HttpQueryParser httpQueryParser)
+        public HttpBowQueryParser(HttpQueryParser httpQueryParser)
         {
-            _tokenizer = tokenizer;
             _httpQueryParser = httpQueryParser;
         }
 
         public Query Parse(
             ulong collectionId, 
             HttpRequest request, 
-            ReadSession mappingSession)
+            ReadSession readSession,
+            IModel tokenizer)
         {
-            var query = _httpQueryParser.Parse(collectionId, request);
-            mappingSession.Map(query);
+            var query = _httpQueryParser.Parse(collectionId, tokenizer, request);
+            readSession.Map(query);
             return query;
         }
     }

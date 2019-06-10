@@ -12,7 +12,7 @@ namespace Sir.Store
     public class ValidateSession : CollectionSession, IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
-        private readonly ITokenizer _tokenizer;
+        private readonly IModel _tokenizer;
         private readonly ReadSession _readSession;
         private readonly ProducerConsumerQueue<(long docId, object key, AnalyzedString tokens)> _validator;
 
@@ -20,13 +20,13 @@ namespace Sir.Store
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
-            ITokenizer tokenizer,
+            IModel tokenizer,
             IConfigurationProvider config
             ) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
             _tokenizer = tokenizer;
-            _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config);
+            _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, tokenizer);
             _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedString tokens)>(
                 int.Parse(_config.Get("write_thread_count")), Validate);
         }
@@ -64,7 +64,7 @@ namespace Sir.Store
 
             foreach (var vector in item.tokens.Embeddings)
             {
-                GraphSerializer.Add(docTree, new VectorNode(vector, item.docId), Similarity.Term);
+                GraphBuilder.Add(docTree, new VectorNode(vector, item.docId), _tokenizer);
             }
 
             foreach (var node in PathFinder.All(docTree))

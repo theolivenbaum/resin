@@ -11,7 +11,7 @@ namespace Sir.Store
     public class TermIndexSession : CollectionSession, IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
-        private readonly ITokenizer _tokenizer;
+        private readonly IModel _model;
         private readonly ConcurrentDictionary<long, VectorNode> _dirty;
         private bool _committed;
         private bool _committing;
@@ -22,11 +22,11 @@ namespace Sir.Store
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
-            ITokenizer tokenizer,
+            IModel tokenizer,
             IConfigurationProvider config) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
-            _tokenizer = tokenizer;
+            _model = tokenizer;
             _dirty = new ConcurrentDictionary<long, VectorNode>();
 
             var numThreads = int.Parse(_config.Get("write_thread_count"));
@@ -42,11 +42,11 @@ namespace Sir.Store
         private void BuildModel((long docId, long keyId, string value) workItem)
         {
             var ix = GetOrCreateIndex(workItem.keyId);
-            var tokens = _tokenizer.Tokenize(workItem.value);
+            var tokens = _model.Tokenize(workItem.value);
 
             foreach (var vector in tokens.Embeddings)
             {
-                if (!GraphSerializer.Add(ix, new VectorNode(vector, workItem.docId), Similarity.Term))
+                if (!GraphBuilder.Add(ix, new VectorNode(vector, workItem.docId), _model))
                 {
                     _merges++;
                 }
@@ -72,7 +72,7 @@ namespace Sir.Store
                     {
                         using (var writer = new ColumnSerializer(CollectionId, column.Key, SessionFactory))
                         {
-                            writer.CreateColumnSegment(column.Value, vectorStream, postingsStream);
+                            writer.CreateColumnSegment(column.Value, vectorStream, postingsStream, _model);
                         }
                     }
                 }
@@ -90,9 +90,9 @@ namespace Sir.Store
 
             foreach (var vector in item.tokens.Embeddings)
             {
-                var hit = PathFinder.ClosestMatch(tree, vector, Similarity.Term.foldAngle);
+                var hit = PathFinder.ClosestMatch(tree, vector, _model);
 
-                if (hit.Score < Similarity.Term.identicalAngle)
+                if (hit.Score < _model.Similarity().identicalAngle)
                 {
                     throw new DataMisalignedException();
                 }

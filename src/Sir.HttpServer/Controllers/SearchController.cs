@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Sir.HttpServer.Controllers
@@ -10,10 +8,12 @@ namespace Sir.HttpServer.Controllers
     public class SearchController : UIController
     {
         private readonly PluginsCollection _plugins;
+        private readonly IModel _model;
 
-        public SearchController(PluginsCollection plugins, IConfigurationProvider config) : base(config)
+        public SearchController(PluginsCollection plugins, IConfigurationProvider config, IModel tokenizer) : base(config)
         {
             _plugins = plugins;
+            _model = tokenizer;
         }
 
         [HttpGet("/search/")]
@@ -34,7 +34,7 @@ namespace Sir.HttpServer.Controllers
             var timer = new Stopwatch();
             timer.Start();
 
-            var result = reader.Read(collection, Request);
+            var result = reader.Read(collection, _model, Request);
 
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
             ViewData["total"] = result.Total;

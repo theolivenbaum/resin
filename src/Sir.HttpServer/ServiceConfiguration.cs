@@ -14,7 +14,7 @@ namespace Sir.HttpServer
         {
             var sessionFactory = container.GetService<SessionFactory>();
 
-            services.Add(new ServiceDescriptor(typeof(CrawlQueue), new CrawlQueue(sessionFactory)));
+            services.Add(new ServiceDescriptor(typeof(CrawlQueue), new CrawlQueue(sessionFactory, container.GetService<IModel>())));
         }
 
         public static IServiceProvider Configure(IServiceCollection services)

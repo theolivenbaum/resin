@@ -15,7 +15,7 @@ namespace Sir.Store
     public class WarmupSession : CollectionSession, IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
-        private readonly ITokenizer _tokenizer;
+        private readonly IModel _tokenizer;
         private readonly ProducerConsumerQueue<string> _httpQueue;
         private readonly HttpClient _http;
         private readonly string _baseUrl;
@@ -24,7 +24,7 @@ namespace Sir.Store
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
-            ITokenizer tokenizer,
+            IModel tokenizer,
             IConfigurationProvider config,
             string baseUrl) : base(collectionName, collectionId, sessionFactory)
         {
@@ -58,7 +58,7 @@ namespace Sir.Store
                         var terms = _tokenizer.Tokenize(doc[key].ToString());
 
                         foreach (var token in terms.Embeddings
-                            .Select(t => t.AsString()))
+                            .Select(t => t.ToString()))
                         {
                             _httpQueue.Enqueue(token);
                         }

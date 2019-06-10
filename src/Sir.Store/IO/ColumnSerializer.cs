@@ -14,24 +14,27 @@ namespace Sir.Store
         private readonly PageIndexWriter _ixPageIndexWriter;
         private readonly Stream _ixStream;
 
-        public ColumnSerializer(ulong collectionId, long keyId, SessionFactory sessionFactory, string ixFileExtension = "ix", string pageFileExtension = "ixp")
+        public ColumnSerializer(
+            ulong collectionId, 
+            long keyId, 
+            SessionFactory sessionFactory)
         {
             _keyId = keyId;
             _collectionId = collectionId;
             _sessionFactory = sessionFactory;
 
-            var pixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}", _collectionId, keyId, pageFileExtension));
-            var ixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.{2}", _collectionId, keyId, ixFileExtension));
+            var pixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.ixp", _collectionId, keyId));
+            var ixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.ix", _collectionId, keyId));
 
             _ixPageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(pixFileName));
             _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
         }
 
-        public void CreateColumnSegment(VectorNode column, Stream vectorStream, Stream postingsStream)
+        public void CreateColumnSegment(VectorNode column, Stream vectorStream, Stream postingsStream, IModel model)
         {
             var time = Stopwatch.StartNew();
 
-            var page = GraphSerializer.SerializeTree(column, _ixStream, vectorStream, postingsStream);
+            var page = GraphBuilder.SerializeTree(column, _ixStream, vectorStream, postingsStream, model);
 
             _ixStream.Flush();
             _ixPageIndexWriter.Write(page.offset, page.length);

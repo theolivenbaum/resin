@@ -5,15 +5,16 @@ using System.Linq;
 namespace Sir.Store
 {
     /// <summary>
-    /// Parses terms (key:value). Keys are separated from values by a ':' and
-    /// terms are separated by newline characters. 
+    /// Parses terms ([key]:[value]). 
+    /// Terms are enclosed in parenthases and separated by space. 
+    /// Keys are separated from values by a ':'.
     /// Terms may be appended with a + sign (meaning AND), a - sign (meaning NOT) or nothing (meaning OR).
     /// </summary>
-    public class TermQueryParser
+    public class QueryParser
     {
         private static  char[] Operators = new char[] { ' ', '+', '-' };
 
-        public Query Parse(ulong collectionId, string query, ITokenizer tokenizer)
+        public Query Parse(ulong collectionId, string query, IModel tokenizer)
         {
             Query root = null;
             Query cursor = null;
@@ -32,7 +33,9 @@ namespace Sir.Store
                 var parts = line.Split(':');
                 var key = parts[0];
                 var value = parts[1];
-                var values = key[0] == '_' ? AnalyzedString.AsSingleToken(value) : tokenizer.Tokenize(value);
+                var values = key[0] == '_' 
+                    ? new AnalyzedString(new List<Vector> { value.ToIndexedVector(0, value.Length)})
+                    : tokenizer.Tokenize(value);
                 var or = key[0] != '+' && key[0] != '-';
                 var not = key[0] == '-';
                 var and = !or && !not;

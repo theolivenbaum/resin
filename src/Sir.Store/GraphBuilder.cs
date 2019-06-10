@@ -2,22 +2,20 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
-    public static class GraphSerializer
+    public static class GraphBuilder
     {
-        public static bool Add(VectorNode root, VectorNode node, (float identicalAngle, float foldAngle) similarity)
+        public static bool Add(VectorNode root, VectorNode node, IModel model)
         {
             var cursor = root;
 
             while (cursor != null)
             {
-                var angle = cursor.Vector.Count > 0 ? node.Vector.CosAngle(cursor.Vector) : 0;
+                var angle = cursor.Vector.Count > 0 ? model.CosAngle(node.Vector, cursor.Vector) : 0;
 
-                if (angle >= similarity.identicalAngle)
+                if (angle >= model.Similarity().identicalAngle)
                 {
                     lock (cursor.Sync)
                     {
@@ -26,7 +24,7 @@ namespace Sir.Store
                         return false;
                     }
                 }
-                else if (angle > similarity.foldAngle)
+                else if (angle > model.Similarity().foldAngle)
                 {
                     if (cursor.Left == null)
                     {
@@ -144,7 +142,8 @@ namespace Sir.Store
             stream.WriteByte(terminator);
         }
 
-        public static (long offset, long length) SerializeTree(VectorNode node, Stream indexStream, Stream vectorStream, Stream postingsStream)
+        public static (long offset, long length) SerializeTree(
+            VectorNode node, Stream indexStream, Stream vectorStream, Stream postingsStream, IModel tokenizer)
         {
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;
@@ -157,7 +156,7 @@ namespace Sir.Store
             while (node != null)
             {
                 SerializePostings(node, postingsStream);
-                SerializeVector(node, vectorStream);
+                node.VectorOffset = tokenizer.SerializeVector(node.Vector, vectorStream);
                 SerializeNode(node, indexStream);
 
                 if (node.Right != null)
@@ -187,16 +186,7 @@ namespace Sir.Store
             node.PostingsOffset = offset;
         }
 
-        public static void SerializeVector(VectorNode node, Stream vectorStream)
-        {
-            Span<byte> values = MemoryMarshal.Cast<int, byte>(node.Vector.Values.Span);
-
-            node.VectorOffset = vectorStream.Position;
-
-            vectorStream.Write(values);
-        }
-
-        public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream)
+        public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, IModel tokenizer)
         {
             // Deserialize node
             var vecOffset = BitConverter.ToInt64(nodeBuffer, 0);
@@ -205,7 +195,7 @@ namespace Sir.Store
             var weight = BitConverter.ToInt32(nodeBuffer, sizeof(long) + sizeof(long) + sizeof(int));
             var terminator = nodeBuffer[VectorNode.BlockSize - 2];
 
-            return DeserializeNode(vecOffset, postingsOffset, vectorCount, weight, terminator, vectorStream);
+            return DeserializeNode(vecOffset, postingsOffset, vectorCount, weight, terminator, vectorStream, tokenizer);
         }
 
         public static VectorNode DeserializeNode(
@@ -214,46 +204,35 @@ namespace Sir.Store
             int componentCount,
             int weight,
             byte terminator,
-            Stream vectorStream)
+            Stream vectorStream,
+            IModel tokenizer)
         {
-            var vector = DeserializeVector(vecOffset, componentCount, vectorStream);
+            var vector = tokenizer.DeserializeVector(vecOffset, componentCount, vectorStream);
             var node = new VectorNode(postingsOffset, vecOffset, terminator, weight, componentCount, vector);
 
             return node;
         }
 
-        public static Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
-        {
-            if (vectorStream == null)
-            {
-                throw new ArgumentNullException(nameof(vectorStream));
-            }
+        
 
-            Span<byte> valuesBuf = new byte[componentCount * sizeof(int)];
-
-            vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
-            vectorStream.Read(valuesBuf);
-
-            Span<int> values = MemoryMarshal.Cast<byte, int>(valuesBuf);
-
-            return new Vector(values.ToArray().AsMemory());
-        }
+        
 
         public static void DeserializeUnorderedFile(
             Stream indexStream,
             Stream vectorStream,
             VectorNode root,
-            (float identicalAngle, float foldAngle) similarity)
+            (float identicalAngle, float foldAngle) similarity,
+            IModel model)
         {
             var buf = new byte[VectorNode.BlockSize];
             int read = indexStream.Read(buf);
 
             while (read == VectorNode.BlockSize)
             {
-                var node = DeserializeNode(buf, vectorStream);
+                var node = DeserializeNode(buf, vectorStream, model);
 
                 if (node.VectorOffset > -1)
-                    GraphSerializer.Add(root, node, similarity);
+                    GraphBuilder.Add(root, node, model);
 
                 read = indexStream.Read(buf);
             }
@@ -264,7 +243,8 @@ namespace Sir.Store
             Stream vectorStream,
             long indexLength,
             VectorNode root,
-            (float identicalAngle, float foldAngle) similarity)
+            (float identicalAngle, float foldAngle) similarity,
+            IModel model)
         {
             int read = 0;
             var buf = new byte[VectorNode.BlockSize];
@@ -273,16 +253,16 @@ namespace Sir.Store
             {
                 indexStream.Read(buf);
 
-                var node = DeserializeNode(buf, vectorStream);
+                var node = DeserializeNode(buf, vectorStream, model);
 
                 if (node.VectorOffset > -1)
-                    GraphSerializer.Add(root, node, similarity);
+                    GraphBuilder.Add(root, node, model);
 
                 read += VectorNode.BlockSize;
             }
         }
 
-        public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, long indexLength)
+        public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, long indexLength, IModel tokenizer)
         {
             VectorNode root = new VectorNode();
             VectorNode cursor = root;
@@ -294,7 +274,7 @@ namespace Sir.Store
             {
                 indexStream.Read(buf);
 
-                var node = DeserializeNode(buf, vectorStream);
+                var node = DeserializeNode(buf, vectorStream, tokenizer);
 
                 if (node.Terminator == 0) // there is both a left and a right child
                 {

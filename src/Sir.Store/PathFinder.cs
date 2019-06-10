@@ -5,7 +5,7 @@ namespace Sir.Store
 {
     public static class PathFinder
     {
-        public static Hit ClosestMatch(VectorNode root, Vector vector, float foldAngle)
+        public static Hit ClosestMatch(VectorNode root, Vector vector, IModel model)
         {
             var best = root;
             var cursor = root;
@@ -13,9 +13,9 @@ namespace Sir.Store
 
             while (cursor != null)
             {
-                var angle = vector.CosAngle(cursor.Vector);
+                var angle = model.CosAngle(vector, cursor.Vector);
 
-                if (angle > foldAngle)
+                if (angle > model.Similarity().foldAngle)
                 {
                     if (angle > highscore)
                     {
@@ -41,36 +41,6 @@ namespace Sir.Store
                 Score = highscore,
                 Node = best
             };
-        }
-
-        public static Hit FindFirstNonSimilar(VectorNode root, Vector vector, float foldAngle)
-        {
-            var cursor = root;
-
-            while (cursor != null)
-            {
-                var angle = vector.CosAngle(cursor.Vector);
-
-                if (angle < foldAngle)
-                {
-                    return new Hit
-                    {
-                        Score = angle,
-                        Node = cursor
-                    };
-
-                }
-                else if (cursor.Right != null)
-                {
-                    cursor = cursor.Right;
-                }
-                else
-                {
-                    cursor = cursor.Left;
-                }
-            }
-
-            return new Hit();
         }
 
         public static IEnumerable<VectorNode> All(VectorNode root)

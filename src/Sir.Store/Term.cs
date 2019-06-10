@@ -1,6 +1,4 @@
-﻿using Sir.Store;
-
-namespace Sir
+﻿namespace Sir.Store
 {
     /// <summary>
     /// A query term.
@@ -53,7 +51,7 @@ namespace Sir
 
         private string CreateString()
         {
-            return Vector.AsString();
+            return Vector.ToString();
         }
 
         public override string ToString()

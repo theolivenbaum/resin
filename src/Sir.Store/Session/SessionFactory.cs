@@ -11,7 +11,6 @@ namespace Sir.Store
     /// </summary>
     public class SessionFactory : IDisposable, ILogger
     {
-        private readonly ITokenizer _tokenizer;
         private readonly IConfigurationProvider _config;
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
@@ -19,7 +18,7 @@ namespace Sir.Store
         public string Dir { get; }
         public IConfigurationProvider Config { get { return _config; } }
 
-        public SessionFactory(ITokenizer tokenizer, IConfigurationProvider config)
+        public SessionFactory(IConfigurationProvider config)
         {
             Dir = config.Get("data_dir");
 
@@ -29,7 +28,6 @@ namespace Sir.Store
             }
 
             _keys = LoadKeys();
-            _tokenizer = tokenizer;
             _config = config;
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
         }
@@ -46,12 +44,12 @@ namespace Sir.Store
             _keys.Clear();
         }
 
-        public void Commit(Job job)
+        public void Execute(Job job)
         {
             var timer = Stopwatch.StartNew();
             var colId = job.Collection.ToHash();
 
-            using (var indexSession = CreateIndexSession(job.Collection, colId))
+            using (var indexSession = CreateIndexSession(job.Collection, colId, job.Tokenizer))
             using (var writeSession = CreateWriteSession(job.Collection, colId, indexSession))
             {
                 foreach (var doc in job.Documents)
@@ -160,9 +158,9 @@ namespace Sir.Store
             return true;
         }
 
-        public WarmupSession CreateWarmupSession(string collectionName, ulong collectionId, string baseUrl)
+        public WarmupSession CreateWarmupSession(string collectionName, ulong collectionId, string baseUrl, IModel tokenizer)
         {
-            return new WarmupSession(collectionName, collectionId, this, _tokenizer, _config, baseUrl);
+            return new WarmupSession(collectionName, collectionId, this, tokenizer, _config, baseUrl);
         }
 
         public DocumentStreamSession CreateDocumentStreamSession(string collectionName, ulong collectionId)
@@ -176,19 +174,19 @@ namespace Sir.Store
                 collectionName, collectionId, this, indexSession, _config);
         }
 
-        public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId)
+        public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId, IModel tokenizer)
         {
-            return new TermIndexSession(collectionName, collectionId, this, _tokenizer, _config);
+            return new TermIndexSession(collectionName, collectionId, this, tokenizer, _config);
         }
 
-        public ValidateSession CreateValidateSession(string collectionName, ulong collectionId)
+        public ValidateSession CreateValidateSession(string collectionName, ulong collectionId, IModel tokenizer)
         {
-            return new ValidateSession(collectionName, collectionId, this, _tokenizer, _config);
+            return new ValidateSession(collectionName, collectionId, this, tokenizer, _config);
         }
 
-        public ReadSession CreateReadSession(string collectionName, ulong collectionId)
+        public ReadSession CreateReadSession(string collectionName, ulong collectionId, IModel tokenizer)
         {
-            return new ReadSession(collectionName, collectionId, this, _config);
+            return new ReadSession(collectionName, collectionId, this, _config, tokenizer);
         }
 
         public Stream CreateAsyncReadStream(string fileName)

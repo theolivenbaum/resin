@@ -38,9 +38,9 @@ namespace Sir.Store
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
         }
 
-        public Hit ClosestMatch(Vector vector, (float identicalAngle, float foldAngle) similarity)
+        public Hit ClosestMatch(Vector vector, IModel model)
         {
-            var hits = ClosestMatchOnDisk(vector, similarity);
+            var hits = ClosestMatchOnDisk(vector, model);
             var time = Stopwatch.StartNew();
             Hit best = null;
 
@@ -52,7 +52,7 @@ namespace Sir.Store
                 }
                 else if (hit.Score == best.Score)
                 {
-                    GraphSerializer.MergePostings(best.Node, hit.Node);
+                    GraphBuilder.MergePostings(best.Node, hit.Node);
                 }
             }
 
@@ -61,15 +61,16 @@ namespace Sir.Store
             return best;
         }
 
-        private ConcurrentBag<Hit> ClosestMatchOnDisk(Vector vector, (float identicalAngle, float foldAngle) similarity)
+        private ConcurrentBag<Hit> ClosestMatchOnDisk(
+            Vector vector, IModel model)
         {
             var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
             var hits = new ConcurrentBag<Hit>();
             var ixbufferSize = int.Parse(_config.Get("index_read_buffer_size") ?? "4096");
 
-            //foreach(var page in pages)
-            Parallel.ForEach(pages, page =>
+            foreach(var page in pages)
+            //Parallel.ForEach(pages, page =>
             {
                 using (var indexStream = new BufferedStream(_sessionFactory.CreateReadStream(_ixFileName), ixbufferSize))
                 using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
@@ -80,11 +81,11 @@ namespace Sir.Store
                                 vector,
                                 indexStream,
                                 vectorStream,
-                                similarity);
+                                model);
 
                     hits.Add(hit);
                 }
-            });
+            }//);
 
             this.Log($"scan took {time.Elapsed}");
 
@@ -95,7 +96,7 @@ namespace Sir.Store
             Vector vector,
             Stream indexStream,
             Stream vectorStream,
-            (float identicalAngle, float foldAngle) similarity
+            IModel model
         )
         {
             Span<byte> block = new byte[VectorNode.BlockSize];
@@ -109,13 +110,13 @@ namespace Sir.Store
             {
                 var vecOffset = BitConverter.ToInt64(block.Slice(0, sizeof(long)));
                 var componentCount = BitConverter.ToInt32(block.Slice(sizeof(long) + sizeof(long), sizeof(int)));
-                var cursorVector = GraphSerializer.DeserializeVector(vecOffset, componentCount, vectorStream);
+                var cursorVector = model.DeserializeVector(vecOffset, componentCount, vectorStream);
                 var cursorTerminator = block[block.Length - 1];
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));
 
-                var angle = cursorVector.CosAngle(vector);
+                var angle = model.CosAngle(cursorVector, vector);
 
-                if (angle >= similarity.identicalAngle)
+                if (angle >= model.Similarity().identicalAngle)
                 {
                     if (best == null || angle > highscore)
                     {
@@ -137,7 +138,7 @@ namespace Sir.Store
 
                     break;
                 }
-                else if (angle > similarity.foldAngle)
+                else if (angle > model.Similarity().foldAngle)
                 {
                     if (best == null || angle > highscore)
                     {

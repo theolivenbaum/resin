@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Microsoft.AspNetCore.Http;
@@ -15,22 +14,20 @@ namespace Sir.Store
         public string ContentType => "application/json";
 
         private readonly SessionFactory _sessionFactory;
-        private readonly ITokenizer _tokenizer;
         private readonly Stopwatch _timer;
 
-        public StoreWriter(SessionFactory sessionFactory, ITokenizer analyzer)
+        public StoreWriter(SessionFactory sessionFactory)
         {
-            _tokenizer = analyzer;
             _sessionFactory = sessionFactory;
             _timer = new Stopwatch();
         }
 
-        public ResponseModel Write(string collectionName, HttpRequest request)
+        public ResponseModel Write(string collectionName, IModel tokenizer, HttpRequest request)
         {
             var documents = Deserialize<IEnumerable<IDictionary<string, object>>>(request.Body);
-            var job = new Job(collectionName, documents);
+            var job = new Job(collectionName, documents, tokenizer);
 
-            _sessionFactory.Commit(job);
+            _sessionFactory.Execute(job);
 
             return new ResponseModel();
         }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Sir.HttpServer.Controllers
@@ -9,10 +8,12 @@ namespace Sir.HttpServer.Controllers
     public class IOController : Controller, ILogger
     {
         private readonly PluginsCollection _plugins;
+        private readonly IModel _model;
 
-        public IOController(PluginsCollection plugins)
+        public IOController(PluginsCollection plugins, IModel tokenizer)
         {
             _plugins = plugins;
+            _model = tokenizer;
         }
 
         [HttpPost("{*collectionName}")]
@@ -32,7 +33,7 @@ namespace Sir.HttpServer.Controllers
 
             try
             {
-                ResponseModel result = writer.Write(collectionName, Request);
+                ResponseModel result = writer.Write(collectionName, _model, Request);
 
                 if (result.Stream != null)
                 {
@@ -65,7 +66,7 @@ namespace Sir.HttpServer.Controllers
             }
 
             var timer = Stopwatch.StartNew();
-            var result = reader.Read(collectionName, Request);
+            var result = reader.Read(collectionName, _model, Request);
 
             this.Log("processed {0} request in {1}", mediaType, timer.Elapsed);
 

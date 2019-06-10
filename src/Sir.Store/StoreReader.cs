@@ -18,17 +18,14 @@ namespace Sir.Store
         private readonly SessionFactory _sessionFactory;
         private readonly HttpQueryParser _httpQueryParser;
         private readonly HttpBowQueryParser _httpBowQueryParser;
-        private readonly ITokenizer _tokenizer;
 
         public StoreReader(
             SessionFactory sessionFactory, 
             HttpQueryParser httpQueryParser, 
-            HttpBowQueryParser httpDocumentQueryParser, 
-            ITokenizer tokenizer)
+            HttpBowQueryParser httpDocumentQueryParser)
         {
             _sessionFactory = sessionFactory;
             _httpQueryParser = httpQueryParser;
-            _tokenizer = tokenizer;
             _httpBowQueryParser = httpDocumentQueryParser;
         }
 
@@ -36,12 +33,12 @@ namespace Sir.Store
         {
         }
 
-        public ResponseModel Read(string collectionName, HttpRequest request)
+        public ResponseModel Read(string collectionName, IModel tokenizer, HttpRequest request)
         {
             var timer = Stopwatch.StartNew();
             var collectionId = collectionName.ToHash();
 
-            using (var session = _sessionFactory.CreateReadSession(collectionName, collectionId))
+            using (var session = _sessionFactory.CreateReadSession(collectionName, collectionId, tokenizer))
             {
                 IList<IDictionary<string, object>> docs;
                 long total;
@@ -58,7 +55,7 @@ namespace Sir.Store
                 }
                 else
                 {
-                    var query = _httpQueryParser.Parse(collectionId, request);
+                    var query = _httpQueryParser.Parse(collectionId, tokenizer, request);
 
                     if (query == null)
                     {
@@ -81,7 +78,7 @@ namespace Sir.Store
                             newCollectionName = Guid.NewGuid().ToString();
                         }
 
-                        _sessionFactory.Commit(new Job(newCollectionName, docs));
+                        _sessionFactory.Execute(new Job(newCollectionName, docs, tokenizer));
                     }
                 }
 

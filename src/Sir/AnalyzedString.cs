@@ -1,5 +1,4 @@
-﻿using Sir.Store;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Sir
 {
@@ -13,11 +12,6 @@ namespace Sir
         public AnalyzedString(IList<Vector> embeddings)
         {
             Embeddings = embeddings;
-        }
-
-        public static AnalyzedString AsSingleToken(string text)
-        {
-            return new UnicodeTokenizer().Tokenize(text);
         }
     }
 }
