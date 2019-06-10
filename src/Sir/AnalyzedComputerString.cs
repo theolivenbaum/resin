@@ -3,7 +3,7 @@
 namespace Sir
 {
     /// <summary>
-    /// An analyzed (tokenized) string.
+    /// An analyzed (tokenized) stream of computer words.
     /// </summary>
     public class AnalyzedComputerString
     {
