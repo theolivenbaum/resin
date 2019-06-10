@@ -15,7 +15,7 @@ namespace Sir.Store
     public class WarmupSession : CollectionSession, IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
-        private readonly IModel _tokenizer;
+        private readonly IStringModel _tokenizer;
         private readonly ProducerConsumerQueue<string> _httpQueue;
         private readonly HttpClient _http;
         private readonly string _baseUrl;
@@ -24,7 +24,7 @@ namespace Sir.Store
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
-            IModel tokenizer,
+            IStringModel tokenizer,
             IConfigurationProvider config,
             string baseUrl) : base(collectionName, collectionId, sessionFactory)
         {

@@ -33,7 +33,7 @@ namespace Sir.Store
         {
         }
 
-        public ResponseModel Read(string collectionName, IModel tokenizer, HttpRequest request)
+        public ResponseModel Read(string collectionName, IStringModel tokenizer, HttpRequest request)
         {
             var timer = Stopwatch.StartNew();
             var collectionId = collectionName.ToHash();

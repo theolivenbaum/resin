@@ -7,7 +7,7 @@ namespace Sir.Store
 {
     public static class GraphBuilder
     {
-        public static bool Add(VectorNode root, VectorNode node, IModel model)
+        public static bool Add(VectorNode root, VectorNode node, IStringModel model)
         {
             var cursor = root;
 
@@ -143,7 +143,7 @@ namespace Sir.Store
         }
 
         public static (long offset, long length) SerializeTree(
-            VectorNode node, Stream indexStream, Stream vectorStream, Stream postingsStream, IModel tokenizer)
+            VectorNode node, Stream indexStream, Stream vectorStream, Stream postingsStream, IStringModel tokenizer)
         {
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;
@@ -186,7 +186,7 @@ namespace Sir.Store
             node.PostingsOffset = offset;
         }
 
-        public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, IModel tokenizer)
+        public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, IStringModel tokenizer)
         {
             // Deserialize node
             var vecOffset = BitConverter.ToInt64(nodeBuffer, 0);
@@ -205,7 +205,7 @@ namespace Sir.Store
             int weight,
             byte terminator,
             Stream vectorStream,
-            IModel tokenizer)
+            IStringModel tokenizer)
         {
             var vector = tokenizer.DeserializeVector(vecOffset, componentCount, vectorStream);
             var node = new VectorNode(postingsOffset, vecOffset, terminator, weight, componentCount, vector);
@@ -222,7 +222,7 @@ namespace Sir.Store
             Stream vectorStream,
             VectorNode root,
             (float identicalAngle, float foldAngle) similarity,
-            IModel model)
+            IStringModel model)
         {
             var buf = new byte[VectorNode.BlockSize];
             int read = indexStream.Read(buf);
@@ -244,7 +244,7 @@ namespace Sir.Store
             long indexLength,
             VectorNode root,
             (float identicalAngle, float foldAngle) similarity,
-            IModel model)
+            IStringModel model)
         {
             int read = 0;
             var buf = new byte[VectorNode.BlockSize];
@@ -262,7 +262,7 @@ namespace Sir.Store
             }
         }
 
-        public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, long indexLength, IModel tokenizer)
+        public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, long indexLength, IStringModel tokenizer)
         {
             VectorNode root = new VectorNode();
             VectorNode cursor = root;

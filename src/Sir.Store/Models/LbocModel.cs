@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
-    public class LbocModel : IModel
+    public class LbocModel : IStringModel
     {
         public Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
         {
@@ -35,7 +35,7 @@ namespace Sir.Store
             return pos;
         }
 
-        public AnalyzedString Tokenize(string text)
+        public AnalyzedComputerString Tokenize(string text)
         {
             var source = text.AsMemory();
             var offset = 0;
@@ -93,7 +93,7 @@ namespace Sir.Store
                 }
             }
 
-            return new AnalyzedString(embeddings);
+            return new AnalyzedComputerString(embeddings);
         }
 
         public (float identicalAngle, float foldAngle) Similarity()

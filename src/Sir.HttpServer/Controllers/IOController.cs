@@ -8,9 +8,9 @@ namespace Sir.HttpServer.Controllers
     public class IOController : Controller, ILogger
     {
         private readonly PluginsCollection _plugins;
-        private readonly IModel _model;
+        private readonly IStringModel _model;
 
-        public IOController(PluginsCollection plugins, IModel tokenizer)
+        public IOController(PluginsCollection plugins, IStringModel tokenizer)
         {
             _plugins = plugins;
             _model = tokenizer;

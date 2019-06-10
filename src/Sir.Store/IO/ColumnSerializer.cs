@@ -30,7 +30,7 @@ namespace Sir.Store
             _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
         }
 
-        public void CreateColumnSegment(VectorNode column, Stream vectorStream, Stream postingsStream, IModel model)
+        public void CreateColumnSegment(VectorNode column, Stream vectorStream, Stream postingsStream, IStringModel model)
         {
             var time = Stopwatch.StartNew();
 

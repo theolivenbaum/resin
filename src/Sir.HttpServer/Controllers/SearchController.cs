@@ -8,9 +8,9 @@ namespace Sir.HttpServer.Controllers
     public class SearchController : UIController
     {
         private readonly PluginsCollection _plugins;
-        private readonly IModel _model;
+        private readonly IStringModel _model;
 
-        public SearchController(PluginsCollection plugins, IConfigurationProvider config, IModel tokenizer) : base(config)
+        public SearchController(PluginsCollection plugins, IConfigurationProvider config, IStringModel tokenizer) : base(config)
         {
             _plugins = plugins;
             _model = tokenizer;

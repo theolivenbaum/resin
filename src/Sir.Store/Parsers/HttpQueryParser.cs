@@ -15,7 +15,7 @@ namespace Sir.Store
             _queryParser = queryParser;
         }
 
-        public Query Parse(ulong collectionId, IModel tokenizer, HttpRequest request)
+        public Query Parse(ulong collectionId, IStringModel tokenizer, HttpRequest request)
         {
             Query query = null;
 
@@ -72,7 +72,7 @@ namespace Sir.Store
             return query;
         }
 
-        public Query FromFormattedString(ulong collectionId, string formattedQuery, IModel tokenizer)
+        public Query FromFormattedString(ulong collectionId, string formattedQuery, IStringModel tokenizer)
         {
             Query root = null;
             var lines = formattedQuery

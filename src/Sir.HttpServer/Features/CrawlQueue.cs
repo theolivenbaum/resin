@@ -13,11 +13,11 @@ namespace Sir.HttpServer.Features
     {
         private readonly ProducerConsumerQueue<(string collection, Uri uri)> _queue;
         private readonly SessionFactory _sessionFactory;
-        private readonly IModel _model;
+        private readonly IStringModel _model;
 
         public (Uri uri, string title) LastProcessed { get; private set; }
 
-        public CrawlQueue(SessionFactory sessionFactory, IModel tokenizer)
+        public CrawlQueue(SessionFactory sessionFactory, IStringModel tokenizer)
         {
             _queue = new ProducerConsumerQueue<(string,Uri)>(1, Submit);
             _sessionFactory = sessionFactory;

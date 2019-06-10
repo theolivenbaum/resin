@@ -7,6 +7,6 @@ namespace Sir
     /// </summary>
     public interface IReader : IPlugin
     {
-       ResponseModel Read(string collectionId, IModel model, HttpRequest request);
+       ResponseModel Read(string collectionId, IStringModel model, HttpRequest request);
     }
 }

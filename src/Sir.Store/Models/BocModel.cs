@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
-    public class BocModel : IModel
+    public class BocModel : IStringModel
     {
         public long SerializeVector(Vector vector, Stream vectorStream)
         {
@@ -41,7 +41,7 @@ namespace Sir.Store
             return new IndexedVector(index.ToArray().AsMemory(), values.ToArray().AsMemory());
         }
 
-        public AnalyzedString Tokenize(string text)
+        public AnalyzedComputerString Tokenize(string text)
         {
             var source = text.AsMemory();
             var offset = 0;
@@ -105,7 +105,7 @@ namespace Sir.Store
                 }
             }
 
-            return new AnalyzedString(embeddings);
+            return new AnalyzedComputerString(embeddings);
         }
 
         public (float identicalAngle, float foldAngle) Similarity()

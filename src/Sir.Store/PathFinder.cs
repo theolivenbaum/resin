@@ -5,7 +5,7 @@ namespace Sir.Store
 {
     public static class PathFinder
     {
-        public static Hit ClosestMatch(VectorNode root, Vector vector, IModel model)
+        public static Hit ClosestMatch(VectorNode root, Vector vector, IStringModel model)
         {
             var best = root;
             var cursor = root;

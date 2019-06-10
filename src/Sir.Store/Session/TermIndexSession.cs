@@ -11,7 +11,7 @@ namespace Sir.Store
     public class TermIndexSession : CollectionSession, IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
-        private readonly IModel _model;
+        private readonly IStringModel _model;
         private readonly ConcurrentDictionary<long, VectorNode> _dirty;
         private bool _committed;
         private bool _committing;
@@ -22,7 +22,7 @@ namespace Sir.Store
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
-            IModel tokenizer,
+            IStringModel tokenizer,
             IConfigurationProvider config) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
@@ -84,7 +84,7 @@ namespace Sir.Store
             this.Log(string.Format("***FLUSHED***"));
         }
 
-        private void Validate((long keyId, long docId, AnalyzedString tokens) item)
+        private void Validate((long keyId, long docId, AnalyzedComputerString tokens) item)
         {
             var tree = GetOrCreateIndex(item.keyId);
 

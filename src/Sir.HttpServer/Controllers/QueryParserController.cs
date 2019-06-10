@@ -9,13 +9,13 @@ namespace Sir.HttpServer.Controllers
     {
         private readonly IQueryFormatter _queryFormatter;
         private readonly PluginsCollection _plugins;
-        private readonly IModel _model;
+        private readonly IStringModel _model;
 
         public QueryParserController(
             PluginsCollection plugins,
             IQueryFormatter queryFormatter, 
             IConfigurationProvider config,
-            IModel tokenizer) : base(config)
+            IStringModel tokenizer) : base(config)
         {
             _queryFormatter = queryFormatter;
             _plugins = plugins;

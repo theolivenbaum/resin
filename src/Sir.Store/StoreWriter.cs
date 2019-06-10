@@ -22,7 +22,7 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
-        public ResponseModel Write(string collectionName, IModel tokenizer, HttpRequest request)
+        public ResponseModel Write(string collectionName, IStringModel tokenizer, HttpRequest request)
         {
             var documents = Deserialize<IEnumerable<IDictionary<string, object>>>(request.Body);
             var job = new Job(collectionName, documents, tokenizer);

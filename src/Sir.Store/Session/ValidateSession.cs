@@ -12,22 +12,22 @@ namespace Sir.Store
     public class ValidateSession : CollectionSession, IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
-        private readonly IModel _tokenizer;
+        private readonly IStringModel _tokenizer;
         private readonly ReadSession _readSession;
-        private readonly ProducerConsumerQueue<(long docId, object key, AnalyzedString tokens)> _validator;
+        private readonly ProducerConsumerQueue<(long docId, object key, AnalyzedComputerString tokens)> _validator;
 
         public ValidateSession(
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
-            IModel tokenizer,
+            IStringModel tokenizer,
             IConfigurationProvider config
             ) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
             _tokenizer = tokenizer;
             _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, tokenizer);
-            _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedString tokens)>(
+            _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedComputerString tokens)>(
                 int.Parse(_config.Get("write_thread_count")), Validate);
         }
 
@@ -58,7 +58,7 @@ namespace Sir.Store
             }
         }
 
-        private void Validate((long docId, object key, AnalyzedString tokens) item)
+        private void Validate((long docId, object key, AnalyzedComputerString tokens) item)
         {
             var docTree = new VectorNode();
 

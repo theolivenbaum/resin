@@ -15,7 +15,7 @@ namespace Sir.Store
             ulong collectionId, 
             HttpRequest request, 
             ReadSession readSession,
-            IModel tokenizer)
+            IStringModel tokenizer)
         {
             var query = _httpQueryParser.Parse(collectionId, tokenizer, request);
             readSession.Map(query);

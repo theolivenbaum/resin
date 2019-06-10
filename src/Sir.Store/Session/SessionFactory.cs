@@ -158,7 +158,7 @@ namespace Sir.Store
             return true;
         }
 
-        public WarmupSession CreateWarmupSession(string collectionName, ulong collectionId, string baseUrl, IModel tokenizer)
+        public WarmupSession CreateWarmupSession(string collectionName, ulong collectionId, string baseUrl, IStringModel tokenizer)
         {
             return new WarmupSession(collectionName, collectionId, this, tokenizer, _config, baseUrl);
         }
@@ -174,17 +174,17 @@ namespace Sir.Store
                 collectionName, collectionId, this, indexSession, _config);
         }
 
-        public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId, IModel tokenizer)
+        public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId, IStringModel tokenizer)
         {
             return new TermIndexSession(collectionName, collectionId, this, tokenizer, _config);
         }
 
-        public ValidateSession CreateValidateSession(string collectionName, ulong collectionId, IModel tokenizer)
+        public ValidateSession CreateValidateSession(string collectionName, ulong collectionId, IStringModel tokenizer)
         {
             return new ValidateSession(collectionName, collectionId, this, tokenizer, _config);
         }
 
-        public ReadSession CreateReadSession(string collectionName, ulong collectionId, IModel tokenizer)
+        public ReadSession CreateReadSession(string collectionName, ulong collectionId, IStringModel tokenizer)
         {
             return new ReadSession(collectionName, collectionId, this, _config, tokenizer);
         }

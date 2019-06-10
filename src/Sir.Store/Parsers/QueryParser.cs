@@ -14,7 +14,7 @@ namespace Sir.Store
     {
         private static  char[] Operators = new char[] { ' ', '+', '-' };
 
-        public Query Parse(ulong collectionId, string query, IModel tokenizer)
+        public Query Parse(ulong collectionId, string query, IStringModel tokenizer)
         {
             Query root = null;
             Query cursor = null;
@@ -34,7 +34,7 @@ namespace Sir.Store
                 var key = parts[0];
                 var value = parts[1];
                 var values = key[0] == '_' 
-                    ? new AnalyzedString(new List<Vector> { value.ToIndexedVector(0, value.Length)})
+                    ? new AnalyzedComputerString(new List<Vector> { value.ToIndexedVector(0, value.Length)})
                     : tokenizer.Tokenize(value);
                 var or = key[0] != '+' && key[0] != '-';
                 var not = key[0] == '-';

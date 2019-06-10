@@ -2,9 +2,13 @@
 
 namespace Sir
 {
-    public interface IModel
+    public interface IStringModel : IModel<string>
     {
-        AnalyzedString Tokenize(string text);
+    }
+
+    public interface IModel<T>
+    {
+        AnalyzedComputerString Tokenize(T data);
         Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream);
         long SerializeVector(Vector vector, Stream vectorStream);
         (float identicalAngle, float foldAngle) Similarity();

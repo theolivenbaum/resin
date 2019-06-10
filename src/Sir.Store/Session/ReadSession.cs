@@ -18,13 +18,13 @@ namespace Sir.Store
         private readonly ValueReader _keyReader;
         private readonly ValueReader _valReader;
         private readonly IConfigurationProvider _config;
-        private readonly IModel _tokenizer;
+        private readonly IStringModel _tokenizer;
 
         public ReadSession(string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
             IConfigurationProvider config,
-            IModel tokenizer) 
+            IStringModel tokenizer) 
             : base(collectionName, collectionId, sessionFactory)
         {
             ValueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));

@@ -38,7 +38,7 @@ namespace Sir.Store
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
         }
 
-        public Hit ClosestMatch(Vector vector, IModel model)
+        public Hit ClosestMatch(Vector vector, IStringModel model)
         {
             var hits = ClosestMatchOnDisk(vector, model);
             var time = Stopwatch.StartNew();
@@ -62,7 +62,7 @@ namespace Sir.Store
         }
 
         private ConcurrentBag<Hit> ClosestMatchOnDisk(
-            Vector vector, IModel model)
+            Vector vector, IStringModel model)
         {
             var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
@@ -96,7 +96,7 @@ namespace Sir.Store
             Vector vector,
             Stream indexStream,
             Stream vectorStream,
-            IModel model
+            IStringModel model
         )
         {
             Span<byte> block = new byte[VectorNode.BlockSize];

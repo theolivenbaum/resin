@@ -6,9 +6,9 @@ namespace Sir.Store
     {
         public string Collection { get; private set; }
         public IEnumerable<IDictionary<string, object>> Documents { get; private set; }
-        public IModel Tokenizer { get; }
+        public IStringModel Tokenizer { get; }
 
-        public Job(string collection, IEnumerable<IDictionary<string, object>> documents, IModel tokenizer)
+        public Job(string collection, IEnumerable<IDictionary<string, object>> documents, IStringModel tokenizer)
         {
             Collection = collection;
             Documents = documents;

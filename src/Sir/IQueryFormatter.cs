@@ -4,6 +4,6 @@ namespace Sir
 {
     public interface IQueryFormatter
     {
-        string Format(string collectionName, IModel model, HttpRequest request);
+        string Format(string collectionName, IStringModel model, HttpRequest request);
     }
 }

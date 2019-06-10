@@ -168,7 +168,7 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void Warmup(string dir, Uri uri, string collectionName, int skip, int take, IModel tokenizer)
+        private static void Warmup(string dir, Uri uri, string collectionName, int skip, int take, IStringModel tokenizer)
         {
             using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini")))
             {
