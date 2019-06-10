@@ -77,7 +77,7 @@ namespace Sir.Store
                         }
                     }
 
-                    cursor = cursor.Then;
+                    cursor = cursor.NextTermInClause;
                 }
             }
 

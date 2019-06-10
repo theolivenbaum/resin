@@ -47,8 +47,8 @@ namespace Sir.Store
 
                 for (int i = 1; i < values.Embeddings.Count; i++)
                 {
-                    qc.Then = new Query(collectionId, new Term(key, values, i)) { And = and, Or = or, Not = not };
-                    qc = qc.Then;
+                    qc.NextTermInClause = new Query(collectionId, new Term(key, values, i)) { And = and, Or = or, Not = not };
+                    qc = qc.NextTermInClause;
                 }
 
                 if (cursor == null)
@@ -58,15 +58,15 @@ namespace Sir.Store
                 else
                 {
                     var last = cursor;
-                    var next = last.Next;
+                    var next = last.NextClause;
 
                     while (next != null)
                     {
                         last = next;
-                        next = last.Next;
+                        next = last.NextClause;
                     }
 
-                    last.Next = q;
+                    last.NextClause = q;
                 }
 
                 cursor = q;

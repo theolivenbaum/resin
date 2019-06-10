@@ -134,15 +134,15 @@ namespace Sir.Store
                 else
                 {
                     var last = root;
-                    var next = last.Next;
+                    var next = last.NextClause;
 
                     while (next != null)
                     {
                         last = next;
-                        next = last.Next;
+                        next = last.NextClause;
                     }
 
-                    last.Next = x;
+                    last.NextClause = x;
                 }
             }
 

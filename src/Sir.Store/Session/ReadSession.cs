@@ -91,7 +91,7 @@ namespace Sir.Store
 
             using (var postingsStream = SessionFactory.CreateReadStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos")))
             {
-                var result = new PostingsReader(postingsStream).Reduce(query.ToList(), query.Skip, query.Take);
+                var result = new PostingsReader(postingsStream).Reduce(query.ToClauses(), query.Skip, query.Take);
 
                 this.Log("reducing {0} into {1} docs took {2}", query, result.Documents.Count, timer.Elapsed);
 
@@ -107,7 +107,7 @@ namespace Sir.Store
         {
             var timer = Stopwatch.StartNew();
 
-            var clauses = query.ToList();
+            var clauses = query.ToClauses();
 
             Parallel.ForEach(clauses, q =>
             //foreach (var q in clauses)
@@ -137,7 +137,7 @@ namespace Sir.Store
                         }
                     }
 
-                    cursor = cursor.Then;
+                    cursor = cursor.NextTermInClause;
                 }
             });
 

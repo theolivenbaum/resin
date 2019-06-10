@@ -77,8 +77,8 @@ namespace Sir.Store
             }
         }
         public Term Term { get; private set; }
-        public Query Next { get; set; }
-        public Query Then { get; set; }
+        public Query NextClause { get; set; }
+        public Query NextTermInClause { get; set; }
         public int Skip { get; set; }
         public int Take { get; set; }
         public IList<long> PostingsOffsets { get; set; }
@@ -100,12 +100,12 @@ namespace Sir.Store
                 {
                     termResult.AppendFormat("{0}{1} ", termop, term.Term);
 
-                    term = term.Then;
+                    term = term.NextTermInClause;
                 }
 
                 result.AppendFormat("{0}({1})\n", queryop, termResult.ToString().TrimEnd());
 
-                query = query.Next;
+                query = query.NextClause;
             }
 
             return result.ToString();
@@ -120,13 +120,13 @@ namespace Sir.Store
             {
                 diagram.AppendLine(x.ToString());
 
-                x = x.Next;
+                x = x.NextClause;
             }
 
             return diagram.ToString();
         }
 
-        public IList<Query> ToList()
+        public IList<Query> ToClauses()
         {
             var list = new List<Query>();
             Query q = this;
@@ -134,7 +134,7 @@ namespace Sir.Store
             while (q != null)
             {
                 list.Add(q);
-                q = q.Next;
+                q = q.NextClause;
             }
 
             return list;
@@ -151,17 +151,17 @@ namespace Sir.Store
                 if (!q.Not)
                     count++;
 
-                var then = q.Then;
+                var then = q.NextTermInClause;
 
                 while (then != null)
                 {
                     if (!then.Not)
                         count++;
 
-                    then = then.Then;
+                    then = then.NextTermInClause;
                 }
 
-                q = q.Next;
+                q = q.NextClause;
             }
 
             return count;
@@ -169,7 +169,7 @@ namespace Sir.Store
 
         public byte[] ToStream()
         {
-            var clauses = ToList();
+            var clauses = ToClauses();
             var result = new MemoryStream();
 
             for (int index = 0; index < clauses.Count; index++)
@@ -196,7 +196,7 @@ namespace Sir.Store
                     result.Write(BitConverter.GetBytes(offs));
                 }
 
-                var then = q.Then;
+                var then = q.NextTermInClause;
 
                 while (then != null)
                 {
@@ -220,7 +220,7 @@ namespace Sir.Store
                         result.Write(BitConverter.GetBytes(offs));
                     }
 
-                    then = then.Then;
+                    then = then.NextTermInClause;
                 }
             }
 
@@ -229,13 +229,13 @@ namespace Sir.Store
 
         public Query AddClause(Query query)
         {
-            if (Then == null)
+            if (NextTermInClause == null)
             {
-                Then = query;
+                NextTermInClause = query;
             }
             else
             {
-                Then.AddClause(query);
+                NextTermInClause.AddClause(query);
             }
 
             return this;
