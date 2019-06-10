@@ -15,7 +15,7 @@ namespace Sir.Store
 
             while (cursor != null)
             {
-                var angle = node.Vector.CosAngle(cursor.Vector);
+                var angle = cursor.Vector.Count > 0 ? node.Vector.CosAngle(cursor.Vector) : 0;
 
                 if (angle >= similarity.identicalAngle)
                 {
@@ -106,7 +106,7 @@ namespace Sir.Store
 
         public static Vector Compress(VectorNode root)
         {
-            var vector = new Vector(new int[0], new int[0]);
+            var vector = new Vector(new int[0]);
 
             foreach (var node in PathFinder.All(root))
             {
@@ -189,12 +189,10 @@ namespace Sir.Store
 
         public static void SerializeVector(VectorNode node, Stream vectorStream)
         {
-            Span<byte> index = MemoryMarshal.Cast<int, byte>(node.Vector.Index.Span);
             Span<byte> values = MemoryMarshal.Cast<int, byte>(node.Vector.Values.Span);
 
             node.VectorOffset = vectorStream.Position;
 
-            vectorStream.Write(index);
             vectorStream.Write(values);
         }
 
@@ -231,17 +229,14 @@ namespace Sir.Store
                 throw new ArgumentNullException(nameof(vectorStream));
             }
 
-            Span<byte> indexBuf = new byte[componentCount * sizeof(int)];
             Span<byte> valuesBuf = new byte[componentCount * sizeof(int)];
 
             vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
-            vectorStream.Read(indexBuf);
             vectorStream.Read(valuesBuf);
 
-            Span<int> index = MemoryMarshal.Cast<byte, int>(indexBuf);
             Span<int> values = MemoryMarshal.Cast<byte, int>(valuesBuf);
 
-            return new Vector(index.ToArray(), values.ToArray());
+            return new Vector(values.ToArray().AsMemory());
         }
 
         public static void DeserializeUnorderedFile(

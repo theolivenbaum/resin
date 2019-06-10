@@ -124,9 +124,7 @@ namespace Sir.Store
 
                     if (indexReader != null)
                     {
-                        var termVector = cursor.Term.AsVector();
-
-                        hit = indexReader.ClosestMatch(termVector, Similarity.Term);
+                        hit = indexReader.ClosestMatch(cursor.Term.Vector, Similarity.Term);
                     }
 
                     if (hit != null && hit.Score > 0)

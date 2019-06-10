@@ -12,7 +12,7 @@ namespace Sir
         public ulong KeyHash { get; private set; }
         public int Index { get; private set; }
         public long? KeyId { get; private set; }
-        public VectorNode Node { get; private set; }
+        public Vector Vector { get; private set; }
 
         public Term(object key, AnalyzedString tokenizedString, int index)
         {
@@ -20,6 +20,7 @@ namespace Sir
             KeyHash = key.ToHash();
             TokenizedString = tokenizedString;
             Index = index;
+            Vector = tokenizedString.Embeddings[index];
         }
 
         public Term(long keyId, AnalyzedString tokenizedString, int index)
@@ -27,35 +28,32 @@ namespace Sir
             KeyId = keyId;
             TokenizedString = tokenizedString;
             Index = index;
+            Vector = tokenizedString.Embeddings[index];
         }
 
         public Term(object key, VectorNode node)
         {
             Key = key;
             KeyHash = key.ToHash();
-            Node = node;
+            Vector = node.Vector;
         }
 
         public Term(long keyId, VectorNode node)
         {
             KeyId = keyId;
-            Node = node;
+            Vector = node.Vector;
         }
 
         public Vector AsVector()
         {
-            return Node == null
+            return Vector == null
                 ? TokenizedString.Embeddings[Index]
-                : Node.Vector;
+                : Vector;
         }
 
         private string CreateString()
         {
-            if (Node != null)
-                return Node.ToString();
-
-            var token = TokenizedString.Tokens[Index];
-            return new string(TokenizedString.Original.Span.Slice(token.offset, token.length));
+            return Vector.AsString();
         }
 
         public override string ToString()

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
@@ -14,9 +11,8 @@ namespace Sir.Store
             var offset = 0;
             bool word = false;
             int index = 0;
-            var tokens = new List<(int, int)>();
             var embeddings = new List<Vector>();
-            var embedding = new SortedList<int, int>();
+            var embedding = new List<int>();
 
             for (; index < source.Length; index++)
             {
@@ -30,9 +26,8 @@ namespace Sir.Store
 
                         if (len > 0)
                         {
-                            tokens.Add((offset, index - offset));
-                            embeddings.Add(new Vector(embedding.Keys.ToArray().AsMemory(), embedding.Values.ToArray().AsMemory()));
-                            embedding = new SortedList<int, int>();
+                            embeddings.Add(new Vector(embedding.ToArray().AsMemory()));
+                            embedding = new List<int>();
                         }
 
                         offset = index;
@@ -40,7 +35,7 @@ namespace Sir.Store
                     }
                     else
                     {
-                        embedding.AddOrAppendToComponent(c, 1);
+                        embedding.Add(c);
                     }
                 }
                 else
@@ -49,7 +44,7 @@ namespace Sir.Store
                     {
                         word = true;
                         offset = index;
-                        embedding.AddOrAppendToComponent(c, 1);
+                        embedding.Add(c);
                     }
                     else
                     {
@@ -64,12 +59,11 @@ namespace Sir.Store
 
                 if (len > 0)
                 {
-                    tokens.Add((offset, index - offset));
-                    embeddings.Add(new Vector(embedding.Keys.ToArray().AsMemory(), embedding.Values.ToArray().AsMemory()));
+                    embeddings.Add(new Vector(embedding.ToArray().AsMemory()));
                 }
             }
 
-            return new AnalyzedString(tokens, embeddings, source);
+            return new AnalyzedString(embeddings);
         }
     }
 }

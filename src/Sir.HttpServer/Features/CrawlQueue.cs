@@ -129,7 +129,7 @@ namespace Sir.HttpServer.Features
         {
             using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
             {
-                var urlQuery = new Query(collectionName.ToHash(), new Term("_url", new VectorNode(url)));
+                var urlQuery = new Query(collectionName.ToHash(), new Term("_url", new VectorNode(new UnicodeTokenizer().Tokenize(url).Embeddings[0])));
                 urlQuery.And = true;
                 urlQuery.Take = 1;
 

@@ -45,7 +45,7 @@ namespace Sir.Store
                 var q = new Query(collectionId, new Term(key, values, 0)) { And = and, Or = or, Not = not };
                 var qc = q;
 
-                for (int i = 1; i < values.Tokens.Count; i++)
+                for (int i = 1; i < values.Embeddings.Count; i++)
                 {
                     qc.Then = new Query(collectionId, new Term(key, values, i)) { And = and, Or = or, Not = not };
                     qc = qc.Then;

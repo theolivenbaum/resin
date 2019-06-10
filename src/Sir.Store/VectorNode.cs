@@ -76,12 +76,7 @@ namespace Sir.Store
         public float AngleWhenAdded { get => _angleWhenAdded; set => _angleWhenAdded = value; }
 
         public VectorNode()
-            : this(string.Empty)
-        {
-        }
-
-        public VectorNode(string s)
-            : this(s.ToSparseVector(0, s.Length))
+            : this(new Vector(new int[0]))
         {
         }
 
@@ -146,8 +141,7 @@ namespace Sir.Store
 
         public override string ToString()
         {
-            var ix = Vector.Index.ToArray();
-            var vals = Vector.Values.ToArray();
+            var vals = Vector.Values.Span;
 
             var w = new StringBuilder();
 
@@ -155,21 +149,12 @@ namespace Sir.Store
 
             for (int i = 0; i < Vector.Count;i++)
             {
-                w.Append(ix[i]);
-
-                var value = vals[i];
-
-                if (value == 2)
-                {
-                    w.Append(char.ConvertFromUtf32(178));
-                }
-                else if (value > 2)
-                {
-                    w.Append(char.ConvertFromUtf32(179));
-                }
+                w.Append(vals[i]);
 
                 w.Append('|');
             }
+
+            w.Append(Vector.AsString());
 
             return w.ToString();
         }

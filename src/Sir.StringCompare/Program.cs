@@ -7,6 +7,8 @@ namespace Sir.StringCompare
     {
         static void Main(string[] args)
         {
+            var tokenizer = new UnicodeTokenizer();
+
             if (args[0] == "-b")
             {
                 var root = new VectorNode();
@@ -22,7 +24,7 @@ namespace Sir.StringCompare
                         break;
                     }
 
-                    GraphSerializer.Add(root, new VectorNode(command.ToSparseVector(0, command.Length)), Similarity.Term);
+                    GraphSerializer.Add(root, new VectorNode(tokenizer.Tokenize(command).Embeddings[0]), Similarity.Term);
                 }
 
                 Console.WriteLine(root.Visualize());
@@ -38,15 +40,15 @@ namespace Sir.StringCompare
                         break;
                     }
 
-                    var hit = PathFinder.ClosestMatch(root, command.ToSparseVector(0, command.Length), Similarity.Term.foldAngle);
+                    var hit = PathFinder.ClosestMatch(root, tokenizer.Tokenize(command).Embeddings[0], Similarity.Term.foldAngle);
 
                     Console.WriteLine($"{hit.Score} {hit.Node}");
                 }
             }
             else
             {
-                var doc1 = new VectorNode(args[0]);
-                var doc2 = new VectorNode(args[1]);
+                var doc1 = new VectorNode(tokenizer.Tokenize(args[0]).Embeddings[0]);
+                var doc2 = new VectorNode(tokenizer.Tokenize(args[1]).Embeddings[0]);
                 var angle = doc1.Vector.CosAngle(doc2.Vector);
 
                 Console.WriteLine($"similarity: {angle}");
