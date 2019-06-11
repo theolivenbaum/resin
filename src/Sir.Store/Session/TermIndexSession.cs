@@ -84,7 +84,7 @@ namespace Sir.Store
             this.Log(string.Format("***FLUSHED***"));
         }
 
-        private void Validate((long keyId, long docId, AnalyzedComputerString tokens) item)
+        private void Validate((long keyId, long docId, AnalyzedData tokens) item)
         {
             var tree = GetOrCreateIndex(item.keyId);
 

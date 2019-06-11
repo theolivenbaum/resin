@@ -41,7 +41,7 @@ namespace Sir.Store
             return new IndexedVector(index.ToArray().AsMemory(), values.ToArray().AsMemory());
         }
 
-        public AnalyzedComputerString Tokenize(string text)
+        public AnalyzedData Tokenize(string text)
         {
             var source = text.AsMemory();
             var offset = 0;
@@ -105,7 +105,7 @@ namespace Sir.Store
                 }
             }
 
-            return new AnalyzedComputerString(embeddings);
+            return new AnalyzedData(embeddings);
         }
 
         public (float identicalAngle, float foldAngle) Similarity()
