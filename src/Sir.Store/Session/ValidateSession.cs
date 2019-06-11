@@ -14,7 +14,7 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _tokenizer;
         private readonly ReadSession _readSession;
-        private readonly ProducerConsumerQueue<(long docId, object key, AnalyzedComputerString tokens)> _validator;
+        private readonly ProducerConsumerQueue<(long docId, object key, AnalyzedData tokens)> _validator;
 
         public ValidateSession(
             string collectionName,
@@ -27,7 +27,7 @@ namespace Sir.Store
             _config = config;
             _tokenizer = tokenizer;
             _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, tokenizer);
-            _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedComputerString tokens)>(
+            _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedData tokens)>(
                 int.Parse(_config.Get("write_thread_count")), Validate);
         }
 
@@ -58,7 +58,7 @@ namespace Sir.Store
             }
         }
 
-        private void Validate((long docId, object key, AnalyzedComputerString tokens) item)
+        private void Validate((long docId, object key, AnalyzedData tokens) item)
         {
             var docTree = new VectorNode();
 

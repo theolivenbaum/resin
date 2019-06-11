@@ -6,13 +6,13 @@
     public class Term
     {
         public object Key { get; private set; }
-        public AnalyzedComputerString TokenizedString { get; private set; }
+        public AnalyzedData TokenizedString { get; private set; }
         public ulong KeyHash { get; private set; }
         public int Index { get; private set; }
         public long? KeyId { get; private set; }
         public Vector Vector { get; private set; }
 
-        public Term(object key, AnalyzedComputerString tokenizedString, int index)
+        public Term(object key, AnalyzedData tokenizedString, int index)
         {
             Key = key;
             KeyHash = key.ToHash();
@@ -21,7 +21,7 @@
             Vector = tokenizedString.Embeddings[index];
         }
 
-        public Term(long keyId, AnalyzedComputerString tokenizedString, int index)
+        public Term(long keyId, AnalyzedData tokenizedString, int index)
         {
             KeyId = keyId;
             TokenizedString = tokenizedString;
