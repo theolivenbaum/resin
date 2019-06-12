@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Sir.Store;
 
@@ -13,7 +12,7 @@ namespace Sir.DbUtil
 {
     class Program
     {
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
             Console.WriteLine("processing command: {0}", string.Join(" ", args));
 
@@ -74,6 +73,7 @@ namespace Sir.DbUtil
                 var count = int.Parse(args[3]);
                 var batchSize = int.Parse(args[4]);
                 var fullTime = Stopwatch.StartNew();
+                var batchNo = 0;
 
                 foreach (var batch in ReadFile(fileName, count)
                     .Where(x => x.Contains("title"))
@@ -86,7 +86,9 @@ namespace Sir.DbUtil
                             })
                     .Batch(batchSize))
                 {
+                    var time = Stopwatch.StartNew();
                     Submit((batch, url));
+                    Console.WriteLine($"{DateTime.Now.ToLongTimeString()} submitted batch {batchNo++} in {time.Elapsed}");
                 }
 
                 Console.WriteLine("write took {0}", fullTime.Elapsed);
@@ -134,8 +136,6 @@ namespace Sir.DbUtil
 
         private static void Submit((IEnumerable<object> documents, string url) job)
         {
-            var time = Stopwatch.StartNew();
-
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(job.url);
             httpWebRequest.ContentType = "application/json";
             httpWebRequest.Method = "POST";
@@ -153,8 +153,6 @@ namespace Sir.DbUtil
             {
                 throw new Exception();
             }
-
-            Console.WriteLine($"{DateTime.Now.ToLongTimeString()} submitted batch took {time.Elapsed}");
         }
 
         private static void Serialize(IEnumerable<object> docs, Stream stream)
