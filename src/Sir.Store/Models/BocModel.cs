@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -34,6 +35,24 @@ namespace Sir.Store
             vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
             vectorStream.Read(indexBuf);
             vectorStream.Read(valuesBuf);
+
+            Span<int> index = MemoryMarshal.Cast<byte, int>(indexBuf);
+            Span<int> values = MemoryMarshal.Cast<byte, int>(valuesBuf);
+
+            return new IndexedVector(index.ToArray().AsMemory(), values.ToArray().AsMemory());
+        }
+
+        public Vector DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView)
+        {
+            if (vectorView == null)
+            {
+                throw new ArgumentNullException(nameof(vectorView));
+            }
+
+            var indexBuf = new byte[componentCount * sizeof(int)];
+            var valuesBuf = new byte[componentCount * sizeof(int)];
+            var read = vectorView.ReadArray(vectorOffset, indexBuf, 0, indexBuf.Length);
+            read = vectorView.ReadArray(vectorOffset + indexBuf.Length, valuesBuf, 0, valuesBuf.Length);
 
             Span<int> index = MemoryMarshal.Cast<byte, int>(indexBuf);
             Span<int> values = MemoryMarshal.Cast<byte, int>(valuesBuf);

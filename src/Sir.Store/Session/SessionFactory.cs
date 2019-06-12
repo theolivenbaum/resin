@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 
 namespace Sir.Store
 {
@@ -12,9 +13,10 @@ namespace Sir.Store
     public class SessionFactory : IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
+        private ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
-
+        private static readonly object WriteSync = new object();
         public string Dir { get; }
         public IConfigurationProvider Config { get { return _config; } }
 
@@ -30,6 +32,17 @@ namespace Sir.Store
             _keys = LoadKeys();
             _config = config;
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
+            _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
+        }
+
+        public MemoryMappedFile OpenMMF(string fileName)
+        {
+            var mapName = fileName.Replace(":", "").Replace("\\", "_");
+
+            return _mmfs.GetOrAdd(mapName, x =>
+            {
+                return MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.ReadWrite);
+            });
         }
 
         public void Truncate(ulong collectionId)
@@ -46,28 +59,31 @@ namespace Sir.Store
 
         public void Execute(Job job)
         {
-            var timer = Stopwatch.StartNew();
-            var colId = job.Collection.ToHash();
-
-            using (var indexSession = CreateIndexSession(job.Collection, colId, job.Tokenizer))
-            using (var writeSession = CreateWriteSession(job.Collection, colId, indexSession))
+            lock (WriteSync)
             {
-                foreach (var doc in job.Documents)
+                var timer = Stopwatch.StartNew();
+                var colId = job.Collection.ToHash();
+
+                using (var indexSession = CreateIndexSession(job.Collection, colId, job.Tokenizer))
+                using (var writeSession = CreateWriteSession(job.Collection, colId, indexSession))
                 {
-                    writeSession.Write(doc);
+                    foreach (var doc in job.Documents)
+                    {
+                        writeSession.Write(doc);
+                    }
+
+                    writeSession.Commit();
                 }
 
-                writeSession.Commit();
+                _pageInfo.Clear();
+
+                this.Log("executed {0} write+index job in {1}", job.Collection, timer.Elapsed);
             }
-
-            _pageInfo.Clear();
-
-            this.Log("executed {0} write+index job in {1}", job.Collection, timer.Elapsed);
         }
 
-        public IList<(long offset, long length)> ReadPageInfoFromDisk(string ixpFileName)
+        public IList<(long offset, long length)> ReadPageInfo(string pageFileName)
         {
-            return _pageInfo.GetOrAdd(ixpFileName, key =>
+            return _pageInfo.GetOrAdd(pageFileName, key =>
             {
                 using (var ixpStream = CreateReadStream(key))
                 {
@@ -76,7 +92,7 @@ namespace Sir.Store
             });
         }
 
-        public void LoadAllKeys()
+        public void RefreshKeys()
         {
             _keys = LoadKeys();
         }
@@ -220,6 +236,10 @@ namespace Sir.Store
 
         public void Dispose()
         {
+            foreach(var x in _mmfs)
+            {
+                x.Value.Dispose();
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -40,7 +41,7 @@ namespace Sir.Store
 
         public Hit ClosestMatch(Vector vector, IStringModel model)
         {
-            var hits = ClosestMatchOnDisk(vector, model);
+            var hits = ClosestMatchInMemory(vector, model);
             var time = Stopwatch.StartNew();
             Hit best = null;
 
@@ -61,19 +62,18 @@ namespace Sir.Store
             return best;
         }
 
-        private ConcurrentBag<Hit> ClosestMatchOnDisk(
+        private IList<Hit> ClosestMatchOnDisk(
             Vector vector, IStringModel model)
         {
             var time = Stopwatch.StartNew();
-            var pages = _sessionFactory.ReadPageInfoFromDisk(_ixpFileName);
-            var hits = new ConcurrentBag<Hit>();
+            var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
+            var hits = new List<Hit>();
             var ixbufferSize = int.Parse(_config.Get("index_read_buffer_size") ?? "4096");
 
-            foreach(var page in pages)
-            //Parallel.ForEach(pages, page =>
+            using (var indexStream = new BufferedStream(_sessionFactory.CreateReadStream(_ixFileName), ixbufferSize))
+            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
             {
-                using (var indexStream = new BufferedStream(_sessionFactory.CreateReadStream(_ixFileName), ixbufferSize))
-                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                foreach (var page in pages)
                 {
                     indexStream.Seek(page.offset, SeekOrigin.Begin);
 
@@ -85,7 +85,36 @@ namespace Sir.Store
 
                     hits.Add(hit);
                 }
-            }//);
+            }
+
+            this.Log($"scan took {time.Elapsed}");
+
+            return hits;
+        }
+
+        private ConcurrentBag<Hit> ClosestMatchInMemory(
+            Vector vector, IStringModel model)
+        {
+            var time = Stopwatch.StartNew();
+            var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
+            var hits = new ConcurrentBag<Hit>();
+            var ixbufferSize = int.Parse(_config.Get("index_read_buffer_size") ?? "4096");
+            var ixFile = _sessionFactory.OpenMMF(_ixFileName);
+
+            Parallel.ForEach(pages, page =>
+            {
+                using (var indexStream = ixFile.CreateViewStream(page.offset, page.length))
+                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                {
+                    var hit = ClosestMatchInPage(
+                                vector,
+                                indexStream,
+                                vectorStream,
+                                model);
+
+                    hits.Add(hit);
+                }
+            });
 
             this.Log($"scan took {time.Elapsed}");
 
@@ -111,6 +140,143 @@ namespace Sir.Store
                 var vecOffset = BitConverter.ToInt64(block.Slice(0, sizeof(long)));
                 var componentCount = BitConverter.ToInt32(block.Slice(sizeof(long) + sizeof(long), sizeof(int)));
                 var cursorVector = model.DeserializeVector(vecOffset, componentCount, vectorStream);
+                var cursorTerminator = block[block.Length - 1];
+                var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));
+
+                var angle = model.CosAngle(cursorVector, vector);
+
+                if (angle >= model.Similarity().identicalAngle)
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    break;
+                }
+                else if (angle > model.Similarity().foldAngle)
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    // We need to determine if we can traverse further left.
+                    bool canGoLeft = cursorTerminator == 0 || cursorTerminator == 1;
+
+                    if (canGoLeft)
+                    {
+                        // There exists either a left and a right child or just a left child.
+                        // Either way, we want to go left and the next node in bitmap is the left child.
+
+                        read = indexStream.Read(block);
+                    }
+                    else
+                    {
+                        // There is no left child.
+
+                        break;
+                    }
+                }
+                else
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    // We need to determine if we can traverse further to the right.
+
+                    if (cursorTerminator == 0)
+                    {
+                        // There exists a left and a right child.
+                        // Next node in bitmap is the left child. 
+                        // To find cursor's right child we must skip over the left tree.
+
+                        SkipTree(indexStream);
+                        read = indexStream.Read(block);
+                    }
+                    else if (cursorTerminator == 2)
+                    {
+                        // Next node in bitmap is the right child,
+                        // which is good because we want to go right.
+
+                        read = indexStream.Read(block);
+                    }
+                    else
+                    {
+                        // There is no right child.
+
+                        break;
+                    }
+                }
+            }
+
+            return new Hit
+            {
+                Score = highscore,
+                Node = best
+            };
+        }
+
+        private Hit ClosestMatchInPage(
+            Vector vector,
+            MemoryMappedViewStream indexStream,
+            MemoryMappedViewAccessor vectorView,
+            IStringModel model
+        )
+        {
+            Span<byte> block = new byte[VectorNode.BlockSize];
+
+            var read = indexStream.Read(block);
+
+            VectorNode best = null;
+            float highscore = 0;
+
+            while (read > 0)
+            {
+                var vecOffset = BitConverter.ToInt64(block.Slice(0, sizeof(long)));
+                var componentCount = BitConverter.ToInt32(block.Slice(sizeof(long) + sizeof(long), sizeof(int)));
+                var cursorVector = model.DeserializeVector(vecOffset, componentCount, vectorView);
                 var cursorTerminator = block[block.Length - 1];
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));
 
