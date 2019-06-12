@@ -100,11 +100,12 @@ namespace Sir.Store
             var hits = new ConcurrentBag<Hit>();
             var ixbufferSize = int.Parse(_config.Get("index_read_buffer_size") ?? "4096");
             var ixFile = _sessionFactory.OpenMMF(_ixFileName);
+            var vecFile = _sessionFactory.OpenMMF(_vecFileName);
 
             Parallel.ForEach(pages, page =>
             {
                 using (var indexStream = ixFile.CreateViewStream(page.offset, page.length))
-                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                using (var vectorStream = vecFile.CreateViewAccessor(0, 0))
                 {
                     var hit = ClosestMatchInPage(
                                 vector,
@@ -260,7 +261,7 @@ namespace Sir.Store
 
         private Hit ClosestMatchInPage(
             Vector vector,
-            MemoryMappedViewStream indexStream,
+            Stream indexStream,
             MemoryMappedViewAccessor vectorView,
             IStringModel model
         )
