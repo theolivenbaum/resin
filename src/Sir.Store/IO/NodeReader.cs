@@ -98,7 +98,6 @@ namespace Sir.Store
             var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
             var hits = new ConcurrentBag<Hit>();
-            var ixbufferSize = int.Parse(_config.Get("index_read_buffer_size") ?? "4096");
             var ixFile = _sessionFactory.OpenMMF(_ixFileName);
             var vecFile = _sessionFactory.OpenMMF(_vecFileName);
 
