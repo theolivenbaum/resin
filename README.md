@@ -4,15 +4,13 @@
 
 This project's roadmap matches the curriculum of [Guide To Vector Space Search and Computational Language Models](https://github.com/kreeben/vectorspacesearchguide).
 
-Resin is a toolbox for those who want a simple way to program, analyze and deploy a vector space model. 
+Resin is search engine but also a toolbox for those who want a simple way to program, analyze and deploy a vector space model. 
  
 Resin includes APIs for
 
 - building a queryable space from embeddings
 - writing/analyzing/tokenizing/vectorizing documents
-- querying document collections using natural language or with the built-in query language 
-- adding support for your favorite type of document format
-- serialization of documents/vectors/graphs
+- reading and writing in your favorite type of document format
 
 Resin solves the problems of data queryability by providing an infrastructure for writing data, building spaces and representing them as graphs and by providing a query language that works over any model.
 
