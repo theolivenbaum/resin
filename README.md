@@ -39,6 +39,8 @@ and then query over it.
 
 Interface over HTTP with an IReader such as StoreReader, or provide your own IReader implementation.
 
+Format your data any way you want. JSON support comes out-of-the-box. Implement other formats either by extending the appropriate Asp.Net model formatting facilities or by writing a custom format directly to the response stream by implementing an IReader.
+
 ### Example query
 
 To find documents where title is  
@@ -62,7 +64,11 @@ to the HTTP client's "Accept" header.
 To create models from your favorite data you may host one of these servers yourself, privately or publicly, 
 or you can use a [free search cloud](https://didyougogo.com).
 
-You may provide our own IWriter implementation or use the StoreWriter to which you plug in your own IModel.
+You may provide your own IWriter implementation or use the built-in StoreWriter to which you plug in your own IModel.
+
+### Writing
+
+Use any document format. JSON support comes out-of-the-box. Implement your custom format by extending the Asp.Net model format capabilities or by parsing the request stream yourself using a custom IWriter.
 
 #### POST a JSON document to the WRITE endpoint
 
