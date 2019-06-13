@@ -14,9 +14,9 @@ Resin includes APIs for
 - adding support for your favorite type of document format
 - serialization of documents/vectors/graphs
 
-Resin solves the problems of data queryability by providing an infrastructure for writing data, building spaces and representing them as graphs.
+Resin solves the problems of data queryability by providing an infrastructure for writing data, building spaces and representing them as graphs and by providing a query language that works over any model.
 
-Resin also solves the problem of querying over data using natural language. You provide the model. Resin provides the queryability.
+Resin also solves the issues that arise when you fancy querying over your data using natural language. You provide the model. Resin provides the queryability.
 
 Resin is open-source and MIT-licensed. 
 
