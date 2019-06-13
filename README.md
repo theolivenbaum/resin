@@ -34,7 +34,7 @@ Are you interested in NLP or ML? Help is wanted. Code of conduct: always be cool
         float CosAngle(Vector vec1, Vector vec2);
     }
 
-By implementing this interface you are providing Resin with the means to perform supervised training over your data, 
+By implementing this interface you provide the means for Resin to perform supervised training over your data, 
 and then query over it.
 
 Interface over HTTP with an IReader such as StoreReader, or provide your own IReader implementation.
