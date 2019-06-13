@@ -8,7 +8,7 @@ Resin is a toolbox for those who want a simple way to program, analyze and deplo
  
 Resin includes APIs for
 
-- building queryable graphs from vectors
+- building a queryable space from embeddings
 - writing/analyzing/tokenizing/vectorizing documents
 - querying document collections using natural language or with the built-in query language 
 - adding support for your favorite type of document format
