@@ -152,7 +152,7 @@ https://github.com/kreeben/resin/tree/master/src/Sir.Store
 - [ ] v0.4b - improve read performance
 - [ ] v0.5 - create semantic language model
 - [ ] v0.6 - allow local joins between collections
-- [ ] v0.7 - tbd
+- [ ] v0.7 - AI
 - [ ] v0.8 - join (orchestrate) over private/public collections
 - [ ] v0.9 - add support for voice
 - [ ] v1.0 - add support for images
