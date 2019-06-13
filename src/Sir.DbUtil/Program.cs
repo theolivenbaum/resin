@@ -64,7 +64,7 @@ namespace Sir.DbUtil
                     collection, 
                     skip, 
                     take,
-                    new LbocModel());
+                    new CbocModel());
             }
             else if (command == "submit")
             {
@@ -182,7 +182,7 @@ namespace Sir.DbUtil
 
         private static void Query(string dir, string collectionName)
         {
-            var tokenizer = new LbocModel();
+            var tokenizer = new CbocModel();
             var qp = new QueryParser();
             var sessionFactory = new SessionFactory(
                 new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini")));
@@ -233,7 +233,7 @@ namespace Sir.DbUtil
             using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini")))
             {
                 using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
-                using (var validateSession = sessionFactory.CreateValidateSession(collectionName, collectionName.ToHash(), new LbocModel()))
+                using (var validateSession = sessionFactory.CreateValidateSession(collectionName, collectionName.ToHash(), new CbocModel()))
                 {
                     validateSession.Validate(documentStreamSession.ReadDocs(skip, take), 0, 1, 2, 3, 6);
                 }

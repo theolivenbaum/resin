@@ -101,10 +101,10 @@ namespace Sir.Store
             var ixFile = _sessionFactory.OpenMMF(_ixFileName);
             var vecFile = _sessionFactory.OpenMMF(_vecFileName);
 
+            using (var vectorStream = vecFile.CreateViewAccessor(0, 0))
             Parallel.ForEach(pages, page =>
             {
                 using (var indexStream = ixFile.CreateViewStream(page.offset, page.length))
-                using (var vectorStream = vecFile.CreateViewAccessor(0, 0))
                 {
                     var hit = ClosestMatchInPage(
                                 vector,

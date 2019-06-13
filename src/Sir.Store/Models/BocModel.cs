@@ -135,8 +135,8 @@ namespace Sir.Store
         public float CosAngle(Vector vec1, Vector vec2)
         {
             long dotProduct = Dot((IndexedVector)vec1, (IndexedVector)vec2);
-            long dotSelf1 = LbocModel.DotSelf(vec1);
-            long dotSelf2 = LbocModel.DotSelf(vec2);
+            long dotSelf1 = CbocModel.DotSelf(vec1);
+            long dotSelf2 = CbocModel.DotSelf(vec2);
 
             return (float)(dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
         }
@@ -145,7 +145,7 @@ namespace Sir.Store
         {
             if (ReferenceEquals(vec1, vec2))
             {
-                return LbocModel.DotSelf(vec1);
+                return CbocModel.DotSelf(vec1);
             }
 
             long product = 0;
