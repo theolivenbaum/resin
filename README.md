@@ -37,9 +37,11 @@ and then to query over it.
 
 Tokenization involves creating embeddings from your data.
 
-Serialization and deserialization procedures need to be provided by you but don't worry, boilderplate code can be found [here](https://github.com/kreeben/resin/blob/master/src/Sir.Store/Models/CbocModel.cs) and [here](https://github.com/kreeben/resin/blob/master/src/Sir.Store/Models/BocModel.cs).  
+Serialization and deserialization procedures need to be provided by you but don't worry, boilerplate code can be found [here](https://github.com/kreeben/resin/blob/master/src/Sir.Store/Models/CbocModel.cs) and [here](https://github.com/kreeben/resin/blob/master/src/Sir.Store/Models/BocModel.cs).  
 
-The identical angle determines how likely it is two nodes will be merged. The fold angle does not impact the formation of graphs but instead how they are balanced. Boilerplate code for the algorith for cos angle can also be found in the examples above.
+The identical angle determines how likely it is two nodes will be merged. The fold angle is domain expertise that you provide. When are two things similar? The answer lies in thefold angle.  
+
+Boilerplate code for the algorith for cos angle can also be found in the examples above.
 
 Interface over HTTP with an IReader such as StoreReader, or provide your own IReader implementation.
 
