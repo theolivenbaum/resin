@@ -33,7 +33,7 @@ Are you interested in NLP or ML? Help is wanted. Code of conduct: always be cool
     }
 
 By implementing this interface you provide the means for Resin to perform supervised training over your data, 
-and then query over it.
+and then to query over it.
 
 Tokenization involves creating embeddings from your data.
 
