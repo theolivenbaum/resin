@@ -61,9 +61,6 @@ to the HTTP client's "Accept" header.
 
 ## Training
 
-To create models from your favorite data you may host one of these servers yourself, privately or publicly, 
-or you can use a [free search cloud](https://didyougogo.com).
-
 You may provide your own IWriter implementation or use the built-in StoreWriter to which you plug in your own IModel.
 
 ### Writing
