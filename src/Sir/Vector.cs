@@ -13,7 +13,7 @@ namespace Sir
             Values = values;
         }
 
-        public override string ToString()
+        public virtual string AsString()
         {
             var buf = new char[Values.Length];
 
@@ -40,7 +40,7 @@ namespace Sir
             return new IndexedVector(new Memory<int>(), new Memory<int>());
         }
 
-        public override string ToString()
+        public override string AsString()
         {
             var w = new StringBuilder();
             var ix = Index.ToArray();

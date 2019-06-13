@@ -7,7 +7,7 @@ namespace Sir.StringCompare
     {
         static void Main(string[] args)
         {
-            var model = new LbocModel();
+            var model = new CbocModel();
 
             if (args[0] == "-b")
             {

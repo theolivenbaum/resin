@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
-    public class LbocModel : IStringModel
+    public class CbocModel : IStringModel
     {
         public Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
         {
