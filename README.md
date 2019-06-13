@@ -2,38 +2,44 @@
 
 ## Introduction
 
-Read [Guide To Vector Space Search and Computational Language Models](https://github.com/kreeben/vectorspacesearchguide).
+This project's roadmap matches the curriculum of [Guide To Vector Space Search and Computational Language Models](https://github.com/kreeben/vectorspacesearchguide).
 
 Resin is a toolbox for those who want a simple way to program, analyze and deploy a vector space model. 
-You may serve it documents (non-nested JSON is supported out-of-the-box) 
-or use a lower-level API to serve sparse/dense vectors. 
-
-Your data ends up being represented as nodes in a graph that can be traversed by comparing a query 
-(which is also represented as a vector) to nodes from the graph and use their cosine angle as a guide as to 
-what node to traverse to next and when to stop. 
-
-Each node can reference external payloads. The built-in search engine that comes with Resin 
-and that is powered by the same toolbox uses a node's external reference abilities to store postings 
-(i.e. document references).
-
-The highest level API in Resin is its HTTP read/write API that you can use as a document database and search engine. 
-You may also run your own reader/writer using the same IReader/IWriter plugin system as the built-in 
-search engine does.
  
 Resin includes APIs for
 
-- building queryable graphs from vectors that are (max) 64 bits wide
-- visualizing graphs
+- building queryable graphs from vectors
 - writing/analyzing/tokenizing/vectorizing documents
 - querying document collections using natural language or with the built-in query language 
 - adding support for your favorite type of document format
 - serialization of documents/vectors/graphs
 
+Resin solves the problems of data queryability by providing an infrastructure for writing data, building spaces and representing them as graphs.
+
+Resin also solves the problem of querying over data using natural language. You provide the model. Resin provides the queryability.
+
 Resin is open-source and MIT-licensed. 
 
 Are you interested in NLP or ML? Help is wanted. Code of conduct: always be cool.
 
-## Reading
+## IModel
+
+    public interface IModel<T>
+    {
+        AnalyzedData Tokenize(T data);
+        Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream);
+        Vector DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView);
+        long SerializeVector(Vector vector, Stream vectorStream);
+        (float identicalAngle, float foldAngle) Similarity();
+        float CosAngle(Vector vec1, Vector vec2);
+    }
+
+By implementing this interface you are providing Resin with the means to perform supervised training over your data, 
+and then query over it.
+
+Interface over HTTP with an IReader such as StoreReader, or provide your own IReader implementation.
+
+### Example query
 
 To find documents where title is  
 
@@ -51,10 +57,12 @@ That set is sorted by score and a window defined by skip and take parameters is 
 who materializes the list of document IDs, i.e. reads and returns to the client a document stream formatted according 
 to the HTTP client's "Accept" header.
 
-## Writing
+## Training
 
-To create collections from your favorite data you may host one of these servers yourself, privately or publicly, 
+To create models from your favorite data you may host one of these servers yourself, privately or publicly, 
 or you can use a [free search cloud](https://didyougogo.com).
+
+You may provide our own IWriter implementation or use the StoreWriter to which you plug in your own IModel.
 
 #### POST a JSON document to the WRITE endpoint
 
