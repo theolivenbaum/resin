@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
@@ -11,10 +13,19 @@ namespace Sir.Store
     public class PostingsReader : ILogger
     {
         private readonly Stream _stream;
-
+        private readonly MemoryMappedViewAccessor _view;
+        private readonly Action<long, List<long>> _read
+;
         public PostingsReader(Stream stream)
         {
             _stream = stream;
+            _read = GetPostingsFromStream;
+        }
+
+        public PostingsReader(MemoryMappedViewAccessor view)
+        {
+            _view = view;
+            _read = GetPostingsFromView;
         }
 
         public ScoredResult Reduce(IList<Query> query, int skip, int take)
@@ -110,16 +121,14 @@ namespace Sir.Store
 
             foreach(var offset in offsets)
             {
-                result.AddRange(GetPostings(offset));
+                _read(offset, result);
             }
 
             return result;
         }
 
-        private IList<long> GetPostings(long postingsOffset)
+        private void GetPostingsFromStream(long postingsOffset, List<long> result)
         {
-            var postings = new List<long>();
-
             _stream.Seek(postingsOffset, SeekOrigin.Begin);
 
             var buf = new byte[sizeof(long)];
@@ -128,14 +137,21 @@ namespace Sir.Store
 
             var numOfPostings = BitConverter.ToInt64(buf);
 
-            for (int i = 0; i < numOfPostings; i++)
-            {
-                _stream.Read(buf);
+            Span<byte> listBuf = new byte[sizeof(long) * numOfPostings];
 
-                postings.Add(BitConverter.ToInt64(buf));
-            }
+            _stream.Read(listBuf);
 
-            return postings;
+            result.AddRange(MemoryMarshal.Cast<byte, long>(listBuf).ToArray());
+        }
+
+        private void GetPostingsFromView(long postingsOffset, List<long> result)
+        {
+            var numOfPostings = _view.ReadInt64(postingsOffset);
+            var buf = new long[numOfPostings];
+
+            _view.ReadArray(postingsOffset + sizeof(long), buf, 0, buf.Length);
+
+            result.AddRange(buf);
         }
     }
 

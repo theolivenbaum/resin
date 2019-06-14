@@ -19,7 +19,6 @@ namespace Sir.Store
         private readonly string _ixMapName;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
-        private long _optimizedOffset;
 
         public NodeReader(
             ulong collectionId,
@@ -101,15 +100,16 @@ namespace Sir.Store
             var ixFile = _sessionFactory.OpenMMF(_ixFileName);
             var vecFile = _sessionFactory.OpenMMF(_vecFileName);
 
-            using (var vectorStream = vecFile.CreateViewAccessor(0, 0))
+            using (var vectorView = vecFile.CreateViewAccessor(0, 0))
+            //foreach (var page in pages)
             Parallel.ForEach(pages, page =>
             {
-                using (var indexStream = ixFile.CreateViewStream(page.offset, page.length))
+                using (var indexView = ixFile.CreateViewAccessor(page.offset, page.length))
                 {
                     var hit = ClosestMatchInPage(
                                 vector,
-                                indexStream,
-                                vectorStream,
+                                indexView,
+                                vectorView,
                                 model);
 
                     hits.Add(hit);
@@ -395,6 +395,152 @@ namespace Sir.Store
             };
         }
 
+        private Hit ClosestMatchInPage(
+            Vector vector,
+            MemoryMappedViewAccessor indexView,
+            MemoryMappedViewAccessor vectorView,
+            IStringModel model
+        )
+        {
+            long offset = 0;
+            var block = new byte[VectorNode.BlockSize];
+            VectorNode best = null;
+            float highscore = 0;
+
+            var read = indexView.ReadArray(offset, block, 0, block.Length);
+
+            offset += block.Length;
+
+            while (read > 0)
+            {
+                var vecOffset = BitConverter.ToInt64(block);
+                var componentCount = BitConverter.ToInt32(block, sizeof(long) + sizeof(long));
+                var cursorVector = model.DeserializeVector(vecOffset, componentCount, vectorView);
+                var cursorTerminator = block[block.Length - 1];
+                var postingsOffset = BitConverter.ToInt64(block, sizeof(long));
+
+                var angle = model.CosAngle(cursorVector, vector);
+
+                if (angle >= model.Similarity().identicalAngle)
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    break;
+                }
+                else if (angle > model.Similarity().foldAngle)
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    // We need to determine if we can traverse further left.
+                    bool canGoLeft = cursorTerminator == 0 || cursorTerminator == 1;
+
+                    if (canGoLeft)
+                    {
+                        // There exists either a left and a right child or just a left child.
+                        // Either way, we want to go left and the next node in bitmap is the left child.
+
+                        read = indexView.ReadArray(offset, block, 0, block.Length);
+
+                        offset += block.Length;
+                    }
+                    else
+                    {
+                        // There is no left child.
+
+                        break;
+                    }
+                }
+                else
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    // We need to determine if we can traverse further to the right.
+
+                    if (cursorTerminator == 0)
+                    {
+                        // There exists a left and a right child.
+                        // Next node in bitmap is the left child. 
+                        // To find cursor's right child we must skip over the left tree.
+
+                        SkipTree(indexView, ref offset);
+
+                        read = indexView.ReadArray(offset, block, 0, block.Length);
+
+                        offset += block.Length;
+                    }
+                    else if (cursorTerminator == 2)
+                    {
+                        // Next node in bitmap is the right child,
+                        // which is good because we want to go right.
+
+                        read = indexView.ReadArray(offset, block, 0, block.Length);
+
+                        offset += block.Length;
+                    }
+                    else
+                    {
+                        // There is no right child.
+
+                        break;
+                    }
+                }
+            }
+
+            return new Hit
+            {
+                Score = highscore,
+                Node = best
+            };
+        }
+
         private void SkipTree(Stream indexStream)
         {
             Span<byte> buf = new byte[VectorNode.BlockSize];
@@ -414,6 +560,24 @@ namespace Sir.Store
             {
                 indexStream.Seek(distance, SeekOrigin.Current);
             }
+        }
+
+        private void SkipTree(MemoryMappedViewAccessor indexView, ref long offset)
+        {
+            var buf = new byte[VectorNode.BlockSize];
+            var read = indexView.ReadArray(offset, buf, 0, buf.Length);
+
+            offset += buf.Length;
+
+            if (read == 0)
+            {
+                throw new InvalidOperationException();
+            }
+
+            var weight = BitConverter.ToInt32(buf, sizeof(long) + sizeof(long) + sizeof(int));
+            var distance = weight * VectorNode.BlockSize;
+
+            offset += distance;
         }
     }
 }

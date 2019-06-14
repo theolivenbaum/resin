@@ -92,9 +92,11 @@ namespace Sir.Store
 
             var timer = Stopwatch.StartNew();
 
-            using (var postingsStream = SessionFactory.CreateReadStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos")))
+            var posFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos");
+
+            using (var postingsView = SessionFactory.OpenMMF(posFileName).CreateViewAccessor(0, 0))
             {
-                var result = new PostingsReader(postingsStream).Reduce(query.ToClauses(), query.Skip, query.Take);
+                var result = new PostingsReader(postingsView).Reduce(query.ToClauses(), query.Skip, query.Take);
 
                 this.Log("reducing {0} into {1} docs took {2}", query, result.Documents.Count, timer.Elapsed);
 
