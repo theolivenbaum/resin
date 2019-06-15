@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Sir.Store
@@ -14,7 +14,7 @@ namespace Sir.Store
     {
         private readonly Stream _stream;
         private readonly MemoryMappedViewAccessor _view;
-        private readonly Action<long, List<long>> _read
+        private readonly Action<long, IDictionary<long, float>, float> _read
 ;
         public PostingsReader(Stream stream)
         {
@@ -30,7 +30,9 @@ namespace Sir.Store
 
         public ScoredResult Reduce(IList<Query> query, int skip, int take)
         {
-            IDictionary<long, float> result = null;
+            var timer = Stopwatch.StartNew();
+
+            var result = new Dictionary<long, float>();
 
             foreach (var q in query)
             {
@@ -38,52 +40,44 @@ namespace Sir.Store
 
                 while (cursor != null)
                 {
-                    var docIdList = Read(cursor.PostingsOffsets);
-                    var docIds = docIdList.Distinct().ToDictionary(docId => docId, score => cursor.Score);
+                    var docIds = Read(cursor.PostingsOffsets, cursor.Score);
 
-                    if (result == null)
+                    if (cursor.And)
                     {
-                        result = docIds;
+                        var aggregatedResult = new Dictionary<long, float>();
+
+                        foreach (var doc in result)
+                        {
+                            float score;
+
+                            if (docIds.TryGetValue(doc.Key, out score))
+                            {
+                                aggregatedResult[doc.Key] = score + doc.Value;
+                            }
+                        }
+
+                        result = aggregatedResult;
                     }
-                    else
+                    else if (cursor.Not)
                     {
-                        if (cursor.And)
+                        foreach (var id in docIds.Keys)
                         {
-                            var aggregatedResult = new Dictionary<long, float>();
-
-                            foreach (var doc in result)
-                            {
-                                float score;
-
-                                if (docIds.TryGetValue(doc.Key, out score))
-                                {
-                                    aggregatedResult[doc.Key] = score + doc.Value;
-                                }
-                            }
-
-                            result = aggregatedResult;
+                            result.Remove(id, out float _);
                         }
-                        else if (cursor.Not)
+                    }
+                    else // Or
+                    {
+                        foreach (var id in docIds)
                         {
-                            foreach (var id in docIds.Keys)
-                            {
-                                result.Remove(id, out float _);
-                            }
-                        }
-                        else // Or
-                        {
-                            foreach (var id in docIds)
-                            {
-                                float score;
+                            float score;
 
-                                if (result.TryGetValue(id.Key, out score))
-                                {
-                                    result[id.Key] = score + id.Value;
-                                }
-                                else
-                                {
-                                    result.Add(id.Key, id.Value);
-                                }
+                            if (result.TryGetValue(id.Key, out score))
+                            {
+                                result[id.Key] = score + id.Value;
+                            }
+                            else
+                            {
+                                result.Add(id.Key, id.Value);
                             }
                         }
                     }
@@ -92,7 +86,7 @@ namespace Sir.Store
                 }
             }
 
-            var sortedByScore = result.ToList();
+            var sortedByScore = new List<KeyValuePair<long, float>>(result);
             sortedByScore.Sort(
                 delegate (KeyValuePair<long, float> pair1,
                 KeyValuePair<long, float> pair2)
@@ -101,63 +95,62 @@ namespace Sir.Store
                 }
             );
 
-            if (take < 1)
-            {
-                take = sortedByScore.Count;
-            }
-            if (skip < 1)
-            {
-                skip = 0;
-            }
+            var index = skip > 0 ? skip : 0;
+            var count = take > 0 ? take : sortedByScore.Count;
 
-            var window = sortedByScore.Skip(skip).Take(take).ToList();
+            this.Log("reducing {0} into {1} docs took {2}", query, sortedByScore.Count, timer.Elapsed);
 
-            return new ScoredResult { Documents = result, SortedDocuments = window, Total = sortedByScore.Count };
+            return new ScoredResult { SortedDocuments = sortedByScore.GetRange(index, count), Total = sortedByScore.Count };
         }
 
-        private IList<long> Read(IList<long> offsets)
+        private IDictionary<long, float> Read(IList<long> offsets, float score)
         {
-            var result = new List<long>();
+            var result = new Dictionary<long, float>();
 
             foreach(var offset in offsets)
             {
-                _read(offset, result);
+                _read(offset, result, score);
             }
 
             return result;
         }
 
-        private void GetPostingsFromStream(long postingsOffset, List<long> result)
+        private void GetPostingsFromStream(long postingsOffset, IDictionary<long, float> result, float score)
         {
             _stream.Seek(postingsOffset, SeekOrigin.Begin);
 
-            var buf = new byte[sizeof(long)];
+            Span<byte> buf = stackalloc byte[sizeof(long)];
 
             _stream.Read(buf);
 
             var numOfPostings = BitConverter.ToInt64(buf);
 
-            Span<byte> listBuf = new byte[sizeof(long) * numOfPostings];
+            Span<byte> listBuf = stackalloc byte[sizeof(long) * (int)numOfPostings];
 
             _stream.Read(listBuf);
 
-            result.AddRange(MemoryMarshal.Cast<byte, long>(listBuf).ToArray());
+            foreach (var word in MemoryMarshal.Cast<byte, long>(listBuf).ToArray())
+            {
+                result.Add(word, score);
+            }
         }
 
-        private void GetPostingsFromView(long postingsOffset, List<long> result)
+        private void GetPostingsFromView(long postingsOffset, IDictionary<long, float> result, float score)
         {
             var numOfPostings = _view.ReadInt64(postingsOffset);
             var buf = new long[numOfPostings];
 
             _view.ReadArray(postingsOffset + sizeof(long), buf, 0, buf.Length);
 
-            result.AddRange(buf);
+            foreach (var word in buf)
+            {
+                result.Add(word, score);
+            }
         }
     }
 
     public class ScoredResult
     {
-        public IDictionary<long, float> Documents { get; set; }
         public IList<KeyValuePair<long, float>> SortedDocuments { get; set; }
         public int Total { get; set; }
     }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -76,7 +75,7 @@ namespace Sir.Store
                     return new long[0];
                 }
 
-                return result.Documents.Keys;
+                return new Dictionary<long, float>(result.SortedDocuments).Keys;
             }
 
             return new long[0];
@@ -98,7 +97,7 @@ namespace Sir.Store
             {
                 var result = new PostingsReader(postingsView).Reduce(query.ToClauses(), query.Skip, query.Take);
 
-                this.Log("reducing {0} into {1} docs took {2}", query, result.Documents.Count, timer.Elapsed);
+                this.Log("map/reduce took {0}", timer.Elapsed);
 
                 return result;
             }
