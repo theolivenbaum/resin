@@ -35,11 +35,6 @@ namespace Sir
             Index = index;
         }
 
-        public static IndexedVector Empty()
-        {
-            return new IndexedVector(new Memory<int>(), new Memory<int>());
-        }
-
         public override string AsString()
         {
             var w = new StringBuilder();

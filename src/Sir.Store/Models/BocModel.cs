@@ -49,15 +49,13 @@ namespace Sir.Store
                 throw new ArgumentNullException(nameof(vectorView));
             }
 
-            var indexBuf = new byte[componentCount * sizeof(int)];
-            var valuesBuf = new byte[componentCount * sizeof(int)];
-            var read = vectorView.ReadArray(vectorOffset, indexBuf, 0, indexBuf.Length);
-            read = vectorView.ReadArray(vectorOffset + indexBuf.Length, valuesBuf, 0, valuesBuf.Length);
+            var index = new int[componentCount];
+            var values = new int[componentCount];
 
-            Span<int> index = MemoryMarshal.Cast<byte, int>(indexBuf);
-            Span<int> values = MemoryMarshal.Cast<byte, int>(valuesBuf);
+            vectorView.ReadArray(vectorOffset, index, 0, index.Length);
+            vectorView.ReadArray(vectorOffset, values, 0, values.Length);
 
-            return new IndexedVector(index.ToArray().AsMemory(), values.ToArray().AsMemory());
+            return new IndexedVector(index, values);
         }
 
         public AnalyzedData Tokenize(string text)
@@ -151,7 +149,7 @@ namespace Sir.Store
             long product = 0;
             var cursor1 = 0;
             var cursor2 = 0;
-
+            
             while (cursor1 < vec1.Count && cursor2 < vec2.Count)
             {
                 var i1 = vec1.Index.Span[cursor1];

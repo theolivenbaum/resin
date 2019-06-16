@@ -101,19 +101,18 @@ namespace Sir.Store
             var vecFile = _sessionFactory.OpenMMF(_vecFileName);
 
             using (var vectorView = vecFile.CreateViewAccessor(0, 0))
+            using (var indexView = ixFile.CreateViewAccessor(0, 0))
             //foreach (var page in pages)
             Parallel.ForEach(pages, page =>
             {
-                using (var indexView = ixFile.CreateViewAccessor(page.offset, page.length))
-                {
-                    var hit = ClosestMatchInPage(
+                var hit = ClosestMatchInPage(
                                 vector,
                                 indexView,
                                 vectorView,
-                                model);
+                                model,
+                                page.offset);
 
-                    hits.Add(hit);
-                }
+                hits.Add(hit);
             });
 
             this.Log($"scan took {time.Elapsed}");
@@ -265,7 +264,7 @@ namespace Sir.Store
             IStringModel model
         )
         {
-            Span<byte> block = new byte[VectorNode.BlockSize];
+            Span<byte> block = stackalloc byte[VectorNode.BlockSize];
 
             var read = indexStream.Read(block);
 
@@ -399,10 +398,10 @@ namespace Sir.Store
             Vector vector,
             MemoryMappedViewAccessor indexView,
             MemoryMappedViewAccessor vectorView,
-            IStringModel model
+            IStringModel model,
+            long offset = 0
         )
         {
-            long offset = 0;
             var block = new byte[VectorNode.BlockSize];
             VectorNode best = null;
             float highscore = 0;

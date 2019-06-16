@@ -32,12 +32,10 @@ namespace Sir.Store
                 throw new ArgumentNullException(nameof(vectorView));
             }
 
-            var valuesBuf = new byte[componentCount * sizeof(int)];
+            var valuesBuf = new int[componentCount];
             var read = vectorView.ReadArray(vectorOffset, valuesBuf, 0, valuesBuf.Length);
 
-            Span<int> values = MemoryMarshal.Cast<byte, int>(valuesBuf);
-
-            return new Vector(values.ToArray().AsMemory());
+            return new Vector(valuesBuf);
         }
 
         public long SerializeVector(Vector vector, Stream vectorStream)
