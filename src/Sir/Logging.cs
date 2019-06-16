@@ -15,6 +15,7 @@ namespace Sir
             var writer = GetWriter();
 
             writer.WriteLineAsync(message);
+            writer.FlushAsync();
 
             if (SendToConsole)
             {

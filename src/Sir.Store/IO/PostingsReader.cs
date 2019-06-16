@@ -32,7 +32,7 @@ namespace Sir.Store
         {
             var timer = Stopwatch.StartNew();
 
-            var result = new Dictionary<long, float>();
+            IDictionary<long, float> result = null;
 
             foreach (var q in query)
             {
@@ -44,40 +44,49 @@ namespace Sir.Store
 
                     if (cursor.And)
                     {
-                        var aggregatedResult = new Dictionary<long, float>();
-
-                        foreach (var doc in result)
+                        if (result == null)
                         {
-                            float score;
-
-                            if (docIds.TryGetValue(doc.Key, out score))
+                            result = docIds;
+                        }
+                        else
+                        {
+                            foreach (var doc in docIds)
                             {
-                                aggregatedResult[doc.Key] = score + doc.Value;
+                                if (result.ContainsKey(doc.Key))
+                                {
+                                    result[doc.Key] += doc.Value;
+                                }
+                                else
+                                {
+                                    result.Remove(doc.Key);
+                                }
                             }
                         }
-
-                        result = aggregatedResult;
                     }
                     else if (cursor.Not)
                     {
-                        foreach (var id in docIds.Keys)
+                        if (result != null)
                         {
-                            result.Remove(id, out float _);
+                            foreach (var id in docIds.Keys)
+                            {
+                                result.Remove(id, out float _);
+                            }
                         }
                     }
                     else // Or
                     {
-                        foreach (var id in docIds)
+                        if (result == null)
                         {
-                            float score;
-
-                            if (result.TryGetValue(id.Key, out score))
+                            result = docIds;
+                        }
+                        else
+                        {
+                            foreach (var doc in docIds)
                             {
-                                result[id.Key] = score + id.Value;
-                            }
-                            else
-                            {
-                                result.Add(id.Key, id.Value);
+                                if (result.ContainsKey(doc.Key))
+                                {
+                                    result[doc.Key] += doc.Value;
+                                }
                             }
                         }
                     }
