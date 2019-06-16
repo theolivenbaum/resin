@@ -15,17 +15,11 @@ namespace Sir
             var writer = GetWriter();
 
             writer.WriteLineAsync(message);
-            writer.FlushAsync();
 
             if (SendToConsole)
             {
                 Console.WriteLine(message);
             }
-        }
-
-        public static void LogJ(this ILogger logger, object message)
-        {
-            Write(logger, $"{DateTime.Now} :: {logger?.GetType()} :: {message}");
         }
 
         public static void Log(this ILogger logger, object message)
@@ -54,7 +48,7 @@ namespace Sir
                         }
 
                         var fn = Path.Combine(logDir, "sir.log");
-                        var stream = Stream.Synchronized(new FileStream(fn, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 8*4096, true));
+                        var stream = Stream.Synchronized(new FileStream(fn, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
                         Writer = TextWriter.Synchronized(new StreamWriter(stream));
                         return Writer;
                     }
