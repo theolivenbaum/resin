@@ -67,9 +67,8 @@ namespace Sir.Store
             var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
             var hits = new List<Hit>();
-            var ixbufferSize = int.Parse(_config.Get("index_read_buffer_size") ?? "4096");
 
-            using (var indexStream = new BufferedStream(_sessionFactory.CreateReadStream(_ixFileName), ixbufferSize))
+            using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
             using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
             {
                 foreach (var page in pages)
