@@ -102,8 +102,8 @@ namespace Sir.Store
             using (var vectorView = vecFile.CreateViewAccessor(0, 0))
             using (var indexView = ixFile.CreateViewAccessor(0, 0))
             
-                //foreach (var page in pages)
-            Parallel.ForEach(pages, page =>
+            foreach (var page in pages)
+            //Parallel.ForEach(pages, page =>
             {
                 var hit = ClosestMatchInPage(
                                 vector,
@@ -113,7 +113,7 @@ namespace Sir.Store
                                 page.offset);
 
                 hits.Add(hit);
-            });
+            }//);
 
             this.Log($"scan took {time.Elapsed}");
 
@@ -137,14 +137,14 @@ namespace Sir.Store
             while (read > 0)
             {
                 var vecOffset = BitConverter.ToInt64(block.Slice(0, sizeof(long)));
-                var componentCount = BitConverter.ToInt32(block.Slice(sizeof(long) + sizeof(long), sizeof(int)));
-                var cursorVector = model.DeserializeVector(vecOffset, componentCount, vectorStream);
-                var cursorTerminator = block[block.Length - 1];
+                var componentCount = BitConverter.ToInt64(block.Slice(sizeof(long) + sizeof(long), sizeof(long)));
+                var cursorVector = model.DeserializeVector(vecOffset, (int)componentCount, vectorStream);
+                var cursorTerminator = BitConverter.ToInt64(block.Slice(sizeof(long) + sizeof(long) + sizeof(long) + sizeof(long), sizeof(long)));
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));
 
                 var angle = model.CosAngle(cursorVector, vector);
 
-                if (angle >= model.Similarity().identicalAngle)
+                if (angle >= model.IdenticalAngle)
                 {
                     if (best == null || angle > highscore)
                     {
@@ -166,7 +166,7 @@ namespace Sir.Store
 
                     break;
                 }
-                else if (angle > model.Similarity().foldAngle)
+                else if (angle > model.FoldAngle)
                 {
                     if (best == null || angle > highscore)
                     {
@@ -274,14 +274,14 @@ namespace Sir.Store
             while (read > 0)
             {
                 var vecOffset = BitConverter.ToInt64(block.Slice(0, sizeof(long)));
-                var componentCount = BitConverter.ToInt32(block.Slice(sizeof(long) + sizeof(long), sizeof(int)));
-                var cursorVector = model.DeserializeVector(vecOffset, componentCount, vectorView);
-                var cursorTerminator = block[block.Length - 1];
+                var componentCount = BitConverter.ToInt64(block.Slice(sizeof(long) + sizeof(long), sizeof(long)));
+                var cursorVector = model.DeserializeVector(vecOffset, (int)componentCount, vectorView);
+                var cursorTerminator = BitConverter.ToInt64(block.Slice(sizeof(long) + sizeof(long) + sizeof(long) + sizeof(long), sizeof(long)));
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));
 
                 var angle = model.CosAngle(cursorVector, vector);
 
-                if (angle >= model.Similarity().identicalAngle)
+                if (angle >= model.IdenticalAngle)
                 {
                     if (best == null || angle > highscore)
                     {
@@ -303,7 +303,7 @@ namespace Sir.Store
 
                     break;
                 }
-                else if (angle > model.Similarity().foldAngle)
+                else if (angle > model.FoldAngle)
                 {
                     if (best == null || angle > highscore)
                     {
@@ -413,14 +413,15 @@ namespace Sir.Store
             while (read > 0)
             {
                 var vecOffset = BitConverter.ToInt64(block);
-                var componentCount = BitConverter.ToInt32(block, sizeof(long) + sizeof(long));
-                var cursorVector = model.DeserializeVector(vecOffset, componentCount, vectorView);
-                var cursorTerminator = block[block.Length - 1];
                 var postingsOffset = BitConverter.ToInt64(block, sizeof(long));
+                var componentCount = BitConverter.ToInt64(block, sizeof(long) + sizeof(long));
+                var cursorTerminator = BitConverter.ToInt64(block, sizeof(long) + sizeof(long) + sizeof(long) + sizeof(long));
+
+                var cursorVector = model.DeserializeVector(vecOffset, (int)componentCount, vectorView);
 
                 var angle = model.CosAngle(cursorVector, vector);
 
-                if (angle >= model.Similarity().identicalAngle)
+                if (angle >= model.IdenticalAngle)
                 {
                     if (best == null || angle > highscore)
                     {
@@ -442,7 +443,7 @@ namespace Sir.Store
 
                     break;
                 }
-                else if (angle > model.Similarity().foldAngle)
+                else if (angle > model.FoldAngle)
                 {
                     if (best == null || angle > highscore)
                     {
@@ -551,8 +552,8 @@ namespace Sir.Store
                 throw new InvalidOperationException();
             }
 
-            var positionInBuffer = VectorNode.BlockSize - (sizeof(int) + sizeof(byte));
-            var weight = BitConverter.ToInt32(buf.Slice(positionInBuffer, sizeof(int)));
+            var positionInBuffer = VectorNode.BlockSize - (sizeof(long) + sizeof(long));
+            var weight = BitConverter.ToInt64(buf.Slice(positionInBuffer, sizeof(long)));
             var distance = weight * VectorNode.BlockSize;
 
             if (distance > 0)
@@ -563,17 +564,10 @@ namespace Sir.Store
 
         private void SkipTree(MemoryMappedViewAccessor indexView, ref long offset)
         {
-            var buf = new byte[VectorNode.BlockSize];
-            var read = indexView.ReadArray(offset, buf, 0, buf.Length);
+            var weight = indexView.ReadInt64(offset + sizeof(long) + sizeof(long) + sizeof(long));
 
-            offset += buf.Length;
+            offset += VectorNode.BlockSize;
 
-            if (read == 0)
-            {
-                throw new InvalidOperationException();
-            }
-
-            var weight = BitConverter.ToInt32(buf, sizeof(long) + sizeof(long) + sizeof(int));
             var distance = weight * VectorNode.BlockSize;
 
             offset += distance;

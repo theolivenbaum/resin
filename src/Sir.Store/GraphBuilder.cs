@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 
@@ -15,7 +14,7 @@ namespace Sir.Store
             {
                 var angle = cursor.Vector.Count > 0 ? model.CosAngle(node.Vector, cursor.Vector) : 0;
 
-                if (angle >= model.Similarity().identicalAngle)
+                if (angle >= model.IdenticalAngle)
                 {
                     lock (cursor.Sync)
                     {
@@ -24,7 +23,7 @@ namespace Sir.Store
                         return false;
                     }
                 }
-                else if (angle > model.Similarity().foldAngle)
+                else if (angle > model.FoldAngle)
                 {
                     if (cursor.Left == null)
                     {
@@ -116,7 +115,7 @@ namespace Sir.Store
 
         public static void SerializeNode(VectorNode node, Stream stream)
         {
-            byte terminator = 1;
+            long terminator = 1;
 
             if (node.Left == null && node.Right == null) // there are no children
             {
@@ -137,9 +136,9 @@ namespace Sir.Store
 
             stream.Write(BitConverter.GetBytes(node.VectorOffset));
             stream.Write(BitConverter.GetBytes(node.PostingsOffset));
-            stream.Write(BitConverter.GetBytes(node.Vector.Count));
+            stream.Write(BitConverter.GetBytes((long)node.Vector.Count));
             stream.Write(BitConverter.GetBytes(node.Weight));
-            stream.WriteByte(terminator);
+            stream.Write(BitConverter.GetBytes(terminator));
         }
 
         public static (long offset, long length) SerializeTree(
@@ -191,9 +190,9 @@ namespace Sir.Store
             // Deserialize node
             var vecOffset = BitConverter.ToInt64(nodeBuffer, 0);
             var postingsOffset = BitConverter.ToInt64(nodeBuffer, sizeof(long));
-            var vectorCount = BitConverter.ToInt32(nodeBuffer, sizeof(long) + sizeof(long));
-            var weight = BitConverter.ToInt32(nodeBuffer, sizeof(long) + sizeof(long) + sizeof(int));
-            var terminator = nodeBuffer[VectorNode.BlockSize - 2];
+            var vectorCount = BitConverter.ToInt64(nodeBuffer, sizeof(long) + sizeof(long));
+            var weight = BitConverter.ToInt64(nodeBuffer, sizeof(long) + sizeof(long) + sizeof(long));
+            var terminator = BitConverter.ToInt64(nodeBuffer, sizeof(long) + sizeof(long) + sizeof(long) + sizeof(long));
 
             return DeserializeNode(vecOffset, postingsOffset, vectorCount, weight, terminator, vectorStream, tokenizer);
         }
@@ -201,27 +200,24 @@ namespace Sir.Store
         public static VectorNode DeserializeNode(
             long vecOffset,
             long postingsOffset,
-            int componentCount,
-            int weight,
-            byte terminator,
+            long componentCount,
+            long weight,
+            long terminator,
             Stream vectorStream,
             IStringModel tokenizer)
         {
-            var vector = tokenizer.DeserializeVector(vecOffset, componentCount, vectorStream);
+            var vector = tokenizer.DeserializeVector(vecOffset, (int)componentCount, vectorStream);
             var node = new VectorNode(postingsOffset, vecOffset, terminator, weight, componentCount, vector);
 
             return node;
         }
 
-        
-
-        
-
         public static void DeserializeUnorderedFile(
             Stream indexStream,
             Stream vectorStream,
             VectorNode root,
-            (float identicalAngle, float foldAngle) similarity,
+            float identicalAngle, 
+            float foldAngle,
             IStringModel model)
         {
             var buf = new byte[VectorNode.BlockSize];

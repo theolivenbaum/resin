@@ -15,7 +15,7 @@ namespace Sir.Store
             {
                 var angle = model.CosAngle(vector, cursor.Vector);
 
-                if (angle > model.Similarity().foldAngle)
+                if (angle > model.FoldAngle)
                 {
                     if (angle > highscore)
                     {

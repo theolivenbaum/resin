@@ -9,25 +9,25 @@ namespace Sir.Store
     /// </summary>
     public class VectorNode
     {
-        public const int BlockSize = sizeof(long) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(byte);
+        public const int BlockSize = sizeof(long) + sizeof(long) + sizeof(long) + sizeof(long) + sizeof(long);
         public const int ComponentSize = sizeof(int) + sizeof(int);
 
         private VectorNode _right;
         private VectorNode _left;
         private VectorNode _ancestor;
-        private int _weight;
+        private long _weight;
         private float _angleWhenAdded;
         private object _sync = new object();
 
         public HashSet<long> DocIds { get; set; }
         public VectorNode Ancestor { get { return _ancestor; } }
-        public int ComponentCount { get; set; }
+        public long ComponentCount { get; set; }
         public long VectorOffset { get; set; }
         public long PostingsOffset { get; set; }
         public Vector Vector { get; set; }
         public object Sync { get { return _sync; } }
 
-        public int Weight
+        public long Weight
         {
             get { return _weight; }
             set
@@ -70,7 +70,7 @@ namespace Sir.Store
             }
         }
 
-        public byte Terminator { get; set; }
+        public long Terminator { get; set; }
 
         public IList<long> PostingsOffsets { get; set; }
         public float AngleWhenAdded { get => _angleWhenAdded; set => _angleWhenAdded = value; }
@@ -96,7 +96,7 @@ namespace Sir.Store
             DocIds.Add(docId);
         }
 
-        public VectorNode(long postingsOffset, long vecOffset, byte terminator, int weight, int componentCount, Vector vector)
+        public VectorNode(long postingsOffset, long vecOffset, long terminator, long weight, long componentCount, Vector vector)
         {
             PostingsOffset = postingsOffset;
             VectorOffset = vecOffset;

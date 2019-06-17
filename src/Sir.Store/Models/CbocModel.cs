@@ -110,10 +110,9 @@ namespace Sir.Store
             return new AnalyzedData(embeddings);
         }
 
-        public (float identicalAngle, float foldAngle) Similarity()
-        {
-            return (0.999999f, 0.65f);
-        }
+        public float IdenticalAngle => 0.999999f;
+
+        public float FoldAngle => 0.65f;
 
         public float CosAngle(Vector vec1, Vector vec2)
         {

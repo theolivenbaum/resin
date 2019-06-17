@@ -105,7 +105,7 @@ namespace Sir.Store
             );
 
             var index = skip > 0 ? skip : 0;
-            var count = take > 0 ? take : sortedByScore.Count;
+            var count = Math.Min(sortedByScore.Count, (take > 0 ? take : sortedByScore.Count));
 
             this.Log("reducing {0} into {1} docs took {2}", query, sortedByScore.Count, timer.Elapsed);
 

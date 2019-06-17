@@ -92,7 +92,7 @@ namespace Sir.Store
             {
                 var hit = PathFinder.ClosestMatch(tree, vector, _model);
 
-                if (hit.Score < _model.Similarity().identicalAngle)
+                if (hit.Score < _model.IdenticalAngle)
                 {
                     throw new DataMisalignedException();
                 }

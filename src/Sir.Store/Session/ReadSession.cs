@@ -113,8 +113,8 @@ namespace Sir.Store
 
             var clauses = query.ToClauses();
 
-            Parallel.ForEach(clauses, q =>
-            //foreach (var q in clauses)
+            //Parallel.ForEach(clauses, q =>
+            foreach (var q in clauses)
             {
                 var cursor = q;
 
@@ -143,7 +143,7 @@ namespace Sir.Store
 
                     cursor = cursor.NextTermInClause;
                 }
-            });
+            }//);
 
             this.Log("mapping {0} took {1}", query, timer.Elapsed);
         }

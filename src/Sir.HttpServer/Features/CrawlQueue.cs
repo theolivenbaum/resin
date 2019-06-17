@@ -136,7 +136,7 @@ namespace Sir.HttpServer.Features
                 var result = readSession.Read(urlQuery);
             
                 return result.Total == 0 
-                    ? null : (float)result.Docs[0]["___score"] >= _model.Similarity().identicalAngle 
+                    ? null : (float)result.Docs[0]["___score"] >= _model.IdenticalAngle 
                     ? result.Docs[0] : null;
             }
         }
