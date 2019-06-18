@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 
 namespace Sir.Store
 {
@@ -139,6 +140,13 @@ namespace Sir.Store
             stream.Write(BitConverter.GetBytes((long)node.Vector.Count));
             stream.Write(BitConverter.GetBytes(node.Weight));
             stream.Write(BitConverter.GetBytes(terminator));
+        }
+
+        public static void SerializeNode(VectorNode node, MemoryMappedViewAccessor view, long offset)
+        {
+            var data = node.ToData();
+
+            view.Write(offset, ref data);
         }
 
         public static (long offset, long length) SerializeTree(

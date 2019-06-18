@@ -98,19 +98,18 @@ namespace Sir.Store
             var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
             var hits = new ConcurrentBag<Hit>();
             var vecFile = _sessionFactory.OpenMMF(_vecFileName);
-            var indexMemory = _sessionFactory.GetIndexMemory(_ixFileName);
 
             using (var vectorView = vecFile.CreateViewAccessor(0, 0))
             //foreach (var page in pages)
             Parallel.ForEach(pages, page =>
             {
+                var indexMemory = _sessionFactory.GetIndexMemory(_ixFileName, page.offset);
 
                 var hit = ClosestMatchInPage(
                                 vector,
                                 indexMemory,
                                 vectorView,
-                                model,
-                                (int)page.offset/sizeof(long));
+                                model);
 
                 hits.Add(hit);
             });
@@ -575,16 +574,16 @@ namespace Sir.Store
             Vector vector,
             Memory<long> indexMemory,
             MemoryMappedViewAccessor vectorView,
-            IStringModel model,
-            int offset
+            IStringModel model
         )
         {
+            int offset = 0;
             const int blockLength = 5;
             Span<long> page = indexMemory.Span;
             VectorNode best = null;
             float highscore = 0;
 
-            while (offset < page.Length)
+            while (true)
             {
                 var vecOffset = page[offset];
                 var postingsOffset = page[offset + 1];

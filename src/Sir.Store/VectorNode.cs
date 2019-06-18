@@ -158,5 +158,47 @@ namespace Sir.Store
 
             return w.ToString();
         }
+
+        public VectorNodeData ToData()
+        {
+            long terminator;
+
+            if (Left == null && Right == null) // there are no children
+            {
+                terminator = 3;
+            }
+            else if (Left == null) // there is a right but no left
+            {
+                terminator = 2;
+            }
+            else if (Right == null) // there is a left but no right
+            {
+                terminator = 1;
+            }
+            else // there is a left and a right
+            {
+                terminator = 0;
+            }
+
+            return new VectorNodeData(VectorOffset, PostingsOffset, ComponentCount, Weight, terminator);
+        }
+    }
+
+    public struct VectorNodeData
+    {
+        public long VectorOffset { get; }
+        public long PostingsOffset { get; }
+        public long ComponentCount { get; }
+        public long Weight { get; }
+        public long Terminator { get; }
+
+        public VectorNodeData(long vectorOffset, long postingsOffset, long componentCount, long weight, long terminator)
+        {
+            VectorOffset = vectorOffset;
+            PostingsOffset = postingsOffset;
+            ComponentCount = componentCount;
+            Weight = weight;
+            Terminator = terminator;
+        }
     }
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -17,7 +17,7 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
-        private readonly ConcurrentDictionary<string, Memory<long>> _indexMemory;
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<long, Memory<long>>> _indexMemory;
 
         private static readonly object WriteSync = new object();
         public string Dir { get; }
@@ -39,30 +39,48 @@ namespace Sir.Store
             _indexMemory = LoadIndexMemory();
         }
 
-        private ConcurrentDictionary<string, Memory<long>> LoadIndexMemory()
+        private ConcurrentDictionary<string, ConcurrentDictionary<long, Memory<long>>> LoadIndexMemory()
         {
-            var indexMemory = new ConcurrentDictionary<string, Memory<long>>();
-
-            foreach (var fileName in Directory.GetFiles(Dir, "*.ix"))
+            var indexMemory = new ConcurrentDictionary<string, ConcurrentDictionary<long, Memory<long>>>();
+            Parallel.ForEach(Directory.GetFiles(Dir, "*.ix"), fileName =>
+            //foreach (var fileName in Directory.GetFiles(Dir, "*.ix"))
             {
-                using(var stream = CreateReadStream(fileName, FileOptions.SequentialScan))
+                var pageFileName = Path.Combine(Dir, $"{Path.GetFileNameWithoutExtension(fileName)}.ixp");
+                var indexFile = OpenMMF(fileName);
+                var pages = indexMemory.GetOrAdd(fileName, new ConcurrentDictionary<long, Memory<long>>());
+
+                foreach (var page in ReadPageInfo(pageFileName))
                 {
-                    var mem = new MemoryStream();
+                    var timer = Stopwatch.StartNew();
 
-                    stream.CopyTo(mem);
+                    using (var indexView = indexFile.CreateViewAccessor(page.offset, page.length))
+                    {
+                        try
+                        {
+                            var length = page.length / sizeof(long);
+                            var buf = new long[length];
+                            var read = indexView.ReadArray(0, buf, 0, buf.Length);
 
-                    Span<byte> span = mem.ToArray();
-                    Span<long> list = MemoryMarshal.Cast<byte, long>(span);
-                    indexMemory.GetOrAdd(fileName, new Memory<long>(list.ToArray()));
+                            pages.GetOrAdd(page.offset, buf);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Log(ex.ToString());
+
+                            throw;
+                        }
+                    }
+
+                    this.Log($"loaded page {page} from {fileName} into memory in {timer.Elapsed}");
                 }
-            }
+            });
 
             return indexMemory;
         }
 
-        public Memory<long> GetIndexMemory(string ixFileName)
+        public Memory<long> GetIndexMemory(string ixFileName, long offset)
         {
-            return _indexMemory[ixFileName];
+            return _indexMemory[ixFileName][offset];
         }
 
         public MemoryMappedFile OpenMMF(string fileName)
