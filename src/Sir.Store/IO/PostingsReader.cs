@@ -70,7 +70,7 @@ namespace Sir.Store
                         {
                             foreach (var id in docIds.Keys)
                             {
-                                result.Remove(id, out float _);
+                                result.Remove(id);
                             }
                         }
                     }
