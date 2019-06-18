@@ -123,7 +123,7 @@ namespace Sir.Store
             return (float)(dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
         }
 
-        public static long Dot(Vector vec1, Vector vec2)
+        private static long Dot(Vector vec1, Vector vec2)
         {
             if (ReferenceEquals(vec1, vec2))
                 return DotSelf(vec1);

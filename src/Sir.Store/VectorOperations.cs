@@ -135,7 +135,7 @@ namespace Sir
             return result;
         }
 
-        public static void AddOrAppendToComponent(this SortedList<int, int> vec, int key, int value)
+        public static void AddOrPerformAddition(this SortedList<int, int> vec, int key, int value)
         {
             if (vec.ContainsKey(key))
                 vec[key] += value;

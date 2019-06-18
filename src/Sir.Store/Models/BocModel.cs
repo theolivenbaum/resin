@@ -53,7 +53,7 @@ namespace Sir.Store
             var values = new int[componentCount];
 
             vectorView.ReadArray(vectorOffset, index, 0, index.Length);
-            vectorView.ReadArray(vectorOffset, values, 0, values.Length);
+            vectorView.ReadArray(vectorOffset + componentCount * sizeof(int), values, 0, values.Length);
 
             return new IndexedVector(index, values);
         }
@@ -91,7 +91,7 @@ namespace Sir.Store
                     }
                     else
                     {
-                        embedding.AddOrAppendToComponent(c, 1);
+                        embedding.AddOrPerformAddition(c, 1);
                     }
                 }
                 else
@@ -101,7 +101,7 @@ namespace Sir.Store
                         word = true;
                         offset = index;
 
-                        embedding.AddOrAppendToComponent(c, 1);
+                        embedding.AddOrPerformAddition(c, 1);
                     }
                     else
                     {
