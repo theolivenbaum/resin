@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,7 +18,7 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
-        private readonly ConcurrentDictionary<string, ConcurrentDictionary<long, Memory<VectorNodeData>>> _indexMemory;
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<long, IMemoryOwner<VectorNodeData>>> _indexMemory;
 
         private static readonly object WriteSync = new object();
         public string Dir { get; }
@@ -39,16 +40,16 @@ namespace Sir.Store
             _indexMemory = LoadIndexMemory();
         }
 
-        private ConcurrentDictionary<string, ConcurrentDictionary<long, Memory<VectorNodeData>>> LoadIndexMemory()
+        private ConcurrentDictionary<string, ConcurrentDictionary<long, IMemoryOwner<VectorNodeData>>> LoadIndexMemory()
         {
-            var indexMemory = new ConcurrentDictionary<string, ConcurrentDictionary<long, Memory<VectorNodeData>>>();
+            var indexMemory = new ConcurrentDictionary<string, ConcurrentDictionary<long, IMemoryOwner<VectorNodeData>>>();
 
             Parallel.ForEach(Directory.GetFiles(Dir, "*.ix"), fileName =>
             //foreach (var fileName in Directory.GetFiles(Dir, "*.ix"))
             {
                 var pageFileName = Path.Combine(Dir, $"{Path.GetFileNameWithoutExtension(fileName)}.ixp");
                 var indexFile = OpenMMF(fileName);
-                var pages = indexMemory.GetOrAdd(fileName, new ConcurrentDictionary<long, Memory<VectorNodeData>>());
+                var pages = indexMemory.GetOrAdd(fileName, new ConcurrentDictionary<long, IMemoryOwner<VectorNodeData>>());
 
                 Parallel.ForEach(ReadPageInfo(pageFileName), page =>
                 //foreach (var page in ReadPageInfo(pageFileName))
@@ -62,8 +63,9 @@ namespace Sir.Store
                             var length = page.length / VectorNode.BlockSize;
                             var buf = new VectorNodeData[length];
                             var read = indexView.ReadArray(0, buf, 0, buf.Length);
-
-                            pages.GetOrAdd(page.offset, buf);
+                            IMemoryOwner<VectorNodeData> owner = MemoryPool<VectorNodeData>.Shared.Rent(minBufferSize:buf.Length);
+                            buf.AsSpan().CopyTo(owner.Memory.Span);
+                            pages.GetOrAdd(page.offset, owner);
                         }
                         catch (Exception ex)
                         {
@@ -82,7 +84,7 @@ namespace Sir.Store
 
         public Memory<VectorNodeData> GetIndexMemory(string ixFileName, long offset)
         {
-            return _indexMemory[ixFileName][offset];
+            return _indexMemory[ixFileName][offset].Memory;
         }
 
         public MemoryMappedFile OpenMMF(string fileName)
@@ -289,6 +291,14 @@ namespace Sir.Store
             foreach(var x in _mmfs)
             {
                 x.Value.Dispose();
+            }
+
+            foreach (var x in _indexMemory.Values)
+            {
+                foreach (var y in x.Values)
+                {
+                    y.Dispose();
+                }
             }
         }
     }
