@@ -85,6 +85,11 @@ namespace Sir.Store
         public static void Merge(VectorNode target, VectorNode node)
         {
             MergeDocIds(target, node);
+
+            if (target.PostingsOffsets != null)
+            {
+                MergePostings(target, node);
+            }
         }
 
         public static void MergeDocIds(VectorNode target, VectorNode node)
