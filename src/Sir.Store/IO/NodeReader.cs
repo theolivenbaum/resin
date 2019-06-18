@@ -402,20 +402,20 @@ namespace Sir.Store
             long offset = 0
         )
         {
-            var block = new byte[VectorNode.BlockSize];
+            var block = new long[5];
             VectorNode best = null;
             float highscore = 0;
 
             var read = indexView.ReadArray(offset, block, 0, block.Length);
 
-            offset += block.Length;
+            offset += VectorNode.BlockSize;
 
             while (read > 0)
             {
-                var vecOffset = BitConverter.ToInt64(block);
-                var postingsOffset = BitConverter.ToInt64(block, sizeof(long));
-                var componentCount = BitConverter.ToInt64(block, sizeof(long) + sizeof(long));
-                var cursorTerminator = BitConverter.ToInt64(block, sizeof(long) + sizeof(long) + sizeof(long) + sizeof(long));
+                var vecOffset = block[0];
+                var postingsOffset = block[1];
+                var componentCount = block[2];
+                var cursorTerminator = block[4];
 
                 var cursorVector = model.DeserializeVector(vecOffset, (int)componentCount, vectorView);
 
@@ -473,7 +473,7 @@ namespace Sir.Store
 
                         read = indexView.ReadArray(offset, block, 0, block.Length);
 
-                        offset += block.Length;
+                        offset += VectorNode.BlockSize;
                     }
                     else
                     {
@@ -514,7 +514,7 @@ namespace Sir.Store
 
                         read = indexView.ReadArray(offset, block, 0, block.Length);
 
-                        offset += block.Length;
+                        offset += VectorNode.BlockSize;
                     }
                     else if (cursorTerminator == 2)
                     {
@@ -523,7 +523,7 @@ namespace Sir.Store
 
                         read = indexView.ReadArray(offset, block, 0, block.Length);
 
-                        offset += block.Length;
+                        offset += VectorNode.BlockSize;
                     }
                     else
                     {
