@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -18,6 +19,7 @@ namespace Sir.Store
         private readonly ValueReader _valReader;
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _tokenizer;
+        private readonly MemoryMappedViewAccessor _postingsView;
 
         public ReadSession(string collectionName,
             ulong collectionId,
@@ -41,8 +43,18 @@ namespace Sir.Store
             _valReader = new ValueReader(ValueStream);
             _config = config;
             _tokenizer = tokenizer;
+
+            var posFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos");
+
+            _postingsView = SessionFactory.OpenMMF(posFileName).CreateViewAccessor(0, 0);
         }
 
+        public override void Dispose()
+        {
+            _postingsView.Dispose();
+
+            base.Dispose();
+        }
         public ReadResult Read(Query query)
         {
             if (SessionFactory.CollectionExists(query.Collection))
@@ -91,16 +103,11 @@ namespace Sir.Store
 
             var timer = Stopwatch.StartNew();
 
-            var posFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos");
+            var result = new PostingsReader(_postingsView).Reduce(query.ToClauses(), query.Skip, query.Take);
 
-            using (var postingsView = SessionFactory.OpenMMF(posFileName).CreateViewAccessor(0, 0))
-            {
-                var result = new PostingsReader(postingsView).Reduce(query.ToClauses(), query.Skip, query.Take);
+            this.Log("map/reduce took {0}", timer.Elapsed);
 
-                this.Log("map/reduce took {0}", timer.Elapsed);
-
-                return result;
-            }
+            return result;
         }
 
         /// <summary>
