@@ -50,17 +50,18 @@ namespace Sir.Store
                         }
                         else
                         {
-                            foreach (var doc in docIds)
+                            var intersection = new Dictionary<long, float>();
+
+                            foreach (var doc in result)
                             {
-                                if (result.ContainsKey(doc.Key))
+                                float score;
+                                if (docIds.TryGetValue(doc.Key, out score))
                                 {
-                                    result[doc.Key] += doc.Value;
-                                }
-                                else
-                                {
-                                    result.Remove(doc.Key);
+                                    intersection.Add(doc.Key, doc.Value + score);
                                 }
                             }
+
+                            result = intersection;
                         }
                     }
                     else if (cursor.Not)

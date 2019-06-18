@@ -102,8 +102,8 @@ namespace Sir.Store
             using (var vectorView = vecFile.CreateViewAccessor(0, 0))
             using (var indexView = ixFile.CreateViewAccessor(0, 0))
             
-            foreach (var page in pages)
-            //Parallel.ForEach(pages, page =>
+            //foreach (var page in pages)
+            Parallel.ForEach(pages, page =>
             {
                 var hit = ClosestMatchInPage(
                                 vector,
@@ -113,7 +113,7 @@ namespace Sir.Store
                                 page.offset);
 
                 hits.Add(hit);
-            }//);
+            });
 
             this.Log($"scan took {time.Elapsed}");
 

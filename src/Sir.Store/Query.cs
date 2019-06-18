@@ -88,13 +88,13 @@ namespace Sir.Store
         {
             var result = new StringBuilder();
             var query = this;
-            var queryop = And ? "+" : Or ? string.Empty : "-";
 
             while (query != null)
             {
                 var termResult = new StringBuilder();
-                var termop = And ? "+" : Or ? string.Empty : "-";
                 var term = query;
+                var queryop = query.And ? "+" : query.Or ? string.Empty : "-";
+                var termop = term.And ? "+" : term.Or ? string.Empty : "-";
 
                 while (term != null)
                 {
@@ -106,6 +106,7 @@ namespace Sir.Store
                 result.AppendFormat("{0}({1})\n", queryop, termResult.ToString().TrimEnd());
 
                 query = query.NextClause;
+            
             }
 
             return result.ToString();
