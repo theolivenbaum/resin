@@ -90,7 +90,37 @@ namespace Sir.Store
             return hits;
         }
 
+
         private ConcurrentBag<Hit> ClosestMatchInMemory(
+            Vector vector, IStringModel model)
+        {
+            var time = Stopwatch.StartNew();
+            var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
+            var hits = new ConcurrentBag<Hit>();
+            var vecFile = _sessionFactory.OpenMMF(_vecFileName);
+            var indexMemory = _sessionFactory.GetIndexMemory(_ixFileName);
+
+            using (var vectorView = vecFile.CreateViewAccessor(0, 0))
+            //foreach (var page in pages)
+            Parallel.ForEach(pages, page =>
+            {
+
+                var hit = ClosestMatchInPage(
+                                vector,
+                                indexMemory,
+                                vectorView,
+                                model,
+                                (int)page.offset/sizeof(long));
+
+                hits.Add(hit);
+            });
+
+            this.Log($"scan took {time.Elapsed}");
+
+            return hits;
+        }
+
+        private ConcurrentBag<Hit> ClosestMatchInMemoryMap(
             Vector vector, IStringModel model)
         {
             var time = Stopwatch.StartNew();
@@ -541,6 +571,129 @@ namespace Sir.Store
             };
         }
 
+        private Hit ClosestMatchInPage(
+            Vector vector,
+            Memory<long> indexMemory,
+            MemoryMappedViewAccessor vectorView,
+            IStringModel model,
+            int offset
+        )
+        {
+            const int blockLength = 5;
+            Span<long> page = indexMemory.Span;
+            VectorNode best = null;
+            float highscore = 0;
+
+            while (offset < page.Length)
+            {
+                var vecOffset = page[offset];
+                var postingsOffset = page[offset + 1];
+                var componentCount = page[offset + 2];
+                var cursorTerminator = page[offset + 4];
+
+                offset += blockLength;
+
+                var cursorVector = model.DeserializeVector(vecOffset, (int)componentCount, vectorView);
+                var angle = model.CosAngle(cursorVector, vector);
+
+                if (angle >= model.IdenticalAngle)
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    break;
+                }
+                else if (angle > model.FoldAngle)
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    // We need to determine if we can traverse further left.
+                    bool canGoLeft = cursorTerminator == 0 || cursorTerminator == 1;
+
+                    if (!canGoLeft)
+                    {
+                        // There is no left child.
+
+                        break;
+                    }
+                }
+                else
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffset = postingsOffset;
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    // We need to determine if we can traverse further to the right.
+
+                    if (cursorTerminator == 0)
+                    {
+                        // There exists a left and a right child.
+                        // Next node in bitmap is the left child. 
+                        // To find cursor's right child we must skip over the left tree.
+
+                        SkipTree(indexMemory, ref offset);
+                    }
+                    else if (cursorTerminator != 2)
+                    {
+                        // There is no right child.
+
+                        break;
+                    }
+                }
+            }
+
+            return new Hit
+            {
+                Score = highscore,
+                Node = best
+            };
+        }
+
         private void SkipTree(Stream indexStream)
         {
             Span<byte> buf = new byte[VectorNode.BlockSize];
@@ -571,6 +724,13 @@ namespace Sir.Store
             var distance = weight * VectorNode.BlockSize;
 
             offset += distance;
+        }
+
+        private void SkipTree(Memory<long> indexMemory, ref int offset)
+        {
+            var weight = (int)indexMemory.Span[offset + 3];
+
+            offset += 5 + (weight * 5);
         }
     }
 }

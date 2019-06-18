@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
@@ -13,9 +14,11 @@ namespace Sir.Store
     public class SessionFactory : IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
-        private ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
+        private readonly ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
+        private readonly ConcurrentDictionary<string, Memory<long>> _indexMemory;
+
         private static readonly object WriteSync = new object();
         public string Dir { get; }
         public IConfigurationProvider Config { get { return _config; } }
@@ -33,6 +36,33 @@ namespace Sir.Store
             _config = config;
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
+            _indexMemory = LoadIndexMemory();
+        }
+
+        private ConcurrentDictionary<string, Memory<long>> LoadIndexMemory()
+        {
+            var indexMemory = new ConcurrentDictionary<string, Memory<long>>();
+
+            foreach (var fileName in Directory.GetFiles(Dir, "*.ix"))
+            {
+                using(var stream = CreateReadStream(fileName, FileOptions.SequentialScan))
+                {
+                    var mem = new MemoryStream();
+
+                    stream.CopyTo(mem);
+
+                    Span<byte> span = mem.ToArray();
+                    Span<long> list = MemoryMarshal.Cast<byte, long>(span);
+                    indexMemory.GetOrAdd(fileName, new Memory<long>(list.ToArray()));
+                }
+            }
+
+            return indexMemory;
+        }
+
+        public Memory<long> GetIndexMemory(string ixFileName)
+        {
+            return _indexMemory[ixFileName];
         }
 
         public MemoryMappedFile OpenMMF(string fileName)
