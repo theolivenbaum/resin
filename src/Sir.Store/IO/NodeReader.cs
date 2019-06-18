@@ -572,27 +572,20 @@ namespace Sir.Store
 
         private Hit ClosestMatchInPage(
             Vector vector,
-            Memory<long> indexMemory,
+            Memory<VectorNodeData> indexMemory,
             MemoryMappedViewAccessor vectorView,
             IStringModel model
         )
         {
             int offset = 0;
-            const int blockLength = 5;
-            Span<long> page = indexMemory.Span;
+            Span<VectorNodeData> page = indexMemory.Span;
             VectorNode best = null;
             float highscore = 0;
 
             while (true)
             {
-                var vecOffset = page[offset];
-                var postingsOffset = page[offset + 1];
-                var componentCount = page[offset + 2];
-                var cursorTerminator = page[offset + 4];
-
-                offset += blockLength;
-
-                var cursorVector = model.DeserializeVector(vecOffset, (int)componentCount, vectorView);
+                var data = page[offset++];
+                var cursorVector = model.DeserializeVector(data.VectorOffset, (int)data.ComponentCount, vectorView);
                 var angle = model.CosAngle(cursorVector, vector);
 
                 if (angle >= model.IdenticalAngle)
@@ -600,19 +593,11 @@ namespace Sir.Store
                     if (best == null || angle > highscore)
                     {
                         highscore = angle;
-                        best = new VectorNode(cursorVector);
-                        best.PostingsOffset = postingsOffset;
+                        best = new VectorNode(cursorVector, new List<long> { data.PostingsOffset });
                     }
                     else if (angle == highscore)
                     {
-                        if (best.PostingsOffsets == null)
-                        {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
-                        }
-                        else
-                        {
-                            best.PostingsOffsets.Add(postingsOffset);
-                        }
+                        best.PostingsOffsets.Add(data.PostingsOffset);
                     }
 
                     break;
@@ -622,23 +607,15 @@ namespace Sir.Store
                     if (best == null || angle > highscore)
                     {
                         highscore = angle;
-                        best = new VectorNode(cursorVector);
-                        best.PostingsOffset = postingsOffset;
+                        best = new VectorNode(cursorVector, new List<long> { data.PostingsOffset });
                     }
                     else if (angle == highscore)
                     {
-                        if (best.PostingsOffsets == null)
-                        {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
-                        }
-                        else
-                        {
-                            best.PostingsOffsets.Add(postingsOffset);
-                        }
+                        best.PostingsOffsets.Add(data.PostingsOffset);
                     }
 
                     // We need to determine if we can traverse further left.
-                    bool canGoLeft = cursorTerminator == 0 || cursorTerminator == 1;
+                    bool canGoLeft = data.Terminator == 0 || data.Terminator == 1;
 
                     if (!canGoLeft)
                     {
@@ -652,32 +629,26 @@ namespace Sir.Store
                     if (best == null || angle > highscore)
                     {
                         highscore = angle;
-                        best = new VectorNode(cursorVector);
-                        best.PostingsOffset = postingsOffset;
+                        best = new VectorNode(cursorVector, new List<long> { data.PostingsOffset });
                     }
                     else if (angle == highscore)
                     {
-                        if (best.PostingsOffsets == null)
-                        {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
-                        }
-                        else
-                        {
-                            best.PostingsOffsets.Add(postingsOffset);
-                        }
+                        best.PostingsOffsets.Add(data.PostingsOffset);
                     }
 
                     // We need to determine if we can traverse further to the right.
 
-                    if (cursorTerminator == 0)
+                    if (data.Terminator == 0)
                     {
                         // There exists a left and a right child.
                         // Next node in bitmap is the left child. 
                         // To find cursor's right child we must skip over the left tree.
 
-                        SkipTree(indexMemory, ref offset);
+                        var weight = (int)page[offset++].Weight;
+
+                        offset += weight;
                     }
-                    else if (cursorTerminator != 2)
+                    else if (data.Terminator != 2)
                     {
                         // There is no right child.
 

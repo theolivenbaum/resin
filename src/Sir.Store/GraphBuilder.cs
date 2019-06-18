@@ -79,14 +79,7 @@ namespace Sir.Store
 
         public static void MergePostings(VectorNode target, VectorNode node)
         {
-            if (target.PostingsOffsets == null)
-            {
-                target.PostingsOffsets = new List<long> { target.PostingsOffset, node.PostingsOffset };
-            }
-            else
-            {
-                target.PostingsOffsets.Add(node.PostingsOffset);
-            }
+            ((List<long>)target.PostingsOffsets).AddRange(node.PostingsOffsets);
         }
 
         public static void Merge(VectorNode target, VectorNode node)

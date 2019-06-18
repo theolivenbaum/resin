@@ -17,7 +17,7 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
-        private readonly ConcurrentDictionary<string, ConcurrentDictionary<long, Memory<long>>> _indexMemory;
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<long, Memory<VectorNodeData>>> _indexMemory;
 
         private static readonly object WriteSync = new object();
         public string Dir { get; }
@@ -39,16 +39,16 @@ namespace Sir.Store
             _indexMemory = LoadIndexMemory();
         }
 
-        private ConcurrentDictionary<string, ConcurrentDictionary<long, Memory<long>>> LoadIndexMemory()
+        private ConcurrentDictionary<string, ConcurrentDictionary<long, Memory<VectorNodeData>>> LoadIndexMemory()
         {
-            var indexMemory = new ConcurrentDictionary<string, ConcurrentDictionary<long, Memory<long>>>();
+            var indexMemory = new ConcurrentDictionary<string, ConcurrentDictionary<long, Memory<VectorNodeData>>>();
 
             Parallel.ForEach(Directory.GetFiles(Dir, "*.ix"), fileName =>
             //foreach (var fileName in Directory.GetFiles(Dir, "*.ix"))
             {
                 var pageFileName = Path.Combine(Dir, $"{Path.GetFileNameWithoutExtension(fileName)}.ixp");
                 var indexFile = OpenMMF(fileName);
-                var pages = indexMemory.GetOrAdd(fileName, new ConcurrentDictionary<long, Memory<long>>());
+                var pages = indexMemory.GetOrAdd(fileName, new ConcurrentDictionary<long, Memory<VectorNodeData>>());
 
                 Parallel.ForEach(ReadPageInfo(pageFileName), page =>
                 //foreach (var page in ReadPageInfo(pageFileName))
@@ -59,8 +59,8 @@ namespace Sir.Store
                     {
                         try
                         {
-                            var length = page.length / sizeof(long);
-                            var buf = new long[length];
+                            var length = page.length / VectorNode.BlockSize;
+                            var buf = new VectorNodeData[length];
                             var read = indexView.ReadArray(0, buf, 0, buf.Length);
 
                             pages.GetOrAdd(page.offset, buf);
@@ -80,7 +80,7 @@ namespace Sir.Store
             return indexMemory;
         }
 
-        public Memory<long> GetIndexMemory(string ixFileName, long offset)
+        public Memory<VectorNodeData> GetIndexMemory(string ixFileName, long offset)
         {
             return _indexMemory[ixFileName][offset];
         }

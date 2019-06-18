@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Sir.Store
@@ -84,6 +85,14 @@ namespace Sir.Store
         {
             Vector = vector;
             PostingsOffset = -1;
+            VectorOffset = -1;
+        }
+
+        public VectorNode(Vector vector, IList<long> postingsOffsets)
+        {
+            Vector = vector;
+            PostingsOffset = -1;
+            PostingsOffsets = postingsOffsets;
             VectorOffset = -1;
         }
 
