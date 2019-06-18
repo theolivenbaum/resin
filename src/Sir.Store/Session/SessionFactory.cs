@@ -42,6 +42,7 @@ namespace Sir.Store
         private ConcurrentDictionary<string, ConcurrentDictionary<long, Memory<long>>> LoadIndexMemory()
         {
             var indexMemory = new ConcurrentDictionary<string, ConcurrentDictionary<long, Memory<long>>>();
+
             Parallel.ForEach(Directory.GetFiles(Dir, "*.ix"), fileName =>
             //foreach (var fileName in Directory.GetFiles(Dir, "*.ix"))
             {
@@ -49,7 +50,8 @@ namespace Sir.Store
                 var indexFile = OpenMMF(fileName);
                 var pages = indexMemory.GetOrAdd(fileName, new ConcurrentDictionary<long, Memory<long>>());
 
-                foreach (var page in ReadPageInfo(pageFileName))
+                Parallel.ForEach(ReadPageInfo(pageFileName), page =>
+                //foreach (var page in ReadPageInfo(pageFileName))
                 {
                     var timer = Stopwatch.StartNew();
 
@@ -72,7 +74,7 @@ namespace Sir.Store
                     }
 
                     this.Log($"loaded page {page} from {fileName} into memory in {timer.Elapsed}");
-                }
+                });
             });
 
             return indexMemory;
