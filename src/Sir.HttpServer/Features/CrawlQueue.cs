@@ -147,7 +147,7 @@ namespace Sir.HttpServer.Features
             using (var writeSession = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash(), indexSession))
             {
                 writeSession.Write(doc);
-                writeSession.Commit();
+                indexSession.CommitToDisk();
             }
         }
 

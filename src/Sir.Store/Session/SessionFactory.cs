@@ -208,7 +208,7 @@ namespace Sir.Store
                         writeSession.Write(doc);
                     }
 
-                    writeSession.Commit();
+                    indexSession.CommitToDisk();
                 }
 
                 _pageInfo.Clear();

@@ -53,7 +53,7 @@ namespace Sir.Store
             }
         }
 
-        public void Commit()
+        public void CommitToDisk()
         {
             if (_committing || _committed)
                 return;
@@ -122,6 +122,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
+            CommitToDisk();
         }
     }
 }

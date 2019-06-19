@@ -54,11 +54,6 @@ namespace Sir.Store
             base.Dispose();
         }
 
-        public void Commit()
-        {
-            _indexSession.Commit();
-        }
-
         /// <summary>
         /// Fields prefixed with "___" will not be stored.
         /// </summary>
