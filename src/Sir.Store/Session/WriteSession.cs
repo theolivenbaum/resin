@@ -1,6 +1,8 @@
-﻿using System;
+﻿using RocksDbSharp;
+using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
@@ -9,49 +11,23 @@ namespace Sir.Store
     /// </summary>
     public class WriteSession : DocumentSession, ILogger
     {
+        private readonly RocksDb _db;
         private readonly IConfigurationProvider _config;
-        private readonly ValueWriter _vals;
-        private readonly ValueWriter _keys;
-        private readonly DocMapWriter _docs;
-        private readonly ValueIndexWriter _valIx;
-        private readonly ValueIndexWriter _keyIx;
-        private readonly DocIndexWriter _docIx;
         private readonly TermIndexSession _indexSession;
+        private readonly byte[] _collectionId;
 
         public WriteSession(
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory,
             TermIndexSession indexSession,
-            IConfigurationProvider config) : base(collectionName, collectionId, sessionFactory)
+            IConfigurationProvider config,
+            RocksDb db) : base(collectionName, collectionId, sessionFactory)
         {
-            ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
-            KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", CollectionId)));
-            DocStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", CollectionId)));
-            ValueIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", CollectionId)));
-            KeyIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", CollectionId)));
-            DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
-
             _config = config;
-            _vals = new ValueWriter(ValueStream);
-            _keys = new ValueWriter(KeyStream);
-            _docs = new DocMapWriter(DocStream);
-            _valIx = new ValueIndexWriter(ValueIndexStream);
-            _keyIx = new ValueIndexWriter(KeyIndexStream);
-            _docIx = new DocIndexWriter(DocIndexStream);
             _indexSession = indexSession;
-        }
-
-        public override void Dispose()
-        {
-            _keys.Dispose();
-            _vals.Dispose();
-            _keyIx.Dispose();
-            _valIx.Dispose();
-            _docs.Dispose();
-            _docIx.Dispose();
-
-            base.Dispose();
+            _collectionId = BitConverter.GetBytes(CollectionId);
+            _db = db;
         }
 
         public void Commit()
@@ -63,62 +39,123 @@ namespace Sir.Store
         /// Fields prefixed with "___" will not be stored.
         /// </summary>
         /// <returns>Document ID</returns>
-        public long Write(IDictionary<string, object> document)
+        public void Write(IDictionary<string, object> document)
         {
             document["__created"] = DateTime.Now.ToBinary();
 
-            var docMap = new List<(long keyId, long valId)>();
-            var docId = _docIx.GetNextDocId();
+            Span<ulong> map = stackalloc ulong[document.Count];
+            var docId = Guid.NewGuid().ToByteArray();
+            var bigDocId = new BigInteger(docId);
+            var off = 0;
 
             foreach (var key in document.Keys)
             {
-                var val = document[key];
-
-                if (val == null)
+                if (key.StartsWith("___"))
                 {
                     continue;
                 }
 
-                var keyStr = key.ToString();
+                var value = document[key];
 
-                if (keyStr.StartsWith("___"))
+                if (value == null)
                 {
                     continue;
                 }
 
-                var keyHash = keyStr.ToHash();
-                long keyId;
+                var keyId = key.ToHash();
+                var keyIdBuf = BitConverter.GetBytes(keyId);
 
-                if (!SessionFactory.TryGetKeyId(CollectionId, keyHash, out keyId))
+                Put(keyIdBuf, key);
+
+                map[off++] = keyId;
+
+                var valueId = StreamHelper.Concat(docId, keyIdBuf);
+
+                Put(valueId, value);
+
+                var valStr = value as string;
+
+                if (!key.StartsWith("_") && valStr != null)
                 {
-                    // We have a new key!
-
-                    // store key
-                    var keyInfo = _keys.Append(keyStr);
-
-                    keyId = _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
-                    SessionFactory.PersistKeyMapping(CollectionId, keyHash, keyId);
-                }
-
-                // store value
-                var valInfo = _vals.Append(val);
-                var valId = _valIx.Append(valInfo.offset, valInfo.len, valInfo.dataType);
-
-                // store refs to keys and values
-                docMap.Add((keyId, valId));
-
-                // index
-                if (!keyStr.StartsWith("_") && valInfo.dataType == DataType.STRING)
-                {
-                    _indexSession.Put(docId, keyId, (string) val);
+                    _indexSession.Put(bigDocId, keyId, valStr);
                 }
             }
 
-            var docMeta = _docs.Append(docMap);
-
-            _docIx.Append(docMeta.offset, docMeta.length);
-
-            return docId;
+            _db.Put(docId, MemoryMarshal.Cast<ulong, byte>(map).ToArray());
         }
+
+        private void Put(byte[] key, object value)
+        {
+            Span<byte> buffer;
+            byte dataType;
+
+            if (value is bool)
+            {
+                buffer = BitConverter.GetBytes((bool)value);
+                dataType = DataType.BOOL;
+            }
+            else if (value is char)
+            {
+                buffer = BitConverter.GetBytes((char)value);
+                dataType = DataType.CHAR;
+            }
+            else if (value is float)
+            {
+                buffer = BitConverter.GetBytes((float)value);
+                dataType = DataType.FLOAT;
+            }
+            else if (value is int)
+            {
+                buffer = BitConverter.GetBytes((int)value);
+                dataType = DataType.INT;
+            }
+            else if (value is double)
+            {
+                buffer = BitConverter.GetBytes((double)value);
+                dataType = DataType.DOUBLE;
+            }
+            else if (value is long)
+            {
+                buffer = BitConverter.GetBytes((long)value);
+                dataType = DataType.LONG;
+            }
+            else if (value is DateTime)
+            {
+                buffer = BitConverter.GetBytes(((DateTime)value).ToBinary());
+                dataType = DataType.DATETIME;
+            }
+            else if (value is string)
+            {
+                buffer = System.Text.Encoding.Unicode.GetBytes((string)value);
+                dataType = DataType.STRING;
+            }
+            else
+            {
+                buffer = (byte[])value;
+                dataType = DataType.STREAM;
+            }
+
+            Span<byte> data = stackalloc byte[buffer.Length + 1];
+
+            buffer.CopyTo(data);
+
+            data[data.Length - 1] = dataType;
+
+            _db.Put(key, data.ToArray());
+        }
+
+        private void Put(byte[] key, string value)
+        {
+            var buffer = System.Text.Encoding.Unicode.GetBytes(value);
+
+            _db.Put(key, buffer);
+        }
+    }
+
+    public static class DbKeys
+    {
+        public static int DocId = 16;
+        public static int KeyId = 8;
+        public static int ValueId = 24;
     }
 }

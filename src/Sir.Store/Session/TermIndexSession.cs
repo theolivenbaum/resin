@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Numerics;
 
 namespace Sir.Store
 {
@@ -12,11 +13,10 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
-        private readonly ConcurrentDictionary<long, VectorNode> _dirty;
+        private readonly ConcurrentDictionary<ulong, VectorNode> _dirty;
         private bool _committed;
         private bool _committing;
         private long _merges;
-        private readonly ProducerConsumerQueue<(long, long, string)> _builder;
 
         public TermIndexSession(
             string collectionName,
@@ -27,26 +27,22 @@ namespace Sir.Store
         {
             _config = config;
             _model = tokenizer;
-            _dirty = new ConcurrentDictionary<long, VectorNode>();
-
-            var numThreads = int.Parse(_config.Get("write_thread_count"));
-
-            _builder = new ProducerConsumerQueue<(long, long, string)>(numThreads, BuildModel);
+            _dirty = new ConcurrentDictionary<ulong, VectorNode>();
         }
 
-        public void Put(long docId, long keyId, string value)
+        public void Put(BigInteger docId, ulong keyId, string value)
         {
-            _builder.Enqueue((docId, keyId, value));
+            BuildModel(docId, keyId, value);
         }
 
-        private void BuildModel((long docId, long keyId, string value) workItem)
+        private void BuildModel(BigInteger docId, ulong keyId, string value)
         {
-            var ix = GetOrCreateIndex(workItem.keyId);
-            var tokens = _model.Tokenize(workItem.value);
+            var ix = GetOrCreateIndex(keyId);
+            var tokens = _model.Tokenize(value);
 
             foreach (var vector in tokens.Embeddings)
             {
-                if (!GraphBuilder.Add(ix, new VectorNode(vector, workItem.docId), _model))
+                if (!GraphBuilder.Add(ix, new VectorNode(vector, docId), _model))
                 {
                     _merges++;
                 }
@@ -59,8 +55,6 @@ namespace Sir.Store
                 return;
 
             _committing = true;
-
-            _builder.Dispose();
 
             this.Log($"merges: {_merges}");
 
@@ -84,7 +78,7 @@ namespace Sir.Store
             this.Log(string.Format("***FLUSHED***"));
         }
 
-        private void Validate((long keyId, long docId, AnalyzedData tokens) item)
+        private void Validate((ulong keyId, BigInteger docId, AnalyzedData tokens) item)
         {
             var tree = GetOrCreateIndex(item.keyId);
 
@@ -115,7 +109,7 @@ namespace Sir.Store
             }
         }
 
-        private VectorNode GetOrCreateIndex(long keyId)
+        private VectorNode GetOrCreateIndex(ulong keyId)
         {
             return _dirty.GetOrAdd(keyId, new VectorNode());
         }

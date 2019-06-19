@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RocksDbSharp;
+using System;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,9 +19,9 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
         private readonly IStringModel _model;
-        private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private readonly ConcurrentDictionary<string, VectorNode> _graph;
+        private readonly RocksDb _db;
         private static readonly object WriteSync = new object();
         private bool _isInitialized;
 
@@ -37,11 +38,14 @@ namespace Sir.Store
             }
 
             _model = model;
-            _keys = LoadKeys();
             _config = config;
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
             _graph = new ConcurrentDictionary<string, VectorNode>();
+
+            var options = new DbOptions().SetCreateIfMissing(true);
+
+            _db = RocksDb.Open(options, Path.Combine(Dir, "db"));
         }
 
         private void LoadGraph()
@@ -189,8 +193,6 @@ namespace Sir.Store
             }
 
             _pageInfo.Clear();
-
-            _keys.Clear();
         }
 
         public void Execute(Job job)
@@ -228,88 +230,6 @@ namespace Sir.Store
             });
         }
 
-        public void RefreshKeys()
-        {
-            _keys = LoadKeys();
-        }
-
-        public ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> LoadKeys()
-        {
-            var timer = new Stopwatch();
-            timer.Start();
-
-            var allkeys = new ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>>();
-
-            foreach (var keyFile in Directory.GetFiles(Dir, "*.kmap"))
-            {
-                var collectionId = ulong.Parse(Path.GetFileNameWithoutExtension(keyFile));
-                ConcurrentDictionary<ulong, long> keys;
-
-                if (!allkeys.TryGetValue(collectionId, out keys))
-                {
-                    keys = new ConcurrentDictionary<ulong, long>();
-                    allkeys.GetOrAdd(collectionId, keys);
-                }
-
-                using (var stream = new FileStream(keyFile, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
-                {
-                    long i = 0;
-                    var buf = new byte[sizeof(ulong)];
-                    var read = stream.Read(buf, 0, buf.Length);
-
-                    while (read > 0)
-                    {
-                        keys.GetOrAdd(BitConverter.ToUInt64(buf, 0), i++);
-
-                        read = stream.Read(buf, 0, buf.Length);
-                    }
-                }
-            }
-
-            this.Log("loaded keys into memory in {0}", timer.Elapsed);
-
-            return allkeys;
-        }
-
-        public void PersistKeyMapping(ulong collectionId, ulong keyHash, long keyId)
-        {
-            var fileName = Path.Combine(Dir, string.Format("{0}.kmap", collectionId));
-            ConcurrentDictionary<ulong, long> keys;
-
-            if (!_keys.TryGetValue(collectionId, out keys))
-            {
-                keys = new ConcurrentDictionary<ulong, long>();
-                _keys.GetOrAdd(collectionId, keys);
-            }
-
-            if (!keys.ContainsKey(keyHash))
-            {
-                keys.GetOrAdd(keyHash, keyId);
-
-                using (var stream = CreateAppendStream(fileName))
-                {
-                    stream.Write(BitConverter.GetBytes(keyHash), 0, sizeof(ulong));
-                }
-            }
-        }
-
-        public long GetKeyId(ulong collectionId, ulong keyHash)
-        {
-            return _keys[collectionId][keyHash];
-        }
-
-        public bool TryGetKeyId(ulong collectionId, ulong keyHash, out long keyId)
-        {
-            var keys = _keys.GetOrAdd(collectionId, new ConcurrentDictionary<ulong, long>());
-
-            if (!keys.TryGetValue(keyHash, out keyId))
-            {
-                keyId = -1;
-                return false;
-            }
-            return true;
-        }
-
         public WarmupSession CreateWarmupSession(string collectionName, ulong collectionId, string baseUrl)
         {
             return new WarmupSession(collectionName, collectionId, this, _model, _config, baseUrl);
@@ -323,7 +243,7 @@ namespace Sir.Store
         public WriteSession CreateWriteSession(string collectionName, ulong collectionId, TermIndexSession indexSession)
         {
             return new WriteSession(
-                collectionName, collectionId, this, indexSession, _config);
+                collectionName, collectionId, this, indexSession, _config, _db);
         }
 
         public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId)
@@ -333,12 +253,13 @@ namespace Sir.Store
 
         public ValidateSession CreateValidateSession(string collectionName, ulong collectionId)
         {
-            return new ValidateSession(collectionName, collectionId, this, _model, _config);
+            return new ValidateSession(
+                collectionName, collectionId, this, _model, _config, CreateReadSession(collectionName, collectionId));
         }
 
         public ReadSession CreateReadSession(string collectionName, ulong collectionId)
         {
-            return new ReadSession(collectionName, collectionId, this, _config, _model);
+            return new ReadSession(collectionName, collectionId, this, _config, _model, _db);
         }
 
         public Stream CreateAsyncReadStream(string fileName)
@@ -367,7 +288,7 @@ namespace Sir.Store
 
         public bool CollectionExists(ulong collectionId)
         {
-            return File.Exists(Path.Combine(Dir, collectionId + ".val"));
+            return File.Exists(Path.Combine(Dir, collectionId + ".pos"));
         }
 
         public void Dispose()

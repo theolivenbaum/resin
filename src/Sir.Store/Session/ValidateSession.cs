@@ -21,17 +21,18 @@ namespace Sir.Store
             ulong collectionId,
             SessionFactory sessionFactory, 
             IStringModel tokenizer,
-            IConfigurationProvider config
+            IConfigurationProvider config,
+            ReadSession readSession
             ) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
             _tokenizer = tokenizer;
-            _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, tokenizer);
+            _readSession = readSession;
             _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedData tokens)>(
                 int.Parse(_config.Get("write_thread_count")), Validate);
         }
 
-        public void Validate(IEnumerable<IDictionary> documents, params long[] excludeKeyIds)
+        public void Validate(IEnumerable<IDictionary> documents, params ulong[] excludeKeyIds)
         {
             foreach (var doc in documents)
             {
@@ -43,7 +44,7 @@ namespace Sir.Store
 
                     if (!strKey.StartsWith("__"))
                     {
-                        var keyId = SessionFactory.GetKeyId(CollectionId, strKey.ToHash());
+                        var keyId = strKey.ToHash();
 
                         if (excludeKeyIds.Contains(keyId))
                         {

@@ -22,7 +22,7 @@ namespace Sir.Store
 
         public NodeReader(
             ulong collectionId,
-            long keyId,
+            ulong keyId,
             SessionFactory sessionFactory,
             IConfigurationProvider config)
         {
@@ -40,7 +40,7 @@ namespace Sir.Store
 
         public Hit ClosestMatch(Vector vector, IStringModel model)
         {
-            var hits = ClosestMatchInMemory(vector, model);
+            var hits = ClosestMatchOnDisk(vector, model);
             var time = Stopwatch.StartNew();
             Hit best = null;
 
@@ -142,7 +142,7 @@ namespace Sir.Store
             IStringModel model
         )
         {
-            Span<byte> block = new byte[VectorNode.BlockSize];
+            Span<byte> block = stackalloc byte[VectorNode.BlockSize];
 
             var read = indexStream.Read(block);
 

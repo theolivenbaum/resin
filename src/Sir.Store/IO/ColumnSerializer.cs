@@ -6,7 +6,7 @@ namespace Sir.Store
 {
     public class ColumnSerializer : ILogger, IDisposable
     {
-        private readonly long _keyId;
+        private readonly ulong _keyId;
         private readonly ulong _collectionId;
         private readonly SessionFactory _sessionFactory;
         private static readonly object _indexFileSync = new object();
@@ -15,7 +15,7 @@ namespace Sir.Store
 
         public ColumnSerializer(
             ulong collectionId, 
-            long keyId, 
+            ulong keyId, 
             SessionFactory sessionFactory)
         {
             _keyId = keyId;

@@ -9,7 +9,7 @@
         public AnalyzedData TokenizedString { get; private set; }
         public ulong KeyHash { get; private set; }
         public int Index { get; private set; }
-        public long? KeyId { get; private set; }
+        public ulong? KeyId { get; private set; }
         public Vector Vector { get; private set; }
 
         public Term(object key, AnalyzedData tokenizedString, int index)
@@ -21,7 +21,7 @@
             Vector = tokenizedString.Embeddings[index];
         }
 
-        public Term(long keyId, AnalyzedData tokenizedString, int index)
+        public Term(ulong keyId, AnalyzedData tokenizedString, int index)
         {
             KeyId = keyId;
             TokenizedString = tokenizedString;
@@ -36,7 +36,7 @@
             Vector = node.Vector;
         }
 
-        public Term(long keyId, VectorNode node)
+        public Term(ulong keyId, VectorNode node)
         {
             KeyId = keyId;
             Vector = node.Vector;

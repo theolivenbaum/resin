@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 
 namespace Sir.Store
@@ -20,7 +21,7 @@ namespace Sir.Store
         private float _angleWhenAdded;
         private object _sync = new object();
 
-        public HashSet<long> DocIds { get; set; }
+        public HashSet<BigInteger> DocIds { get; set; }
         public VectorNode Ancestor { get { return _ancestor; } }
         public long ComponentCount { get; set; }
         public long VectorOffset { get; set; }
@@ -96,12 +97,12 @@ namespace Sir.Store
             VectorOffset = -1;
         }
 
-        public VectorNode(Vector vector, long docId)
+        public VectorNode(Vector vector, BigInteger docId)
         {
             Vector = vector;
             PostingsOffset = -1;
             VectorOffset = -1;
-            DocIds = new HashSet<long>();
+            DocIds = new HashSet<BigInteger>();
             DocIds.Add(docId);
         }
 

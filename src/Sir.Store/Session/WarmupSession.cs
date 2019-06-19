@@ -38,7 +38,7 @@ namespace Sir.Store
             this.Log("initiated warmup session");
         }
 
-        public void Warmup(IEnumerable<IDictionary> documents, params long[] excludeKeyIds)
+        public void Warmup(IEnumerable<IDictionary> documents, params ulong[] excludeKeyIds)
         {
             foreach (var doc in documents)
             {
@@ -48,7 +48,7 @@ namespace Sir.Store
 
                     if (!strKey.StartsWith("__"))
                     {
-                        var keyId = SessionFactory.GetKeyId(CollectionId, strKey.ToHash());
+                        var keyId = strKey.ToHash();
 
                         if (excludeKeyIds.Contains(keyId))
                         {

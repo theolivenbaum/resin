@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 namespace Sir.Store
@@ -14,7 +15,7 @@ namespace Sir.Store
     {
         private readonly Stream _stream;
         private readonly MemoryMappedViewAccessor _view;
-        private readonly Action<long, IDictionary<long, float>, float> _read
+        private readonly Action<long, IDictionary<BigInteger, float>, float> _read
 ;
         public PostingsReader(Stream stream)
         {
@@ -32,7 +33,7 @@ namespace Sir.Store
         {
             var timer = Stopwatch.StartNew();
 
-            IDictionary<long, float> result = null;
+            IDictionary<BigInteger, float> result = null;
 
             foreach (var q in query)
             {
@@ -50,7 +51,7 @@ namespace Sir.Store
                         }
                         else
                         {
-                            var intersection = new Dictionary<long, float>();
+                            var intersection = new Dictionary<BigInteger, float>();
 
                             foreach (var doc in result)
                             {
@@ -96,10 +97,10 @@ namespace Sir.Store
                 }
             }
 
-            var sortedByScore = new List<KeyValuePair<long, float>>(result);
+            var sortedByScore = new List<KeyValuePair<BigInteger, float>>(result);
             sortedByScore.Sort(
-                delegate (KeyValuePair<long, float> pair1,
-                KeyValuePair<long, float> pair2)
+                delegate (KeyValuePair<BigInteger, float> pair1,
+                KeyValuePair<BigInteger, float> pair2)
                 {
                     return pair2.Value.CompareTo(pair1.Value);
                 }
@@ -113,9 +114,9 @@ namespace Sir.Store
             return new ScoredResult { SortedDocuments = sortedByScore.GetRange(index, count), Total = sortedByScore.Count };
         }
 
-        private IDictionary<long, float> Read(IList<long> offsets, float score)
+        private IDictionary<BigInteger, float> Read(IList<long> offsets, float score)
         {
-            var result = new Dictionary<long, float>();
+            var result = new Dictionary<BigInteger, float>();
 
             foreach(var offset in offsets)
             {
@@ -125,7 +126,7 @@ namespace Sir.Store
             return result;
         }
 
-        private void GetPostingsFromStream(long postingsOffset, IDictionary<long, float> result, float score)
+        private void GetPostingsFromStream(long postingsOffset, IDictionary<BigInteger, float> result, float score)
         {
             _stream.Seek(postingsOffset, SeekOrigin.Begin);
 
@@ -135,22 +136,22 @@ namespace Sir.Store
 
             var numOfPostings = BitConverter.ToInt64(buf);
 
-            Span<byte> listBuf = stackalloc byte[sizeof(long) * (int)numOfPostings];
+            Span<byte> listBuf = stackalloc byte[DbKeys.DocId * (int)numOfPostings];
 
             _stream.Read(listBuf);
 
-            foreach (var word in MemoryMarshal.Cast<byte, long>(listBuf).ToArray())
+            for (int i = 0; i < numOfPostings; i++)
             {
-                result.Add(word, score);
+                result.Add(new BigInteger(listBuf.Slice(DbKeys.DocId * i, DbKeys.DocId).ToArray()), score);
             }
         }
 
-        private void GetPostingsFromView(long postingsOffset, IDictionary<long, float> result, float score)
+        private void GetPostingsFromView(long postingsOffset, IDictionary<BigInteger, float> result, float score)
         {
             var numOfPostings = _view.ReadInt64(postingsOffset);
-            var buf = new long[numOfPostings];
+            var buf = new BigInteger[numOfPostings];
 
-            _view.ReadArray(postingsOffset + sizeof(long), buf, 0, buf.Length);
+            _view.ReadArray(postingsOffset + buf.Length, buf, 0, buf.Length);
 
             foreach (var word in buf)
             {
@@ -161,7 +162,7 @@ namespace Sir.Store
 
     public class ScoredResult
     {
-        public IList<KeyValuePair<long, float>> SortedDocuments { get; set; }
+        public IList<KeyValuePair<BigInteger, float>> SortedDocuments { get; set; }
         public int Total { get; set; }
     }
 }

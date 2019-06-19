@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
@@ -44,42 +43,30 @@ namespace Sir.Store
                 long total;
                 var stream = new MemoryStream();
 
-                if (request.Query.ContainsKey("id"))
+                var query = _httpQueryParser.Parse(collectionId, model, request);
+
+                if (query == null)
                 {
-                    var ids = request.Query["id"].Select(s => long.Parse(s));
-
-                    docs = session.ReadDocs(ids);
-                    total = docs.Count;
-
-                    this.Log(string.Format("executed lookup by id in {0}", timer.Elapsed));
+                    return new ResponseModel { MediaType = "application/json", Total = 0 };
                 }
-                else
+
+                var result = session.Read(query);
+
+                docs = result.Docs;
+                total = result.Total;
+
+                this.Log(string.Format("executed query {0} in {1}", query, timer.Elapsed));
+
+                if (request.Query.ContainsKey("create"))
                 {
-                    var query = _httpQueryParser.Parse(collectionId, model, request);
+                    var newCollectionName = request.Query["newCollection"].ToString();
 
-                    if (query == null)
+                    if (string.IsNullOrWhiteSpace(newCollectionName))
                     {
-                        return new ResponseModel { MediaType = "application/json", Total = 0 };
+                        newCollectionName = Guid.NewGuid().ToString();
                     }
 
-                    var result = session.Read(query);
-
-                    docs = result.Docs;
-                    total = result.Total;
-
-                    this.Log(string.Format("executed query {0} in {1}", query, timer.Elapsed));
-
-                    if (request.Query.ContainsKey("create"))
-                    {
-                        var newCollectionName = request.Query["newCollection"].ToString();
-
-                        if (string.IsNullOrWhiteSpace(newCollectionName))
-                        {
-                            newCollectionName = Guid.NewGuid().ToString();
-                        }
-
-                        _sessionFactory.Execute(new Job(newCollectionName, docs, model));
-                    }
+                    _sessionFactory.Execute(new Job(newCollectionName, docs, model));
                 }
 
                 Serialize(docs, stream);
