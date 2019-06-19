@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sir.Core;
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Numerics;
@@ -15,6 +16,7 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<ulong, VectorNode> _dirty;
         private long _merges;
         private static object _sync = new object();
+        private readonly ProducerConsumerQueue<(BigInteger, ulong, string)> _builder;
 
         public TermIndexSession(
             string collectionName,
@@ -26,21 +28,25 @@ namespace Sir.Store
             _config = config;
             _model = tokenizer;
             _dirty = new ConcurrentDictionary<ulong, VectorNode>();
+
+            var numThreads = int.Parse(_config.Get("write_thread_count"));
+
+            _builder = new ProducerConsumerQueue<(BigInteger, ulong, string)>(numThreads, BuildModel);
         }
 
         public void Put(BigInteger docId, ulong keyId, string value)
         {
-            BuildModel(docId, keyId, value);
+            _builder.Enqueue((docId, keyId, value));
         }
 
-        private void BuildModel(BigInteger docId, ulong keyId, string value)
+        private void BuildModel((BigInteger docId, ulong keyId, string value) item)
         {
-            var ix = GetOrCreateIndex(keyId);
-            var tokens = _model.Tokenize(value);
+            var ix = GetOrCreateIndex(item.keyId);
+            var tokens = _model.Tokenize(item.value);
 
             foreach (var vector in tokens.Embeddings)
             {
-                if (!GraphBuilder.Add(ix, new VectorNode(vector, docId), _model))
+                if (!GraphBuilder.Add(ix, new VectorNode(vector, item.docId), _model))
                 {
                     _merges++;
                 }
@@ -49,6 +55,13 @@ namespace Sir.Store
 
         public void CommitToDisk()
         {
+            _builder.Dispose();
+
+            if (_dirty.Count == 0)
+            {
+                return;
+            }
+
             lock (_sync)
             {
                 this.Log($"merges: {_merges}");

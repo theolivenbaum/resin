@@ -201,11 +201,11 @@ namespace Sir.Store
             using (var indexSession = CreateIndexSession(job.Collection, colId))
             using (var writeSession = CreateWriteSession(job.Collection, colId, indexSession))
             {
-                Parallel.ForEach(job.Documents, doc =>
-                //foreach (var doc in job.Documents)
+                //Parallel.ForEach(job.Documents, doc =>
+                foreach (var doc in job.Documents)
                 {
                     writeSession.Write(doc);
-                });
+                }//);
 
                 indexSession.CommitToDisk();
             }
