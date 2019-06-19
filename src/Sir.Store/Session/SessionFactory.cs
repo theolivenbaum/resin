@@ -15,7 +15,6 @@ namespace Sir.Store
     /// </summary>
     public class SessionFactory : IDisposable, ILogger
     {
-        private readonly IConfigurationProvider _config;
         private readonly ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
         private readonly IStringModel _model;
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
@@ -25,11 +24,12 @@ namespace Sir.Store
         private bool _isInitialized;
 
         public string Dir { get; }
-        public IConfigurationProvider Config { get { return _config; } }
+        public IConfigurationProvider Config { get; }
 
         public SessionFactory(IConfigurationProvider config, IStringModel model)
         {
             Dir = config.Get("data_dir");
+            Config = config;
 
             if (!Directory.Exists(Dir))
             {
@@ -38,7 +38,6 @@ namespace Sir.Store
 
             _model = model;
             _keys = LoadKeys();
-            _config = config;
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
             _graph = new ConcurrentDictionary<string, VectorNode>();
@@ -312,7 +311,7 @@ namespace Sir.Store
 
         public WarmupSession CreateWarmupSession(string collectionName, ulong collectionId, string baseUrl)
         {
-            return new WarmupSession(collectionName, collectionId, this, _model, _config, baseUrl);
+            return new WarmupSession(collectionName, collectionId, this, _model, Config, baseUrl);
         }
 
         public DocumentStreamSession CreateDocumentStreamSession(string collectionName, ulong collectionId)
@@ -323,22 +322,22 @@ namespace Sir.Store
         public WriteSession CreateWriteSession(string collectionName, ulong collectionId, TermIndexSession indexSession)
         {
             return new WriteSession(
-                collectionName, collectionId, this, indexSession, _config);
+                collectionName, collectionId, this, indexSession, Config);
         }
 
         public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId)
         {
-            return new TermIndexSession(collectionName, collectionId, this, _model, _config);
+            return new TermIndexSession(collectionName, collectionId, this, _model, Config);
         }
 
         public ValidateSession CreateValidateSession(string collectionName, ulong collectionId)
         {
-            return new ValidateSession(collectionName, collectionId, this, _model, _config);
+            return new ValidateSession(collectionName, collectionId, this, _model, Config);
         }
 
         public ReadSession CreateReadSession(string collectionName, ulong collectionId)
         {
-            return new ReadSession(collectionName, collectionId, this, _config, _model);
+            return new ReadSession(collectionName, collectionId, this, Config, _model);
         }
 
         public Stream CreateAsyncReadStream(string fileName)
