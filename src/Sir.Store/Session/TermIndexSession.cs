@@ -16,34 +16,32 @@ namespace Sir.Store
         private bool _committed;
         private bool _committing;
         private long _merges;
-        private readonly ProducerConsumerQueue<(long, long, string)> _builder;
 
         public TermIndexSession(
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
-            IStringModel tokenizer,
+            IStringModel model,
             IConfigurationProvider config) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
-            _model = tokenizer;
+            _model = model;
             _dirty = new ConcurrentDictionary<long, VectorNode>();
-            _builder = new ProducerConsumerQueue<(long, long, string)>(1, BuildModel);
         }
 
         public void Put(long docId, long keyId, string value)
         {
-            _builder.Enqueue((docId, keyId, value));
+            BuildModel(docId, keyId, value);
         }
 
-        private void BuildModel((long docId, long keyId, string value) workItem)
+        private void BuildModel(long docId, long keyId, string value)
         {
-            var ix = GetOrCreateIndex(workItem.keyId);
-            var tokens = _model.Tokenize(workItem.value);
+            var ix = GetOrCreateIndex(keyId);
+            var tokens = _model.Tokenize(value);
 
             foreach (var vector in tokens.Embeddings)
             {
-                if (!GraphBuilder.Add(ix, new VectorNode(vector, workItem.docId), _model))
+                if (!GraphBuilder.Add(ix, new VectorNode(vector, docId), _model))
                 {
                     _merges++;
                 }
@@ -56,8 +54,6 @@ namespace Sir.Store
                 return;
 
             _committing = true;
-
-            _builder.Dispose();
 
             this.Log($"merges: {_merges}");
 
