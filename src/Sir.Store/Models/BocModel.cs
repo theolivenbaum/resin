@@ -131,7 +131,15 @@ namespace Sir.Store
 
         public float CosAngle(Vector vec1, Vector vec2)
         {
-            long dotProduct = Dot((IndexedVector)vec1, (IndexedVector)vec2);
+            var ivec1 = vec1 as IndexedVector;
+            var ivec2 = vec2 as IndexedVector;
+
+            if (ivec1 == null || ivec2 == null)
+            {
+                return 0;
+            }
+
+            long dotProduct = Dot(ivec1, ivec2);
             long dotSelf1 = CbocModel.DotSelf(vec1);
             long dotSelf2 = CbocModel.DotSelf(vec2);
 

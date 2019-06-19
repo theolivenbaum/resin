@@ -79,21 +79,35 @@ namespace Sir.Store
 
         public static void MergePostings(VectorNode target, VectorNode node)
         {
-            ((List<long>)target.PostingsOffsets).AddRange(node.PostingsOffsets);
+            if (target.PostingsOffsets == null)
+            {
+                target.PostingsOffsets = new List<long> { target.PostingsOffset };
+            }
+
+            if (node.PostingsOffsets == null)
+            {
+                target.PostingsOffsets.Add(node.PostingsOffset);
+            }
+            else
+            {
+                ((List<long>)target.PostingsOffsets).AddRange(node.PostingsOffsets);
+            }
         }
 
         public static void Merge(VectorNode target, VectorNode node)
         {
             MergeDocIds(target, node);
-
-            if (target.PostingsOffsets != null)
-            {
-                MergePostings(target, node);
-            }
+            MergePostings(target, node);
+            
         }
 
         public static void MergeDocIds(VectorNode target, VectorNode node)
         {
+            if (target.DocIds == null || node.DocIds == null)
+            {
+                return;
+            }
+
             foreach (var docId in node.DocIds)
             {
                 target.DocIds.Add(docId);

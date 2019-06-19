@@ -33,12 +33,12 @@ namespace Sir.Store
         {
         }
 
-        public ResponseModel Read(string collectionName, IStringModel tokenizer, HttpRequest request)
+        public ResponseModel Read(string collectionName, IStringModel model, HttpRequest request)
         {
             var timer = Stopwatch.StartNew();
             var collectionId = collectionName.ToHash();
 
-            using (var session = _sessionFactory.CreateReadSession(collectionName, collectionId, tokenizer))
+            using (var session = _sessionFactory.CreateReadSession(collectionName, collectionId))
             {
                 IList<IDictionary<string, object>> docs;
                 long total;
@@ -55,7 +55,7 @@ namespace Sir.Store
                 }
                 else
                 {
-                    var query = _httpQueryParser.Parse(collectionId, tokenizer, request);
+                    var query = _httpQueryParser.Parse(collectionId, model, request);
 
                     if (query == null)
                     {
@@ -78,7 +78,7 @@ namespace Sir.Store
                             newCollectionName = Guid.NewGuid().ToString();
                         }
 
-                        _sessionFactory.Execute(new Job(newCollectionName, docs, tokenizer));
+                        _sessionFactory.Execute(new Job(newCollectionName, docs, model));
                     }
                 }
 

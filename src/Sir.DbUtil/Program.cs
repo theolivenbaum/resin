@@ -14,6 +14,8 @@ namespace Sir.DbUtil
     {
         static void Main(string[] args)
         {
+            var model = new BocModel();
+
             Console.WriteLine("processing command: {0}", string.Join(" ", args));
 
             Logging.SendToConsole = true;
@@ -26,7 +28,8 @@ namespace Sir.DbUtil
 
                 Query(
                     dir: args[1], 
-                    collectionName: args[2]);
+                    collectionName: args[2],
+                    model);
             }
             else if (command == "create-bow")
             {
@@ -166,13 +169,13 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void Warmup(string dir, Uri uri, string collectionName, int skip, int take, IStringModel tokenizer)
+        private static void Warmup(string dir, Uri uri, string collectionName, int skip, int take, IStringModel model)
         {
-            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini")))
+            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
             {
                 using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
                 {
-                    using (var session = sessionFactory.CreateWarmupSession(collectionName, collectionName.ToHash(), uri.ToString(), tokenizer))
+                    using (var session = sessionFactory.CreateWarmupSession(collectionName, collectionName.ToHash(), uri.ToString()))
                     {
                         session.Warmup(documentStreamSession.ReadDocs(skip, take), 0);
                     }
@@ -180,12 +183,12 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void Query(string dir, string collectionName)
+        private static void Query(string dir, string collectionName, IStringModel model)
         {
             var tokenizer = new CbocModel();
             var qp = new QueryParser();
             var sessionFactory = new SessionFactory(
-                new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini")));
+                new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini")), model);
 
             while (true)
             {
@@ -202,7 +205,7 @@ namespace Sir.DbUtil
                 q.Skip = 0;
                 q.Take = 100;
 
-                using (var session = sessionFactory.CreateReadSession(collectionName, collectionName.ToHash(), new BocModel()))
+                using (var session = sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
                 {
                     var result = session.Read(q);
                     var docs = result.Docs;
@@ -230,10 +233,10 @@ namespace Sir.DbUtil
             var files = Directory.GetFiles(dir, "*.docs");
             var time = Stopwatch.StartNew();
 
-            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini")))
+            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), new BocModel()))
             {
                 using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
-                using (var validateSession = sessionFactory.CreateValidateSession(collectionName, collectionName.ToHash(), new CbocModel()))
+                using (var validateSession = sessionFactory.CreateValidateSession(collectionName, collectionName.ToHash()))
                 {
                     validateSession.Validate(documentStreamSession.ReadDocs(skip, take), 0, 1, 2, 3, 6);
                 }

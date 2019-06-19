@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -16,15 +17,17 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
+        private readonly IStringModel _model;
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
-        private readonly ConcurrentDictionary<string, ConcurrentDictionary<long, IMemoryOwner<VectorNodeData>>> _indexMemory;
-
+        private readonly ConcurrentDictionary<string, VectorNode> _graph;
         private static readonly object WriteSync = new object();
+        private bool _isInitialized;
+
         public string Dir { get; }
         public IConfigurationProvider Config { get { return _config; } }
 
-        public SessionFactory(IConfigurationProvider config)
+        public SessionFactory(IConfigurationProvider config, IStringModel model)
         {
             Dir = config.Get("data_dir");
 
@@ -33,11 +36,70 @@ namespace Sir.Store
                 Directory.CreateDirectory(Dir);
             }
 
+            _model = model;
             _keys = LoadKeys();
             _config = config;
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
-            _indexMemory = LoadIndexMemory();
+            _graph = new ConcurrentDictionary<string, VectorNode>();
+        }
+
+        private void LoadGraph()
+        {
+            _isInitialized = false;
+
+            var gtimer = Stopwatch.StartNew();
+
+            Parallel.ForEach(Directory.GetFiles(Dir, "*.ix"), fileName =>
+            //foreach (var fileName in Directory.GetFiles(Dir, "*.ix"))
+            {
+                var ftimer = Stopwatch.StartNew();
+                var pageFileName = Path.Combine(Dir, $"{Path.GetFileNameWithoutExtension(fileName)}.ixp");
+                var vectorFileName = Path.Combine(Dir, $"{Path.GetFileNameWithoutExtension(fileName)}.vec");
+                var ixFile = OpenMMF(fileName);
+                var vecFile = OpenMMF(vectorFileName);
+                var root = _graph.GetOrAdd(fileName, new VectorNode());
+
+                Parallel.ForEach(ReadPageInfo(pageFileName), page =>
+                //foreach (var page in ReadPageInfo(pageFileName))
+                {
+                    var timer = Stopwatch.StartNew();
+
+                    using (var vectorView = vecFile.CreateViewAccessor(0, 0))
+                    using (var indexView = ixFile.CreateViewAccessor(page.offset, page.length))
+                    {
+                        try
+                        {
+                            var length = page.length / VectorNode.BlockSize;
+                            var buf = new VectorNodeData[length];
+                            var read = indexView.ReadArray(0, buf, 0, buf.Length);
+
+                            foreach (var item in buf)
+                            {
+                                var vector = _model.DeserializeVector(
+                                    item.VectorOffset, (int)item.ComponentCount, vectorView);
+
+                                GraphBuilder.Add(
+                                    root, new VectorNode(vector, new List<long> { item.PostingsOffset }), _model);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Log(ex.ToString());
+
+                            throw;
+                        }
+                    }
+
+                    this.Log($"loaded page {page} from {fileName} into memory in {timer.Elapsed}");
+                });
+
+                this.Log($"{fileName} fully loaded into memory in {ftimer.Elapsed}");
+            });
+
+            this.Log($"graph fully loaded into memory in {gtimer.Elapsed}");
+
+            _isInitialized = true;
         }
 
         private ConcurrentDictionary<string, ConcurrentDictionary<long, IMemoryOwner<VectorNodeData>>> LoadIndexMemory()
@@ -82,9 +144,31 @@ namespace Sir.Store
             return indexMemory;
         }
 
-        public Memory<VectorNodeData> GetIndexMemory(string ixFileName, long offset)
+        public void BeginInit()
         {
-            return _indexMemory[ixFileName][offset].Memory;
+            new Thread(() =>
+            {
+                Thread.CurrentThread.IsBackground = true;
+
+                try
+                {
+                    LoadGraph();
+
+                }
+                catch (Exception ex)
+                {
+                    this.Log(ex.ToString());
+                }
+            }).Start();
+        }
+
+        public VectorNode GetGraph(string ixFileName)
+        {
+            if (!_isInitialized)
+                throw new InvalidOperationException(
+                    "Unable to respond while initializing. Check log to see progress of init.");
+
+            return _graph[ixFileName];
         }
 
         public MemoryMappedFile OpenMMF(string fileName)
@@ -116,7 +200,7 @@ namespace Sir.Store
                 var timer = Stopwatch.StartNew();
                 var colId = job.Collection.ToHash();
 
-                using (var indexSession = CreateIndexSession(job.Collection, colId, job.Tokenizer))
+                using (var indexSession = CreateIndexSession(job.Collection, colId))
                 using (var writeSession = CreateWriteSession(job.Collection, colId, indexSession))
                 {
                     foreach (var doc in job.Documents)
@@ -226,9 +310,9 @@ namespace Sir.Store
             return true;
         }
 
-        public WarmupSession CreateWarmupSession(string collectionName, ulong collectionId, string baseUrl, IStringModel tokenizer)
+        public WarmupSession CreateWarmupSession(string collectionName, ulong collectionId, string baseUrl)
         {
-            return new WarmupSession(collectionName, collectionId, this, tokenizer, _config, baseUrl);
+            return new WarmupSession(collectionName, collectionId, this, _model, _config, baseUrl);
         }
 
         public DocumentStreamSession CreateDocumentStreamSession(string collectionName, ulong collectionId)
@@ -242,19 +326,19 @@ namespace Sir.Store
                 collectionName, collectionId, this, indexSession, _config);
         }
 
-        public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId, IStringModel tokenizer)
+        public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId)
         {
-            return new TermIndexSession(collectionName, collectionId, this, tokenizer, _config);
+            return new TermIndexSession(collectionName, collectionId, this, _model, _config);
         }
 
-        public ValidateSession CreateValidateSession(string collectionName, ulong collectionId, IStringModel tokenizer)
+        public ValidateSession CreateValidateSession(string collectionName, ulong collectionId)
         {
-            return new ValidateSession(collectionName, collectionId, this, tokenizer, _config);
+            return new ValidateSession(collectionName, collectionId, this, _model, _config);
         }
 
-        public ReadSession CreateReadSession(string collectionName, ulong collectionId, IStringModel tokenizer)
+        public ReadSession CreateReadSession(string collectionName, ulong collectionId)
         {
-            return new ReadSession(collectionName, collectionId, this, _config, tokenizer);
+            return new ReadSession(collectionName, collectionId, this, _config, _model);
         }
 
         public Stream CreateAsyncReadStream(string fileName)
@@ -291,14 +375,6 @@ namespace Sir.Store
             foreach(var x in _mmfs)
             {
                 x.Value.Dispose();
-            }
-
-            foreach (var x in _indexMemory.Values)
-            {
-                foreach (var y in x.Values)
-                {
-                    y.Dispose();
-                }
             }
         }
     }

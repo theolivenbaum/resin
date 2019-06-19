@@ -95,24 +95,10 @@ namespace Sir.Store
             Vector vector, IStringModel model)
         {
             var time = Stopwatch.StartNew();
-            var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
             var hits = new ConcurrentBag<Hit>();
-            var vecFile = _sessionFactory.OpenMMF(_vecFileName);
+            var hit = PathFinder.ClosestMatch(_sessionFactory.GetGraph(_ixFileName), vector, model);
 
-            using (var vectorView = vecFile.CreateViewAccessor(0, 0))
-            //foreach (var page in pages)
-            Parallel.ForEach(pages, page =>
-            {
-                var indexMemory = _sessionFactory.GetIndexMemory(_ixFileName, page.offset);
-
-                var hit = ClosestMatchInPage(
-                                vector,
-                                indexMemory,
-                                vectorView,
-                                model);
-
-                hits.Add(hit);
-            });
+            hits.Add(hit);
 
             this.Log($"scan took {time.Elapsed}");
 
