@@ -197,44 +197,6 @@ namespace Sir.Store
             return result;
         }
 
-        public IList<IDictionary<string, object>> ReadDocs(IEnumerable<BigInteger> docs)
-        {
-            var result = new List<IDictionary<string, object>>();
-
-            foreach (var d in docs)
-            {
-                var doc = new Dictionary<string, object>();
-                doc["___docid"] = d;
-                doc["___score"] = 1f;
-
-                var docId = d.ToByteArray();
-                Span<byte> map = _db.Get(docId);
-                var count = map.Length / DbKeys.KeyId;
-                var valueId = new byte[DbKeys.ValueId];
-
-                Buffer.BlockCopy(docId, 0, valueId, 0, docId.Length);
-
-                for (int i = 0; i < count; i++)
-                {
-                    var slice = map.Slice(i * DbKeys.KeyId, DbKeys.KeyId);
-
-                    Buffer.BlockCopy(slice.ToArray(), 0, valueId, docId.Length, DbKeys.KeyId);
-
-                    var value = Read(valueId);
-
-                    var keyId = BitConverter.ToUInt64(slice);
-
-                    var key = new string(System.Text.Encoding.Unicode.GetChars(_db.Get(slice.ToArray())));
-
-                    doc.Add(key, value);
-                }
-
-                result.Add(doc);
-            }
-
-            return result;
-        }
-
         private object Read(byte[] valueId)
         {
             Span<byte> buffer = _db.Get(valueId);
