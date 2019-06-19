@@ -357,12 +357,12 @@ namespace Sir.Store
 
         public Stream CreateAsyncAppendStream(string fileName)
         {
-            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 4096, true);
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true);
         }
 
         public Stream CreateAppendStream(string fileName)
         {
-            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read);
         }
 
         public bool CollectionExists(ulong collectionId)
