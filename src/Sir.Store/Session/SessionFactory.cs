@@ -16,21 +16,20 @@ namespace Sir.Store
     /// </summary>
     public class SessionFactory : IDisposable, ILogger
     {
-        private readonly IConfigurationProvider _config;
         private readonly ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
         private readonly IStringModel _model;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private readonly ConcurrentDictionary<string, VectorNode> _graph;
         private readonly RocksDb _db;
-        private static readonly object WriteSync = new object();
         private bool _isInitialized;
 
         public string Dir { get; }
-        public IConfigurationProvider Config { get { return _config; } }
+        public IConfigurationProvider Config { get; }
 
         public SessionFactory(IConfigurationProvider config, IStringModel model)
         {
             Dir = config.Get("data_dir");
+            Config = config;
 
             if (!Directory.Exists(Dir))
             {
@@ -38,7 +37,6 @@ namespace Sir.Store
             }
 
             _model = model;
-            _config = config;
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
             _graph = new ConcurrentDictionary<string, VectorNode>();
@@ -195,28 +193,26 @@ namespace Sir.Store
             _pageInfo.Clear();
         }
 
-        public void Execute(Job job)
+        public void ExecuteWrite(Job job)
         {
-            lock (WriteSync)
+            var timer = Stopwatch.StartNew();
+            var colId = job.Collection.ToHash();
+
+            using (var indexSession = CreateIndexSession(job.Collection, colId))
+            using (var writeSession = CreateWriteSession(job.Collection, colId, indexSession))
             {
-                var timer = Stopwatch.StartNew();
-                var colId = job.Collection.ToHash();
-
-                using (var indexSession = CreateIndexSession(job.Collection, colId))
-                using (var writeSession = CreateWriteSession(job.Collection, colId, indexSession))
+                Parallel.ForEach(job.Documents, doc =>
+                //foreach (var doc in job.Documents)
                 {
-                    foreach (var doc in job.Documents)
-                    {
-                        writeSession.Write(doc);
-                    }
+                    writeSession.Write(doc);
+                });
 
-                    writeSession.Commit();
-                }
-
-                _pageInfo.Clear();
-
-                this.Log("executed {0} write+index job in {1}", job.Collection, timer.Elapsed);
+                indexSession.CommitToDisk();
             }
+
+            _pageInfo.Clear();
+
+            this.Log("executed {0} write+index job in {1}", job.Collection, timer.Elapsed);
         }
 
         public IList<(long offset, long length)> ReadPageInfo(string pageFileName)
@@ -232,7 +228,7 @@ namespace Sir.Store
 
         public WarmupSession CreateWarmupSession(string collectionName, ulong collectionId, string baseUrl)
         {
-            return new WarmupSession(collectionName, collectionId, this, _model, _config, baseUrl);
+            return new WarmupSession(collectionName, collectionId, this, _model, Config, baseUrl);
         }
 
         public DocumentStreamSession CreateDocumentStreamSession(string collectionName, ulong collectionId)
@@ -243,23 +239,23 @@ namespace Sir.Store
         public WriteSession CreateWriteSession(string collectionName, ulong collectionId, TermIndexSession indexSession)
         {
             return new WriteSession(
-                collectionName, collectionId, this, indexSession, _config, _db);
+                collectionName, collectionId, this, indexSession, Config, _db);
         }
 
         public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId)
         {
-            return new TermIndexSession(collectionName, collectionId, this, _model, _config);
+            return new TermIndexSession(collectionName, collectionId, this, _model, Config);
         }
 
         public ValidateSession CreateValidateSession(string collectionName, ulong collectionId)
         {
             return new ValidateSession(
-                collectionName, collectionId, this, _model, _config, CreateReadSession(collectionName, collectionId));
+                collectionName, collectionId, this, _model, Config, CreateReadSession(collectionName, collectionId));
         }
 
         public ReadSession CreateReadSession(string collectionName, ulong collectionId)
         {
-            return new ReadSession(collectionName, collectionId, this, _config, _model, _db);
+            return new ReadSession(collectionName, collectionId, this, Config, _model, _db);
         }
 
         public Stream CreateAsyncReadStream(string fileName)
@@ -278,12 +274,12 @@ namespace Sir.Store
 
         public Stream CreateAsyncAppendStream(string fileName)
         {
-            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 4096, true);
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true);
         }
 
         public Stream CreateAppendStream(string fileName)
         {
-            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read);
         }
 
         public bool CollectionExists(ulong collectionId)
@@ -297,6 +293,8 @@ namespace Sir.Store
             {
                 x.Value.Dispose();
             }
+
+            _db.Dispose();
         }
     }
 }

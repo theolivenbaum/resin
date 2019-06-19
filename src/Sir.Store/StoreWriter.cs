@@ -27,7 +27,7 @@ namespace Sir.Store
             var documents = Deserialize<IEnumerable<IDictionary<string, object>>>(request.Body);
             var job = new Job(collectionName, documents, tokenizer);
 
-            _sessionFactory.Execute(job);
+            _sessionFactory.ExecuteWrite(job);
 
             return new ResponseModel();
         }

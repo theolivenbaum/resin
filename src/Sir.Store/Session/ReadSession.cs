@@ -172,16 +172,16 @@ namespace Sir.Store
 
                 var docId = d.Key.ToByteArray();
                 Span<byte> map = _db.Get(docId);
-                var columnCount = map.Length / DbKeys.KeyId;
-                var valueId = new byte[DbKeys.ValueId];
+                var columnCount = map.Length / DbKeySize.KeyId;
+                var valueId = new byte[DbKeySize.ValueId];
                 
                 Buffer.BlockCopy(docId, 0, valueId, 0, docId.Length);
 
                 for (int i = 0; i < columnCount; i++)
                 {
-                    var keyIdSlice = map.Slice(i * DbKeys.KeyId, DbKeys.KeyId);
+                    var keyIdSlice = map.Slice(i * DbKeySize.KeyId, DbKeySize.KeyId);
 
-                    Buffer.BlockCopy(keyIdSlice.ToArray(), 0, valueId, docId.Length, DbKeys.KeyId);
+                    Buffer.BlockCopy(keyIdSlice.ToArray(), 0, valueId, docId.Length, DbKeySize.KeyId);
 
                     var value = Read(valueId);
                     var keyId = BitConverter.ToUInt64(keyIdSlice);

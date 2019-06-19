@@ -1,5 +1,4 @@
-﻿using Sir.Core;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Numerics;
@@ -14,9 +13,8 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
         private readonly ConcurrentDictionary<ulong, VectorNode> _dirty;
-        private bool _committed;
-        private bool _committing;
         private long _merges;
+        private static object _sync = new object();
 
         public TermIndexSession(
             string collectionName,
@@ -49,33 +47,28 @@ namespace Sir.Store
             }
         }
 
-        public void Commit()
+        public void CommitToDisk()
         {
-            if (_committing || _committed)
-                return;
-
-            _committing = true;
-
-            this.Log($"merges: {_merges}");
-
-            using (var postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos")))
+            lock (_sync)
             {
-                foreach (var column in _dirty)
+                this.Log($"merges: {_merges}");
+
+                using (var postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos")))
                 {
-                    using (var vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.vec")))
+                    foreach (var column in _dirty)
                     {
-                        using (var writer = new ColumnSerializer(CollectionId, column.Key, SessionFactory))
+                        using (var vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.vec")))
                         {
-                            writer.CreateColumnSegment(column.Value, vectorStream, postingsStream, _model);
+                            using (var writer = new ColumnSerializer(CollectionId, column.Key, SessionFactory))
+                            {
+                                writer.CreateColumnSegment(column.Value, vectorStream, postingsStream, _model);
+                            }
                         }
                     }
                 }
+
+                this.Log(string.Format("***FLUSHED***"));
             }
-
-            _committed = true;
-            _committing = false;
-
-            this.Log(string.Format("***FLUSHED***"));
         }
 
         private void Validate((ulong keyId, BigInteger docId, AnalyzedData tokens) item)

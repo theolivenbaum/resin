@@ -66,7 +66,7 @@ namespace Sir.Store
                         newCollectionName = Guid.NewGuid().ToString();
                     }
 
-                    _sessionFactory.Execute(new Job(newCollectionName, docs, model));
+                    _sessionFactory.ExecuteWrite(new Job(newCollectionName, docs, model));
                 }
 
                 Serialize(docs, stream);

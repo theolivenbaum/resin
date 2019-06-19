@@ -30,11 +30,6 @@ namespace Sir.Store
             _db = db;
         }
 
-        public void Commit()
-        {
-            _indexSession.Commit();
-        }
-
         /// <summary>
         /// Fields prefixed with "___" will not be stored.
         /// </summary>
@@ -152,7 +147,7 @@ namespace Sir.Store
         }
     }
 
-    public static class DbKeys
+    public static class DbKeySize
     {
         public static int DocId = 16;
         public static int KeyId = 8;

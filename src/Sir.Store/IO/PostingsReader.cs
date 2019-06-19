@@ -136,13 +136,13 @@ namespace Sir.Store
 
             var numOfPostings = BitConverter.ToInt64(buf);
 
-            Span<byte> listBuf = stackalloc byte[DbKeys.DocId * (int)numOfPostings];
+            Span<byte> listBuf = stackalloc byte[DbKeySize.DocId * (int)numOfPostings];
 
             _stream.Read(listBuf);
 
             for (int i = 0; i < numOfPostings; i++)
             {
-                result.Add(new BigInteger(listBuf.Slice(DbKeys.DocId * i, DbKeys.DocId).ToArray()), score);
+                result.Add(new BigInteger(listBuf.Slice(DbKeySize.DocId * i, DbKeySize.DocId).ToArray()), score);
             }
         }
 
