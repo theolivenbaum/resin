@@ -54,5 +54,23 @@ namespace Sir
 
             return w.ToString();
         }
+
+        public static IndexedVector[] UnitVectors(int dimensions)
+        {
+            var bases = new IndexedVector[dimensions];
+
+            for (int i = 0; i < dimensions; i++)
+            {
+                Span<int> vectorValues = new int[1];
+                vectorValues.Fill(1);
+
+                Span<int> vectorIndex = new int[1];
+                vectorIndex.Fill(i);
+
+                bases[i] = new IndexedVector(vectorIndex.ToArray(), vectorValues.ToArray());
+            }
+
+            return bases;
+        }
     }
 }
