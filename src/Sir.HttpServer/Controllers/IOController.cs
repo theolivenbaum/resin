@@ -42,8 +42,10 @@ namespace Sir.HttpServer.Controllers
 
                 if (result.Id.HasValue)
                 {
+                    var location = Uri.EscapeDataString($"{Request.Host}/{collectionName}/?id={result.Id.Value}");
+
                     Response.Headers.Add(
-                        "Location", new Microsoft.Extensions.Primitives.StringValues(result.Id.Value.ToString()));
+                        "Location", new Microsoft.Extensions.Primitives.StringValues(location));
 
                     return StatusCode(201);
                 }
