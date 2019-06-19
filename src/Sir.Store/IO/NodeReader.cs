@@ -40,7 +40,7 @@ namespace Sir.Store
 
         public Hit ClosestMatch(Vector vector, IStringModel model)
         {
-            var hits = ClosestMatchInMemory(vector, model);
+            var hits = ClosestMatchInMemoryMap(vector, model);
             var time = Stopwatch.StartNew();
             Hit best = null;
 

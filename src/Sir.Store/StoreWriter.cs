@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Microsoft.AspNetCore.Http;
@@ -22,14 +23,15 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
-        public ResponseModel Write(string collectionName, IStringModel tokenizer, HttpRequest request)
+        public ResponseModel Write(string collectionName, IStringModel model, HttpRequest request)
         {
-            var documents = Deserialize<IEnumerable<IDictionary<string, object>>>(request.Body);
-            var job = new Job(collectionName, documents, tokenizer);
-
-            _sessionFactory.Execute(job);
-
-            return new ResponseModel();
+            var document = Deserialize<IDictionary<string, object>>(request.Body);
+            var id = _sessionFactory.ExecuteWrite(collectionName, model, document);
+            
+            return new ResponseModel
+            {
+                Id = id
+            };
         }
 
         private static T Deserialize<T>(Stream stream)

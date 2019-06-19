@@ -42,6 +42,8 @@ namespace Sir.Store
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
             _graph = new ConcurrentDictionary<string, VectorNode>();
+
+            this.Log($"initiated");
         }
 
         private void LoadGraph()
@@ -193,27 +195,50 @@ namespace Sir.Store
             _keys.Clear();
         }
 
-        public void Execute(Job job)
+        public long ExecuteWrite(string collectionName, IStringModel model, IDictionary<string, object> document)
         {
             lock (WriteSync)
             {
                 var timer = Stopwatch.StartNew();
-                var colId = job.Collection.ToHash();
+                var colId = collectionName.ToHash();
+                long docId;
 
-                using (var indexSession = CreateIndexSession(job.Collection, colId))
-                using (var writeSession = CreateWriteSession(job.Collection, colId, indexSession))
+                using (var indexSession = CreateIndexSession(collectionName, colId))
+                using (var writeSession = CreateWriteSession(collectionName, colId, indexSession))
                 {
-                    foreach (var doc in job.Documents)
-                    {
-                        writeSession.Write(doc);
-                    }
+                    docId = writeSession.Write(document);
 
                     writeSession.Commit();
                 }
 
                 _pageInfo.Clear();
 
-                this.Log("executed {0} write+index job in {1}", job.Collection, timer.Elapsed);
+                this.Log("executed {0} write+index job in {1}", collectionName, timer.Elapsed);
+
+                return docId;
+            }
+        }
+
+        public void ExecuteWrite(string collectionName, IStringModel model, IEnumerable<IDictionary<string, object>> documents)
+        {
+            lock (WriteSync)
+            {
+                var timer = Stopwatch.StartNew();
+                var colId = collectionName.ToHash();
+
+                using (var indexSession = CreateIndexSession(collectionName, colId))
+                using (var writeSession = CreateWriteSession(collectionName, colId, indexSession))
+                {
+                    foreach (var document in documents)
+                    {
+                        writeSession.Write(document);
+                    }
+                    writeSession.Commit();
+                }
+
+                _pageInfo.Clear();
+
+                this.Log("executed {0} write+index job in {1}", collectionName, timer.Elapsed);
             }
         }
 

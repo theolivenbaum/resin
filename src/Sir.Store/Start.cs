@@ -15,8 +15,6 @@ namespace Sir.Store
             var httpBowParser = new HttpBowQueryParser(httpParser);
             var sessionFactory = new SessionFactory(config, new BocModel());
 
-            sessionFactory.BeginInit();
-
             services.AddSingleton(typeof(IStringModel), new BocModel());
             services.AddSingleton(typeof(SessionFactory), sessionFactory);
             services.AddSingleton(typeof(HttpQueryParser), httpParser);

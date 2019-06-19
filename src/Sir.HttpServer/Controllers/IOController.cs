@@ -28,6 +28,11 @@ namespace Sir.HttpServer.Controllers
 
             if (writer == null)
             {
+                writer = _plugins.Get<IWriter>(Request.ContentType.Split(';', StringSplitOptions.RemoveEmptyEntries)[0]);
+            }
+
+            if (writer == null)
+            {
                 throw new NotSupportedException(); // Media type not supported
             }
 
@@ -35,9 +40,18 @@ namespace Sir.HttpServer.Controllers
             {
                 ResponseModel result = writer.Write(collectionName, _model, Request);
 
-                if (result.Stream != null)
+                if (result.Id.HasValue)
+                {
+                    Response.Headers.Add(
+                        "Location", new Microsoft.Extensions.Primitives.StringValues(result.Id.Value.ToString()));
+
+                    return StatusCode(201);
+                }
+                else if (result.Stream != null)
                 {
                     var buf = result.Stream.ToArray();
+
+                    result.Stream.Dispose();
 
                     return new FileContentResult(buf, result.MediaType);
                 }
