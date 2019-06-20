@@ -340,28 +340,28 @@ namespace Sir.Store
             return new ReadSession(collectionName, collectionId, this, Config, _model);
         }
 
-        public Stream CreateAsyncReadStream(string fileName)
+        public Stream CreateAsyncReadStream(string fileName, int bufferSize = 4096)
         {
             return File.Exists(fileName)
-            ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true)
+            ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize, true)
             : null;
         }
 
-        public Stream CreateReadStream(string fileName, FileOptions fileOptions = FileOptions.RandomAccess)
+        public Stream CreateReadStream(string fileName, int bufferSize = 4096, FileOptions fileOptions = FileOptions.RandomAccess)
         {
             return File.Exists(fileName)
-                ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, fileOptions)
+                ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize, fileOptions)
                 : null;
         }
 
-        public Stream CreateAsyncAppendStream(string fileName)
+        public Stream CreateAsyncAppendStream(string fileName, int bufferSize = 4096)
         {
-            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, true);
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read, bufferSize, true);
         }
 
-        public Stream CreateAppendStream(string fileName)
+        public Stream CreateAppendStream(string fileName, int bufferSize = 4096)
         {
-            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read);
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.Read, bufferSize, false);
         }
 
         public bool CollectionExists(ulong collectionId)

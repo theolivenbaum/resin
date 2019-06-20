@@ -25,7 +25,7 @@ namespace Sir.Store
             TermIndexSession indexSession,
             IConfigurationProvider config) : base(collectionName, collectionId, sessionFactory)
         {
-            ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
+            ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)), int.Parse(config.Get("value_stream_buffer_size")));
             KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", CollectionId)));
             DocStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", CollectionId)));
             ValueIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", CollectionId)));
