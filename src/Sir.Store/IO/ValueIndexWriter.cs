@@ -23,7 +23,6 @@ namespace Sir.Store
             _stream.Write(BitConverter.GetBytes(offset));
             _stream.Write(BitConverter.GetBytes(len));
             _stream.WriteByte(dataType);
-            _stream.Flush();
 
             return position == 0 ? 0 : position / _blockSize;
         }
