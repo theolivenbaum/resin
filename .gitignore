@@ -16,5 +16,3 @@ log/*.*
 *.json
 *.zip
 *.pubxml
-src/*.ini
-src/Sir.HttpServer/*.ini
