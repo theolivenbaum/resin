@@ -103,10 +103,10 @@ namespace Sir.Store
                 docMap.Add((keyId, valId));
 
                 // index
-                //if (!keyStr.StartsWith("_") && valInfo.dataType == DataType.STRING)
-                //{
-                //    _indexSession.Put(docId, keyId, (string) val);
-                //}
+                if (!keyStr.StartsWith("_") && valInfo.dataType == DataType.STRING)
+                {
+                    _indexSession.Put(docId, keyId, (string)val);
+                }
             }
 
             var docMeta = _docs.Append(docMap);
