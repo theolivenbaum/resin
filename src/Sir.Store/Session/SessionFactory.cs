@@ -192,7 +192,7 @@ namespace Sir.Store
             _keys.Clear();
         }
 
-        public void Execute(Job job)
+        public void ExecuteWrite(Job job)
         {
             lock (WriteSync)
             {
