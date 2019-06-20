@@ -28,7 +28,7 @@ namespace Sir.Store
             _tokenizer = tokenizer;
             _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, tokenizer);
             _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedData tokens)>(
-                int.Parse(_config.Get("write_thread_count")), Validate);
+                int.Parse(_config.Get("validate_thread_count")), Validate);
         }
 
         public void Validate(IEnumerable<IDictionary> documents, params long[] excludeKeyIds)

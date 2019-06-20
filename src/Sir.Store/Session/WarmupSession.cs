@@ -31,7 +31,7 @@ namespace Sir.Store
             _config = config;
             _tokenizer = tokenizer;
             _httpQueue = new ProducerConsumerQueue<string>(
-                int.Parse(_config.Get("write_thread_count")), callback:SubmitQuery);
+                int.Parse(_config.Get("warmup_thread_count")), callback:SubmitQuery);
             _http = new HttpClient();
             _baseUrl = baseUrl;
 

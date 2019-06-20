@@ -29,7 +29,7 @@ namespace Sir.Store
             _model = tokenizer;
             _dirty = new ConcurrentDictionary<long, VectorNode>();
 
-            var numThreads = int.Parse(_config.Get("write_thread_count"));
+            var numThreads = int.Parse(_config.Get("index_thread_count"));
 
             _builder = new ProducerConsumerQueue<(long, long, string)>(numThreads, BuildModel);
         }
