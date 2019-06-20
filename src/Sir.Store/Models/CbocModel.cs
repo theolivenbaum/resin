@@ -22,7 +22,7 @@ namespace Sir.Store
 
             Span<int> values = MemoryMarshal.Cast<byte, int>(valuesBuf);
 
-            return new Vector(values.ToArray().AsMemory());
+            return new Vector(values.ToArray());
         }
 
         public Vector DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView)
@@ -70,7 +70,7 @@ namespace Sir.Store
 
                         if (len > 0)
                         {
-                            embeddings.Add(new Vector(embedding.ToArray().AsMemory()));
+                            embeddings.Add(new Vector(embedding.ToArray()));
                             embedding = new List<int>();
                         }
 
@@ -103,7 +103,7 @@ namespace Sir.Store
 
                 if (len > 0)
                 {
-                    embeddings.Add(new Vector(embedding.ToArray().AsMemory()));
+                    embeddings.Add(new Vector(embedding.ToArray()));
                 }
             }
 

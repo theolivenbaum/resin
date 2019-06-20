@@ -193,7 +193,7 @@ namespace Sir
                     vec.Add(codePoint, 1);
             }
 
-            return new IndexedVector(vec.Keys.ToArray().AsMemory(), vec.Values.ToArray().AsMemory());
+            return new IndexedVector(vec.Keys.ToArray(), vec.Values.ToArray());
         }
     }
 }

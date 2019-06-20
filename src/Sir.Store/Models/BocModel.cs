@@ -39,7 +39,7 @@ namespace Sir.Store
             Span<int> index = MemoryMarshal.Cast<byte, int>(indexBuf);
             Span<int> values = MemoryMarshal.Cast<byte, int>(valuesBuf);
 
-            return new IndexedVector(index.ToArray().AsMemory(), values.ToArray().AsMemory());
+            return new IndexedVector(index.ToArray(), values.ToArray());
         }
 
         public Vector DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView)
@@ -80,8 +80,8 @@ namespace Sir.Store
                         if (len > 0)
                         {
                             embeddings.Add(new IndexedVector
-                                (embedding.Keys.ToArray().AsMemory(), 
-                                embedding.Values.ToArray().AsMemory()));
+                                (embedding.Keys.ToArray(), 
+                                embedding.Values.ToArray()));
 
                             embedding = new SortedList<int, int>();
                         }
@@ -117,8 +117,8 @@ namespace Sir.Store
                 if (len > 0)
                 {
                     embeddings.Add(new IndexedVector
-                                (embedding.Keys.ToArray().AsMemory(),
-                                embedding.Values.ToArray().AsMemory()));
+                                (embedding.Keys.ToArray(),
+                                embedding.Values.ToArray()));
                 }
             }
 
