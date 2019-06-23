@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Text;
 using Newtonsoft.Json;
 using Sir.Store;
 
@@ -72,11 +74,12 @@ namespace Sir.DbUtil
             else if (command == "submit")
             {
                 var fileName = args[1];
-                var url = args[2];
+                var uri = new Uri(args[2]);
                 var count = int.Parse(args[3]);
                 var batchSize = int.Parse(args[4]);
                 var fullTime = Stopwatch.StartNew();
                 var batchNo = 0;
+                var httpClient = new HttpClient();
 
                 foreach (var batch in ReadFile(fileName, count)
                     .Where(x => x.Contains("title"))
@@ -90,7 +93,7 @@ namespace Sir.DbUtil
                     .Batch(batchSize))
                 {
                     var time = Stopwatch.StartNew();
-                    Submit((batch, url));
+                    Submit(batch, uri, httpClient);
                     Console.WriteLine($"{DateTime.Now.ToLongTimeString()} submitted batch {batchNo++} in {time.Elapsed}");
                 }
 
@@ -137,25 +140,13 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void Submit((IEnumerable<object> documents, string url) job)
+        private static void Submit(IEnumerable<IDictionary> documents, Uri uri, HttpClient client)
         {
-            var httpWebRequest = (HttpWebRequest)WebRequest.Create(job.url);
-            httpWebRequest.ContentType = "application/json";
-            httpWebRequest.Method = "POST";
+            var jsonStr = JsonConvert.SerializeObject(documents);
+            var content = new StringContent(jsonStr, Encoding.UTF8, "application/json");
+            var response = client.PostAsync(uri, content).Result;
 
-            var json = JsonConvert.SerializeObject(job.documents);
-
-            using (var stream = httpWebRequest.GetRequestStream())
-            {
-                Serialize(job.documents, stream);
-            }
-
-            var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-
-            if (httpResponse.StatusCode != HttpStatusCode.OK)
-            {
-                throw new Exception();
-            }
+            response.EnsureSuccessStatusCode();
         }
 
         private static void Serialize(IEnumerable<object> docs, Stream stream)
