@@ -28,23 +28,19 @@ namespace Sir.HttpServer.Controllers
 
             if (writer == null)
             {
+                writer = _plugins.Get<IWriter>(Request.ContentType.Split(';', StringSplitOptions.RemoveEmptyEntries)[0]);
+            }
+
+            if (writer == null)
+            {
                 throw new NotSupportedException(); // Media type not supported
             }
 
             try
             {
-                ResponseModel result = writer.Write(collectionName, _model, Request);
+                writer.Write(collectionName, _model, Request);
 
-                if (result.Stream != null)
-                {
-                    var buf = result.Stream.ToArray();
-
-                    return new FileContentResult(buf, result.MediaType);
-                }
-                else
-                {
-                    return Ok();
-                }
+                return StatusCode(201);
             }
             catch (Exception ew)
             {
