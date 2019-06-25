@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace Sir.Store
@@ -150,7 +149,7 @@ namespace Sir.Store
 
         public override string ToString()
         {
-            var vals = Vector.Values.Span;
+            var vals = Vector.Values;
 
             var w = new StringBuilder();
 

@@ -11,8 +11,8 @@ namespace Sir.Store
     {
         public long SerializeVector(Vector vector, Stream vectorStream)
         {
-            Span<byte> index = MemoryMarshal.Cast<int, byte>(((IndexedVector)vector).Index.Span);
-            Span<byte> values = MemoryMarshal.Cast<int, byte>(vector.Values.Span);
+            Span<byte> index = MemoryMarshal.Cast<int, byte>(((IndexedVector)vector).Index);
+            Span<byte> values = MemoryMarshal.Cast<int, byte>(vector.Values);
 
             var pos = vectorStream.Position;
 
@@ -159,8 +159,8 @@ namespace Sir.Store
             
             while (cursor1 < vec1.Count && cursor2 < vec2.Count)
             {
-                var i1 = vec1.Index.Span[cursor1];
-                var i2 = vec2.Index.Span[cursor2];
+                var i1 = vec1.Index[cursor1];
+                var i2 = vec2.Index[cursor2];
 
                 if (i2 > i1)
                 {
@@ -172,7 +172,7 @@ namespace Sir.Store
                 }
                 else
                 {
-                    product += vec1.Values.Span[cursor1++] * vec2.Values.Span[cursor2++];
+                    product += vec1.Values[cursor1++] * vec2.Values[cursor2++];
                 }
             }
 

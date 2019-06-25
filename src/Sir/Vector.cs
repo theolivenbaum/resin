@@ -1,16 +1,16 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace Sir
 {
     public class Vector
     {
-        public Memory<int> Values { get; private set; }
-        public int Count { get { return Values.Length; } }
+        public int[] Values { get; private set; }
+        public int Count { get; }
 
-        public Vector(Memory<int> values)
+        public Vector(int[] values)
         {
             Values = values;
+            Count = Values.Length;
         }
 
         public virtual string AsString()
@@ -19,7 +19,7 @@ namespace Sir
 
             for (int i = 0; i < Values.Length; i++)
             {
-                buf[i] = (char)Values.Span[i];
+                buf[i] = (char)Values[i];
             }
 
             return new string(buf);
@@ -28,9 +28,9 @@ namespace Sir
 
     public class IndexedVector : Vector
     {
-        public Memory<int> Index { get; private set; }
+        public int[] Index { get; }
 
-        public IndexedVector(Memory<int> index, Memory<int> values):base(values)
+        public IndexedVector(int[] index, int[] values) : base(values)
         {
             Index = index;
         }
@@ -38,39 +38,21 @@ namespace Sir
         public override string AsString()
         {
             var w = new StringBuilder();
-            var ix = Index.ToArray();
-            var vals = Values.ToArray();
+            var ix = Index;
+            var vals = Values;
 
-            for (int i = 0; i < ix.Length;i++)
+            for (int i = 0; i < ix.Length; i++)
             {
                 var c = ix[i];
                 var val = vals[i];
 
-                for(int ii = 0; ii < val; ii++)
+                for (int ii = 0; ii < val; ii++)
                 {
                     w.Append(char.ConvertFromUtf32(c));
                 }
             }
 
             return w.ToString();
-        }
-
-        public static IndexedVector[] UnitVectors(int dimensions)
-        {
-            var bases = new IndexedVector[dimensions];
-
-            for (int i = 0; i < dimensions; i++)
-            {
-                Span<int> vectorValues = new int[1];
-                vectorValues.Fill(1);
-
-                Span<int> vectorIndex = new int[1];
-                vectorIndex.Fill(i);
-
-                bases[i] = new IndexedVector(vectorIndex.ToArray(), vectorValues.ToArray());
-            }
-
-            return bases;
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace Sir.Store
 {
@@ -11,11 +10,12 @@ namespace Sir.Store
         public void OnApplicationStartup(
             IServiceCollection services, ServiceProvider serviceProvider, IConfigurationProvider config)
         {
+            var model = new BocModel();
             var httpParser = new HttpQueryParser(new QueryParser());
             var httpBowParser = new HttpBowQueryParser(httpParser);
-            var sessionFactory = new SessionFactory(config, new BocModel());
+            var sessionFactory = new SessionFactory(config, model);
 
-            services.AddSingleton(typeof(IStringModel), new BocModel());
+            services.AddSingleton(typeof(IStringModel), model);
             services.AddSingleton(typeof(SessionFactory), sessionFactory);
             services.AddSingleton(typeof(HttpQueryParser), httpParser);
             services.AddSingleton(typeof(HttpBowQueryParser), new HttpBowQueryParser(httpParser));

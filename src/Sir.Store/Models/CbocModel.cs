@@ -40,7 +40,7 @@ namespace Sir.Store
 
         public long SerializeVector(Vector vector, Stream vectorStream)
         {
-            Span<byte> values = MemoryMarshal.Cast<int, byte>(vector.Values.Span);
+            Span<byte> values = MemoryMarshal.Cast<int, byte>(vector.Values);
 
             var pos = vectorStream.Position;
 
@@ -135,7 +135,7 @@ namespace Sir.Store
 
             for (; dimension < shorter.Count; dimension++)
             {
-                product += shorter.Values.Span[dimension] * longer.Values.Span[dimension];
+                product += shorter.Values[dimension] * longer.Values[dimension];
             }
 
             return product;
@@ -145,7 +145,7 @@ namespace Sir.Store
         {
             long product = 0;
 
-            foreach (var component in vec.Values.ToArray())
+            foreach (var component in vec.Values)
             {
                 product += (component * component);
             }
