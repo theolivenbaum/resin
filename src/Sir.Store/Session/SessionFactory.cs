@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RocksDbSharp;
+using System;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -41,7 +42,14 @@ namespace Sir.Store
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
             _graph = new ConcurrentDictionary<string, VectorNode>();
+
+
+
+
+
         }
+
+
 
         private void LoadGraph()
         {
@@ -99,48 +107,6 @@ namespace Sir.Store
             this.Log($"graph fully loaded into memory in {gtimer.Elapsed}");
 
             _isInitialized = true;
-        }
-
-        private ConcurrentDictionary<string, ConcurrentDictionary<long, IMemoryOwner<VectorNodeData>>> LoadIndexMemory()
-        {
-            var indexMemory = new ConcurrentDictionary<string, ConcurrentDictionary<long, IMemoryOwner<VectorNodeData>>>();
-
-            Parallel.ForEach(Directory.GetFiles(Dir, "*.ix"), fileName =>
-            //foreach (var fileName in Directory.GetFiles(Dir, "*.ix"))
-            {
-                var pageFileName = Path.Combine(Dir, $"{Path.GetFileNameWithoutExtension(fileName)}.ixp");
-                var indexFile = OpenMMF(fileName);
-                var pages = indexMemory.GetOrAdd(fileName, new ConcurrentDictionary<long, IMemoryOwner<VectorNodeData>>());
-
-                Parallel.ForEach(ReadPageInfo(pageFileName), page =>
-                //foreach (var page in ReadPageInfo(pageFileName))
-                {
-                    var timer = Stopwatch.StartNew();
-
-                    using (var indexView = indexFile.CreateViewAccessor(page.offset, page.length))
-                    {
-                        try
-                        {
-                            var length = page.length / VectorNode.BlockSize;
-                            var buf = new VectorNodeData[length];
-                            var read = indexView.ReadArray(0, buf, 0, buf.Length);
-                            IMemoryOwner<VectorNodeData> owner = MemoryPool<VectorNodeData>.Shared.Rent(minBufferSize:buf.Length);
-                            buf.AsSpan().CopyTo(owner.Memory.Span);
-                            pages.GetOrAdd(page.offset, owner);
-                        }
-                        catch (Exception ex)
-                        {
-                            this.Log(ex.ToString());
-
-                            throw;
-                        }
-                    }
-
-                    this.Log($"loaded page {page} from {fileName} into memory in {timer.Elapsed}");
-                });
-            });
-
-            return indexMemory;
         }
 
         public void BeginInit()

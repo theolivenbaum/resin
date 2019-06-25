@@ -66,20 +66,9 @@ namespace Sir.HttpServer.Controllers
 
             this.Log("processed {0} request in {1}", mediaType, timer.Elapsed);
 
-            if (result.Stream == null)
-            {
-                return new FileContentResult(new byte[0], result.MediaType);
-            }
-            else
-            {
-                Response.Headers.Add("X-Total", result.Total.ToString());
+            Response.Headers.Add("X-Total", result.Total.ToString());
 
-                var buf = result.Stream.ToArray();
-
-                this.Log("serialized {0} response in {1}", reader.GetType().ToString(), timer.Elapsed);
-
-                return new FileContentResult(buf, result.MediaType);
-            }
+            return new FileContentResult(result.Body, result.MediaType);
         }
     }
 }

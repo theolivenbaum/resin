@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -116,7 +117,7 @@ namespace Sir.Store
 
             using (var vectorView = vecFile.CreateViewAccessor(0, 0))
             using (var indexView = ixFile.CreateViewAccessor(0, 0))
-            
+
             //foreach (var page in pages)
             Parallel.ForEach(pages, page =>
             {
@@ -142,7 +143,7 @@ namespace Sir.Store
             IStringModel model
         )
         {
-            Span<byte> block = new byte[VectorNode.BlockSize];
+            Span<byte> block = stackalloc byte[VectorNode.BlockSize];
 
             var read = indexStream.Read(block);
 
@@ -156,7 +157,6 @@ namespace Sir.Store
                 var cursorVector = model.DeserializeVector(vecOffset, (int)componentCount, vectorStream);
                 var cursorTerminator = BitConverter.ToInt64(block.Slice(sizeof(long) + sizeof(long) + sizeof(long) + sizeof(long), sizeof(long)));
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));
-
                 var angle = model.CosAngle(cursorVector, vector);
 
                 if (angle >= model.IdenticalAngle)

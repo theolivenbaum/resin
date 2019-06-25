@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 
 namespace Sir
 {
@@ -10,8 +8,8 @@ namespace Sir
     public class ResponseModel
     {
         public IList<IDictionary<string, object>> Documents { get; set; }
-        public MemoryStream Stream { get; set; }
         public long Total { get; set; }
         public string MediaType { get; set; }
+        public byte[] Body { get; set; }
     }
 }

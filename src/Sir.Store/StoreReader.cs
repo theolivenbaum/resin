@@ -36,60 +36,46 @@ namespace Sir.Store
         public ResponseModel Read(string collectionName, IStringModel model, HttpRequest request)
         {
             var timer = Stopwatch.StartNew();
-            var collectionId = collectionName.ToHash();
+            var collectionId = collectionName.ToHash(); 
 
             using (var session = _sessionFactory.CreateReadSession(collectionName, collectionId))
             {
-                IList<IDictionary<string, object>> docs;
-                long total;
-                var stream = new MemoryStream();
+                var query = _httpQueryParser.Parse(collectionId, model, request);
 
-                if (request.Query.ContainsKey("id"))
+                if (query == null)
                 {
-                    var ids = request.Query["id"].Select(s => long.Parse(s));
-
-                    docs = session.ReadDocs(ids);
-                    total = docs.Count;
-
-                    this.Log(string.Format("executed lookup by id in {0}", timer.Elapsed));
-                }
-                else
-                {
-                    var query = _httpQueryParser.Parse(collectionId, model, request);
-
-                    if (query == null)
-                    {
-                        return new ResponseModel { MediaType = "application/json", Total = 0 };
-                    }
-
-                    var result = session.Read(query);
-
-                    docs = result.Docs;
-                    total = result.Total;
-
-                    this.Log(string.Format("executed query {0} in {1}", query, timer.Elapsed));
-
-                    if (request.Query.ContainsKey("create"))
-                    {
-                        var newCollectionName = request.Query["newCollection"].ToString();
-
-                        if (string.IsNullOrWhiteSpace(newCollectionName))
-                        {
-                            newCollectionName = Guid.NewGuid().ToString();
-                        }
-
-                        _sessionFactory.ExecuteWrite(new Job(newCollectionName, docs, model));
-                    }
+                    return new ResponseModel { MediaType = "application/json", Total = 0 };
                 }
 
-                Serialize(docs, stream);
+                var result = session.Read(query);
+
+                IList<IDictionary<string, object>> docs = result.Docs;
+                long total = result.Total;
+
+                this.Log(string.Format("executed query {0} in {1}", query, timer.Elapsed));
+
+                if (request.Query.ContainsKey("create"))
+                {
+                    var newCollectionName = request.Query["newCollection"].ToString();
+
+                    if (string.IsNullOrWhiteSpace(newCollectionName))
+                    {
+                        newCollectionName = Guid.NewGuid().ToString();
+                    }
+
+                    _sessionFactory.ExecuteWrite(new Job(newCollectionName, docs, model));
+                }
+
+                var mem = new MemoryStream();
+
+                Serialize(docs, mem);
 
                 return new ResponseModel
                 {
                     MediaType = "application/json",
-                    Stream = stream,
                     Documents = docs,
-                    Total = total
+                    Total = total,
+                    Body = mem.ToArray()
                 };
             }
         }
