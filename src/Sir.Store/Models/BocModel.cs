@@ -29,17 +29,15 @@ namespace Sir.Store
                 throw new ArgumentNullException(nameof(vectorStream));
             }
 
-            Span<byte> indexBuf = new byte[componentCount * sizeof(int)];
-            Span<byte> valuesBuf = new byte[componentCount * sizeof(int)];
+            Span<byte> buf = new byte[componentCount * 2 * sizeof(int)];
 
             vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
-            vectorStream.Read(indexBuf);
-            vectorStream.Read(valuesBuf);
+            vectorStream.Read(buf);
 
-            Span<int> index = MemoryMarshal.Cast<byte, int>(indexBuf);
-            Span<int> values = MemoryMarshal.Cast<byte, int>(valuesBuf);
+            Span<int> x = MemoryMarshal.Cast<byte, int>(buf);
 
-            return new IndexedVector(index.ToArray(), values.ToArray());
+            return new IndexedVector(x.Slice(0, componentCount).ToArray(), 
+                x.Slice(componentCount, componentCount).ToArray());
         }
 
         public Vector DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView)
