@@ -114,7 +114,7 @@ namespace Sir.Store
 
         public float IdenticalAngle => 0.999999f;
 
-        public float FoldAngle => 0.75f;
+        public float FoldAngle => 0.55f;
 
         public float CosAngle(Vector vec1, Vector vec2)
         {
