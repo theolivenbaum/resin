@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
@@ -20,6 +21,7 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _tokenizer;
         private readonly Stream _postingsStream;
+        private readonly ConcurrentDictionary<long, NodeReader> _nodeReaders;
 
         public ReadSession(string collectionName,
             ulong collectionId,
@@ -43,6 +45,7 @@ namespace Sir.Store
             _valReader = new ValueReader(ValueStream);
             _config = config;
             _tokenizer = tokenizer;
+            _nodeReaders = new ConcurrentDictionary<long, NodeReader>();
 
             var posFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos");
 
@@ -53,6 +56,11 @@ namespace Sir.Store
         {
             if (_postingsStream != null)
                 _postingsStream.Dispose();
+
+            foreach(var reader in _nodeReaders.Values)
+            {
+                reader.Dispose();
+            }
 
             base.Dispose();
         }
@@ -163,7 +171,7 @@ namespace Sir.Store
             if (!File.Exists(ixFileName))
                 return null;
 
-            return new NodeReader(CollectionId, keyId, SessionFactory, _config);
+            return _nodeReaders.GetOrAdd(keyId, new NodeReader(CollectionId, keyId, SessionFactory, _config));
         }
 
         public NodeReader CreateIndexReader(ulong keyHash)

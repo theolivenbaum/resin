@@ -8,12 +8,14 @@ namespace Sir.Store
     /// <summary>
     /// Index bitmap reader. Each block is a <see cref="Sir.Store.VectorNode"/>.
     /// </summary>
-    public class NodeReader : ILogger
+    public class NodeReader : ILogger, IDisposable
     {
         private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
         private readonly string _ixpFileName;
         private readonly string _ixMapName;
+        private readonly Stream _indexStream;
+        private readonly Stream _vectorStream;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
 
@@ -33,6 +35,8 @@ namespace Sir.Store
             _config = config;
             _ixpFileName = ixpFileName;
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
+            _indexStream = _sessionFactory.CreateReadStream(_ixFileName);
+            _vectorStream = _sessionFactory.CreateReadStream(_vecFileName);
         }
 
         public Hit ClosestMatch(Vector vector, IStringModel model)
@@ -65,21 +69,17 @@ namespace Sir.Store
             var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
             var hits = new List<Hit>();
 
-            using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName))
-            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+            foreach (var page in pages)
             {
-                foreach (var page in pages)
-                {
-                    indexStream.Seek(page.offset, SeekOrigin.Begin);
+                _indexStream.Seek(page.offset, SeekOrigin.Begin);
 
-                    var hit = ClosestMatchInPage(
-                                vector,
-                                indexStream,
-                                vectorStream,
-                                model);
+                var hit = ClosestMatchInPage(
+                            vector,
+                            _indexStream,
+                            _vectorStream,
+                            model);
 
-                    hits.Add(hit);
-                }
+                hits.Add(hit);
             }
 
             this.Log($"scan took {time.Elapsed}");
@@ -242,6 +242,12 @@ namespace Sir.Store
             {
                 indexStream.Seek(distance, SeekOrigin.Current);
             }
+        }
+
+        public void Dispose()
+        {
+            _indexStream.Dispose();
+            _vectorStream.Dispose();
         }
     }
 }

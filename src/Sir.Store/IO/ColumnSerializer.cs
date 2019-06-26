@@ -32,7 +32,6 @@ namespace Sir.Store
         public void CreateColumnSegment(VectorNode column, Stream vectorStream, Stream postingsStream, IStringModel model)
         {
             var time = Stopwatch.StartNew();
-
             var page = GraphBuilder.SerializeTree(column, _ixStream, vectorStream, postingsStream, model);
 
             _ixStream.Flush();

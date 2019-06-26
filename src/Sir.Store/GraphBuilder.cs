@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.MemoryMappedFiles;
+using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
@@ -147,18 +147,15 @@ namespace Sir.Store
                 terminator = 0;
             }
 
-            stream.Write(BitConverter.GetBytes(node.VectorOffset));
-            stream.Write(BitConverter.GetBytes(node.PostingsOffset));
-            stream.Write(BitConverter.GetBytes((long)node.Vector.Count));
-            stream.Write(BitConverter.GetBytes(node.Weight));
-            stream.Write(BitConverter.GetBytes(terminator));
-        }
+            Span<long> span = stackalloc long[5];
 
-        public static void SerializeNode(VectorNode node, MemoryMappedViewAccessor view, long offset)
-        {
-            var data = node.ToData();
+            span[0] = node.VectorOffset;
+            span[1] = node.PostingsOffset;
+            span[2] = node.Vector.Count;
+            span[3] = node.Weight;
+            span[4] = terminator;
 
-            view.Write(offset, ref data);
+            stream.Write(MemoryMarshal.Cast<long, byte>(span));
         }
 
         public static (long offset, long length) SerializeTree(
