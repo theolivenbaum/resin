@@ -17,7 +17,7 @@ namespace Sir.Store
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private static readonly object WriteSync = new object();
-        private bool _isInitialized;
+        private readonly ConcurrentDictionary<string, Stream> _readStreams;
 
         public string Dir { get; }
         public IConfigurationProvider Config { get; }
@@ -36,6 +36,8 @@ namespace Sir.Store
             _keys = LoadKeys();
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
+
+            this.Log("initiated");
         }
 
         public MemoryMappedFile OpenMMF(string fileName)
@@ -239,7 +241,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            foreach(var x in _mmfs)
+            foreach (var x in _mmfs)
             {
                 x.Value.Dispose();
             }

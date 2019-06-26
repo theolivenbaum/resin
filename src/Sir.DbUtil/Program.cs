@@ -93,7 +93,9 @@ namespace Sir.DbUtil
                 {
                     var time = Stopwatch.StartNew();
                     Submit(batch, uri, httpClient);
-                    Console.WriteLine($"{DateTime.Now.ToLongTimeString()} submitted batch {batchNo++} in {time.Elapsed}");
+                    time.Stop();
+                    var docsPerSecond = (int)(batchSize / time.Elapsed.TotalSeconds);
+                    Console.WriteLine($"batch {batchNo++} took {time.Elapsed} {docsPerSecond} docs/s");
                 }
 
                 Console.WriteLine("write took {0}", fullTime.Elapsed);

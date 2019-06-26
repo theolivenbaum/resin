@@ -23,6 +23,11 @@ namespace Sir.Store
 
         public Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
         {
+            if (vectorOffset < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(vectorOffset));
+            }
+
             if (vectorStream == null)
             {
                 throw new ArgumentNullException(nameof(vectorStream));
@@ -33,10 +38,11 @@ namespace Sir.Store
             vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
             vectorStream.Read(buf);
 
-            Span<int> x = MemoryMarshal.Cast<byte, int>(buf);
+            Span<int> all = MemoryMarshal.Cast<byte, int>(buf);
+            int[] index = all.Slice(0, componentCount).ToArray();
+            int[] values = all.Slice(componentCount, componentCount).ToArray();
 
-            return new IndexedVector(x.Slice(0, componentCount).ToArray(), 
-                x.Slice(componentCount, componentCount).ToArray());
+            return new IndexedVector(index, values);
         }
 
         public AnalyzedData Tokenize(string text)
@@ -108,7 +114,7 @@ namespace Sir.Store
 
         public float IdenticalAngle => 0.999999f;
 
-        public float FoldAngle => 0.65f;
+        public float FoldAngle => 0.75f;
 
         public float CosAngle(Vector vec1, Vector vec2)
         {
