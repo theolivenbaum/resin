@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -38,22 +37,6 @@ namespace Sir.Store
 
             return new IndexedVector(x.Slice(0, componentCount).ToArray(), 
                 x.Slice(componentCount, componentCount).ToArray());
-        }
-
-        public Vector DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView)
-        {
-            if (vectorView == null)
-            {
-                throw new ArgumentNullException(nameof(vectorView));
-            }
-
-            var index = new int[componentCount];
-            var values = new int[componentCount];
-
-            vectorView.ReadArray(vectorOffset, index, 0, index.Length);
-            vectorView.ReadArray(vectorOffset + componentCount * sizeof(int), values, 0, values.Length);
-
-            return new IndexedVector(index, values);
         }
 
         public AnalyzedData Tokenize(string text)

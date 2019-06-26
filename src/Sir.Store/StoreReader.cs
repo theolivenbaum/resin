@@ -47,8 +47,6 @@ namespace Sir.Store
                 }
 
                 var result = session.Read(query);
-
-                IList<IDictionary<string, object>> docs = result.Docs;
                 long total = result.Total;
 
                 this.Log(string.Format("executed query {0} in {1}", query, timer.Elapsed));
@@ -62,17 +60,17 @@ namespace Sir.Store
                         newCollectionName = Guid.NewGuid().ToString();
                     }
 
-                    _sessionFactory.ExecuteWrite(new Job(newCollectionName, docs, model));
+                    _sessionFactory.ExecuteWrite(new Job(newCollectionName, result.Docs, model));
                 }
 
                 var mem = new MemoryStream();
 
-                Serialize(docs, mem);
+                Serialize(result.Docs, mem);
 
                 return new ResponseModel
                 {
                     MediaType = "application/json",
-                    Documents = docs,
+                    Documents = result.Docs,
                     Total = total,
                     Body = mem.ToArray()
                 };

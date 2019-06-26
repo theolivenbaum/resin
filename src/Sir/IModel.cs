@@ -14,7 +14,6 @@ namespace Sir
     {
         AnalyzedData Tokenize(T data);
         Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream);
-        Vector DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView);
         long SerializeVector(Vector vector, Stream vectorStream);
         float IdenticalAngle { get; }
         float FoldAngle { get; }

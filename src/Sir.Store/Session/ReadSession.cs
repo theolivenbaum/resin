@@ -19,7 +19,7 @@ namespace Sir.Store
         private readonly ValueReader _valReader;
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _tokenizer;
-        private readonly MemoryMappedViewAccessor _postingsView;
+        private readonly Stream _postingsStream;
 
         public ReadSession(string collectionName,
             ulong collectionId,
@@ -46,12 +46,12 @@ namespace Sir.Store
 
             var posFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos");
 
-            _postingsView = SessionFactory.OpenMMF(posFileName).CreateViewAccessor(0, 0);
+            _postingsStream = SessionFactory.CreateReadStream(posFileName);
         }
 
         public override void Dispose()
         {
-            _postingsView.Dispose();
+            _postingsStream.Dispose();
 
             base.Dispose();
         }
@@ -103,7 +103,7 @@ namespace Sir.Store
 
             var timer = Stopwatch.StartNew();
 
-            var result = new PostingsReader(_postingsView).Reduce(query.ToClauses(), query.Skip, query.Take);
+            var result = new PostingsReader(_postingsStream).Reduce(query.ToClauses(), query.Skip, query.Take);
 
             this.Log("map/reduce took {0}", timer.Elapsed);
 

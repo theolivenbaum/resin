@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 
 namespace Sir.Store
@@ -23,19 +22,6 @@ namespace Sir.Store
             Span<int> values = MemoryMarshal.Cast<byte, int>(valuesBuf);
 
             return new Vector(values.ToArray());
-        }
-
-        public Vector DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView)
-        {
-            if (vectorView == null)
-            {
-                throw new ArgumentNullException(nameof(vectorView));
-            }
-
-            var valuesBuf = new int[componentCount];
-            var read = vectorView.ReadArray(vectorOffset, valuesBuf, 0, valuesBuf.Length);
-
-            return new Vector(valuesBuf);
         }
 
         public long SerializeVector(Vector vector, Stream vectorStream)

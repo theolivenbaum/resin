@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -18,7 +16,6 @@ namespace Sir.Store
         private readonly IStringModel _model;
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
-        private readonly ConcurrentDictionary<string, VectorNode> _graph;
         private static readonly object WriteSync = new object();
         private bool _isInitialized;
 
@@ -39,92 +36,6 @@ namespace Sir.Store
             _keys = LoadKeys();
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
-            _graph = new ConcurrentDictionary<string, VectorNode>();
-        }
-
-        private void LoadGraph()
-        {
-            _isInitialized = false;
-
-            var gtimer = Stopwatch.StartNew();
-
-            Parallel.ForEach(Directory.GetFiles(Dir, "*.ix"), fileName =>
-            //foreach (var fileName in Directory.GetFiles(Dir, "*.ix"))
-            {
-                var ftimer = Stopwatch.StartNew();
-                var pageFileName = Path.Combine(Dir, $"{Path.GetFileNameWithoutExtension(fileName)}.ixp");
-                var vectorFileName = Path.Combine(Dir, $"{Path.GetFileNameWithoutExtension(fileName)}.vec");
-                var ixFile = OpenMMF(fileName);
-                var vecFile = OpenMMF(vectorFileName);
-                var root = _graph.GetOrAdd(fileName, new VectorNode());
-
-                Parallel.ForEach(ReadPageInfo(pageFileName), page =>
-                //foreach (var page in ReadPageInfo(pageFileName))
-                {
-                    var timer = Stopwatch.StartNew();
-
-                    using (var vectorView = vecFile.CreateViewAccessor(0, 0))
-                    using (var indexView = ixFile.CreateViewAccessor(page.offset, page.length))
-                    {
-                        try
-                        {
-                            var length = page.length / VectorNode.BlockSize;
-                            var buf = new VectorNodeData[length];
-                            var read = indexView.ReadArray(0, buf, 0, buf.Length);
-
-                            foreach (var item in buf)
-                            {
-                                var vector = _model.DeserializeVector(
-                                    item.VectorOffset, (int)item.ComponentCount, vectorView);
-
-                                GraphBuilder.Add(
-                                    root, new VectorNode(vector, new List<long> { item.PostingsOffset }), _model);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            this.Log(ex.ToString());
-
-                            throw;
-                        }
-                    }
-
-                    this.Log($"loaded page {page} from {fileName} into memory in {timer.Elapsed}");
-                });
-
-                this.Log($"{fileName} fully loaded into memory in {ftimer.Elapsed}");
-            });
-
-            this.Log($"graph fully loaded into memory in {gtimer.Elapsed}");
-
-            _isInitialized = true;
-        }
-
-        public void BeginInit()
-        {
-            new Thread(() =>
-            {
-                Thread.CurrentThread.IsBackground = true;
-
-                try
-                {
-                    LoadGraph();
-
-                }
-                catch (Exception ex)
-                {
-                    this.Log(ex.ToString());
-                }
-            }).Start();
-        }
-
-        public VectorNode GetGraph(string ixFileName)
-        {
-            if (!_isInitialized)
-                throw new InvalidOperationException(
-                    "Unable to respond while initializing. Check log to see progress of init.");
-
-            return _graph[ixFileName];
         }
 
         public MemoryMappedFile OpenMMF(string fileName)

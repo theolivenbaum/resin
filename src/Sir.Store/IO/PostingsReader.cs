@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 
 namespace Sir.Store
@@ -13,19 +12,10 @@ namespace Sir.Store
     public class PostingsReader : ILogger
     {
         private readonly Stream _stream;
-        private readonly MemoryMappedViewAccessor _view;
-        private readonly Action<long, IDictionary<long, float>, float> _read
-;
+
         public PostingsReader(Stream stream)
         {
             _stream = stream;
-            _read = GetPostingsFromStream;
-        }
-
-        public PostingsReader(MemoryMappedViewAccessor view)
-        {
-            _view = view;
-            _read = GetPostingsFromView;
         }
 
         public ScoredResult Reduce(IList<Query> query, int skip, int take)
@@ -50,18 +40,18 @@ namespace Sir.Store
                         }
                         else
                         {
-                            var intersection = new Dictionary<long, float>();
+                            var section = new Dictionary<long, float>();
 
                             foreach (var doc in result)
                             {
                                 float score;
                                 if (docIds.TryGetValue(doc.Key, out score))
                                 {
-                                    intersection.Add(doc.Key, doc.Value + score);
+                                    section.Add(doc.Key, doc.Value + score);
                                 }
                             }
 
-                            result = intersection;
+                            result = section;
                         }
                     }
                     else if (cursor.Not)
@@ -119,7 +109,7 @@ namespace Sir.Store
 
             foreach(var offset in offsets)
             {
-                _read(offset, result, score);
+                GetPostingsFromStream(offset, result, score);
             }
 
             return result;
@@ -139,20 +129,7 @@ namespace Sir.Store
 
             _stream.Read(listBuf);
 
-            foreach (var word in MemoryMarshal.Cast<byte, long>(listBuf).ToArray())
-            {
-                result.Add(word, score);
-            }
-        }
-
-        private void GetPostingsFromView(long postingsOffset, IDictionary<long, float> result, float score)
-        {
-            var numOfPostings = _view.ReadInt64(postingsOffset);
-            var buf = new long[numOfPostings];
-
-            _view.ReadArray(postingsOffset + sizeof(long), buf, 0, buf.Length);
-
-            foreach (var word in buf)
+            foreach (var word in MemoryMarshal.Cast<byte, long>(listBuf))
             {
                 result.Add(word, score);
             }
