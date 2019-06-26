@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Sir.Store;
 
 namespace Sir.HttpServer.Controllers
 {
@@ -10,7 +11,11 @@ namespace Sir.HttpServer.Controllers
         private readonly PluginsCollection _plugins;
         private readonly IStringModel _model;
 
-        public SearchController(PluginsCollection plugins, IConfigurationProvider config, IStringModel tokenizer) : base(config)
+        public SearchController(
+            PluginsCollection plugins, 
+            IConfigurationProvider config, 
+            IStringModel tokenizer,
+            SessionFactory sessionFactory) : base(config, sessionFactory)
         {
             _plugins = plugins;
             _model = tokenizer;

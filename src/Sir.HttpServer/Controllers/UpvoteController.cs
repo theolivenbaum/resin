@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using Sir.Store;
 using System;
 using System.Collections.Specialized;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace Sir.HttpServer.Controllers
 {
     public class UpvoteController : UIController
     {
-        public UpvoteController(IConfigurationProvider config) : base(config)
+        public UpvoteController(IConfigurationProvider config, SessionFactory sessionFactory) : base(config, sessionFactory)
         {
         }
 

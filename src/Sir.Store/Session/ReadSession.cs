@@ -51,7 +51,8 @@ namespace Sir.Store
 
         public override void Dispose()
         {
-            _postingsStream.Dispose();
+            if (_postingsStream != null)
+                _postingsStream.Dispose();
 
             base.Dispose();
         }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Sir.Store;
 
 namespace Sir.HttpServer.Controllers
 {
@@ -6,7 +7,7 @@ namespace Sir.HttpServer.Controllers
     {
         private readonly IConfigurationProvider _config;
 
-        public HomeController(IConfigurationProvider config) : base(config)
+        public HomeController(IConfigurationProvider config, SessionFactory sessionFactory) : base(config, sessionFactory)
         {
             _config = config;
         }

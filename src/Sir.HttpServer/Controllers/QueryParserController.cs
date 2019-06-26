@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Sir.Store;
 
 namespace Sir.HttpServer.Controllers
 {
@@ -15,7 +16,8 @@ namespace Sir.HttpServer.Controllers
             PluginsCollection plugins,
             IQueryFormatter queryFormatter, 
             IConfigurationProvider config,
-            IStringModel tokenizer) : base(config)
+            IStringModel tokenizer,
+            SessionFactory sessionFactory) : base(config, sessionFactory)
         {
             _queryFormatter = queryFormatter;
             _plugins = plugins;

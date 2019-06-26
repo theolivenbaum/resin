@@ -3,6 +3,7 @@ using System.Net;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Mvc;
 using Sir.HttpServer.Features;
+using Sir.Store;
 
 namespace Sir.HttpServer.Controllers
 {
@@ -11,7 +12,7 @@ namespace Sir.HttpServer.Controllers
         private readonly HtmlWeb _htmlParser;
         private readonly CrawlQueue _crawlQueue;
 
-        public SubmitController(PluginsCollection plugins, CrawlQueue crawlQueue, IConfigurationProvider config) : base(config)
+        public SubmitController(PluginsCollection plugins, CrawlQueue crawlQueue, IConfigurationProvider config, SessionFactory sessionFactory) : base(config, sessionFactory)
         {
             _htmlParser = new HtmlWeb();
             _crawlQueue = crawlQueue;

@@ -40,6 +40,16 @@ namespace Sir.Store
             this.Log("initiated");
         }
 
+        public long GetDocCount(string collection)
+        {
+            var fileName = Path.Combine(Dir, $"{collection.ToHash()}.dix");
+
+            if (!File.Exists(fileName))
+                return 0;
+
+            return new FileInfo(fileName).Length / (sizeof(long) + sizeof(int));
+        }
+
         public MemoryMappedFile OpenMMF(string fileName)
         {
             var mapName = fileName.Replace(":", "").Replace("\\", "_");

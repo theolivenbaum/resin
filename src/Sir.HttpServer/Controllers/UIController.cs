@@ -1,29 +1,31 @@
-﻿using System.IO;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Sir.Store;
 
 namespace Sir.HttpServer.Controllers
 {
     public abstract class UIController : Controller
     {
         private readonly IConfigurationProvider _config;
+        private readonly SessionFactory _sessionFactory;
+        private IConfigurationProvider config;
 
         protected IConfigurationProvider Config { get { return _config; } }
 
-        public UIController(IConfigurationProvider config)
+        public UIController(IConfigurationProvider config, SessionFactory sessionFactory)
         {
             _config = config;
+            _sessionFactory = sessionFactory;
+        }
+
+        protected UIController(IConfigurationProvider config)
+        {
+            this.config = config;
         }
 
         public override void OnActionExecuted(ActionExecutedContext context)
         {
-            long? docCount = null;
-            string fileName = Path.Combine(_config.Get("data_dir"), "6604389855880847730.docs");
-            if (System.IO.File.Exists(fileName))
-            {
-                docCount = new FileInfo(fileName).Length/111;
-            }
-            ViewData["doc_count"] = docCount;
+            ViewData["doc_count"] = _sessionFactory.GetDocCount(_config.Get("default_collection"));
             ViewBag.DefaultCollection = _config.Get("default_collection");
             ViewBag.Collection = context.HttpContext.Request.Query.ContainsKey("collection") ?
                 context.HttpContext.Request.Query["collection"].ToString() :
