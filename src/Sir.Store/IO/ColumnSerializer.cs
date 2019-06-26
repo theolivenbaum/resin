@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RocksDbSharp;
+using System;
 using System.Diagnostics;
 using System.IO;
 
@@ -9,34 +10,42 @@ namespace Sir.Store
         private readonly long _keyId;
         private readonly ulong _collectionId;
         private readonly SessionFactory _sessionFactory;
-        private static readonly object _indexFileSync = new object();
+        private readonly RocksDb _db;
+        private readonly ColumnFamilyHandle _cf;
         private readonly PageIndexWriter _ixPageIndexWriter;
-        private readonly Stream _ixStream;
 
         public ColumnSerializer(
-            ulong collectionId, 
-            long keyId, 
-            SessionFactory sessionFactory)
+            ulong collectionId,
+            long keyId,
+            SessionFactory sessionFactory,
+            RocksDb db)
         {
             _keyId = keyId;
             _collectionId = collectionId;
             _sessionFactory = sessionFactory;
 
-            var pixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.ixp", _collectionId, keyId));
             var ixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.ix", _collectionId, keyId));
+            var pixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.ixp", _collectionId, keyId));
 
             _ixPageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(pixFileName));
-            _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
+
+            _db = db;
+
+            _cf = db.GetColumnFamily(ixFileName);
+
+            if (_cf == null || _cf.Handle == null)
+            {
+                _cf = db.CreateColumnFamily(new ColumnFamilyOptions(), ixFileName);
+            }
         }
 
-        public void CreateColumnSegment(VectorNode column, Stream vectorStream, Stream postingsStream, IStringModel model)
+        public void CreateColumnSegment(
+            VectorNode column, Stream vectorStream, Stream postingsStream, IStringModel model)
         {
             var time = Stopwatch.StartNew();
-            var page = GraphBuilder.SerializeTree(column, _ixStream, vectorStream, postingsStream, model);
+            var page = GraphBuilder.SerializeTree(column, _db, _cf, vectorStream, postingsStream, model);
 
-            _ixStream.Flush();
             _ixPageIndexWriter.Write(page.offset, page.length);
-            _ixPageIndexWriter.Flush();
 
             var size = PathFinder.Size(column);
 
@@ -46,7 +55,6 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            _ixStream.Dispose();
             _ixPageIndexWriter.Dispose();
         }
     }

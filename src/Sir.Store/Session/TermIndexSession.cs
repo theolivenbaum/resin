@@ -1,8 +1,8 @@
-﻿using Sir.Core;
+﻿using RocksDbSharp;
+using Sir.Core;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -18,6 +18,7 @@ namespace Sir.Store
         private bool _committing;
         private long _merges;
         private readonly ProducerConsumerQueue<(long, long, string)> _builder;
+        private readonly RocksDb _db;
 
         public TermIndexSession(
             string collectionName,
@@ -33,6 +34,7 @@ namespace Sir.Store
             var numThreads = int.Parse(_config.Get("index_thread_count"));
 
             _builder = new ProducerConsumerQueue<(long, long, string)>(numThreads, BuildModel);
+            _db = RocksDb.Open(new DbOptions(), Path.Combine(sessionFactory.Dir, "db"));
         }
 
         public void Put(long docId, long keyId, string value)
@@ -71,7 +73,7 @@ namespace Sir.Store
                 {
                     using (var vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.vec")))
                     {
-                        using (var writer = new ColumnSerializer(CollectionId, column.Key, SessionFactory))
+                        using (var writer = new ColumnSerializer(CollectionId, column.Key, SessionFactory, _db))
                         {
                             writer.CreateColumnSegment(column.Value, vectorStream, postingsStream, _model);
                         }
@@ -124,6 +126,7 @@ namespace Sir.Store
         public void Dispose()
         {
             CommitToDisk();
+            _db.Dispose();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RocksDbSharp;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -158,8 +159,93 @@ namespace Sir.Store
             stream.Write(MemoryMarshal.Cast<long, byte>(span));
         }
 
+        public static void SerializeNode(VectorNode node, RocksDb db, ColumnFamilyHandle cf)
+        {
+            long terminator = 1;
+
+            if (node.Left == null && node.Right == null) // there are no children
+            {
+                terminator = 3;
+            }
+            else if (node.Left == null) // there is a right but no left
+            {
+                terminator = 2;
+            }
+            else if (node.Right == null) // there is a left but no right
+            {
+                terminator = 1;
+            }
+            else // there is a left and a right
+            {
+                terminator = 0;
+            }
+
+            Span<long> span = stackalloc long[5];
+
+            span[0] = node.VectorOffset;
+            span[1] = node.PostingsOffset;
+            span[2] = node.Vector.Count;
+            span[3] = node.Weight;
+            span[4] = terminator;
+            
+            db.Put(
+                MemoryMarshal.Cast<long, byte>(span.Slice(0, sizeof(long))).ToArray(),
+                MemoryMarshal.Cast<long, byte>(span).ToArray(), cf: cf);
+        }
+
         public static (long offset, long length) SerializeTree(
-            VectorNode node, Stream indexStream, Stream vectorStream, Stream postingsStream, IStringModel tokenizer)
+            VectorNode node, 
+            RocksDb db, 
+            ColumnFamilyHandle cf, 
+            Stream vectorStream, 
+            Stream postingsStream, 
+            IStringModel tokenizer)
+        {
+            var stack = new Stack<VectorNode>();
+
+            if (node.Vector.Count == 0)
+            {
+                node = node.Right;
+            }
+
+            long offset = -1;
+            long count = 0;
+
+            while (node != null)
+            {
+                SerializePostings(node, postingsStream);
+                node.VectorOffset = tokenizer.SerializeVector(node.Vector, vectorStream);
+                SerializeNode(node, db, cf);
+
+                if (offset == -1)
+                {
+                    offset = node.VectorOffset;
+                }
+
+                count++;
+
+                if (node.Right != null)
+                {
+                    stack.Push(node.Right);
+                }
+
+                node = node.Left;
+
+                if (node == null && stack.Count > 0)
+                {
+                    node = stack.Pop();
+                }
+            }
+
+            return (offset, count);
+        }
+
+        public static (long offset, long length) SerializeTree(
+            VectorNode node, 
+            Stream indexStream, 
+            Stream vectorStream, 
+            Stream postingsStream, 
+            IStringModel tokenizer)
         {
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;

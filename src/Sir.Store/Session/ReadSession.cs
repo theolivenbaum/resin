@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using RocksDbSharp;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -22,6 +23,8 @@ namespace Sir.Store
         private readonly IStringModel _tokenizer;
         private readonly Stream _postingsStream;
         private readonly ConcurrentDictionary<long, NodeReader> _nodeReaders;
+        private readonly RocksDb _db;
+        private readonly ColumnFamilyHandle _cf;
 
         public ReadSession(string collectionName,
             ulong collectionId,
@@ -171,7 +174,8 @@ namespace Sir.Store
             if (!File.Exists(ixFileName))
                 return null;
 
-            return _nodeReaders.GetOrAdd(keyId, new NodeReader(CollectionId, keyId, SessionFactory, _config));
+            return _nodeReaders.GetOrAdd(keyId, new NodeReader(
+                CollectionId, keyId, SessionFactory, _config));
         }
 
         public NodeReader CreateIndexReader(ulong keyHash)
