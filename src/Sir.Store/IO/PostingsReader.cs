@@ -30,35 +30,47 @@ namespace Sir.Store
 
                 while (cursor != null)
                 {
-                    var docIds = Read(cursor.PostingsOffsets, cursor.Score);
+                    var subResult = Read(cursor.PostingsOffsets, cursor.Score);
+
+                    this.Log($"term {cursor.Term} exists in {subResult.Count} documents");
 
                     if (cursor.And)
                     {
                         if (result == null)
                         {
-                            result = docIds;
+                            result = subResult;
                         }
                         else
                         {
-                            var section = new Dictionary<long, float>();
+                            var product = new Dictionary<long, float>();
 
                             foreach (var doc in result)
                             {
                                 float score;
-                                if (docIds.TryGetValue(doc.Key, out score))
+                                if (subResult.TryGetValue(doc.Key, out score))
                                 {
-                                    section.Add(doc.Key, doc.Value + score);
+                                    product.Add(doc.Key, doc.Value + score);
                                 }
                             }
 
-                            result = section;
+                            foreach (var doc in subResult)
+                            {
+                                float score;
+                                if (result.TryGetValue(doc.Key, out score))
+                                {
+                                    if (!product.ContainsKey(doc.Key))
+                                        product.Add(doc.Key, doc.Value + score);
+                                }
+                            }
+
+                            result = product;
                         }
                     }
                     else if (cursor.Not)
                     {
                         if (result != null)
                         {
-                            foreach (var id in docIds.Keys)
+                            foreach (var id in subResult.Keys)
                             {
                                 result.Remove(id);
                             }
@@ -68,17 +80,40 @@ namespace Sir.Store
                     {
                         if (result == null)
                         {
-                            result = docIds;
+                            result = subResult;
                         }
                         else
                         {
-                            foreach (var doc in docIds)
+                            var product = new Dictionary<long, float>();
+
+                            foreach (var doc in result)
                             {
-                                if (result.ContainsKey(doc.Key))
+                                float score;
+                                if (subResult.TryGetValue(doc.Key, out score))
                                 {
-                                    result[doc.Key] += doc.Value;
+                                    product.Add(doc.Key, doc.Value + score);
+                                }
+                                else
+                                {
+                                    product.Add(doc.Key, doc.Value);
                                 }
                             }
+
+                            foreach (var doc in subResult)
+                            {
+                                float score;
+                                if (result.TryGetValue(doc.Key, out score))
+                                {
+                                    if (!product.ContainsKey(doc.Key))
+                                        product.Add(doc.Key, doc.Value + score);
+                                }
+                                else
+                                {
+                                    product.Add(doc.Key, doc.Value);
+                                }
+                            }
+
+                            result = product;
                         }
                     }
 
@@ -96,9 +131,9 @@ namespace Sir.Store
             );
 
             var index = skip > 0 ? skip : 0;
-            var count = Math.Min(sortedByScore.Count, (take > 0 ? take : sortedByScore.Count));
+            var count = Math.Min(sortedByScore.Count, take > 0 ? take : sortedByScore.Count);
 
-            this.Log("reducing {0} into {1} docs took {2}", query, sortedByScore.Count, timer.Elapsed);
+            this.Log($"found total of {sortedByScore.Count} docs in {timer.Elapsed}. skip {skip} take {take} index {index} count {count}");
 
             return new ScoredResult { SortedDocuments = sortedByScore.GetRange(index, count), Total = sortedByScore.Count };
         }
@@ -107,7 +142,7 @@ namespace Sir.Store
         {
             var result = new Dictionary<long, float>();
 
-            foreach(var offset in offsets)
+            foreach (var offset in offsets)
             {
                 GetPostingsFromStream(offset, result, score);
             }
@@ -127,7 +162,12 @@ namespace Sir.Store
 
             Span<byte> listBuf = stackalloc byte[sizeof(long) * (int)numOfPostings];
 
-            _stream.Read(listBuf);
+            var read = _stream.Read(listBuf);
+
+            if (read < listBuf.Length)
+            {
+                throw new Exception("oh dear");
+            }
 
             foreach (var word in MemoryMarshal.Cast<byte, long>(listBuf))
             {
