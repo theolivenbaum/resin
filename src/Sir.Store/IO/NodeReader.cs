@@ -82,7 +82,7 @@ namespace Sir.Store
                 }
             }
 
-            this.Log($"scanning of {pages.Count} pages found {hits.Count} hits in {time.Elapsed}");
+            this.Log($"scanning of {pages.Count} pages took {time.Elapsed}");
 
             return hits;
         }
