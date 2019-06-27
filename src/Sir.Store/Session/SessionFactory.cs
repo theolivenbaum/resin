@@ -71,6 +71,28 @@ namespace Sir.Store
             _keys.Clear();
         }
 
+        public void TruncateIndex(ulong collectionId)
+        {
+            foreach (var file in Directory.GetFiles(Dir, $"{collectionId}*.ix"))
+            {
+                File.Delete(file);
+            }
+            foreach (var file in Directory.GetFiles(Dir, $"{collectionId}*.ixp"))
+            {
+                File.Delete(file);
+            }
+            foreach (var file in Directory.GetFiles(Dir, $"{collectionId}*.vec"))
+            {
+                File.Delete(file);
+            }
+            foreach (var file in Directory.GetFiles(Dir, $"{collectionId}*.pos"))
+            {
+                File.Delete(file);
+            }
+
+            _pageInfo.Clear();
+        }
+
         public void ExecuteWrite(Job job)
         {
             lock (WriteSync)

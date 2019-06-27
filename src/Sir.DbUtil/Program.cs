@@ -32,6 +32,15 @@ namespace Sir.DbUtil
                     collectionName: args[2],
                     model);
             }
+            else if (command == "index")
+            {
+                // example: index www
+
+                Index(
+                    dir: args[1],
+                    collectionName: args[2],
+                    model: model);
+            }
             else if (command == "create-bow")
             {
                 // example: create-bow C:\projects\resin\src\Sir.HttpServer\App_Data www 0 1000
@@ -170,6 +179,39 @@ namespace Sir.DbUtil
                     using (var session = sessionFactory.CreateWarmupSession(collectionName, collectionName.ToHash(), uri.ToString()))
                     {
                         session.Warmup(documentStreamSession.ReadDocs(skip, take), 0);
+                    }
+                }
+            }
+        }
+
+        private static void Index(string dir, string collectionName, IStringModel model)
+        {
+            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
+            {
+                var collectionId = collectionName.ToHash();
+
+                sessionFactory.TruncateIndex(collectionId);
+
+                using (var documents = sessionFactory.CreateDocumentStreamSession(collectionName, collectionId))
+                {
+                    using (var indexSession = sessionFactory.CreateIndexSession(collectionName, collectionId))
+                    {
+                        foreach (var document in documents.ReadDocs())
+                        {
+                            foreach(var key in document.Keys)
+                            {
+                                var strKey = (string)key;
+
+                                if (strKey.StartsWith("_"))
+                                    continue;
+
+                                var keyId = sessionFactory.GetKeyId(collectionId, strKey.ToHash());
+
+                                indexSession.Put((long)document["___docid"], keyId, (string)document[key]);
+                            }
+
+                            Console.WriteLine(document["___docid"]);
+                        }
                     }
                 }
             }

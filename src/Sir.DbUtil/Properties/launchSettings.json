@@ -2,7 +2,7 @@
   "profiles": {
     "Sir.DbUtil": {
       "commandName": "Project",
-      "commandLineArgs": "optimize c:\\temp\\app_data www"
+      "commandLineArgs": "index c:\\data\\resin d365"
     }
   }
 }
