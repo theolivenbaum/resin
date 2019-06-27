@@ -17,7 +17,6 @@ namespace Sir.Store
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private static readonly object WriteSync = new object();
-        private readonly ConcurrentDictionary<string, Stream> _readStreams;
 
         public string Dir { get; }
         public IConfigurationProvider Config { get; }
