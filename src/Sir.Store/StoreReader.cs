@@ -46,6 +46,8 @@ namespace Sir.Store
                     return new ResponseModel { MediaType = "application/json", Total = 0 };
                 }
 
+                this.Log(string.Format("begin executing query {0}", query));
+
                 var result = session.Read(query);
                 long total = result.Total;
 
