@@ -1,25 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
     public static class StreamHelper
     {
-        public static byte[] ToStreamWithHeader(this IEnumerable<long> items, long header)
+        public static void SerializeHeaderAndPayload(IEnumerable<long> items, int itemCount, Stream stream)
         {
-            var payload = new MemoryStream();
+            Span<long> payload = stackalloc long[itemCount+1];
 
-            payload.Write(BitConverter.GetBytes(header));
+            payload[0] = itemCount;
+
+            var index = 1;
 
             foreach (var item in items)
             {
-                var buf = BitConverter.GetBytes(item);
-
-                payload.Write(buf);
+                payload[index++] = item;
             }
 
-            return payload.ToArray();
+            stream.Write(MemoryMarshal.Cast<long, byte>(payload));
         }
 
         public static byte[] ToStream(this IEnumerable<long> items)

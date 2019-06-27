@@ -195,11 +195,9 @@ namespace Sir.Store
 
         public static void SerializePostings(VectorNode node, Stream postingsStream)
         {
-            var offset = postingsStream.Position;
+            node.PostingsOffset = postingsStream.Position;
 
-            postingsStream.Write(node.DocIds.ToStreamWithHeader(node.DocIds.Count));
-
-            node.PostingsOffset = offset;
+            StreamHelper.SerializeHeaderAndPayload(node.DocIds, node.DocIds.Count, postingsStream);
         }
 
         public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, IStringModel tokenizer)
