@@ -20,7 +20,7 @@ namespace Sir.Store
         private readonly ValueReader _valReader;
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _tokenizer;
-        private readonly Stream _postingsStream;
+        private readonly Stream _postings;
         private readonly ConcurrentDictionary<long, NodeReader> _nodeReaders;
 
         public ReadSession(string collectionName,
@@ -49,15 +49,14 @@ namespace Sir.Store
 
             var posFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos");
 
-            _postingsStream = SessionFactory.CreateReadStream(posFileName);
+            _postings = SessionFactory.CreateReadStream(posFileName);
         }
 
         public override void Dispose()
         {
-            if (_postingsStream != null)
-                _postingsStream.Dispose();
+            _postings.Dispose();
 
-            foreach(var reader in _nodeReaders.Values)
+            foreach (var reader in _nodeReaders.Values)
             {
                 reader.Dispose();
             }
@@ -112,7 +111,7 @@ namespace Sir.Store
 
             var timer = Stopwatch.StartNew();
 
-            var result = new PostingsReader(_postingsStream).Reduce(query.ToClauses(), query.Skip, query.Take);
+            var result = new PostingsReader(_postings).Reduce(query.ToClauses(), query.Skip, query.Take);
 
             this.Log("map/reduce took {0}", timer.Elapsed);
 

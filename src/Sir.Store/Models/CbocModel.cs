@@ -1,12 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
     public class CbocModel : IStringModel
     {
+        public Vector DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView)
+        {
+            if (vectorView == null)
+            {
+                throw new ArgumentNullException(nameof(vectorView));
+            }
+
+            var valuesBuf = new int[componentCount];
+            var read = vectorView.ReadArray(vectorOffset, valuesBuf, 0, valuesBuf.Length);
+
+            return new Vector(valuesBuf);
+        }
+
         public Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
         {
             if (vectorStream == null)
@@ -98,7 +112,7 @@ namespace Sir.Store
 
         public float IdenticalAngle => 0.999999f;
 
-        public float FoldAngle => 0.65f;
+        public float FoldAngle => throw new NotImplementedException();
 
         public float CosAngle(Vector vec1, Vector vec2)
         {
