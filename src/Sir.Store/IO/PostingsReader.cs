@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Sir.Store
@@ -42,37 +43,28 @@ namespace Sir.Store
                         }
                         else
                         {
-                            var product = new Dictionary<long, float>();
-
-                            foreach (var doc in result)
-                            {
-                                float score;
-                                if (subResult.TryGetValue(doc.Key, out score))
-                                {
-                                    product.Add(doc.Key, doc.Value + score);
-                                }
-                            }
-
                             foreach (var doc in subResult)
                             {
                                 float score;
+
                                 if (result.TryGetValue(doc.Key, out score))
                                 {
-                                    if (!product.ContainsKey(doc.Key))
-                                        product.Add(doc.Key, doc.Value + score);
+                                    result[doc.Key] = score + doc.Value;
+                                }
+                                else
+                                {
+                                    result.Remove(doc.Key);
                                 }
                             }
-
-                            result = product;
                         }
                     }
                     else if (cursor.Not)
                     {
                         if (result != null)
                         {
-                            foreach (var id in subResult.Keys)
+                            foreach (var doc in subResult.Keys)
                             {
-                                result.Remove(id);
+                                result.Remove(doc);
                             }
                         }
                     }
@@ -84,36 +76,19 @@ namespace Sir.Store
                         }
                         else
                         {
-                            var product = new Dictionary<long, float>();
-
-                            foreach (var doc in result)
-                            {
-                                float score;
-                                if (subResult.TryGetValue(doc.Key, out score))
-                                {
-                                    product.Add(doc.Key, doc.Value + score);
-                                }
-                                else
-                                {
-                                    product.Add(doc.Key, doc.Value);
-                                }
-                            }
-
                             foreach (var doc in subResult)
                             {
                                 float score;
+
                                 if (result.TryGetValue(doc.Key, out score))
                                 {
-                                    if (!product.ContainsKey(doc.Key))
-                                        product.Add(doc.Key, doc.Value + score);
+                                    result[doc.Key] = score + doc.Value;
                                 }
                                 else
                                 {
-                                    product.Add(doc.Key, doc.Value);
+                                    result.Add(doc);
                                 }
                             }
-
-                            result = product;
                         }
                     }
 
