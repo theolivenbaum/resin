@@ -8,7 +8,6 @@ namespace Sir.Store
     /// </summary>
     public class WriteSession : CollectionSession, ILogger, IDisposable
     {
-        private readonly IConfigurationProvider _config;
         private readonly TermIndexSession _indexSession;
         private readonly CollectionStreamWriter _streamWriter;
 
