@@ -249,7 +249,8 @@ namespace Sir.Store
 
         public ReadSession CreateReadSession(string collectionName, ulong collectionId)
         {
-            return new ReadSession(collectionName, collectionId, this, Config, _model);
+            return new ReadSession(
+                collectionName, collectionId, this, Config, _model, new CollectionStreamReader(collectionId, this));
         }
 
         public Stream CreateAsyncReadStream(string fileName, int bufferSize = 4096)

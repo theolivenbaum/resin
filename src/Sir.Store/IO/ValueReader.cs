@@ -6,13 +6,18 @@ namespace Sir.Store
     /// <summary>
     /// Read a value by supplying an offset, length and data type.
     /// </summary>
-    public class ValueReader
+    public class ValueReader : IDisposable
     {
         private readonly Stream _stream;
 
         public ValueReader(Stream stream)
         {
             _stream = stream;
+        }
+
+        public void Dispose()
+        {
+            _stream.Dispose();
         }
 
         public object Read(long offset, int len, byte dataType)

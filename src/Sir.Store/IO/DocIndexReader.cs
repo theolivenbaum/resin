@@ -6,7 +6,7 @@ namespace Sir.Store
     /// <summary>
     /// Lookup offset and length of a document map that consists of key IDs and value IDs.
     /// </summary>
-    public class DocIndexReader
+    public class DocIndexReader : IDisposable
     {
         private readonly Stream _stream;
 
@@ -43,6 +43,11 @@ namespace Sir.Store
             }
 
             return (BitConverter.ToInt64(buf, 0), BitConverter.ToInt32(buf, sizeof(long)));
+        }
+
+        public void Dispose()
+        {
+            _stream.Dispose();
         }
     }
 }

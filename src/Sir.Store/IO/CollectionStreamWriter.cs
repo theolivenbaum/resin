@@ -85,9 +85,4 @@ namespace Sir.Store
             _docIx.Dispose();
         }
     }
-
-    public class CollectionStreamReader
-    {
-
-    }
 }

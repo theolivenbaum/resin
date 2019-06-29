@@ -24,9 +24,16 @@ namespace Sir.Store
             IConfigurationProvider config
             ) : base(collectionName, collectionId, sessionFactory)
         {
+            _readSession = new ReadSession(
+                CollectionName,
+                CollectionId,
+                SessionFactory,
+                config,
+                tokenizer,
+                new CollectionStreamReader(collectionId, sessionFactory));
+
             _config = config;
             _tokenizer = tokenizer;
-            _readSession = new ReadSession(CollectionName, CollectionId, SessionFactory, _config, tokenizer);
             _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedData tokens)>(
                 int.Parse(_config.Get("validate_thread_count")), Validate);
         }

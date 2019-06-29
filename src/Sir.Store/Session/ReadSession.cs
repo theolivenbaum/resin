@@ -1,8 +1,8 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Threading.Tasks;
 
 namespace Sir.Store
@@ -10,49 +10,33 @@ namespace Sir.Store
     /// <summary>
     /// Read session targeting a single collection.
     /// </summary>
-    public class ReadSession : DocumentSession, ILogger
+    public class ReadSession : CollectionSession, ILogger, IDisposable
     {
-        private readonly DocIndexReader _docIx;
-        private readonly DocMapReader _docs;
-        private readonly ValueIndexReader _keyIx;
-        private readonly ValueIndexReader _valIx;
-        private readonly ValueReader _keyReader;
-        private readonly ValueReader _valReader;
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _tokenizer;
         private readonly Stream _postings;
         private readonly ConcurrentDictionary<long, NodeReader> _nodeReaders;
+        private readonly CollectionStreamReader _streamReader;
 
         public ReadSession(string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
             IConfigurationProvider config,
-            IStringModel tokenizer) 
+            IStringModel tokenizer,
+            CollectionStreamReader streamReader) 
             : base(collectionName, collectionId, sessionFactory)
         {
-            ValueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)));
-            KeyStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", CollectionId)));
-            DocStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", CollectionId)));
-            ValueIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", CollectionId)));
-            KeyIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", CollectionId)));
-            DocIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
-
-            _docIx = new DocIndexReader(DocIndexStream);
-            _docs = new DocMapReader(DocStream);
-            _keyIx = new ValueIndexReader(KeyIndexStream);
-            _valIx = new ValueIndexReader(ValueIndexStream);
-            _keyReader = new ValueReader(KeyStream);
-            _valReader = new ValueReader(ValueStream);
             _config = config;
             _tokenizer = tokenizer;
             _nodeReaders = new ConcurrentDictionary<long, NodeReader>();
+            _streamReader = streamReader;
 
             var posFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos");
 
             _postings = SessionFactory.CreateReadStream(posFileName);
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             _postings.Dispose();
 
@@ -61,7 +45,7 @@ namespace Sir.Store
                 reader.Dispose();
             }
 
-            base.Dispose();
+            _streamReader.Dispose();
         }
         public ReadResult Read(Query query)
         {
@@ -190,65 +174,29 @@ namespace Sir.Store
 
             foreach (var d in docs)
             {
-                var docInfo = _docIx.Read(d.Key);
+                var docInfo = _streamReader.GetDocumentAddress(d.Key);
 
                 if (docInfo.offset < 0)
                 {
                     continue;
                 }
 
-                var docMap = _docs.Read(docInfo.offset, docInfo.length);
+                var docMap = _streamReader.GetDocumentMap(docInfo.offset, docInfo.length);
                 var doc = new Dictionary<string, object>();
 
                 for (int i = 0; i < docMap.Count; i++)
                 {
                     var kvp = docMap[i];
-                    var kInfo = _keyIx.Read(kvp.keyId);
-                    var vInfo = _valIx.Read(kvp.valId);
-                    var key = _keyReader.Read(kInfo.offset, kInfo.len, kInfo.dataType);
-                    var val = _valReader.Read(vInfo.offset, vInfo.len, vInfo.dataType);
+                    var kInfo = _streamReader.GetAddressOfKey(kvp.keyId);
+                    var vInfo = _streamReader.GetAddressOfValue(kvp.valId);
+                    var key = _streamReader.GetKey(kInfo.offset, kInfo.len, kInfo.dataType);
+                    var val = _streamReader.GetValue(vInfo.offset, vInfo.len, vInfo.dataType);
 
                     doc[key.ToString()] = val;
                 }
 
                 doc["___docid"] = d.Key;
                 doc["___score"] = d.Value;
-
-                result.Add(doc);
-            }
-
-            return result;
-        }
-
-        public IList<IDictionary<string, object>> ReadDocs(IEnumerable<long> docs)
-        {
-            var result = new List<IDictionary<string, object>>();
-
-            foreach (var docId in docs)
-            {
-                var docInfo = _docIx.Read(docId);
-
-                if (docInfo.offset < 0)
-                {
-                    continue;
-                }
-
-                var docMap = _docs.Read(docInfo.offset, docInfo.length);
-                var doc = new Dictionary<string, object>();
-
-                for (int i = 0; i < docMap.Count; i++)
-                {
-                    var kvp = docMap[i];
-                    var kInfo = _keyIx.Read(kvp.keyId);
-                    var vInfo = _valIx.Read(kvp.valId);
-                    var key = _keyReader.Read(kInfo.offset, kInfo.len, kInfo.dataType);
-                    var val = _valReader.Read(vInfo.offset, vInfo.len, vInfo.dataType);
-
-                    doc[key.ToString()] = val;
-                }
-
-                doc["___docid"] = docId;
-                doc["___score"] = 1f;
 
                 result.Add(doc);
             }

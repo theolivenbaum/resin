@@ -7,7 +7,7 @@ namespace Sir.Store
     /// <summary>
     /// Find out there in the value stream a value is stored, by supplying a value ID.
     /// </summary>
-    public class ValueIndexReader
+    public class ValueIndexReader : IDisposable
     {
         private readonly Stream _stream;
         private static int _blockSize = sizeof(long) + sizeof(int) + sizeof(byte);
@@ -15,6 +15,11 @@ namespace Sir.Store
         public ValueIndexReader(Stream stream)
         {
             _stream = stream;
+        }
+
+        public void Dispose()
+        {
+            _stream.Dispose();
         }
 
         public async Task<(long offset, int len, byte dataType)> ReadAsync(long id)

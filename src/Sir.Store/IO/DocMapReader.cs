@@ -9,13 +9,18 @@ namespace Sir.Store
     /// Document map stream reader, for fetching a document maps (key_id/val_id) from the document map stream.
     /// A document map is needed to re-contruct a complete document.
     /// </summary>
-    public class DocMapReader
+    public class DocMapReader : IDisposable
     {
         private readonly Stream _stream;
 
         public DocMapReader(Stream stream)
         {
             _stream = stream;
+        }
+
+        public void Dispose()
+        {
+            _stream.Dispose();
         }
 
         public IList<(long keyId, long valId)> Read(long offset, int length)
