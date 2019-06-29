@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -19,11 +18,11 @@ namespace Sir.Store
         public object Read(long offset, int len, byte dataType)
         {
             int read;
-            byte[] buf;
+            Span<byte> buf = stackalloc byte[len];
 
             _stream.Seek(offset, SeekOrigin.Begin);
-            buf = new byte[len];
-            read = _stream.Read(buf, 0, len);
+            
+            read = _stream.Read(buf);
 
             if (read != len)
             {
@@ -38,35 +37,35 @@ namespace Sir.Store
             }
             else if (DataType.CHAR == typeId)
             {
-                return BitConverter.ToChar(buf, 0);
+                return BitConverter.ToChar(buf);
             }
             else if (DataType.FLOAT == typeId)
             {
-                return BitConverter.ToSingle(buf, 0);
+                return BitConverter.ToSingle(buf);
             }
             else if (DataType.INT == typeId)
             {
-                return BitConverter.ToInt32(buf, 0);
+                return BitConverter.ToInt32(buf);
             }
             else if (DataType.DOUBLE == typeId)
             {
-                return BitConverter.ToDouble(buf, 0);
+                return BitConverter.ToDouble(buf);
             }
             else if (DataType.LONG == typeId)
             {
-                return BitConverter.ToInt64(buf, 0);
+                return BitConverter.ToInt64(buf);
             }
             else if (DataType.DATETIME == typeId)
             {
-                return DateTime.FromBinary(BitConverter.ToInt64(buf, 0));
+                return DateTime.FromBinary(BitConverter.ToInt64(buf));
             }
             else if (DataType.STRING == typeId)
             {
-                return new string(System.Text.Encoding.Unicode.GetChars(buf));
+                return new string(System.Text.Encoding.Unicode.GetChars(buf.ToArray()));
             }
             else
             {
-                return buf;
+                return buf.ToArray();
             }
         }
     }

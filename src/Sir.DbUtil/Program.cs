@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Sir.Store;
 
@@ -88,8 +89,7 @@ namespace Sir.DbUtil
                 var fullTime = Stopwatch.StartNew();
                 var batchNo = 0;
                 var httpClient = new HttpClient();
-
-                foreach (var batch in ReadFile(fileName, count)
+                var payload = ReadFile(fileName, count)
                     .Where(x => x.Contains("title"))
                     .Select(x => new Dictionary<string, object>
                             {
@@ -97,15 +97,17 @@ namespace Sir.DbUtil
                                 { "_url", string.Format("www.wikipedia.org/search-redirect.php?family=wikipedia&language={0}&search={1}", x["language"], x["title"]) },
                                 { "title", x["title"] },
                                 { "body", x["text"] }
-                            })
-                    .Batch(batchSize))
+                            });
+
+                Parallel.ForEach(payload.Batch(batchSize), batch =>
+                //foreach (var batch in payload.Batch(batchSize))
                 {
                     var time = Stopwatch.StartNew();
                     Submit(batch, uri, httpClient);
                     time.Stop();
                     var docsPerSecond = (int)(batchSize / time.Elapsed.TotalSeconds);
                     Console.WriteLine($"batch {batchNo++} took {time.Elapsed} {docsPerSecond} docs/s");
-                }
+                });
 
                 Console.WriteLine("write took {0}", fullTime.Elapsed);
             }
@@ -192,27 +194,10 @@ namespace Sir.DbUtil
 
                 sessionFactory.TruncateIndex(collectionId);
 
+                using (var indexSession = sessionFactory.CreateIndexSession(collectionName, collectionId))
                 using (var documents = sessionFactory.CreateDocumentStreamSession(collectionName, collectionId))
                 {
-                    using (var indexSession = sessionFactory.CreateIndexSession(collectionName, collectionId))
-                    {
-                        foreach (var document in documents.ReadDocs())
-                        {
-                            foreach(var key in document.Keys)
-                            {
-                                var strKey = (string)key;
-
-                                if (strKey.StartsWith("_"))
-                                    continue;
-
-                                var keyId = sessionFactory.GetKeyId(collectionId, strKey.ToHash());
-
-                                indexSession.Put((long)document["___docid"], keyId, (string)document[key]);
-                            }
-
-                            Console.WriteLine(document["___docid"]);
-                        }
-                    }
+                    documents.Index(indexSession, Console.Out);
                 }
             }
         }

@@ -57,7 +57,7 @@ namespace Sir.Store
             }
             else if (value is string)
             {
-                buffer = System.Text.Encoding.Unicode.GetBytes(value.ToString());
+                buffer = System.Text.Encoding.Unicode.GetBytes((string)value);
                 dataType = DataType.STRING;
             }
             else

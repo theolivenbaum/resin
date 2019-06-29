@@ -10,7 +10,7 @@ namespace Sir.Store
     {
         private readonly Stream _stream;
 
-        public int NumOfDocs
+        public int Count
         {
             get
             {
