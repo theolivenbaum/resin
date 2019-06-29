@@ -60,6 +60,11 @@ namespace Sir.Store
             return _vals.Read(offset, len, dataType);
         }
 
+        public int DocumentCount()
+        {
+            return _docIx.Count;
+        }
+
         public void Dispose()
         {
             _vals.Dispose();

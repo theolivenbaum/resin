@@ -226,7 +226,7 @@ namespace Sir.Store
 
         public DocumentStreamSession CreateDocumentStreamSession(string collectionName, ulong collectionId)
         {
-            return new DocumentStreamSession(collectionName, collectionId, this);
+            return new DocumentStreamSession(collectionName, collectionId, this, new CollectionStreamReader(collectionId, this));
         }
 
         public WriteSession CreateWriteSession(string collectionName, ulong collectionId, TermIndexSession indexSession)
