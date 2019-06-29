@@ -22,6 +22,11 @@ namespace Sir.Store
             }
         }
 
+        public void Flush()
+        {
+            _stream.Flush();
+        }
+
         /// <summary>
         /// Get the next auto-incrementing doc id
         /// </summary>
@@ -44,6 +49,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
+            _stream.Dispose();
         }
     }
 }

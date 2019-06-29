@@ -16,6 +16,11 @@ namespace Sir.Store
             _stream = stream;
         }
 
+        public void Flush()
+        {
+            _stream.Flush();
+        }
+
         public long Append(long offset, int len, byte dataType)
         {
             var position = _stream.Position;
@@ -29,6 +34,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
+            _stream.Dispose();
         }
     }
 }

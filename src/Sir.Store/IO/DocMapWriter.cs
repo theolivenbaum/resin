@@ -16,6 +16,11 @@ namespace Sir.Store
             _stream = stream;
         }
 
+        public void Flush()
+        {
+            _stream.Flush();
+        }
+
         public (long offset, int length) Append(IList<(long keyId, long valId)> doc)
         {
             var off = _stream.Position;
@@ -31,6 +36,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
+            _stream.Dispose();
         }
     }
 }

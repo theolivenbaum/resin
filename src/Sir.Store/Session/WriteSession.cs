@@ -1,57 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Sir.Store
 {
     /// <summary>
     /// Write session targeting a single collection.
     /// </summary>
-    public class WriteSession : DocumentSession, ILogger
+    public class WriteSession : CollectionSession, ILogger, IDisposable
     {
         private readonly IConfigurationProvider _config;
-        private readonly ValueWriter _vals;
-        private readonly ValueWriter _keys;
-        private readonly DocMapWriter _docs;
-        private readonly ValueIndexWriter _valIx;
-        private readonly ValueIndexWriter _keyIx;
-        private readonly DocIndexWriter _docIx;
         private readonly TermIndexSession _indexSession;
+        private readonly CollectionStreamWriter _streamWriter;
 
         public WriteSession(
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory,
             TermIndexSession indexSession,
+            CollectionStreamWriter streamWriter,
             IConfigurationProvider config) : base(collectionName, collectionId, sessionFactory)
         {
-            ValueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", CollectionId)), int.Parse(config.Get("value_stream_buffer_size")));
-            KeyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", CollectionId)));
-            DocStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", CollectionId)), int.Parse(config.Get("doc_map_stream_buffer_size")));
-            ValueIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", CollectionId)));
-            KeyIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", CollectionId)));
-            DocIndexStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", CollectionId)));
-
-            _config = config;
-            _vals = new ValueWriter(ValueStream);
-            _keys = new ValueWriter(KeyStream);
-            _docs = new DocMapWriter(DocStream);
-            _valIx = new ValueIndexWriter(ValueIndexStream);
-            _keyIx = new ValueIndexWriter(KeyIndexStream);
-            _docIx = new DocIndexWriter(DocIndexStream);
             _indexSession = indexSession;
+            _streamWriter = streamWriter;
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
-            _keys.Dispose();
-            _vals.Dispose();
-            _keyIx.Dispose();
-            _valIx.Dispose();
-            _docs.Dispose();
-            _docIx.Dispose();
-
-            base.Dispose();
+            _streamWriter.Flush();
         }
 
         /// <summary>
@@ -63,7 +38,7 @@ namespace Sir.Store
             document["__created"] = DateTime.Now.ToBinary();
 
             var docMap = new List<(long keyId, long valId)>();
-            var docId = _docIx.GetNextDocId();
+            var docId = _streamWriter.GetNextDocId();
 
             foreach (var key in document.Keys)
             {
@@ -89,15 +64,15 @@ namespace Sir.Store
                     // We have a new key!
 
                     // store key
-                    var keyInfo = _keys.Append(keyStr);
+                    var keyInfo = _streamWriter.PutKey(keyStr);
 
-                    keyId = _keyIx.Append(keyInfo.offset, keyInfo.len, keyInfo.dataType);
+                    keyId = _streamWriter.PutKeyInfo(keyInfo.offset, keyInfo.len, keyInfo.dataType);
                     SessionFactory.PersistKeyMapping(CollectionId, keyHash, keyId);
                 }
 
                 // store value
-                var valInfo = _vals.Append(val);
-                var valId = _valIx.Append(valInfo.offset, valInfo.len, valInfo.dataType);
+                var valInfo = _streamWriter.PutValue(val);
+                var valId = _streamWriter.PutValueInfo(valInfo.offset, valInfo.len, valInfo.dataType);
 
                 // store refs to keys and values
                 docMap.Add((keyId, valId));
@@ -109,9 +84,9 @@ namespace Sir.Store
                 }
             }
 
-            var docMeta = _docs.Append(docMap);
+            var docMeta = _streamWriter.PutDocumentMap(docMap);
 
-            _docIx.Append(docMeta.offset, docMeta.length);
+            _streamWriter.PutDocumentAddress(docMeta.offset, docMeta.length);
         }
     }
 }
