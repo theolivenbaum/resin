@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Sir.Store;
 
@@ -99,15 +98,14 @@ namespace Sir.DbUtil
                                 { "body", x["text"] }
                             });
 
-                Parallel.ForEach(payload.Batch(batchSize), batch =>
-                //foreach (var batch in payload.Batch(batchSize))
+                foreach (var batch in payload.Batch(batchSize))
                 {
                     var time = Stopwatch.StartNew();
                     Submit(batch, uri, httpClient);
                     time.Stop();
                     var docsPerSecond = (int)(batchSize / time.Elapsed.TotalSeconds);
                     Console.WriteLine($"batch {batchNo++} took {time.Elapsed} {docsPerSecond} docs/s");
-                });
+                }
 
                 Console.WriteLine("write took {0}", fullTime.Elapsed);
             }
