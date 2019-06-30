@@ -18,7 +18,7 @@ namespace Sir.Store
             _stream = stream;
         }
 
-        public ScoredResult Reduce(IList<Query> query, int skip, int take)
+        public ScoredResult Reduce(IEnumerable<Query> query, int skip, int take)
         {
             var timer = Stopwatch.StartNew();
 

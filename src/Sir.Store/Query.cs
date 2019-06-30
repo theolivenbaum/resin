@@ -127,18 +127,15 @@ namespace Sir.Store
             return diagram.ToString();
         }
 
-        public IList<Query> ToClauses()
+        public IEnumerable<Query> ToClauses()
         {
-            var list = new List<Query>();
             Query q = this;
 
             while (q != null)
             {
-                list.Add(q);
+                yield return q;
                 q = q.NextClause;
             }
-
-            return list;
         }
 
         public Query AddClause(Query query)

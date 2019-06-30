@@ -109,9 +109,7 @@ namespace Sir.Store
         {
             var timer = Stopwatch.StartNew();
 
-            var clauses = query.ToClauses();
-
-            foreach (var q in clauses)
+            foreach (var q in query.ToClauses())
             {
                 var cursor = q;
 
