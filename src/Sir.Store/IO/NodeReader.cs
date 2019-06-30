@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
@@ -302,14 +303,17 @@ namespace Sir.Store
 
             VectorNode best = null;
             float highscore = 0;
+            Span<long> span = stackalloc long[5];
 
             while (read > 0)
             {
-                var vecOffset = BitConverter.ToInt64(block.Slice(0, sizeof(long)));
-                var componentCount = BitConverter.ToInt64(block.Slice(sizeof(long) + sizeof(long), sizeof(long)));
+                span = MemoryMarshal.Cast<byte, long>(block);
+
+                var vecOffset = span[0];
+                var postingsOffset = span[1];
+                var componentCount = span[2];
                 var cursorVector = model.DeserializeVector(vecOffset, (int)componentCount, vectorStream);
-                var cursorTerminator = BitConverter.ToInt64(block.Slice(sizeof(long) + sizeof(long) + sizeof(long) + sizeof(long), sizeof(long)));
-                var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));
+                var cursorTerminator = span[4];
                 var angle = model.CosAngle(cursorVector, vector);
 
                 if (angle >= model.IdenticalAngle)
@@ -574,17 +578,10 @@ namespace Sir.Store
 
         private void SkipTree(Stream indexStream)
         {
-            Span<byte> buf = new byte[VectorNode.BlockSize];
+            Span<byte> buf = stackalloc byte[VectorNode.BlockSize];
 
             var read = indexStream.Read(buf);
-
-            if (read == 0)
-            {
-                throw new InvalidOperationException();
-            }
-
-            var positionInBuffer = VectorNode.BlockSize - (sizeof(long) + sizeof(long));
-            var weight = BitConverter.ToInt64(buf.Slice(positionInBuffer, sizeof(long)));
+            var weight = BitConverter.ToInt64(buf.Slice(sizeof(long)*3, sizeof(long)));
             var distance = weight * VectorNode.BlockSize;
 
             if (distance > 0)
