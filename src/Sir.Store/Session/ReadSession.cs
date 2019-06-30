@@ -96,7 +96,7 @@ namespace Sir.Store
 
             var result = new PostingsReader(_postings).Reduce(query.ToClauses(), query.Skip, query.Take);
 
-            this.Log("map/reduce took {0}", timer.Elapsed);
+            this.Log("reduce operation took {0}", timer.Elapsed);
 
             return result;
         }
@@ -140,7 +140,7 @@ namespace Sir.Store
                 }
             }
 
-            this.Log("mapping {0} took {1}", query, timer.Elapsed);
+            this.Log("map operation for {0} took {1}", query, timer.Elapsed);
         }
 
         public NodeReader CreateIndexReader(long keyId)

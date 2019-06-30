@@ -138,11 +138,6 @@ namespace Sir.Store
 
             var read = _stream.Read(listBuf);
 
-            if (read < listBuf.Length)
-            {
-                throw new Exception("oh dear");
-            }
-
             foreach (var word in MemoryMarshal.Cast<byte, long>(listBuf))
             {
                 result.Add(word, score);

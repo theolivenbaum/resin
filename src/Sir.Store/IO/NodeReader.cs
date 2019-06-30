@@ -139,7 +139,7 @@ namespace Sir.Store
                 hits.Add(hit);
             }
 
-            this.Log($"scanning of {pages.Count} pages took {time.Elapsed}");
+            this.Log($"scan of {pages.Count} pages took {time.Elapsed}");
 
             return hits;
         }
