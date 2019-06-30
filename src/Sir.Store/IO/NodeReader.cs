@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -18,6 +17,8 @@ namespace Sir.Store
         private readonly string _ixMapName;
         private readonly MemoryMappedFile _indexFile;
         private readonly MemoryMappedViewAccessor _vectorView;
+        private readonly Stream _indexStream;
+        private readonly Stream _vectorStream;
         private readonly string _ixFileName;
         private readonly string _vecFileName;
 
@@ -25,7 +26,8 @@ namespace Sir.Store
             ulong collectionId,
             long keyId,
             SessionFactory sessionFactory,
-            IConfigurationProvider config)
+            IConfigurationProvider config,
+            bool useMemoryMapping = false)
         {
             var ixFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
             var ixpFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.{1}.ixp", collectionId, keyId));
@@ -37,13 +39,22 @@ namespace Sir.Store
             _config = config;
             _ixpFileName = ixpFileName;
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
-            _indexFile = _sessionFactory.OpenMMF(_ixFileName);
-            _vectorView = _sessionFactory.OpenMMF(_vecFileName).CreateViewAccessor(0, 0);
+
+            if (useMemoryMapping)
+            {
+                _indexFile = _sessionFactory.OpenMMF(_ixFileName);
+                _vectorView = _sessionFactory.OpenMMF(_vecFileName).CreateViewAccessor(0, 0);
+            }
+            else
+            {
+                _indexStream = _sessionFactory.CreateReadStream(_ixFileName);
+                _vectorStream = sessionFactory.CreateReadStream(_vecFileName);
+            }
         }
 
         public Hit ClosestMatch(Vector vector, IStringModel model)
         {
-            var hits = ClosestMatchOnFile(vector, model);
+            var hits = ClosestMatchOnDisk(vector, model);
             Hit best = null;
 
             foreach (var hit in hits)
@@ -61,12 +72,32 @@ namespace Sir.Store
             return best;
         }
 
-        private IEnumerable<Hit> ClosestMatchOnFile(
+        public Hit ClosestMatchInMemory(Vector vector, IStringModel model)
+        {
+            var hits = ClosestMatchInMemoryMappedFile(vector, model);
+            Hit best = null;
+
+            foreach (var hit in hits)
+            {
+                if (best == null || hit.Score > best.Score)
+                {
+                    best = hit;
+                }
+                else if (hit.Score == best.Score)
+                {
+                    GraphBuilder.MergePostings(best.Node, hit.Node);
+                }
+            }
+
+            return best;
+        }
+
+        private IEnumerable<Hit> ClosestMatchInMemoryMappedFile(
             Vector vector, IStringModel model)
         {
             var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
-            var hits = new ConcurrentBag<Hit>();
+            var hits = new List<Hit>();
 
             foreach (var page in pages)
             {
@@ -80,6 +111,31 @@ namespace Sir.Store
 
                     hits.Add(hit);
                 }
+            }
+
+            this.Log($"scanning of {pages.Count} pages took {time.Elapsed}");
+
+            return hits;
+        }
+
+        private IEnumerable<Hit> ClosestMatchOnDisk(
+            Vector vector, IStringModel model)
+        {
+            var time = Stopwatch.StartNew();
+            var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
+            var hits = new List<Hit>();
+
+            foreach (var page in pages)
+            {
+                _indexStream.Seek(page.offset, SeekOrigin.Begin);
+
+                var hit = ClosestMatchInPage(
+                vector,
+                _indexStream,
+                _vectorStream,
+                model);
+
+                hits.Add(hit);
             }
 
             this.Log($"scanning of {pages.Count} pages took {time.Elapsed}");
@@ -369,6 +425,142 @@ namespace Sir.Store
             };
         }
 
+        private Hit ClosestMatchInPage(
+            Vector vector,
+            Stream indexStream,
+            MemoryMappedViewAccessor vectorView,
+            IStringModel model
+        )
+        {
+            Span<byte> block = stackalloc byte[VectorNode.BlockSize];
+
+            var read = indexStream.Read(block);
+
+            VectorNode best = null;
+            float highscore = 0;
+
+            while (read > 0)
+            {
+                var vecOffset = BitConverter.ToInt64(block.Slice(0, sizeof(long)));
+                var componentCount = BitConverter.ToInt64(block.Slice(sizeof(long) + sizeof(long), sizeof(long)));
+                var cursorVector = model.DeserializeVector(vecOffset, (int)componentCount, vectorView);
+                var cursorTerminator = BitConverter.ToInt64(block.Slice(sizeof(long) + sizeof(long) + sizeof(long) + sizeof(long), sizeof(long)));
+                var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long), sizeof(long)));
+                var angle = model.CosAngle(cursorVector, vector);
+
+                if (angle >= model.IdenticalAngle)
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffsets = new List<long> { postingsOffset };
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    break;
+                }
+                else if (angle > model.FoldAngle)
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffsets = new List<long> { postingsOffset };
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    // We need to determine if we can traverse further left.
+                    bool canGoLeft = cursorTerminator == 0 || cursorTerminator == 1;
+
+                    if (canGoLeft)
+                    {
+                        // There exists either a left and a right child or just a left child.
+                        // Either way, we want to go left and the next node in bitmap is the left child.
+
+                        read = indexStream.Read(block);
+                    }
+                    else
+                    {
+                        // There is no left child.
+
+                        break;
+                    }
+                }
+                else
+                {
+                    if (best == null || angle > highscore)
+                    {
+                        highscore = angle;
+                        best = new VectorNode(cursorVector);
+                        best.PostingsOffsets = new List<long> { postingsOffset };
+                    }
+                    else if (angle == highscore)
+                    {
+                        if (best.PostingsOffsets == null)
+                        {
+                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
+                        }
+                        else
+                        {
+                            best.PostingsOffsets.Add(postingsOffset);
+                        }
+                    }
+
+                    // We need to determine if we can traverse further to the right.
+
+                    if (cursorTerminator == 0)
+                    {
+                        // There exists a left and a right child.
+                        // Next node in bitmap is the left child. 
+                        // To find cursor's right child we must skip over the left tree.
+
+                        SkipTree(indexStream);
+                        read = indexStream.Read(block);
+                    }
+                    else if (cursorTerminator == 2)
+                    {
+                        // Next node in bitmap is the right child,
+                        // which is good because we want to go right.
+
+                        read = indexStream.Read(block);
+                    }
+                    else
+                    {
+                        // There is no right child.
+
+                        break;
+                    }
+                }
+            }
+
+            return new Hit
+            {
+                Score = highscore,
+                Node = best
+            };
+        }
+
         private void SkipTree(MemoryMappedViewAccessor indexView, ref long offset)
         {
             var weight = indexView.ReadInt64(offset + sizeof(long) + sizeof(long) + sizeof(long));
@@ -403,7 +595,17 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            _vectorView.Dispose();
+            if(_vectorView != null)
+                _vectorView.Dispose();
+
+            if (_indexFile != null)
+                _indexFile.Dispose();
+
+            if (_indexStream != null)
+                _indexStream.Dispose();
+
+            if (_vectorStream != null)
+                _vectorStream.Dispose();
         }
     }
 }
