@@ -30,9 +30,11 @@ namespace Sir.Store
 
                 while (cursor != null)
                 {
+                    var readTimer = Stopwatch.StartNew();
+
                     var subResult = Read(cursor.PostingsOffsets, cursor.Score);
 
-                    this.Log($"term {cursor.Term} exists in {subResult.Count} documents");
+                    this.Log($"found {subResult.Count} documents for term {cursor.Term} in {readTimer.Elapsed}");
 
                     if (cursor.And)
                     {
