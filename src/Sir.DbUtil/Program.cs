@@ -16,7 +16,6 @@ namespace Sir.DbUtil
         static void Main(string[] args)
         {
             var model = new BocModel();
-
             Console.WriteLine("processing command: {0}", string.Join(" ", args));
 
             Logging.SendToConsole = true;
@@ -107,6 +106,50 @@ namespace Sir.DbUtil
                     Console.WriteLine($"batch {batchNo++} took {time.Elapsed} {docsPerSecond} docs/s");
                 }
 
+                Console.WriteLine("submit took {0}", fullTime.Elapsed);
+            }
+            else if (command == "write")
+            {
+                var fileName = args[1];
+                var dir = args[2];
+                var collection = args[3];
+                var skip = int.Parse(args[4]);
+                var take = int.Parse(args[5]);
+                var batchSize = int.Parse(args[6]);
+
+                var fullTime = Stopwatch.StartNew();
+                var batchNo = 0;
+                var payload = ReadFile(fileName, take)
+                    .Where(x => x.Contains("title"))
+                    .Skip(skip)
+                    .Take(take)
+                    .Select(x => new Dictionary<string, object>
+                            {
+                                { "_language", x["language"].ToString() },
+                                { "_url", string.Format("www.wikipedia.org/search-redirect.php?family=wikipedia&language={0}&search={1}", x["language"], x["title"]) },
+                                { "title", x["title"] },
+                                { "body", x["text"] }
+                            });
+
+                using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
+                {
+                    sessionFactory.Truncate(collection.ToHash());
+
+                    foreach (var batch in payload.Batch(batchSize))
+                    {
+                        var time = Stopwatch.StartNew();
+
+                        sessionFactory.ExecuteWrite(new Job(collection, batch, model));
+
+                        time.Stop();
+
+                        var docsPerSecond = (int)(batchSize / time.Elapsed.TotalSeconds);
+
+                        Console.WriteLine($"batch {batchNo++} took {time.Elapsed}");
+                        Console.WriteLine($"{docsPerSecond} docs/s");
+                    }
+                }
+
                 Console.WriteLine("write took {0}", fullTime.Elapsed);
             }
             else
@@ -146,6 +189,29 @@ namespace Sir.DbUtil
                     }
 
                     yield return JsonConvert.DeserializeObject<IDictionary>(line);
+                }
+            }
+        }
+
+        private static void Write(string dir, string collectionName, IEnumerable<Dictionary<string, object>> batch, IStringModel model)
+        {
+            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
+            {
+                sessionFactory.Truncate(collectionName.ToHash());
+                sessionFactory.ExecuteWrite(new Job(collectionName, batch, model));
+            }
+        }
+
+        private static void Write(string dir, Uri uri, string collectionName, int skip, int take, IStringModel model)
+        {
+            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
+            {
+                using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
+                {
+                    using (var session = sessionFactory.CreateWarmupSession(collectionName, collectionName.ToHash(), uri.ToString()))
+                    {
+                        session.Warmup(documentStreamSession.ReadDocs(skip, take), 0);
+                    }
                 }
             }
         }

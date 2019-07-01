@@ -48,8 +48,8 @@ namespace Sir.Store
             }
             else
             {
-                _indexStream = _sessionFactory.CreateReadStream(_ixFileName);
-                _vectorStream = sessionFactory.CreateReadStream(_vecFileName);
+                _indexStream = _sessionFactory.CreateReadStream(_ixFileName, fileOptions: FileOptions.SequentialScan);
+                _vectorStream = sessionFactory.CreateReadStream(_vecFileName, fileOptions: FileOptions.RandomAccess);
             }
         }
 

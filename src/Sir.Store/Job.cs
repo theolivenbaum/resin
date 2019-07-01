@@ -6,13 +6,13 @@ namespace Sir.Store
     {
         public string Collection { get; private set; }
         public IEnumerable<IDictionary<string, object>> Documents { get; private set; }
-        public IStringModel Tokenizer { get; }
+        public IStringModel Model { get; }
 
-        public Job(string collection, IEnumerable<IDictionary<string, object>> documents, IStringModel tokenizer)
+        public Job(string collection, IEnumerable<IDictionary<string, object>> documents, IStringModel model)
         {
             Collection = collection;
             Documents = documents;
-            Tokenizer = tokenizer;
+            Model = model;
         }
     }
 }
