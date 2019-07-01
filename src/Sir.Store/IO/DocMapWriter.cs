@@ -23,6 +23,9 @@ namespace Sir.Store
 
         public (long offset, int length) Append(IList<(long keyId, long valId)> doc)
         {
+            if (doc.Count == 0)
+                throw new ArgumentException(nameof(doc));
+
             var off = _stream.Position;
 
             foreach (var kv in doc)

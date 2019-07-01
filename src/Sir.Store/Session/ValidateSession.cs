@@ -12,7 +12,7 @@ namespace Sir.Store
     public class ValidateSession : CollectionSession, IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
-        private readonly IStringModel _tokenizer;
+        private readonly IStringModel _model;
         private readonly ReadSession _readSession;
         private readonly ProducerConsumerQueue<(long docId, object key, AnalyzedData tokens)> _validator;
 
@@ -20,7 +20,7 @@ namespace Sir.Store
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
-            IStringModel tokenizer,
+            IStringModel model,
             IConfigurationProvider config
             ) : base(collectionName, collectionId, sessionFactory)
         {
@@ -29,11 +29,11 @@ namespace Sir.Store
                 CollectionId,
                 SessionFactory,
                 config,
-                tokenizer,
+                model,
                 new CollectionStreamReader(collectionId, sessionFactory));
 
             _config = config;
-            _tokenizer = tokenizer;
+            _model = model;
             _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedData tokens)>(
                 int.Parse(_config.Get("validate_thread_count")), Validate);
         }
@@ -48,7 +48,7 @@ namespace Sir.Store
                 {
                     var strKey = key.ToString();
 
-                    if (!strKey.StartsWith("__"))
+                    if (!strKey.StartsWith("_"))
                     {
                         var keyId = SessionFactory.GetKeyId(CollectionId, strKey.ToHash());
 
@@ -57,7 +57,7 @@ namespace Sir.Store
                             continue;
                         }
 
-                        var terms = _tokenizer.Tokenize(doc[key].ToString());
+                        var terms = _model.Tokenize(doc[key].ToString());
 
                         _validator.Enqueue((docId, key, terms));
                     }       
@@ -71,10 +71,10 @@ namespace Sir.Store
 
             foreach (var vector in item.tokens.Embeddings)
             {
-                GraphBuilder.Add(docTree, new VectorNode(vector, item.docId), _tokenizer);
+                GraphBuilder.Add(docTree, new VectorNode(vector, item.docId), _model);
             }
 
-            foreach (var node in PathFinder.All(docTree))
+            foreach (var node in PathFinder.All(docTree.Right))
             {
                 var query = new Query(CollectionId, new Term(item.key, node));
                 bool valid = false;

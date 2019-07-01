@@ -40,16 +40,6 @@ namespace Sir.DbUtil
                     collectionName: args[2],
                     model: model);
             }
-            else if (command == "create-bow")
-            {
-                // example: create-bow C:\projects\resin\src\Sir.HttpServer\App_Data www 0 1000
-
-                CreateBOWModel(
-                    dir: args[1], 
-                    collectionName: args[2], 
-                    skip: int.Parse(args[3]), 
-                    take: int.Parse(args[4]));
-            }
             else if (command == "validate")
             {
                 // example: validate C:\projects\resin\src\Sir.HttpServer\App_Data www 0 3000
@@ -58,7 +48,8 @@ namespace Sir.DbUtil
                     dir: args[1], 
                     collectionName: args[2], 
                     skip: int.Parse(args[3]), 
-                    take: int.Parse(args[4]));
+                    take: int.Parse(args[4]),
+                    model);
             }
             else if (command == "warmup")
             {
@@ -121,15 +112,15 @@ namespace Sir.DbUtil
                 var batchNo = 0;
                 var payload = ReadFile(fileName, take)
                     .Where(x => x.Contains("title"))
-                    .Skip(skip)
-                    .Take(take)
                     .Select(x => new Dictionary<string, object>
                             {
                                 { "_language", x["language"].ToString() },
                                 { "_url", string.Format("www.wikipedia.org/search-redirect.php?family=wikipedia&language={0}&search={1}", x["language"], x["title"]) },
                                 { "title", x["title"] },
                                 { "body", x["text"] }
-                            });
+                            })
+                    .Skip(skip)
+                    .Take(take);
 
                 using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
                 {
@@ -156,9 +147,6 @@ namespace Sir.DbUtil
             {
                 Console.WriteLine("unknown command: {0}", command);
             }
-
-            Console.WriteLine("press any key to exit");
-            Console.Read();
         }
 
         private static IEnumerable<IDictionary> ReadFile(string fileName, int count)
@@ -190,15 +178,6 @@ namespace Sir.DbUtil
 
                     yield return JsonConvert.DeserializeObject<IDictionary>(line);
                 }
-            }
-        }
-
-        private static void Write(string dir, string collectionName, IEnumerable<Dictionary<string, object>> batch, IStringModel model)
-        {
-            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
-            {
-                sessionFactory.Truncate(collectionName.ToHash());
-                sessionFactory.ExecuteWrite(new Job(collectionName, batch, model));
             }
         }
 
@@ -305,23 +284,17 @@ namespace Sir.DbUtil
                 }
             }
         }
-        
-        private static void CreateBOWModel(string dir, string collectionName, int skip, int take)
-        {
-            throw new NotImplementedException();
-        }
 
-        private static void Validate(string dir, string collectionName, int skip, int take)
+        private static void Validate(string dir, string collectionName, int skip, int take, IStringModel model)
         {
-            var files = Directory.GetFiles(dir, "*.docs");
             var time = Stopwatch.StartNew();
 
-            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), new BocModel()))
+            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
             {
                 using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
                 using (var validateSession = sessionFactory.CreateValidateSession(collectionName, collectionName.ToHash()))
                 {
-                    validateSession.Validate(documentStreamSession.ReadDocs(skip, take), 0, 1, 2, 3, 6);
+                    validateSession.Validate(documentStreamSession.ReadDocs(skip, take));
                 }
             }
 

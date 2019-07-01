@@ -32,29 +32,29 @@ namespace Sir.Store
                 {
                     var readTimer = Stopwatch.StartNew();
 
-                    var subResult = Read(cursor.PostingsOffsets, cursor.Score);
+                    var termResult = Read(cursor.PostingsOffsets, cursor.Score);
 
-                    this.Log($"found {subResult.Count} documents for term {cursor.Term} in {readTimer.Elapsed}");
+                    this.Log($"found {termResult.Count} documents for term {cursor.Term} in {readTimer.Elapsed}");
 
                     if (cursor.And)
                     {
                         if (result == null)
                         {
-                            result = subResult;
+                            result = termResult;
                         }
                         else
                         {
-                            foreach (var doc in subResult)
+                            foreach (var hit in termResult)
                             {
                                 float score;
 
-                                if (result.TryGetValue(doc.Key, out score))
+                                if (result.TryGetValue(hit.Key, out score))
                                 {
-                                    result[doc.Key] = score + doc.Value;
+                                    result[hit.Key] = score + hit.Value;
                                 }
                                 else
                                 {
-                                    result.Remove(doc.Key);
+                                    result.Remove(hit.Key);
                                 }
                             }
                         }
@@ -63,7 +63,7 @@ namespace Sir.Store
                     {
                         if (result != null)
                         {
-                            foreach (var doc in subResult.Keys)
+                            foreach (var doc in termResult.Keys)
                             {
                                 result.Remove(doc);
                             }
@@ -73,11 +73,11 @@ namespace Sir.Store
                     {
                         if (result == null)
                         {
-                            result = subResult;
+                            result = termResult;
                         }
                         else
                         {
-                            foreach (var doc in subResult)
+                            foreach (var doc in termResult)
                             {
                                 float score;
 

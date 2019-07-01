@@ -71,7 +71,7 @@ namespace Sir.Store
 
         public IEnumerable<IDictionary> ReadDocs()
         {
-            var docId = 0;
+            long docId = 1;
             var docCount = _streamReader.DocumentCount();
 
             while (docId < docCount)
@@ -97,7 +97,7 @@ namespace Sir.Store
                     doc[key] = val;
                 }
 
-                doc["___docid"] = docId;
+                doc["___docid"] = docId++;
 
                 yield return doc;
             }
