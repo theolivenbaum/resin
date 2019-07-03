@@ -133,11 +133,11 @@ namespace Sir.HttpServer.Features
                 urlQuery.And = true;
                 urlQuery.Take = 1;
 
-                var result = readSession.Read(urlQuery);
+                var result = readSession.Read(urlQuery).Docs.ToList();
             
-                return result.Total == 0 
-                    ? null : (float)result.Docs[0]["___score"] >= _model.IdenticalAngle 
-                    ? result.Docs[0] : null;
+                return result.Count == 0 
+                    ? null : (float)result[0]["___score"] >= _model.IdenticalAngle 
+                    ? result[0] : null;
             }
         }
 

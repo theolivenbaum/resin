@@ -16,16 +16,13 @@ namespace Sir.Store
 
         private readonly SessionFactory _sessionFactory;
         private readonly HttpQueryParser _httpQueryParser;
-        private readonly HttpBowQueryParser _httpBowQueryParser;
 
         public StoreReader(
             SessionFactory sessionFactory, 
-            HttpQueryParser httpQueryParser, 
-            HttpBowQueryParser httpDocumentQueryParser)
+            HttpQueryParser httpQueryParser)
         {
             _sessionFactory = sessionFactory;
             _httpQueryParser = httpQueryParser;
-            _httpBowQueryParser = httpDocumentQueryParser;
         }
 
         public void Dispose()
@@ -62,7 +59,7 @@ namespace Sir.Store
                         newCollectionName = Guid.NewGuid().ToString();
                     }
 
-                    _sessionFactory.ExecuteWrite(new Job(newCollectionName, result.Docs, model));
+                    _sessionFactory.ExecuteWrite(new Job(newCollectionName, result.Docs));
                 }
 
                 var mem = new MemoryStream();
@@ -79,7 +76,7 @@ namespace Sir.Store
             }
         }
 
-        private void Serialize(IList<IDictionary<string, object>> docs, Stream stream)
+        private void Serialize(IEnumerable<IDictionary<string, object>> docs, Stream stream)
         {
             using (StreamWriter writer = new StreamWriter(stream))
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))

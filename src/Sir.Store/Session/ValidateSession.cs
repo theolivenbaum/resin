@@ -35,7 +35,7 @@ namespace Sir.Store
             _config = config;
             _model = model;
             _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedData tokens)>(
-                int.Parse(_config.Get("validate_thread_count")), Validate);
+                1, Validate);
         }
 
         public void Validate(IEnumerable<IDictionary> documents, params long[] excludeKeyIds)
@@ -77,24 +77,15 @@ namespace Sir.Store
             foreach (var node in PathFinder.All(docTree.Right))
             {
                 var query = new Query(CollectionId, new Term(item.key, node));
-                bool valid = false;
+                var ids = _readSession.ReadIds(query).ToList();
 
-                foreach (var id in _readSession.ReadIds(query))
-                {
-                    if (id == item.docId)
-                    {
-                        valid = true;
-                        break;
-                    }
-                }
-
-                if (!valid)
+                if (!ids.Contains(item.docId))
                 {
                     throw new DataMisalignedException();
                 }
             }
 
-            this.Log("**************************validated doc {0}", item.docId);
+            this.Log("validated doc {0}", item.docId);
         }
 
         public void Dispose()

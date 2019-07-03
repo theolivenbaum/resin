@@ -13,7 +13,7 @@ namespace Sir
             Count = Values.Length;
         }
 
-        public virtual string AsString()
+        public override string ToString()
         {
             var buf = new char[Values.Length];
 
@@ -35,24 +35,16 @@ namespace Sir
             Index = index;
         }
 
-        public override string AsString()
+        public override string ToString()
         {
-            var w = new StringBuilder();
-            var ix = Index;
-            var vals = Values;
+            var buf = new char[Index.Length];
 
-            for (int i = 0; i < ix.Length; i++)
+            for (int i = 0; i < Index.Length; i++)
             {
-                var c = ix[i];
-                var val = vals[i];
-
-                for (int ii = 0; ii < val; ii++)
-                {
-                    w.Append(char.ConvertFromUtf32(c));
-                }
+                buf[i] = (char)Index[i];
             }
 
-            return w.ToString();
+            return new string(buf);
         }
     }
 }

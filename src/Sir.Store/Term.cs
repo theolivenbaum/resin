@@ -51,7 +51,7 @@
 
         private string CreateString()
         {
-            return Vector.AsString();
+            return Vector.ToString();
         }
 
         public override string ToString()

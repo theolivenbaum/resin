@@ -130,7 +130,7 @@ namespace Sir.DbUtil
                     {
                         var time = Stopwatch.StartNew();
 
-                        sessionFactory.ExecuteWrite(new Job(collection, batch, model));
+                        sessionFactory.ExecuteWrite(new Job(collection, batch));
 
                         time.Stop();
 
@@ -177,20 +177,6 @@ namespace Sir.DbUtil
                     }
 
                     yield return JsonConvert.DeserializeObject<IDictionary>(line);
-                }
-            }
-        }
-
-        private static void Write(string dir, Uri uri, string collectionName, int skip, int take, IStringModel model)
-        {
-            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
-            {
-                using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
-                {
-                    using (var session = sessionFactory.CreateWarmupSession(collectionName, collectionName.ToHash(), uri.ToString()))
-                    {
-                        session.Warmup(documentStreamSession.ReadDocs(skip, take), 0);
-                    }
                 }
             }
         }
@@ -272,14 +258,11 @@ namespace Sir.DbUtil
                     var result = session.Read(q);
                     var docs = result.Docs;
 
-                    if (docs.Count > 0)
-                    {
-                        var index = 0;
+                    var index = 0;
 
-                        foreach (var doc in docs.Take(10))
-                        {
-                            Console.WriteLine("{0} {1} {2}", index++, doc["___score"], doc["title"]);
-                        }
+                    foreach (var doc in docs.Take(10))
+                    {
+                        Console.WriteLine("{0} {1} {2}", index++, doc["___score"], doc["title"]);
                     }
                 }
             }

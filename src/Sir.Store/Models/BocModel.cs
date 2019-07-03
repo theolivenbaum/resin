@@ -71,7 +71,7 @@ namespace Sir.Store
 
         public AnalyzedData Tokenize(string text)
         {
-            var source = text.AsMemory();
+            var source = text.ToCharArray();
             var offset = 0;
             bool word = false;
             int index = 0;
@@ -80,7 +80,7 @@ namespace Sir.Store
 
             for (; index < source.Length; index++)
             {
-                char c = char.ToLower(source.Span[index]);
+                char c = char.ToLower(source[index]);
 
                 if (word)
                 {

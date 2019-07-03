@@ -140,14 +140,14 @@ namespace Sir.Store
         {
             if (node == null) return;
             output.Append('\t', depth);
-            output.AppendFormat($"{node.AngleWhenAdded} {node} w:{node.Weight}");
+            output.AppendFormat($"{node.AngleWhenAdded} {node.ToDebugString()} w:{node.Weight}");
             output.AppendLine();
 
             Visualize(node.Left, output, depth + 1);
             Visualize(node.Right, output, depth);
         }
 
-        public override string ToString()
+        public string ToDebugString()
         {
             var vals = Vector.Values;
 
@@ -165,6 +165,11 @@ namespace Sir.Store
             w.Append(Vector.ToString());
 
             return w.ToString();
+        }
+
+        public override string ToString()
+        {
+            return Vector.ToString();
         }
 
         public VectorNodeData ToData()

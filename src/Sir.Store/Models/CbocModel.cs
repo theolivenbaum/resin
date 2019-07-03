@@ -51,7 +51,7 @@ namespace Sir.Store
 
         public AnalyzedData Tokenize(string text)
         {
-            var source = text.AsMemory();
+            Memory<char> source = text.ToCharArray();
             var offset = 0;
             bool word = false;
             int index = 0;
@@ -112,7 +112,7 @@ namespace Sir.Store
 
         public float IdenticalAngle => 0.999999f;
 
-        public float FoldAngle => throw new NotImplementedException();
+        public float FoldAngle => 0.55f;
 
         public float CosAngle(Vector vec1, Vector vec2)
         {

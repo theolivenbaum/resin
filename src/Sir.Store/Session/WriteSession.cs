@@ -86,6 +86,8 @@ namespace Sir.Store
             var docMeta = _streamWriter.PutDocumentMap(docMap);
 
             _streamWriter.PutDocumentAddress(docMeta.offset, docMeta.length);
+
+            document["___docid"] = docId;
         }
     }
 }
