@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
@@ -301,17 +300,14 @@ namespace Sir.Store
             var read = indexStream.Read(block);
             VectorNode best = null;
             float highscore = 0;
-            Span<long> span = stackalloc long[5];
 
             while (read > 0)
             {
-                span = MemoryMarshal.Cast<byte, long>(block);
-
-                var vecOffset = span[0];
-                var postingsOffset = span[1];
-                var componentCount = span[2];
+                var vecOffset = BitConverter.ToInt64(block.Slice(0));
+                var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long)));
+                var componentCount = BitConverter.ToInt64(block.Slice(sizeof(long)*2));
                 var cursorVector = model.DeserializeVector(vecOffset, (int)componentCount, vectorStream);
-                var cursorTerminator = span[4];
+                var cursorTerminator = BitConverter.ToInt64(block.Slice(sizeof(long) * 4));
                 var angle = model.CosAngle(cursorVector, vector);
 
                 if (angle >= model.IdenticalAngle)
@@ -579,7 +575,7 @@ namespace Sir.Store
             Span<byte> buf = stackalloc byte[VectorNode.BlockSize];
 
             var read = indexStream.Read(buf);
-            var weight = BitConverter.ToInt64(buf.Slice(sizeof(long)*3, sizeof(long)));
+            var weight = BitConverter.ToInt64(buf.Slice(sizeof(long)*3));
             var distance = weight * VectorNode.BlockSize;
 
             if (distance > 0)
