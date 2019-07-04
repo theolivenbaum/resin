@@ -48,6 +48,8 @@ namespace Sir.Store
         }
         public ReadResult Read(Query query)
         {
+            this.Log("begin read session for query {0}", query);
+
             if (SessionFactory.CollectionExists(query.Collection))
             {
                 var result = MapReduce(query);
@@ -56,11 +58,13 @@ namespace Sir.Store
                 {
                     var docs = ReadDocs(result.SortedDocuments);
 
+                    this.Log("end read session for query {0}", query);
+
                     return new ReadResult { Total = result.Total, Docs = docs };
                 }
             }
 
-            this.Log("found nothing for query {0}", query);
+            this.Log("zero results for query {0}", query);
 
             return new ReadResult { Total = 0, Docs = new IDictionary<string, object>[0] };
         }

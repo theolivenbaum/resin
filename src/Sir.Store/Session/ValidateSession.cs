@@ -27,7 +27,7 @@ namespace Sir.Store
             _config = config;
             _model = model;
             _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedData tokens)>(
-                10, Validate);
+                int.Parse(_config.Get("validate_thread_count")), Validate);
             _comparer = new DocumentComparer();
         }
 
