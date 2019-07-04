@@ -256,7 +256,7 @@ namespace Sir.Store
         public Stream CreateAsyncReadStream(string fileName, int bufferSize = 4096)
         {
             return File.Exists(fileName)
-            ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize, true)
+            ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize, FileOptions.Asynchronous)
             : null;
         }
 
@@ -269,7 +269,7 @@ namespace Sir.Store
 
         public Stream CreateAsyncAppendStream(string fileName, int bufferSize = 4096)
         {
-            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, bufferSize, true);
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, bufferSize, FileOptions.Asynchronous);
         }
 
         public Stream CreateAppendStream(string fileName, int bufferSize = 4096)

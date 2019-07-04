@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
 
 namespace Sir.Store
@@ -34,15 +35,15 @@ namespace Sir.Store
 
             _stream.Seek(offs, SeekOrigin.Begin);
 
-            var buf = new byte[DocIndexWriter.BlockSize];
-            var read = _stream.Read(buf, 0, DocIndexWriter.BlockSize);
+            Span<byte> buf = stackalloc byte[DocIndexWriter.BlockSize];
+            var read = _stream.Read(buf);
 
             if (read == 0)
             {
                 throw new ArgumentException(nameof(docId));
             }
 
-            return (BitConverter.ToInt64(buf, 0), BitConverter.ToInt32(buf, sizeof(long)));
+            return (BitConverter.ToInt64(buf.Slice(0, sizeof(long))), BitConverter.ToInt32(buf.Slice(sizeof(long))));
         }
 
         public void Dispose()

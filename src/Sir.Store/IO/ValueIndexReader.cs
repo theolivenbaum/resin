@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -45,15 +46,15 @@ namespace Sir.Store
 
             _stream.Seek(offset, SeekOrigin.Begin);
 
-            var buf = new byte[_blockSize];
-            var read =  _stream.Read(buf, 0, _blockSize);
+            Span<byte> buf = stackalloc byte[_blockSize];
+            var read =  _stream.Read(buf);
 
             if (read != _blockSize)
             {
                 throw new InvalidDataException();
             }
 
-            return (BitConverter.ToInt64(buf, 0), BitConverter.ToInt32(buf, sizeof(long)), buf[_blockSize - 1]);
+            return (BitConverter.ToInt64(buf.Slice(0)), BitConverter.ToInt32(buf.Slice(sizeof(long))), buf[_blockSize - 1]);
         }
     }
 }

@@ -15,9 +15,9 @@ namespace Sir.Store
 
         public CollectionStreamReader(ulong collectionId, SessionFactory sessionFactory)
         {
-            var valueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)), int.Parse(sessionFactory.Config.Get("value_stream_buffer_size")));
+            var valueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)), int.Parse(sessionFactory.Config.Get("value_stream_read_buffer_size")));
             var keyStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));
-            var docStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", collectionId)), int.Parse(sessionFactory.Config.Get("doc_map_stream_buffer_size")));
+            var docStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", collectionId)), int.Parse(sessionFactory.Config.Get("doc_map_stream_read_buffer_size")));
             var valueIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collectionId)));
             var keyIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collectionId)));
             var docIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collectionId)));

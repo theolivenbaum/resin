@@ -48,7 +48,7 @@ namespace Sir.Store
                 var result = session.Read(query);
                 long total = result.Total;
 
-                this.Log(string.Format("executed query {0} in {1}", query, timer.Elapsed));
+                this.Log($"executed query {query} in {timer.Elapsed}");
 
                 if (request.Query.ContainsKey("create"))
                 {

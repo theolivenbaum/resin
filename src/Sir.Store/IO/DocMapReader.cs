@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -25,13 +26,10 @@ namespace Sir.Store
 
         public IList<(long keyId, long valId)> Read(long offset, int length)
         {
-            byte[] buf;
-            int read;
-
             _stream.Seek(offset, SeekOrigin.Begin);
 
-            buf = new byte[length];
-            read = _stream.Read(buf, 0, length);
+            Span<byte> buf = stackalloc byte[length];
+            int read = _stream.Read(buf);
 
             if (read != length)
             {
@@ -45,8 +43,8 @@ namespace Sir.Store
             for (int i = 0; i < blockCount; i++)
             {
                 var offs = i * blockSize;
-                var key = BitConverter.ToInt64(buf, offs);
-                var val = BitConverter.ToInt64(buf, offs + sizeof(long));
+                var key = BitConverter.ToInt64(buf.Slice(offs));
+                var val = BitConverter.ToInt64(buf.Slice(offs + sizeof(long)));
 
                 docMapping.Add((key, val));
             }

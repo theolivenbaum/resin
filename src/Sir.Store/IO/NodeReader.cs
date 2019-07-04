@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -48,7 +49,7 @@ namespace Sir.Store
             }
             else
             {
-                _indexStream = _sessionFactory.CreateReadStream(_ixFileName, fileOptions: FileOptions.SequentialScan);
+                _indexStream = _sessionFactory.CreateReadStream(_ixFileName, bufferSize: int.Parse(_config.Get("nodereader_buffer_size")), fileOptions: FileOptions.SequentialScan);
                 _vectorStream = sessionFactory.CreateReadStream(_vecFileName, fileOptions: FileOptions.RandomAccess);
             }
         }
@@ -298,9 +299,7 @@ namespace Sir.Store
         )
         {
             Span<byte> block = stackalloc byte[VectorNode.BlockSize];
-
             var read = indexStream.Read(block);
-
             VectorNode best = null;
             float highscore = 0;
             Span<long> span = stackalloc long[5];
