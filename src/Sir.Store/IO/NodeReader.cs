@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -49,7 +48,7 @@ namespace Sir.Store
             }
             else
             {
-                _indexStream = _sessionFactory.CreateReadStream(_ixFileName, bufferSize: int.Parse(_config.Get("nodereader_buffer_size")), fileOptions: FileOptions.SequentialScan);
+                _indexStream = _sessionFactory.CreateReadStream(_ixFileName, bufferSize: int.Parse(_config.Get("nodereader_buffer_size")), fileOptions: FileOptions.RandomAccess);
                 _vectorStream = sessionFactory.CreateReadStream(_vecFileName, fileOptions: FileOptions.RandomAccess);
             }
         }

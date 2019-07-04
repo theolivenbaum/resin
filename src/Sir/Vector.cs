@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace Sir
+﻿namespace Sir
 {
     public class Vector
     {
