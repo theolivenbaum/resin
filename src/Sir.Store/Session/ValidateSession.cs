@@ -1,5 +1,4 @@
-﻿using Sir.Core;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,8 +12,8 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
-        private readonly ProducerConsumerQueue<(long docId, object key, AnalyzedData tokens)> _validator;
         private readonly DocumentComparer _comparer;
+        private readonly ReadSession _readSession;
 
         public ValidateSession(
             string collectionName,
@@ -26,9 +25,14 @@ namespace Sir.Store
         {
             _config = config;
             _model = model;
-            _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedData tokens)>(
-                int.Parse(_config.Get("validate_thread_count")), Validate);
             _comparer = new DocumentComparer();
+            _readSession = new ReadSession(
+                CollectionName,
+                CollectionId,
+                SessionFactory,
+                SessionFactory.Config,
+                SessionFactory.Model,
+                new CollectionStreamReader(CollectionId, SessionFactory));
         }
 
         public void Validate(IEnumerable<IDictionary> documents)
@@ -45,45 +49,40 @@ namespace Sir.Store
                     {
                         var terms = _model.Tokenize(doc[key].ToString());
 
-                        _validator.Enqueue((docId, key, terms));
+                        Validate(docId, key, terms);
                     }       
                 }
             }
         }
 
-        private void Validate((long docId, object key, AnalyzedData tokens) item)
+        private void Validate(long docId, object key, AnalyzedData tokens)
         {
             var docTree = new VectorNode();
 
-            foreach (var embedding in item.tokens.Embeddings)
+            foreach (var embedding in tokens.Embeddings)
             {
                 GraphBuilder.Add(docTree, new VectorNode(embedding), _model);
             }
 
-            using (var readSession = new ReadSession(
-                CollectionName,
-                CollectionId,
-                SessionFactory,
-                SessionFactory.Config,
-                SessionFactory.Model,
-                new CollectionStreamReader(CollectionId, SessionFactory)))
             foreach (var node in PathFinder.All(docTree))
             {
-                var query = new Query(CollectionId, new Term(item.key, node));
-                var result = readSession.Read(query);
+                var query = new Query(CollectionId, new Term(key, node));
+                var result = _readSession.Read(query);
 
-                if (!result.Docs.Contains(new Dictionary<string, object> { { "___docid", item.docId } }, _comparer))
+                if (!result.Docs.Contains(new Dictionary<string, object> { { "___docid", docId } }, _comparer))
                 {
+                    this.Log($"failed to validate node {node} from doc {docId}");
+
                     throw new DataMisalignedException();
                 }
             }
 
-            this.Log("validated doc {0}", item.docId);
+            this.Log("validated doc {0}", docId);
         }
 
         public void Dispose()
         {
-            _validator.Dispose();
+            _readSession.Dispose();
         }
     }
 
