@@ -14,7 +14,6 @@ namespace Sir.Store
     public class SessionFactory : IDisposable, ILogger
     {
         private readonly ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
-        private readonly IStringModel _model;
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private readonly Semaphore WriteSync = new Semaphore(1, 2);
@@ -22,6 +21,7 @@ namespace Sir.Store
 
         public string Dir { get; }
         public IConfigurationProvider Config { get; }
+        public IStringModel Model { get; }
 
         public SessionFactory(IConfigurationProvider config, IStringModel model)
         {
@@ -33,7 +33,7 @@ namespace Sir.Store
                 Directory.CreateDirectory(Dir);
             }
 
-            _model = model;
+            Model = model;
             _keys = LoadKeys();
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
@@ -221,7 +221,7 @@ namespace Sir.Store
 
         public WarmupSession CreateWarmupSession(string collectionName, ulong collectionId, string baseUrl)
         {
-            return new WarmupSession(collectionName, collectionId, this, _model, Config, baseUrl);
+            return new WarmupSession(collectionName, collectionId, this, Model, Config, baseUrl);
         }
 
         public DocumentStreamSession CreateDocumentStreamSession(string collectionName, ulong collectionId)
@@ -239,18 +239,18 @@ namespace Sir.Store
 
         public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId)
         {
-            return new TermIndexSession(collectionName, collectionId, this, _model, Config);
+            return new TermIndexSession(collectionName, collectionId, this, Model, Config);
         }
 
         public ValidateSession CreateValidateSession(string collectionName, ulong collectionId)
         {
-            return new ValidateSession(collectionName, collectionId, this, _model, Config);
+            return new ValidateSession(collectionName, collectionId, this, Model, Config);
         }
 
         public ReadSession CreateReadSession(string collectionName, ulong collectionId)
         {
             return new ReadSession(
-                collectionName, collectionId, this, Config, _model, new CollectionStreamReader(collectionId, this));
+                collectionName, collectionId, this, Config, Model, new CollectionStreamReader(collectionId, this));
         }
 
         public Stream CreateAsyncReadStream(string fileName, int bufferSize = 4096)

@@ -13,8 +13,8 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
-        private readonly ReadSession _readSession;
         private readonly ProducerConsumerQueue<(long docId, object key, AnalyzedData tokens)> _validator;
+        private readonly DocumentComparer _comparer;
 
         public ValidateSession(
             string collectionName,
@@ -24,21 +24,14 @@ namespace Sir.Store
             IConfigurationProvider config
             ) : base(collectionName, collectionId, sessionFactory)
         {
-            _readSession = new ReadSession(
-                CollectionName,
-                CollectionId,
-                SessionFactory,
-                config,
-                model,
-                new CollectionStreamReader(collectionId, sessionFactory));
-
             _config = config;
             _model = model;
             _validator = new ProducerConsumerQueue<(long docId, object key, AnalyzedData tokens)>(
-                1, Validate);
+                10, Validate);
+            _comparer = new DocumentComparer();
         }
 
-        public void Validate(IEnumerable<IDictionary> documents, params long[] excludeKeyIds)
+        public void Validate(IEnumerable<IDictionary> documents)
         {
             foreach (var doc in documents)
             {
@@ -50,13 +43,6 @@ namespace Sir.Store
 
                     if (!strKey.StartsWith("_"))
                     {
-                        var keyId = SessionFactory.GetKeyId(CollectionId, strKey.ToHash());
-
-                        if (excludeKeyIds.Contains(keyId))
-                        {
-                            continue;
-                        }
-
                         var terms = _model.Tokenize(doc[key].ToString());
 
                         _validator.Enqueue((docId, key, terms));
@@ -69,17 +55,24 @@ namespace Sir.Store
         {
             var docTree = new VectorNode();
 
-            foreach (var vector in item.tokens.Embeddings)
+            foreach (var embedding in item.tokens.Embeddings)
             {
-                GraphBuilder.Add(docTree, new VectorNode(vector, item.docId), _model);
+                GraphBuilder.Add(docTree, new VectorNode(embedding), _model);
             }
 
-            foreach (var node in PathFinder.All(docTree.Right))
+            using (var readSession = new ReadSession(
+                CollectionName,
+                CollectionId,
+                SessionFactory,
+                SessionFactory.Config,
+                SessionFactory.Model,
+                new CollectionStreamReader(CollectionId, SessionFactory)))
+            foreach (var node in PathFinder.All(docTree))
             {
                 var query = new Query(CollectionId, new Term(item.key, node));
-                var ids = _readSession.ReadIds(query).ToList();
+                var result = readSession.Read(query);
 
-                if (!ids.Contains(item.docId))
+                if (!result.Docs.Contains(new Dictionary<string, object> { { "___docid", item.docId } }, _comparer))
                 {
                     throw new DataMisalignedException();
                 }
@@ -91,7 +84,19 @@ namespace Sir.Store
         public void Dispose()
         {
             _validator.Dispose();
-            _readSession.Dispose();
+        }
+    }
+
+    public class DocumentComparer : IEqualityComparer<IDictionary<string, object>>
+    {
+        public bool Equals(IDictionary<string, object> x, IDictionary<string, object> y)
+        {
+            return (long)x["___docid"] == (long)y["___docid"];
+        }
+
+        public int GetHashCode(IDictionary<string, object> obj)
+        {
+            return obj.GetHashCode();
         }
     }
 }

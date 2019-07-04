@@ -45,7 +45,7 @@ namespace Sir.Store
 
         public static IEnumerable<VectorNode> All(VectorNode root)
         {
-            var node = root;
+            var node = root.ComponentCount == 0 ? root.Right : root;
             var stack = new Stack<VectorNode>();
 
             while (node != null)
