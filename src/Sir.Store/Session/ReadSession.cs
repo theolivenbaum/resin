@@ -37,7 +37,8 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            _postings.Dispose();
+            if (_postings != null)
+                _postings.Dispose();
 
             foreach (var reader in _nodeReaders.Values)
             {

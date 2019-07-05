@@ -19,7 +19,8 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            _stream.Dispose();
+            if (_stream != null)
+                _stream.Dispose();
         }
 
         public IList<(long keyId, long valId)> Read(long offset, int length)

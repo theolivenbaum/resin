@@ -47,7 +47,8 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            _stream.Dispose();
+            if (_stream != null)
+                _stream.Dispose();
         }
     }
 }

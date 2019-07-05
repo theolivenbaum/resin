@@ -143,12 +143,7 @@ namespace Sir.HttpServer.Features
 
         public void ExecuteWrite(string collectionName, IDictionary<string, object> doc)
         {
-            using (var indexSession = _sessionFactory.CreateIndexSession(collectionName, collectionName.ToHash()))
-            using (var writeSession = _sessionFactory.CreateWriteSession(collectionName, collectionName.ToHash(), indexSession))
-            {
-                writeSession.Write(doc);
-                indexSession.CommitToDisk();
-            }
+            _sessionFactory.ExecuteWrite(new Job(collectionName, new[] { doc }));
         }
 
         private string GetWebString(Uri uri)
