@@ -320,14 +320,7 @@ namespace Sir.Store
                     }
                     else if (angle == highscore)
                     {
-                        if (best.PostingsOffsets == null)
-                        {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
-                        }
-                        else
-                        {
-                            best.PostingsOffsets.Add(postingsOffset);
-                        }
+                        best.PostingsOffsets.Add(postingsOffset);
                     }
 
                     break;
@@ -342,14 +335,7 @@ namespace Sir.Store
                     }
                     else if (angle == highscore)
                     {
-                        if (best.PostingsOffsets == null)
-                        {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
-                        }
-                        else
-                        {
-                            best.PostingsOffsets.Add(postingsOffset);
-                        }
+                        best.PostingsOffsets.Add(postingsOffset);
                     }
 
                     // We need to determine if we can traverse further left.
@@ -377,16 +363,9 @@ namespace Sir.Store
                         best = new VectorNode(cursorVector);
                         best.PostingsOffsets = new List<long> { postingsOffset };
                     }
-                    else if (angle == highscore)
+                    else if (angle > 0 && angle == highscore)
                     {
-                        if (best.PostingsOffsets == null)
-                        {
-                            best.PostingsOffsets = new List<long> { best.PostingsOffset, postingsOffset };
-                        }
-                        else
-                        {
-                            best.PostingsOffsets.Add(postingsOffset);
-                        }
+                        best.PostingsOffsets.Add(postingsOffset);
                     }
 
                     // We need to determine if we can traverse further to the right.
@@ -573,7 +552,6 @@ namespace Sir.Store
         private void SkipTree(Stream indexStream)
         {
             Span<byte> buf = stackalloc byte[VectorNode.BlockSize];
-
             var read = indexStream.Read(buf);
             var weight = BitConverter.ToInt64(buf.Slice(sizeof(long)*3));
             var distance = weight * VectorNode.BlockSize;
