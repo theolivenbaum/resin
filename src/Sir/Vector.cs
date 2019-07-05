@@ -1,48 +1,51 @@
-﻿namespace Sir
+﻿using System;
+using System.Text;
+
+namespace Sir
 {
     public class Vector
     {
-        public int[] Values { get; private set; }
+        public ArraySegment<int> Values { get; private set; }
         public int Count { get; }
 
-        public Vector(int[] values)
+        public Vector(ArraySegment<int> values)
         {
             Values = values;
-            Count = Values.Length;
+            Count = Values.Count;
         }
 
         public override string ToString()
         {
-            var buf = new char[Values.Length];
+            var buf = new StringBuilder();
 
-            for (int i = 0; i < Values.Length; i++)
+            for (int i = 0; i < Values.Count; i++)
             {
-                buf[i] = (char)Values[i];
+                buf.Append((char)Values[i]);
             }
 
-            return new string(buf);
+            return buf.ToString();
         }
     }
 
     public class IndexedVector : Vector
     {
-        public int[] Index { get; }
+        public ArraySegment<int> Index { get; }
 
-        public IndexedVector(int[] index, int[] values) : base(values)
+        public IndexedVector(ArraySegment<int> index, ArraySegment<int> values) : base(values)
         {
             Index = index;
         }
 
         public override string ToString()
         {
-            var buf = new char[Index.Length];
+            var buf = new StringBuilder();
 
-            for (int i = 0; i < Index.Length; i++)
+            for (int i = 0; i < Index.Count; i++)
             {
-                buf[i] = (char)Index[i];
+                buf.Append((char)Index[i], Values[i]);
             }
 
-            return new string(buf);
+            return buf.ToString();
         }
     }
 }

@@ -62,11 +62,11 @@ namespace Sir.Store
             vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
             vectorStream.Read(buf);
 
-            Span<int> all = MemoryMarshal.Cast<byte, int>(buf);
-            int[] index = all.Slice(0, componentCount).ToArray();
-            int[] values = all.Slice(componentCount, componentCount).ToArray();
+            var all = MemoryMarshal.Cast<byte, int>(buf).ToArray();
 
-            return new IndexedVector(index, values);
+            return new IndexedVector(
+                new ArraySegment<int>(all, 0, componentCount), 
+                new ArraySegment<int>(all, componentCount, componentCount));
         }
 
         public AnalyzedData Tokenize(string text)
