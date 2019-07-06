@@ -7,7 +7,7 @@ namespace Sir.Store
 {
     public static class GraphBuilder
     {
-        public static bool Add(VectorNode root, VectorNode node, IStringModel model)
+        public static void Add(VectorNode root, VectorNode node, IStringModel model)
         {
             var cursor = root;
 
@@ -21,7 +21,7 @@ namespace Sir.Store
                     {
                         Merge(cursor, node);
 
-                        return false;
+                        break;
                     }
                 }
                 else if (angle > model.FoldAngle)
@@ -35,7 +35,7 @@ namespace Sir.Store
                                 node.AngleWhenAdded = angle;
                                 cursor.Left = node;
 
-                                return true;
+                                break;
                             }
                             else
                             {
@@ -59,7 +59,7 @@ namespace Sir.Store
                                 node.AngleWhenAdded = angle;
                                 cursor.Right = node;
 
-                                return true;
+                                break;
                             }
                             else
                             {
@@ -73,8 +73,6 @@ namespace Sir.Store
                     }
                 }
             }
-
-            return false;
         }
 
         public static void MergePostings(VectorNode target, VectorNode node)

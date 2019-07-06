@@ -86,13 +86,11 @@ namespace Sir.Store
             Visualize(node.Right, output, depth);
         }
 
-        public static (int depth, int width, int avgDepth) Size(VectorNode root)
+        public static (int depth, int width) Size(VectorNode root)
         {
             var width = 0;
             var depth = 1;
             var node = root;
-            var aggDepth = 0;
-            var count = 0;
 
             while (node != null)
             {
@@ -102,14 +100,12 @@ namespace Sir.Store
                     depth = d;
                 }
 
-                aggDepth += d;
-                count++;
                 width++;
 
                 node = node.Right;
             }
 
-            return (depth, width, aggDepth / count);
+            return (depth, width);
         }
 
         public static int Depth(VectorNode node)

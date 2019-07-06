@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Sir.Store
 {
-    public class CollectionStreamWriter : IDisposable
+    public class DocumentStreamWriter : IDisposable
     {
         private readonly ValueWriter _vals;
         private readonly ValueWriter _keys;
@@ -13,7 +13,7 @@ namespace Sir.Store
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
 
-        public CollectionStreamWriter(ulong collectionId, SessionFactory sessionFactory)
+        public DocumentStreamWriter(ulong collectionId, SessionFactory sessionFactory)
         {
             var valueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)), int.Parse(sessionFactory.Config.Get("value_stream_write_buffer_size")));
             var keyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));

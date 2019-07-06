@@ -9,9 +9,9 @@ namespace Sir.Store
 {
     public class DocumentStreamSession : CollectionSession, IDisposable
     {
-        private readonly CollectionStreamReader _streamReader;
+        private readonly DocumentStreamReader _streamReader;
 
-        public DocumentStreamSession(string collectionName, ulong collectionId, SessionFactory sessionFactory, CollectionStreamReader streamReader) 
+        public DocumentStreamSession(string collectionName, ulong collectionId, SessionFactory sessionFactory, DocumentStreamReader streamReader) 
             : base(collectionName, collectionId, sessionFactory)
         {
             _streamReader = streamReader;

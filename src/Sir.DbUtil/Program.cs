@@ -15,11 +15,11 @@ namespace Sir.DbUtil
     {
         static void Main(string[] args)
         {
-            var model = new BocModel();
             Console.WriteLine("processing command: {0}", string.Join(" ", args));
 
             Logging.SendToConsole = true;
 
+            var model = new BocModel();
             var command = args[0].ToLower();
 
             if (command == "query")
@@ -122,26 +122,31 @@ namespace Sir.DbUtil
                     .Skip(skip)
                     .Take(take);
 
-                using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
-                {
-                    sessionFactory.Truncate(collection.ToHash());
+                var collectionId = collection.ToHash();
+                var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model);
 
+                sessionFactory.Truncate(collectionId);
+
+                using (var indexSession = sessionFactory.CreateIndexSession(collection, collectionId))
+                using (var writeSession = sessionFactory.CreateWriteSession(collection, collectionId, indexSession))
+                {
                     foreach (var batch in payload.Batch(batchSize))
                     {
                         var time = Stopwatch.StartNew();
 
-                        sessionFactory.ExecuteWrite(new Job(collection, batch));
+                        writeSession.Write(batch);
 
                         time.Stop();
 
                         var docsPerSecond = (int)(batchSize / time.Elapsed.TotalSeconds);
 
-                        Console.WriteLine($"batch {batchNo++} took {time.Elapsed}");
-                        Console.WriteLine($"{docsPerSecond} docs/s");
+                        Console.WriteLine($"batch {batchNo++} took {time.Elapsed.TotalMilliseconds} ms, {docsPerSecond} docs/s");
                     }
                 }
 
-                Console.WriteLine("write took {0}", fullTime.Elapsed);
+                sessionFactory.Dispose();
+
+                Console.WriteLine("write operation took {0}", fullTime.Elapsed);
             }
             else
             {

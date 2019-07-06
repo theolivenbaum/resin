@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Sir.Store
 {
-    public class CollectionStreamReader : IDisposable
+    public class DocumentStreamReader : IDisposable
     {
         private readonly ValueReader _vals;
         private readonly ValueReader _keys;
@@ -13,7 +13,7 @@ namespace Sir.Store
         private readonly ValueIndexReader _keyIx;
         private readonly DocIndexReader _docIx;
 
-        public CollectionStreamReader(ulong collectionId, SessionFactory sessionFactory)
+        public DocumentStreamReader(ulong collectionId, SessionFactory sessionFactory)
         {
             var valueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)), int.Parse(sessionFactory.Config.Get("value_stream_read_buffer_size")));
             var keyStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));

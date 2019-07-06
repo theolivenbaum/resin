@@ -17,7 +17,7 @@ namespace Sir.Store
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private readonly Semaphore WriteSync = new Semaphore(1, 2);
-        private readonly ConcurrentDictionary<ulong, CollectionStreamWriter> _writers;
+        private readonly ConcurrentDictionary<ulong, DocumentStreamWriter> _writers;
 
         public string Dir { get; }
         public IConfigurationProvider Config { get; }
@@ -37,14 +37,14 @@ namespace Sir.Store
             _keys = LoadKeys();
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
-            _writers = new ConcurrentDictionary<ulong, CollectionStreamWriter>();
+            _writers = new ConcurrentDictionary<ulong, DocumentStreamWriter>();
 
             this.Log("initiated");
         }
 
-        public CollectionStreamWriter GetStreamWriter(ulong collectionId)
+        public DocumentStreamWriter GetStreamWriter(ulong collectionId)
         {
-            return _writers.GetOrAdd(collectionId, new CollectionStreamWriter(collectionId, this));
+            return _writers.GetOrAdd(collectionId, new DocumentStreamWriter(collectionId, this));
         }
 
         public long GetDocCount(string collection)
@@ -77,6 +77,8 @@ namespace Sir.Store
             _pageInfo.Clear();
 
             _keys.Clear();
+
+            this.Log($"truncated {collectionId}");
         }
 
         public void TruncateIndex(ulong collectionId)
@@ -111,19 +113,17 @@ namespace Sir.Store
             using (var indexSession = CreateIndexSession(job.Collection, colId))
             using (var writeSession = CreateWriteSession(job.Collection, colId, indexSession))
             {
-                foreach (var doc in job.Documents)
-                {
-                    writeSession.Write(doc);
-                }
-
-                indexSession.CommitToDisk();
+                writeSession.Write(job.Documents);
             }
-
-            _pageInfo.Clear();
 
             this.Log("executed {0} write+index job in {1}", job.Collection, timer.Elapsed);
 
             WriteSync.Release();
+        }
+
+        public void ClearPageInfo()
+        {
+            _pageInfo.Clear();
         }
 
         public IList<(long offset, long length)> ReadPageInfo(string pageFileName)
@@ -226,7 +226,7 @@ namespace Sir.Store
 
         public DocumentStreamSession CreateDocumentStreamSession(string collectionName, ulong collectionId)
         {
-            return new DocumentStreamSession(collectionName, collectionId, this, new CollectionStreamReader(collectionId, this));
+            return new DocumentStreamSession(collectionName, collectionId, this, new DocumentStreamReader(collectionId, this));
         }
 
         public WriteSession CreateWriteSession(string collectionName, ulong collectionId, TermIndexSession indexSession)
@@ -250,7 +250,7 @@ namespace Sir.Store
         public ReadSession CreateReadSession(string collectionName, ulong collectionId)
         {
             return new ReadSession(
-                collectionName, collectionId, this, Config, Model, new CollectionStreamReader(collectionId, this));
+                collectionName, collectionId, this, Config, Model, new DocumentStreamReader(collectionId, this));
         }
 
         public Stream CreateAsyncReadStream(string fileName, int bufferSize = 4096)
@@ -274,7 +274,14 @@ namespace Sir.Store
 
         public Stream CreateAppendStream(string fileName, int bufferSize = 4096)
         {
-            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, bufferSize, false);
+            if (!File.Exists(fileName))
+            {
+                using (var fs = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, bufferSize))
+                {
+                }
+            }
+
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, bufferSize);
         }
 
         public bool CollectionExists(ulong collectionId)
@@ -288,7 +295,7 @@ namespace Sir.Store
             {
                 x.Value.Dispose();
             }
-            foreach(var x in _writers)
+            foreach (var x in _writers)
             {
                 x.Value.Dispose();
             }

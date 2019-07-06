@@ -32,7 +32,7 @@ namespace Sir.Store
                 SessionFactory,
                 SessionFactory.Config,
                 SessionFactory.Model,
-                new CollectionStreamReader(CollectionId, SessionFactory));
+                new DocumentStreamReader(CollectionId, SessionFactory));
         }
 
         public void Validate(IEnumerable<IDictionary> documents)

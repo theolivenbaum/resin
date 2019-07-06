@@ -13,10 +13,10 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
         private readonly ConcurrentDictionary<long, VectorNode> _dirty;
-        private bool _committed;
-        private bool _committing;
-        private long _merges;
-        private readonly ProducerConsumerQueue<(long, long, string)> _builder;
+        private readonly int _numThreads;
+        private ProducerConsumerQueue<(long, long, string)> _builder;
+        private Stream _postingsStream;
+        private readonly Stream _vectorStream;
 
         public TermIndexSession(
             string collectionName,
@@ -28,10 +28,10 @@ namespace Sir.Store
             _config = config;
             _model = tokenizer;
             _dirty = new ConcurrentDictionary<long, VectorNode>();
-
-            var numThreads = int.Parse(_config.Get("index_session_thread_count"));
-
-            _builder = new ProducerConsumerQueue<(long, long, string)>(numThreads, BuildModel);
+            _numThreads = int.Parse(_config.Get("index_session_thread_count"));
+            _builder = new ProducerConsumerQueue<(long, long, string)>(_numThreads, BuildModel);
+            _postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"));
+            _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
         }
 
         public void Put(long docId, long keyId, string value)
@@ -46,42 +46,29 @@ namespace Sir.Store
 
             foreach (var vector in tokens.Embeddings)
             {
-                if (!GraphBuilder.Add(ix, new VectorNode(vector, workItem.docId), _model))
-                {
-                    _merges++;
-                }
+                GraphBuilder.Add(ix, new VectorNode(vector, workItem.docId), _model);
             }
         }
 
-        public void CommitToDisk()
+        public void Flush()
         {
-            if (_committing || _committed)
-                return;
-
-            _committing = true;
-
             _builder.Dispose();
 
-            this.Log($"merges: {_merges}");
-
-            using (var postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos")))
+            foreach (var column in _dirty)
             {
-                foreach (var column in _dirty)
+                using (var writer = new ColumnSerializer(CollectionId, column.Key, SessionFactory))
                 {
-                    using (var vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.vec")))
-                    {
-                        using (var writer = new ColumnSerializer(CollectionId, column.Key, SessionFactory))
-                        {
-                            writer.CreateColumnSegment(column.Value, vectorStream, postingsStream, _model);
-                        }
-                    }
-                };
-            }
+                    writer.CreatePage(column.Value, _vectorStream, _postingsStream, _model);
+                }
+            };
 
-            _committed = true;
-            _committing = false;
+            _postingsStream.Flush();
+            _vectorStream.Flush();
 
             this.Log(string.Format("***FLUSHED***"));
+
+            _dirty.Clear();
+            _builder = new ProducerConsumerQueue<(long, long, string)>(_numThreads, BuildModel);
         }
 
         private void Validate((long keyId, long docId, AnalyzedData tokens) item)
@@ -122,7 +109,6 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            CommitToDisk();
         }
     }
 }

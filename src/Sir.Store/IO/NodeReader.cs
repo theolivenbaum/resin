@@ -18,43 +18,28 @@ namespace Sir.Store
         private readonly MemoryMappedFile _indexFile;
         private readonly MemoryMappedViewAccessor _vectorView;
         private readonly Stream _indexStream;
-        private readonly Stream _vectorStream;
         private readonly string _ixFileName;
-        private readonly string _vecFileName;
 
         public NodeReader(
             ulong collectionId,
             long keyId,
             SessionFactory sessionFactory,
-            IConfigurationProvider config,
-            bool useMemoryMapping = false)
+            IConfigurationProvider config)
         {
             var ixFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
             var ixpFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.{1}.ixp", collectionId, keyId));
-            var vecFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.{1}.vec", collectionId, keyId));
 
-            _vecFileName = vecFileName;
             _ixFileName = ixFileName;
             _sessionFactory = sessionFactory;
             _config = config;
             _ixpFileName = ixpFileName;
             _ixMapName = _ixFileName.Replace(":", "").Replace("\\", "_");
-
-            if (useMemoryMapping)
-            {
-                _indexFile = _sessionFactory.OpenMMF(_ixFileName);
-                _vectorView = _sessionFactory.OpenMMF(_vecFileName).CreateViewAccessor(0, 0);
-            }
-            else
-            {
-                _indexStream = _sessionFactory.CreateReadStream(_ixFileName, bufferSize: int.Parse(_config.Get("nodereader_buffer_size")), fileOptions: FileOptions.RandomAccess);
-                _vectorStream = sessionFactory.CreateReadStream(_vecFileName, fileOptions: FileOptions.RandomAccess);
-            }
+            _indexStream = _sessionFactory.CreateReadStream(_ixFileName, bufferSize: int.Parse(_config.Get("nodereader_buffer_size")), fileOptions: FileOptions.RandomAccess);
         }
 
-        public Hit ClosestMatch(Vector vector, IStringModel model)
+        public Hit ClosestMatch(Vector vector, IStringModel model, Stream vectorStream)
         {
-            var hits = ClosestMatchOnDisk(vector, model);
+            var hits = ClosestMatchOnDisk(vector, model, vectorStream);
             Hit best = null;
 
             foreach (var hit in hits)
@@ -119,7 +104,7 @@ namespace Sir.Store
         }
 
         private IEnumerable<Hit> ClosestMatchOnDisk(
-            Vector vector, IStringModel model)
+            Vector vector, IStringModel model, Stream vectorStream)
         {
             var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
@@ -132,7 +117,7 @@ namespace Sir.Store
                 var hit = ClosestMatchInPage(
                 vector,
                 _indexStream,
-                _vectorStream,
+                vectorStream,
                 model);
 
                 hits.Add(hit);
@@ -572,9 +557,6 @@ namespace Sir.Store
 
             if (_indexStream != null)
                 _indexStream.Dispose();
-
-            if (_vectorStream != null)
-                _vectorStream.Dispose();
         }
     }
 }

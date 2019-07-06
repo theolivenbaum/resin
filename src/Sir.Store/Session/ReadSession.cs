@@ -15,14 +15,15 @@ namespace Sir.Store
         private readonly IStringModel _tokenizer;
         private readonly Stream _postings;
         private readonly ConcurrentDictionary<long, NodeReader> _nodeReaders;
-        private readonly CollectionStreamReader _streamReader;
+        private readonly DocumentStreamReader _streamReader;
+        private readonly Stream _vectorStream;
 
         public ReadSession(string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
             IConfigurationProvider config,
             IStringModel tokenizer,
-            CollectionStreamReader streamReader) 
+            DocumentStreamReader streamReader) 
             : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
@@ -33,12 +34,19 @@ namespace Sir.Store
             var posFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos");
 
             _postings = SessionFactory.CreateReadStream(posFileName);
+
+            var vecFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId));
+
+            _vectorStream = sessionFactory.CreateReadStream(vecFileName);
         }
 
         public void Dispose()
         {
             if (_postings != null)
                 _postings.Dispose();
+
+            if (_vectorStream != null)
+                _vectorStream.Dispose();
 
             foreach (var reader in _nodeReaders.Values)
             {
@@ -128,7 +136,7 @@ namespace Sir.Store
 
                     if (indexReader != null)
                     {
-                        hit = indexReader.ClosestMatch(cursor.Term.Vector, _tokenizer);
+                        hit = indexReader.ClosestMatch(cursor.Term.Vector, _tokenizer, _vectorStream);
                     }
 
                     if (hit != null && hit.Score > 0)

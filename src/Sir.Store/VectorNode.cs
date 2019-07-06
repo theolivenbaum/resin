@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Sir.Store
@@ -73,6 +74,7 @@ namespace Sir.Store
         public long Terminator { get; set; }
 
         public IList<long> PostingsOffsets { get; set; }
+
         public float AngleWhenAdded { get => _angleWhenAdded; set => _angleWhenAdded = value; }
 
         public VectorNode()
