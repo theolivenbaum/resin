@@ -1,26 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
     public class CbocModel : IStringModel
     {
-        public Vector DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView)
-        {
-            if (vectorView == null)
-            {
-                throw new ArgumentNullException(nameof(vectorView));
-            }
-
-            var valuesBuf = new int[componentCount];
-            var read = vectorView.ReadArray(vectorOffset, valuesBuf, 0, valuesBuf.Length);
-
-            return new Vector(valuesBuf);
-        }
-
         public Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
         {
             if (vectorStream == null)

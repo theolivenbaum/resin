@@ -112,39 +112,42 @@ namespace Sir.DbUtil
                 var batchNo = 0;
                 var payload = ReadFile(fileName, take)
                     .Where(x => x.Contains("title"))
+                    .Skip(skip)
+                    .Take(take)
                     .Select(x => new Dictionary<string, object>
                             {
                                 { "_language", x["language"].ToString() },
                                 { "_url", string.Format("www.wikipedia.org/search-redirect.php?family=wikipedia&language={0}&search={1}", x["language"], x["title"]) },
                                 { "title", x["title"] },
                                 { "body", x["text"] }
-                            })
-                    .Skip(skip)
-                    .Take(take);
+                            });
+
 
                 var collectionId = collection.ToHash();
-                var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model);
-
-                sessionFactory.Truncate(collectionId);
-
-                using (var indexSession = sessionFactory.CreateIndexSession(collection, collectionId))
-                using (var writeSession = sessionFactory.CreateWriteSession(collection, collectionId, indexSession))
+                using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
                 {
-                    foreach (var batch in payload.Batch(batchSize))
+                    sessionFactory.Truncate(collectionId);
+
+                    using (var writeSession = sessionFactory.CreateWriteSession(
+                        collection,
+                        collectionId,
+                        model))
                     {
-                        var time = Stopwatch.StartNew();
+                        foreach (var batch in payload.Batch(batchSize))
+                        {
+                            var time = Stopwatch.StartNew();
 
-                        writeSession.Write(batch);
+                            foreach (var doc in batch)
+                                writeSession.Write(doc);
 
-                        time.Stop();
+                            time.Stop();
 
-                        var docsPerSecond = (int)(batchSize / time.Elapsed.TotalSeconds);
+                            var docsPerSecond = (int)(batchSize / time.Elapsed.TotalSeconds);
 
-                        Console.WriteLine($"batch {batchNo++} took {time.Elapsed.TotalMilliseconds} ms, {docsPerSecond} docs/s");
+                            Console.WriteLine($"batch {batchNo++} took {time.Elapsed.TotalMilliseconds} ms, {docsPerSecond} docs/s");
+                        }
                     }
                 }
-
-                sessionFactory.Dispose();
 
                 Console.WriteLine("write operation took {0}", fullTime.Elapsed);
             }

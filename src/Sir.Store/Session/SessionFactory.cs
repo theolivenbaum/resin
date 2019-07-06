@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Threading;
 
 namespace Sir.Store
@@ -13,11 +12,9 @@ namespace Sir.Store
     /// </summary>
     public class SessionFactory : IDisposable, ILogger
     {
-        private readonly ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private readonly Semaphore WriteSync = new Semaphore(1, 2);
-        private readonly ConcurrentDictionary<ulong, DocumentStreamWriter> _writers;
 
         public string Dir { get; }
         public IConfigurationProvider Config { get; }
@@ -36,15 +33,8 @@ namespace Sir.Store
             Model = model;
             _keys = LoadKeys();
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
-            _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
-            _writers = new ConcurrentDictionary<ulong, DocumentStreamWriter>();
 
             this.Log("initiated");
-        }
-
-        public DocumentStreamWriter GetStreamWriter(ulong collectionId)
-        {
-            return _writers.GetOrAdd(collectionId, new DocumentStreamWriter(collectionId, this));
         }
 
         public long GetDocCount(string collection)
@@ -55,16 +45,6 @@ namespace Sir.Store
                 return 0;
 
             return new FileInfo(fileName).Length / (sizeof(long) + sizeof(int));
-        }
-
-        public MemoryMappedFile OpenMMF(string fileName)
-        {
-            var mapName = fileName.Replace(":", "").Replace("\\", "_");
-
-            return _mmfs.GetOrAdd(mapName, x =>
-            {
-                return MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.ReadWrite);
-            });
         }
 
         public void Truncate(ulong collectionId)
@@ -110,10 +90,10 @@ namespace Sir.Store
             var timer = Stopwatch.StartNew();
             var colId = job.Collection.ToHash();
 
-            using (var indexSession = CreateIndexSession(job.Collection, colId))
-            using (var writeSession = CreateWriteSession(job.Collection, colId, indexSession))
+            using (var writeSession = CreateWriteSession(job.Collection, colId, job.Model))
             {
-                writeSession.Write(job.Documents);
+                foreach (var doc in job.Documents)
+                    writeSession.Write(doc);
             }
 
             this.Log("executed {0} write+index job in {1}", job.Collection, timer.Elapsed);
@@ -229,12 +209,10 @@ namespace Sir.Store
             return new DocumentStreamSession(collectionName, collectionId, this, new DocumentStreamReader(collectionId, this));
         }
 
-        public WriteSession CreateWriteSession(string collectionName, ulong collectionId, TermIndexSession indexSession)
+        public WriteSession CreateWriteSession(string collectionName, ulong collectionId, IStringModel model)
         {
-            var streamWriter = GetStreamWriter(collectionId);
-
             return new WriteSession(
-                collectionName, collectionId, this, indexSession, streamWriter, Config);
+                collectionName, collectionId, this, new DocumentStreamWriter(collectionId, this), Config, model);
         }
 
         public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId)
@@ -291,14 +269,6 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            foreach (var x in _mmfs)
-            {
-                x.Value.Dispose();
-            }
-            foreach (var x in _writers)
-            {
-                x.Value.Dispose();
-            }
         }
     }
 }

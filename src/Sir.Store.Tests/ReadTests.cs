@@ -26,10 +26,11 @@ namespace Sir.Store.Tests
             var collection = "Can_validate";
             var collectionId = collection.ToHash();
             var comparer = new DocumentComparer();
+            var model = new BocModel();
 
             _sessionFactory.Truncate(collectionId);
 
-            _sessionFactory.ExecuteWrite(new Job(collection, documents));
+            _sessionFactory.ExecuteWrite(new Job(collection, documents, model));
 
             using (var documentStreamSession = _sessionFactory.CreateDocumentStreamSession(collection, collectionId))
             using (var validateSession = _sessionFactory.CreateValidateSession(collection, collectionId))

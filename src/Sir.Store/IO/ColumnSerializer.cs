@@ -36,25 +36,17 @@ namespace Sir.Store
 
             _ixPageIndexWriter.Write(page.offset, page.length);
 
-            Flush();
-
             var size = PathFinder.Size(column);
 
             this.Log("serialized column {0} in {1}. weight {2} depth {3} width {4}",
                 _keyId, time.Elapsed, column.Weight, size.depth, size.width);
         }
 
-        public void Flush()
-        {
-            _ixStream.Flush();
-            _ixPageIndexWriter.Flush();
-            _sessionFactory.ClearPageInfo();
-        }
-
         public void Dispose()
         {
             _ixStream.Dispose();
             _ixPageIndexWriter.Dispose();
+            _sessionFactory.ClearPageInfo();
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.IO.MemoryMappedFiles;
 
 namespace Sir
 {
@@ -13,7 +12,6 @@ namespace Sir
     public interface IModel<T>
     {
         AnalyzedData Tokenize(T data);
-        Vector DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView);
         Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream);
         long SerializeVector(Vector vector, Stream vectorStream);
         float IdenticalAngle { get; }

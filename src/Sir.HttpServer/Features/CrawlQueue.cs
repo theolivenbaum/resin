@@ -17,11 +17,11 @@ namespace Sir.HttpServer.Features
 
         public (Uri uri, string title) LastProcessed { get; private set; }
 
-        public CrawlQueue(SessionFactory sessionFactory, IStringModel tokenizer)
+        public CrawlQueue(SessionFactory sessionFactory, IStringModel model)
         {
             _queue = new ProducerConsumerQueue<(string,Uri)>(1, Submit);
             _sessionFactory = sessionFactory;
-            _model = tokenizer;
+            _model = model;
         }
 
         public void Enqueue(string collection, Uri uri)
@@ -143,7 +143,7 @@ namespace Sir.HttpServer.Features
 
         public void ExecuteWrite(string collectionName, IDictionary<string, object> doc)
         {
-            _sessionFactory.ExecuteWrite(new Job(collectionName, new[] { doc }));
+            _sessionFactory.ExecuteWrite(new Job(collectionName, new[] { doc }, _model));
         }
 
         private string GetWebString(Uri uri)

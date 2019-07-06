@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -9,29 +8,6 @@ namespace Sir.Store
 {
     public class BocModel : IStringModel
     {
-        public Vector DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView)
-        {
-            if (vectorView == null)
-            {
-                throw new ArgumentNullException(nameof(vectorView));
-            }
-
-            var index = new int[componentCount];
-            var values = new int[componentCount];
-
-            var read = vectorView.ReadArray(vectorOffset, index, 0, index.Length);
-
-            if (read < componentCount)
-                throw new Exception("bad");
-
-            read = vectorView.ReadArray(vectorOffset + componentCount * sizeof(int), values, 0, values.Length);
-
-            if (read < componentCount)
-                throw new Exception("bad");
-
-            return new IndexedVector(index, values);
-        }
-
         public long SerializeVector(Vector vector, Stream vectorStream)
         {
             Span<byte> index = MemoryMarshal.Cast<int, byte>(((IndexedVector)vector).Index);

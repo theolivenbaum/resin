@@ -1,6 +1,7 @@
 ﻿using Sir.Core;
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 
 namespace Sir.Store
@@ -22,11 +23,11 @@ namespace Sir.Store
             string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
-            IStringModel tokenizer,
+            IStringModel model,
             IConfigurationProvider config) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
-            _model = tokenizer;
+            _model = model;
             _dirty = new ConcurrentDictionary<long, VectorNode>();
             _numThreads = int.Parse(_config.Get("index_session_thread_count"));
             _builder = new ProducerConsumerQueue<(long, long, string)>(_numThreads, BuildModel);
@@ -50,9 +51,17 @@ namespace Sir.Store
             }
         }
 
-        public void Flush()
+        private void CreatePage()
         {
+            this.Log("waiting for index builder");
+
+            var time = Stopwatch.StartNew();
+
             _builder.Dispose();
+
+            this.Log(string.Format($"waited for index builder for {time.Elapsed}"));
+
+            time.Restart();
 
             foreach (var column in _dirty)
             {
@@ -65,10 +74,7 @@ namespace Sir.Store
             _postingsStream.Flush();
             _vectorStream.Flush();
 
-            this.Log(string.Format("***FLUSHED***"));
-
-            _dirty.Clear();
-            _builder = new ProducerConsumerQueue<(long, long, string)>(_numThreads, BuildModel);
+            this.Log(string.Format($"created page in {time.Elapsed}"));
         }
 
         private void Validate((long keyId, long docId, AnalyzedData tokens) item)
@@ -109,6 +115,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
+            CreatePage();
         }
     }
 }

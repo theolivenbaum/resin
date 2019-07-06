@@ -59,7 +59,7 @@ namespace Sir.Store
                         newCollectionName = Guid.NewGuid().ToString();
                     }
 
-                    _sessionFactory.ExecuteWrite(new Job(newCollectionName, result.Docs));
+                    _sessionFactory.ExecuteWrite(new Job(newCollectionName, result.Docs, model));
                 }
 
                 var mem = new MemoryStream();

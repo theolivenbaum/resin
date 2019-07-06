@@ -85,4 +85,20 @@ namespace Sir.Store
             _docIx.Dispose();
         }
     }
+
+    public class GraphStreamWriter
+    {
+        private readonly Stream _ixStream;
+        private readonly Stream _ixpStream;
+        private readonly Stream _postingsStream;
+        private readonly Stream _vectorStream;
+
+        public GraphStreamWriter(ulong collectionId, SessionFactory sessionFactory)
+        {
+            _ixStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, $"{collectionId}.vec"));
+            _ixpStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, $"{collectionId}.vec"));
+            _postingsStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, $"{collectionId}.pos"));
+            _vectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, $"{collectionId}.vec"));
+        }
+    }
 }
