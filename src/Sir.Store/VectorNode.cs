@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace Sir.Store
@@ -18,7 +17,6 @@ namespace Sir.Store
         private VectorNode _ancestor;
         private long _weight;
         private float _angleWhenAdded;
-        private object _sync = new object();
 
         public HashSet<long> DocIds { get; set; }
         public VectorNode Ancestor { get { return _ancestor; } }
@@ -26,7 +24,6 @@ namespace Sir.Store
         public long VectorOffset { get; set; }
         public long PostingsOffset { get; set; }
         public Vector Vector { get; set; }
-        public object Sync { get { return _sync; } }
 
         public long Weight
         {

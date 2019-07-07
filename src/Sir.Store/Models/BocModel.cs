@@ -38,11 +38,11 @@ namespace Sir.Store
             vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
             vectorStream.Read(buf);
 
-            var all = MemoryMarshal.Cast<byte, int>(buf).ToArray();
+            var all = MemoryMarshal.Cast<byte, int>(buf);
 
             return new IndexedVector(
-                new ArraySegment<int>(all, 0, componentCount), 
-                new ArraySegment<int>(all, componentCount, componentCount));
+                all.Slice(0, componentCount).ToArray(), 
+                all.Slice(componentCount, componentCount).ToArray());
         }
 
         public AnalyzedData Tokenize(string text)

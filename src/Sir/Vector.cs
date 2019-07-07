@@ -1,24 +1,23 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace Sir
 {
     public class Vector
     {
-        public ArraySegment<int> Values { get; private set; }
+        public int[] Values { get; private set; }
         public int Count { get; }
 
-        public Vector(ArraySegment<int> values)
+        public Vector(int[] values)
         {
             Values = values;
-            Count = Values.Count;
+            Count = Values.Length;
         }
 
         public override string ToString()
         {
             var buf = new StringBuilder();
 
-            for (int i = 0; i < Values.Count; i++)
+            for (int i = 0; i < Count; i++)
             {
                 buf.Append((char)Values[i]);
             }
@@ -29,9 +28,9 @@ namespace Sir
 
     public class IndexedVector : Vector
     {
-        public ArraySegment<int> Index { get; }
+        public int[] Index { get; }
 
-        public IndexedVector(ArraySegment<int> index, ArraySegment<int> values) : base(values)
+        public IndexedVector(int[] index, int[] values) : base(values)
         {
             Index = index;
         }
@@ -40,7 +39,7 @@ namespace Sir
         {
             var buf = new StringBuilder();
 
-            for (int i = 0; i < Index.Count; i++)
+            for (int i = 0; i < Count; i++)
             {
                 buf.Append((char)Index[i], Values[i]);
             }

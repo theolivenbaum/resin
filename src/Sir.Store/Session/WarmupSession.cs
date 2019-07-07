@@ -92,7 +92,6 @@ namespace Sir.Store
         {
             this.Log("waiting for warmup session to tear down");
 
-            _httpQueue.Join();
             _httpQueue.Dispose();
             _http.Dispose();
         }

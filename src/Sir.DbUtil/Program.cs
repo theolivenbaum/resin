@@ -78,8 +78,9 @@ namespace Sir.DbUtil
                 var fullTime = Stopwatch.StartNew();
                 var batchNo = 0;
                 var httpClient = new HttpClient();
-                var payload = ReadFile(fileName, count)
-                    .Where(x => x.Contains("title"))
+                var payload = ReadFile(fileName)
+                    .Skip(0)
+                    .Take(count)
                     .Select(x => new Dictionary<string, object>
                             {
                                 { "_language", x["language"].ToString() },
@@ -110,8 +111,7 @@ namespace Sir.DbUtil
 
                 var fullTime = Stopwatch.StartNew();
                 var batchNo = 0;
-                var payload = ReadFile(fileName, take)
-                    .Where(x => x.Contains("title"))
+                var payload = ReadFile(fileName)
                     .Skip(skip)
                     .Take(take)
                     .Select(x => new Dictionary<string, object>
@@ -121,7 +121,6 @@ namespace Sir.DbUtil
                                 { "title", x["title"] },
                                 { "body", x["text"] }
                             });
-
 
                 var collectionId = collection.ToHash();
                 using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
@@ -133,23 +132,26 @@ namespace Sir.DbUtil
                         collectionId,
                         model))
                     {
+                        var time = Stopwatch.StartNew();
+
                         foreach (var batch in payload.Batch(batchSize))
                         {
-                            var time = Stopwatch.StartNew();
+                            writeSession.Write(batch);
 
-                            foreach (var doc in batch)
-                                writeSession.Write(doc);
+                            var t = time.Elapsed.TotalMilliseconds;
 
-                            time.Stop();
+                            var docsPerSecond = (int)(batchSize / t*1000);
 
-                            var docsPerSecond = (int)(batchSize / time.Elapsed.TotalSeconds);
+                            Console.WriteLine($"batch {batchNo++} took {t} ms, {docsPerSecond} docs/s");
 
-                            Console.WriteLine($"batch {batchNo++} took {time.Elapsed.TotalMilliseconds} ms, {docsPerSecond} docs/s");
+                            time.Restart();
                         }
                     }
                 }
 
                 Console.WriteLine("write operation took {0}", fullTime.Elapsed);
+
+                Console.Read();
             }
             else
             {
@@ -157,34 +159,26 @@ namespace Sir.DbUtil
             }
         }
 
-        private static IEnumerable<IDictionary> ReadFile(string fileName, int count)
+        private static IEnumerable<IDictionary> ReadFile(string fileName)
         {
-            var read = 0;
-
             using (var stream = File.OpenRead(fileName))
             using (var reader = new StreamReader(stream))
             {
+                //skip first line
+                reader.ReadLine();
+
                 var line = reader.ReadLine();
 
-                while (!string.IsNullOrWhiteSpace(line))
+                while (!string.IsNullOrWhiteSpace(line) && !line.StartsWith("]"))
                 {
+                    var doc = JsonConvert.DeserializeObject<IDictionary>(line);
+
+                    if (doc.Contains("title"))
+                    {
+                        yield return doc;
+                    }
+
                     line = reader.ReadLine();
-
-                    if (line == null)
-                        break;
-
-                    read++;
-
-                    if (line.StartsWith("]") || read == count)
-                    {
-                        break;
-                    }
-                    else if (line.StartsWith("["))
-                    {
-                        continue;
-                    }
-
-                    yield return JsonConvert.DeserializeObject<IDictionary>(line);
                 }
             }
         }

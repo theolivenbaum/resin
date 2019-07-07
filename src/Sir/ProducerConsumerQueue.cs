@@ -93,12 +93,9 @@ namespace Sir.Core
             _queue.Add(item);
         }
 
-        public void Join()
+        private void Join()
         {
-            if (_joining || _joined)
-                return;
-
-            if (!_started)
+            if (_joining || _joined || !_started)
                 return;
 
             _joining = true;
@@ -107,17 +104,15 @@ namespace Sir.Core
 
             Task.WaitAll(_consumers);
 
-            _queue.Dispose();
             _joined = true;
             _joining = false;
         }
 
         public void Dispose()
         {
-            if (!_joined)
-            {
-                Join();
-            }
+            Join();
+
+            _queue.Dispose();
         }
     }
 }

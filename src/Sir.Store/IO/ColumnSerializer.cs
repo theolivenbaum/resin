@@ -46,6 +46,7 @@ namespace Sir.Store
         {
             _ixStream.Dispose();
             _ixPageIndexWriter.Dispose();
+
             _sessionFactory.ClearPageInfo();
         }
     }

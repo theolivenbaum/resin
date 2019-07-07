@@ -1,6 +1,5 @@
-﻿using Sir.Core;
-using System;
-using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -13,9 +12,8 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
-        private readonly ConcurrentDictionary<long, VectorNode> _dirty;
-        private readonly int _numThreads;
-        private ProducerConsumerQueue<(long, long, string)> _builder;
+        private readonly Dictionary<long, VectorNode> _dirty;
+        private readonly Dictionary<long, ColumnSerializer> _serializers;
         private Stream _postingsStream;
         private readonly Stream _vectorStream;
 
@@ -28,53 +26,21 @@ namespace Sir.Store
         {
             _config = config;
             _model = model;
-            _dirty = new ConcurrentDictionary<long, VectorNode>();
-            _numThreads = int.Parse(_config.Get("index_session_thread_count"));
-            _builder = new ProducerConsumerQueue<(long, long, string)>(_numThreads, BuildModel);
+            _dirty = new Dictionary<long, VectorNode>();
             _postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"));
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
+            _serializers = new Dictionary<long, ColumnSerializer>();
         }
 
         public void Put(long docId, long keyId, string value)
         {
-            _builder.Enqueue((docId, keyId, value));
-        }
-
-        private void BuildModel((long docId, long keyId, string value) workItem)
-        {
-            var ix = GetOrCreateIndex(workItem.keyId);
-            var tokens = _model.Tokenize(workItem.value);
+            var ix = GetOrCreateIndex(keyId);
+            var tokens = _model.Tokenize(value);
 
             foreach (var vector in tokens.Embeddings)
             {
-                GraphBuilder.Add(ix, new VectorNode(vector, workItem.docId), _model);
+                GraphBuilder.Add(ix, new VectorNode(vector, docId), _model);
             }
-        }
-
-        private void CreatePage()
-        {
-            this.Log("waiting for index builder");
-
-            var time = Stopwatch.StartNew();
-
-            _builder.Dispose();
-
-            this.Log(string.Format($"waited for index builder for {time.Elapsed}"));
-
-            time.Restart();
-
-            foreach (var column in _dirty)
-            {
-                using (var writer = new ColumnSerializer(CollectionId, column.Key, SessionFactory))
-                {
-                    writer.CreatePage(column.Value, _vectorStream, _postingsStream, _model);
-                }
-            };
-
-            _postingsStream.Flush();
-            _vectorStream.Flush();
-
-            this.Log(string.Format($"created page in {time.Elapsed}"));
         }
 
         private void Validate((long keyId, long docId, AnalyzedData tokens) item)
@@ -110,12 +76,60 @@ namespace Sir.Store
 
         private VectorNode GetOrCreateIndex(long keyId)
         {
-            return _dirty.GetOrAdd(keyId, new VectorNode());
+            VectorNode node;
+
+            if (!_dirty.TryGetValue(keyId, out node))
+            {
+                node = new VectorNode();
+                _dirty.Add(keyId, node);
+            }
+
+            return node;
+        }
+
+        public void CreatePage()
+        {
+            var time = Stopwatch.StartNew();
+
+            foreach (var column in _dirty)
+            {
+                ColumnSerializer serializer;
+
+                if (!_serializers.TryGetValue(column.Key, out serializer))
+                {
+                    serializer = new ColumnSerializer(CollectionId, column.Key, SessionFactory);
+                    _serializers.Add(column.Key, serializer);
+                }
+
+                serializer.CreatePage(column.Value, _vectorStream, _postingsStream, _model);
+            };
+
+            this.Log(string.Format($"serialized {_dirty.Count} pages in {time.Elapsed}"));
+
+            _dirty.Clear();
         }
 
         public void Dispose()
         {
-            CreatePage();
+            foreach (var serializer in _serializers.Values)
+                serializer.Dispose();
+
+            _postingsStream.Dispose();
+            _vectorStream.Dispose();
+        }
+    }
+
+    public class StringTerm
+    {
+        public long DocId { get; }
+        public long KeyId { get; }
+        public string Value { get; }
+
+        public StringTerm(long docId, long keyId, string value)
+        {
+            DocId = docId;
+            KeyId = keyId;
+            Value = value;
         }
     }
 }

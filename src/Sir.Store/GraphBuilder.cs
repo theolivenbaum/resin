@@ -11,37 +11,24 @@ namespace Sir.Store
         {
             var cursor = root;
 
-            while (cursor != null)
+            while (true)
             {
                 var angle = cursor.Vector.Count > 0 ? model.CosAngle(node.Vector, cursor.Vector) : 0;
 
                 if (angle >= model.IdenticalAngle)
                 {
-                    lock (cursor.Sync)
-                    {
-                        Merge(cursor, node);
+                    Merge(cursor, node);
 
-                        break;
-                    }
+                    break;
                 }
                 else if (angle > model.FoldAngle)
                 {
                     if (cursor.Left == null)
                     {
-                        lock (cursor.Sync)
-                        {
-                            if (cursor.Left == null)
-                            {
-                                node.AngleWhenAdded = angle;
-                                cursor.Left = node;
+                        node.AngleWhenAdded = angle;
+                        cursor.Left = node;
 
-                                break;
-                            }
-                            else
-                            {
-                                cursor = cursor.Left;
-                            }
-                        }
+                        break;
                     }
                     else
                     {
@@ -52,20 +39,10 @@ namespace Sir.Store
                 {
                     if (cursor.Right == null)
                     {
-                        lock (cursor.Sync)
-                        {
-                            if (cursor.Right == null)
-                            {
-                                node.AngleWhenAdded = angle;
-                                cursor.Right = node;
+                        node.AngleWhenAdded = angle;
+                        cursor.Right = node;
 
-                                break;
-                            }
-                            else
-                            {
-                                cursor = cursor.Right;
-                            }
-                        }
+                        break;
                     }
                     else
                     {

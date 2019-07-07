@@ -92,8 +92,7 @@ namespace Sir.Store
 
             using (var writeSession = CreateWriteSession(job.Collection, colId, job.Model))
             {
-                foreach (var doc in job.Documents)
-                    writeSession.Write(doc);
+                writeSession.Write(job.Documents);
             }
 
             this.Log("executed {0} write+index job in {1}", job.Collection, timer.Elapsed);
