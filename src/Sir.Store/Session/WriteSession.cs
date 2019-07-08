@@ -26,7 +26,6 @@ namespace Sir.Store
         public void Dispose()
         {
             _indexSession.Dispose();
-            _streamWriter.Dispose();
         }
 
         /// <summary>
@@ -80,7 +79,7 @@ namespace Sir.Store
                     docMap.Add((keyId, valId));
 
                     // index
-                    if (!keyStr.StartsWith("_") && valInfo.dataType == DataType.STRING)
+                    if (valInfo.dataType == DataType.STRING && keyStr.StartsWith("_") == false)
                     {
                         _indexSession.Put(docId, keyId, (string)val);
                     }
@@ -93,6 +92,7 @@ namespace Sir.Store
                 document["___docid"] = docId;
             }
 
+            _streamWriter.Flush();
             _indexSession.CreatePage();
         }
     }

@@ -15,6 +15,8 @@ namespace Sir.Store
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private readonly Semaphore WriteSync = new Semaphore(1, 2);
+        private readonly ConcurrentDictionary<ulong, DocumentStreamWriter> _documentWriters;
+        private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<long, ColumnSerializer>> _columnSerializers;
 
         public string Dir { get; }
         public IConfigurationProvider Config { get; }
@@ -33,6 +35,8 @@ namespace Sir.Store
             Model = model;
             _keys = LoadKeys();
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
+            _documentWriters = new ConcurrentDictionary<ulong, DocumentStreamWriter>();
+            _columnSerializers = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, ColumnSerializer>>();
 
             this.Log("initiated");
         }
@@ -210,8 +214,10 @@ namespace Sir.Store
 
         public WriteSession CreateWriteSession(string collectionName, ulong collectionId, IStringModel model)
         {
+            var documentWriter = _documentWriters.GetOrAdd(collectionId, new DocumentStreamWriter(collectionId, this));
+
             return new WriteSession(
-                collectionName, collectionId, this, new DocumentStreamWriter(collectionId, this), Config, model);
+                collectionName, collectionId, this, documentWriter, Config, model);
         }
 
         public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId)
@@ -268,6 +274,14 @@ namespace Sir.Store
 
         public void Dispose()
         {
+            foreach (var x in _documentWriters.Values)
+                x.Dispose();
+
+            foreach(var d in _columnSerializers.Values)
+            {
+                foreach (var x in d.Values)
+                    x.Dispose();
+            }
         }
     }
 }
