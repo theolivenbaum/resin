@@ -16,7 +16,7 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private readonly Semaphore WriteSync = new Semaphore(1, 2);
         private readonly ConcurrentDictionary<ulong, DocumentStreamWriter> _documentWriters;
-        private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<long, ColumnSerializer>> _columnSerializers;
+        private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<long, ColumnWriter>> _columnWriters;
 
         public string Dir { get; }
         public IConfigurationProvider Config { get; }
@@ -36,7 +36,7 @@ namespace Sir.Store
             _keys = LoadKeys();
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _documentWriters = new ConcurrentDictionary<ulong, DocumentStreamWriter>();
-            _columnSerializers = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, ColumnSerializer>>();
+            _columnWriters = new ConcurrentDictionary<ulong, ConcurrentDictionary<long, ColumnWriter>>();
 
             this.Log("initiated");
         }
@@ -217,12 +217,14 @@ namespace Sir.Store
             var documentWriter = _documentWriters.GetOrAdd(collectionId, new DocumentStreamWriter(collectionId, this));
 
             return new WriteSession(
-                collectionName, collectionId, this, documentWriter, Config, model);
+                collectionName, collectionId, this, documentWriter, Config, model, CreateIndexSession(collectionName, collectionId));
         }
 
         public TermIndexSession CreateIndexSession(string collectionName, ulong collectionId)
         {
-            return new TermIndexSession(collectionName, collectionId, this, Model, Config);
+            var columnSerializers = _columnWriters.GetOrAdd(collectionId, new ConcurrentDictionary<long, ColumnWriter>());
+
+            return new TermIndexSession(collectionName, collectionId, this, Model, Config, columnSerializers);
         }
 
         public ValidateSession CreateValidateSession(string collectionName, ulong collectionId)
@@ -277,7 +279,7 @@ namespace Sir.Store
             foreach (var x in _documentWriters.Values)
                 x.Dispose();
 
-            foreach(var d in _columnSerializers.Values)
+            foreach(var d in _columnWriters.Values)
             {
                 foreach (var x in d.Values)
                     x.Dispose();

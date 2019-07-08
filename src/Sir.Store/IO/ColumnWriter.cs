@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Sir.Store
 {
-    public class ColumnSerializer : ILogger, IDisposable
+    public class ColumnWriter : ILogger, IDisposable
     {
         private readonly long _keyId;
         private readonly ulong _collectionId;
@@ -13,7 +13,7 @@ namespace Sir.Store
         private readonly PageIndexWriter _ixPageIndexWriter;
         private readonly Stream _ixStream;
 
-        public ColumnSerializer(
+        public ColumnWriter(
             ulong collectionId, 
             long keyId, 
             SessionFactory sessionFactory)
@@ -36,6 +36,13 @@ namespace Sir.Store
 
             _ixPageIndexWriter.Write(page.offset, page.length);
 
+            vectorStream.Flush();
+            postingsStream.Flush();
+            _ixStream.Flush();
+            _ixPageIndexWriter.Flush();
+
+            _sessionFactory.ClearPageInfo();
+
             var size = PathFinder.Size(column);
 
             this.Log("serialized column {0} in {1}. weight {2} depth {3} width {4}",
@@ -46,8 +53,6 @@ namespace Sir.Store
         {
             _ixStream.Dispose();
             _ixPageIndexWriter.Dispose();
-
-            _sessionFactory.ClearPageInfo();
         }
     }
 }

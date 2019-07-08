@@ -17,9 +17,10 @@ namespace Sir.Store
             SessionFactory sessionFactory,
             DocumentStreamWriter streamWriter,
             IConfigurationProvider config,
-            IStringModel model) : base(collectionName, collectionId, sessionFactory)
+            IStringModel model,
+            TermIndexSession indexSession) : base(collectionName, collectionId, sessionFactory)
         {
-            _indexSession = new TermIndexSession(collectionName, collectionId, sessionFactory, model, config);
+            _indexSession = indexSession;
             _streamWriter = streamWriter;
         }
 

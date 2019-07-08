@@ -12,8 +12,8 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
-        private readonly Dictionary<long, VectorNode> _dirty;
-        private readonly Dictionary<long, ColumnSerializer> _serializers;
+        private readonly IDictionary<long, VectorNode> _dirty;
+        private readonly IDictionary<long, ColumnWriter> _writers;
         private Stream _postingsStream;
         private readonly Stream _vectorStream;
 
@@ -22,14 +22,15 @@ namespace Sir.Store
             ulong collectionId,
             SessionFactory sessionFactory, 
             IStringModel model,
-            IConfigurationProvider config) : base(collectionName, collectionId, sessionFactory)
+            IConfigurationProvider config,
+            IDictionary<long, ColumnWriter> columnWriters) : base(collectionName, collectionId, sessionFactory)
         {
             _config = config;
             _model = model;
             _dirty = new Dictionary<long, VectorNode>();
             _postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"));
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
-            _serializers = new Dictionary<long, ColumnSerializer>();
+            _writers = columnWriters;
         }
 
         public void Put(long docId, long keyId, string value)
@@ -93,12 +94,12 @@ namespace Sir.Store
 
             foreach (var column in _dirty)
             {
-                ColumnSerializer serializer;
+                ColumnWriter serializer;
 
-                if (!_serializers.TryGetValue(column.Key, out serializer))
+                if (!_writers.TryGetValue(column.Key, out serializer))
                 {
-                    serializer = new ColumnSerializer(CollectionId, column.Key, SessionFactory);
-                    _serializers.Add(column.Key, serializer);
+                    serializer = new ColumnWriter(CollectionId, column.Key, SessionFactory);
+                    _writers.Add(column.Key, serializer);
                 }
 
                 serializer.CreatePage(column.Value, _vectorStream, _postingsStream, _model);
@@ -111,25 +112,8 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            foreach (var serializer in _serializers.Values)
-                serializer.Dispose();
-
             _postingsStream.Dispose();
             _vectorStream.Dispose();
-        }
-    }
-
-    public class StringTerm
-    {
-        public long DocId { get; }
-        public long KeyId { get; }
-        public string Value { get; }
-
-        public StringTerm(long docId, long keyId, string value)
-        {
-            DocId = docId;
-            KeyId = keyId;
-            Value = value;
         }
     }
 }
