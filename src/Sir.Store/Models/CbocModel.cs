@@ -7,6 +7,21 @@ namespace Sir.Store
 {
     public class CbocModel : IStringModel
     {
+        public long SerializeVector(Vector vector, Stream vectorStream)
+        {
+            var list = new int[vector.Count];
+
+            vector.Values.CopyTo(list, 0);
+
+            Span<byte> buf = MemoryMarshal.Cast<int, byte>(list);
+
+            var pos = vectorStream.Position;
+
+            vectorStream.Write(buf);
+
+            return pos;
+        }
+
         public Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
         {
             if (vectorStream == null)
@@ -22,17 +37,6 @@ namespace Sir.Store
             Span<int> values = MemoryMarshal.Cast<byte, int>(valuesBuf);
 
             return new Vector(values.ToArray());
-        }
-
-        public long SerializeVector(Vector vector, Stream vectorStream)
-        {
-            Span<byte> values = MemoryMarshal.Cast<int, byte>(vector.Values);
-
-            var pos = vectorStream.Position;
-
-            vectorStream.Write(values);
-
-            return pos;
         }
 
         public AnalyzedData Tokenize(string text)

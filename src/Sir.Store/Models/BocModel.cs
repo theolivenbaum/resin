@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Sir.Store
@@ -10,13 +9,16 @@ namespace Sir.Store
     {
         public long SerializeVector(Vector vector, Stream vectorStream)
         {
-            Span<byte> index = MemoryMarshal.Cast<int, byte>(((IndexedVector)vector).Index);
-            Span<byte> values = MemoryMarshal.Cast<int, byte>(vector.Values);
+            var list = new int[vector.Count * 2];
+
+            ((IndexedVector)vector).Index.CopyTo(list, 0);
+            vector.Values.CopyTo(list, vector.Count);
+
+            Span<byte> buf = MemoryMarshal.Cast<int, byte>(list);
 
             var pos = vectorStream.Position;
 
-            vectorStream.Write(index);
-            vectorStream.Write(values);
+            vectorStream.Write(buf);
 
             return pos;
         }
@@ -66,9 +68,7 @@ namespace Sir.Store
 
                         if (len > 0)
                         {
-                            embeddings.Add(new IndexedVector
-                                (embedding.Keys.ToArray(), 
-                                embedding.Values.ToArray()));
+                            embeddings.Add(new IndexedVector(embedding.Keys, embedding.Values));
 
                             embedding = new SortedList<int, int>();
                         }
@@ -103,9 +103,7 @@ namespace Sir.Store
 
                 if (len > 0)
                 {
-                    embeddings.Add(new IndexedVector
-                                (embedding.Keys.ToArray(),
-                                embedding.Values.ToArray()));
+                    embeddings.Add(new IndexedVector(embedding.Keys, embedding.Values));
                 }
             }
 

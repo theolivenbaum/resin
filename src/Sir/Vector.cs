@@ -1,16 +1,17 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 
 namespace Sir
 {
     public class Vector
     {
-        public int[] Values { get; private set; }
+        public IList<int> Values { get; private set; }
         public int Count { get; }
 
-        public Vector(int[] values)
+        public Vector(IList<int> values)
         {
             Values = values;
-            Count = Values.Length;
+            Count = Values.Count;
         }
 
         public override string ToString()
@@ -28,9 +29,9 @@ namespace Sir
 
     public class IndexedVector : Vector
     {
-        public int[] Index { get; }
+        public IList<int> Index { get; }
 
-        public IndexedVector(int[] index, int[] values) : base(values)
+        public IndexedVector(IList<int> index, IList<int> values) : base(values)
         {
             Index = index;
         }
