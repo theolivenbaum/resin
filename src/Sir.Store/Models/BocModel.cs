@@ -34,7 +34,7 @@ namespace Sir.Store
             vectorStream.Read(buf);
 
             var index = MemoryMarshal.Cast<byte, int>(buf.Slice(0, componentCount * sizeof(int)));
-            var values = MemoryMarshal.Cast<byte, float>(buf.Slice(componentCount * sizeof(int)));
+            var values = MemoryMarshal.Cast<byte, float>(buf.Slice(componentCount * sizeof(float)));
             var tuples = new Tuple<int, float>[componentCount];
 
             for (int i = 0; i < componentCount; i++)
@@ -42,7 +42,7 @@ namespace Sir.Store
                 tuples[i] = new Tuple<int, float>(index[i], values[i]);
             }
 
-            return new IndexedVector(MathNet.Numerics.LinearAlgebra.CreateVector.SparseOfIndexed(1000, tuples));
+            return new IndexedVector(tuples);
         }
 
         public AnalyzedData Tokenize(string text)
@@ -117,7 +117,7 @@ namespace Sir.Store
             var dotProduct = vec1.Value.DotProduct(vec2.Value);
             var dotSelf1 = vec1.Value.DotProduct(vec1.Value);
             var dotSelf2 = vec2.Value.DotProduct(vec2.Value);
-
+            
             return (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
         }
     }
