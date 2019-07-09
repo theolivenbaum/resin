@@ -1,51 +1,72 @@
-﻿using System.Collections.Generic;
-using System.Text;
+﻿using MathNet.Numerics.LinearAlgebra.Storage;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Sir
 {
-    public class Vector
+    public interface IVector
     {
-        public IList<int> Values { get; private set; }
-        public int Count { get; }
+        MathNet.Numerics.LinearAlgebra.Vector<float> Value { get; }
+        void Serialize(Stream stream);
+        int ComponentCount { get; }
+    }
 
-        public Vector(IList<int> values)
+    public class Vector : IVector
+    {
+        public MathNet.Numerics.LinearAlgebra.Vector<float> Value { get; private set; }
+        public int ComponentCount { get; }
+
+        public Vector(MathNet.Numerics.LinearAlgebra.Vector<float> vector)
         {
-            Values = values;
-            Count = Values.Count;
+            Value = vector;
+            ComponentCount = ((DenseVectorStorage<float>)vector.Storage).Length;
         }
 
-        public override string ToString()
+        public Vector(IList<float> vector)
         {
-            var buf = new StringBuilder();
+            Value = MathNet.Numerics.LinearAlgebra.CreateVector.Dense(vector.ToArray());
+            ComponentCount = ((DenseVectorStorage<float>)Value.Storage).Length;
+        }
 
-            for (int i = 0; i < Count; i++)
-            {
-                buf.Append((char)Values[i]);
-            }
-
-            return buf.ToString();
+        public void Serialize(Stream stream)
+        {
+            stream.Write(MemoryMarshal.Cast<float, byte>(Value.Storage.AsArray()));
         }
     }
 
-    public class IndexedVector : Vector
+    public class IndexedVector : IVector
     {
-        public IList<int> Index { get; }
+        public MathNet.Numerics.LinearAlgebra.Vector<float> Value { get; private set; }
+        public int ComponentCount { get; }
 
-        public IndexedVector(IList<int> index, IList<int> values) : base(values)
+        public IndexedVector(MathNet.Numerics.LinearAlgebra.Vector<float> value)
         {
-            Index = index;
+            Value = value;
+            ComponentCount = ((SparseVectorStorage<float>)Value.Storage).ValueCount;
         }
 
-        public override string ToString()
+        public IndexedVector(SortedList<int, float> dictionary)
         {
-            var buf = new StringBuilder();
+            var tuples = new Tuple<int, float>[dictionary.Count];
 
-            for (int i = 0; i < Count; i++)
+            var i = 0;
+
+            foreach (var p in dictionary)
             {
-                buf.Append((char)Index[i], Values[i]);
+                tuples[i++] = new Tuple<int, float>(p.Key, p.Value);
             }
 
-            return buf.ToString();
+            Value = MathNet.Numerics.LinearAlgebra.CreateVector.SparseOfIndexed(1000, tuples);
+            ComponentCount = tuples.Length;
+        }
+
+        public void Serialize(Stream stream)
+        {
+            stream.Write(MemoryMarshal.Cast<int, byte>(((SparseVectorStorage<float>)Value.Storage).Indices));
+            stream.Write(MemoryMarshal.Cast<float, byte>(((SparseVectorStorage<float>)Value.Storage).Values));
         }
     }
 }

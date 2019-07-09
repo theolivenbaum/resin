@@ -16,14 +16,14 @@ namespace Sir.Store
         private VectorNode _left;
         private VectorNode _ancestor;
         private long _weight;
-        private float _angleWhenAdded;
+        private double _angleWhenAdded;
 
         public HashSet<long> DocIds { get; set; }
         public VectorNode Ancestor { get { return _ancestor; } }
         public long ComponentCount { get; set; }
         public long VectorOffset { get; set; }
         public long PostingsOffset { get; set; }
-        public Vector Vector { get; set; }
+        public IVector Vector { get; set; }
 
         public long Weight
         {
@@ -72,21 +72,22 @@ namespace Sir.Store
 
         public IList<long> PostingsOffsets { get; set; }
 
-        public float AngleWhenAdded { get => _angleWhenAdded; set => _angleWhenAdded = value; }
+        public double AngleWhenAdded { get => _angleWhenAdded; set => _angleWhenAdded = value; }
 
         public VectorNode()
-            : this(new Vector(new int[0]))
         {
+            PostingsOffset = -1;
+            VectorOffset = -1;
         }
 
-        public VectorNode(Vector vector)
+        public VectorNode(IVector vector)
         {
             Vector = vector;
             PostingsOffset = -1;
             VectorOffset = -1;
         }
 
-        public VectorNode(Vector vector, IList<long> postingsOffsets)
+        public VectorNode(IVector vector, IList<long> postingsOffsets)
         {
             Vector = vector;
             PostingsOffset = -1;
@@ -94,7 +95,7 @@ namespace Sir.Store
             VectorOffset = -1;
         }
 
-        public VectorNode(Vector vector, long docId)
+        public VectorNode(IVector vector, long docId)
         {
             Vector = vector;
             PostingsOffset = -1;
@@ -103,7 +104,7 @@ namespace Sir.Store
             DocIds.Add(docId);
         }
 
-        public VectorNode(long postingsOffset, long vecOffset, long terminator, long weight, long componentCount, Vector vector)
+        public VectorNode(long postingsOffset, long vecOffset, long terminator, long weight, long componentCount, IVector vector)
         {
             PostingsOffset = postingsOffset;
             VectorOffset = vecOffset;
@@ -148,13 +149,13 @@ namespace Sir.Store
 
         public string ToDebugString()
         {
-            var vals = Vector.Values;
+            var vals = Vector.Value.AsArray();
 
             var w = new StringBuilder();
 
             w.Append('|');
 
-            for (int i = 0; i < Vector.Count;i++)
+            for (int i = 0; i < vals.Length; i++)
             {
                 w.Append(vals[i]);
 

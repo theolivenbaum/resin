@@ -13,7 +13,7 @@ namespace Sir.Store
 
             while (true)
             {
-                var angle = cursor.Vector.Count > 0 ? model.CosAngle(node.Vector, cursor.Vector) : 0;
+                var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
 
                 if (angle >= model.IdenticalAngle)
                 {
@@ -89,18 +89,6 @@ namespace Sir.Store
             }
         }
 
-        public static Vector Compress(VectorNode root)
-        {
-            var vector = new Vector(new int[0]);
-
-            foreach (var node in PathFinder.All(root))
-            {
-                vector = vector.Add(node.Vector);
-            }
-
-            return vector;
-        }
-
         public static void SerializeNode(VectorNode node, Stream stream)
         {
             long terminator = 1;
@@ -126,7 +114,7 @@ namespace Sir.Store
 
             span[0] = node.VectorOffset;
             span[1] = node.PostingsOffset;
-            span[2] = node.Vector.Count;
+            span[2] = node.Vector.ComponentCount;
             span[3] = node.Weight;
             span[4] = terminator;
 
@@ -139,7 +127,7 @@ namespace Sir.Store
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;
 
-            if (node.Vector.Count == 0)
+            if (node.Vector == null)
             {
                 node = node.Right;
             }

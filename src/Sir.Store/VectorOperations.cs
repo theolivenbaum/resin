@@ -53,7 +53,7 @@ namespace Sir
             return product;
         }
 
-        public static Vector Add(this Vector vec1, Vector vec2)
+        public static IVector Add(this IVector vec1, IVector vec2)
         {
             throw new NotImplementedException();
         }
@@ -92,7 +92,7 @@ namespace Sir
             return result;
         }
 
-        public static void AddOrPerformAddition(this SortedList<int, int> vec, int key, int value)
+        public static void AddOrPerformAddition(this SortedList<int, float> vec, int key, float value)
         {
             if (vec.ContainsKey(key))
                 vec[key] += value;

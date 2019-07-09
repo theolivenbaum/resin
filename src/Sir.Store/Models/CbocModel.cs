@@ -7,34 +7,28 @@ namespace Sir.Store
 {
     public class CbocModel : IStringModel
     {
-        public long SerializeVector(Vector vector, Stream vectorStream)
+        public long SerializeVector(IVector vector, Stream vectorStream)
         {
-            var list = new int[vector.Count];
-
-            vector.Values.CopyTo(list, 0);
-
-            Span<byte> buf = MemoryMarshal.Cast<int, byte>(list);
-
             var pos = vectorStream.Position;
 
-            vectorStream.Write(buf);
+            vector.Serialize(vectorStream);
 
             return pos;
         }
 
-        public Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
+        public IVector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
         {
             if (vectorStream == null)
             {
                 throw new ArgumentNullException(nameof(vectorStream));
             }
 
-            Span<byte> valuesBuf = new byte[componentCount * sizeof(int)];
+            Span<byte> valuesBuf = new byte[componentCount * sizeof(float)];
 
             vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
             vectorStream.Read(valuesBuf);
 
-            Span<int> values = MemoryMarshal.Cast<byte, int>(valuesBuf);
+            Span<float> values = MemoryMarshal.Cast<byte, float>(valuesBuf);
 
             return new Vector(values.ToArray());
         }
@@ -45,8 +39,8 @@ namespace Sir.Store
             var offset = 0;
             bool word = false;
             int index = 0;
-            var embeddings = new List<Vector>();
-            var embedding = new List<int>();
+            var embeddings = new List<IVector>();
+            var embedding = new List<float>();
 
             for (; index < source.Length; index++)
             {
@@ -61,7 +55,7 @@ namespace Sir.Store
                         if (len > 0)
                         {
                             embeddings.Add(new Vector(embedding.ToArray()));
-                            embedding = new List<int>();
+                            embedding = new List<float>();
                         }
 
                         offset = index;
@@ -100,47 +94,17 @@ namespace Sir.Store
             return new AnalyzedData(embeddings);
         }
 
-        public float IdenticalAngle => 0.999999f;
+        public double IdenticalAngle => 0.999999d;
 
-        public float FoldAngle => 0.55f;
+        public double FoldAngle => 0.55d;
 
-        public float CosAngle(Vector vec1, Vector vec2)
+        public double CosAngle(IVector vec1, IVector vec2)
         {
-            long dotProduct = Dot(vec1, vec2);
-            long dotSelf1 = DotSelf(vec1);
-            long dotSelf2 = DotSelf(vec2);
+            var dotProduct = vec1.Value.DotProduct(vec2.Value);
+            var dotSelf1 = vec1.Value.DotProduct(vec1.Value);
+            var dotSelf2 = vec2.Value.DotProduct(vec2.Value);
 
-            return (float)(dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
-        }
-
-        private static long Dot(Vector vec1, Vector vec2)
-        {
-            if (ReferenceEquals(vec1, vec2))
-                return DotSelf(vec1);
-
-            long product = 0;
-            var shorter = vec1.Count < vec2.Count ? vec1 : vec2;
-            var longer = ReferenceEquals(vec1, shorter) ? vec2 : vec1;
-            int dimension = 0;
-
-            for (; dimension < shorter.Count; dimension++)
-            {
-                product += shorter.Values[dimension] * longer.Values[dimension];
-            }
-
-            return product;
-        }
-
-        public static long DotSelf(Vector vec)
-        {
-            long product = 0;
-
-            foreach (var component in vec.Values)
-            {
-                product += (component * component);
-            }
-
-            return product;
+            return (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
         }
     }
 }

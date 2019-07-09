@@ -91,7 +91,7 @@ namespace Sir.Store
                     return new long[0];
                 }
 
-                return new Dictionary<long, float>(result.SortedDocuments).Keys;
+                return new Dictionary<long, double>(result.SortedDocuments).Keys;
             }
 
             return new long[0];
@@ -177,7 +177,7 @@ namespace Sir.Store
             return CreateIndexReader(keyId);
         }
 
-        public IList<IDictionary<string, object>> ReadDocs(IEnumerable<KeyValuePair<long, float>> docs)
+        public IList<IDictionary<string, object>> ReadDocs(IEnumerable<KeyValuePair<long, double>> docs)
         {
             var result = new List<IDictionary<string, object>>();
 

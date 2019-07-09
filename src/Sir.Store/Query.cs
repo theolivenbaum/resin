@@ -82,7 +82,7 @@ namespace Sir.Store
         public int Skip { get; set; }
         public int Take { get; set; }
         public IList<long> PostingsOffsets { get; set; }
-        public float Score { get; set; }
+        public double Score { get; set; }
 
         public override string ToString()
         {

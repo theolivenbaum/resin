@@ -12,10 +12,10 @@ namespace Sir
     public interface IModel<T>
     {
         AnalyzedData Tokenize(T data);
-        Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream);
-        long SerializeVector(Vector vector, Stream vectorStream);
-        float IdenticalAngle { get; }
-        float FoldAngle { get; }
-        float CosAngle(Vector vec1, Vector vec2);
+        IVector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream);
+        long SerializeVector(IVector vector, Stream vectorStream);
+        double IdenticalAngle { get; }
+        double FoldAngle { get; }
+        double CosAngle(IVector vec1, IVector vec2);
     }
 }

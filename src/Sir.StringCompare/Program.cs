@@ -9,7 +9,7 @@ namespace Sir.StringCompare
         {
             var model = new BocModel();
 
-            if (args[0] == "-b")
+            if (args[0] == "-b" || args[0] == "--build-graph")
             {
                 var root = new VectorNode();
 
@@ -48,7 +48,6 @@ namespace Sir.StringCompare
             else
             {
                 var doc1 = new VectorNode(model.Tokenize(args[0]).Embeddings[0]);
-
                 var doc2 = new VectorNode(model.Tokenize(args[1]).Embeddings[0]);
                 var angle = model.CosAngle(doc1.Vector, doc2.Vector);
                 Console.WriteLine($"similarity: {angle}");

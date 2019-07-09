@@ -22,7 +22,7 @@ namespace Sir.Store
         {
             var timer = Stopwatch.StartNew();
 
-            IDictionary<long, float> result = null;
+            IDictionary<long, double> result = null;
 
             foreach (var q in query)
             {
@@ -46,7 +46,7 @@ namespace Sir.Store
                         {
                             foreach (var hit in termResult)
                             {
-                                float score;
+                                double score;
 
                                 if (result.TryGetValue(hit.Key, out score))
                                 {
@@ -79,7 +79,7 @@ namespace Sir.Store
                         {
                             foreach (var doc in termResult)
                             {
-                                float score;
+                                double score;
 
                                 if (result.TryGetValue(doc.Key, out score))
                                 {
@@ -97,10 +97,10 @@ namespace Sir.Store
                 }
             }
 
-            var sortedByScore = new List<KeyValuePair<long, float>>(result);
+            var sortedByScore = new List<KeyValuePair<long, double>>(result);
             sortedByScore.Sort(
-                delegate (KeyValuePair<long, float> pair1,
-                KeyValuePair<long, float> pair2)
+                delegate (KeyValuePair<long, double> pair1,
+                KeyValuePair<long, double> pair2)
                 {
                     return pair2.Value.CompareTo(pair1.Value);
                 }
@@ -114,9 +114,9 @@ namespace Sir.Store
             return new ScoredResult { SortedDocuments = sortedByScore.GetRange(index, count), Total = sortedByScore.Count };
         }
 
-        private IDictionary<long, float> Read(IList<long> offsets, float score)
+        private IDictionary<long, double> Read(IList<long> offsets, double score)
         {
-            var result = new Dictionary<long, float>();
+            var result = new Dictionary<long, double>();
 
             foreach (var offset in offsets)
             {
@@ -126,7 +126,7 @@ namespace Sir.Store
             return result;
         }
 
-        private void GetPostingsFromStream(long postingsOffset, IDictionary<long, float> result, float score)
+        private void GetPostingsFromStream(long postingsOffset, IDictionary<long, double> result, double score)
         {
             _stream.Seek(postingsOffset, SeekOrigin.Begin);
 
@@ -149,7 +149,7 @@ namespace Sir.Store
 
     public class ScoredResult
     {
-        public IList<KeyValuePair<long, float>> SortedDocuments { get; set; }
+        public IList<KeyValuePair<long, double>> SortedDocuments { get; set; }
         public int Total { get; set; }
     }
 }

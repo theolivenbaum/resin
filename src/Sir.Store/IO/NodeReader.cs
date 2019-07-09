@@ -32,7 +32,7 @@ namespace Sir.Store
             _indexStream = _sessionFactory.CreateReadStream(_ixFileName, bufferSize: int.Parse(_config.Get("nodereader_buffer_size")), fileOptions: FileOptions.RandomAccess);
         }
 
-        public Hit ClosestMatch(Vector vector, IStringModel model, Stream vectorStream)
+        public Hit ClosestMatch(IVector vector, IStringModel model, Stream vectorStream)
         {
             var hits = ClosestMatchOnDisk(vector, model, vectorStream);
             Hit best = null;
@@ -53,7 +53,7 @@ namespace Sir.Store
         }
 
         private IEnumerable<Hit> ClosestMatchOnDisk(
-            Vector vector, IStringModel model, Stream vectorStream)
+            IVector vector, IStringModel model, Stream vectorStream)
         {
             var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
@@ -78,7 +78,7 @@ namespace Sir.Store
         }
 
         private Hit ClosestMatchInPage(
-            Vector vector,
+            IVector vector,
             Stream indexStream,
             Stream vectorStream,
             IStringModel model
@@ -87,7 +87,7 @@ namespace Sir.Store
             Span<byte> block = stackalloc byte[VectorNode.BlockSize];
             var read = indexStream.Read(block);
             VectorNode best = null;
-            float highscore = 0;
+            double highscore = 0;
 
             while (read > 0)
             {

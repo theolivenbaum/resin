@@ -10,7 +10,7 @@
         public ulong KeyHash { get; private set; }
         public int Index { get; private set; }
         public long? KeyId { get; private set; }
-        public Vector Vector { get; private set; }
+        public IVector Vector { get; private set; }
 
         public Term(object key, AnalyzedData tokenizedString, int index)
         {
@@ -42,7 +42,7 @@
             Vector = node.Vector;
         }
 
-        public Vector AsVector()
+        public IVector AsVector()
         {
             return Vector == null
                 ? TokenizedString.Embeddings[Index]

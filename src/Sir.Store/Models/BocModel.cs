@@ -7,23 +7,16 @@ namespace Sir.Store
 {
     public class BocModel : IStringModel
     {
-        public long SerializeVector(Vector vector, Stream vectorStream)
+        public long SerializeVector(IVector vector, Stream vectorStream)
         {
-            var list = new int[vector.Count * 2];
-
-            ((IndexedVector)vector).Index.CopyTo(list, 0);
-            vector.Values.CopyTo(list, vector.Count);
-
-            Span<byte> buf = MemoryMarshal.Cast<int, byte>(list);
-
             var pos = vectorStream.Position;
 
-            vectorStream.Write(buf);
+            vector.Serialize(vectorStream);
 
             return pos;
         }
 
-        public Vector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
+        public IVector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
         {
             if (vectorOffset < 0)
             {
@@ -35,16 +28,21 @@ namespace Sir.Store
                 throw new ArgumentNullException(nameof(vectorStream));
             }
 
-            Span<byte> buf = new byte[componentCount * 2 * sizeof(int)];
+            Span<byte> buf = new byte[componentCount * 2 * sizeof(float)];
 
             vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
             vectorStream.Read(buf);
 
-            var all = MemoryMarshal.Cast<byte, int>(buf);
+            var index = MemoryMarshal.Cast<byte, int>(buf.Slice(0, componentCount * sizeof(int)));
+            var values = MemoryMarshal.Cast<byte, float>(buf.Slice(componentCount * sizeof(int)));
+            var tuples = new Tuple<int, float>[componentCount];
 
-            return new IndexedVector(
-                all.Slice(0, componentCount).ToArray(), 
-                all.Slice(componentCount, componentCount).ToArray());
+            for (int i = 0; i < componentCount; i++)
+            {
+                tuples[i] = new Tuple<int, float>(index[i], values[i]);
+            }
+
+            return new IndexedVector(MathNet.Numerics.LinearAlgebra.CreateVector.SparseOfIndexed(1000, tuples));
         }
 
         public AnalyzedData Tokenize(string text)
@@ -53,8 +51,8 @@ namespace Sir.Store
             var offset = 0;
             bool word = false;
             int index = 0;
-            var embeddings = new List<Vector>();
-            var embedding = new SortedList<int, int>();
+            var embeddings = new List<IVector>();
+            var embedding = new SortedList<int, float>();
 
             for (; index < source.Length; index++)
             {
@@ -68,9 +66,9 @@ namespace Sir.Store
 
                         if (len > 0)
                         {
-                            embeddings.Add(new IndexedVector(embedding.Keys, embedding.Values));
+                            embeddings.Add(new IndexedVector(embedding));
 
-                            embedding = new SortedList<int, int>();
+                            embedding = new SortedList<int, float>();
                         }
 
                         offset = index;
@@ -103,65 +101,24 @@ namespace Sir.Store
 
                 if (len > 0)
                 {
-                    embeddings.Add(new IndexedVector(embedding.Keys, embedding.Values));
+                    embeddings.Add(new IndexedVector(embedding));
                 }
             }
 
             return new AnalyzedData(embeddings);
         }
 
-        public float IdenticalAngle => 0.999999f;
+        public double IdenticalAngle => 0.999999d;
 
-        public float FoldAngle => 0.55f;
+        public double FoldAngle => 0.55d;
 
-        public float CosAngle(Vector vec1, Vector vec2)
+        public double CosAngle(IVector vec1, IVector vec2)
         {
-            var ivec1 = vec1 as IndexedVector;
-            var ivec2 = vec2 as IndexedVector;
+            var dotProduct = vec1.Value.DotProduct(vec2.Value);
+            var dotSelf1 = vec1.Value.DotProduct(vec1.Value);
+            var dotSelf2 = vec2.Value.DotProduct(vec2.Value);
 
-            if (ivec1 == null || ivec2 == null)
-            {
-                return 0;
-            }
-
-            long dotProduct = Dot(ivec1, ivec2);
-            long dotSelf1 = CbocModel.DotSelf(vec1);
-            long dotSelf2 = CbocModel.DotSelf(vec2);
-
-            return (float)(dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
-        }
-
-        public static long Dot(IndexedVector vec1, IndexedVector vec2)
-        {
-            if (ReferenceEquals(vec1, vec2))
-            {
-                return CbocModel.DotSelf(vec1);
-            }
-
-            long product = 0;
-            var cursor1 = 0;
-            var cursor2 = 0;
-            
-            while (cursor1 < vec1.Count && cursor2 < vec2.Count)
-            {
-                var i1 = vec1.Index[cursor1];
-                var i2 = vec2.Index[cursor2];
-
-                if (i2 > i1)
-                {
-                    cursor1++;
-                }
-                else if (i1 > i2)
-                {
-                    cursor2++;
-                }
-                else
-                {
-                    product += vec1.Values[cursor1++] * vec2.Values[cursor2++];
-                }
-            }
-
-            return product;
+            return (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
         }
     }
 }

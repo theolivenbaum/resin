@@ -7,9 +7,9 @@ namespace Sir
     /// </summary>
     public class AnalyzedData
     {
-        public IList<Vector> Embeddings { get; private set; }
+        public IList<IVector> Embeddings { get; private set; }
 
-        public AnalyzedData(IList<Vector> embeddings)
+        public AnalyzedData(IList<IVector> embeddings)
         {
             Embeddings = embeddings;
         }
