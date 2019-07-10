@@ -87,11 +87,10 @@ namespace Sir.Store
             VectorOffset = -1;
         }
 
-        public VectorNode(IVector vector, IList<long> postingsOffsets)
+        public VectorNode(long postingsOffset)
         {
-            Vector = vector;
             PostingsOffset = -1;
-            PostingsOffsets = postingsOffsets;
+            PostingsOffsets = new List<long> { postingsOffset }; ;
             VectorOffset = -1;
         }
 

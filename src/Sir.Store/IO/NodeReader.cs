@@ -103,8 +103,7 @@ namespace Sir.Store
                     if (best == null || angle > highscore)
                     {
                         highscore = angle;
-                        best = new VectorNode(cursorVector);
-                        best.PostingsOffsets = new List<long> { postingsOffset };
+                        best = new VectorNode(postingsOffset);
                     }
                     else if (angle == highscore)
                     {
@@ -118,8 +117,7 @@ namespace Sir.Store
                     if (best == null || angle > highscore)
                     {
                         highscore = angle;
-                        best = new VectorNode(cursorVector);
-                        best.PostingsOffsets = new List<long> { postingsOffset };
+                        best = new VectorNode(postingsOffset);
                     }
                     else if (angle == highscore)
                     {
@@ -148,8 +146,7 @@ namespace Sir.Store
                     if (best == null || angle > highscore)
                     {
                         highscore = angle;
-                        best = new VectorNode(cursorVector);
-                        best.PostingsOffsets = new List<long> { postingsOffset };
+                        best = new VectorNode(postingsOffset);
                     }
                     else if (angle > 0 && angle == highscore)
                     {
