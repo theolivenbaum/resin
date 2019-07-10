@@ -30,10 +30,10 @@ namespace Sir.Store.Tests
 
             _sessionFactory.Truncate(collectionId);
 
-            _sessionFactory.ExecuteWrite(new Job(collection, documents, model));
+            _sessionFactory.ExecuteWrite(new Job(collectionId, documents, model));
 
-            using (var documentStreamSession = _sessionFactory.CreateDocumentStreamSession(collection, collectionId))
-            using (var validateSession = _sessionFactory.CreateValidateSession(collection, collectionId))
+            using (var documentStreamSession = _sessionFactory.CreateDocumentStreamSession(collectionId))
+            using (var validateSession = _sessionFactory.CreateValidateSession(collectionId))
             {
                 validateSession.Validate(documentStreamSession.ReadDocs());
             }

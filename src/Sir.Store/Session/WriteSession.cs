@@ -12,13 +12,12 @@ namespace Sir.Store
         private readonly DocumentStreamWriter _streamWriter;
 
         public WriteSession(
-            string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory,
             DocumentStreamWriter streamWriter,
             IConfigurationProvider config,
             IStringModel model,
-            TermIndexSession indexSession) : base(collectionName, collectionId, sessionFactory)
+            TermIndexSession indexSession) : base(collectionId, sessionFactory)
         {
             _indexSession = indexSession;
             _streamWriter = streamWriter;
@@ -92,7 +91,10 @@ namespace Sir.Store
 
                 document["___docid"] = docId;
             }
+        }
 
+        public void Commit()
+        {
             _streamWriter.Flush();
             _indexSession.CreatePage();
         }

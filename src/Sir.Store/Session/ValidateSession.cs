@@ -16,18 +16,16 @@ namespace Sir.Store
         private readonly ReadSession _readSession;
 
         public ValidateSession(
-            string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
             IStringModel model,
             IConfigurationProvider config
-            ) : base(collectionName, collectionId, sessionFactory)
+            ) : base(collectionId, sessionFactory)
         {
             _config = config;
             _model = model;
             _comparer = new DocumentComparer();
             _readSession = new ReadSession(
-                CollectionName,
                 CollectionId,
                 SessionFactory,
                 SessionFactory.Config,

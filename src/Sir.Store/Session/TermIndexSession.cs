@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 
@@ -12,25 +12,21 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
-        private readonly IDictionary<long, VectorNode> _dirty;
-        private readonly IDictionary<long, ColumnWriter> _writers;
+        private readonly ConcurrentDictionary<long, VectorNode> _dirty;
         private Stream _postingsStream;
         private readonly Stream _vectorStream;
 
         public TermIndexSession(
-            string collectionName,
             ulong collectionId,
             SessionFactory sessionFactory, 
             IStringModel model,
-            IConfigurationProvider config,
-            IDictionary<long, ColumnWriter> columnWriters) : base(collectionName, collectionId, sessionFactory)
+            IConfigurationProvider config) : base(collectionId, sessionFactory)
         {
             _config = config;
             _model = model;
-            _dirty = new Dictionary<long, VectorNode>();
+            _dirty = new ConcurrentDictionary<long, VectorNode>();
             _postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"));
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
-            _writers = columnWriters;
         }
 
         public void Put(long docId, long keyId, string value)
@@ -77,15 +73,7 @@ namespace Sir.Store
 
         private VectorNode GetOrCreateIndex(long keyId)
         {
-            VectorNode node;
-
-            if (!_dirty.TryGetValue(keyId, out node))
-            {
-                node = new VectorNode();
-                _dirty.Add(keyId, node);
-            }
-
-            return node;
+            return _dirty.GetOrAdd(keyId, new VectorNode());
         }
 
         public void CreatePage()
@@ -94,20 +82,17 @@ namespace Sir.Store
 
             foreach (var column in _dirty)
             {
-                ColumnWriter serializer;
-
-                if (!_writers.TryGetValue(column.Key, out serializer))
+                using (var serializer = new ColumnWriter(CollectionId, column.Key, SessionFactory))
                 {
-                    serializer = new ColumnWriter(CollectionId, column.Key, SessionFactory);
-                    _writers.Add(column.Key, serializer);
+                    serializer.CreatePage(column.Value, _vectorStream, _postingsStream, _model);
                 }
-
-                serializer.CreatePage(column.Value, _vectorStream, _postingsStream, _model);
             };
 
-            this.Log(string.Format($"serialized {_dirty.Count} pages in {time.Elapsed}"));
-
             _dirty.Clear();
+
+            SessionFactory.ClearPageInfo();
+
+            this.Log(string.Format($"serialized {_dirty.Count} pages in {time.Elapsed}"));
         }
 
         public void Dispose()

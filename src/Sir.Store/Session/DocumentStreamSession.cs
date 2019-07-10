@@ -11,8 +11,8 @@ namespace Sir.Store
     {
         private readonly DocumentStreamReader _streamReader;
 
-        public DocumentStreamSession(string collectionName, ulong collectionId, SessionFactory sessionFactory, DocumentStreamReader streamReader) 
-            : base(collectionName, collectionId, sessionFactory)
+        public DocumentStreamSession(ulong collectionId, SessionFactory sessionFactory, DocumentStreamReader streamReader) 
+            : base(collectionId, sessionFactory)
         {
             _streamReader = streamReader;
         }

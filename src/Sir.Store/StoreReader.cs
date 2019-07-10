@@ -34,7 +34,7 @@ namespace Sir.Store
             var timer = Stopwatch.StartNew();
             var collectionId = collectionName.ToHash(); 
 
-            using (var session = _sessionFactory.CreateReadSession(collectionName, collectionId))
+            using (var session = _sessionFactory.CreateReadSession(collectionId))
             {
                 var query = _httpQueryParser.Parse(collectionId, model, request);
 
@@ -59,7 +59,7 @@ namespace Sir.Store
                         newCollectionName = Guid.NewGuid().ToString();
                     }
 
-                    _sessionFactory.ExecuteWrite(new Job(newCollectionName, result.Docs, model));
+                    _sessionFactory.ExecuteWrite(new Job(newCollectionName.ToHash(), result.Docs, model));
                 }
 
                 var mem = new MemoryStream();

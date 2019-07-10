@@ -18,13 +18,12 @@ namespace Sir.Store
         private readonly DocumentStreamReader _streamReader;
         private readonly Stream _vectorStream;
 
-        public ReadSession(string collectionName,
-            ulong collectionId,
+        public ReadSession(ulong collectionId,
             SessionFactory sessionFactory, 
             IConfigurationProvider config,
             IStringModel tokenizer,
             DocumentStreamReader streamReader) 
-            : base(collectionName, collectionId, sessionFactory)
+            : base(collectionId, sessionFactory)
         {
             _config = config;
             _tokenizer = tokenizer;

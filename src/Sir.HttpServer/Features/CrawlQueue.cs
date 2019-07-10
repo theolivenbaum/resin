@@ -127,7 +127,7 @@ namespace Sir.HttpServer.Features
 
         private IDictionary<string, object> GetDocument(string collectionName, string url, string title)
         {
-            using (var readSession = _sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
+            using (var readSession = _sessionFactory.CreateReadSession(collectionName.ToHash()))
             {
                 var urlQuery = new Query(collectionName.ToHash(), new Term("_url", new VectorNode(_model.Tokenize(url).Embeddings[0])));
                 urlQuery.And = true;
@@ -143,7 +143,7 @@ namespace Sir.HttpServer.Features
 
         public void ExecuteWrite(string collectionName, IDictionary<string, object> doc)
         {
-            _sessionFactory.ExecuteWrite(new Job(collectionName, new[] { doc }, _model));
+            _sessionFactory.ExecuteWrite(new Job(collectionName.ToHash(), new[] { doc }, _model));
         }
 
         private string GetWebString(Uri uri)

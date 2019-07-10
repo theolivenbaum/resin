@@ -38,7 +38,7 @@ namespace Sir.HttpServer.Controllers
 
             try
             {
-                writer.Write(collectionName, _model, Request);
+                writer.Write(collectionName.ToHash(), _model, Request);
 
                 return StatusCode(201);
             }

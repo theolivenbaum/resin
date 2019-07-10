@@ -51,24 +51,6 @@ namespace Sir.DbUtil
                     take: int.Parse(args[4]),
                     model);
             }
-            else if (command == "warmup")
-            {
-                // example: warmup C:\projects\resin\src\Sir.HttpServer\App_Data https://didyougogo.com www 0 3000
-
-                var dir = args[1];
-                var uri = new Uri(args[2]);
-                var collection = args[3];
-                var skip = int.Parse(args[4]);
-                var take = int.Parse(args[5]);
-
-                Warmup(
-                    dir, 
-                    uri, 
-                    collection, 
-                    skip, 
-                    take,
-                    new CbocModel());
-            }
             else if (command == "submit")
             {
                 var fileName = args[1];
@@ -109,6 +91,7 @@ namespace Sir.DbUtil
                 var take = int.Parse(args[5]);
                 var batchSize = int.Parse(args[6]);
 
+                var collectionId = collection.ToHash();
                 var fullTime = Stopwatch.StartNew();
                 var batchNo = 0;
                 var payload = ReadFile(fileName)
@@ -122,13 +105,11 @@ namespace Sir.DbUtil
                                 { "body", x["text"] }
                             });
 
-                var collectionId = collection.ToHash();
                 using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
                 {
                     sessionFactory.Truncate(collectionId);
 
                     using (var writeSession = sessionFactory.CreateWriteSession(
-                        collection,
                         collectionId,
                         model))
                     {
@@ -146,6 +127,8 @@ namespace Sir.DbUtil
 
                             time.Restart();
                         }
+
+                        writeSession.Commit();
                     }
                 }
 
@@ -203,20 +186,6 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void Warmup(string dir, Uri uri, string collectionName, int skip, int take, IStringModel model)
-        {
-            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
-            {
-                using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
-                {
-                    using (var session = sessionFactory.CreateWarmupSession(collectionName, collectionName.ToHash(), uri.ToString()))
-                    {
-                        session.Warmup(documentStreamSession.ReadDocs(skip, take), 0);
-                    }
-                }
-            }
-        }
-
         private static void Index(string dir, string collectionName, IStringModel model)
         {
             using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
@@ -225,8 +194,8 @@ namespace Sir.DbUtil
 
                 sessionFactory.TruncateIndex(collectionId);
 
-                using (var indexSession = sessionFactory.CreateIndexSession(collectionName, collectionId))
-                using (var documents = sessionFactory.CreateDocumentStreamSession(collectionName, collectionId))
+                using (var indexSession = sessionFactory.CreateIndexSession(collectionId))
+                using (var documents = sessionFactory.CreateDocumentStreamSession(collectionId))
                 {
                     documents.Index(indexSession, Console.Out);
                 }
@@ -255,7 +224,7 @@ namespace Sir.DbUtil
                 q.Skip = 0;
                 q.Take = 100;
 
-                using (var session = sessionFactory.CreateReadSession(collectionName, collectionName.ToHash()))
+                using (var session = sessionFactory.CreateReadSession(collectionName.ToHash()))
                 {
                     var result = session.Read(q);
                     var docs = result.Docs;
@@ -276,8 +245,8 @@ namespace Sir.DbUtil
 
             using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
             {
-                using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName, collectionName.ToHash()))
-                using (var validateSession = sessionFactory.CreateValidateSession(collectionName, collectionName.ToHash()))
+                using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName.ToHash()))
+                using (var validateSession = sessionFactory.CreateValidateSession(collectionName.ToHash()))
                 {
                     validateSession.Validate(documentStreamSession.ReadDocs(skip, take));
                 }

@@ -22,10 +22,10 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
-        public void Write(string collectionName, IStringModel model, HttpRequest request)
+        public void Write(ulong collectionId, IStringModel model, HttpRequest request)
         {
             var documents = Deserialize<IEnumerable<IDictionary<string, object>>>(request.Body);
-            var job = new Job(collectionName, documents, model);
+            var job = new Job(collectionId, documents, model);
 
             _sessionFactory.ExecuteWrite(job);
         }
