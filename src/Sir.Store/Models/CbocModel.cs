@@ -98,11 +98,36 @@ namespace Sir.Store
 
         public double FoldAngle => 0.55d;
 
+        public int PageWeight => 50000;
+
         public double CosAngle(IVector vec1, IVector vec2)
         {
             var dotProduct = vec1.Value.DotProduct(vec2.Value);
             var dotSelf1 = vec1.Value.DotProduct(vec1.Value);
             var dotSelf2 = vec2.Value.DotProduct(vec2.Value);
+
+            return (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
+        }
+
+        public double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream)
+        {
+            if (vectorStream == null)
+            {
+                throw new ArgumentNullException(nameof(vectorStream));
+            }
+
+            Span<byte> valuesBuf = new byte[componentCount * sizeof(float)];
+
+            vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
+            vectorStream.Read(valuesBuf);
+
+            Span<float> values = MemoryMarshal.Cast<byte, float>(valuesBuf);
+
+            var otherVector = new Vector(values.ToArray());
+
+            var dotProduct = vector.Value.DotProduct(otherVector.Value);
+            var dotSelf1 = vector.Value.DotProduct(vector.Value);
+            var dotSelf2 = otherVector.Value.DotProduct(otherVector.Value);
 
             return (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
         }

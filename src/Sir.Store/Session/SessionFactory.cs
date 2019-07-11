@@ -94,7 +94,6 @@ namespace Sir.Store
             using (var writeSession = CreateWriteSession(job.CollectionId, job.Model))
             {
                 writeSession.Write(job.Documents);
-                writeSession.Commit();
             }
 
             this.Log("executed {0} write+index job in {1}", job.CollectionId, timer.Elapsed);

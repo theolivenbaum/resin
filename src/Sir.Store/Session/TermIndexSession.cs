@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace Sir.Store
 {
@@ -37,6 +39,12 @@ namespace Sir.Store
             foreach (var vector in tokens.Embeddings)
             {
                 GraphBuilder.Add(ix, new VectorNode(vector, docId), _model);
+
+                if (ix.Weight == _model.PageWeight)
+                {
+                    CreatePage(keyId);
+                    ix = GetOrCreateIndex(keyId);
+                }
             }
         }
 
@@ -76,29 +84,56 @@ namespace Sir.Store
             return _dirty.GetOrAdd(keyId, new VectorNode());
         }
 
-        public void CreatePage()
+        public IEnumerable<GraphStats> GetStats()
+        {
+            foreach(var node in _dirty)
+            {
+                yield return new GraphStats(node.Key, node.Value);
+            }
+        }
+
+        public void CreatePage(long keyId)
         {
             var time = Stopwatch.StartNew();
 
-            foreach (var column in _dirty)
+            using (var serializer = new ColumnWriter(CollectionId, keyId, SessionFactory))
             {
-                using (var serializer = new ColumnWriter(CollectionId, column.Key, SessionFactory))
-                {
-                    serializer.CreatePage(column.Value, _vectorStream, _postingsStream, _model);
-                }
-            };
+                serializer.CreatePage(_dirty[keyId], _vectorStream, _postingsStream, _model);
+            }
 
-            _dirty.Clear();
+            this.Log(string.Format($"serialized column {keyId} in {time.Elapsed}"));
+
+            _dirty.Remove(keyId, out _);
 
             SessionFactory.ClearPageInfo();
-
-            this.Log(string.Format($"serialized {_dirty.Count} pages in {time.Elapsed}"));
         }
 
         public void Dispose()
         {
+            foreach (var column in _dirty.Keys)
+            {
+                CreatePage(column);
+            }
+
             _postingsStream.Dispose();
             _vectorStream.Dispose();
+        }
+    }
+
+    public class GraphStats
+    {
+        private readonly long _keyId;
+        private readonly VectorNode _graph;
+
+        public GraphStats(long keyId, VectorNode graph)
+        {
+            _keyId = keyId;
+            _graph = graph;
+        }
+
+        public override string ToString()
+        {
+            return $"key: {_keyId} weight: {_graph.Weight} depth/width: {PathFinder.Size(_graph)}";
         }
     }
 }

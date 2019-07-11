@@ -117,18 +117,21 @@ namespace Sir.DbUtil
 
                         foreach (var batch in payload.Batch(batchSize))
                         {
-                            writeSession.Write(batch);
+                            var stats = writeSession.Write(batch);
 
                             var t = time.Elapsed.TotalMilliseconds;
 
                             var docsPerSecond = (int)(batchSize / t*1000);
 
                             Console.WriteLine($"batch {batchNo++} took {t} ms, {docsPerSecond} docs/s");
+                            
+                            foreach(var stat in stats)
+                            {
+                                Console.WriteLine(stat);
+                            }
 
                             time.Restart();
                         }
-
-                        writeSession.Commit();
                     }
                 }
 

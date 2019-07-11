@@ -18,16 +18,6 @@ namespace Sir.Store
 
         public IVector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
         {
-            if (vectorOffset < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(vectorOffset));
-            }
-
-            if (vectorStream == null)
-            {
-                throw new ArgumentNullException(nameof(vectorStream));
-            }
-
             Span<byte> buf = new byte[componentCount * 2 * sizeof(float)];
 
             vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
@@ -108,9 +98,11 @@ namespace Sir.Store
             return new AnalyzedData(embeddings);
         }
 
-        public double IdenticalAngle => 0.999999d;
+        public double IdenticalAngle => 0.85d;
 
-        public double FoldAngle => 0.55d;
+        public double FoldAngle => 0.4d;
+
+        public int PageWeight => 50000;
 
         public double CosAngle(IVector vec1, IVector vec2)
         {
@@ -118,6 +110,31 @@ namespace Sir.Store
             var dotSelf1 = vec1.Value.DotProduct(vec1.Value);
             var dotSelf2 = vec2.Value.DotProduct(vec2.Value);
             
+            return (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
+        }
+
+        public double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream)
+        {
+            Span<byte> buf = new byte[componentCount * 2 * sizeof(float)];
+
+            vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
+            vectorStream.Read(buf);
+
+            var index = MemoryMarshal.Cast<byte, int>(buf.Slice(0, componentCount * sizeof(int)));
+            var values = MemoryMarshal.Cast<byte, float>(buf.Slice(componentCount * sizeof(float)));
+            var tuples = new Tuple<int, float>[componentCount];
+
+            for (int i = 0; i < componentCount; i++)
+            {
+                tuples[i] = new Tuple<int, float>(index[i], values[i]);
+            }
+
+            var otherVector = new IndexedVector(tuples);
+
+            var dotProduct = vector.Value.DotProduct(otherVector.Value);
+            var dotSelf1 = vector.Value.DotProduct(vector.Value);
+            var dotSelf2 = otherVector.Value.DotProduct(otherVector.Value);
+
             return (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
         }
     }

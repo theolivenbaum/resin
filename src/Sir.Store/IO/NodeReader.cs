@@ -63,11 +63,7 @@ namespace Sir.Store
             {
                 _indexStream.Seek(page.offset, SeekOrigin.Begin);
 
-                var hit = ClosestMatchInPage(
-                vector,
-                _indexStream,
-                vectorStream,
-                model);
+                var hit = ClosestMatchInPage(vector, _indexStream, vectorStream, model);
 
                 hits.Add(hit);
             }
@@ -94,9 +90,8 @@ namespace Sir.Store
                 var vecOffset = BitConverter.ToInt64(block.Slice(0));
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long)));
                 var componentCount = BitConverter.ToInt64(block.Slice(sizeof(long)*2));
-                var cursorVector = model.DeserializeVector(vecOffset, (int)componentCount, vectorStream);
                 var cursorTerminator = BitConverter.ToInt64(block.Slice(sizeof(long) * 4));
-                var angle = model.CosAngle(cursorVector, vector);
+                var angle = model.CosAngle(vector, vecOffset, (int)componentCount, vectorStream);
 
                 if (angle >= model.IdenticalAngle)
                 {

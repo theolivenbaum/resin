@@ -32,7 +32,7 @@ namespace Sir.Store
         /// Fields prefixed with "___" will not be stored.
         /// </summary>
         /// <returns>Document ID</returns>
-        public void Write(IEnumerable<IDictionary<string, object>> documents)
+        public IEnumerable<GraphStats> Write(IEnumerable<IDictionary<string, object>> documents)
         {
             foreach(var document in documents)
             {
@@ -91,12 +91,8 @@ namespace Sir.Store
 
                 document["___docid"] = docId;
             }
-        }
 
-        public void Commit()
-        {
-            _streamWriter.Flush();
-            _indexSession.CreatePage();
+            return _indexSession.GetStats();
         }
     }
 }
