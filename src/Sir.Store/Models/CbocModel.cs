@@ -100,6 +100,8 @@ namespace Sir.Store
 
         public int PageWeight => 50000;
 
+        public int VectorWidth => 100;
+
         public double CosAngle(IVector vec1, IVector vec2)
         {
             var dotProduct = vec1.Value.DotProduct(vec2.Value);

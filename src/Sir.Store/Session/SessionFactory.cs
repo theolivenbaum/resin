@@ -23,6 +23,8 @@ namespace Sir.Store
 
         public SessionFactory(IConfigurationProvider config, IStringModel model)
         {
+            var time = Stopwatch.StartNew();
+
             Dir = config.Get("data_dir");
             Config = config;
 
@@ -31,12 +33,12 @@ namespace Sir.Store
                 Directory.CreateDirectory(Dir);
             }
 
-            Model = model;
             _keys = LoadKeys();
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _documentWriters = new ConcurrentDictionary<ulong, DocumentStreamWriter>();
+            Model = model;
 
-            this.Log("initiated");
+            this.Log($"initiated in {time.Elapsed}");
         }
 
         public long GetDocCount(string collection)
@@ -124,9 +126,7 @@ namespace Sir.Store
 
         public ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> LoadKeys()
         {
-            var timer = new Stopwatch();
-            timer.Start();
-
+            var timer = Stopwatch.StartNew();
             var allkeys = new ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>>();
 
             foreach (var keyFile in Directory.GetFiles(Dir, "*.kmap"))

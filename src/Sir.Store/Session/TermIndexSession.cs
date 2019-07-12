@@ -94,14 +94,10 @@ namespace Sir.Store
 
         public void CreatePage(long keyId)
         {
-            var time = Stopwatch.StartNew();
-
             using (var serializer = new ColumnWriter(CollectionId, keyId, SessionFactory))
             {
                 serializer.CreatePage(_dirty[keyId], _vectorStream, _postingsStream, _model);
             }
-
-            this.Log(string.Format($"serialized column {keyId} in {time.Elapsed}"));
 
             _dirty.Remove(keyId, out _);
 

@@ -1,35 +1,33 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Sir
 {
     public static class ListHelper
     {
-        public static IEnumerable<IEnumerable<T>> Batch<T>(
-        this IEnumerable<T> source, int size)
+        /// <summary>
+        /// https://stackoverflow.com/a/44505349/46645
+        /// </summary>
+        public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> source, int size)
         {
-            T[] bucket = null;
-            var count = 0;
+            if (size <= 0)
+                throw new ArgumentOutOfRangeException("size", "Must be greater than zero.");
 
-            foreach (var item in source)
+            using (var enumerator = source.GetEnumerator())
+            while (enumerator.MoveNext())
             {
-                if (bucket == null)
-                    bucket = new T[size];
+                int i = 0;
+                // Batch is a local function closing over `i` and `enumerator` that
+                // executes the inner batch enumeration
+                IEnumerable<T> Batch()
+                {
+                    do yield return enumerator.Current;
+                    while (++i < size && enumerator.MoveNext());
+                }
 
-                bucket[count++] = item;
-
-                if (count != size)
-                    continue;
-
-                yield return bucket;
-
-                bucket = null;
-                count = 0;
+                yield return Batch();
+                while (++i < size && enumerator.MoveNext()) ; // discard skipped items
             }
-
-            // Return the last bucket with all remaining elements
-            if (bucket != null && count > 0)
-                yield return bucket.Take(count);
         }
     }
 }

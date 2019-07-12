@@ -14,6 +14,8 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly string _ixpFileName;
         private readonly Stream _indexStream;
+        private readonly string _vecFileName;
+        private readonly ulong _collectionId;
         private readonly string _ixFileName;
 
         public NodeReader(
@@ -25,16 +27,21 @@ namespace Sir.Store
             var ixFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
             var ixpFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.{1}.ixp", collectionId, keyId));
 
+            _collectionId = collectionId;
             _ixFileName = ixFileName;
             _sessionFactory = sessionFactory;
             _config = config;
             _ixpFileName = ixpFileName;
             _indexStream = _sessionFactory.CreateReadStream(_ixFileName, bufferSize: int.Parse(_config.Get("nodereader_buffer_size")), fileOptions: FileOptions.RandomAccess);
+            _vecFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId));
+
         }
 
         public Hit ClosestMatch(IVector vector, IStringModel model, Stream vectorStream)
         {
+            var time = Stopwatch.StartNew();
             var hits = ClosestMatchOnDisk(vector, model, vectorStream);
+
             Hit best = null;
 
             foreach (var hit in hits)
@@ -49,28 +56,22 @@ namespace Sir.Store
                 }
             }
 
+            this.Log($"scan took {time.Elapsed}");
+
             return best;
         }
 
         private IEnumerable<Hit> ClosestMatchOnDisk(
             IVector vector, IStringModel model, Stream vectorStream)
         {
-            var time = Stopwatch.StartNew();
             var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
-            var hits = new List<Hit>();
 
             foreach (var page in pages)
             {
                 _indexStream.Seek(page.offset, SeekOrigin.Begin);
 
-                var hit = ClosestMatchInPage(vector, _indexStream, vectorStream, model);
-
-                hits.Add(hit);
+                yield return ClosestMatchInPage(vector, _indexStream, vectorStream, model);
             }
-
-            this.Log($"scan of {pages.Count} pages took {time.Elapsed}");
-
-            return hits;
         }
 
         private Hit ClosestMatchInPage(
@@ -95,15 +96,8 @@ namespace Sir.Store
 
                 if (angle >= model.IdenticalAngle)
                 {
-                    if (best == null || angle > highscore)
-                    {
-                        highscore = angle;
-                        best = new VectorNode(postingsOffset);
-                    }
-                    else if (angle == highscore)
-                    {
-                        best.PostingsOffsets.Add(postingsOffset);
-                    }
+                    highscore = angle;
+                    best = new VectorNode(postingsOffset);
 
                     break;
                 }

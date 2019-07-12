@@ -142,7 +142,7 @@ namespace Sir.Store
 
             foreach (var word in MemoryMarshal.Cast<byte, long>(listBuf))
             {
-                result.Add(word, score);
+                result.TryAdd(word, score);
             }
         }
     }

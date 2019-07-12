@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.IO.MemoryMappedFiles;
 
 namespace Sir
 {
@@ -17,6 +18,7 @@ namespace Sir
         double IdenticalAngle { get; }
         double FoldAngle { get; }
         int PageWeight { get; }
+        int VectorWidth { get; }
         double CosAngle(IVector vec1, IVector vec2);
         double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream);
     }

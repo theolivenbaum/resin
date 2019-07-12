@@ -47,7 +47,22 @@ namespace Sir
             ComponentCount = tuples.Length;
         }
 
-        public IndexedVector(Tuple<int, float>[] tuples, int vectorWidth = 100)
+        public IndexedVector(int[] index, float[] values, int vectorWidth)
+        {
+            var tuples = new Tuple<int, float>[index.Length];
+
+            for (int i = 0; i < index.Length; i++)
+            {
+                tuples[i] = new Tuple<int, float>(index[i], values[i]);
+            }
+
+            Value = CreateVector.Sparse(
+                SparseVectorStorage<float>.OfIndexedEnumerable(vectorWidth, tuples));
+
+            ComponentCount = tuples.Length;
+        }
+
+        public IndexedVector(Tuple<int, float>[] tuples, int vectorWidth)
         {
             Value = CreateVector.SparseOfIndexed(vectorWidth, tuples);
             ComponentCount = tuples.Length;

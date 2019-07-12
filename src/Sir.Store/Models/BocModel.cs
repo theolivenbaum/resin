@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MathNet.Numerics.LinearAlgebra;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -32,7 +33,7 @@ namespace Sir.Store
                 tuples[i] = new Tuple<int, float>(index[i], values[i]);
             }
 
-            return new IndexedVector(tuples);
+            return new IndexedVector(tuples, VectorWidth);
         }
 
         public AnalyzedData Tokenize(string text)
@@ -104,6 +105,8 @@ namespace Sir.Store
 
         public int PageWeight => 50000;
 
+        public int VectorWidth => 100;
+
         public double CosAngle(IVector vec1, IVector vec2)
         {
             var dotProduct = vec1.Value.DotProduct(vec2.Value);
@@ -129,11 +132,11 @@ namespace Sir.Store
                 tuples[i] = new Tuple<int, float>(index[i], values[i]);
             }
 
-            var otherVector = new IndexedVector(tuples);
+            var otherVector = CreateVector.SparseOfIndexed(VectorWidth, tuples);
 
-            var dotProduct = vector.Value.DotProduct(otherVector.Value);
+            var dotProduct = vector.Value.DotProduct(otherVector);
             var dotSelf1 = vector.Value.DotProduct(vector.Value);
-            var dotSelf2 = otherVector.Value.DotProduct(otherVector.Value);
+            var dotSelf2 = otherVector.DotProduct(otherVector);
 
             return (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
         }
