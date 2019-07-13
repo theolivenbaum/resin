@@ -59,15 +59,10 @@ namespace Sir.Store
 
             foreach (var embedding in tokens.Embeddings)
             {
-                GraphBuilder.Add(docTree, new VectorNode(embedding), _model);
-            }
+                var node = new VectorNode(embedding);
+                VectorNode x;
 
-            foreach (var node in PathFinder.All(docTree))
-            {
-                var query = new Query(CollectionId, new Term(key, node));
-                var result = _readSession.Read(query);
-
-                if (!result.Docs.Contains(new Dictionary<string, object> { { "___docid", docId } }, _comparer))
+                if (!GraphBuilder.GetOrAdd(docTree, node, _model, out x))
                 {
                     this.Log($"failed to validate node {node} from doc {docId}");
 
@@ -93,7 +88,7 @@ namespace Sir.Store
 
         public int GetHashCode(IDictionary<string, object> obj)
         {
-            return obj.GetHashCode();
+            return obj["___docid"].GetHashCode();
         }
     }
 }

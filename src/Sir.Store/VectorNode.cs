@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace Sir.Store
 {
@@ -16,7 +18,7 @@ namespace Sir.Store
         private VectorNode _left;
         private VectorNode _ancestor;
         private long _weight;
-        private double _angleWhenAdded;
+        private readonly object _sync = new object();
 
         public HashSet<long> DocIds { get; set; }
         public VectorNode Ancestor { get { return _ancestor; } }
@@ -24,26 +26,11 @@ namespace Sir.Store
         public long VectorOffset { get; set; }
         public long PostingsOffset { get; set; }
         public IVector Vector { get; set; }
+        public object Sync { get { return _sync; } }
 
         public long Weight
         {
             get { return _weight; }
-            set
-            {
-                var diff = value - _weight;
-
-                _weight = value;
-
-                if (diff > 0)
-                {
-                    var cursor = _ancestor;
-                    while (cursor != null)
-                    {
-                        cursor._weight += diff;
-                        cursor = cursor._ancestor;
-                    }
-                }
-            }
         }
 
         public VectorNode Right
@@ -53,7 +40,7 @@ namespace Sir.Store
             {
                 _right = value;
                 _right._ancestor = this;
-                Weight++;
+                IncrementWeight();
             }
         }
 
@@ -64,15 +51,13 @@ namespace Sir.Store
             {
                 _left = value;
                 _left._ancestor = this;
-                Weight++;
+                IncrementWeight();
             }
         }
 
         public long Terminator { get; set; }
 
         public IList<long> PostingsOffsets { get; set; }
-
-        public double AngleWhenAdded { get => _angleWhenAdded; set => _angleWhenAdded = value; }
 
         public VectorNode()
         {
@@ -108,9 +93,21 @@ namespace Sir.Store
             PostingsOffset = postingsOffset;
             VectorOffset = vecOffset;
             Terminator = terminator;
-            Weight = weight;
+            _weight = weight;
             ComponentCount = componentCount;
             Vector = vector;
+        }
+
+        public void IncrementWeight()
+        {
+            Interlocked.Increment(ref _weight);
+
+            var cursor = _ancestor;
+            while (cursor != null)
+            {
+                Interlocked.Increment(ref cursor._weight);
+                cursor = cursor._ancestor;
+            }
         }
 
         public VectorNode Detach()
@@ -139,7 +136,7 @@ namespace Sir.Store
         {
             if (node == null) return;
             output.Append('\t', depth);
-            output.AppendFormat($"{node.AngleWhenAdded} {node.ToDebugString()} w:{node.Weight}");
+            output.AppendFormat($"{node.ToDebugString()} w:{node.Weight}");
             output.AppendLine();
 
             Visualize(node.Left, output, depth + 1);

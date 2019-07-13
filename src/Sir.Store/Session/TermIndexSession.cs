@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -36,46 +35,21 @@ namespace Sir.Store
             var ix = GetOrCreateIndex(keyId);
             var tokens = _model.Tokenize(value);
 
-            foreach (var vector in tokens.Embeddings)
+            Parallel.ForEach(tokens.Embeddings, vector =>
+            //foreach (var vector in tokens.Embeddings)
             {
-                GraphBuilder.Add(ix, new VectorNode(vector, docId), _model);
+                var node = new VectorNode(vector, docId);
+                VectorNode x;
 
-                if (ix.Weight == _model.PageWeight)
+                if (GraphBuilder.GetOrAdd(ix, node, _model, out x))
                 {
-                    CreatePage(keyId);
-                    ix = GetOrCreateIndex(keyId);
+                    GraphBuilder.AddDocId(x, docId);
                 }
-            }
-        }
+            });
 
-        private void Validate((long keyId, long docId, AnalyzedData tokens) item)
-        {
-            var tree = GetOrCreateIndex(item.keyId);
-
-            foreach (var vector in item.tokens.Embeddings)
+            if (ix.Weight >= _model.PageWeight)
             {
-                var hit = PathFinder.ClosestMatch(tree, vector, _model);
-
-                if (hit.Score < _model.IdenticalAngle)
-                {
-                    throw new DataMisalignedException();
-                }
-
-                var valid = false;
-
-                foreach (var id in hit.Node.DocIds)
-                {
-                    if (id == item.docId)
-                    {
-                        valid = true;
-                        break;
-                    }
-                }
-
-                if (!valid)
-                {
-                    throw new DataMisalignedException();
-                }
+                CreatePage(keyId);
             }
         }
 
@@ -113,6 +87,37 @@ namespace Sir.Store
 
             _postingsStream.Dispose();
             _vectorStream.Dispose();
+        }
+
+        private void Validate((long keyId, long docId, AnalyzedData tokens) item)
+        {
+            var tree = GetOrCreateIndex(item.keyId);
+
+            foreach (var vector in item.tokens.Embeddings)
+            {
+                var hit = PathFinder.ClosestMatch(tree, vector, _model);
+
+                if (hit.Score < _model.IdenticalAngle)
+                {
+                    throw new DataMisalignedException();
+                }
+
+                var valid = false;
+
+                foreach (var id in hit.Node.DocIds)
+                {
+                    if (id == item.docId)
+                    {
+                        valid = true;
+                        break;
+                    }
+                }
+
+                if (!valid)
+                {
+                    throw new DataMisalignedException();
+                }
+            }
         }
     }
 

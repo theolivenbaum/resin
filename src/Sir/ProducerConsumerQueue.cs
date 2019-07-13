@@ -112,7 +112,8 @@ namespace Sir.Core
         {
             Join();
 
-            _queue.Dispose();
+            if (!_queue.IsAddingCompleted)
+                _queue.Dispose();
         }
     }
 }

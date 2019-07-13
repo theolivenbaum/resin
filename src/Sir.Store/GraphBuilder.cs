@@ -7,7 +7,7 @@ namespace Sir.Store
 {
     public static class GraphBuilder
     {
-        public static void Add(VectorNode root, VectorNode node, IStringModel model)
+        public static bool GetOrAdd(VectorNode root, VectorNode node, IStringModel model, out VectorNode x)
         {
             var cursor = root;
 
@@ -17,18 +17,30 @@ namespace Sir.Store
 
                 if (angle >= model.IdenticalAngle)
                 {
-                    Merge(cursor, node);
-
-                    break;
+                    x = cursor;
+                    return true;
                 }
                 else if (angle > model.FoldAngle)
                 {
                     if (cursor.Left == null)
                     {
-                        node.AngleWhenAdded = angle;
-                        cursor.Left = node;
+                        var sync = cursor.Sync;
 
-                        break;
+                        lock (sync)
+                        {
+                            if (cursor.Left == null)
+                            {
+                                cursor.Left = node;
+
+                                x = node;
+
+                                return false;
+                            }
+                            else
+                            {
+                                cursor = cursor.Left;
+                            }
+                        }
                     }
                     else
                     {
@@ -39,10 +51,23 @@ namespace Sir.Store
                 {
                     if (cursor.Right == null)
                     {
-                        node.AngleWhenAdded = angle;
-                        cursor.Right = node;
+                        var sync = cursor.Sync;
 
-                        break;
+                        lock (sync)
+                        {
+                            if (cursor.Right == null)
+                            {
+                                cursor.Right = node;
+
+                                x = node;
+
+                                return false;
+                            }
+                            else
+                            {
+                                cursor = cursor.Right;
+                            }
+                        }
                     }
                     else
                     {
@@ -52,38 +77,20 @@ namespace Sir.Store
             }
         }
 
-        public static void MergePostings(VectorNode target, VectorNode node)
+        public static void MergePostings(VectorNode target, VectorNode source)
         {
             if (target.PostingsOffsets == null)
-            {
-                target.PostingsOffsets = new List<long> { target.PostingsOffset };
-            }
+                target.PostingsOffsets = new List<long>();
 
-            if (node.PostingsOffsets == null)
-            {
-                target.PostingsOffsets.Add(node.PostingsOffset);
-            }
-            else
-            {
-                ((List<long>)target.PostingsOffsets).AddRange(node.PostingsOffsets);
-            }
+            if (source.PostingsOffsets == null)
+                source.PostingsOffsets = new List<long>();
+
+            ((List<long>)target.PostingsOffsets).AddRange(source.PostingsOffsets);
         }
 
-        public static void Merge(VectorNode target, VectorNode node)
+        public static void AddDocId(VectorNode target, long docId)
         {
-            MergeDocIds(target, node);
-            MergePostings(target, node);
-            
-        }
-
-        public static void MergeDocIds(VectorNode target, VectorNode node)
-        {
-            if (target.DocIds == null || node.DocIds == null)
-            {
-                return;
-            }
-
-            foreach (var docId in node.DocIds)
+            lock (target)
             {
                 target.DocIds.Add(docId);
             }
@@ -204,9 +211,12 @@ namespace Sir.Store
             while (read == VectorNode.BlockSize)
             {
                 var node = DeserializeNode(buf, vectorStream, model);
+                VectorNode x;
 
-                if (node.VectorOffset > -1)
-                    GraphBuilder.Add(root, node, model);
+                if (GetOrAdd(root, node, model, out x))
+                {
+                    MergePostings(x, node);
+                }
 
                 read = indexStream.Read(buf);
             }
@@ -228,9 +238,12 @@ namespace Sir.Store
                 indexStream.Read(buf);
 
                 var node = DeserializeNode(buf, vectorStream, model);
+                VectorNode x;
 
-                if (node.VectorOffset > -1)
-                    GraphBuilder.Add(root, node, model);
+                if (GetOrAdd(root, node, model, out x))
+                {
+                    MergePostings(x, node);
+                }
 
                 read += VectorNode.BlockSize;
             }

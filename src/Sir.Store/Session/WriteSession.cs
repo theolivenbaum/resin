@@ -92,8 +92,6 @@ namespace Sir.Store
                 document["___docid"] = docId;
             }
 
-            _streamWriter.Flush();
-
             return _indexSession.GetStats();
         }
     }

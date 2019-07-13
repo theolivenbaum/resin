@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -16,7 +17,6 @@ namespace Sir.Store
         private readonly Stream _postings;
         private readonly ConcurrentDictionary<long, NodeReader> _nodeReaders;
         private readonly DocumentStreamReader _streamReader;
-        private readonly Stream _vectorStream;
 
         public ReadSession(ulong collectionId,
             SessionFactory sessionFactory, 
@@ -33,19 +33,12 @@ namespace Sir.Store
             var posFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos");
 
             _postings = SessionFactory.CreateReadStream(posFileName);
-
-            var vecFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId));
-
-            _vectorStream = sessionFactory.CreateReadStream(vecFileName);
         }
 
         public void Dispose()
         {
             if (_postings != null)
                 _postings.Dispose();
-
-            if (_vectorStream != null)
-                _vectorStream.Dispose();
 
             foreach (var reader in _nodeReaders.Values)
             {
@@ -121,7 +114,8 @@ namespace Sir.Store
         {
             var timer = Stopwatch.StartNew();
 
-            foreach (var q in query.ToClauses())
+            Parallel.ForEach(query.ToClauses(), q =>
+            //foreach (var q in query.ToClauses())
             {
                 var cursor = q;
 
@@ -135,7 +129,7 @@ namespace Sir.Store
 
                     if (indexReader != null)
                     {
-                        hit = indexReader.ClosestMatch(cursor.Term.Vector, _tokenizer, _vectorStream);
+                        hit = indexReader.ClosestMatch(cursor.Term.Vector, _tokenizer);
                     }
 
                     if (hit != null && hit.Score > 0)
@@ -150,7 +144,7 @@ namespace Sir.Store
 
                     cursor = cursor.NextTermInClause;
                 }
-            }
+            });
 
             this.Log("map operation for {0} took {1}", query, timer.Elapsed);
         }

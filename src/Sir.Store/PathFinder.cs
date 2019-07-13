@@ -79,7 +79,7 @@ namespace Sir.Store
             if (node == null) return;
 
             output.Append('\t', depth);
-            output.AppendFormat($"{node.AngleWhenAdded} {node} w:{node.Weight}");
+            output.AppendFormat($"{node} w:{node.Weight}");
             output.AppendLine();
 
             Visualize(node.Left, output, depth + 1);

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -13,7 +15,6 @@ namespace Sir.Store
         private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
         private readonly string _ixpFileName;
-        private readonly Stream _indexStream;
         private readonly string _vecFileName;
         private readonly ulong _collectionId;
         private readonly string _ixFileName;
@@ -32,15 +33,13 @@ namespace Sir.Store
             _sessionFactory = sessionFactory;
             _config = config;
             _ixpFileName = ixpFileName;
-            _indexStream = _sessionFactory.CreateReadStream(_ixFileName, bufferSize: int.Parse(_config.Get("nodereader_buffer_size")), fileOptions: FileOptions.RandomAccess);
             _vecFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId));
-
         }
 
-        public Hit ClosestMatch(IVector vector, IStringModel model, Stream vectorStream)
+        public Hit ClosestMatch(IVector vector, IStringModel model)
         {
             var time = Stopwatch.StartNew();
-            var hits = ClosestMatchOnDisk(vector, model, vectorStream);
+            var hits = ClosestMatchOnDisk(vector, model);
 
             Hit best = null;
 
@@ -62,16 +61,27 @@ namespace Sir.Store
         }
 
         private IEnumerable<Hit> ClosestMatchOnDisk(
-            IVector vector, IStringModel model, Stream vectorStream)
+            IVector vector, IStringModel model)
         {
             var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
+            var hits = new ConcurrentBag<Hit>();
 
-            foreach (var page in pages)
+            Parallel.ForEach(pages, page =>
+            //foreach (var page in pages)
             {
-                _indexStream.Seek(page.offset, SeekOrigin.Begin);
+                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+                using (var indexStream = _sessionFactory.CreateReadStream(
+                    _ixFileName,
+                    bufferSize: int.Parse(_config.Get("nodereader_buffer_size")),
+                    fileOptions: FileOptions.RandomAccess))
+                {
+                    indexStream.Seek(page.offset, SeekOrigin.Begin);
 
-                yield return ClosestMatchInPage(vector, _indexStream, vectorStream, model);
-            }
+                    hits.Add(ClosestMatchInPage(vector, indexStream, vectorStream, model)); ;
+                }
+            });
+
+            return hits;
         }
 
         private Hit ClosestMatchInPage(
@@ -191,8 +201,6 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            if (_indexStream != null)
-                _indexStream.Dispose();
         }
     }
 }

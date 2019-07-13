@@ -24,7 +24,7 @@ namespace Sir.StringCompare
                         break;
                     }
 
-                    GraphBuilder.Add(root, new VectorNode(model.Tokenize(command).Embeddings[0]), model);
+                    GraphBuilder.GetOrAdd(root, new VectorNode(model.Tokenize(command).Embeddings[0]), model, out _);
                 }
 
                 Console.WriteLine(root.Visualize());
