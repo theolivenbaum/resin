@@ -129,7 +129,7 @@ namespace Sir.Store
         }
 
         public static (long offset, long length) SerializeTree(
-            VectorNode node, Stream indexStream, Stream vectorStream, Stream postingsStream, IStringModel tokenizer)
+            VectorNode node, Stream indexStream, Stream vectorStream, Stream postingsStream, IStringModel model)
         {
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;
@@ -142,7 +142,7 @@ namespace Sir.Store
             while (node != null)
             {
                 SerializePostings(node, postingsStream);
-                node.VectorOffset = tokenizer.SerializeVector(node.Vector, vectorStream);
+                node.VectorOffset = model.SerializeVector(node.Vector, vectorStream);
                 SerializeNode(node, indexStream);
 
                 if (node.Right != null)
