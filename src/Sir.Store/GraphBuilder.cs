@@ -24,23 +24,11 @@ namespace Sir.Store
                 {
                     if (cursor.Left == null)
                     {
-                        var sync = cursor.Sync;
+                        cursor.Left = node;
 
-                        lock (sync)
-                        {
-                            if (cursor.Left == null)
-                            {
-                                cursor.Left = node;
+                        x = node;
 
-                                x = node;
-
-                                return false;
-                            }
-                            else
-                            {
-                                cursor = cursor.Left;
-                            }
-                        }
+                        return false;
                     }
                     else
                     {
@@ -51,23 +39,11 @@ namespace Sir.Store
                 {
                     if (cursor.Right == null)
                     {
-                        var sync = cursor.Sync;
+                        cursor.Right = node;
 
-                        lock (sync)
-                        {
-                            if (cursor.Right == null)
-                            {
-                                cursor.Right = node;
+                        x = node;
 
-                                x = node;
-
-                                return false;
-                            }
-                            else
-                            {
-                                cursor = cursor.Right;
-                            }
-                        }
+                        return false;
                     }
                     else
                     {
@@ -134,7 +110,7 @@ namespace Sir.Store
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;
 
-            if (node.Vector == null)
+            if (node.Vector == null || node.Vector.ComponentCount == 0)
             {
                 node = node.Right;
             }
@@ -288,11 +264,7 @@ namespace Sir.Store
                 read += VectorNode.BlockSize;
             }
 
-            var right = root.Right;
-
-            right.DetachFromAncestor();
-
-            return right;
+            return root;
         }
     }
 }

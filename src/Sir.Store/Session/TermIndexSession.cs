@@ -35,8 +35,7 @@ namespace Sir.Store
             var ix = GetOrCreateIndex(keyId);
             var tokens = _model.Tokenize(value);
 
-            Parallel.ForEach(tokens.Embeddings, vector =>
-            //foreach (var vector in tokens.Embeddings)
+            foreach (var vector in tokens.Embeddings)
             {
                 var node = new VectorNode(vector, docId);
                 VectorNode x;
@@ -45,7 +44,7 @@ namespace Sir.Store
                 {
                     GraphBuilder.AddDocId(x, docId);
                 }
-            });
+            }
 
             if (ix.Weight >= _model.PageWeight)
             {
