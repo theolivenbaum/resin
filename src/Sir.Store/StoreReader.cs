@@ -34,7 +34,7 @@ namespace Sir.Store
             var timer = Stopwatch.StartNew();
             var collectionId = collectionName.ToHash(); 
 
-            using (var session = _sessionFactory.CreateReadSession(collectionId))
+            using (var readSession = _sessionFactory.CreateReadSession(collectionId))
             {
                 var query = _httpQueryParser.Parse(collectionId, model, request);
 
@@ -45,7 +45,7 @@ namespace Sir.Store
 
                 this.Log(string.Format("begin executing query {0}", query));
 
-                var result = session.Read(query);
+                var result = readSession.Read(query);
                 long total = result.Total;
 
                 this.Log($"executed query {query} in {timer.Elapsed}");

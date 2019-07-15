@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -13,7 +12,7 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
-        private readonly ConcurrentDictionary<long, VectorNode> _dirty;
+        private readonly ConcurrentDictionary<long, VectorNode> _index;
         private Stream _postingsStream;
         private readonly Stream _vectorStream;
 
@@ -25,7 +24,7 @@ namespace Sir.Store
         {
             _config = config;
             _model = model;
-            _dirty = new ConcurrentDictionary<long, VectorNode>();
+            _index = new ConcurrentDictionary<long, VectorNode>();
             _postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"));
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
         }
@@ -54,12 +53,12 @@ namespace Sir.Store
 
         private VectorNode GetOrCreateIndex(long keyId)
         {
-            return _dirty.GetOrAdd(keyId, new VectorNode());
+            return _index.GetOrAdd(keyId, new VectorNode());
         }
 
         public IEnumerable<GraphStats> GetStats()
         {
-            foreach(var node in _dirty)
+            foreach(var node in _index)
             {
                 yield return new GraphStats(node.Key, node.Value);
             }
@@ -69,17 +68,17 @@ namespace Sir.Store
         {
             using (var serializer = new ColumnWriter(CollectionId, keyId, SessionFactory))
             {
-                serializer.CreatePage(_dirty[keyId], _vectorStream, _postingsStream, _model);
+                serializer.CreatePage(_index[keyId], _vectorStream, _postingsStream, _model);
             }
 
-            _dirty.Remove(keyId, out _);
+            _index.Remove(keyId, out _);
 
             SessionFactory.ClearPageInfo();
         }
 
         public void Dispose()
         {
-            foreach (var column in _dirty.Keys)
+            foreach (var column in _index.Keys)
             {
                 CreatePage(column);
             }
