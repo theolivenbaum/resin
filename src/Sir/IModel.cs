@@ -17,6 +17,8 @@ namespace Sir
         long SerializeVector(IVector vector, Stream vectorStream);
         double IdenticalAngle { get; }
         double FoldAngle { get; }
+        double PrimaryIndexIdenticalAngle { get; }
+        double PrimaryIndexFoldAngle { get; }
         int PageWeight { get; }
         int VectorWidth { get; }
         double CosAngle(IVector vec1, IVector vec2);

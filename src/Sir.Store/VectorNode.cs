@@ -21,7 +21,7 @@ namespace Sir.Store
 
         public HashSet<long> DocIds { get; set; }
         public VectorNode Ancestor { get { return _ancestor; } }
-        public long ComponentCount { get; set; }
+        public long ComponentCount { get { return Vector.ComponentCount; } }
         public long VectorOffset { get; set; }
         public long PostingsOffset { get; set; }
         public IVector Vector { get; set; }
@@ -86,21 +86,18 @@ namespace Sir.Store
             DocIds.Add(docId);
         }
 
-        public VectorNode(long postingsOffset, long vecOffset, long terminator, long weight, long componentCount, IVector vector)
+        public VectorNode(long postingsOffset, long vecOffset, long terminator, long weight, IVector vector)
         {
             PostingsOffset = postingsOffset;
             VectorOffset = vecOffset;
             Terminator = terminator;
             _weight = weight;
-            ComponentCount = componentCount;
             Vector = vector;
         }
 
         public void IncrementWeight()
         {
-            Interlocked.Increment(ref _weight);
-
-            var cursor = _ancestor;
+            var cursor = this;
             while (cursor != null)
             {
                 Interlocked.Increment(ref cursor._weight);

@@ -16,14 +16,15 @@ namespace Sir.Store
         public ColumnWriter(
             ulong collectionId, 
             long keyId, 
-            SessionFactory sessionFactory)
+            SessionFactory sessionFactory,
+            string fileExtension = "ix")
         {
             _keyId = keyId;
             _collectionId = collectionId;
             _sessionFactory = sessionFactory;
 
-            var pixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.ixp", _collectionId, keyId));
-            var ixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.ix", _collectionId, keyId));
+            var pixFileName = Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{keyId}.{fileExtension}p");
+            var ixFileName = Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{keyId}.{fileExtension}");
 
             _ixPageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(pixFileName));
             _ixStream = _sessionFactory.CreateAppendStream(ixFileName);
