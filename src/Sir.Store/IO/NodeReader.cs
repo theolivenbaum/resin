@@ -43,28 +43,14 @@ namespace Sir.Store
         public Hit ClosestMatch(IVector vector, IStringModel model)
         {
             var time = Stopwatch.StartNew();
-            var hits = ClosestMatchOnDisk(vector, model);
-
-            Hit best = null;
-
-            foreach (var hit in hits)
-            {
-                if (best == null || hit.Score > best.Score)
-                {
-                    best = hit;
-                }
-                else if (hit.Score == best.Score)
-                {
-                    GraphBuilder.MergePostings(best.Node, hit.Node);
-                }
-            }
+            var best = ClosestMatchOnDisk(vector, model);
 
             this.Log($"scan took {time.Elapsed}");
 
             return best;
         }
 
-        private IEnumerable<Hit> ClosestMatchOnDisk(
+        private Hit ClosestMatchOnDisk(
             IVector vector, IStringModel model)
         {
             int indexId;
@@ -73,10 +59,7 @@ namespace Sir.Store
 
             using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
             {
-                using (var indexStream = _sessionFactory.CreateReadStream(
-                    _ixFileName,
-                    bufferSize: bufferSize,
-                    fileOptions: FileOptions.RandomAccess))
+                using (var indexStream = _sessionFactory.CreateReadStream(_ixFileName, bufferSize: bufferSize, fileOptions: FileOptions.RandomAccess))
                 {
                     var hit = ClosestMatchInPrimaryPage(vector, indexStream, vectorStream, model);
                     indexId = (int)hit.Node.PostingsOffsets[0];
@@ -84,14 +67,11 @@ namespace Sir.Store
 
                 var page = pages[indexId];
 
-                using (var indexStream = _sessionFactory.CreateReadStream(
-                    _ixsFileName,
-                    bufferSize: bufferSize,
-                    fileOptions: FileOptions.RandomAccess))
+                using (var indexStream = _sessionFactory.CreateReadStream(_ixsFileName, bufferSize: bufferSize, fileOptions: FileOptions.RandomAccess))
                 {
                     indexStream.Seek(page.offset, SeekOrigin.Begin);
 
-                    yield return ClosestMatchInPage(vector, indexStream, vectorStream, model);
+                    return ClosestMatchInPage(vector, indexStream, vectorStream, model);
                 }
             }
         }
