@@ -24,7 +24,7 @@ namespace Sir.StringCompare
                         break;
                     }
 
-                    GraphBuilder.MergeOrAdd(root, new VectorNode(model.Tokenize(command).Embeddings[0]), model, out _);
+                    GraphBuilder.MergeOrAdd(root, new VectorNode(model.Tokenize(command).Embeddings[0]), model.IdenticalAngle, model.FoldAngle, model, out _);
                 }
 
                 Console.WriteLine(root.Visualize());

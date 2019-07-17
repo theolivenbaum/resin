@@ -62,7 +62,7 @@ namespace Sir.Store
                 var node = new VectorNode(embedding);
                 VectorNode x;
 
-                if (!GraphBuilder.MergeOrAdd(docTree, node, _model, out x))
+                if (!GraphBuilder.MergeOrAdd(docTree, node, _model.IdenticalAngle, _model.FoldAngle, _model, out x))
                 {
                     this.Log($"failed to validate node {node} from doc {docId}");
 

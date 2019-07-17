@@ -7,7 +7,7 @@ namespace Sir.Store
 {
     public static class GraphBuilder
     {
-        public static bool MergeOrAdd(VectorNode root, VectorNode node, IStringModel model, out VectorNode x)
+        public static bool MergeOrAdd(VectorNode root, VectorNode node, double identicalAngle, double foldAngle, IDistance model, out VectorNode x)
         {
             var cursor = root;
 
@@ -15,58 +15,12 @@ namespace Sir.Store
             {
                 var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
 
-                if (angle >= model.IdenticalAngle)
+                if (angle >= identicalAngle)
                 {
                     x = cursor;
                     return true;
                 }
-                else if (angle > model.FoldAngle)
-                {
-                    if (cursor.Left == null)
-                    {
-                        cursor.Left = node;
-
-                        x = node;
-
-                        return false;
-                    }
-                    else
-                    {
-                        cursor = cursor.Left;
-                    }
-                }
-                else
-                {
-                    if (cursor.Right == null)
-                    {
-                        cursor.Right = node;
-
-                        x = node;
-
-                        return false;
-                    }
-                    else
-                    {
-                        cursor = cursor.Right;
-                    }
-                }
-            }
-        }
-
-        public static bool MergeOrAddPrimary(VectorNode root, VectorNode node, IStringModel model, out VectorNode x)
-        {
-            var cursor = root;
-
-            while (true)
-            {
-                var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
-
-                if (angle >= model.PrimaryIndexIdenticalAngle)
-                {
-                    x = cursor;
-                    return true;
-                }
-                else if (angle > model.PrimaryIndexFoldAngle)
+                else if (angle > foldAngle)
                 {
                     if (cursor.Left == null)
                     {
@@ -238,7 +192,7 @@ namespace Sir.Store
                 var node = DeserializeNode(buf, vectorStream, model);
                 VectorNode x;
 
-                if (MergeOrAdd(root, node, model, out x))
+                if (MergeOrAdd(root, node, model.IdenticalAngle, model.FoldAngle, model, out x))
                 {
                     MergePostings(x, node);
                 }
@@ -265,7 +219,7 @@ namespace Sir.Store
                 var node = DeserializeNode(buf, vectorStream, model);
                 VectorNode x;
 
-                if (MergeOrAdd(root, node, model, out x))
+                if (MergeOrAdd(root, node, model.IdenticalAngle, model.FoldAngle, model, out x))
                 {
                     MergePostings(x, node);
                 }

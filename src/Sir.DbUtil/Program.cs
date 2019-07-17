@@ -117,16 +117,19 @@ namespace Sir.DbUtil
 
                         foreach (var batch in payload.Batch(batchSize))
                         {
-                            var stats = writeSession.Write(batch);
+                            var info = writeSession.Write(batch);
                             var t = time.Elapsed.TotalMilliseconds;
                             var docsPerSecond = (int)(batchSize / t*1000);
-                            
-                            foreach(var stat in stats)
+                            var infoStr = new StringBuilder();
+
+                            foreach (var inf in info.Info)
                             {
-                                Console.WriteLine(stat);
+                                if (inf.Weight > 100)
+                                    infoStr.AppendLine(inf.ToString());                                
                             }
 
-                            Console.WriteLine($"batch {batchNo++} took {t} ms, {docsPerSecond} docs/s");
+                            Console.WriteLine(infoStr);
+                            Console.WriteLine($"batch {batchNo++} took {t} ms, {docsPerSecond} docs/s, queue {info.QueueLength}");
 
                             time.Restart();
                         }

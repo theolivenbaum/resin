@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Sir.Core;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace Sir.Store
@@ -12,8 +14,9 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
-        private readonly ConcurrentDictionary<long, List<VectorNode>> _secondaryIndex;
+        private readonly IDictionary<long, List<VectorNode>> _secondaryIndex;
         private readonly ConcurrentDictionary<long, VectorNode> _primaryIndex;
+        private readonly ProducerConsumerQueue<(int indexId, long docId, long keyId, IVector term)> _workers;
         private Stream _postingsStream;
         private readonly Stream _vectorStream;
 
@@ -25,10 +28,11 @@ namespace Sir.Store
         {
             _config = config;
             _model = model;
-            _secondaryIndex = new ConcurrentDictionary<long, List<VectorNode>>();
+            _secondaryIndex = new Dictionary<long, List<VectorNode>>();
             _primaryIndex = new ConcurrentDictionary<long, VectorNode>();
             _postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"));
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
+            _workers = new ProducerConsumerQueue<(int, long, long, IVector)>(1, PutSecondary);
         }
 
         public void Put(long docId, long keyId, string value)
@@ -40,36 +44,46 @@ namespace Sir.Store
             {
                 VectorNode x;
                 long indexId;
+                int i;
 
-                if (!GraphBuilder.MergeOrAddPrimary(primix, new VectorNode(term, docId), _model, out x))
+                if (!GraphBuilder.MergeOrAdd(primix, new VectorNode(term, docId), _model.PrimaryIndexIdenticalAngle, _model.PrimaryIndexFoldAngle, _model, out x))
                 {
                     x.PostingsOffset = indexId = primix.Weight - 1;
+                    i = (int)indexId;
+                    GetOrCreateSecondaryIndex(keyId, i);
                 }
                 else
                 {
                     indexId = x.PostingsOffset;
+                    i = (int)indexId;
                 }
 
-                PutSecondary((int)indexId, docId, keyId, term);
+                _workers.Enqueue((i, docId, keyId, term));
             }
         }
 
-        private void PutSecondary(int indexId, long docId, long keyId, IVector term)
+        private void PutSecondary((int indexId, long docId, long keyId, IVector term) workItem)
         {
-            var ix = GetOrCreateSecondaryIndex(keyId, (int)indexId);
+            var ix = GetOrCreateSecondaryIndex(workItem.keyId, workItem.indexId);
 
-            var node = new VectorNode(term, docId);
+            var node = new VectorNode(workItem.term, workItem.docId);
             VectorNode x;
 
-            if (GraphBuilder.MergeOrAdd(ix, node, _model, out x))
+            if (GraphBuilder.MergeOrAdd(ix, node, _model.IdenticalAngle, _model.FoldAngle, _model, out x))
             {
-                GraphBuilder.AddDocId(x, docId);
+                GraphBuilder.AddDocId(x, workItem.docId);
             }
         }
 
         private VectorNode GetOrCreateSecondaryIndex(long keyId, int indexId)
         {
-            var list = _secondaryIndex.GetOrAdd(keyId, new List<VectorNode>());
+            List<VectorNode> list;
+
+            if (!_secondaryIndex.TryGetValue(keyId, out list))
+            {
+                list = new List<VectorNode>();
+                _secondaryIndex.Add(keyId, list);
+            }
 
             if (indexId > list.Count - 1)
             {
@@ -84,19 +98,24 @@ namespace Sir.Store
             return _primaryIndex.GetOrAdd(keyId, new VectorNode());
         }
 
-        public IEnumerable<GraphStats> GetStats()
+        public IndexInfo GetIndexInfo()
         {
-            //foreach (var node in _primaryIndex)
-            //{
-            //    yield return new GraphStats(node.Key, node.Value);
-            //}
+            return new IndexInfo(_workers.Count, GetGraphInfo());
+        }
+
+        private IEnumerable<GraphInfo> GetGraphInfo()
+        {
+            foreach (var node in _primaryIndex)
+            {
+                yield return new GraphInfo("primary", node.Key, node.Value);
+            }
 
             foreach (var list in _secondaryIndex)
             {
                 var i = 0;
 
                 foreach (var node in list.Value)
-                    yield return new GraphStats(list.Key, i++, node);
+                    yield return new GraphInfo($"secondary{i++}", list.Key, node);
             }
         }
 
@@ -105,7 +124,9 @@ namespace Sir.Store
             foreach (var column in _primaryIndex)
             {
                 using (var writer = new ColumnWriter(CollectionId, column.Key, SessionFactory))
+                {
                     writer.CreatePage(column.Value, _vectorStream, _postingsStream, _model);
+                }
             }
 
             _primaryIndex.Clear();
@@ -115,7 +136,9 @@ namespace Sir.Store
                 using (var writer = new ColumnWriter(CollectionId, column.Key, SessionFactory, "ixs"))
                 {
                     foreach (var node in column.Value)
+                    {
                         writer.CreatePage(node, _vectorStream, _postingsStream, _model);
+                    }
                 }
             }
 
@@ -124,6 +147,14 @@ namespace Sir.Store
 
         public void Dispose()
         {
+            var time = Stopwatch.StartNew();
+
+            this.Log("synchronizing");
+
+            _workers.Dispose();
+
+            this.Log($"synchronized for {time.Elapsed}");
+
             Serialize();
 
             _postingsStream.Dispose();
@@ -164,22 +195,36 @@ namespace Sir.Store
         //}
     }
 
-    public class GraphStats
+    public class IndexInfo
     {
+        public int QueueLength { get; }
+        public IEnumerable<GraphInfo> Info { get; }
+
+        public IndexInfo(int queueLength, IEnumerable<GraphInfo> stats)
+        {
+            QueueLength = queueLength;
+            Info = stats;
+        }
+    }
+
+    public class GraphInfo
+    {
+        private readonly string _name;
         private readonly long _keyId;
         private readonly VectorNode _graph;
-        private readonly int _indexId;
 
-        public GraphStats(long keyId, int indexId, VectorNode graph)
+        public long Weight => _graph.Weight;
+
+        public GraphInfo(string name, long keyId, VectorNode graph)
         {
+            _name = name;
             _keyId = keyId;
             _graph = graph;
-            _indexId = indexId;
         }
 
         public override string ToString()
         {
-            return $"key: {_keyId} i: {_indexId} weight: {_graph.Weight} depth/width: {PathFinder.Size(_graph)}";
+            return $"{_name} key: {_keyId} weight: {_graph.Weight} depth/width: {PathFinder.Size(_graph)}";
         }
     }
 }

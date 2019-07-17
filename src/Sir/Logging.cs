@@ -23,6 +23,11 @@ namespace Sir
             }
         }
 
+        public static void Append(this ILogger logger, char c)
+        {
+            Console.Write(c);
+        }
+
         public static void Log(this ILogger logger, object message)
         {
             Write(logger, $"{DateTime.Now} :: {logger?.GetType()} :: {message}");

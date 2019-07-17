@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.IO.MemoryMappedFiles;
 
 namespace Sir
 {
@@ -10,7 +9,13 @@ namespace Sir
     {
     }
 
-    public interface IModel<T>
+    public interface IDistance
+    {
+        double CosAngle(IVector vec1, IVector vec2);
+        double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream);
+    }
+
+    public interface IModel<T> : IDistance
     {
         AnalyzedData Tokenize(T data);
         IVector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream);
@@ -21,7 +26,5 @@ namespace Sir
         double PrimaryIndexFoldAngle { get; }
         int PageWeight { get; }
         int VectorWidth { get; }
-        double CosAngle(IVector vec1, IVector vec2);
-        double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream);
     }
 }
