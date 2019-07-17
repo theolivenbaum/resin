@@ -46,8 +46,7 @@ namespace Sir.Store
 
             var size = PathFinder.Size(column);
 
-            this.Log("serialized column {0} in {1}. weight {2} depth {3} width {4}",
-                _keyId, time.Elapsed, column.Weight, size.depth, size.width);
+            this.Log($"serialized column {_keyId} in {time.Elapsed}. offset {page.offset} weight {column.Weight} depth {size.depth} width {size.width}");
         }
 
         public void Dispose()

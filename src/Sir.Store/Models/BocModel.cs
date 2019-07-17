@@ -101,9 +101,9 @@ namespace Sir.Store
 
         public double IdenticalAngle => 0.85d;
 
-        public double FoldAngle => 0.4d;
+        public double FoldAngle => 0.5d;
 
-        public double PrimaryIndexIdenticalAngle => 0.5d;
+        public double PrimaryIndexIdenticalAngle => 0.3d;
 
         public double PrimaryIndexFoldAngle => 0d;
 

@@ -89,8 +89,8 @@ namespace Sir.Store
         public static (int depth, int width) Size(VectorNode root)
         {
             var width = 0;
-            var depth = 1;
-            var node = root;
+            var depth = 0;
+            var node = root.Vector == null ? root.Right : root;
 
             while (node != null)
             {

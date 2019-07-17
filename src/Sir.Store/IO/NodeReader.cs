@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -27,9 +24,6 @@ namespace Sir.Store
             SessionFactory sessionFactory,
             IConfigurationProvider config)
         {
-            var ixFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
-            var ixpFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.{1}.ixp", collectionId, keyId));
-
             _collectionId = collectionId;
             _sessionFactory = sessionFactory;
             _config = config;

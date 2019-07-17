@@ -86,16 +86,18 @@ namespace Sir.Store
 
         public IEnumerable<GraphStats> GetStats()
         {
-            foreach (var node in _primaryIndex)
-            {
-                yield return new GraphStats(node.Key, node.Value);
-            }
-
-            //foreach (var list in _secondaryIndex)
+            //foreach (var node in _primaryIndex)
             //{
-            //    foreach (var node in list.Value)
-            //        yield return new GraphStats(list.Key, node);
+            //    yield return new GraphStats(node.Key, node.Value);
             //}
+
+            foreach (var list in _secondaryIndex)
+            {
+                var i = 0;
+
+                foreach (var node in list.Value)
+                    yield return new GraphStats(list.Key, i++, node);
+            }
         }
 
         private void Serialize()
@@ -166,16 +168,18 @@ namespace Sir.Store
     {
         private readonly long _keyId;
         private readonly VectorNode _graph;
+        private readonly int _indexId;
 
-        public GraphStats(long keyId, VectorNode graph)
+        public GraphStats(long keyId, int indexId, VectorNode graph)
         {
             _keyId = keyId;
             _graph = graph;
+            _indexId = indexId;
         }
 
         public override string ToString()
         {
-            return $"key: {_keyId} weight: {_graph.Weight} depth/width: {PathFinder.Size(_graph)}";
+            return $"key: {_keyId} i: {_indexId} weight: {_graph.Weight} depth/width: {PathFinder.Size(_graph)}";
         }
     }
 }

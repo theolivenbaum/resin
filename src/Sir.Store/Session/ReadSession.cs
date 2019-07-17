@@ -115,8 +115,8 @@ namespace Sir.Store
         {
             var timer = Stopwatch.StartNew();
 
-            //Parallel.ForEach(query.ToClauses(), q =>
-            foreach (var q in query.ToClauses())
+            Parallel.ForEach(query.ToClauses(), q =>
+            //foreach (var q in query.ToClauses())
             {
                 var cursor = q;
 
@@ -145,7 +145,7 @@ namespace Sir.Store
 
                     cursor = cursor.NextTermInClause;
                 }
-            }//);
+            });
 
             this.Log("map operation for {0} took {1}", query, timer.Elapsed);
         }
