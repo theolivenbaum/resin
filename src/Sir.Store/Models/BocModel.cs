@@ -109,7 +109,7 @@ namespace Sir.Store
 
         public double Level3IdenticalAngle => 0.9d;
 
-        public double Level3FoldAngle => 0.4d;
+        public double Level3FoldAngle => 0.5d;
 
         public int PageWeight => 50000;
 
