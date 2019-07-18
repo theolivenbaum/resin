@@ -152,7 +152,7 @@ namespace Sir.Store
 
         public NodeReader CreateIndexReader(long keyId)
         {
-            var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
+            var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix1", CollectionId, keyId));
 
             if (!File.Exists(ixFileName))
                 return null;

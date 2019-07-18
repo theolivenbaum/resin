@@ -60,9 +60,10 @@ namespace Sir.Store
             foreach (var embedding in tokens.Embeddings)
             {
                 var node = new VectorNode(embedding);
-                VectorNode x;
+                VectorNode parent;
+                bool left;
 
-                if (!GraphBuilder.MergeOrAdd(docTree, node, _model.IdenticalAngle, _model.FoldAngle, _model, out x))
+                if (!GraphBuilder.TryMerge(docTree, node, _model.Level3IdenticalAngle, _model.Level3FoldAngle, _model, out parent, out left))
                 {
                     this.Log($"failed to validate node {node} from doc {docId}");
 

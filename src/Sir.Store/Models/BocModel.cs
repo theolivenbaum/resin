@@ -99,13 +99,17 @@ namespace Sir.Store
             return new AnalyzedData(embeddings);
         }
 
-        public double IdenticalAngle => 0.85d;
+        public double Level1IdenticalAngle => 0.1d;
 
-        public double FoldAngle => 0.5d;
+        public double Level1FoldAngle => 0d;
 
-        public double PrimaryIndexIdenticalAngle => 0.3d;
+        public double Level2IdenticalAngle => 0.5d;
 
-        public double PrimaryIndexFoldAngle => 0d;
+        public double Level2FoldAngle => 0.1d;
+
+        public double Level3IdenticalAngle => 0.9d;
+
+        public double Level3FoldAngle => 0.4d;
 
         public int PageWeight => 50000;
 

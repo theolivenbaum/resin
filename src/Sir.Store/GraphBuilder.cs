@@ -7,7 +7,7 @@ namespace Sir.Store
 {
     public static class GraphBuilder
     {
-        public static bool MergeOrAdd(VectorNode root, VectorNode node, double identicalAngle, double foldAngle, IDistance model, out VectorNode x)
+        public static bool TryMerge(VectorNode root, VectorNode node, double identicalAngle, double foldAngle, IDistance model, out VectorNode x, out bool left)
         {
             var cursor = root;
 
@@ -18,16 +18,15 @@ namespace Sir.Store
                 if (angle >= identicalAngle)
                 {
                     x = cursor;
+                    left = false;
                     return true;
                 }
                 else if (angle > foldAngle)
                 {
                     if (cursor.Left == null)
                     {
-                        cursor.Left = node;
-
-                        x = node;
-
+                        x = cursor;
+                        left = true;
                         return false;
                     }
                     else
@@ -39,10 +38,8 @@ namespace Sir.Store
                 {
                     if (cursor.Right == null)
                     {
-                        cursor.Right = node;
-
-                        x = node;
-
+                        x = cursor;
+                        left = false;
                         return false;
                     }
                     else
@@ -190,11 +187,23 @@ namespace Sir.Store
             while (read == VectorNode.BlockSize)
             {
                 var node = DeserializeNode(buf, vectorStream, model);
-                VectorNode x;
+                VectorNode parent;
+                bool left;
 
-                if (MergeOrAdd(root, node, model.IdenticalAngle, model.FoldAngle, model, out x))
+                if (!TryMerge(root, node, model.Level3IdenticalAngle, model.Level3FoldAngle, model, out parent, out left))
                 {
-                    MergePostings(x, node);
+                    if (left)
+                    {
+                        parent.Left = node;
+                    }
+                    else
+                    {
+                        parent.Right = node;
+                    }
+                }
+                else
+                {
+                    MergePostings(parent, node);
                 }
 
                 read = indexStream.Read(buf);
@@ -217,11 +226,23 @@ namespace Sir.Store
                 indexStream.Read(buf);
 
                 var node = DeserializeNode(buf, vectorStream, model);
-                VectorNode x;
+                VectorNode parent;
+                bool left;
 
-                if (MergeOrAdd(root, node, model.IdenticalAngle, model.FoldAngle, model, out x))
+                if (!TryMerge(root, node, model.Level3IdenticalAngle, model.Level3FoldAngle, model, out parent, out left))
                 {
-                    MergePostings(x, node);
+                    if (left)
+                    {
+                        parent.Left = node;
+                    }
+                    else
+                    {
+                        parent.Right = node;
+                    }
+                }
+                else
+                {
+                    MergePostings(parent, node);
                 }
 
                 read += VectorNode.BlockSize;

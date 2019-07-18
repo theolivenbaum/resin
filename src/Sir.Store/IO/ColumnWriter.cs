@@ -6,6 +6,7 @@ namespace Sir.Store
 {
     public class ColumnWriter : ILogger, IDisposable
     {
+        private readonly string _ext;
         private readonly long _keyId;
         private readonly ulong _collectionId;
         private readonly SessionFactory _sessionFactory;
@@ -17,8 +18,9 @@ namespace Sir.Store
             ulong collectionId, 
             long keyId, 
             SessionFactory sessionFactory,
-            string fileExtension = "ix")
+            string fileExtension)
         {
+            _ext = fileExtension;
             _keyId = keyId;
             _collectionId = collectionId;
             _sessionFactory = sessionFactory;
@@ -46,7 +48,7 @@ namespace Sir.Store
 
             var size = PathFinder.Size(column);
 
-            this.Log($"serialized column {_keyId} in {time.Elapsed}. offset {page.offset} weight {column.Weight} depth {size.depth} width {size.width}");
+            this.Log($"serialized {_ext} column {_keyId} column | weight {column.Weight} | depth {size.depth} | width {size.width}");
         }
 
         public void Dispose()

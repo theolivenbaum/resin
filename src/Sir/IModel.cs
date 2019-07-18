@@ -20,10 +20,12 @@ namespace Sir
         AnalyzedData Tokenize(T data);
         IVector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream);
         long SerializeVector(IVector vector, Stream vectorStream);
-        double IdenticalAngle { get; }
-        double FoldAngle { get; }
-        double PrimaryIndexIdenticalAngle { get; }
-        double PrimaryIndexFoldAngle { get; }
+        double Level1IdenticalAngle { get; }
+        double Level1FoldAngle { get; }
+        double Level2IdenticalAngle { get; }
+        double Level2FoldAngle { get; }
+        double Level3IdenticalAngle { get; }
+        double Level3FoldAngle { get; }
         int PageWeight { get; }
         int VectorWidth { get; }
     }

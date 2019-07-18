@@ -24,7 +24,21 @@ namespace Sir.StringCompare
                         break;
                     }
 
-                    GraphBuilder.MergeOrAdd(root, new VectorNode(model.Tokenize(command).Embeddings[0]), model.IdenticalAngle, model.FoldAngle, model, out _);
+                    VectorNode parent;
+                    bool left;
+                    var node = new VectorNode(model.Tokenize(command).Embeddings[0]);
+
+                    if (!GraphBuilder.TryMerge(root, node, model.Level3IdenticalAngle, model.Level3FoldAngle, model, out parent, out left))
+                    {
+                        if (left)
+                        {
+                            parent.Left = node;
+                        }
+                        else
+                        {
+                            parent.Right = node;
+                        }
+                    }
                 }
 
                 Console.WriteLine(root.Visualize());
@@ -40,7 +54,7 @@ namespace Sir.StringCompare
                         break;
                     }
 
-                    var hit = PathFinder.ClosestMatch(root, model.Tokenize(command).Embeddings[0], model);
+                    var hit = PathFinder.ClosestMatch(root, model.Tokenize(command).Embeddings[0], model.Level3FoldAngle, model);
 
                     Console.WriteLine($"{hit.Score} {hit.Node}");
                 }

@@ -122,14 +122,25 @@ namespace Sir.DbUtil
                             var docsPerSecond = (int)(batchSize / t*1000);
                             var infoStr = new StringBuilder();
 
-                            foreach (var inf in info.Info)
+                            foreach (var inf in info.Level1Info)
+                            {
+                                infoStr.AppendLine(inf.ToString());
+                            }
+
+                            foreach (var inf in info.Level2Info)
+                            {
+                                if (inf.Weight > 100)
+                                    infoStr.AppendLine(inf.ToString());
+                            }
+
+                            foreach (var inf in info.Level3Info)
                             {
                                 if (inf.Weight > 100)
                                     infoStr.AppendLine(inf.ToString());                                
                             }
 
                             Console.WriteLine(infoStr);
-                            Console.WriteLine($"batch {batchNo++} took {t} ms, {docsPerSecond} docs/s, queue {info.QueueLength}");
+                            Console.WriteLine($"batch {batchNo++} took {t} ms, {docsPerSecond} docs/s, level2queue {info.L2QueueLength} level3queue {info.L3QueueLength}");
 
                             time.Restart();
                         }
@@ -208,7 +219,7 @@ namespace Sir.DbUtil
 
         private static void Query(string dir, string collectionName, IStringModel model)
         {
-            var tokenizer = new CbocModel();
+            var tokenizer = new BocModel();
             var qp = new QueryParser();
             var sessionFactory = new SessionFactory(
                 new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini")), model);

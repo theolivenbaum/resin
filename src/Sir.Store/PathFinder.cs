@@ -5,7 +5,7 @@ namespace Sir.Store
 {
     public static class PathFinder
     {
-        public static Hit ClosestMatch(VectorNode root, IVector vector, IStringModel model)
+        public static Hit ClosestMatch(VectorNode root, IVector vector, double foldAngle, IDistance model)
         {
             var best = root;
             var cursor = root;
@@ -15,7 +15,7 @@ namespace Sir.Store
             {
                 var angle = model.CosAngle(vector, cursor.Vector);
 
-                if (angle > model.FoldAngle)
+                if (angle > foldAngle)
                 {
                     if (angle > highscore)
                     {
