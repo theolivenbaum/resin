@@ -7,7 +7,7 @@ namespace Sir.Store
 {
     public static class GraphBuilder
     {
-        public static bool GetOrAdd(VectorNode root, VectorNode node, IStringModel model, out VectorNode x)
+        public static bool TryMerge(VectorNode root, VectorNode node, IStringModel model, out VectorNode vertex)
         {
             var cursor = root;
 
@@ -17,7 +17,7 @@ namespace Sir.Store
 
                 if (angle >= model.IdenticalAngle)
                 {
-                    x = cursor;
+                    vertex = cursor;
                     return true;
                 }
                 else if (angle > model.FoldAngle)
@@ -25,9 +25,7 @@ namespace Sir.Store
                     if (cursor.Left == null)
                     {
                         cursor.Left = node;
-
-                        x = node;
-
+                        vertex = node;
                         return false;
                     }
                     else
@@ -40,9 +38,7 @@ namespace Sir.Store
                     if (cursor.Right == null)
                     {
                         cursor.Right = node;
-
-                        x = node;
-
+                        vertex = node;
                         return false;
                     }
                     else
@@ -187,11 +183,11 @@ namespace Sir.Store
             while (read == VectorNode.BlockSize)
             {
                 var node = DeserializeNode(buf, vectorStream, model);
-                VectorNode x;
+                VectorNode vertex;
 
-                if (GetOrAdd(root, node, model, out x))
+                if (TryMerge(root, node, model, out vertex))
                 {
-                    MergePostings(x, node);
+                    MergePostings(vertex, node);
                 }
 
                 read = indexStream.Read(buf);
@@ -214,11 +210,11 @@ namespace Sir.Store
                 indexStream.Read(buf);
 
                 var node = DeserializeNode(buf, vectorStream, model);
-                VectorNode x;
+                VectorNode vertex;
 
-                if (GetOrAdd(root, node, model, out x))
+                if (TryMerge(root, node, model, out vertex))
                 {
-                    MergePostings(x, node);
+                    MergePostings(vertex, node);
                 }
 
                 read += VectorNode.BlockSize;

@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Sir.Core;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace Sir.Store
@@ -15,6 +17,7 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<long, VectorNode> _index;
         private Stream _postingsStream;
         private readonly Stream _vectorStream;
+        private readonly ConcurrentDictionary<long, ProducerConsumerQueue<(long docId, long keyId, IVector term)>> _workers;
 
         public TermIndexSession(
             ulong collectionId,
@@ -27,28 +30,36 @@ namespace Sir.Store
             _index = new ConcurrentDictionary<long, VectorNode>();
             _postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"));
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
+            _workers = new ConcurrentDictionary<long, ProducerConsumerQueue<(long docId, long keyId, IVector term)>>();
         }
 
         public void Put(long docId, long keyId, string value)
         {
-            var ix = GetOrCreateIndex(keyId);
             var tokens = _model.Tokenize(value);
+            var worker = GetOrCreateWorker(keyId);
 
             foreach (var vector in tokens.Embeddings)
             {
-                var node = new VectorNode(vector, docId);
-                VectorNode x;
-
-                if (GraphBuilder.GetOrAdd(ix, node, _model, out x))
-                {
-                    GraphBuilder.AddDocId(x, docId);
-                }
+                worker.Enqueue((docId, keyId, vector));
             }
+        }
 
-            if (ix.Weight >= _model.PageWeight)
+        private void Put((long docId, long keyId, IVector term) workItem)
+        {
+            var ix = GetOrCreateIndex(workItem.keyId);
+            var node = new VectorNode(workItem.term, workItem.docId);
+
+            VectorNode vertex;
+
+            if (GraphBuilder.TryMerge(ix, node, _model, out vertex))
             {
-                CreatePage(keyId);
+                GraphBuilder.AddDocId(vertex, workItem.docId);
             }
+        }
+
+        private ProducerConsumerQueue<(long, long, IVector)> GetOrCreateWorker(long keyId)
+        {
+            return _workers.GetOrAdd(keyId, new ProducerConsumerQueue<(long docId, long keyId, IVector term)>(1, Put));
         }
 
         private VectorNode GetOrCreateIndex(long keyId)
@@ -56,31 +67,46 @@ namespace Sir.Store
             return _index.GetOrAdd(keyId, new VectorNode());
         }
 
-        public IEnumerable<GraphStats> GetStats()
+        public IndexInfo GetIndexInfo()
         {
-            foreach(var node in _index)
+            return new IndexInfo(GetGraphInfo());
+        }
+
+        private IEnumerable<GraphInfo> GetGraphInfo()
+        {
+            foreach (var node in _index)
             {
-                yield return new GraphStats(node.Key, node.Value);
+                yield return new GraphInfo(node.Key, node.Value, _workers[node.Key].Count);
             }
         }
 
-        public void CreatePage(long keyId)
+        private void Serialize(long keyId)
         {
             using (var serializer = new ColumnWriter(CollectionId, keyId, SessionFactory))
             {
                 serializer.CreatePage(_index[keyId], _vectorStream, _postingsStream, _model);
             }
 
-            _index.Remove(keyId, out _);
-
             SessionFactory.ClearPageInfo();
         }
 
         public void Dispose()
         {
+            var timer = Stopwatch.StartNew();
+
+            this.Log("waiting for sync");
+
+            foreach (var worker in _workers)
+                worker.Value.CompleteAdding();
+
+            foreach (var worker in _workers)
+                worker.Value.Dispose();
+
+            this.Log($"waited for sync for {timer.Elapsed}");
+
             foreach (var column in _index.Keys)
             {
-                CreatePage(column);
+                Serialize(column);
             }
 
             _postingsStream.Dispose();
@@ -119,20 +145,32 @@ namespace Sir.Store
         }
     }
 
-    public class GraphStats
+    public class IndexInfo
+    {
+        public IEnumerable<GraphInfo> Info { get; }
+
+        public IndexInfo(IEnumerable<GraphInfo> info)
+        {
+            Info = info;
+        }
+    }
+
+    public class GraphInfo
     {
         private readonly long _keyId;
         private readonly VectorNode _graph;
+        private readonly int _queueLength;
 
-        public GraphStats(long keyId, VectorNode graph)
+        public GraphInfo(long keyId, VectorNode graph, int queueLength)
         {
             _keyId = keyId;
             _graph = graph;
+            _queueLength = queueLength;
         }
 
         public override string ToString()
         {
-            return $"key: {_keyId} weight: {_graph.Weight} depth/width: {PathFinder.Size(_graph)}";
+            return $"key {_keyId} | weight {_graph.Weight} | depth/width {PathFinder.Size(_graph)} | queue length {_queueLength}";
         }
     }
 }

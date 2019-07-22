@@ -32,9 +32,9 @@ namespace Sir.Store
         /// Fields prefixed with "___" will not be stored.
         /// </summary>
         /// <returns>Document ID</returns>
-        public IEnumerable<GraphStats> Write(IEnumerable<IDictionary<string, object>> documents)
+        public IndexInfo Write(IEnumerable<IDictionary<string, object>> documents)
         {
-            foreach(var document in documents)
+            foreach (var document in documents)
             {
                 document["__created"] = DateTime.Now.ToBinary();
 
@@ -92,7 +92,7 @@ namespace Sir.Store
                 document["___docid"] = docId;
             }
 
-            return _indexSession.GetStats();
+            return _indexSession.GetIndexInfo();
         }
     }
 }
