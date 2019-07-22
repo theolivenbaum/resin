@@ -127,20 +127,20 @@ namespace Sir.DbUtil
                                 infoStr.AppendLine(inf.ToString());
                             }
 
-                            foreach (var inf in info.Level2Info)
-                            {
-                                if (inf.Weight > 100)
-                                    infoStr.AppendLine(inf.ToString());
-                            }
+                            //foreach (var inf in info.Level2Info)
+                            //{
+                            //    if (inf.Weight > 100)
+                            //        infoStr.AppendLine(inf.ToString());
+                            //}
 
                             foreach (var inf in info.Level3Info)
                             {
-                                if (inf.Weight > 100)
+                                //if (inf.Weight > 100)
                                     infoStr.AppendLine(inf.ToString());                                
                             }
 
                             Console.WriteLine(infoStr);
-                            Console.WriteLine($"batch {batchNo++} took {t} ms, {docsPerSecond} docs/s, level2queue {info.L2QueueLength} level3queue {info.L3QueueLength}");
+                            Console.WriteLine($"batch {batchNo++} took {t} ms, {docsPerSecond} docs/s, level1queue {info.L1QueueLength} level2queue {info.L2QueueLength} level3queue {info.L3QueueLength}");
 
                             time.Restart();
                         }

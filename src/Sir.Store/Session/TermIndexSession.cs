@@ -14,10 +14,11 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
-        private readonly IDictionary<long, List<VectorNode>> _level3Index;
-        private readonly IDictionary<long, List<VectorNode>> _level2Index;
+        private readonly ConcurrentDictionary<long, ConcurrentDictionary<int, VectorNode>> _level3Index;
+        //private readonly ConcurrentDictionary<long, ConcurrentDictionary<int, VectorNode>> _level2Index;
         private readonly ConcurrentDictionary<long, VectorNode> _level1Index;
-        private readonly ProducerConsumerQueue<(int indexId, long docId, long keyId, IVector term)> _level2Workers;
+        private readonly ProducerConsumerQueue<(long docId, long keyId, IVector term)> _level1Workers;
+        //private readonly ProducerConsumerQueue<(int indexId, long docId, long keyId, IVector term)> _level2Workers;
         private readonly ProducerConsumerQueue<(int indexId, long docId, long keyId, IVector term)> _level3Workers;
         private Stream _postingsStream;
         private readonly Stream _vectorStream;
@@ -30,60 +31,38 @@ namespace Sir.Store
         {
             _config = config;
             _model = model;
-            _level3Index = new Dictionary<long, List<VectorNode>>();
-            _level2Index = new Dictionary<long, List<VectorNode>>();
+            _level3Index = new ConcurrentDictionary<long, ConcurrentDictionary<int, VectorNode>>();
+            //_level2Index = new ConcurrentDictionary<long, ConcurrentDictionary<int, VectorNode>>();
             _level1Index = new ConcurrentDictionary<long, VectorNode>();
             _postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"));
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
-            _level2Workers = new ProducerConsumerQueue<(int, long, long, IVector)>(1, PutLevel2);
-            _level3Workers = new ProducerConsumerQueue<(int indexId, long docId, long keyId, IVector term)>(int.Parse(config.Get("index_session_thread_count")), PutLevel3);
+            _level1Workers = new ProducerConsumerQueue<(long, long, IVector)>(int.Parse(config.Get("level1_index_session_thread_count")), PutLevel1);
+            //_level2Workers = new ProducerConsumerQueue<(int, long, long, IVector)>(int.Parse(config.Get("level2_index_session_thread_count")), PutLevel2);
+            _level3Workers = new ProducerConsumerQueue<(int indexId, long docId, long keyId, IVector term)>(int.Parse(config.Get("level3_index_session_thread_count")), PutLevel3);
         }
 
         public void Put(long docId, long keyId, string value)
         {
             var terms = _model.Tokenize(value).Embeddings;
-            var level1Index = GetOrCreateLevel1Index(keyId);
 
             foreach (var term in terms)
             {
-                VectorNode parent;
-                long indexId;
-                bool left;
-                var node = new VectorNode(term, docId);
-
-                if (!GraphBuilder.TryMerge(level1Index, node, _model.Level1IdenticalAngle, _model.Level1FoldAngle, _model, out parent, out left))
-                {
-                    node.PostingsOffset = indexId = level1Index.Weight;
-
-                    if (left)
-                    {
-                        parent.Left = node;
-                    }
-                    else
-                    {
-                        parent.Right = node;
-                    }
-                }
-                else
-                {
-                    indexId = parent.PostingsOffset;
-                }
-
-                _level2Workers.Enqueue(((int)indexId, docId, keyId, term));
+                _level1Workers.Enqueue((docId, keyId, term));
             }
         }
 
-        private void PutLevel2((int indexId, long docId, long keyId, IVector term) workItem)
+        public void PutLevel1((long docId, long keyId, IVector term) workItem)
         {
-            var level2Index = GetOrCreateLevel2Index(workItem.keyId, workItem.indexId);
-            long indexId;
-            var node = new VectorNode(workItem.term, workItem.docId);
-            VectorNode parent;
-            bool left;
+            var level1Index = GetOrCreateLevel1Index(workItem.keyId);
 
-            if (!GraphBuilder.TryMerge(level2Index, node, _model.Level2IdenticalAngle, _model.Level2FoldAngle, _model, out parent, out left))
+            VectorNode parent;
+            long indexId;
+            bool left;
+            var node = new VectorNode(workItem.term, workItem.docId);
+
+            if (!GraphBuilder.TryMerge(level1Index, node, _model.Level1IdenticalAngle, _model.Level1FoldAngle, _model, out parent, out left))
             {
-                node.PostingsOffset = indexId = level2Index.Weight;
+                node.PostingsOffset = indexId = level1Index.Weight;
 
                 if (left)
                 {
@@ -93,8 +72,6 @@ namespace Sir.Store
                 {
                     parent.Right = node;
                 }
-
-                GetOrCreateLevel3Index(workItem.keyId, (int)indexId);
             }
             else
             {
@@ -104,70 +81,74 @@ namespace Sir.Store
             _level3Workers.Enqueue(((int)indexId, workItem.docId, workItem.keyId, workItem.term));
         }
 
+        //private void PutLevel2((int indexId, long docId, long keyId, IVector term) workItem)
+        //{
+        //    VectorNode level2Index = GetOrCreateLevel2Index(workItem.keyId, workItem.indexId);
+        //    long indexId;
+        //    var node = new VectorNode(workItem.term, workItem.docId);
+        //    VectorNode parent;
+        //    bool left;
+
+        //    if (!GraphBuilder.TryMerge(level2Index, node, _model.Level2IdenticalAngle, _model.Level2FoldAngle, _model, out parent, out left))
+        //    {
+        //        node.PostingsOffset = indexId = level2Index.Weight;
+
+        //        if (left)
+        //        {
+        //            parent.Left = node;
+        //        }
+        //        else
+        //        {
+        //            parent.Right = node;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        indexId = parent.PostingsOffset;
+        //    }
+
+        //    _level3Workers.Enqueue(((int)indexId, workItem.docId, workItem.keyId, workItem.term));
+        //}
+
         private void PutLevel3((int indexId, long docId, long keyId, IVector term) workItem)
         {
-            var level3Index = GetOrCreateLevel3Index(workItem.keyId, workItem.indexId);
-
+            VectorNode level3Index = GetOrCreateLevel3Index(workItem.keyId, workItem.indexId);
             var node = new VectorNode(workItem.term, workItem.docId);
             VectorNode parent;
             bool left;
 
             if (!GraphBuilder.TryMerge(level3Index, node, _model.Level3IdenticalAngle, _model.Level3FoldAngle, _model, out parent, out left))
             {
-                lock (parent)
+                if (left)
                 {
-                    if (left)
-                    {
-                        parent.Left = node;
-                    }
-                    else
-                    {
-                        parent.Right = node;
-                    }
+                    parent.Left = node;
+                }
+                else
+                {
+                    parent.Right = node;
                 }
             }
             else
             {
-                lock (parent)
-                    GraphBuilder.AddDocId(parent, workItem.docId);
+                GraphBuilder.AddDocId(parent, workItem.docId);
             }
         }
 
         private VectorNode GetOrCreateLevel3Index(long keyId, int indexId)
         {
-            List<VectorNode> list;
-
-            if (!_level3Index.TryGetValue(keyId, out list))
-            {
-                list = new List<VectorNode>();
-                _level3Index.Add(keyId, list);
-            }
-
-            if (indexId > list.Count - 1)
-            {
-                list.Add(new VectorNode());
-            }
+            var list = _level3Index.GetOrAdd(keyId, new ConcurrentDictionary<int, VectorNode>());
+            var ix = list.GetOrAdd(indexId, new VectorNode());
 
             return list[indexId];
         }
 
-        private VectorNode GetOrCreateLevel2Index(long keyId, int indexId)
-        {
-            List<VectorNode> list;
+        //private VectorNode GetOrCreateLevel2Index(long keyId, int indexId)
+        //{
+        //    var list = _level2Index.GetOrAdd(keyId, new ConcurrentDictionary<int, VectorNode>());
+        //    var ix = list.GetOrAdd(indexId, new VectorNode());
 
-            if (!_level2Index.TryGetValue(keyId, out list))
-            {
-                list = new List<VectorNode>();
-                _level2Index.Add(keyId, list);
-            }
-
-            if (indexId > list.Count - 1)
-            {
-                list.Add(new VectorNode());
-            }
-
-            return list[indexId];
-        }
+        //    return list[indexId];
+        //}
 
         private VectorNode GetOrCreateLevel1Index(long keyId)
         {
@@ -176,7 +157,7 @@ namespace Sir.Store
 
         public IndexInfo GetIndexInfo()
         {
-            return new IndexInfo(_level2Workers.Count, _level3Workers.Count, GetLevel1Info(), GetLevel2Info(), GetLevel3Info());
+            return new IndexInfo(_level1Workers.Count, _level3Workers.Count, GetLevel1Info(), GetLevel3Info());
         }
 
         private IEnumerable<GraphInfo> GetLevel1Info()
@@ -187,16 +168,16 @@ namespace Sir.Store
             }
         }
 
-        private IEnumerable<GraphInfo> GetLevel2Info()
-        {
-            foreach (var list in _level2Index)
-            {
-                var i = 0;
+        //private IEnumerable<GraphInfo> GetLevel2Info()
+        //{
+        //    foreach (var list in _level2Index)
+        //    {
+        //        var i = 0;
 
-                foreach (var node in list.Value)
-                    yield return new GraphInfo($"level2 p-{i++}", list.Key, node);
-            }
-        }
+        //        foreach (var node in list.Value.Values)
+        //            yield return new GraphInfo($"level2 p-{i++}", list.Key, node);
+        //    }
+        //}
 
         private IEnumerable<GraphInfo> GetLevel3Info()
         {
@@ -204,7 +185,7 @@ namespace Sir.Store
             {
                 var i = 0;
 
-                foreach (var node in list.Value)
+                foreach (var node in list.Value.Values)
                     yield return new GraphInfo($"level3 p-{i++}", list.Key, node);
             }
         }
@@ -219,22 +200,22 @@ namespace Sir.Store
                 }
             }
 
-            foreach (var column in _level2Index)
-            {
-                using (var writer = new ColumnWriter(CollectionId, column.Key, SessionFactory, "ix2"))
-                {
-                    foreach (var node in column.Value)
-                    {
-                        writer.CreatePage(node, _vectorStream, _postingsStream, _model);
-                    }
-                }
-            }
+            //foreach (var column in _level2Index)
+            //{
+            //    using (var writer = new ColumnWriter(CollectionId, column.Key, SessionFactory, "ix2"))
+            //    {
+            //        foreach (var node in new SortedList<int, VectorNode>(column.Value).Values)
+            //        {
+            //            writer.CreatePage(node, _vectorStream, _postingsStream, _model);
+            //        }
+            //    }
+            //}
 
             foreach (var column in _level3Index)
             {
                 using (var writer = new ColumnWriter(CollectionId, column.Key, SessionFactory, "ix3"))
                 {
-                    foreach (var node in column.Value)
+                    foreach (var node in new SortedList<int, VectorNode>(column.Value).Values)
                     {
                         writer.CreatePage(node, _vectorStream, _postingsStream, _model);
                     }
@@ -248,10 +229,8 @@ namespace Sir.Store
 
             this.Log("synchronizing");
 
-            _level2Workers.CompleteAdding();
-            _level3Workers.CompleteAdding();
-
-            _level2Workers.Dispose();
+            _level1Workers.Dispose();
+            //_level2Workers.Dispose();
             _level3Workers.Dispose();
 
             this.Log($"synchronization took {time.Elapsed}");
@@ -298,6 +277,7 @@ namespace Sir.Store
 
     public class IndexInfo
     {
+        public int L1QueueLength { get; }
         public int L2QueueLength { get; }
         public int L3QueueLength { get; }
 
@@ -305,12 +285,11 @@ namespace Sir.Store
         public IEnumerable<GraphInfo> Level2Info { get; }
         public IEnumerable<GraphInfo> Level3Info { get; }
 
-        public IndexInfo(int level2Queue, int level3Queue, IEnumerable<GraphInfo> level1Stats, IEnumerable<GraphInfo> level2Stats, IEnumerable<GraphInfo> level3Stats)
+        public IndexInfo(int level1Queue, int level3Queue, IEnumerable<GraphInfo> level1Stats, IEnumerable<GraphInfo> level3Stats)
         {
-            L2QueueLength = level2Queue;
+            L1QueueLength = level1Queue;
             L3QueueLength = level3Queue;
             Level3Info = level3Stats;
-            Level2Info = level2Stats;
             Level1Info = level1Stats;
         }
     }

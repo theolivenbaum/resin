@@ -52,12 +52,12 @@ namespace Sir.Store
             IVector vector, IStringModel model)
         {
             var bufferSize = int.Parse(_config.Get("nodereader_buffer_size"));
-            var level2Pages = _sessionFactory.ReadPageInfo(_ix2pFileName);
+            //var level2Pages = _sessionFactory.ReadPageInfo(_ix2pFileName);
             var level3Pages = _sessionFactory.ReadPageInfo(_ix3pFileName);
 
             using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
             {
-                int level2Index;
+                //int level2Index;
                 int level3Index;
 
                 using (var level1IndexStream = _sessionFactory.CreateReadStream(_ix1FileName, bufferSize: bufferSize, fileOptions: FileOptions.RandomAccess))
@@ -65,24 +65,24 @@ namespace Sir.Store
                     var hit = ClosestMatchInPage(vector, level1IndexStream, vectorStream, model.Level1IdenticalAngle, model.Level1FoldAngle, model);
 
                     if (hit.Score > 0)
-                        level2Index = (int)hit.Node.PostingsOffsets[0];
-                    else
-                        return hit;
-                }
-
-                var level2Page = level2Pages[level2Index];
-
-                using (var level2IndexStream = _sessionFactory.CreateReadStream(_ix2FileName, bufferSize: bufferSize, fileOptions: FileOptions.RandomAccess))
-                {
-                    level2IndexStream.Seek(level2Page.offset, SeekOrigin.Begin);
-
-                    var hit = ClosestMatchInPage(vector, level2IndexStream, vectorStream, model.Level2IdenticalAngle, model.Level2FoldAngle, model);
-
-                    if (hit.Score > 0)
                         level3Index = (int)hit.Node.PostingsOffsets[0];
                     else
                         return hit;
                 }
+
+                //var level2Page = level2Pages[level2Index];
+
+                //using (var level2IndexStream = _sessionFactory.CreateReadStream(_ix2FileName, bufferSize: bufferSize, fileOptions: FileOptions.RandomAccess))
+                //{
+                //    level2IndexStream.Seek(level2Page.offset, SeekOrigin.Begin);
+
+                //    var hit = ClosestMatchInPage(vector, level2IndexStream, vectorStream, model.Level2IdenticalAngle, model.Level2FoldAngle, model);
+
+                //    if (hit.Score > 0)
+                //        level3Index = (int)hit.Node.PostingsOffsets[0];
+                //    else
+                //        return hit;
+                //}
 
                 var level3Page = level3Pages[level3Index];
 

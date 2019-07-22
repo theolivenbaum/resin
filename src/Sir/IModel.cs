@@ -22,8 +22,8 @@ namespace Sir
         long SerializeVector(IVector vector, Stream vectorStream);
         double Level1IdenticalAngle { get; }
         double Level1FoldAngle { get; }
-        double Level2IdenticalAngle { get; }
-        double Level2FoldAngle { get; }
+        //double Level2IdenticalAngle { get; }
+        //double Level2FoldAngle { get; }
         double Level3IdenticalAngle { get; }
         double Level3FoldAngle { get; }
         int PageWeight { get; }
