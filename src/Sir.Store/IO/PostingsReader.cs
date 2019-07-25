@@ -130,13 +130,13 @@ namespace Sir.Store
         {
             _stream.Seek(postingsOffset, SeekOrigin.Begin);
 
-            Span<byte> buf = stackalloc byte[sizeof(long)];
+            Span<byte> buf = new byte[sizeof(long)];
 
             _stream.Read(buf);
 
             var numOfPostings = BitConverter.ToInt64(buf);
 
-            Span<byte> listBuf = stackalloc byte[sizeof(long) * (int)numOfPostings];
+            Span<byte> listBuf = new byte[sizeof(long) * (int)numOfPostings];
 
             var read = _stream.Read(listBuf);
 

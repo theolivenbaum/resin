@@ -24,7 +24,8 @@ namespace Sir.StringCompare
                         break;
                     }
 
-                    GraphBuilder.TryMerge(root, new VectorNode(model.Tokenize(command).Embeddings[0]), model, out _);
+                    var node = new VectorNode(model.Tokenize(command).Embeddings[0]);
+                    GraphBuilder.TryMerge(root, node, model, out _);
                 }
 
                 Console.WriteLine(root.Visualize());

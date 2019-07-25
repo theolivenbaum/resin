@@ -18,6 +18,7 @@ namespace Sir.Store
         private VectorNode _left;
         private VectorNode _ancestor;
         private long _weight;
+        private readonly object _sync = new object();
 
         public HashSet<long> DocIds { get; set; }
         public VectorNode Ancestor { get { return _ancestor; } }
@@ -25,6 +26,7 @@ namespace Sir.Store
         public long VectorOffset { get; set; }
         public long PostingsOffset { get; set; }
         public IVector Vector { get; set; }
+        public object Sync { get { return _sync; } }
 
         public long Weight
         {

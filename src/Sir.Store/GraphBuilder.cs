@@ -7,7 +7,7 @@ namespace Sir.Store
 {
     public static class GraphBuilder
     {
-        public static bool TryMerge(VectorNode root, VectorNode node, IStringModel model, out VectorNode vertex)
+        public static bool TryMerge(VectorNode root, VectorNode node, IStringModel model, out VectorNode parent)
         {
             var cursor = root;
 
@@ -17,7 +17,7 @@ namespace Sir.Store
 
                 if (angle >= model.IdenticalAngle)
                 {
-                    vertex = cursor;
+                    parent = cursor;
                     return true;
                 }
                 else if (angle > model.FoldAngle)
@@ -25,7 +25,7 @@ namespace Sir.Store
                     if (cursor.Left == null)
                     {
                         cursor.Left = node;
-                        vertex = node;
+                        parent = cursor;
                         return false;
                     }
                     else
@@ -38,8 +38,69 @@ namespace Sir.Store
                     if (cursor.Right == null)
                     {
                         cursor.Right = node;
-                        vertex = node;
+                        parent = cursor;
                         return false;
+                    }
+                    else
+                    {
+                        cursor = cursor.Right;
+                    }
+                }
+            }
+        }
+
+        public static void TryMergeConcurrent(VectorNode root, VectorNode node, IStringModel model)
+        {
+            var cursor = root;
+
+            while (true)
+            {
+                var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
+
+                if (angle >= model.IdenticalAngle)
+                {
+                    lock (root.Sync)
+                        AddDocId(cursor, node);
+                    break;
+                }
+                else if (angle > model.FoldAngle)
+                {
+                    if (cursor.Left == null)
+                    {
+                        lock (root.Sync)
+                        {
+                            if (cursor.Left == null)
+                            {
+                                cursor.Left = node;
+                                break;
+                            }
+                            else
+                            {
+                                cursor = cursor.Left;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        cursor = cursor.Left;
+                    }
+                }
+                else
+                {
+                    if (cursor.Right == null)
+                    {
+                        lock (root.Sync)
+                        {
+                            if (cursor.Right == null)
+                            {
+                                cursor.Right = node;
+                                break;
+                            }
+                            else
+                            {
+                                cursor = cursor.Right;
+                            }
+                        }
                     }
                     else
                     {
@@ -62,7 +123,12 @@ namespace Sir.Store
 
         public static void AddDocId(VectorNode target, long docId)
         {
-            lock (target)
+            target.DocIds.Add(docId);
+        }
+
+        public static void AddDocId(VectorNode target, VectorNode node)
+        {
+            foreach (var docId in node.DocIds)
             {
                 target.DocIds.Add(docId);
             }
@@ -183,11 +249,11 @@ namespace Sir.Store
             while (read == VectorNode.BlockSize)
             {
                 var node = DeserializeNode(buf, vectorStream, model);
-                VectorNode vertex;
+                VectorNode parent;
 
-                if (TryMerge(root, node, model, out vertex))
+                if (TryMerge(root, node, model, out parent))
                 {
-                    MergePostings(vertex, node);
+                    MergePostings(parent, node);
                 }
 
                 read = indexStream.Read(buf);
@@ -210,11 +276,11 @@ namespace Sir.Store
                 indexStream.Read(buf);
 
                 var node = DeserializeNode(buf, vectorStream, model);
-                VectorNode vertex;
+                VectorNode parent;
 
-                if (TryMerge(root, node, model, out vertex))
+                if (TryMerge(root, node, model, out parent))
                 {
-                    MergePostings(vertex, node);
+                    MergePostings(parent, node);
                 }
 
                 read += VectorNode.BlockSize;

@@ -9,7 +9,7 @@ namespace Sir.Store
     {
         public static void SerializeHeaderAndPayload(IEnumerable<long> items, int itemCount, Stream stream)
         {
-            Span<long> payload = stackalloc long[itemCount+1];
+            Span<long> payload = new long[itemCount+1];
 
             payload[0] = itemCount;
 

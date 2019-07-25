@@ -123,12 +123,14 @@ namespace Sir.DbUtil
 
                             var docsPerSecond = (int)(batchSize / t*1000);
 
-                            Console.WriteLine($"batch {batchNo++} took {t} ms | {docsPerSecond} docs/s");
+                            Console.WriteLine($"batch {batchNo++} took {t} ms. queue length {info.QueueLength} | {docsPerSecond} docs/s");
                             
                             foreach (var stat in info.Info)
                             {
                                 Console.WriteLine(stat);
                             }
+
+                            Console.WriteLine();
 
                             time.Restart();
                         }
@@ -207,7 +209,7 @@ namespace Sir.DbUtil
 
         private static void Query(string dir, string collectionName, IStringModel model)
         {
-            var tokenizer = new CbocModel();
+            var tokenizer = new BocModel();
             var qp = new QueryParser();
             var sessionFactory = new SessionFactory(
                 new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini")), model);

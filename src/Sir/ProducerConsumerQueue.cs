@@ -51,16 +51,16 @@ namespace Sir.Core
                 {
                     _consumers[i] = Task.Run(() =>
                     {
-                        while (!_queue.IsCompleted)
+                        try
                         {
-                            try
+                            while (true)
                             {
                                 var item = _queue.Take();
 
                                 _consumingAction(item);
                             }
-                            catch (InvalidOperationException) { }
                         }
+                        catch (InvalidOperationException) { }
                     });
                 }
             }
@@ -70,16 +70,17 @@ namespace Sir.Core
                 {
                     _consumers[i] = Task.Run(async() => 
                     {
-                        while (!_queue.IsCompleted)
+                        try
                         {
-                            try
+                            while (true)
                             {
                                 var item = _queue.Take();
 
                                 await _consumingFunc(item);
                             }
-                            catch (InvalidOperationException) { }
                         }
+                        catch (InvalidOperationException) { }
+                        
                     });
                 }
             }

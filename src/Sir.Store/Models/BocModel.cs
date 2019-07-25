@@ -103,7 +103,7 @@ namespace Sir.Store
 
         public double FoldAngle => 0.4d;
 
-        public int PageWeight => 50000;
+        public int PageWeight => 10000;
 
         public int VectorWidth => 100;
 
