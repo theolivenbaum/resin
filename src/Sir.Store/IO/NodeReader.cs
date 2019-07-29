@@ -64,6 +64,28 @@ namespace Sir.Store
             IVector vector, IStringModel model)
         {
             var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
+            var hits = new List<Hit>();
+
+            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
+            using (var indexStream = _sessionFactory.CreateReadStream(
+                _ixFileName,
+                bufferSize: int.Parse(_config.Get("nodereader_buffer_size")),
+                fileOptions: FileOptions.RandomAccess))
+            {
+                foreach (var page in pages)
+                {
+                    indexStream.Seek(page.offset, SeekOrigin.Begin);
+                    hits.Add(ClosestMatchInPage(vector, indexStream, vectorStream, model)); ;
+                }
+            }
+
+            return hits;
+        }
+
+        private IEnumerable<Hit> ClosestMatchOnDisk2(
+            IVector vector, IStringModel model)
+        {
+            var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
             var hits = new ConcurrentBag<Hit>();
 
             Parallel.ForEach(pages, page =>

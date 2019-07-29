@@ -123,7 +123,7 @@ namespace Sir.DbUtil
 
                             var docsPerSecond = (int)(batchSize / t*1000);
 
-                            Console.WriteLine($"batch {batchNo++} took {t} ms. queue length {info.QueueLength} | {docsPerSecond} docs/s");
+                            Console.WriteLine($"batch {batchNo++} took {t} ms. build queue length {info.BuildQueueLength} | write queue length {info.WriteQueueLength} | {docsPerSecond} docs/s");
                             
                             foreach (var stat in info.Info)
                             {

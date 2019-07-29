@@ -15,11 +15,10 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
         private readonly ConcurrentDictionary<long, VectorNode> _index;
-        private Stream _postingsStream;
+        private readonly Stream _postingsStream;
         private readonly Stream _vectorStream;
         private readonly ProducerConsumerQueue<(long docId, long keyId, IVector term)> _workers;
-        //private readonly ProducerConsumerQueue<(long keyId, VectorNode ix)> _serializer;
-        private readonly object _stopTheWorld = new object();
+        private readonly ProducerConsumerQueue<(long keyId, VectorNode ix)> _serializer;
 
         public TermIndexSession(
             ulong collectionId,
@@ -32,8 +31,8 @@ namespace Sir.Store
             _index = new ConcurrentDictionary<long, VectorNode>();
             _postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"));
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
+            _serializer = new ProducerConsumerQueue<(long keyId, VectorNode ix)>(1, CreatePage);
             _workers = new ProducerConsumerQueue<(long docId, long keyId, IVector term)>(int.Parse(config.Get("index_session_thread_count")), Put);
-            //_serializer = new ProducerConsumerQueue<(long keyId, VectorNode ix)>(1, CreatePage);
         }
 
         public void Put(long docId, long keyId, string value)
@@ -50,21 +49,18 @@ namespace Sir.Store
         {
             VectorNode ix = GetOrCreateIndex(workItem.keyId);
 
-            //lock (_stopTheWorld)
-            //{
-            //    ix = GetOrCreateIndex(workItem.keyId);
-
-            //    if (ix.Weight >= _model.PageWeight)
-            //    {
-            //        VectorNode page;
-
-            //        _index.Remove(workItem.keyId, out page);
-
-            //        _serializer.Enqueue((workItem.keyId, page));
-
-            //        ix = GetOrCreateIndex(workItem.keyId);
-            //    }
-            //}
+            if (ix.Weight >= _model.PageWeight)
+            {
+                lock (ix)
+                {
+                    if (ix.Weight >= _model.PageWeight)
+                    {
+                        var payload = ix.Right.DetachFromAncestor();
+                        ix.Right = null;
+                        _serializer.Enqueue((workItem.keyId, payload));
+                    }
+                }
+            }
 
             var node = new VectorNode(workItem.term, workItem.docId);
 
@@ -78,7 +74,7 @@ namespace Sir.Store
 
         public IndexInfo GetIndexInfo()
         {
-            return new IndexInfo(GetGraphInfo(), _workers.Count);
+            return new IndexInfo(GetGraphInfo(), _workers.Count, _serializer.Count);
         }
 
         private IEnumerable<GraphInfo> GetGraphInfo()
@@ -106,7 +102,7 @@ namespace Sir.Store
             this.Log($"waiting for sync. queue length: {_workers.Count}");
 
             _workers.Dispose();
-            //_serializer.Dispose();
+            _serializer.Dispose();
 
             this.Log($"waited for sync for {timer.Elapsed}");
 
@@ -154,12 +150,14 @@ namespace Sir.Store
     public class IndexInfo
     {
         public IEnumerable<GraphInfo> Info { get; }
-        public int QueueLength { get; }
+        public int BuildQueueLength { get; }
+        public int WriteQueueLength { get; }
 
-        public IndexInfo(IEnumerable<GraphInfo> info, int queueLength)
+        public IndexInfo(IEnumerable<GraphInfo> info, int queueLength, int writeQueueLength)
         {
             Info = info;
-            QueueLength = queueLength;
+            BuildQueueLength = queueLength;
+            WriteQueueLength = writeQueueLength;
         }
     }
 

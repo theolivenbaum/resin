@@ -38,9 +38,19 @@ namespace Sir.Store
             get => _right;
             set
             {
+                var old = _right;
+
                 _right = value;
-                _right._ancestor = this;
-                IncrementWeight();
+
+                if (value != null)
+                {
+                    _right._ancestor = this;
+                    IncrementWeight();
+                }
+                else
+                {
+                    _weight = _weight - old.Weight - 1;
+                }
             }
         }
 
@@ -49,9 +59,19 @@ namespace Sir.Store
             get => _left;
             set
             {
+                var old = _left;
+
                 _left = value;
-                _left._ancestor = this;
-                IncrementWeight();
+
+                if (value != null)
+                {
+                    _left._ancestor = this;
+                    IncrementWeight();
+                }
+                else
+                {
+                    _weight = _weight - old.Weight - 1;
+                }
             }
         }
 
@@ -120,9 +140,10 @@ namespace Sir.Store
             return this;
         }
 
-        public void DetachFromAncestor()
+        public VectorNode DetachFromAncestor()
         {
             _ancestor = null;
+            return this;
         }
 
         public string Visualize()

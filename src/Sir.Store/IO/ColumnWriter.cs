@@ -32,9 +32,7 @@ namespace Sir.Store
         public void CreatePage(VectorNode column, Stream vectorStream, Stream postingsStream, IStringModel model)
         {
             var time = Stopwatch.StartNew();
-
             var page = GraphBuilder.SerializeTree(column, _ixStream, vectorStream, postingsStream, model);
-            this.Log($"serialized graph {_keyId}");
 
             _ixPageIndexWriter.Write(page.offset, page.length);
 
@@ -47,7 +45,7 @@ namespace Sir.Store
 
             var size = PathFinder.Size(column);
 
-            this.Log($"serialized column {_keyId} in {time.Elapsed}. weight {column.Weight} depth {size.depth} width {size.width}");
+            this.Log($"serialized column {_keyId} in {time.Elapsed}. weight: {column.Weight} d: {size.depth} w: {size.width}");
         }
 
         public void Dispose()

@@ -101,9 +101,9 @@ namespace Sir.Store
 
         public double IdenticalAngle => 0.85d;
 
-        public double FoldAngle => 0.4d;
+        public double FoldAngle => 0.45d;
 
-        public int PageWeight => 10000;
+        public int PageWeight => 50000;
 
         public int VectorWidth => 100;
 
