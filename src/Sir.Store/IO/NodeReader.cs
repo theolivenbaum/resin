@@ -39,7 +39,7 @@ namespace Sir.Store
         public Hit ClosestMatch(IVector vector, IStringModel model)
         {
             var time = Stopwatch.StartNew();
-            var hits = ClosestMatchOnDisk(vector, model);
+            var hits = ClosestMatchOnDiskInParallel(vector, model);
 
             Hit best = null;
 
@@ -82,11 +82,12 @@ namespace Sir.Store
             return hits;
         }
 
-        private IEnumerable<Hit> ClosestMatchOnDisk2(
+        private IEnumerable<Hit> ClosestMatchOnDiskInParallel(
             IVector vector, IStringModel model)
         {
             var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
             var hits = new ConcurrentBag<Hit>();
+            var bufSize = int.Parse(_config.Get("nodereader_buffer_size"));
 
             Parallel.ForEach(pages, page =>
             //foreach (var page in pages)
@@ -94,7 +95,7 @@ namespace Sir.Store
                 using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
                 using (var indexStream = _sessionFactory.CreateReadStream(
                     _ixFileName,
-                    bufferSize: int.Parse(_config.Get("nodereader_buffer_size")),
+                    bufferSize: bufSize,
                     fileOptions: FileOptions.RandomAccess))
                 {
                     indexStream.Seek(page.offset, SeekOrigin.Begin);
