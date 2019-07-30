@@ -38,7 +38,7 @@ namespace Sir.Store
 
         public AnalyzedData Tokenize(string text)
         {
-            var source = text.ToCharArray();
+            Span<char> source = text.ToCharArray();
             var offset = 0;
             bool word = false;
             int index = 0;
@@ -57,7 +57,7 @@ namespace Sir.Store
 
                         if (len > 0)
                         {
-                            embeddings.Add(new IndexedVector(embedding));
+                            embeddings.Add(new IndexedVector(embedding, source.Slice(offset, len).ToArray()));
 
                             embedding = new SortedList<int, float>();
                         }
@@ -67,7 +67,7 @@ namespace Sir.Store
                     }
                     else
                     {
-                        embedding.AddOrPerformAddition(c, 1);
+                        embedding.AddOrAppendToComponent(c, 1);
                     }
                 }
                 else
@@ -77,7 +77,7 @@ namespace Sir.Store
                         word = true;
                         offset = index;
 
-                        embedding.AddOrPerformAddition(c, 1);
+                        embedding.AddOrAppendToComponent(c, 1);
                     }
                     else
                     {
@@ -92,7 +92,7 @@ namespace Sir.Store
 
                 if (len > 0)
                 {
-                    embeddings.Add(new IndexedVector(embedding));
+                    embeddings.Add(new IndexedVector(embedding, source.Slice(offset, len).ToArray()));
                 }
             }
 

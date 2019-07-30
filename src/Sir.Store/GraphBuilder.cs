@@ -49,7 +49,7 @@ namespace Sir.Store
             }
         }
 
-        public static void TryMergeConcurrent(VectorNode root, VectorNode node, IStringModel model)
+        public static bool TryMergeConcurrent(VectorNode root, VectorNode node, IStringModel model)
         {
             var cursor = root;
 
@@ -59,20 +59,20 @@ namespace Sir.Store
 
                 if (angle >= model.IdenticalAngle)
                 {
-                    lock (root.Sync)
+                    lock (cursor.Sync)
                         AddDocId(cursor, node);
-                    break;
+                    return true;
                 }
                 else if (angle > model.FoldAngle)
                 {
                     if (cursor.Left == null)
                     {
-                        lock (root.Sync)
+                        lock (cursor.Sync)
                         {
                             if (cursor.Left == null)
                             {
                                 cursor.Left = node;
-                                break;
+                                return false;
                             }
                             else
                             {
@@ -89,12 +89,12 @@ namespace Sir.Store
                 {
                     if (cursor.Right == null)
                     {
-                        lock (root.Sync)
+                        lock (cursor.Sync)
                         {
                             if (cursor.Right == null)
                             {
                                 cursor.Right = node;
-                                break;
+                                return false;
                             }
                             else
                             {

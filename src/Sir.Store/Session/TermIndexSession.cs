@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace Sir.Store
 {
@@ -19,6 +20,7 @@ namespace Sir.Store
         private readonly Stream _vectorStream;
         private readonly ProducerConsumerQueue<(long docId, long keyId, IVector term)> _workers;
         private readonly ProducerConsumerQueue<(long keyId, VectorNode ix)> _serializer;
+        private readonly ConcurrentDictionary<long, ConcurrentBag<IVector>> _words;
 
         public TermIndexSession(
             ulong collectionId,
@@ -33,6 +35,7 @@ namespace Sir.Store
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
             _serializer = new ProducerConsumerQueue<(long keyId, VectorNode ix)>(1, CreatePage);
             _workers = new ProducerConsumerQueue<(long docId, long keyId, IVector term)>(int.Parse(config.Get("index_session_thread_count")), Put);
+            _words = new ConcurrentDictionary<long, ConcurrentBag<IVector>>();
         }
 
         public void Put(long docId, long keyId, string value)
@@ -64,7 +67,10 @@ namespace Sir.Store
 
             var node = new VectorNode(workItem.term, workItem.docId);
 
-            GraphBuilder.TryMergeConcurrent(ix, node, _model);
+            if (!GraphBuilder.TryMergeConcurrent(ix, node, _model))
+            {
+                _words.GetOrAdd(workItem.keyId, new ConcurrentBag<IVector>()).Add(workItem.term);
+            }
         }
 
         private VectorNode GetOrCreateIndex(long keyId)
@@ -104,7 +110,7 @@ namespace Sir.Store
             _workers.Dispose();
             _serializer.Dispose();
 
-            this.Log($"waited for sync for {timer.Elapsed}");
+            this.Log($"awaited sync for {timer.Elapsed}");
 
             foreach (var column in _index)
             {
@@ -113,6 +119,27 @@ namespace Sir.Store
 
             _postingsStream.Dispose();
             _vectorStream.Dispose();
+
+            var debugOutput = new StringBuilder();
+
+            foreach (var key in _words)
+            {
+                var sorted = new SortedList<string, object>();
+
+                foreach (var word in key.Value)
+                {
+                    sorted.Add(word.ToString(), null);
+                }
+
+                debugOutput.AppendLine($"{key.Key}: {sorted.Count} words");
+
+                foreach (var word in sorted)
+                {
+                    debugOutput.AppendLine($"{key.Key} {word.Key}");
+                }
+            }
+
+            this.Log(debugOutput);
         }
 
         private void Validate((long keyId, long docId, AnalyzedData tokens) item)
