@@ -16,6 +16,7 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly string _ixpFileName;
         private readonly string _vecFileName;
+        private readonly long _keyId;
         private readonly ulong _collectionId;
         private readonly string _ixFileName;
 
@@ -28,6 +29,7 @@ namespace Sir.Store
             var ixFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
             var ixpFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.{1}.ixp", collectionId, keyId));
 
+            _keyId = keyId;
             _collectionId = collectionId;
             _ixFileName = ixFileName;
             _sessionFactory = sessionFactory;
@@ -39,7 +41,7 @@ namespace Sir.Store
         public Hit ClosestMatch(IVector vector, IStringModel model)
         {
             var time = Stopwatch.StartNew();
-            var hits = ClosestMatchOnDiskInParallel(vector, model);
+            var hits = ClosestMatchOnDisk(vector, model);
 
             Hit best = null;
 
@@ -63,46 +65,40 @@ namespace Sir.Store
         private IEnumerable<Hit> ClosestMatchOnDisk(
             IVector vector, IStringModel model)
         {
-            var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
+            var ix1pages = _sessionFactory.ReadPageInfo(
+                Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.ixp1", _collectionId, _keyId)));
+
+            var ix2pages = _sessionFactory.ReadPageInfo(
+                Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.ixp2", _collectionId, _keyId)));
+
             var hits = new List<Hit>();
 
-            using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-            using (var indexStream = _sessionFactory.CreateReadStream(
-                _ixFileName,
+            using (var vectorStream = _sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Dir, string.Format("{0}.vec", _collectionId))))
+            using (var ixStream = _sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.ix", _collectionId, _keyId)),
                 bufferSize: int.Parse(_config.Get("nodereader_buffer_size")),
                 fileOptions: FileOptions.RandomAccess))
             {
-                foreach (var page in pages)
+                foreach (var ix1page in ix1pages)
                 {
-                    indexStream.Seek(page.offset, SeekOrigin.Begin);
-                    hits.Add(ClosestMatchInPage(vector, indexStream, vectorStream, model)); ;
+                    ixStream.Seek(ix1page.offset, SeekOrigin.Begin);
+
+                    var ix1Hit = ClosestMatchInPage(vector, ixStream, vectorStream, model, model.PrimaryFoldAngle, model.PrimaryIdenticalAngle);
+
+                    if (ix1Hit.Score > 0)
+                    {
+                        var indexId = (int)ix1Hit.Node.PostingsOffsets[0];
+                        var ix2page = ix2pages[indexId];
+
+                        ixStream.Seek(ix2page.offset, SeekOrigin.Begin);
+
+                        var hit = ClosestMatchInPage(
+                            vector, ixStream, vectorStream, model, model.FoldAngle, model.IdenticalAngle);
+
+                        if (hit.Score > 0)
+                            hits.Add(hit);
+                    }
                 }
             }
-
-            return hits;
-        }
-
-        private IEnumerable<Hit> ClosestMatchOnDiskInParallel(
-            IVector vector, IStringModel model)
-        {
-            var pages = _sessionFactory.ReadPageInfo(_ixpFileName);
-            var hits = new ConcurrentBag<Hit>();
-            var bufSize = int.Parse(_config.Get("nodereader_buffer_size"));
-
-            Parallel.ForEach(pages, page =>
-            //foreach (var page in pages)
-            {
-                using (var vectorStream = _sessionFactory.CreateReadStream(_vecFileName))
-                using (var indexStream = _sessionFactory.CreateReadStream(
-                    _ixFileName,
-                    bufferSize: bufSize,
-                    fileOptions: FileOptions.RandomAccess))
-                {
-                    indexStream.Seek(page.offset, SeekOrigin.Begin);
-
-                    hits.Add(ClosestMatchInPage(vector, indexStream, vectorStream, model)); ;
-                }
-            });
 
             return hits;
         }
@@ -111,7 +107,9 @@ namespace Sir.Store
             IVector vector,
             Stream indexStream,
             Stream vectorStream,
-            IStringModel model
+            IStringModel model,
+            double foldAngle,
+            double identicalAngle
         )
         {
             Span<byte> block = stackalloc byte[VectorNode.BlockSize];
@@ -127,14 +125,14 @@ namespace Sir.Store
                 var cursorTerminator = BitConverter.ToInt64(block.Slice(sizeof(long) * 4));
                 var angle = model.CosAngle(vector, vecOffset, (int)componentCount, vectorStream);
 
-                if (angle >= model.IdenticalAngle)
+                if (angle >= identicalAngle)
                 {
                     highscore = angle;
                     best = new VectorNode(postingsOffset);
 
                     break;
                 }
-                else if (angle > model.FoldAngle)
+                else if (angle > foldAngle)
                 {
                     if (best == null || angle > highscore)
                     {

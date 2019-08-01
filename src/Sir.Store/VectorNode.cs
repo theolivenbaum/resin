@@ -88,6 +88,7 @@ namespace Sir.Store
         public VectorNode(IVector vector)
         {
             Vector = vector;
+            ComponentCount = vector.ComponentCount;
             PostingsOffset = -1;
             VectorOffset = -1;
         }
@@ -102,19 +103,20 @@ namespace Sir.Store
         public VectorNode(IVector vector, long docId)
         {
             Vector = vector;
+            ComponentCount = vector.ComponentCount;
             PostingsOffset = -1;
             VectorOffset = -1;
             DocIds = new HashSet<long>();
             DocIds.Add(docId);
         }
 
-        public VectorNode(long postingsOffset, long vecOffset, long terminator, long weight, long componentCount, IVector vector)
+        public VectorNode(long postingsOffset, long vecOffset, long terminator, long weight, IVector vector)
         {
             PostingsOffset = postingsOffset;
             VectorOffset = vecOffset;
             Terminator = terminator;
             _weight = weight;
-            ComponentCount = componentCount;
+            ComponentCount = vector.ComponentCount;
             Vector = vector;
         }
 

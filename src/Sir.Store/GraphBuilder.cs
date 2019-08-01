@@ -49,7 +49,7 @@ namespace Sir.Store
             }
         }
 
-        public static bool TryMergeConcurrent(VectorNode root, VectorNode node, IStringModel model)
+        public static bool TryMergeConcurrent(VectorNode root, VectorNode node, IStringModel model, double foldAngle, double identicalAngle, out long id)
         {
             var cursor = root;
 
@@ -57,13 +57,83 @@ namespace Sir.Store
             {
                 var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
 
-                if (angle >= model.IdenticalAngle)
+                if (angle >= identicalAngle)
                 {
                     lock (cursor.Sync)
+                    {
                         AddDocId(cursor, node);
+                    }
+
+                    id = cursor.PostingsOffset;
                     return true;
                 }
-                else if (angle > model.FoldAngle)
+                else if (angle > foldAngle)
+                {
+                    if (cursor.Left == null)
+                    {
+                        lock (cursor.Sync)
+                        {
+                            if (cursor.Left == null)
+                            {
+                                node.PostingsOffset = id = root.Weight;
+                                cursor.Left = node;
+                                return false;
+                            }
+                            else
+                            {
+                                cursor = cursor.Left;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        cursor = cursor.Left;
+                    }
+                }
+                else
+                {
+                    if (cursor.Right == null)
+                    {
+                        lock (cursor.Sync)
+                        {
+                            if (cursor.Right == null)
+                            {
+                                node.PostingsOffset = id = root.Weight;
+                                cursor.Right = node;
+                                return false;
+                            }
+                            else
+                            {
+                                cursor = cursor.Right;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        cursor = cursor.Right;
+                    }
+                }
+            }
+        }
+
+        public static bool TryMergeConcurrent(VectorNode root, VectorNode node, IStringModel model, double foldAngle, double identicalAngle)
+        {
+            var cursor = root;
+
+            while (true)
+            {
+                var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
+
+                if (angle >= identicalAngle)
+                {
+                    lock (cursor.Sync)
+                    {
+                        AddDocId(cursor, node);
+                    }
+
+                    return true;
+                }
+                else if (angle > foldAngle)
                 {
                     if (cursor.Left == null)
                     {
@@ -172,15 +242,18 @@ namespace Sir.Store
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;
 
-            if (node.Vector == null || node.Vector.ComponentCount == 0)
+            if (node.ComponentCount == 0)
             {
                 node = node.Right;
             }
 
             while (node != null)
             {
-                SerializePostings(node, postingsStream);
+                if (node.PostingsOffset == -1)
+                    SerializePostings(node, postingsStream);
+
                 node.VectorOffset = model.SerializeVector(node.Vector, vectorStream);
+
                 SerializeNode(node, indexStream);
 
                 if (node.Right != null)
@@ -230,7 +303,7 @@ namespace Sir.Store
             IStringModel tokenizer)
         {
             var vector = tokenizer.DeserializeVector(vecOffset, (int)componentCount, vectorStream);
-            var node = new VectorNode(postingsOffset, vecOffset, terminator, weight, componentCount, vector);
+            var node = new VectorNode(postingsOffset, vecOffset, terminator, weight, vector);
 
             return node;
         }
