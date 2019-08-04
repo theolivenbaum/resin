@@ -52,20 +52,20 @@ namespace Sir.Store
             }
         }
 
-        private void Put((long docId, long keyId, IVector term) workItem)
+        private void Put((long docId, long keyId, IVector term) work)
         {
-            VectorNode ix1 = _index1.GetOrAdd(workItem.keyId, new VectorNode());
+            VectorNode ix1 = _index1.GetOrAdd(work.keyId, new VectorNode());
             long indexId;
 
             GraphBuilder.TryMergeConcurrent(
-                ix1, new VectorNode(workItem.term, workItem.docId), _model, _model.PrimaryFoldAngle, _model.PrimaryIdenticalAngle, out indexId);
+                ix1, new VectorNode(work.term, work.docId), _model, _model.PrimaryFoldAngle, _model.PrimaryIdenticalAngle, out indexId);
 
             var ix2 = _index2
-                    .GetOrAdd(workItem.keyId, new ConcurrentDictionary<long, VectorNode>())
+                    .GetOrAdd(work.keyId, new ConcurrentDictionary<long, VectorNode>())
                     .GetOrAdd(indexId, new VectorNode());
 
             GraphBuilder.TryMergeConcurrent(
-                ix2, new VectorNode(workItem.term, workItem.docId), _model, _model.FoldAngle, _model.IdenticalAngle);
+                ix2, new VectorNode(work.term, work.docId), _model, _model.FoldAngle, _model.IdenticalAngle);
         }
 
         public IndexInfo GetIndexInfo()

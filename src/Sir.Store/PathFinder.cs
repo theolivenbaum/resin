@@ -88,7 +88,7 @@ namespace Sir.Store
 
         public static (int depth, int width) Size(VectorNode root)
         {
-            var width = 0;
+            var width = 1;
             var depth = 1;
             var node = root;
 

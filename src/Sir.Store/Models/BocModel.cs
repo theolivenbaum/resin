@@ -101,11 +101,11 @@ namespace Sir.Store
 
         public double PrimaryIdenticalAngle => 0.4d;
 
-        public double PrimaryFoldAngle => 0.9d;
+        public double PrimaryFoldAngle => 0.99d;
 
         public double IdenticalAngle => 0.85d;
 
-        public double FoldAngle => 0.45d;
+        public double FoldAngle => 0.25d;
 
         public int PageWeight => 50000;
 

@@ -8,17 +8,23 @@ using System.Runtime.InteropServices;
 
 namespace Sir
 {
-    public class Vector : IVector
+    public class DenseVector : IVector
     {
-        public Memory<char> Data { get; }
+        public Memory<char>? Data { get; }
         public Vector<float> Value { get; private set; }
         public int ComponentCount { get; }
 
-        public Vector(IList<float> vector, Memory<char> data, int offset, int length)
+        public DenseVector(IList<float> vector, Memory<char> data, int offset, int length)
         {
             Value = CreateVector.Dense(vector.ToArray());
-            ComponentCount = ((DenseVectorStorage<float>)Value.Storage).Length;
+            ComponentCount = vector.Count;
             Data = data;
+        }
+
+        public DenseVector(Vector<float> vector)
+        {
+            Value = vector;
+            ComponentCount = ((DenseVectorStorage<float>)Value.Storage).Length;
         }
 
         public void Serialize(Stream stream)
@@ -28,13 +34,13 @@ namespace Sir
 
         public override string ToString()
         {
-            return new string(Data.ToArray());
+            return new string(Data.Value.ToArray());
         }
     }
 
     public class IndexedVector : IVector
     {
-        public Memory<char> Data { get; }
+        public Memory<char>? Data { get; }
         public Vector<float> Value { get; private set; }
         public int ComponentCount { get; }
 
@@ -78,6 +84,12 @@ namespace Sir
             ComponentCount = tuples.Length;
         }
 
+        public IndexedVector(Vector<float> vector)
+        {
+            Value = vector;
+            ComponentCount = ((SparseVectorStorage<float>)Value.Storage).Length;
+        }
+
         public void Serialize(Stream stream)
         {
             stream.Write(MemoryMarshal.Cast<int, byte>(((SparseVectorStorage<float>)Value.Storage).Indices));
@@ -86,7 +98,7 @@ namespace Sir
 
         public override string ToString()
         {
-            return new string(Data.ToArray());
+            return Data.HasValue ? new string(Data.Value.ToArray()) : Value.ToVectorString();
         }
     }
 
@@ -95,6 +107,6 @@ namespace Sir
         Vector<float> Value { get; }
         void Serialize(Stream stream);
         int ComponentCount { get; }
-        Memory<char> Data { get; }
+        Memory<char>? Data { get; }
     }
 }

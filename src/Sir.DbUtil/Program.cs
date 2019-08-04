@@ -90,7 +90,6 @@ namespace Sir.DbUtil
                 var skip = int.Parse(args[4]);
                 var take = int.Parse(args[5]);
                 var batchSize = int.Parse(args[6]);
-
                 var collectionId = collection.ToHash();
                 var fullTime = Stopwatch.StartNew();
                 var batchNo = 0;
@@ -129,8 +128,6 @@ namespace Sir.DbUtil
                             {
                                 Console.WriteLine(stat);
                             }
-
-                            Console.WriteLine();
 
                             time.Restart();
                         }
