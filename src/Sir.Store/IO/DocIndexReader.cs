@@ -28,7 +28,7 @@ namespace Sir.Store
         /// </summary>
         /// <param name="docId">Document ID</param>
         /// <returns>The offset and length of a document's key_id/value_id map</returns>
-        public (long offset, int length) Read(long docId)
+        public (long offset, int length) Get(long docId)
         {
             var offs = docId * DocIndexWriter.BlockSize;
 

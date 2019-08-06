@@ -21,7 +21,7 @@ namespace Sir.Store
                 _stream.Dispose();
         }
 
-        public object Read(long offset, int len, byte dataType)
+        public object Get(long offset, int len, byte dataType)
         {
             int read;
             Span<byte> buf = stackalloc byte[len];

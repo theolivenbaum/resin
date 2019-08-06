@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
     /// <summary>
     /// Index bitmap segment reader.
     /// </summary>
-    public class PageIndexReader
+    public class PageIndexReader : IDisposable
     {
         private readonly Stream _stream;
 
@@ -16,7 +17,38 @@ namespace Sir.Store
             _stream = stream;
         }
 
-        public IList<(long offset, long length)> ReadAll()
+        public void Dispose()
+        {
+            _stream.Dispose();
+        }
+
+        public (long offset, long length) ReadAt(long startingPoint, long id)
+        {
+            return ReadAt(startingPoint + (id * sizeof(long) * 2));
+        }
+
+        public (long offset, long length) ReadAt(long offset)
+        {
+            _stream.Seek(offset, SeekOrigin.Begin);
+
+            Span<byte> buf = stackalloc byte[sizeof(long) * 2];
+
+            var read = _stream.Read(buf);
+
+            if (read < sizeof(long) * 2)
+                throw new DataMisalignedException();
+
+            var list = MemoryMarshal.Cast<byte, long>(buf);
+
+            return (list[0], list[1]);
+        }
+
+        public (long offset, long length) Get(int id)
+        {
+            return ReadAt(id * sizeof(long) * 2);
+        }
+
+        public IList<(long offset, long length)> GetAll()
         {
             var mem = new MemoryStream();
             _stream.CopyTo(mem);

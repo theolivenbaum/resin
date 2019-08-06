@@ -41,7 +41,7 @@ namespace Sir.Store
         /// </summary>
         /// <param name="offset">offset of doc map</param>
         /// <param name="len">length of doc map</param>
-        public void Append(long offset, int len)
+        public void Put(long offset, int len)
         {
             _stream.Write(BitConverter.GetBytes(offset));
             _stream.Write(BitConverter.GetBytes(len));

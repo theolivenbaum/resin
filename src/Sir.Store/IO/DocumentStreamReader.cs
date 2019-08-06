@@ -32,32 +32,32 @@ namespace Sir.Store
 
         public (long offset, int length) GetDocumentAddress(long docId)
         {
-            return _docIx.Read(docId);
+            return _docIx.Get(docId);
         }
 
         public IList<(long keyId, long valId)> GetDocumentMap(long offset, int length)
         {
-            return _docs.Read(offset, length);
+            return _docs.Get(offset, length);
         }
 
         public (long offset, int len, byte dataType) GetAddressOfKey(long id)
         {
-            return _keyIx.Read(id);
+            return _keyIx.Get(id);
         }
 
         public (long offset, int len, byte dataType) GetAddressOfValue(long id)
         {
-            return _valIx.Read(id);
+            return _valIx.Get(id);
         }
 
         public object GetKey(long offset, int len, byte dataType)
         {
-            return _keys.Read(offset, len, dataType);
+            return _keys.Get(offset, len, dataType);
         }
 
         public object GetValue(long offset, int len, byte dataType)
         {
-            return _vals.Read(offset, len, dataType);
+            return _vals.Get(offset, len, dataType);
         }
 
         public int DocumentCount()

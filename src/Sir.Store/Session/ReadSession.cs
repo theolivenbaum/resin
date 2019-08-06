@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -13,26 +12,28 @@ namespace Sir.Store
     public class ReadSession : CollectionSession, ILogger, IDisposable
     {
         private readonly IConfigurationProvider _config;
-        private readonly IStringModel _tokenizer;
+        private readonly IStringModel _model;
         private readonly Stream _postings;
-        private readonly ConcurrentDictionary<long, NodeReader> _nodeReaders;
+        private readonly PostingsReader _postingsReader;
         private readonly DocumentStreamReader _streamReader;
+        private readonly ConcurrentDictionary<long, NodeReader> _nodeReaders;
 
         public ReadSession(ulong collectionId,
             SessionFactory sessionFactory, 
             IConfigurationProvider config,
-            IStringModel tokenizer,
+            IStringModel model,
             DocumentStreamReader streamReader) 
             : base(collectionId, sessionFactory)
         {
             _config = config;
-            _tokenizer = tokenizer;
-            _nodeReaders = new ConcurrentDictionary<long, NodeReader>();
+            _model = model;
             _streamReader = streamReader;
 
             var posFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos");
 
             _postings = SessionFactory.CreateReadStream(posFileName);
+            _postingsReader = new PostingsReader(_postings);
+            _nodeReaders = new ConcurrentDictionary<long, NodeReader>();
         }
 
         public void Dispose()
@@ -40,12 +41,10 @@ namespace Sir.Store
             if (_postings != null)
                 _postings.Dispose();
 
-            foreach (var reader in _nodeReaders.Values)
-            {
-                reader.Dispose();
-            }
-
             _streamReader.Dispose();
+
+            foreach (var reader in _nodeReaders.Values)
+                reader.Dispose();
         }
         public ReadResult Read(Query query)
         {
@@ -70,40 +69,44 @@ namespace Sir.Store
             return new ReadResult { Total = 0, Docs = new IDictionary<string, object>[0] };
         }
 
-        public IEnumerable<long> ReadIds(Query query)
-        {
-            if (SessionFactory.CollectionExists(query.Collection))
-            {
-                var result = MapReduce(query);
-
-                if (result == null)
-                {
-                    this.Log("found nothing for query {0}", query);
-
-                    return new long[0];
-                }
-
-                return new Dictionary<long, double>(result.SortedDocuments).Keys;
-            }
-
-            return new long[0];
-        }
-
-        /// <summary>
-        /// Find each query term's corresponding index node and postings list and perform "AND", "OR" or "NOT" set operations on them.
-        /// </summary>
-        /// <param name="query"></param>
         private ScoredResult MapReduce(Query query)
         {
             Map(query);
 
             var timer = Stopwatch.StartNew();
 
-            var result = new PostingsReader(_postings).Reduce(query.ToClauses(), query.Skip, query.Take);
+            var result = new Dictionary<long, double>();
 
-            this.Log("reduce operation took {0}", timer.Elapsed);
+            _postingsReader.Reduce(query.ToClauses(), result);
 
-            return result;
+            this.Log("reducing took {0}", timer.Elapsed);
+
+            timer.Restart();
+
+            var sorted = Sort(result, query.Skip, query.Take);
+
+            this.Log("sorting took {0}", timer.Elapsed);
+
+            return sorted;
+        }
+
+
+        private static ScoredResult Sort(IDictionary<long, double> documents, int skip, int take)
+        {
+            var sortedByScore = new List<KeyValuePair<long, double>>(documents);
+
+            sortedByScore.Sort(
+                delegate (KeyValuePair<long, double> pair1,
+                KeyValuePair<long, double> pair2)
+                {
+                    return pair2.Value.CompareTo(pair1.Value);
+                }
+            );
+
+            var index = skip > 0 ? skip : 0;
+            var count = Math.Min(sortedByScore.Count, take > 0 ? take : sortedByScore.Count);
+
+            return new ScoredResult { SortedDocuments = sortedByScore.GetRange(index, count), Total = sortedByScore.Count };
         }
 
         /// <summary>
@@ -113,9 +116,10 @@ namespace Sir.Store
         public void Map(Query query)
         {
             var timer = Stopwatch.StartNew();
+            var clauses = query.ToClauses();
 
-            Parallel.ForEach(query.ToClauses(), q =>
-            //foreach (var q in query.ToClauses())
+            //Parallel.ForEach(clauses, q =>
+            foreach (var q in clauses)
             {
                 var cursor = q;
 
@@ -129,7 +133,7 @@ namespace Sir.Store
 
                     if (indexReader != null)
                     {
-                        hit = indexReader.ClosestMatch(cursor.Term.Vector, _tokenizer);
+                        hit = indexReader.ClosestMatch(cursor.Term.Vector, _model);
                     }
 
                     if (hit != null && hit.Score > 0)
@@ -144,9 +148,9 @@ namespace Sir.Store
 
                     cursor = cursor.NextTermInClause;
                 }
-            });
+            }//);
 
-            this.Log("map operation for {0} took {1}", query, timer.Elapsed);
+            this.Log("mapping {0} took {1}", query, timer.Elapsed);
         }
 
         public NodeReader CreateIndexReader(long keyId)

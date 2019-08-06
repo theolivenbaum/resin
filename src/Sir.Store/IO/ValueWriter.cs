@@ -20,7 +20,7 @@ namespace Sir.Store
             _stream.Flush();
         }
 
-        public (long offset, int len, byte dataType) Append(object value)
+        public (long offset, int len, byte dataType) Put(object value)
         {
             Span<byte> buffer;
             byte dataType;

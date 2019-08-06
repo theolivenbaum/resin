@@ -91,7 +91,6 @@ namespace Sir.DbUtil
                 var take = int.Parse(args[5]);
                 var batchSize = int.Parse(args[6]);
                 var collectionId = collection.ToHash();
-                var fullTime = Stopwatch.StartNew();
                 var batchNo = 0;
                 var payload = ReadFile(fileName)
                     .Skip(skip)
@@ -104,32 +103,41 @@ namespace Sir.DbUtil
                                 { "body", x["text"] }
                             });
 
+                var fullTime = Stopwatch.StartNew();
+
                 using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
                 {
                     sessionFactory.Truncate(collectionId);
 
-                    using (var writeSession = sessionFactory.CreateWriteSession(
-                        collectionId,
-                        model))
+                    foreach (var page in payload.Batch(1000000))
                     {
-                        var time = Stopwatch.StartNew();
-
-                        foreach (var batch in payload.Batch(batchSize))
+                        using (var writeSession = sessionFactory.CreateWriteSession(collectionId, model))
                         {
-                            var info = writeSession.Write(batch);
+                            var time = Stopwatch.StartNew();
 
-                            var t = time.Elapsed.TotalMilliseconds;
-
-                            var docsPerSecond = (int)(batchSize / t*1000);
-
-                            Console.WriteLine($"batch {batchNo++} took {t} ms. queue length {info.QueueLength}.  {docsPerSecond} docs/s");
-                            
-                            foreach (var stat in info.Info)
+                            foreach (var batch in page.Batch(batchSize))
                             {
-                                Console.WriteLine(stat);
-                            }
+                                var info = writeSession.Write(batch);
 
-                            time.Restart();
+                                var t = time.Elapsed.TotalMilliseconds;
+
+                                var docsPerSecond = (int)(batchSize / t * 1000);
+                                var segments = 0;
+
+                                foreach (var stat in info.Info)
+                                {
+                                    if (stat.Weight > 1000)
+                                        Console.WriteLine(stat);
+
+                                    segments++;
+                                }
+
+                                writeSession.Flush();
+
+                                Console.WriteLine($"batch {batchNo++} took {t} ms. {segments} segments. queue length {info.QueueLength}. {docsPerSecond} docs/s");
+
+                                time.Restart();
+                            }
                         }
                     }
                 }

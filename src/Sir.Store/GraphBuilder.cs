@@ -7,7 +7,11 @@ namespace Sir.Store
 {
     public static class GraphBuilder
     {
-        public static bool TryMerge(VectorNode root, VectorNode node, IStringModel model, out VectorNode parent)
+        public static bool TryMerge(
+            VectorNode root, 
+            VectorNode node, 
+            IStringModel model, 
+            out VectorNode parent)
         {
             var cursor = root;
 
@@ -49,7 +53,13 @@ namespace Sir.Store
             }
         }
 
-        public static bool TryMergeConcurrent(VectorNode root, VectorNode node, IStringModel model, double foldAngle, double identicalAngle, out long id)
+        public static long MergeConcurrent(
+            VectorNode root, 
+            VectorNode node, 
+            IStringModel model, 
+            double foldAngle, 
+            double identicalAngle,
+            Func<long> identity)
         {
             var cursor = root;
 
@@ -64,8 +74,7 @@ namespace Sir.Store
                         AddDocId(cursor, node);
                     }
 
-                    id = cursor.PostingsOffset;
-                    return true;
+                    return cursor.PostingsOffset;
                 }
                 else if (angle > foldAngle)
                 {
@@ -75,9 +84,9 @@ namespace Sir.Store
                         {
                             if (cursor.Left == null)
                             {
-                                node.PostingsOffset = id = root.Weight;
+                                node.PostingsOffset = identity();
                                 cursor.Left = node;
-                                return false;
+                                return node.PostingsOffset;
                             }
                             else
                             {
@@ -98,9 +107,9 @@ namespace Sir.Store
                         {
                             if (cursor.Right == null)
                             {
-                                node.PostingsOffset = id = root.Weight;
+                                node.PostingsOffset = identity();
                                 cursor.Right = node;
-                                return false;
+                                return node.PostingsOffset;
                             }
                             else
                             {
@@ -116,7 +125,12 @@ namespace Sir.Store
             }
         }
 
-        public static bool TryMergeConcurrent(VectorNode root, VectorNode node, IStringModel model, double foldAngle, double identicalAngle)
+        public static bool TryMergeConcurrent(
+            VectorNode root, 
+            VectorNode node, 
+            IStringModel model, 
+            double foldAngle, 
+            double identicalAngle)
         {
             var cursor = root;
 

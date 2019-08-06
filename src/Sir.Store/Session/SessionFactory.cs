@@ -54,9 +54,7 @@ namespace Sir.Store
         public void Truncate(ulong collectionId)
         {
             foreach (var file in Directory.GetFiles(Dir, $"{collectionId}*"))
-            {
                 File.Delete(file);
-            }
 
             _pageInfo.Clear();
 
@@ -108,13 +106,13 @@ namespace Sir.Store
             _pageInfo.Clear();
         }
 
-        public IList<(long offset, long length)> ReadPageInfo(string pageFileName)
+        public IList<(long offset, long length)> GetAllPages(string pageFileName)
         {
             return _pageInfo.GetOrAdd(pageFileName, key =>
             {
                 using (var ixpStream = CreateReadStream(key))
                 {
-                    return new PageIndexReader(ixpStream).ReadAll();
+                    return new PageIndexReader(ixpStream).GetAll();
                 }
             });
         }

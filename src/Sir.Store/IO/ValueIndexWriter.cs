@@ -21,7 +21,7 @@ namespace Sir.Store
             _stream.Flush();
         }
 
-        public long Append(long offset, int len, byte dataType)
+        public long Put(long offset, int len, byte dataType)
         {
             var position = _stream.Position;
 

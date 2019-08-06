@@ -28,6 +28,11 @@ namespace Sir.Store
             _indexSession.Dispose();
         }
 
+        public void Flush()
+        {
+            _streamWriter.Flush();
+        }
+
         /// <summary>
         /// Fields prefixed with "___" will not be stored.
         /// </summary>

@@ -88,13 +88,14 @@ namespace Sir.Store
 
         public static (int depth, int width) Size(VectorNode root)
         {
-            var width = 1;
-            var depth = 1;
-            var node = root;
+            var width = 0;
+            var depth = 0;
+            var node = root.Right;
 
             while (node != null)
             {
                 var d = Depth(node);
+
                 if (d > depth)
                 {
                     depth = d;
@@ -111,6 +112,8 @@ namespace Sir.Store
         public static int Depth(VectorNode node)
         {
             var count = 0;
+
+            node = node.Left;
 
             while (node != null)
             {

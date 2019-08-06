@@ -37,32 +37,32 @@ namespace Sir.Store
 
         public (long offset, int len, byte dataType) PutKey(object value)
         {
-            return _keys.Append(value);
+            return _keys.Put(value);
         }
 
         public (long offset, int len, byte dataType) PutValue(object value)
         {
-            return _vals.Append(value);
+            return _vals.Put(value);
         }
 
         public long PutKeyInfo(long offset, int len, byte dataType)
         {
-            return _keyIx.Append(offset, len, dataType);
+            return _keyIx.Put(offset, len, dataType);
         }
 
         public long PutValueInfo(long offset, int len, byte dataType)
         {
-            return _valIx.Append(offset, len, dataType);
+            return _valIx.Put(offset, len, dataType);
         }
 
         public (long offset, int length) PutDocumentMap(IList<(long keyId, long valId)> doc)
         {
-            return _docs.Append(doc);
+            return _docs.Put(doc);
         }
 
         public void PutDocumentAddress(long offset, int len)
         {
-            _docIx.Append(offset, len);
+            _docIx.Put(offset, len);
         }
 
         public void Flush()

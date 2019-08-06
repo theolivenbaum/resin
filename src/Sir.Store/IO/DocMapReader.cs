@@ -23,7 +23,7 @@ namespace Sir.Store
                 _stream.Dispose();
         }
 
-        public IList<(long keyId, long valId)> Read(long offset, int length)
+        public IList<(long keyId, long valId)> Get(long offset, int length)
         {
             _stream.Seek(offset, SeekOrigin.Begin);
 

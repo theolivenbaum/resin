@@ -23,24 +23,7 @@ namespace Sir.Store
                 _stream.Dispose();
         }
 
-        public async Task<(long offset, int len, byte dataType)> ReadAsync(long id)
-        {
-            var offset = id * _blockSize;
-
-            _stream.Seek(offset, SeekOrigin.Begin);
-
-            var buf = new byte[_blockSize];
-            var read = await _stream.ReadAsync(buf, 0, _blockSize);
-
-            if (read != _blockSize)
-            {
-                throw new InvalidDataException();
-            }
-
-            return (BitConverter.ToInt64(buf, 0), BitConverter.ToInt32(buf, sizeof(long)), buf[_blockSize - 1]);
-        }
-
-        public (long offset, int len, byte dataType) Read(long id)
+        public (long offset, int len, byte dataType) Get(long id)
         {
             var offset = id * _blockSize;
 

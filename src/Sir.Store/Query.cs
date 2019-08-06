@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace Sir.Store
@@ -22,14 +19,6 @@ namespace Sir.Store
             And = and;
             Or = or;
             Not = not;
-            Collection = collectionId;
-        }
-
-        public Query(ulong collectionId, float score, IList<long> postingsOffsets, bool and = false, bool or = true, bool not = false)
-        {
-            Score = score;
-            PostingsOffsets = postingsOffsets;
-            Or = true;
             Collection = collectionId;
         }
 

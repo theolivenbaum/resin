@@ -79,10 +79,13 @@ namespace Sir.Store
 
         public IList<long> PostingsOffsets { get; set; }
 
-        public VectorNode()
+        public int Level { get; }
+
+        public VectorNode(int level = 0)
         {
             PostingsOffset = -1;
             VectorOffset = -1;
+            Level = level;
         }
 
         public VectorNode(IVector vector)

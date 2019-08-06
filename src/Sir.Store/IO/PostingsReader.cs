@@ -18,13 +18,9 @@ namespace Sir.Store
             _stream = stream;
         }
 
-        public ScoredResult Reduce(IEnumerable<Query> query, int skip, int take)
+        public void Reduce(IEnumerable<Query> mappedQuery, IDictionary<long, double> result)
         {
-            var timer = Stopwatch.StartNew();
-
-            IDictionary<long, double> result = null;
-
-            foreach (var q in query)
+            foreach (var q in mappedQuery)
             {
                 var cursor = q;
 
@@ -38,57 +34,40 @@ namespace Sir.Store
 
                     if (cursor.And)
                     {
-                        if (result == null)
+                        foreach (var hit in termResult)
                         {
-                            result = termResult;
-                        }
-                        else
-                        {
-                            foreach (var hit in termResult)
-                            {
-                                double score;
+                            double score;
 
-                                if (result.TryGetValue(hit.Key, out score))
-                                {
-                                    result[hit.Key] = score + hit.Value;
-                                }
-                                else
-                                {
-                                    result.Remove(hit.Key);
-                                }
+                            if (result.TryGetValue(hit.Key, out score))
+                            {
+                                result[hit.Key] = score + hit.Value;
+                            }
+                            else
+                            {
+                                result.Remove(hit.Key);
                             }
                         }
                     }
                     else if (cursor.Not)
                     {
-                        if (result != null)
+                        foreach (var doc in termResult.Keys)
                         {
-                            foreach (var doc in termResult.Keys)
-                            {
-                                result.Remove(doc);
-                            }
+                            result.Remove(doc);
                         }
                     }
                     else // Or
                     {
-                        if (result == null)
+                        foreach (var doc in termResult)
                         {
-                            result = termResult;
-                        }
-                        else
-                        {
-                            foreach (var doc in termResult)
-                            {
-                                double score;
+                            double score;
 
-                                if (result.TryGetValue(doc.Key, out score))
-                                {
-                                    result[doc.Key] = score + doc.Value;
-                                }
-                                else
-                                {
-                                    result.Add(doc);
-                                }
+                            if (result.TryGetValue(doc.Key, out score))
+                            {
+                                result[doc.Key] = score + doc.Value;
+                            }
+                            else
+                            {
+                                result.Add(doc);
                             }
                         }
                     }
@@ -96,22 +75,6 @@ namespace Sir.Store
                     cursor = cursor.NextTermInClause;
                 }
             }
-
-            var sortedByScore = new List<KeyValuePair<long, double>>(result);
-            sortedByScore.Sort(
-                delegate (KeyValuePair<long, double> pair1,
-                KeyValuePair<long, double> pair2)
-                {
-                    return pair2.Value.CompareTo(pair1.Value);
-                }
-            );
-
-            var index = skip > 0 ? skip : 0;
-            var count = Math.Min(sortedByScore.Count, take > 0 ? take : sortedByScore.Count);
-
-            this.Log($"found total of {sortedByScore.Count} docs in {timer.Elapsed}. skip {skip} take {take} index {index} count {count}");
-
-            return new ScoredResult { SortedDocuments = sortedByScore.GetRange(index, count), Total = sortedByScore.Count };
         }
 
         private IDictionary<long, double> Read(IList<long> offsets, double score)
@@ -130,7 +93,7 @@ namespace Sir.Store
         {
             _stream.Seek(postingsOffset, SeekOrigin.Begin);
 
-            Span<byte> buf = new byte[sizeof(long)];
+            Span<byte> buf = stackalloc byte[sizeof(long)];
 
             _stream.Read(buf);
 
@@ -140,9 +103,9 @@ namespace Sir.Store
 
             var read = _stream.Read(listBuf);
 
-            foreach (var word in MemoryMarshal.Cast<byte, long>(listBuf))
+            foreach (var id in MemoryMarshal.Cast<byte, long>(listBuf))
             {
-                result.TryAdd(word, score);
+                result.Add(id, score);
             }
         }
     }

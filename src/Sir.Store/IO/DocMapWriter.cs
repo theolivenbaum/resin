@@ -21,7 +21,7 @@ namespace Sir.Store
             _stream.Flush();
         }
 
-        public (long offset, int length) Append(IList<(long keyId, long valId)> doc)
+        public (long offset, int length) Put(IList<(long keyId, long valId)> doc)
         {
             if (doc.Count == 0)
                 throw new ArgumentException(nameof(doc));

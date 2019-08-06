@@ -14,16 +14,17 @@ namespace Sir
         AnalyzedData Tokenize(T data);
         IVector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream);
         long SerializeVector(IVector vector, Stream vectorStream);
-        int PageWeight { get; }
         int VectorWidth { get; }
     }
 
     public interface IEuclidDistance
     {
-        double PrimaryIdenticalAngle { get; }
-        double PrimaryFoldAngle { get; }
-        double IdenticalAngle { get; }
+        double IdenticalAngle0 { get; }
+        double FoldAngle0 { get; }
+        double IdenticalAngle1 { get; }
+        double FoldAngle1 { get; }
         double FoldAngle { get; }
+        double IdenticalAngle { get; }
         double CosAngle(IVector vec1, IVector vec2);
         double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream);
     }

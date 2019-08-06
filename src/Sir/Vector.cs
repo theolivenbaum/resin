@@ -55,8 +55,7 @@ namespace Sir
                 tuples[i++] = new Tuple<int, float>(p.Key, p.Value);
             }
 
-            Value = CreateVector.Sparse(
-                SparseVectorStorage<float>.OfIndexedEnumerable(vectorWidth, tuples));
+            Value = CreateVector.SparseOfIndexed(vectorWidth, tuples);
 
             ComponentCount = tuples.Length;
             Data = data;

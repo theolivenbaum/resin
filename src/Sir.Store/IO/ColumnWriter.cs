@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 
 namespace Sir.Store
@@ -23,19 +22,13 @@ namespace Sir.Store
 
         public void CreatePage(VectorNode column, Stream vectorStream, Stream postingsStream, IStringModel model, PageIndexWriter pageIndexWriter)
         {
-            var time = Stopwatch.StartNew();
             var page = GraphBuilder.SerializeTree(column, _ixStream, vectorStream, postingsStream, model);
 
-            pageIndexWriter.Write(page.offset, page.length);
-
-            vectorStream.Flush();
-            postingsStream.Flush();
-            _ixStream.Flush();
-            pageIndexWriter.Flush();
+            pageIndexWriter.Put(page.offset, page.length);
 
             var size = PathFinder.Size(column);
 
-            this.Log($"serialized column {_keyId} in {time.Elapsed}. weight: {column.Weight} d: {size.depth} w: {size.width}");
+            this.Log($"serialized column {_keyId} level {column.Level} weight: {column.Weight} {size}");
         }
 
         public void Dispose()

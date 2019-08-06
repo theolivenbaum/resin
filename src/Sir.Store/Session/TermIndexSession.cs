@@ -15,12 +15,12 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
-        private readonly ConcurrentDictionary<long, VectorNode> _index1;
-        private readonly ConcurrentDictionary<long, ConcurrentDictionary<long, VectorNode>> _index2;
+        private readonly ConcurrentDictionary<long, ConcurrentDictionary<long, VectorNode>> _index;
         private readonly Stream _postingsStream;
         private readonly Stream _vectorStream;
         private readonly ProducerConsumerQueue<(long docId, long keyId, IVector term)> _workers;
         private readonly ConcurrentDictionary<long, ConcurrentBag<IVector>> _debugWords;
+        private readonly ConcurrentDictionary<long, long> _segmentId;
 
         public TermIndexSession(
             ulong collectionId,
@@ -34,12 +34,12 @@ namespace Sir.Store
 
             _config = config;
             _model = model;
-            _index1 = new ConcurrentDictionary<long, VectorNode>();
-            _index2 = new ConcurrentDictionary<long, ConcurrentDictionary<long, VectorNode>>();
+            _index = new ConcurrentDictionary<long, ConcurrentDictionary<long, VectorNode>>();
             _postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"));
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
             _workers = new ProducerConsumerQueue<(long docId, long keyId, IVector term)>(threadCount, Put);
             _debugWords = new ConcurrentDictionary<long, ConcurrentBag<IVector>>();
+            _segmentId = new ConcurrentDictionary<long, long>();
         }
 
         public void Put(long docId, long keyId, string value)
@@ -54,18 +54,36 @@ namespace Sir.Store
 
         private void Put((long docId, long keyId, IVector term) work)
         {
-            VectorNode ix1 = _index1.GetOrAdd(work.keyId, new VectorNode());
-            long indexId;
+            var column = _index.GetOrAdd(work.keyId, new ConcurrentDictionary<long, VectorNode>());
+
+            var ix0 = column.GetOrAdd(0, new VectorNode(0));
+
+            long indexId1 = GraphBuilder.MergeConcurrent(
+                ix0, 
+                new VectorNode(work.term, work.docId), 
+                _model, 
+                _model.FoldAngle0, 
+                _model.IdenticalAngle0,
+                () => _segmentId.AddOrUpdate(work.keyId, 1, (k, v) => ++v));
+
+            var ix1 = column.GetOrAdd((int)indexId1, new VectorNode(1));
+
+            var indexId2 = GraphBuilder.MergeConcurrent(
+                ix1,
+                new VectorNode(work.term, work.docId),
+                _model,
+                _model.FoldAngle1,
+                _model.IdenticalAngle1,
+                () => _segmentId.AddOrUpdate(work.keyId, 1, (k, v) => ++v));
+
+            var ix2 = column.GetOrAdd((int)indexId2, new VectorNode(2));
 
             GraphBuilder.TryMergeConcurrent(
-                ix1, new VectorNode(work.term, work.docId), _model, _model.PrimaryFoldAngle, _model.PrimaryIdenticalAngle, out indexId);
-
-            var ix2 = _index2
-                    .GetOrAdd(work.keyId, new ConcurrentDictionary<long, VectorNode>())
-                    .GetOrAdd(indexId, new VectorNode());
-
-            GraphBuilder.TryMergeConcurrent(
-                ix2, new VectorNode(work.term, work.docId), _model, _model.FoldAngle, _model.IdenticalAngle);
+                ix2, 
+                new VectorNode(work.term, work.docId), 
+                _model, 
+                _model.FoldAngle, 
+                _model.IdenticalAngle);
         }
 
         public IndexInfo GetIndexInfo()
@@ -75,9 +93,10 @@ namespace Sir.Store
 
         private IEnumerable<GraphInfo> GetGraphInfo()
         {
-            foreach (var node in _index1)
+            foreach (var ix in _index)
             {
-                yield return new GraphInfo(node.Key, node.Value);
+                foreach (var node in ix.Value)
+                    yield return new GraphInfo(ix.Key, node.Key, node.Value);
             }
         }
 
@@ -91,30 +110,35 @@ namespace Sir.Store
 
             this.Log($"awaited sync for {timer.Elapsed}");
 
-            foreach (var column in _index1)
+            foreach (var column in _index)
             {
-                var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, column.Key));
-
-                using (var indexStream = SessionFactory.CreateAppendStream(ixFileName))
-                using (var columnWriter = new ColumnWriter(CollectionId, column.Key, indexStream))
+                if (column.Value.Count > 0)
                 {
-                    using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(
-                        Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.ixp1"))))
-                    {
-                        columnWriter.CreatePage(column.Value, _vectorStream, _postingsStream, _model, pageIndexWriter);
-                    }
+                    var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, column.Key));
 
-                    var indices = new SortedList<long, VectorNode>(_index2[column.Key]);
-
-                    using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(
-                        Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.ixp2"))))
+                    using (var indexStream = SessionFactory.CreateAppendStream(ixFileName))
+                    using (var columnWriter = new ColumnWriter(CollectionId, column.Key, indexStream))
+                    using (var segmentIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(
+                        Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.ixps"))))
                     {
+                        var offset = segmentIndexWriter.Offset;
+
+                        var indices = new SortedList<long, VectorNode>(column.Value);
+
                         foreach (var ix in indices)
                         {
-                            columnWriter.CreatePage(ix.Value, _vectorStream, _postingsStream, _model, pageIndexWriter);
+                            columnWriter.CreatePage(ix.Value, _vectorStream, _postingsStream, _model, segmentIndexWriter);
+                        }
+
+                        var length = segmentIndexWriter.Offset - offset;
+
+                        using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(
+                            Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.ixp"))))
+                        {
+                            pageIndexWriter.Put(offset, length);
                         }
                     }
-                }
+                }                
             }
 
             SessionFactory.ClearPageInfo();
@@ -122,28 +146,30 @@ namespace Sir.Store
             _postingsStream.Dispose();
             _vectorStream.Dispose();
 
-            var debugOutput = new StringBuilder();
-
-            foreach (var key in _debugWords)
+            if (_debugWords.Count > 0)
             {
-                var sorted = new SortedList<string, object>();
+                var debugOutput = new StringBuilder();
 
-                foreach (var word in key.Value)
+                foreach (var key in _debugWords)
                 {
-                    sorted.Add(word.ToString(), null);
+                    var sorted = new SortedList<string, object>();
+
+                    foreach (var word in key.Value)
+                    {
+                        sorted.Add(word.ToString(), null);
+                    }
+
+                    debugOutput.AppendLine($"{key.Key}: {sorted.Count} words");
+
+                    foreach (var word in sorted)
+                    {
+                        debugOutput.AppendLine($"{key.Key} {word.Key}");
+                    }
                 }
 
-                debugOutput.AppendLine($"{key.Key}: {sorted.Count} words");
-
-                foreach (var word in sorted)
-                {
-                    debugOutput.AppendLine($"{key.Key} {word.Key}");
-                }
+                this.Log(debugOutput);
             }
-
-            this.Log(debugOutput);
         }
-
     }
 
     public class IndexInfo
@@ -161,17 +187,21 @@ namespace Sir.Store
     public class GraphInfo
     {
         private readonly long _keyId;
+        private readonly long _indexId;
         private readonly VectorNode _graph;
 
-        public GraphInfo(long keyId, VectorNode graph)
+        public long Weight => _graph.Weight;
+
+        public GraphInfo(long keyId, long indexId, VectorNode graph)
         {
             _keyId = keyId;
+            _indexId = indexId;
             _graph = graph;
         }
 
         public override string ToString()
         {
-            return $"key {_keyId} | weight {_graph.Weight} {PathFinder.Size(_graph)}";
+            return $"key {_keyId} level {_graph.Level} indexId: {_indexId} weight {_graph.Weight} {PathFinder.Size(_graph)}";
         }
     }
 }
