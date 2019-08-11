@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Threading;
 
 namespace Sir.Store
@@ -16,6 +17,7 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private readonly Semaphore WriteSync = new Semaphore(1, 2);
         private readonly ConcurrentDictionary<ulong, DocumentStreamWriter> _documentWriters;
+        private readonly ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
 
         public string Dir { get; }
         public IConfigurationProvider Config { get; }
@@ -36,9 +38,30 @@ namespace Sir.Store
             _keys = LoadKeys();
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _documentWriters = new ConcurrentDictionary<ulong, DocumentStreamWriter>();
+            _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
             Model = model;
 
             this.Log($"initiated in {time.Elapsed}");
+        }
+
+        public MemoryMappedFile OpenMMF(string fileName)
+        {
+            var mapName = fileName.Replace(":", "").Replace("\\", "_");
+
+            try
+            {
+                return _mmfs.GetOrAdd(mapName, x =>
+                {
+                    return MemoryMappedFile.CreateFromFile(fileName, FileMode.Open, mapName, 0, MemoryMappedFileAccess.ReadWrite);
+                });
+            }
+            catch
+            {
+                return _mmfs.GetOrAdd(mapName, x =>
+                {
+                    return MemoryMappedFile.OpenExisting(mapName);
+                });
+            }
         }
 
         public long GetDocCount(string collection)
@@ -266,6 +289,9 @@ namespace Sir.Store
         {
             foreach (var x in _documentWriters.Values)
                 x.Dispose();
+
+            foreach (var file in _mmfs.Values)
+                file.Dispose();
         }
     }
 }

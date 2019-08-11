@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -13,10 +15,10 @@ namespace Sir.Store
     {
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
-        private readonly Stream _postings;
-        private readonly PostingsReader _postingsReader;
+        private readonly IPostingsReader _postingsReader;
+        private readonly MemoryMappedViewAccessor _vectorView;
         private readonly DocumentStreamReader _streamReader;
-        private readonly ConcurrentDictionary<long, NodeReader> _nodeReaders;
+        private readonly ConcurrentDictionary<long, INodeReader> _nodeReaders;
 
         public ReadSession(ulong collectionId,
             SessionFactory sessionFactory, 
@@ -29,17 +31,20 @@ namespace Sir.Store
             _model = model;
             _streamReader = streamReader;
 
-            var posFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos");
+            _postingsReader = new MemoryMappedPostingsReader(SessionFactory.OpenMMF(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"))
+                .CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read));
 
-            _postings = SessionFactory.CreateReadStream(posFileName);
-            _postingsReader = new PostingsReader(_postings);
-            _nodeReaders = new ConcurrentDictionary<long, NodeReader>();
+            _vectorView = SessionFactory.OpenMMF(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"))
+                .CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
+
+            _nodeReaders = new ConcurrentDictionary<long, INodeReader>();
         }
 
         public void Dispose()
         {
-            if (_postings != null)
-                _postings.Dispose();
+            _vectorView.Dispose();
+
+            _postingsReader.Dispose();
 
             _streamReader.Dispose();
 
@@ -118,18 +123,18 @@ namespace Sir.Store
             var timer = Stopwatch.StartNew();
             var clauses = query.ToClauses();
 
-            //Parallel.ForEach(clauses, q =>
-            foreach (var q in clauses)
+            Parallel.ForEach(clauses, clause =>
+            //foreach (var clause in clauses)
             {
-                var cursor = q;
+                var cursor = clause;
 
                 while (cursor != null)
                 {
-                    Hit hit = null;
-
                     var indexReader = cursor.Term.KeyId.HasValue ?
                         CreateIndexReader(cursor.Term.KeyId.Value) :
                         CreateIndexReader(cursor.Term.KeyHash);
+
+                    Hit hit = null;
 
                     if (indexReader != null)
                     {
@@ -148,22 +153,22 @@ namespace Sir.Store
 
                     cursor = cursor.NextTermInClause;
                 }
-            }//);
+            });
 
             this.Log("mapping {0} took {1}", query, timer.Elapsed);
         }
 
-        public NodeReader CreateIndexReader(long keyId)
+        public INodeReader CreateIndexReader(long keyId)
         {
             var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
 
             if (!File.Exists(ixFileName))
                 return null;
 
-            return _nodeReaders.GetOrAdd(keyId, new NodeReader(CollectionId, keyId, SessionFactory, _config));
+            return _nodeReaders.GetOrAdd(keyId, new MemoryMappedNodeReader(CollectionId, keyId, SessionFactory, _config, _vectorView));
         }
 
-        public NodeReader CreateIndexReader(ulong keyHash)
+        public INodeReader CreateIndexReader(ulong keyHash)
         {
             long keyId;
             if (!SessionFactory.TryGetKeyId(CollectionId, keyHash, out keyId))

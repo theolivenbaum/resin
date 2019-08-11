@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.InteropServices;
+using System.IO.MemoryMappedFiles;
 
 namespace Sir.Store
 {
     /// <summary>
     /// Read (reduce) postings.
     /// </summary>
-    public class PostingsReader : IPostingsReader
+    public class MemoryMappedPostingsReader : IPostingsReader
     {
-        private readonly Stream _stream;
+        private readonly MemoryMappedViewAccessor _view;
 
-        public PostingsReader(Stream stream)
+        public MemoryMappedPostingsReader(MemoryMappedViewAccessor view)
         {
-            _stream = stream;
+            _view = view;
         }
 
         public void Reduce(IEnumerable<Query> mappedQuery, IDictionary<long, double> result)
@@ -25,7 +24,7 @@ namespace Sir.Store
 
                 while (cursor != null)
                 {
-                    var termResult = Read(cursor.PostingsOffsets, cursor.Score);
+                    var termResult = Read(cursor.PostingsOffsets);
 
                     if (cursor.And)
                     {
@@ -33,19 +32,19 @@ namespace Sir.Store
                         {
                             double score;
 
-                            if (result.TryGetValue(hit.Key, out score))
+                            if (result.TryGetValue(hit, out score))
                             {
-                                result[hit.Key] = score + hit.Value;
+                                result[hit] = score + cursor.Score;
                             }
                             else
                             {
-                                result.Remove(hit.Key);
+                                result.Remove(hit);
                             }
                         }
                     }
                     else if (cursor.Not)
                     {
-                        foreach (var doc in termResult.Keys)
+                        foreach (var doc in termResult)
                         {
                             result.Remove(doc);
                         }
@@ -56,13 +55,13 @@ namespace Sir.Store
                         {
                             double score;
 
-                            if (result.TryGetValue(doc.Key, out score))
+                            if (result.TryGetValue(doc, out score))
                             {
-                                result[doc.Key] = score + doc.Value;
+                                result[doc] = score + cursor.Score;
                             }
                             else
                             {
-                                result.Add(doc);
+                                result.Add(doc, cursor.Score);
                             }
                         }
                     }
@@ -72,41 +71,35 @@ namespace Sir.Store
             }
         }
 
-        private IDictionary<long, double> Read(IList<long> offsets, double score)
+        private IList<long> Read(IList<long> offsets)
         {
-            var result = new Dictionary<long, double>();
+            var result = new List<long>();
 
             foreach (var offset in offsets)
             {
-                GetPostingsFromStream(offset, result, score);
+                result.AddRange(Read(offset));
             }
 
             return result;
         }
 
-        private void GetPostingsFromStream(long postingsOffset, IDictionary<long, double> result, double score)
+        private IList<long> Read(long postingsOffset)
         {
-            _stream.Seek(postingsOffset, SeekOrigin.Begin);
+            var numOfPostings = _view.ReadInt64(postingsOffset);
 
-            Span<byte> buf = stackalloc byte[sizeof(long)];
+            var listBuf = new long[numOfPostings];
 
-            _stream.Read(buf);
+            var read = _view.ReadArray(postingsOffset + sizeof(long), listBuf, 0, listBuf.Length);
 
-            var numOfPostings = BitConverter.ToInt64(buf);
+            if (read != numOfPostings)
+                throw new DataMisalignedException();
 
-            Span<byte> listBuf = new byte[sizeof(long) * (int)numOfPostings];
-
-            var read = _stream.Read(listBuf);
-
-            foreach (var id in MemoryMarshal.Cast<byte, long>(listBuf))
-            {
-                result.Add(id, score);
-            }
+            return listBuf;
         }
 
         public void Dispose()
         {
-            _stream.Dispose();
+            _view.Dispose();
         }
     }
 }

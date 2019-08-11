@@ -10,7 +10,7 @@ namespace Sir.Store
     /// <summary>
     /// Query a collection.
     /// </summary>
-    public class StoreReader : IReader, ILogger
+    public class StoreReader : IReader
     {
         public string ContentType => "application/json";
 
@@ -43,12 +43,8 @@ namespace Sir.Store
                     return new ResponseModel { MediaType = "application/json", Total = 0 };
                 }
 
-                this.Log(string.Format("begin executing query {0}", query));
-
                 var result = readSession.Read(query);
                 long total = result.Total;
-
-                this.Log($"executed query {query} in {timer.Elapsed}");
 
                 if (request.Query.ContainsKey("create"))
                 {

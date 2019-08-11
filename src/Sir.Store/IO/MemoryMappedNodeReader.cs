@@ -1,44 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.IO;
+using System.IO.MemoryMappedFiles;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
     /// <summary>
     /// Index bitmap reader. Each block is a <see cref="Sir.Store.VectorNode"/>.
     /// </summary>
-    public class NodeReader : ILogger, IDisposable, INodeReader
+    public class MemoryMappedNodeReader : ILogger, INodeReader
     {
         private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
-        private readonly string _ixpFileName;
-        private readonly string _vecFileName;
-        private readonly Stream _vectorStream;
-        private readonly Stream _ixStream;
-        private readonly PageIndexReader _segmentPageFile;
+        private readonly MemoryMappedViewAccessor _vectorView;
+        private readonly MemoryMappedFile _ixFile;
         private readonly long _keyId;
         private readonly ulong _collectionId;
         private readonly string _ixFileName;
 
-        public NodeReader(
+        public MemoryMappedNodeReader(
             ulong collectionId,
             long keyId,
             SessionFactory sessionFactory,
-            IConfigurationProvider config)
+            IConfigurationProvider config,
+            MemoryMappedViewAccessor vectorView)
         {
-            var ixFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
-            var ixpFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.{1}.ixp", collectionId, keyId));
-
             _keyId = keyId;
             _collectionId = collectionId;
-            _ixFileName = ixFileName;
             _sessionFactory = sessionFactory;
             _config = config;
-            _ixpFileName = ixpFileName;
-            _vecFileName = Path.Combine(sessionFactory.Dir, string.Format("{0}.vec", collectionId));
-            _vectorStream = _sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.vec"));
-            _ixStream = _sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ix"), bufferSize: int.Parse(_config.Get("nodereader_buffer_size")), fileOptions: FileOptions.RandomAccess);
-            _segmentPageFile = new PageIndexReader(_sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ixps")));
+            _vectorView = vectorView;
+            _ixFile = _sessionFactory.OpenMMF(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ix"));
         }
 
         public Hit ClosestMatch(
@@ -47,15 +39,16 @@ namespace Sir.Store
             var pages = _sessionFactory.GetAllPages(
                 Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ixp"));
 
-            var hits = new List<Hit>();
+            var hits = new ConcurrentBag<Hit>();
 
-            foreach (var page in pages)
+            Parallel.ForEach(pages, page =>
+            //foreach (var page in pages)
             {
                 var hit = ClosestMatch(vector, model, page.offset);
 
                 if (hit != null)
                     hits.Add(hit);
-            }
+            });
 
             Hit best = null;
 
@@ -77,61 +70,64 @@ namespace Sir.Store
         private Hit ClosestMatch(
             IVector vector, IStringModel model, long pageOffset)
         {
-            var ix0page = _segmentPageFile.ReadAt(pageOffset);
-
-            _ixStream.Seek(ix0page.offset, SeekOrigin.Begin);
-
-            var hit0 = ClosestMatchInSegment(
-                vector, _ixStream, _vectorStream, model, model.FoldAngle0, model.IdenticalAngle0);
-
-            Hit hit1 = null;
-
-            if (hit0 != null && hit0.Score > 0)
+            using (var segmentPageFile = new PageIndexReader(_sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ixps"))))
             {
-                var indexId = hit0.Node.PostingsOffsets[0];
-                var nextSegment = _segmentPageFile.ReadAt(startingPoint: pageOffset, id: indexId);
+                var segment0 = segmentPageFile.ReadAt(pageOffset);
 
-                _ixStream.Seek(nextSegment.offset, SeekOrigin.Begin);
+                var hit0 = ClosestMatchInSegment(
+                    vector, _ixFile.CreateViewAccessor(segment0.offset, segment0.length), _vectorView, model, model.FoldAngle0, model.IdenticalAngle0);
 
-                hit1 = ClosestMatchInSegment(
-                    vector, _ixStream, _vectorStream, model, model.FoldAngle1, model.IdenticalAngle1);
+                Hit hit1 = null;
+
+                if (hit0 != null && hit0.Score > 0)
+                {
+                    var indexId = hit0.Node.PostingsOffsets[0];
+                    var nextSegment = segmentPageFile.ReadAt(startingPoint: pageOffset, id: indexId);
+
+                    hit1 = ClosestMatchInSegment(
+                        vector, _ixFile.CreateViewAccessor(nextSegment.offset, nextSegment.length), _vectorView, model, model.FoldAngle1, model.IdenticalAngle1);
+                }
+
+                if (hit1 != null && hit1.Score > 0)
+                {
+                    var indexId = hit1.Node.PostingsOffsets[0];
+                    var nextSegment = segmentPageFile.ReadAt(startingPoint: pageOffset, id: indexId);
+
+                    return ClosestMatchInSegment(
+                        vector, _ixFile.CreateViewAccessor(nextSegment.offset, nextSegment.length), _vectorView, model, model.FoldAngle, model.IdenticalAngle);
+                }
+
+                return null;
             }
-
-            if (hit1 != null && hit1.Score > 0)
-            {
-                var indexId = hit1.Node.PostingsOffsets[0];
-                var nextSegment = _segmentPageFile.ReadAt(startingPoint: pageOffset, id: indexId);
-
-                _ixStream.Seek(nextSegment.offset, SeekOrigin.Begin);
-
-                return ClosestMatchInSegment(
-                    vector, _ixStream, _vectorStream, model, model.FoldAngle, model.IdenticalAngle);
-            }
-
-            return null;
         }
 
         private Hit ClosestMatchInSegment(
             IVector vector,
-            Stream indexStream,
-            Stream vectorStream,
+            MemoryMappedViewAccessor indexView,
+            MemoryMappedViewAccessor vectorView,
             IStringModel model,
             double foldAngle,
-            double identicalAngle
-        )
+            double identicalAngle,
+            long offset = 0)
         {
-            Span<byte> block = stackalloc byte[VectorNode.BlockSize];
-            var read = indexStream.Read(block);
+            var block = new long[5];
             VectorNode best = null;
             double highscore = 0;
 
+            var read = indexView.ReadArray(offset, block, 0, block.Length);
+
+            offset += VectorNode.BlockSize;
+
             while (read > 0)
             {
-                var vecOffset = BitConverter.ToInt64(block.Slice(0));
-                var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long)));
-                var componentCount = BitConverter.ToInt64(block.Slice(sizeof(long)*2));
-                var cursorTerminator = BitConverter.ToInt64(block.Slice(sizeof(long) * 4));
-                var angle = model.CosAngle(vector, vecOffset, (int)componentCount, vectorStream);
+                var vecOffset = block[0];
+                var postingsOffset = block[1];
+                var componentCount = block[2];
+                var cursorTerminator = block[4];
+
+                var cursorVector = model.DeserializeVector(vecOffset, (int)componentCount, vectorView);
+
+                var angle = model.CosAngle(cursorVector, vector);
 
                 if (angle >= identicalAngle)
                 {
@@ -160,7 +156,9 @@ namespace Sir.Store
                         // There exists either a left and a right child or just a left child.
                         // Either way, we want to go left and the next node in bitmap is the left child.
 
-                        read = indexStream.Read(block);
+                        read = indexView.ReadArray(offset, block, 0, block.Length);
+
+                        offset += VectorNode.BlockSize;
                     }
                     else
                     {
@@ -189,15 +187,20 @@ namespace Sir.Store
                         // Next node in bitmap is the left child. 
                         // To find cursor's right child we must skip over the left tree.
 
-                        SkipTree(indexStream);
-                        read = indexStream.Read(block);
+                        SkipTree(indexView, ref offset);
+
+                        read = indexView.ReadArray(offset, block, 0, block.Length);
+
+                        offset += VectorNode.BlockSize;
                     }
                     else if (cursorTerminator == 2)
                     {
                         // Next node in bitmap is the right child,
                         // which is good because we want to go right.
 
-                        read = indexStream.Read(block);
+                        read = indexView.ReadArray(offset, block, 0, block.Length);
+
+                        offset += VectorNode.BlockSize;
                     }
                     else
                     {
@@ -215,24 +218,19 @@ namespace Sir.Store
             };
         }
 
-        private void SkipTree(Stream indexStream)
+        private void SkipTree(MemoryMappedViewAccessor indexView, ref long offset)
         {
-            Span<byte> buf = stackalloc byte[VectorNode.BlockSize];
-            var read = indexStream.Read(buf);
-            var weight = BitConverter.ToInt64(buf.Slice(sizeof(long)*3));
+            var weight = indexView.ReadInt64(offset + sizeof(long) + sizeof(long) + sizeof(long));
+
+            offset += VectorNode.BlockSize;
+
             var distance = weight * VectorNode.BlockSize;
 
-            if (distance > 0)
-            {
-                indexStream.Seek(distance, SeekOrigin.Current);
-            }
+            offset += distance;
         }
 
         public void Dispose()
         {
-            _vectorStream.Dispose();
-            _ixStream.Dispose();
-            _segmentPageFile.Dispose();
         }
     }
 }

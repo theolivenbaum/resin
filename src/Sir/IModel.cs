@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.IO.MemoryMappedFiles;
 
 namespace Sir
 {
@@ -13,6 +14,7 @@ namespace Sir
     {
         AnalyzedData Tokenize(T data);
         IVector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream);
+        IVector DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView);
         long SerializeVector(IVector vector, Stream vectorStream);
         int VectorWidth { get; }
     }

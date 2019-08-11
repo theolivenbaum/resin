@@ -61,7 +61,7 @@ namespace Sir
             Data = data;
         }
 
-        public IndexedVector(int[] index, float[] values, Memory<char> data, int vectorWidth)
+        public IndexedVector(int[] index, float[] values, int vectorWidth)
         {
             var tuples = new Tuple<int, float>[index.Length];
 
@@ -74,7 +74,6 @@ namespace Sir
                 SparseVectorStorage<float>.OfIndexedEnumerable(vectorWidth, tuples));
 
             ComponentCount = tuples.Length;
-            Data = data;
         }
 
         public IndexedVector(Tuple<int, float>[] tuples, int vectorWidth)
