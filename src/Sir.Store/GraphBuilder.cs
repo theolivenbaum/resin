@@ -53,7 +53,7 @@ namespace Sir.Store
             }
         }
 
-        public static long MergeConcurrent(
+        public static long GetIdConcurrent(
             VectorNode root, 
             VectorNode node, 
             IStringModel model, 
@@ -69,11 +69,6 @@ namespace Sir.Store
 
                 if (angle >= identicalAngle)
                 {
-                    lock (cursor.Sync)
-                    {
-                        AddDocId(cursor, node);
-                    }
-
                     return cursor.PostingsOffset;
                 }
                 else if (angle > foldAngle)

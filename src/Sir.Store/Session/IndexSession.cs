@@ -11,7 +11,7 @@ namespace Sir.Store
     /// <summary>
     /// Indexing session targeting a single collection.
     /// </summary>
-    public class TermIndexSession : CollectionSession, IDisposable, ILogger
+    public class IndexSession : CollectionSession, IDisposable, ILogger
     {
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
@@ -21,12 +21,14 @@ namespace Sir.Store
         private readonly ProducerConsumerQueue<(long docId, long keyId, IVector term)> _workers;
         private readonly ConcurrentDictionary<long, ConcurrentBag<IVector>> _debugWords;
         private readonly ConcurrentDictionary<long, long> _segmentId;
+        private readonly string _fileExtension;
 
-        public TermIndexSession(
+        public IndexSession(
             ulong collectionId,
             SessionFactory sessionFactory, 
             IStringModel model,
-            IConfigurationProvider config) : base(collectionId, sessionFactory)
+            IConfigurationProvider config,
+            string fileExtension) : base(collectionId, sessionFactory)
         {
             var threadCount = int.Parse(config.Get("index_session_thread_count"));
 
@@ -40,6 +42,7 @@ namespace Sir.Store
             _workers = new ProducerConsumerQueue<(long docId, long keyId, IVector term)>(threadCount, Put);
             _debugWords = new ConcurrentDictionary<long, ConcurrentBag<IVector>>();
             _segmentId = new ConcurrentDictionary<long, long>();
+            _fileExtension = fileExtension;
         }
 
         public void Put(long docId, long keyId, string value)
@@ -58,7 +61,7 @@ namespace Sir.Store
 
             var ix0 = column.GetOrAdd(0, new VectorNode(0));
 
-            long indexId1 = GraphBuilder.MergeConcurrent(
+            long indexId1 = GraphBuilder.GetIdConcurrent(
                 ix0, 
                 new VectorNode(work.term, work.docId), 
                 _model, 
@@ -68,7 +71,7 @@ namespace Sir.Store
 
             var ix1 = column.GetOrAdd((int)indexId1, new VectorNode(1));
 
-            var indexId2 = GraphBuilder.MergeConcurrent(
+            var indexId2 = GraphBuilder.GetIdConcurrent(
                 ix1,
                 new VectorNode(work.term, work.docId),
                 _model,
@@ -114,12 +117,12 @@ namespace Sir.Store
             {
                 if (column.Value.Count > 0)
                 {
-                    var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, column.Key));
+                    var ixFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.{_fileExtension}");
 
                     using (var indexStream = SessionFactory.CreateAppendStream(ixFileName))
                     using (var columnWriter = new ColumnWriter(CollectionId, column.Key, indexStream))
                     using (var segmentIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(
-                        Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.ixps"))))
+                        Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.{_fileExtension}p"))))
                     {
                         var offset = segmentIndexWriter.Offset;
 

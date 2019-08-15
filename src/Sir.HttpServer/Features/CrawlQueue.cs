@@ -143,7 +143,7 @@ namespace Sir.HttpServer.Features
 
         public void ExecuteWrite(string collectionName, IDictionary<string, object> doc)
         {
-            _sessionFactory.ExecuteWrite(new Job(collectionName.ToHash(), new[] { doc }, _model));
+            _sessionFactory.Write(new Job(collectionName.ToHash(), new[] { doc }, _model));
         }
 
         private string GetWebString(Uri uri)

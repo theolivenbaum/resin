@@ -27,7 +27,7 @@ namespace Sir.Store
             var documents = Deserialize<IEnumerable<IDictionary<string, object>>>(request.Body);
             var job = new Job(collectionId, documents, model);
 
-            _sessionFactory.ExecuteWrite(job);
+            _sessionFactory.Write(job);
         }
 
         private static T Deserialize<T>(Stream stream)

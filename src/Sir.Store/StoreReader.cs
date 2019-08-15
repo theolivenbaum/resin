@@ -55,7 +55,7 @@ namespace Sir.Store
                         newCollectionName = Guid.NewGuid().ToString();
                     }
 
-                    _sessionFactory.ExecuteWrite(new Job(newCollectionName.ToHash(), result.Docs, model));
+                    _sessionFactory.Write(new Job(newCollectionName.ToHash(), result.Docs, model));
                 }
 
                 var mem = new MemoryStream();

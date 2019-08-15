@@ -31,15 +31,6 @@ namespace Sir.DbUtil
                     collectionName: args[2],
                     model);
             }
-            else if (command == "index")
-            {
-                // example: index www
-
-                Index(
-                    dir: args[1],
-                    collectionName: args[2],
-                    model: model);
-            }
             else if (command == "validate")
             {
                 // example: validate C:\projects\resin\src\Sir.HttpServer\App_Data www 0 3000
@@ -109,7 +100,7 @@ namespace Sir.DbUtil
                 {
                     sessionFactory.Truncate(collectionId);
 
-                    foreach (var page in payload.Batch(1000000))
+                    foreach (var page in payload.Batch(batchSize*10))
                     {
                         using (var writeSession = sessionFactory.CreateWriteSession(collectionId, model))
                         {
@@ -131,8 +122,6 @@ namespace Sir.DbUtil
 
                                     segments++;
                                 }
-
-                                writeSession.Flush();
 
                                 Console.WriteLine($"batch {batchNo++} took {t} ms. {segments} segments. queue length {info.QueueLength}. {docsPerSecond} docs/s");
 
@@ -193,22 +182,6 @@ namespace Sir.DbUtil
                 JsonSerializer ser = new JsonSerializer();
                 ser.Serialize(jsonWriter, docs);
                 jsonWriter.Flush();
-            }
-        }
-
-        private static void Index(string dir, string collectionName, IStringModel model)
-        {
-            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
-            {
-                var collectionId = collectionName.ToHash();
-
-                sessionFactory.TruncateIndex(collectionId);
-
-                using (var indexSession = sessionFactory.CreateIndexSession(collectionId))
-                using (var documents = sessionFactory.CreateDocumentStreamSession(collectionId))
-                {
-                    documents.Index(indexSession, Console.Out);
-                }
             }
         }
 

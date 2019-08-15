@@ -16,7 +16,6 @@ namespace Sir.Store
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private readonly Semaphore WriteSync = new Semaphore(1, 2);
-        private readonly ConcurrentDictionary<ulong, DocumentStreamWriter> _documentWriters;
         private readonly ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
 
         public string Dir { get; }
@@ -37,7 +36,6 @@ namespace Sir.Store
 
             _keys = LoadKeys();
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
-            _documentWriters = new ConcurrentDictionary<ulong, DocumentStreamWriter>();
             _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
             Model = model;
 
@@ -108,7 +106,7 @@ namespace Sir.Store
             _pageInfo.Clear();
         }
 
-        public void ExecuteWrite(Job job)
+        public void Write(Job job)
         {
             WriteSync.WaitOne();
 
@@ -119,7 +117,7 @@ namespace Sir.Store
                 writeSession.Write(job.Documents);
             }
 
-            this.Log("executed {0} write+index job in {1}", job.CollectionId, timer.Elapsed);
+            this.Log("executed {0} write in {1}", job.CollectionId, timer.Elapsed);
 
             WriteSync.Release();
         }
@@ -227,15 +225,22 @@ namespace Sir.Store
 
         public WriteSession CreateWriteSession(ulong collectionId, IStringModel model)
         {
-            var documentWriter = _documentWriters.GetOrAdd(collectionId, new DocumentStreamWriter(collectionId, this));
+            var documentWriter = new DocumentStreamWriter(collectionId, this);
 
             return new WriteSession(
-                collectionId, this, documentWriter, Config, model, CreateIndexSession(collectionId));
+                collectionId, 
+                this, 
+                documentWriter, 
+                Config, 
+                model, 
+                CreateIndexSession(collectionId, "ixt"),
+                CreateIndexSession(collectionId, "ixn")
+                );
         }
 
-        public TermIndexSession CreateIndexSession(ulong collectionId)
+        public IndexSession CreateIndexSession(ulong collectionId, string fileExtension)
         {
-            return new TermIndexSession(collectionId, this, Model, Config);
+            return new IndexSession(collectionId, this, Model, Config, fileExtension);
         }
 
         public ValidateSession CreateValidateSession(ulong collectionId)
@@ -287,9 +292,6 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            foreach (var x in _documentWriters.Values)
-                x.Dispose();
-
             foreach (var file in _mmfs.Values)
                 file.Dispose();
         }

@@ -8,8 +8,10 @@ namespace Sir.Store
     /// </summary>
     public class WriteSession : CollectionSession, ILogger, IDisposable
     {
-        private readonly TermIndexSession _indexSession;
+        private readonly IndexSession _termIndexSession;
+        private readonly IndexSession _ngramIndexSession;
         private readonly DocumentStreamWriter _streamWriter;
+        private readonly IStringModel _model;
 
         public WriteSession(
             ulong collectionId,
@@ -17,20 +19,19 @@ namespace Sir.Store
             DocumentStreamWriter streamWriter,
             IConfigurationProvider config,
             IStringModel model,
-            TermIndexSession indexSession) : base(collectionId, sessionFactory)
+            IndexSession termIndexSession,
+            IndexSession ngramIndexSession) : base(collectionId, sessionFactory)
         {
-            _indexSession = indexSession;
+            _termIndexSession = termIndexSession;
+            _ngramIndexSession = ngramIndexSession;
             _streamWriter = streamWriter;
+            _model = model;
         }
 
         public void Dispose()
         {
-            _indexSession.Dispose();
-        }
-
-        public void Flush()
-        {
-            _streamWriter.Flush();
+            _termIndexSession.Dispose();
+            _streamWriter.Dispose();
         }
 
         /// <summary>
@@ -86,7 +87,7 @@ namespace Sir.Store
                     // index
                     if (valInfo.dataType == DataType.STRING && keyStr.StartsWith("_") == false)
                     {
-                        _indexSession.Put(docId, keyId, (string)val);
+                        _termIndexSession.Put(docId, keyId, (string)val);
                     }
                 }
 
@@ -97,7 +98,7 @@ namespace Sir.Store
                 document["___docid"] = docId;
             }
 
-            return _indexSession.GetIndexInfo();
+            return _termIndexSession.GetIndexInfo();
         }
     }
 }
