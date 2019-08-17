@@ -16,7 +16,8 @@ namespace Sir.Store
         private readonly MemoryMappedFile _ixFile;
         private readonly long _keyId;
         private readonly ulong _collectionId;
-        private readonly string _ixFileName;
+
+        public long KeyId { get { return _keyId; } }
 
         public MemoryMappedNodeReader(
             ulong collectionId,
@@ -30,21 +31,22 @@ namespace Sir.Store
             _sessionFactory = sessionFactory;
             _config = config;
             _vectorView = vectorView;
-            _ixFile = _sessionFactory.OpenMMF(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ix"));
+            _ixFile = _sessionFactory.OpenMMF(
+                Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ix"));
         }
 
-        public Hit ClosestMatch(
+        public Hit ClosestTerm(
             IVector vector, IStringModel model)
         {
             var pages = _sessionFactory.GetAllPages(
-                Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ixp"));
+                Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ixtp"));
 
             var hits = new ConcurrentBag<Hit>();
 
             Parallel.ForEach(pages, page =>
             //foreach (var page in pages)
             {
-                var hit = ClosestMatch(vector, model, page.offset);
+                var hit = ClosestTermInPage(vector, model, page.offset);
 
                 if (hit != null)
                     hits.Add(hit);
@@ -67,15 +69,63 @@ namespace Sir.Store
             return best;
         }
 
-        private Hit ClosestMatch(
+        public Hit ClosestNgram(
+            IVector vector, IStringModel model)
+        {
+            var pages = _sessionFactory.GetAllPages(
+                Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ixnp"));
+
+            var hits = new ConcurrentBag<Hit>();
+
+            Parallel.ForEach(pages, page =>
+            //foreach (var page in pages)
+            {
+                var hit = ClosestNgramInPage(vector, model, page.offset, page.length);
+
+                if (hit != null)
+                    hits.Add(hit);
+            });
+
+            Hit best = null;
+
+            foreach (var hit in hits)
+            {
+                if (best == null || hit.Score > best.Score)
+                {
+                    best = hit;
+                }
+                else if (hit.Score == best.Score)
+                {
+                    GraphBuilder.MergePostings(best.Node, hit.Node);
+                }
+            }
+
+            return best;
+        }
+
+        private Hit ClosestNgramInPage(
+            IVector vector, IStringModel model, long pageOffset, long pageLength)
+        {
+            return ClosestMatchInSegment(
+                        vector,
+                        _ixFile.CreateViewAccessor(pageOffset, pageLength),
+                        _vectorView,
+                        model,
+                        model.FoldAngleNgram,
+                        model.IdenticalAngleNgram);
+        }
+
+        private Hit ClosestTermInPage(
             IVector vector, IStringModel model, long pageOffset)
         {
-            using (var segmentPageFile = new PageIndexReader(_sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ixps"))))
+            using (var segmentPageFile = new PageIndexReader(
+                _sessionFactory.CreateReadStream(
+                    Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ixtsp"))))
             {
                 var segment0 = segmentPageFile.ReadAt(pageOffset);
 
                 var hit0 = ClosestMatchInSegment(
-                    vector, _ixFile.CreateViewAccessor(segment0.offset, segment0.length), _vectorView, model, model.FoldAngle0, model.IdenticalAngle0);
+                    vector, _ixFile.CreateViewAccessor(segment0.offset, segment0.length), _vectorView, model, model.FoldAngleFirst, model.IdenticalAngleFirst);
 
                 Hit hit1 = null;
 
@@ -85,7 +135,7 @@ namespace Sir.Store
                     var nextSegment = segmentPageFile.ReadAt(startingPoint: pageOffset, id: indexId);
 
                     hit1 = ClosestMatchInSegment(
-                        vector, _ixFile.CreateViewAccessor(nextSegment.offset, nextSegment.length), _vectorView, model, model.FoldAngle1, model.IdenticalAngle1);
+                        vector, _ixFile.CreateViewAccessor(nextSegment.offset, nextSegment.length), _vectorView, model, model.FoldAngleSecond, model.IdenticalAngleSecond);
                 }
 
                 if (hit1 != null && hit1.Score > 0)
@@ -105,7 +155,7 @@ namespace Sir.Store
             IVector vector,
             MemoryMappedViewAccessor indexView,
             MemoryMappedViewAccessor vectorView,
-            IStringModel model,
+            IEuclidDistance model,
             double foldAngle,
             double identicalAngle,
             long offset = 0)
@@ -124,9 +174,7 @@ namespace Sir.Store
                 var postingsOffset = block[1];
                 var componentCount = block[2];
                 var cursorTerminator = block[4];
-
-                var cursorVector = model.DeserializeVector(vecOffset, (int)componentCount, vectorView);
-
+                var cursorVector = VectorOperations.DeserializeVector(vecOffset, (int)componentCount, model.VectorWidth, vectorView);
                 var angle = model.CosAngle(cursorVector, vector);
 
                 if (angle >= identicalAngle)
@@ -211,11 +259,7 @@ namespace Sir.Store
                 }
             }
 
-            return new Hit
-            {
-                Score = highscore,
-                Node = best
-            };
+            return new Hit(best, highscore);
         }
 
         private void SkipTree(MemoryMappedViewAccessor indexView, ref long offset)

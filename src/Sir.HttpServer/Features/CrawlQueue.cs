@@ -129,11 +129,12 @@ namespace Sir.HttpServer.Features
         {
             using (var readSession = _sessionFactory.CreateReadSession(collectionName.ToHash()))
             {
-                var urlQuery = new Query(collectionName.ToHash(), new Term("_url", new VectorNode(_model.Tokenize(url).Embeddings[0])));
+                const string key = "_url";
+                var keyId = _sessionFactory.GetKeyId(collectionName.ToHash(), key.ToHash());
+                var urlQuery = new Query(collectionName.ToHash(), keyId, _model.Tokenize(url));
                 urlQuery.And = true;
-                urlQuery.Take = 1;
 
-                var result = readSession.Read(urlQuery).Docs.ToList();
+                var result = readSession.Read(new Query[1] { urlQuery }, 0, 1).Docs.ToList();
             
                 return result.Count == 0 
                     ? null : (float)result[0]["___score"] >= _model.IdenticalAngle 

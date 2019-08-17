@@ -9,7 +9,7 @@ namespace Sir.Store
     public class PageIndexWriter : IDisposable
     {
         private readonly Stream _stream;
-        public long Offset => _stream.Position;
+        public long Position => _stream.Position;
 
         public PageIndexWriter(Stream stream)
         {
@@ -20,11 +20,6 @@ namespace Sir.Store
         {
             _stream.Write(BitConverter.GetBytes(offset));
             _stream.Write(BitConverter.GetBytes(length));
-        }
-
-        public void Flush()
-        {
-            _stream.Flush();
         }
 
         public void Dispose()

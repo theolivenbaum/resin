@@ -42,6 +42,8 @@ namespace Sir.Store
             this.Log($"initiated in {time.Elapsed}");
         }
 
+
+
         public MemoryMappedFile OpenMMF(string fileName)
         {
             var mapName = fileName.Replace(":", "").Replace("\\", "_");
@@ -220,12 +222,12 @@ namespace Sir.Store
 
         public DocumentStreamSession CreateDocumentStreamSession(ulong collectionId)
         {
-            return new DocumentStreamSession(collectionId, this, new DocumentStreamReader(collectionId, this));
+            return new DocumentStreamSession(collectionId, this, new DocumentReader(collectionId, this));
         }
 
         public WriteSession CreateWriteSession(ulong collectionId, IStringModel model)
         {
-            var documentWriter = new DocumentStreamWriter(collectionId, this);
+            var documentWriter = new DocumentWriter(collectionId, this);
 
             return new WriteSession(
                 collectionId, 
@@ -233,25 +235,19 @@ namespace Sir.Store
                 documentWriter, 
                 Config, 
                 model, 
-                CreateIndexSession(collectionId, "ixt"),
-                CreateIndexSession(collectionId, "ixn")
-                );
+                CreateIndexSession(collectionId)
+            );
         }
 
-        public IndexSession CreateIndexSession(ulong collectionId, string fileExtension)
+        public IndexSession CreateIndexSession(ulong collectionId)
         {
-            return new IndexSession(collectionId, this, Model, Config, fileExtension);
-        }
-
-        public ValidateSession CreateValidateSession(ulong collectionId)
-        {
-            return new ValidateSession(collectionId, this, Model, Config);
+            return new IndexSession(collectionId, this, Model, Config);
         }
 
         public ReadSession CreateReadSession(ulong collectionId)
         {
             return new ReadSession(
-                collectionId, this, Config, Model, new DocumentStreamReader(collectionId, this));
+                collectionId, this, Config, Model, new DocumentReader(collectionId, this));
         }
 
         public Stream CreateAsyncReadStream(string fileName, int bufferSize = 4096)
@@ -287,7 +283,7 @@ namespace Sir.Store
 
         public bool CollectionExists(ulong collectionId)
         {
-            return File.Exists(Path.Combine(Dir, collectionId + ".val"));
+            return File.Exists(Path.Combine(Dir, collectionId + ".docs"));
         }
 
         public void Dispose()

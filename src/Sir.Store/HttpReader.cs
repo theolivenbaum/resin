@@ -10,14 +10,14 @@ namespace Sir.Store
     /// <summary>
     /// Query a collection.
     /// </summary>
-    public class StoreReader : IReader
+    public class HttoReader : IHttpReader
     {
         public string ContentType => "application/json";
 
         private readonly SessionFactory _sessionFactory;
         private readonly HttpQueryParser _httpQueryParser;
 
-        public StoreReader(
+        public HttoReader(
             SessionFactory sessionFactory, 
             HttpQueryParser httpQueryParser)
         {
@@ -32,18 +32,30 @@ namespace Sir.Store
         public ResponseModel Read(string collectionName, IStringModel model, HttpRequest request)
         {
             var timer = Stopwatch.StartNew();
-            var collectionId = collectionName.ToHash(); 
+            var collectionId = collectionName.ToHash();
+
+            if (!_sessionFactory.CollectionExists(collectionId))
+                return new ResponseModel { Total = 0 };
+
+            var take = 100;
+            var skip = 0;
+
+            if (request.Query.ContainsKey("take"))
+                take = int.Parse(request.Query["take"]);
+
+            if (request.Query.ContainsKey("skip"))
+                skip = int.Parse(request.Query["skip"]);
 
             using (var readSession = _sessionFactory.CreateReadSession(collectionId))
             {
-                var query = _httpQueryParser.Parse(collectionId, model, request);
+                var query = _httpQueryParser.Parse(collectionId, request);
 
                 if (query == null)
                 {
                     return new ResponseModel { MediaType = "application/json", Total = 0 };
                 }
 
-                var result = readSession.Read(query);
+                var result = readSession.Read(query, skip, take);
                 long total = result.Total;
 
                 if (request.Query.ContainsKey("create"))

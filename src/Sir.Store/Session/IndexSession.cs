@@ -19,16 +19,14 @@ namespace Sir.Store
         private readonly Stream _postingsStream;
         private readonly Stream _vectorStream;
         private readonly ProducerConsumerQueue<(long docId, long keyId, IVector term)> _workers;
-        private readonly ConcurrentDictionary<long, ConcurrentBag<IVector>> _debugWords;
+        //private readonly ConcurrentDictionary<long, ConcurrentBag<IVector>> _debugWords;
         private readonly ConcurrentDictionary<long, long> _segmentId;
-        private readonly string _fileExtension;
 
         public IndexSession(
             ulong collectionId,
-            SessionFactory sessionFactory, 
+            SessionFactory sessionFactory,
             IStringModel model,
-            IConfigurationProvider config,
-            string fileExtension) : base(collectionId, sessionFactory)
+            IConfigurationProvider config) : base(collectionId, sessionFactory)
         {
             var threadCount = int.Parse(config.Get("index_session_thread_count"));
 
@@ -40,9 +38,8 @@ namespace Sir.Store
             _postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"));
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
             _workers = new ProducerConsumerQueue<(long docId, long keyId, IVector term)>(threadCount, Put);
-            _debugWords = new ConcurrentDictionary<long, ConcurrentBag<IVector>>();
+            //_debugWords = new ConcurrentDictionary<long, ConcurrentBag<IVector>>();
             _segmentId = new ConcurrentDictionary<long, long>();
-            _fileExtension = fileExtension;
         }
 
         public void Put(long docId, long keyId, string value)
@@ -61,32 +58,34 @@ namespace Sir.Store
 
             var ix0 = column.GetOrAdd(0, new VectorNode(0));
 
-            long indexId1 = GraphBuilder.GetIdConcurrent(
-                ix0, 
-                new VectorNode(work.term, work.docId), 
-                _model, 
-                _model.FoldAngle0, 
-                _model.IdenticalAngle0,
+            long indexId1 = GraphBuilder.GetOrIncrementIdConcurrent(
+                ix0,
+                new VectorNode(work.term, work.docId),
+                _model,
+                _model.FoldAngleFirst,
+                _model.IdenticalAngleFirst,
                 () => _segmentId.AddOrUpdate(work.keyId, 1, (k, v) => ++v));
 
             var ix1 = column.GetOrAdd((int)indexId1, new VectorNode(1));
 
-            var indexId2 = GraphBuilder.GetIdConcurrent(
+            var indexId2 = GraphBuilder.GetOrIncrementIdConcurrent(
                 ix1,
                 new VectorNode(work.term, work.docId),
                 _model,
-                _model.FoldAngle1,
-                _model.IdenticalAngle1,
+                _model.FoldAngleSecond,
+                _model.IdenticalAngleSecond,
                 () => _segmentId.AddOrUpdate(work.keyId, 1, (k, v) => ++v));
 
             var ix2 = column.GetOrAdd((int)indexId2, new VectorNode(2));
 
             GraphBuilder.TryMergeConcurrent(
-                ix2, 
-                new VectorNode(work.term, work.docId), 
-                _model, 
-                _model.FoldAngle, 
+                ix2,
+                new VectorNode(work.term, work.docId),
+                _model,
+                _model.FoldAngle,
                 _model.IdenticalAngle);
+
+            //_debugWords.GetOrAdd(work.keyId, new ConcurrentBag<IVector>()).Add(work.term);
         }
 
         public IndexInfo GetIndexInfo()
@@ -113,35 +112,64 @@ namespace Sir.Store
 
             this.Log($"awaited sync for {timer.Elapsed}");
 
+            var debugOutput = new StringBuilder();
+
             foreach (var column in _index)
             {
                 if (column.Value.Count > 0)
                 {
-                    var ixFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.{_fileExtension}");
+                    var ixFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.ix");
 
                     using (var indexStream = SessionFactory.CreateAppendStream(ixFileName))
                     using (var columnWriter = new ColumnWriter(CollectionId, column.Key, indexStream))
-                    using (var segmentIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(
-                        Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.{_fileExtension}p"))))
+                    using (var segmentIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.ixtsp"))))
+                    using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.ixtp"))))
                     {
-                        var offset = segmentIndexWriter.Offset;
-
+                        var offset = segmentIndexWriter.Position;
                         var indices = new SortedList<long, VectorNode>(column.Value);
 
                         foreach (var ix in indices)
                         {
-                            columnWriter.CreatePage(ix.Value, _vectorStream, _postingsStream, _model, segmentIndexWriter);
+                            columnWriter.CreatePage(ix.Value, _vectorStream, _postingsStream, segmentIndexWriter);
                         }
 
-                        var length = segmentIndexWriter.Offset - offset;
+                        var length = segmentIndexWriter.Position - offset;
 
-                        using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(
-                            Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.ixp"))))
-                        {
-                            pageIndexWriter.Put(offset, length);
-                        }
+                        pageIndexWriter.Put(offset, length);
                     }
-                }                
+
+                    //var debugWords = _debugWords[column.Key];
+                    //var wordSet = new HashSet<IVector>();
+
+                    //foreach (var term in debugWords)
+                    //{
+                    //    if (wordSet.Add(term))
+                    //    {
+                    //        var found = false;
+
+                    //        foreach (var node in column.Value)
+                    //        {
+                    //            var hit = PathFinder.ClosestMatch(node.Value, term, _model);
+
+                    //            if (hit != null && hit.Score >= _model.IdenticalAngle)
+                    //            {
+                    //                found = true;
+                    //                break;
+                    //            }
+                    //        }
+
+                    //        if (!found)
+                    //            throw new Exception($"could not find {term}");
+                    //    }
+                    //}
+
+                    //debugOutput.AppendLine($"{column.Key}: {wordSet.Count} words");
+
+                    //foreach (var term in wordSet)
+                    //{
+                    //    debugOutput.AppendLine(term.ToString());
+                    //}
+                }
             }
 
             SessionFactory.ClearPageInfo();
@@ -149,29 +177,7 @@ namespace Sir.Store
             _postingsStream.Dispose();
             _vectorStream.Dispose();
 
-            if (_debugWords.Count > 0)
-            {
-                var debugOutput = new StringBuilder();
-
-                foreach (var key in _debugWords)
-                {
-                    var sorted = new SortedList<string, object>();
-
-                    foreach (var word in key.Value)
-                    {
-                        sorted.Add(word.ToString(), null);
-                    }
-
-                    debugOutput.AppendLine($"{key.Key}: {sorted.Count} words");
-
-                    foreach (var word in sorted)
-                    {
-                        debugOutput.AppendLine($"{key.Key} {word.Key}");
-                    }
-                }
-
-                this.Log(debugOutput);
-            }
+            this.Log(debugOutput);
         }
     }
 

@@ -3,48 +3,17 @@ using MathNet.Numerics.LinearAlgebra.Storage;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Sir
 {
-    public class DenseVector : IVector
-    {
-        public Memory<char>? Data { get; }
-        public Vector<float> Value { get; private set; }
-        public int ComponentCount { get; }
-
-        public DenseVector(IList<float> vector, Memory<char> data, int offset, int length)
-        {
-            Value = CreateVector.Dense(vector.ToArray());
-            ComponentCount = vector.Count;
-            Data = data;
-        }
-
-        public DenseVector(Vector<float> vector)
-        {
-            Value = vector;
-            ComponentCount = ((DenseVectorStorage<float>)Value.Storage).Length;
-        }
-
-        public void Serialize(Stream stream)
-        {
-            stream.Write(MemoryMarshal.Cast<float, byte>(Value.Storage.AsArray()));
-        }
-
-        public override string ToString()
-        {
-            return new string(Data.Value.ToArray());
-        }
-    }
-
     public class IndexedVector : IVector
     {
         public Memory<char>? Data { get; }
         public Vector<float> Value { get; private set; }
         public int ComponentCount { get; }
 
-        public IndexedVector(SortedList<int, float> dictionary, Memory<char> data, int vectorWidth = 100)
+        public IndexedVector(SortedList<int, float> dictionary, Memory<char> data, int vectorWidth)
         {
             var tuples = new Tuple<int, float>[dictionary.Count];
 
@@ -96,7 +65,7 @@ namespace Sir
 
         public override string ToString()
         {
-            return Data.HasValue ? new string(Data.Value.ToArray()) : Value.ToVectorString();
+            return Data.HasValue ? new string(Data.Value.ToArray()) : Value.ToString();
         }
     }
 

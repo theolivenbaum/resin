@@ -20,15 +20,15 @@ namespace Sir.Store
             _ixStream = indexStream;
         }
 
-        public void CreatePage(VectorNode column, Stream vectorStream, Stream postingsStream, IStringModel model, PageIndexWriter pageIndexWriter)
+        public void CreatePage(VectorNode column, Stream vectorStream, Stream postingsStream, PageIndexWriter pageIndexWriter)
         {
-            var page = GraphBuilder.SerializeTree(column, _ixStream, vectorStream, postingsStream, model);
+            var page = GraphBuilder.SerializeTree(column, _ixStream, vectorStream, postingsStream);
 
             pageIndexWriter.Put(page.offset, page.length);
 
             var size = PathFinder.Size(column);
 
-            this.Log($"serialized column {_keyId} level {column.Level} weight: {column.Weight} {size}");
+            this.Log($"serialized column {_keyId} level {column.Level} weight {column.Weight} {size}");
         }
 
         public void Dispose()

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Threading.Tasks;
+using System.Linq;
 
 namespace Sir.Store
 {
@@ -17,22 +17,21 @@ namespace Sir.Store
         private readonly IStringModel _model;
         private readonly IPostingsReader _postingsReader;
         private readonly MemoryMappedViewAccessor _vectorView;
-        private readonly DocumentStreamReader _streamReader;
+        private readonly DocumentReader _streamReader;
         private readonly ConcurrentDictionary<long, INodeReader> _nodeReaders;
 
         public ReadSession(ulong collectionId,
             SessionFactory sessionFactory, 
             IConfigurationProvider config,
             IStringModel model,
-            DocumentStreamReader streamReader) 
+            DocumentReader streamReader) 
             : base(collectionId, sessionFactory)
         {
             _config = config;
             _model = model;
             _streamReader = streamReader;
 
-            _postingsReader = new MemoryMappedPostingsReader(SessionFactory.OpenMMF(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"))
-                .CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read));
+            _postingsReader = new PostingsReader(SessionFactory.CreateReadStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos")));
 
             _vectorView = SessionFactory.OpenMMF(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"))
                 .CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
@@ -51,22 +50,18 @@ namespace Sir.Store
             foreach (var reader in _nodeReaders.Values)
                 reader.Dispose();
         }
-        public ReadResult Read(Query query)
+
+        public ReadResult Read(IEnumerable<Query> query, int skip, int take)
         {
-            this.Log("begin read session for query {0}", query);
+            var result = MapReduce(query, skip, take);
 
-            if (SessionFactory.CollectionExists(query.Collection))
+            if (result != null)
             {
-                var result = MapReduce(query);
+                var docs = ReadDocs(result.SortedDocuments);
 
-                if (result != null)
-                {
-                    var docs = ReadDocs(result.SortedDocuments);
+                this.Log("end read session for query {0}", query);
 
-                    this.Log("end read session for query {0}", query);
-
-                    return new ReadResult { Total = result.Total, Docs = docs };
-                }
+                return new ReadResult { Total = result.Total, Docs = docs };
             }
 
             this.Log("zero results for query {0}", query);
@@ -74,27 +69,128 @@ namespace Sir.Store
             return new ReadResult { Total = 0, Docs = new IDictionary<string, object>[0] };
         }
 
-        private ScoredResult MapReduce(Query query)
+        private ScoredResult MapReduce(IEnumerable<Query> query, int skip, int take)
         {
-            Map(query);
+            var mapped = Map(query).ToList();
 
             var timer = Stopwatch.StartNew();
 
             var result = new Dictionary<long, double>();
 
-            _postingsReader.Reduce(query.ToClauses(), result);
+            _postingsReader.Reduce(mapped, result);
 
             this.Log("reducing took {0}", timer.Elapsed);
 
             timer.Restart();
 
-            var sorted = Sort(result, query.Skip, query.Take);
+            var sorted = Sort(result, skip, take);
 
             this.Log("sorting took {0}", timer.Elapsed);
 
             return sorted;
         }
 
+        /// <summary>
+        /// Map query terms to index IDs.
+        /// </summary>
+        /// <param name="query">An un-mapped query</param>
+        public IEnumerable<Query> Map(IEnumerable<Query> query)
+        {
+            var timer = Stopwatch.StartNew();
+
+            foreach (var clause in query)
+            {
+                var indexReader = CreateIndexReader(clause.KeyId);
+
+                if (indexReader != null)
+                {
+                    foreach (var term in clause.Terms.Embeddings)
+                    {
+                        var hit = indexReader.ClosestTerm(term, _model);
+
+                        if (hit != null && hit.Score > 0)
+                        {
+                            var q = clause.Copy(term);
+
+                            q.Score = hit.Score;
+
+                            foreach (var offs in hit.Node.PostingsOffsets)
+                            {
+                                q.PostingsOffsets.Add(offs);
+                            }
+
+                            yield return q;
+                        }
+                    }
+                }
+            }
+
+            this.Log("mapping {0} took {1}", query, timer.Elapsed);
+        }
+
+        public IEnumerable<Query> Map2(IEnumerable<Query> query)
+        {
+            var timer = Stopwatch.StartNew();
+
+            foreach (var clause in query)
+            {
+                int? previousTermId = null;
+
+                var indexReader = CreateIndexReader(clause.KeyId);
+
+                if (indexReader != null)
+                {
+                    foreach (var term in clause.Terms.Embeddings)
+                    {
+                        var termHit = indexReader.ClosestTerm(term, _model);
+                        var termId = (int)(termHit == null ? -1 : termHit.Node.PostingsOffsets[0]);
+
+                        if (termId > -1)
+                        {
+                            IndexedVector vector = null;
+
+                            if (clause.TermCount == 1)
+                            {
+                                vector = new IndexedVector(
+                                    new int[2] { termId, termId },
+                                    new float[2] { 1, 1 },
+                                    _model.VectorWidth);
+                            }
+                            else if (previousTermId != null)
+                            {
+                                vector = new IndexedVector(
+                                    new int[2] { Math.Min(previousTermId.Value, termId), Math.Max(previousTermId.Value, termId) },
+                                    new float[2] { 1, 1 },
+                                    _model.VectorWidth);
+                            }
+
+                            previousTermId = termId;
+
+                            if (vector != null)
+                            {
+                                var hit = indexReader.ClosestNgram(vector, _model);
+
+                                if (hit != null && hit.Score > 0)
+                                {
+                                    var q = clause.Copy(term);
+
+                                    q.Score = hit.Score;
+
+                                    foreach (var offs in hit.Node.PostingsOffsets)
+                                    {
+                                        q.PostingsOffsets.Add(offs);
+                                    }
+
+                                    yield return q;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            this.Log("mapping {0} took {1}", query, timer.Elapsed);
+        }
 
         private static ScoredResult Sort(IDictionary<long, double> documents, int skip, int take)
         {
@@ -114,50 +210,6 @@ namespace Sir.Store
             return new ScoredResult { SortedDocuments = sortedByScore.GetRange(index, count), Total = sortedByScore.Count };
         }
 
-        /// <summary>
-        /// Map query terms to index IDs.
-        /// </summary>
-        /// <param name="query">An un-mapped query</param>
-        public void Map(Query query)
-        {
-            var timer = Stopwatch.StartNew();
-            var clauses = query.ToClauses();
-
-            Parallel.ForEach(clauses, clause =>
-            //foreach (var clause in clauses)
-            {
-                var cursor = clause;
-
-                while (cursor != null)
-                {
-                    var indexReader = cursor.Term.KeyId.HasValue ?
-                        CreateIndexReader(cursor.Term.KeyId.Value) :
-                        CreateIndexReader(cursor.Term.KeyHash);
-
-                    Hit hit = null;
-
-                    if (indexReader != null)
-                    {
-                        hit = indexReader.ClosestMatch(cursor.Term.Vector, _model);
-                    }
-
-                    if (hit != null && hit.Score > 0)
-                    {
-                        cursor.Score = hit.Score;
-
-                        foreach (var offs in hit.Node.PostingsOffsets)
-                        {
-                            cursor.PostingsOffsets.Add(offs);
-                        }
-                    }
-
-                    cursor = cursor.NextTermInClause;
-                }
-            });
-
-            this.Log("mapping {0} took {1}", query, timer.Elapsed);
-        }
-
         public INodeReader CreateIndexReader(long keyId)
         {
             var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
@@ -166,17 +218,6 @@ namespace Sir.Store
                 return null;
 
             return _nodeReaders.GetOrAdd(keyId, new MemoryMappedNodeReader(CollectionId, keyId, SessionFactory, _config, _vectorView));
-        }
-
-        public INodeReader CreateIndexReader(ulong keyHash)
-        {
-            long keyId;
-            if (!SessionFactory.TryGetKeyId(CollectionId, keyHash, out keyId))
-            {
-                return null;
-            }
-
-            return CreateIndexReader(keyId);
         }
 
         public IList<IDictionary<string, object>> ReadDocs(IEnumerable<KeyValuePair<long, double>> docs)

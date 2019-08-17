@@ -29,7 +29,7 @@ namespace Sir.HttpServer.Controllers
 
             ViewData["q"] = q;
 
-            var reader = _plugins.Get<IReader>("application/json");
+            var reader = _plugins.Get<IHttpReader>("application/json");
 
             if (reader == null)
             {

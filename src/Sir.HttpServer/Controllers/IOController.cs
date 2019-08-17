@@ -24,11 +24,11 @@ namespace Sir.HttpServer.Controllers
                 throw new ArgumentNullException(nameof(collectionName));
             }
 
-            var writer = _plugins.Get<IWriter>(Request.ContentType);
+            var writer = _plugins.Get<IHttpWriter>(Request.ContentType);
 
             if (writer == null)
             {
-                writer = _plugins.Get<IWriter>(Request.ContentType.Split(';', StringSplitOptions.RemoveEmptyEntries)[0]);
+                writer = _plugins.Get<IHttpWriter>(Request.ContentType.Split(';', StringSplitOptions.RemoveEmptyEntries)[0]);
             }
 
             if (writer == null)
@@ -54,7 +54,7 @@ namespace Sir.HttpServer.Controllers
         public IActionResult Get(string collectionName)
         {
             var mediaType = Request.Headers["Accept"].ToArray()[0];
-            var reader = _plugins.Get<IReader>(mediaType);
+            var reader = _plugins.Get<IHttpReader>(mediaType);
 
             if (reader == null)
             {

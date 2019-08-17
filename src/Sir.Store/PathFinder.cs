@@ -13,7 +13,7 @@ namespace Sir.Store
 
             while (cursor != null)
             {
-                var angle = model.CosAngle(vector, cursor.Vector);
+                var angle = cursor.Vector == null ? 0 : model.CosAngle(vector, cursor.Vector);
 
                 if (angle > model.FoldAngle)
                 {
@@ -36,11 +36,7 @@ namespace Sir.Store
                 }
             }
 
-            return new Hit
-            {
-                Score = highscore,
-                Node = best
-            };
+            return new Hit(best, highscore);
         }
 
         public static IEnumerable<VectorNode> All(VectorNode root)

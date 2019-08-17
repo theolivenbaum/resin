@@ -9,21 +9,18 @@ namespace Sir.Store
     public class WriteSession : CollectionSession, ILogger, IDisposable
     {
         private readonly IndexSession _termIndexSession;
-        private readonly IndexSession _ngramIndexSession;
-        private readonly DocumentStreamWriter _streamWriter;
+        private readonly DocumentWriter _streamWriter;
         private readonly IStringModel _model;
 
         public WriteSession(
             ulong collectionId,
             SessionFactory sessionFactory,
-            DocumentStreamWriter streamWriter,
+            DocumentWriter streamWriter,
             IConfigurationProvider config,
             IStringModel model,
-            IndexSession termIndexSession,
-            IndexSession ngramIndexSession) : base(collectionId, sessionFactory)
+            IndexSession termIndexSession) : base(collectionId, sessionFactory)
         {
             _termIndexSession = termIndexSession;
-            _ngramIndexSession = ngramIndexSession;
             _streamWriter = streamWriter;
             _model = model;
         }
@@ -42,13 +39,18 @@ namespace Sir.Store
         {
             foreach (var document in documents)
             {
-                document["__created"] = DateTime.Now.ToBinary();
+                document["_created"] = DateTime.Now.ToBinary();
 
                 var docMap = new List<(long keyId, long valId)>();
                 var docId = _streamWriter.GetNextDocId();
 
                 foreach (var key in document.Keys)
                 {
+                    if (key.StartsWith("__"))
+                    {
+                        continue;
+                    }
+
                     var val = document[key];
 
                     if (val == null)
@@ -56,38 +58,18 @@ namespace Sir.Store
                         continue;
                     }
 
-                    var keyStr = key.ToString();
+                    byte dataType;
 
-                    if (keyStr.StartsWith("___"))
+                    // store k/v
+                    var kvmap = _streamWriter.Put(key, val, out dataType);
+
+                    // store refs to k/v pair
+                    docMap.Add(kvmap);
+
+                    // add to index
+                    if (dataType == DataType.STRING && key.StartsWith("_") == false)
                     {
-                        continue;
-                    }
-
-                    var keyHash = keyStr.ToHash();
-                    long keyId;
-
-                    if (!SessionFactory.TryGetKeyId(CollectionId, keyHash, out keyId))
-                    {
-                        // We have a new key!
-
-                        // store key
-                        var keyInfo = _streamWriter.PutKey(keyStr);
-
-                        keyId = _streamWriter.PutKeyInfo(keyInfo.offset, keyInfo.len, keyInfo.dataType);
-                        SessionFactory.PersistKeyMapping(CollectionId, keyHash, keyId);
-                    }
-
-                    // store value
-                    var valInfo = _streamWriter.PutValue(val);
-                    var valId = _streamWriter.PutValueInfo(valInfo.offset, valInfo.len, valInfo.dataType);
-
-                    // store refs to keys and values
-                    docMap.Add((keyId, valId));
-
-                    // index
-                    if (valInfo.dataType == DataType.STRING && keyStr.StartsWith("_") == false)
-                    {
-                        _termIndexSession.Put(docId, keyId, (string)val);
+                        _termIndexSession.Put(docId, kvmap.keyId, (string)val);
                     }
                 }
 

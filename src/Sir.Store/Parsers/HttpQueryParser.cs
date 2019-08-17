@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Sir.Store
 {
@@ -8,143 +9,83 @@ namespace Sir.Store
     /// </summary>
     public class HttpQueryParser
     {
-        private readonly QueryParser _queryParser;
+        private readonly SessionFactory _sessionFactory;
+        private readonly IStringModel _model;
 
-        public HttpQueryParser(QueryParser queryParser)
+        public HttpQueryParser(SessionFactory sessionFactory, IStringModel model)
         {
-            _queryParser = queryParser;
+            _sessionFactory = sessionFactory;
+            _model = model;
         }
 
-        public Query Parse(ulong collectionId, IStringModel tokenizer, HttpRequest request)
+        public IEnumerable<Query> Parse(ulong collectionId, HttpRequest request)
         {
-            Query query = null;
-
-            string[] fields;
-
+            string[] fields = request.Query["fields"].ToArray();
             bool and = request.Query.ContainsKey("AND");
-            var termOperator = and ? "+" : "";
-
-            if (request.Query.ContainsKey("fields"))
-            {
-                fields = request.Query["fields"].ToArray();
-            }
-            else
-            {
-                fields = new[] { "title", "body" };
-            }
-
+            bool or = !and;
+            const bool not = false;
             var isFormatted = request.Query.ContainsKey("qf");
 
             if (isFormatted)
             {
                 var formattedQuery = request.Query["qf"].ToString();
-                query = FromFormattedString(collectionId, formattedQuery, tokenizer);
+                foreach (var q in FromFormattedString(collectionId, formattedQuery, _model, and, or, not))
+                    yield return q;
             }
             else
             {
-                string queryFormat = string.Empty;
+                var document = new Dictionary<string, object>();
+                var q = request.Query["q"].ToString();
 
-                if (request.Query.ContainsKey("format"))
+                foreach (var field in fields)
                 {
-                    queryFormat = request.Query["format"].ToArray()[0];
+                    document.Add(field, q);
                 }
-                else
+
+                foreach (var field in document)
                 {
-                    foreach (var field in fields)
+                    long keyId;
+
+                    if (_sessionFactory.TryGetKeyId(collectionId, field.Key.ToHash(), out keyId))
                     {
-                        queryFormat += (termOperator + field + ":{0}\n");
+                        yield return new Query(collectionId, keyId, _model.Tokenize((string)field.Value), and, or, not);
                     }
-
-                    queryFormat = queryFormat.Substring(0, queryFormat.Length - 1);
                 }
-
-                var formattedQuery = string.Format(queryFormat, request.Query["q"]);
-
-                query = _queryParser.Parse(collectionId, formattedQuery, tokenizer);
             }
-
-            if (request.Query.ContainsKey("take"))
-                query.Take = int.Parse(request.Query["take"]);
-
-            if (request.Query.ContainsKey("skip"))
-                query.Skip = int.Parse(request.Query["skip"]);
-
-            return query;
         }
 
-        public Query FromFormattedString(ulong collectionId, string formattedQuery, IStringModel tokenizer)
+        public IEnumerable<Query> FromFormattedString(ulong collectionId, string formattedQuery, IStringModel model, bool and, bool or, bool not)
         {
-            Query root = null;
-            var lines = formattedQuery
-                .Replace("\r", "\n")
-                .Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            var document = JsonConvert.DeserializeObject<IDictionary<string, object>>(formattedQuery);
 
-            foreach (var line in lines)
+            foreach (var field in document)
             {
-                Query x = null;
-
-                var cleanLine = line
-                    .Replace("(", "")
-                    .Replace(")", "\n")
-                    .Replace("++", "+")
-                    .Replace("--", "-");
-
-                string[] terms;
-                
-                if (cleanLine.ContainsMany(':'))
+                if (field.Value is string)
                 {
-                    terms = cleanLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                }
-                else
-                {
-                    terms = new string[] { cleanLine };
-                }
+                    long keyId;
 
-                object lastField = string.Empty;
-
-                foreach (var term in terms)
-                {
-                    var t = term;
-
-                    if (!term.Contains(':'))
+                    if (_sessionFactory.TryGetKeyId(collectionId, field.Key.ToHash(), out keyId))
                     {
-                        t = $"{lastField}:{term}";
+                        yield return new Query(collectionId, keyId, model.Tokenize((string)field.Value), and, or, not);
                     }
-
-                    var query = _queryParser.Parse(collectionId, t, tokenizer);
-
-                    lastField = query.Term.Key;
-
-                    if (x == null)
-                    {
-                        x = query;
-                    }
-                    else
-                    {
-                        x.AddClause(query);
-                    }
-                }
-
-                if (root == null)
-                {
-                    root = x;
-                }
-                else
-                {
-                    var last = root;
-                    var next = last.NextClause;
-
-                    while (next != null)
-                    {
-                        last = next;
-                        next = last.NextClause;
-                    }
-
-                    last.NextClause = x;
                 }
             }
+        }
 
-            return root;
+        public IEnumerable<Query> FromDocument(ulong collectionId, IDictionary<string, object> document, IStringModel model, bool and, bool or, bool not)
+        {
+            foreach (var field in document)
+            {
+                if (field.Value is string)
+                {
+                    long keyId;
+
+                    if (_sessionFactory.TryGetKeyId(collectionId, field.Key.ToHash(), out keyId))
+                    {
+                        yield return new Query(collectionId, keyId, model.Tokenize((string)field.Value), and, or, not);
+                    }
+                }
+            }
         }
     }
 }

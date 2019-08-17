@@ -9,14 +9,14 @@ namespace Sir.Store
     /// <summary>
     /// Write into a collection.
     /// </summary>
-    public class StoreWriter : IWriter, ILogger
+    public class HttpWriter : IHttpWriter, ILogger
     {
         public string ContentType => "application/json";
 
         private readonly SessionFactory _sessionFactory;
         private readonly Stopwatch _timer;
 
-        public StoreWriter(SessionFactory sessionFactory)
+        public HttpWriter(SessionFactory sessionFactory)
         {
             _sessionFactory = sessionFactory;
             _timer = new Stopwatch();

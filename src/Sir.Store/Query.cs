@@ -12,17 +12,24 @@ namespace Sir.Store
         private bool _or;
         private bool _not;
 
-        public Query(ulong collectionId, Term term, bool and = false, bool or = true, bool not = false)
+        public Query(ulong collectionId, long keyId, AnalyzedData terms, bool and = false, bool or = true, bool not = false)
         {
-            Term = term;
+            Terms = terms;
             PostingsOffsets = new List<long>();
             And = and;
             Or = or;
             Not = not;
-            Collection = collectionId;
+            CollectionId = collectionId;
+            KeyId = keyId;
         }
 
-        public ulong Collection { get; private set; }
+        public Query Copy(IVector vector)
+        {
+            return new Query(CollectionId, KeyId, new AnalyzedData(new IVector[1] { vector }), And, Or, Not);
+        }
+
+        public long KeyId { get; }
+        public ulong CollectionId { get; private set; }
         public bool And
         {
             get { return _and; }
@@ -65,80 +72,23 @@ namespace Sir.Store
                 }
             }
         }
-        public Term Term { get; private set; }
-        public Query NextClause { get; set; }
-        public Query NextTermInClause { get; set; }
-        public int Skip { get; set; }
-        public int Take { get; set; }
+        public AnalyzedData Terms { get; private set; }
         public IList<long> PostingsOffsets { get; set; }
         public double Score { get; set; }
+        public int TermCount { get { return Terms.Embeddings.Count; } }
 
         public override string ToString()
         {
             var result = new StringBuilder();
-            var query = this;
 
-            while (query != null)
+            foreach (var term in Terms.Embeddings)
             {
-                var termResult = new StringBuilder();
-                var term = query;
-                var queryop = query.And ? "+" : query.Or ? string.Empty : "-";
-                var termop = term.And ? "+" : term.Or ? string.Empty : "-";
+                var queryop = And ? "+" : Or ? "" : "-";
 
-                while (term != null)
-                {
-                    termResult.AppendFormat("{0}{1} ", termop, term.Term);
-
-                    term = term.NextTermInClause;
-                }
-
-                result.AppendFormat("{0}({1})\n", queryop, termResult.ToString().TrimEnd());
-
-                query = query.NextClause;
-            
+                result.AppendFormat("{0}{1} ", queryop, term.ToString());
             }
 
-            return result.ToString();
-        }
-
-        public string ToDiagram()
-        {
-            var x = this;
-            var diagram = new StringBuilder();
-
-            while (x != null)
-            {
-                diagram.AppendLine(x.ToString());
-
-                x = x.NextClause;
-            }
-
-            return diagram.ToString();
-        }
-
-        public IEnumerable<Query> ToClauses()
-        {
-            Query q = this;
-
-            while (q != null)
-            {
-                yield return q;
-                q = q.NextClause;
-            }
-        }
-
-        public Query AddClause(Query query)
-        {
-            if (NextTermInClause == null)
-            {
-                NextTermInClause = query;
-            }
-            else
-            {
-                NextTermInClause.AddClause(query);
-            }
-
-            return this;
+            return result.ToString().TrimEnd();
         }
     }
 }

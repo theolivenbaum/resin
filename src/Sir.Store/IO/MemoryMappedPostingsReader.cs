@@ -20,53 +20,46 @@ namespace Sir.Store
         {
             foreach (var q in mappedQuery)
             {
-                var cursor = q;
+                var termResult = Read(q.PostingsOffsets);
 
-                while (cursor != null)
+                if (q.And)
                 {
-                    var termResult = Read(cursor.PostingsOffsets);
-
-                    if (cursor.And)
+                    foreach (var hit in termResult)
                     {
-                        foreach (var hit in termResult)
-                        {
-                            double score;
+                        double score;
 
-                            if (result.TryGetValue(hit, out score))
-                            {
-                                result[hit] = score + cursor.Score;
-                            }
-                            else
-                            {
-                                result.Remove(hit);
-                            }
+                        if (result.TryGetValue(hit, out score))
+                        {
+                            result[hit] = score + q.Score;
+                        }
+                        else
+                        {
+                            result.Remove(hit);
                         }
                     }
-                    else if (cursor.Not)
+                }
+                else if (q.Not)
+                {
+                    foreach (var doc in termResult)
                     {
-                        foreach (var doc in termResult)
+                        result.Remove(doc);
+                    }
+                }
+                else // Or
+                {
+                    foreach (var doc in termResult)
+                    {
+                        double score;
+
+                        if (result.TryGetValue(doc, out score))
                         {
-                            result.Remove(doc);
+                            result[doc] = score + q.Score;
+                        }
+                        else
+                        {
+                            result.Add(doc, q.Score);
                         }
                     }
-                    else // Or
-                    {
-                        foreach (var doc in termResult)
-                        {
-                            double score;
-
-                            if (result.TryGetValue(doc, out score))
-                            {
-                                result[doc] = score + cursor.Score;
-                            }
-                            else
-                            {
-                                result.Add(doc, cursor.Score);
-                            }
-                        }
-                    }
-
-                    cursor = cursor.NextTermInClause;
                 }
             }
         }

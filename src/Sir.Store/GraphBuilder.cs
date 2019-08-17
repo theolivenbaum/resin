@@ -10,7 +10,7 @@ namespace Sir.Store
         public static bool TryMerge(
             VectorNode root, 
             VectorNode node, 
-            IStringModel model, 
+            IEuclidDistance model, 
             out VectorNode parent)
         {
             var cursor = root;
@@ -53,10 +53,10 @@ namespace Sir.Store
             }
         }
 
-        public static long GetIdConcurrent(
+        public static long GetOrIncrementIdConcurrent(
             VectorNode root, 
-            VectorNode node, 
-            IStringModel model, 
+            VectorNode node,
+            IEuclidDistance model, 
             double foldAngle, 
             double identicalAngle,
             Func<long> identity)
@@ -122,8 +122,8 @@ namespace Sir.Store
 
         public static bool TryMergeConcurrent(
             VectorNode root, 
-            VectorNode node, 
-            IStringModel model, 
+            VectorNode node,
+            IEuclidDistance model, 
             double foldAngle, 
             double identicalAngle)
         {
@@ -246,7 +246,7 @@ namespace Sir.Store
         }
 
         public static (long offset, long length) SerializeTree(
-            VectorNode node, Stream indexStream, Stream vectorStream, Stream postingsStream, IStringModel model)
+            VectorNode node, Stream indexStream, Stream vectorStream, Stream postingsStream)
         {
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;
@@ -261,7 +261,7 @@ namespace Sir.Store
                 if (node.PostingsOffset == -1)
                     SerializePostings(node, postingsStream);
 
-                node.VectorOffset = model.SerializeVector(node.Vector, vectorStream);
+                node.VectorOffset = VectorOperations.SerializeVector(node.Vector, vectorStream);
 
                 SerializeNode(node, indexStream);
 
@@ -290,7 +290,7 @@ namespace Sir.Store
             StreamHelper.SerializeHeaderAndPayload(node.DocIds, node.DocIds.Count, postingsStream);
         }
 
-        public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, IStringModel tokenizer)
+        public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, IEuclidDistance model)
         {
             // Deserialize node
             var vecOffset = BitConverter.ToInt64(nodeBuffer, 0);
@@ -299,7 +299,7 @@ namespace Sir.Store
             var weight = BitConverter.ToInt64(nodeBuffer, sizeof(long) + sizeof(long) + sizeof(long));
             var terminator = BitConverter.ToInt64(nodeBuffer, sizeof(long) + sizeof(long) + sizeof(long) + sizeof(long));
 
-            return DeserializeNode(vecOffset, postingsOffset, vectorCount, weight, terminator, vectorStream, tokenizer);
+            return DeserializeNode(vecOffset, postingsOffset, vectorCount, weight, terminator, vectorStream, model);
         }
 
         public static VectorNode DeserializeNode(
@@ -309,9 +309,9 @@ namespace Sir.Store
             long weight,
             long terminator,
             Stream vectorStream,
-            IStringModel tokenizer)
+            IEuclidDistance model)
         {
-            var vector = tokenizer.DeserializeVector(vecOffset, (int)componentCount, vectorStream);
+            var vector = VectorOperations.DeserializeVector(vecOffset, (int)componentCount, model.VectorWidth, vectorStream);
             var node = new VectorNode(postingsOffset, vecOffset, terminator, weight, vector);
 
             return node;
@@ -323,7 +323,7 @@ namespace Sir.Store
             VectorNode root,
             float identicalAngle, 
             float foldAngle,
-            IStringModel model)
+            IEuclidDistance model)
         {
             var buf = new byte[VectorNode.BlockSize];
             int read = indexStream.Read(buf);
@@ -348,7 +348,7 @@ namespace Sir.Store
             long indexLength,
             VectorNode root,
             (float identicalAngle, float foldAngle) similarity,
-            IStringModel model)
+            IEuclidDistance model)
         {
             int read = 0;
             var buf = new byte[VectorNode.BlockSize];
@@ -369,7 +369,7 @@ namespace Sir.Store
             }
         }
 
-        public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, long indexLength, IStringModel tokenizer)
+        public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, long indexLength, IEuclidDistance model)
         {
             VectorNode root = new VectorNode();
             VectorNode cursor = root;
@@ -381,7 +381,7 @@ namespace Sir.Store
             {
                 indexStream.Read(buf);
 
-                var node = DeserializeNode(buf, vectorStream, tokenizer);
+                var node = DeserializeNode(buf, vectorStream, model);
 
                 if (node.Terminator == 0) // there is both a left and a right child
                 {

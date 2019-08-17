@@ -22,27 +22,7 @@ namespace Sir.DbUtil
             var model = new BocModel();
             var command = args[0].ToLower();
 
-            if (command == "query")
-            {
-                // example: query C:\projects\resin\src\Sir.HttpServer\App_Data www
-
-                Query(
-                    dir: args[1], 
-                    collectionName: args[2],
-                    model);
-            }
-            else if (command == "validate")
-            {
-                // example: validate C:\projects\resin\src\Sir.HttpServer\App_Data www 0 3000
-
-                Validate(
-                    dir: args[1], 
-                    collectionName: args[2], 
-                    skip: int.Parse(args[3]), 
-                    take: int.Parse(args[4]),
-                    model);
-            }
-            else if (command == "submit")
+            if (command == "submit")
             {
                 var fileName = args[1];
                 var uri = new Uri(args[2]);
@@ -117,7 +97,7 @@ namespace Sir.DbUtil
 
                                 foreach (var stat in info.Info)
                                 {
-                                    if (stat.Weight > 1000)
+                                    if (stat.Weight > 500)
                                         Console.WriteLine(stat);
 
                                     segments++;
@@ -183,59 +163,6 @@ namespace Sir.DbUtil
                 ser.Serialize(jsonWriter, docs);
                 jsonWriter.Flush();
             }
-        }
-
-        private static void Query(string dir, string collectionName, IStringModel model)
-        {
-            var tokenizer = new BocModel();
-            var qp = new QueryParser();
-            var sessionFactory = new SessionFactory(
-                new IniConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "sir.ini")), model);
-
-            while (true)
-            {
-                Console.Write("query>");
-
-                var input = Console.ReadLine();
-
-                if (string.IsNullOrWhiteSpace(input) || input == "q" || input == "quit")
-                {
-                    break;
-                }
-
-                var q = qp.Parse(collectionName.ToHash(), input, tokenizer);
-                q.Skip = 0;
-                q.Take = 100;
-
-                using (var session = sessionFactory.CreateReadSession(collectionName.ToHash()))
-                {
-                    var result = session.Read(q);
-                    var docs = result.Docs;
-
-                    var index = 0;
-
-                    foreach (var doc in docs.Take(10))
-                    {
-                        Console.WriteLine("{0} {1} {2}", index++, doc["___score"], doc["title"]);
-                    }
-                }
-            }
-        }
-
-        private static void Validate(string dir, string collectionName, int skip, int take, IStringModel model)
-        {
-            var time = Stopwatch.StartNew();
-
-            using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
-            {
-                using (var documentStreamSession = sessionFactory.CreateDocumentStreamSession(collectionName.ToHash()))
-                using (var validateSession = sessionFactory.CreateValidateSession(collectionName.ToHash()))
-                {
-                    validateSession.Validate(documentStreamSession.ReadDocs(skip, take));
-                }
-            }
-
-            Logging.Log(null, string.Format("{0} validate operation took {1}", collectionName, time.Elapsed));
         }
     }
 }

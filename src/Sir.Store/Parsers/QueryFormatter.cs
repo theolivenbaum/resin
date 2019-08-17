@@ -4,10 +4,17 @@ namespace Sir.Store
 {
     public class QueryFormatter : IQueryFormatter
     {
+        private readonly SessionFactory _sessionFactory;
+
+        public QueryFormatter(SessionFactory sessionFactory)
+        {
+            _sessionFactory = sessionFactory;
+        }
+
         public string Format(string collectionName, IStringModel tokenizer, HttpRequest request)
         {
-            return new HttpQueryParser(new QueryParser())
-                .Parse(collectionName.ToHash(), tokenizer, request).ToString();
+            return new HttpQueryParser(_sessionFactory, tokenizer)
+                .Parse(collectionName.ToHash(), request).ToString();
         }
     }
 }

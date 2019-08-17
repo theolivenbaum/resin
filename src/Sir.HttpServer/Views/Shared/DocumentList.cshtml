@@ -18,7 +18,7 @@
                 var uri = new Uri(prefix + url);
                 var host = uri.Host.ToString();
                 var title = item.Document.ContainsKey("title") ? item.Document["title"].ToString() : "Unknown title";
-                var created = (long)item.Document["__created"];
+                var created = (long)item.Document["_created"];
                 <li>
                     <div>
                         <div class="document-header">

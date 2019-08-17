@@ -11,15 +11,14 @@ namespace Sir.Store
             IServiceCollection services, ServiceProvider serviceProvider, IConfigurationProvider config)
         {
             var model = new BocModel();
-            var httpParser = new HttpQueryParser(new QueryParser());
             var sessionFactory = new SessionFactory(config, model);
+            var httpParser = new HttpQueryParser(sessionFactory, model);
 
             services.AddSingleton(typeof(IStringModel), model);
             services.AddSingleton(typeof(SessionFactory), sessionFactory);
             services.AddSingleton(typeof(HttpQueryParser), httpParser);
-            services.AddSingleton(typeof(IQueryFormatter), new QueryFormatter());
-            services.AddSingleton(typeof(IWriter), new StoreWriter(sessionFactory));
-            services.AddSingleton(typeof(IReader), new StoreReader(sessionFactory, httpParser));
+            services.AddSingleton(typeof(IHttpWriter), new HttpWriter(sessionFactory));
+            services.AddSingleton(typeof(IHttpReader), new HttoReader(sessionFactory, httpParser));
         }
     }
 }

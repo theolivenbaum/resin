@@ -18,25 +18,5 @@ namespace Sir.Store.Tests
         {
             _sessionFactory.Dispose();
         }
-
-        [Test]
-        public void Can_validate()
-        {
-            var documents = new GoogleFeed("google-feed.json").Take(100);
-            var collection = "Can_validate";
-            var collectionId = collection.ToHash();
-            var comparer = new DocumentComparer();
-            var model = new BocModel();
-
-            _sessionFactory.Truncate(collectionId);
-
-            _sessionFactory.Write(new Job(collectionId, documents, model));
-
-            using (var documentStreamSession = _sessionFactory.CreateDocumentStreamSession(collectionId))
-            using (var validateSession = _sessionFactory.CreateValidateSession(collectionId))
-            {
-                validateSession.Validate(documentStreamSession.ReadDocs());
-            }
-        }
     }
 }

@@ -4,6 +4,8 @@ namespace Sir.Store
 {
     public interface INodeReader : IDisposable
     {
-        Hit ClosestMatch(IVector vector, IStringModel model);
+        long KeyId { get; }
+        Hit ClosestTerm(IVector vector, IStringModel model);
+        Hit ClosestNgram(IVector vector, IStringModel model);
     }
 }

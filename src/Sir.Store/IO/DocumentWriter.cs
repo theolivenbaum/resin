@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Sir.Store
 {
-    public class DocumentStreamWriter : IDisposable
+    public class DocumentWriter : IDisposable
     {
         private readonly ValueWriter _vals;
         private readonly ValueWriter _keys;
@@ -12,8 +12,10 @@ namespace Sir.Store
         private readonly ValueIndexWriter _valIx;
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
+        private readonly ulong _collectionId;
+        private readonly SessionFactory _sessionFactory;
 
-        public DocumentStreamWriter(ulong collectionId, SessionFactory sessionFactory)
+        public DocumentWriter(ulong collectionId, SessionFactory sessionFactory)
         {
             var valueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)), int.Parse(sessionFactory.Config.Get("value_stream_write_buffer_size")));
             var keyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));
@@ -28,6 +30,35 @@ namespace Sir.Store
             _valIx = new ValueIndexWriter(valueIndexStream);
             _keyIx = new ValueIndexWriter(keyIndexStream);
             _docIx = new DocIndexWriter(docIndexStream);
+            _collectionId = collectionId;
+            _sessionFactory = sessionFactory;
+        }
+
+        public (long keyId, long valueId) Put(string key, object val, out byte dataType)
+        {
+            var keyStr = key.ToString();
+            var keyHash = keyStr.ToHash();
+            long keyId;
+
+            if (!_sessionFactory.TryGetKeyId(_collectionId, keyHash, out keyId))
+            {
+                // We have a new key!
+
+                // store key
+                var keyInfo = PutKey(keyStr);
+
+                keyId = PutKeyInfo(keyInfo.offset, keyInfo.len, keyInfo.dataType);
+                _sessionFactory.PersistKeyMapping(_collectionId, keyHash, keyId);
+            }
+
+            // store value
+            var valInfo = PutValue(val);
+            var valId = PutValueInfo(valInfo.offset, valInfo.len, valInfo.dataType);
+
+            dataType = valInfo.dataType;
+
+            // return refs to key and value
+            return (keyId, valId);
         }
 
         public long GetNextDocId()

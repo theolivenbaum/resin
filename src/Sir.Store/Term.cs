@@ -5,14 +5,14 @@
     /// </summary>
     public class Term
     {
-        public object Key { get; private set; }
+        public string Key { get; private set; }
         public AnalyzedData TokenizedString { get; private set; }
         public ulong KeyHash { get; private set; }
         public int Index { get; private set; }
         public long? KeyId { get; private set; }
         public IVector Vector { get; private set; }
 
-        public Term(object key, AnalyzedData tokenizedString, int index)
+        public Term(string key, AnalyzedData tokenizedString, int index)
         {
             Key = key;
             KeyHash = key.ToHash();
@@ -21,24 +21,10 @@
             Vector = tokenizedString.Embeddings[index];
         }
 
-        public Term(long keyId, AnalyzedData tokenizedString, int index)
-        {
-            KeyId = keyId;
-            TokenizedString = tokenizedString;
-            Index = index;
-            Vector = tokenizedString.Embeddings[index];
-        }
-
-        public Term(object key, VectorNode node)
+        public Term(string key, VectorNode node)
         {
             Key = key;
             KeyHash = key.ToHash();
-            Vector = node.Vector;
-        }
-
-        public Term(long keyId, VectorNode node)
-        {
-            KeyId = keyId;
             Vector = node.Vector;
         }
 

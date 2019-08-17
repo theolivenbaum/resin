@@ -2,64 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 
 namespace Sir.Store
 {
     public class BocModel : IStringModel
     {
-        public long SerializeVector(IVector vector, Stream vectorStream)
-        {
-            var pos = vectorStream.Position;
-
-            vector.Serialize(vectorStream);
-
-            return pos;
-        }
-
-        public IVector DeserializeVector(long vectorOffset, int componentCount, MemoryMappedViewAccessor vectorView)
-        {
-            if (vectorView == null)
-            {
-                throw new ArgumentNullException(nameof(vectorView));
-            }
-
-            var index = new int[componentCount];
-            var values = new float[componentCount];
-
-            var read = vectorView.ReadArray(vectorOffset, index, 0, index.Length);
-
-            if (read < componentCount)
-                throw new Exception("bad");
-
-            read = vectorView.ReadArray(vectorOffset + (componentCount*sizeof(int)), values, 0, values.Length);
-
-            if (read < componentCount)
-                throw new Exception("bad");
-
-            return new IndexedVector(index, values, VectorWidth);
-        }
-
-        public IVector DeserializeVector(long vectorOffset, int componentCount, Stream vectorStream)
-        {
-            Span<byte> buf = new byte[componentCount * 2 * sizeof(float)];
-
-            vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
-            vectorStream.Read(buf);
-
-            var index = MemoryMarshal.Cast<byte, int>(buf.Slice(0, componentCount * sizeof(int)));
-            var values = MemoryMarshal.Cast<byte, float>(buf.Slice(componentCount * sizeof(float)));
-            var tuples = new Tuple<int, float>[componentCount];
-
-            for (int i = 0; i < componentCount; i++)
-            {
-                tuples[i] = new Tuple<int, float>(index[i], values[i]);
-            }
-
-            return new IndexedVector(tuples, VectorWidth);
-        }
-
         public AnalyzedData Tokenize(string text)
         {
             Span<char> source = text.ToCharArray();
@@ -81,7 +29,7 @@ namespace Sir.Store
 
                         if (len > 0)
                         {
-                            embeddings.Add(new IndexedVector(embedding, source.Slice(offset, len).ToArray()));
+                            embeddings.Add(new IndexedVector(embedding, source.Slice(offset, len).ToArray(), VectorWidth));
 
                             embedding = new SortedList<int, float>();
                         }
@@ -116,27 +64,22 @@ namespace Sir.Store
 
                 if (len > 0)
                 {
-                    embeddings.Add(new IndexedVector(embedding, source.Slice(offset, len).ToArray()));
+                    embeddings.Add(new IndexedVector(embedding, source.Slice(offset, len).ToArray(), VectorWidth));
                 }
             }
 
             return new AnalyzedData(embeddings);
         }
 
-        /******************************************/
-
-        public double IdenticalAngle0 => 0.01d;
-        public double FoldAngle0 => 0.0001d;
-
-        public double IdenticalAngle1 => 0.35d;
-        public double FoldAngle1 => 0.2d;
-
+        public double IdenticalAngleFirst => 0.01d;
+        public double FoldAngleFirst => 0.0001d;
+        public double IdenticalAngleSecond => 0.2d;
+        public double FoldAngleSecond => 0.1d;
         public double IdenticalAngle => 0.85;
-        public double FoldAngle => 0.6d;
-
-        /******************************************/
-
-        public int VectorWidth => 100;
+        public double FoldAngle => 0.55d;
+        public double IdenticalAngleNgram => 0.99;
+        public double FoldAngleNgram => 0.49d;
+        public int VectorWidth => int.MaxValue;
 
         public double CosAngle(IVector vec1, IVector vec2)
         {
