@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Buffers;
+using System.Collections.Concurrent;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Threading.Tasks;
@@ -160,11 +161,12 @@ namespace Sir.Store
             double identicalAngle,
             long offset = 0)
         {
-            var block = new long[5];
+            const int blockLength = 5;
+            long[] block = ArrayPool<long>.Shared.Rent(blockLength);
             VectorNode best = null;
             double highscore = 0;
 
-            var read = indexView.ReadArray(offset, block, 0, block.Length);
+            var read = indexView.ReadArray(offset, block, 0, blockLength);
 
             offset += VectorNode.BlockSize;
 
@@ -204,7 +206,7 @@ namespace Sir.Store
                         // There exists either a left and a right child or just a left child.
                         // Either way, we want to go left and the next node in bitmap is the left child.
 
-                        read = indexView.ReadArray(offset, block, 0, block.Length);
+                        read = indexView.ReadArray(offset, block, 0, blockLength);
 
                         offset += VectorNode.BlockSize;
                     }
@@ -237,7 +239,7 @@ namespace Sir.Store
 
                         SkipTree(indexView, ref offset);
 
-                        read = indexView.ReadArray(offset, block, 0, block.Length);
+                        read = indexView.ReadArray(offset, block, 0, blockLength);
 
                         offset += VectorNode.BlockSize;
                     }
@@ -246,7 +248,7 @@ namespace Sir.Store
                         // Next node in bitmap is the right child,
                         // which is good because we want to go right.
 
-                        read = indexView.ReadArray(offset, block, 0, block.Length);
+                        read = indexView.ReadArray(offset, block, 0, blockLength);
 
                         offset += VectorNode.BlockSize;
                     }
