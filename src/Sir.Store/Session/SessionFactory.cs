@@ -247,7 +247,22 @@ namespace Sir.Store
         public ReadSession CreateReadSession(ulong collectionId)
         {
             return new ReadSession(
-                collectionId, this, Config, Model, new DocumentReader(collectionId, this));
+                collectionId, 
+                this, 
+                Config,
+                Model, 
+                new DocumentReader(collectionId, this),
+                new PostingsReader(CreateReadStream(Path.Combine(Dir, $"{collectionId}.pos"))));
+        }
+
+        public ValidateSession CreateValidateSession(ulong collectionId)
+        {
+            return new ValidateSession(
+                collectionId,
+                this,
+                Model,
+                Config,
+                new PostingsReader(CreateReadStream(Path.Combine(Dir, $"{collectionId}.pos"))));
         }
 
         public Stream CreateAsyncReadStream(string fileName, int bufferSize = 4096)

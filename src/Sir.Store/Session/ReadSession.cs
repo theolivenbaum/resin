@@ -24,14 +24,14 @@ namespace Sir.Store
             SessionFactory sessionFactory, 
             IConfigurationProvider config,
             IStringModel model,
-            DocumentReader streamReader) 
+            DocumentReader streamReader,
+            IPostingsReader postingsReader) 
             : base(collectionId, sessionFactory)
         {
             _config = config;
             _model = model;
             _streamReader = streamReader;
-
-            _postingsReader = new PostingsReader(SessionFactory.CreateReadStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos")));
+            _postingsReader = postingsReader;
 
             _vectorView = SessionFactory.OpenMMF(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"))
                 .CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
@@ -67,6 +67,31 @@ namespace Sir.Store
             this.Log("zero results for query {0}", query);
 
             return new ReadResult { Total = 0, Docs = new IDictionary<string, object>[0] };
+        }
+
+        public bool IsValid(Query query, long docId)
+        {
+            var indexReader = CreateIndexReader(query.KeyId);
+
+            if (indexReader != null)
+            {
+                foreach (var term in query.Terms.Embeddings)
+                {
+                    var hit = indexReader.ClosestTerm(term, _model);
+
+                    if (hit == null || hit.Score < _model.IdenticalAngle)
+                    {
+                        return false;
+                    }
+
+                    var docIds = _postingsReader.Read(hit.Node.PostingsOffsets, _model.IdenticalAngle);
+
+                    if (!docIds.ContainsKey(docId))
+                        return false;
+                }
+            }
+
+            return true;
         }
 
         private ScoredResult MapReduce(IEnumerable<Query> query, int skip, int take)

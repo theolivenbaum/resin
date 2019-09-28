@@ -12,24 +12,22 @@ namespace Sir.Store
         private bool _or;
         private bool _not;
 
-        public Query(ulong collectionId, long keyId, AnalyzedData terms, bool and = false, bool or = true, bool not = false)
+        public Query(long keyId, AnalyzedData terms, bool and = false, bool or = true, bool not = false)
         {
             Terms = terms;
             PostingsOffsets = new List<long>();
             And = and;
             Or = or;
             Not = not;
-            CollectionId = collectionId;
             KeyId = keyId;
         }
 
         public Query Copy(IVector vector)
         {
-            return new Query(CollectionId, KeyId, new AnalyzedData(new IVector[1] { vector }), And, Or, Not);
+            return new Query(KeyId, new AnalyzedData(new IVector[1] { vector }), And, Or, Not);
         }
 
         public long KeyId { get; }
-        public ulong CollectionId { get; private set; }
         public bool And
         {
             get { return _and; }

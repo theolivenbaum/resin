@@ -131,7 +131,7 @@ namespace Sir.HttpServer.Features
             {
                 const string key = "_url";
                 var keyId = _sessionFactory.GetKeyId(collectionName.ToHash(), key.ToHash());
-                var urlQuery = new Query(collectionName.ToHash(), keyId, _model.Tokenize(url));
+                var urlQuery = new Query(keyId, _model.Tokenize(url));
                 urlQuery.And = true;
 
                 var result = readSession.Read(new Query[1] { urlQuery }, 0, 1).Docs.ToList();

@@ -94,5 +94,17 @@ namespace Sir.Store
         {
             _view.Dispose();
         }
+
+        public IDictionary<long, double> Read(IList<long> offsets, double score)
+        {
+            var result = new Dictionary<long, double>();
+
+            foreach (var x in Read(offsets))
+            {
+                result.Add(x, score);
+            }
+
+            return result;
+        }
     }
 }

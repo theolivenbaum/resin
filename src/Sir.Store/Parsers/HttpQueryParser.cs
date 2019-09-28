@@ -48,7 +48,7 @@ namespace Sir.Store
 
                     if (_sessionFactory.TryGetKeyId(collectionId, field.Key.ToHash(), out keyId))
                     {
-                        yield return new Query(collectionId, keyId, _model.Tokenize((string)field.Value), and, or, not);
+                        yield return new Query(keyId, _model.Tokenize((string)field.Value), and, or, not);
                     }
                 }
             }
@@ -66,7 +66,7 @@ namespace Sir.Store
 
                     if (_sessionFactory.TryGetKeyId(collectionId, field.Key.ToHash(), out keyId))
                     {
-                        yield return new Query(collectionId, keyId, model.Tokenize((string)field.Value), and, or, not);
+                        yield return new Query(keyId, model.Tokenize((string)field.Value), and, or, not);
                     }
                 }
             }
@@ -82,7 +82,7 @@ namespace Sir.Store
 
                     if (_sessionFactory.TryGetKeyId(collectionId, field.Key.ToHash(), out keyId))
                     {
-                        yield return new Query(collectionId, keyId, model.Tokenize((string)field.Value), and, or, not);
+                        yield return new Query(keyId, model.Tokenize((string)field.Value), and, or, not);
                     }
                 }
             }

@@ -65,7 +65,7 @@ namespace Sir.Store
             }
         }
 
-        private IDictionary<long, double> Read(IList<long> offsets, double score)
+        public IDictionary<long, double> Read(IList<long> offsets, double score)
         {
             var result = new Dictionary<long, double>();
 

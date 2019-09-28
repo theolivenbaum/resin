@@ -115,6 +115,34 @@ namespace Sir.DbUtil
 
                 Console.Read();
             }
+            else if (command == "validate")
+            {
+                var fileName = args[1];
+                var dir = args[2];
+                var collection = args[3];
+                var skip = int.Parse(args[4]);
+                var take = int.Parse(args[5]);
+                var collectionId = collection.ToHash();
+                var time = Stopwatch.StartNew();
+
+                using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
+                {
+                    using (var validateSession = sessionFactory.CreateValidateSession(collectionId))
+                    using (var documents = new DocumentStreamSession(collectionId, sessionFactory, new DocumentReader(collectionId, sessionFactory)))
+                    {
+                        foreach (var doc in documents.ReadDocs(skip, take))
+                        {
+                            validateSession.Validate(doc);
+
+                            Console.WriteLine(doc["___docid"]);
+                        }
+                    }
+                }
+
+                Console.WriteLine("validate took {0}", time.Elapsed);
+
+                Console.Read();
+            }
             else
             {
                 Console.WriteLine("unknown command: {0}", command);
