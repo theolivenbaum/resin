@@ -32,7 +32,8 @@ namespace Sir.Store
         }
 
         /// <summary>
-        /// Fields prefixed with "___" will not be stored.
+        /// Fields prefixed with "_" will not be indexed.
+        /// Fields prefixed with "__" will not be stored.
         /// </summary>
         /// <returns>Document ID</returns>
         public IndexInfo Write(IEnumerable<IDictionary<string, object>> documents)
