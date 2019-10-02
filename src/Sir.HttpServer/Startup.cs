@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Sir.HttpServer.Features;
 using System;
 using System.IO;
@@ -28,6 +29,7 @@ namespace Sir.HttpServer
             services.AddMvc(options =>
             {
                 options.RespectBrowserAcceptHeader = true;
+                options.EnableEndpointRouting = false;
             });
 
             var dataDir = ServiceProvider.GetService<IConfigurationProvider>().Get("data_dir");
@@ -39,7 +41,7 @@ namespace Sir.HttpServer
 
         }
 
-        public void Configure(IApplicationBuilder app, IApplicationLifetime applicationLifetime, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, IWebHostEnvironment env)
         {
             app.UseMiddleware<ErrorLoggingMiddleware>();
 
