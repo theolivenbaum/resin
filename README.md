@@ -6,6 +6,7 @@ A search engine built upon the following components:
 - Sir.VectorSpace: hardware accellerated computations over and stream based storage of vectors and matrices
 - Sir.Store: in-process search engine
 - Sir.HttpServer: out-of-process search engine
+- Sir.DbUtil: index, train, validate and query via command-line
 
 ## Roadmap
 
