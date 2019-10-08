@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Sir.Store
+namespace Sir.VectorSpace
 {
     /// <summary>
     /// Index bitmap reader. Each block is a <see cref="Sir.Store.VectorNode"/>.

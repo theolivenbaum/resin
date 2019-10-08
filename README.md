@@ -1,6 +1,11 @@
 # &#9084; Resin
 
-A search engine.
+A search engine built upon the following components:
+
+- Sir.KeyValue: a key/value/document stream based database
+- Sir.VectorSpace: hardware accellerated computations over and stream based storage of vectors and matrices
+- Sir.Store: in-process search engine
+- Sit.HttpServer: out-of-process search engine
 
 ## Roadmap
 

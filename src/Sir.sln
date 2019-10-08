@@ -20,7 +20,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.DbUtil", "Sir.DbUtil\Si
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Store.Tests", "Sir.Store.Tests\Sir.Store.Tests.csproj", "{03F6B627-A8CC-43A6-9BD0-5A9CE47E7EA6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sir.KeyValue", "Sir.KeyValue\Sir.KeyValue.csproj", "{53B25A13-5C26-4344-9AB6-7E998282EF94}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.KeyValue", "Sir.KeyValue\Sir.KeyValue.csproj", "{53B25A13-5C26-4344-9AB6-7E998282EF94}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sir.VectorSpace", "Sir.VectorSpace\Sir.VectorSpace.csproj", "{ABE198C3-16A6-476F-8B4D-FD14F943F632}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -56,6 +58,10 @@ Global
 		{53B25A13-5C26-4344-9AB6-7E998282EF94}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53B25A13-5C26-4344-9AB6-7E998282EF94}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53B25A13-5C26-4344-9AB6-7E998282EF94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABE198C3-16A6-476F-8B4D-FD14F943F632}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABE198C3-16A6-476F-8B4D-FD14F943F632}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABE198C3-16A6-476F-8B4D-FD14F943F632}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABE198C3-16A6-476F-8B4D-FD14F943F632}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

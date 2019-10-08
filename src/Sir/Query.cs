@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 
-namespace Sir.Store
+namespace Sir
 {
     /// <summary>
     /// A boolean query,

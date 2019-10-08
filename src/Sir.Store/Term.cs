@@ -1,4 +1,6 @@
-﻿namespace Sir.Store
+﻿using Sir.VectorSpace;
+
+namespace Sir.Store
 {
     /// <summary>
     /// A query term.

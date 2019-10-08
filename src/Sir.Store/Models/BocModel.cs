@@ -1,4 +1,5 @@
 ﻿using MathNet.Numerics.LinearAlgebra;
+using Sir.VectorSpace;
 using System;
 using System.Collections.Generic;
 using System.IO;

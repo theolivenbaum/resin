@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Sir.Store
+namespace Sir
 {
     public interface IPostingsReader : IDisposable
     {

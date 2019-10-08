@@ -1,4 +1,5 @@
-﻿using System.Buffers;
+﻿using Sir.VectorSpace;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +13,7 @@ namespace Sir.Store
     /// </summary>
     public class MemoryMappedNodeReader : ILogger, INodeReader
     {
-        private readonly SessionFactory _sessionFactory;
+        private readonly ISessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
         private readonly MemoryMappedViewAccessor _vectorView;
         private readonly MemoryMappedFile _ixFile;
@@ -24,7 +25,7 @@ namespace Sir.Store
         public MemoryMappedNodeReader(
             ulong collectionId,
             long keyId,
-            SessionFactory sessionFactory,
+            ISessionFactory sessionFactory,
             IConfigurationProvider config,
             MemoryMappedViewAccessor vectorView)
         {

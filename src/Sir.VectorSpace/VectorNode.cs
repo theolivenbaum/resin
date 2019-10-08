@@ -1,9 +1,8 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace Sir.Store
+namespace Sir.VectorSpace
 {
     /// <summary>
     /// Binary tree that consists of nodes that carry vectors as their payload. 

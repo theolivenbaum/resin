@@ -1,4 +1,4 @@
-﻿namespace Sir.Store
+﻿namespace Sir.VectorSpace
 {
     public class Hit
     {

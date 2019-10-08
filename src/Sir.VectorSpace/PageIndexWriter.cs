@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Sir.Store
+namespace Sir.VectorSpace
 {
     /// <summary>
     /// Index segment writer.

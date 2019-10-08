@@ -1,4 +1,5 @@
 ﻿using Sir.Core;
+using Sir.VectorSpace;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

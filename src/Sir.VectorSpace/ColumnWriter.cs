@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Sir.Store
+namespace Sir.VectorSpace
 {
     public class ColumnWriter : ILogger, IDisposable
     {

@@ -1,14 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Sir.Store\Sir.Store.csproj" />
-    <ProjectReference Include="..\Sir.VectorSpace\Sir.VectorSpace.csproj" />
     <ProjectReference Include="..\Sir\Sir.Core.csproj" />
   </ItemGroup>
 

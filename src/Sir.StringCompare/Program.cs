@@ -1,5 +1,6 @@
-﻿using System;
-using Sir.Store;
+﻿using Sir.Store;
+using Sir.VectorSpace;
+using System;
 
 namespace Sir.StringCompare
 {

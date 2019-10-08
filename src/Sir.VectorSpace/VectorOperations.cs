@@ -4,14 +4,13 @@ using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 
-namespace Sir
+namespace Sir.VectorSpace
 {
     /// <summary>
     /// Perform calculations on sparse vectors.
     /// </summary>
     public static class VectorOperations
     {
-
         public static IVector DeserializeVector(
             long vectorOffset, int componentCount, int vectorWidth, MemoryMappedViewAccessor vectorView)
         {
