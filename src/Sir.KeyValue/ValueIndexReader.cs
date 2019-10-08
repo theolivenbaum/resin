@@ -1,8 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Threading.Tasks;
 
-namespace Sir.Store
+namespace Sir.KeyValue
 {
     /// <summary>
     /// Find out there in the value stream a value is stored, by supplying a value ID.

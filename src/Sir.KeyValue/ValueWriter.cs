@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Sir.Store
+namespace Sir.KeyValue
 {
     /// <summary>
     /// Store a value on the file system.

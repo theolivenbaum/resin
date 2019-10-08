@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Sir.Store
+namespace Sir.KeyValue
 {
     /// <summary>
     /// Store the location of a value.

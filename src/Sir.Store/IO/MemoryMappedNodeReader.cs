@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Threading.Tasks;
@@ -39,7 +40,7 @@ namespace Sir.Store
         public Hit ClosestTerm(
             IVector vector, IStringModel model)
         {
-            var pages = _sessionFactory.GetAllPages(
+            var pages = GetAllPages(
                 Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ixtp"));
 
             var hits = new ConcurrentBag<Hit>();
@@ -73,7 +74,7 @@ namespace Sir.Store
         public Hit ClosestNgram(
             IVector vector, IStringModel model)
         {
-            var pages = _sessionFactory.GetAllPages(
+            var pages = GetAllPages(
                 Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ixnp"));
 
             var hits = new ConcurrentBag<Hit>();
@@ -102,6 +103,14 @@ namespace Sir.Store
             }
 
             return best;
+        }
+
+        public IList<(long offset, long length)> GetAllPages(string pageFileName)
+        {
+            using (var ixpStream = _sessionFactory.CreateReadStream(pageFileName))
+            {
+                return new PageIndexReader(ixpStream).GetAll();
+            }
         }
 
         private Hit ClosestNgramInPage(

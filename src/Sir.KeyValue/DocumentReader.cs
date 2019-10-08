@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Sir.Store
+namespace Sir.KeyValue
 {
     public class DocumentReader : IDisposable
     {
@@ -13,7 +13,7 @@ namespace Sir.Store
         private readonly ValueIndexReader _keyIx;
         private readonly DocIndexReader _docIx;
 
-        public DocumentReader(ulong collectionId, SessionFactory sessionFactory)
+        public DocumentReader(ulong collectionId, ISessionFactory sessionFactory)
         {
             var valueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)), int.Parse(sessionFactory.Config.Get("value_stream_read_buffer_size")));
             var keyStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));

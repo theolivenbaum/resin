@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Sir.Store
+namespace Sir.KeyValue
 {
     /// <summary>
     /// Read a value by supplying an offset, length and data type.

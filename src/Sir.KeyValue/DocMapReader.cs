@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Sir.Store
+namespace Sir.KeyValue
 {
     /// <summary>
     /// Document map stream reader, for fetching a document maps (key_id/val_id) from the document map stream.

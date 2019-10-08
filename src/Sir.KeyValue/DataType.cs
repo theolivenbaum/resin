@@ -1,4 +1,4 @@
-﻿namespace Sir.Store
+﻿namespace Sir.KeyValue
 {
     /// <summary>
     /// Supported data types.

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sir.KeyValue;
+using System;
 using System.Collections.Generic;
 
 namespace Sir.Store

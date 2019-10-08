@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Sir.Store
+namespace Sir.KeyValue
 {
     public class DocumentWriter : IDisposable
     {
@@ -13,9 +13,9 @@ namespace Sir.Store
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
         private readonly ulong _collectionId;
-        private readonly SessionFactory _sessionFactory;
+        private readonly ISessionFactory _sessionFactory;
 
-        public DocumentWriter(ulong collectionId, SessionFactory sessionFactory)
+        public DocumentWriter(ulong collectionId, ISessionFactory sessionFactory)
         {
             var valueStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)), int.Parse(sessionFactory.Config.Get("value_stream_write_buffer_size")));
             var keyStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));
@@ -124,7 +124,7 @@ namespace Sir.Store
         private readonly Stream _postingsStream;
         private readonly Stream _vectorStream;
 
-        public GraphStreamWriter(ulong collectionId, SessionFactory sessionFactory)
+        public GraphStreamWriter(ulong collectionId, ISessionFactory sessionFactory)
         {
             _ixStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, $"{collectionId}.vec"));
             _ixpStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, $"{collectionId}.vec"));

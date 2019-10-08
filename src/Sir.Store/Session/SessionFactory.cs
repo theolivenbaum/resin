@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sir.KeyValue;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,7 +12,7 @@ namespace Sir.Store
     /// <summary>
     /// Dispatcher of sessions.
     /// </summary>
-    public class SessionFactory : IDisposable, ILogger
+    public class SessionFactory : IDisposable, ILogger, ISessionFactory
     {
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
@@ -230,11 +231,11 @@ namespace Sir.Store
             var documentWriter = new DocumentWriter(collectionId, this);
 
             return new WriteSession(
-                collectionId, 
-                this, 
-                documentWriter, 
-                Config, 
-                model, 
+                collectionId,
+                this,
+                documentWriter,
+                Config,
+                model,
                 CreateIndexSession(collectionId)
             );
         }
@@ -247,10 +248,10 @@ namespace Sir.Store
         public ReadSession CreateReadSession(ulong collectionId)
         {
             return new ReadSession(
-                collectionId, 
-                this, 
+                collectionId,
+                this,
                 Config,
-                Model, 
+                Model,
                 new DocumentReader(collectionId, this),
                 new PostingsReader(CreateReadStream(Path.Combine(Dir, $"{collectionId}.pos"))));
         }

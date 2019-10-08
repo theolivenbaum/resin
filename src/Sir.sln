@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.421
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29326.143
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Core", "Sir\Sir.Core.csproj", "{2002DD08-0083-4184-BB1A-2469B608DE95}"
 EndProject
@@ -18,7 +18,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.StringCompare", "Sir.St
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.DbUtil", "Sir.DbUtil\Sir.DbUtil.csproj", "{D267D6FB-6DA5-444F-A628-FC0C3B1C6662}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sir.Store.Tests", "Sir.Store.Tests\Sir.Store.Tests.csproj", "{03F6B627-A8CC-43A6-9BD0-5A9CE47E7EA6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Store.Tests", "Sir.Store.Tests\Sir.Store.Tests.csproj", "{03F6B627-A8CC-43A6-9BD0-5A9CE47E7EA6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sir.KeyValue", "Sir.KeyValue\Sir.KeyValue.csproj", "{53B25A13-5C26-4344-9AB6-7E998282EF94}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -50,6 +52,10 @@ Global
 		{03F6B627-A8CC-43A6-9BD0-5A9CE47E7EA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03F6B627-A8CC-43A6-9BD0-5A9CE47E7EA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{03F6B627-A8CC-43A6-9BD0-5A9CE47E7EA6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53B25A13-5C26-4344-9AB6-7E998282EF94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53B25A13-5C26-4344-9AB6-7E998282EF94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53B25A13-5C26-4344-9AB6-7E998282EF94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53B25A13-5C26-4344-9AB6-7E998282EF94}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
