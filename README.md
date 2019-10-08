@@ -11,7 +11,7 @@ A search engine built upon the following components:
 ## Roadmap
 
 - [x] v0.1a - bag-of-characters term vector space language model
-- [x] v0.2a - HTTP API comprised of distributable search microservices
+- [x] v0.2a - HTTP API
 - [x] v0.3a - boolean query language with support for AND ('+'), OR (' '), NOT ('-') and scope ('(', ')').
 - [ ] v0.4b - semantic language model
 - [ ] v0.5 - TBD 
