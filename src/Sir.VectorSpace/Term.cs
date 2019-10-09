@@ -1,10 +1,5 @@
-﻿using Sir.VectorSpace;
-
-namespace Sir.Store
+﻿namespace Sir.VectorSpace
 {
-    /// <summary>
-    /// A query term.
-    /// </summary>
     public class Term
     {
         public string Key { get; private set; }
