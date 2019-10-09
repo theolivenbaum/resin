@@ -1,12 +1,12 @@
 # &#9084; Resin
 
-A search engine built upon the following components:
+This is a search engine that has been built upon the following components:
 
-- Sir.KeyValue: a key/value/document stream based database
-- Sir.VectorSpace: hardware accellerated computations over and stream based storage of vectors and matrices
-- Sir.Store: in-process search engine
-- Sir.HttpServer: out-of-process search engine
-- Sir.DbUtil: index, train, validate and query via command-line
+- _Sir.KeyValue_: a key/value/document stream based database
+- _Sir.VectorSpace_: hardware accellerated computations over and stream based storage of vectors and matrices
+- _Sir.Store_: embeddable search engine
+- _Sir.HttpServer_: search service
+- _Sir.DbUtil_: index, train, validate and query via command-line
 
 ## Roadmap
 
