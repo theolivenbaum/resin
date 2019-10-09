@@ -26,7 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Sir.KeyValue\Sir.KeyValue.csproj" />
-    <ProjectReference Include="..\Sir.Store\Sir.Store.csproj" />
+    <ProjectReference Include="..\Sir.Search\Sir.Search.csproj" />
     <ProjectReference Include="..\Sir\Sir.Core.csproj" />
   </ItemGroup>
 

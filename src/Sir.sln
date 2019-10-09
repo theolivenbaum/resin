@@ -12,7 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.HttpServer", "Sir.HttpServer\Sir.HttpServer.csproj", "{C94C2F5D-AE55-4157-A74A-26D49EE73E96}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Store", "Sir.Store\Sir.Store.csproj", "{24E80BBF-27D7-49AB-9C1E-B9EAA2453D38}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Search", "Sir.Search\Sir.Search.csproj", "{24E80BBF-27D7-49AB-9C1E-B9EAA2453D38}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.StringCompare", "Sir.StringCompare\Sir.StringCompare.csproj", "{610237D4-15E5-4C9F-9BAE-ACB24F634D2F}"
 EndProject
@@ -22,7 +22,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Store.Tests", "Sir.Stor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.KeyValue", "Sir.KeyValue\Sir.KeyValue.csproj", "{53B25A13-5C26-4344-9AB6-7E998282EF94}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sir.VectorSpace", "Sir.VectorSpace\Sir.VectorSpace.csproj", "{ABE198C3-16A6-476F-8B4D-FD14F943F632}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.VectorSpace", "Sir.VectorSpace\Sir.VectorSpace.csproj", "{ABE198C3-16A6-476F-8B4D-FD14F943F632}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

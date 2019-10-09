@@ -4,8 +4,8 @@ This is a search engine that has been built upon the following components:
 
 - _Sir.KeyValue_: a key/value/document stream based database
 - _Sir.VectorSpace_: hardware accellerated computations over and stream based storage of vectors and matrices
-- _Sir.Store_: embeddable search engine
-- _Sir.HttpServer_: search service
+- _Sir.Search: embeddable search engine
+- _Sir.HttpServer_: HTTP search service
 - _Sir.DbUtil_: index, train, validate and query via command-line
 
 ## Roadmap
