@@ -5,7 +5,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 
 namespace Sir.Store
 {
@@ -20,8 +19,10 @@ namespace Sir.Store
         private readonly Stream _postingsStream;
         private readonly Stream _vectorStream;
         private readonly ProducerConsumerQueue<(long docId, long keyId, IVector term)> _workers;
-        //private readonly ConcurrentDictionary<long, ConcurrentBag<IVector>> _debugWords;
         private readonly ConcurrentDictionary<long, long> _segmentId;
+
+        public IStringModel Model => _model;
+        public ConcurrentDictionary<long, ConcurrentDictionary<long, VectorNode>> Index => _index;
 
         public IndexSession(
             ulong collectionId,
@@ -39,7 +40,6 @@ namespace Sir.Store
             _postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"));
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
             _workers = new ProducerConsumerQueue<(long docId, long keyId, IVector term)>(threadCount, Put);
-            //_debugWords = new ConcurrentDictionary<long, ConcurrentBag<IVector>>();
             _segmentId = new ConcurrentDictionary<long, long>();
         }
 
@@ -51,6 +51,16 @@ namespace Sir.Store
             {
                 _workers.Enqueue((docId, keyId, vector));
             }
+        }
+
+        public void Enqueue(long docId, long keyId, IVector term)
+        {
+            _workers.Enqueue((docId, keyId, term));
+        }
+
+        public IndexInfo GetIndexInfo()
+        {
+            return new IndexInfo(GetGraphInfo(), _workers.Count);
         }
 
         private void Put((long docId, long keyId, IVector term) work)
@@ -85,13 +95,6 @@ namespace Sir.Store
                 _model,
                 _model.FoldAngle,
                 _model.IdenticalAngle);
-
-            //_debugWords.GetOrAdd(work.keyId, new ConcurrentBag<IVector>()).Add(work.term);
-        }
-
-        public IndexInfo GetIndexInfo()
-        {
-            return new IndexInfo(GetGraphInfo(), _workers.Count);
         }
 
         private IEnumerable<GraphInfo> GetGraphInfo()
@@ -112,8 +115,6 @@ namespace Sir.Store
             _workers.Dispose();
 
             this.Log($"awaited sync for {timer.Elapsed}");
-
-            var debugOutput = new StringBuilder();
 
             foreach (var column in _index)
             {
@@ -138,38 +139,6 @@ namespace Sir.Store
 
                         pageIndexWriter.Put(offset, length);
                     }
-
-                    //var debugWords = _debugWords[column.Key];
-                    //var wordSet = new HashSet<IVector>();
-
-                    //foreach (var term in debugWords)
-                    //{
-                    //    if (wordSet.Add(term))
-                    //    {
-                    //        var found = false;
-
-                    //        foreach (var node in column.Value)
-                    //        {
-                    //            var hit = PathFinder.ClosestMatch(node.Value, term, _model);
-
-                    //            if (hit != null && hit.Score >= _model.IdenticalAngle)
-                    //            {
-                    //                found = true;
-                    //                break;
-                    //            }
-                    //        }
-
-                    //        if (!found)
-                    //            throw new Exception($"could not find {term}");
-                    //    }
-                    //}
-
-                    //debugOutput.AppendLine($"{column.Key}: {wordSet.Count} words");
-
-                    //foreach (var term in wordSet)
-                    //{
-                    //    debugOutput.AppendLine(term.ToString());
-                    //}
                 }
             }
 
@@ -177,41 +146,6 @@ namespace Sir.Store
 
             _postingsStream.Dispose();
             _vectorStream.Dispose();
-
-            this.Log(debugOutput);
-        }
-    }
-
-    public class IndexInfo
-    {
-        public IEnumerable<GraphInfo> Info { get; }
-        public int QueueLength { get; }
-
-        public IndexInfo(IEnumerable<GraphInfo> info, int queueLength)
-        {
-            Info = info;
-            QueueLength = queueLength;
-        }
-    }
-
-    public class GraphInfo
-    {
-        private readonly long _keyId;
-        private readonly long _indexId;
-        private readonly VectorNode _graph;
-
-        public long Weight => _graph.Weight;
-
-        public GraphInfo(long keyId, long indexId, VectorNode graph)
-        {
-            _keyId = keyId;
-            _indexId = indexId;
-            _graph = graph;
-        }
-
-        public override string ToString()
-        {
-            return $"key {_keyId} level {_graph.Level} indexId: {_indexId} weight {_graph.Weight} {PathFinder.Size(_graph)}";
         }
     }
 }
