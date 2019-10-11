@@ -17,7 +17,7 @@ namespace Sir.HttpServer.Controllers
             IQueryFormatter queryFormatter, 
             IConfigurationProvider config,
             IStringModel tokenizer,
-            SessionFactory sessionFactory) : base(config, sessionFactory)
+            ISessionFactory sessionFactory) : base(config, sessionFactory)
         {
             _queryFormatter = queryFormatter;
             _plugins = plugins;

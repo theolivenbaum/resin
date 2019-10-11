@@ -28,7 +28,7 @@ namespace Sir.VectorSpace
 
             var size = PathFinder.Size(column);
 
-            this.Log($"serialized column {_keyId} level {column.Level} weight {column.Weight} {size}");
+            this.Log($"serialized column {_keyId} weight {column.Weight} {size}");
         }
 
         public void Dispose()

@@ -47,21 +47,14 @@ namespace Sir.Store
                 {
                     if (wordSet.Add(term))
                     {
-                        var found = false;
+                        var hit = PathFinder.ClosestMatch(column.Value, term, _indexSession.Model);
 
-                        foreach (var node in column.Value)
+                        if (hit != null && hit.Score >= _indexSession.Model.IdenticalAngle)
                         {
-                            var hit = PathFinder.ClosestMatch(node.Value, term, _indexSession.Model);
-
-                            if (hit != null && hit.Score >= _indexSession.Model.IdenticalAngle)
-                            {
-                                found = true;
-                                break;
-                            }
+                            continue;
                         }
 
-                        if (!found)
-                            throw new Exception($"could not find {term}");
+                        throw new Exception($"could not find {term}");
                     }
                 }
 

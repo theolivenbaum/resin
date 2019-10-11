@@ -10,7 +10,7 @@ namespace Sir.HttpServer.Controllers
 {
     public class UpvoteController : UIController
     {
-        public UpvoteController(IConfigurationProvider config, SessionFactory sessionFactory) : base(config, sessionFactory)
+        public UpvoteController(IConfigurationProvider config, ISessionFactory sessionFactory) : base(config, sessionFactory)
         {
         }
 

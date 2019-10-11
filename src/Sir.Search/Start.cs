@@ -15,6 +15,7 @@ namespace Sir.Store
             var httpParser = new HttpQueryParser(sessionFactory, model);
 
             services.AddSingleton(typeof(IStringModel), model);
+            services.AddSingleton(typeof(ISessionFactory), sessionFactory);
             services.AddSingleton(typeof(SessionFactory), sessionFactory);
             services.AddSingleton(typeof(HttpQueryParser), httpParser);
             services.AddSingleton(typeof(IHttpWriter), new HttpWriter(sessionFactory));

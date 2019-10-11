@@ -49,41 +49,7 @@ namespace Sir.Store
             Parallel.ForEach(pages, page =>
             //foreach (var page in pages)
             {
-                var hit = ClosestTermInPage(vector, model, page.offset);
-
-                if (hit != null)
-                    hits.Add(hit);
-            });
-
-            Hit best = null;
-
-            foreach (var hit in hits)
-            {
-                if (best == null || hit.Score > best.Score)
-                {
-                    best = hit;
-                }
-                else if (hit.Score == best.Score)
-                {
-                    GraphBuilder.MergePostings(best.Node, hit.Node);
-                }
-            }
-
-            return best;
-        }
-
-        public Hit ClosestNgram(
-            IVector vector, IStringModel model)
-        {
-            var pages = GetAllPages(
-                Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ixnp"));
-
-            var hits = new ConcurrentBag<Hit>();
-
-            Parallel.ForEach(pages, page =>
-            //foreach (var page in pages)
-            {
-                var hit = ClosestNgramInPage(vector, model, page.offset, page.length);
+                var hit = ClosestTermInPage(vector, model, page.offset, page.length);
 
                 if (hit != null)
                     hits.Add(hit);
@@ -114,52 +80,23 @@ namespace Sir.Store
             }
         }
 
-        private Hit ClosestNgramInPage(
-            IVector vector, IStringModel model, long pageOffset, long pageLength)
-        {
-            return ClosestMatchInSegment(
-                        vector,
-                        _ixFile.CreateViewAccessor(pageOffset, pageLength),
-                        _vectorView,
-                        model,
-                        model.FoldAngleNgram,
-                        model.IdenticalAngleNgram);
-        }
-
         private Hit ClosestTermInPage(
-            IVector vector, IStringModel model, long pageOffset)
+            IVector vector, IStringModel model, long pageOffset, long length)
         {
-            using (var segmentPageFile = new PageIndexReader(
-                _sessionFactory.CreateReadStream(
-                    Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ixtsp"))))
+            var hit0 = ClosestMatchInSegment(
+                    vector,
+                    _ixFile.CreateViewAccessor(pageOffset, length),
+                    _vectorView,
+                    model,
+                    model.FoldAngle,
+                    model.IdenticalAngle);
+
+            if (hit0 != null && hit0.Score > 0)
             {
-                var segment0 = segmentPageFile.ReadAt(pageOffset);
-
-                var hit0 = ClosestMatchInSegment(
-                    vector, _ixFile.CreateViewAccessor(segment0.offset, segment0.length), _vectorView, model, model.FoldAngleFirst, model.IdenticalAngleFirst);
-
-                Hit hit1 = null;
-
-                if (hit0 != null && hit0.Score > 0)
-                {
-                    var indexId = hit0.Node.PostingsOffsets[0];
-                    var nextSegment = segmentPageFile.ReadAt(startingPoint: pageOffset, id: indexId);
-
-                    hit1 = ClosestMatchInSegment(
-                        vector, _ixFile.CreateViewAccessor(nextSegment.offset, nextSegment.length), _vectorView, model, model.FoldAngleSecond, model.IdenticalAngleSecond);
-                }
-
-                if (hit1 != null && hit1.Score > 0)
-                {
-                    var indexId = hit1.Node.PostingsOffsets[0];
-                    var nextSegment = segmentPageFile.ReadAt(startingPoint: pageOffset, id: indexId);
-
-                    return ClosestMatchInSegment(
-                        vector, _ixFile.CreateViewAccessor(nextSegment.offset, nextSegment.length), _vectorView, model, model.FoldAngle, model.IdenticalAngle);
-                }
-
-                return null;
+                return hit0;
             }
+
+            return null;
         }
 
         private Hit ClosestMatchInSegment(

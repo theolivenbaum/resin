@@ -78,13 +78,10 @@ namespace Sir.VectorSpace
 
         public IList<long> PostingsOffsets { get; set; }
 
-        public int Level { get; }
-
-        public VectorNode(int level = 0)
+        public VectorNode()
         {
             PostingsOffset = -1;
             VectorOffset = -1;
-            Level = level;
         }
 
         public VectorNode(IVector vector)

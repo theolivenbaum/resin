@@ -15,7 +15,7 @@ namespace Sir.HttpServer.Controllers
             PluginsCollection plugins, 
             IConfigurationProvider config, 
             IStringModel tokenizer,
-            SessionFactory sessionFactory) : base(config, sessionFactory)
+            ISessionFactory sessionFactory) : base(config, sessionFactory)
         {
             _plugins = plugins;
             _model = tokenizer;

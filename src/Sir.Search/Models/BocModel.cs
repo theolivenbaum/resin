@@ -72,14 +72,8 @@ namespace Sir.Store
             return new AnalyzedData(embeddings);
         }
 
-        public double IdenticalAngleFirst => 0.01d;
-        public double FoldAngleFirst => 0.0001d;
-        public double IdenticalAngleSecond => 0.2d;
-        public double FoldAngleSecond => 0.1d;
         public double IdenticalAngle => 0.85;
         public double FoldAngle => 0.55d;
-        public double IdenticalAngleNgram => 0.99;
-        public double FoldAngleNgram => 0.49d;
         public int VectorWidth => int.MaxValue;
 
         public double CosAngle(IVector vec1, IVector vec2)

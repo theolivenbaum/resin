@@ -6,6 +6,5 @@ namespace Sir.VectorSpace
     {
         long KeyId { get; }
         Hit ClosestTerm(IVector vector, IStringModel model);
-        Hit ClosestNgram(IVector vector, IStringModel model);
     }
 }

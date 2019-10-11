@@ -7,12 +7,12 @@ namespace Sir.HttpServer.Controllers
     public abstract class UIController : Controller
     {
         private readonly IConfigurationProvider _config;
-        private readonly SessionFactory _sessionFactory;
+        private readonly ISessionFactory _sessionFactory;
         private IConfigurationProvider config;
 
         protected IConfigurationProvider Config { get { return _config; } }
 
-        public UIController(IConfigurationProvider config, SessionFactory sessionFactory)
+        public UIController(IConfigurationProvider config, ISessionFactory sessionFactory)
         {
             _config = config;
             _sessionFactory = sessionFactory;
