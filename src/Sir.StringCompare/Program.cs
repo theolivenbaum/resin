@@ -1,6 +1,7 @@
 ﻿using Sir.Store;
 using Sir.VectorSpace;
 using System;
+using System.Linq;
 
 namespace Sir.StringCompare
 {
@@ -25,7 +26,7 @@ namespace Sir.StringCompare
                         break;
                     }
 
-                    var node = new VectorNode(model.Tokenize(command).Embeddings[0]);
+                    var node = new VectorNode(model.Tokenize(command).First());
                     GraphBuilder.TryMerge(root, node, model, out _);
                 }
 
@@ -42,15 +43,15 @@ namespace Sir.StringCompare
                         break;
                     }
 
-                    var hit = PathFinder.ClosestMatch(root, model.Tokenize(command).Embeddings[0], model);
+                    var hit = PathFinder.ClosestMatch(root, model.Tokenize(command).First(), model);
 
                     Console.WriteLine($"{hit.Score} {hit.Node}");
                 }
             }
             else
             {
-                var doc1 = new VectorNode(model.Tokenize(args[0]).Embeddings[0]);
-                var doc2 = new VectorNode(model.Tokenize(args[1]).Embeddings[0]);
+                var doc1 = new VectorNode(model.Tokenize(args[0]).First());
+                var doc2 = new VectorNode(model.Tokenize(args[1]).First());
                 var angle = model.CosAngle(doc1.Vector, doc2.Vector);
                 Console.WriteLine($"similarity: {angle}");
             }

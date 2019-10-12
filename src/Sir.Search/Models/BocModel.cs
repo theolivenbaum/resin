@@ -9,7 +9,7 @@ namespace Sir.Store
 {
     public class BocModel : IStringModel
     {
-        public AnalyzedData Tokenize(string text)
+        public IEnumerable<IVector> Tokenize(string text)
         {
             Span<char> source = text.ToCharArray();
             var offset = 0;
@@ -69,7 +69,7 @@ namespace Sir.Store
                 }
             }
 
-            return new AnalyzedData(embeddings);
+            return embeddings;
         }
 
         public double IdenticalAngle => 0.99;

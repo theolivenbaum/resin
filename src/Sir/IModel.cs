@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 namespace Sir
 {
@@ -11,7 +12,7 @@ namespace Sir
 
     public interface IModel<T>
     {
-        AnalyzedData Tokenize(T data);
+        IEnumerable<IVector> Tokenize(T data);
     }
 
     public interface IEuclidDistance

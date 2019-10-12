@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Sir.Store;
 
 namespace Sir.HttpServer.Controllers
 {

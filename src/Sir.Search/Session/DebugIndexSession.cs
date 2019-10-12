@@ -21,7 +21,7 @@ namespace Sir.Store
         {
             var tokens = _indexSession.Model.Tokenize(value);
 
-            foreach (var vector in tokens.Embeddings)
+            foreach (var vector in tokens)
             {
                 _indexSession.Enqueue(docId, keyId, vector);
 

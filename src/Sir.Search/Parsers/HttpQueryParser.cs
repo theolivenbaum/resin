@@ -9,14 +9,10 @@ namespace Sir.Store
     /// </summary>
     public class HttpQueryParser
     {
-        private readonly SessionFactory _sessionFactory;
-        private readonly IStringModel _model;
         private readonly QueryParser _parser;
 
         public HttpQueryParser(SessionFactory sessionFactory, IStringModel model)
         {
-            _sessionFactory = sessionFactory;
-            _model = model;
             _parser = new QueryParser(sessionFactory, model);
         }
 
@@ -31,52 +27,27 @@ namespace Sir.Store
             if (isFormatted)
             {
                 var formattedQuery = request.Query["qf"].ToString();
-                foreach (var q in FromFormattedString(collectionId, formattedQuery, _model, and, or, not))
-                    yield return q;
+
+                return FromFormattedString(collectionId, formattedQuery, and, or, not);
             }
             else
             {
                 var naturalLanguage = request.Query["q"].ToString();
 
-                foreach (var q in _parser.Parse(collectionId, naturalLanguage, fields, and, or, not))
-                {
-                    yield return q;
-                }
+                return _parser.Parse(collectionId, naturalLanguage, fields, and, or, not);
             }
         }
 
-        public IEnumerable<Query> FromFormattedString(ulong collectionId, string formattedQuery, IStringModel model, bool and, bool or, bool not)
+        public IEnumerable<Query> FromFormattedString(ulong collectionId, string formattedQuery, bool and, bool or, bool not)
         {
             var document = JsonConvert.DeserializeObject<IDictionary<string, object>>(formattedQuery);
 
-            foreach (var field in document)
-            {
-                if (field.Value is string)
-                {
-                    long keyId;
-
-                    if (_sessionFactory.TryGetKeyId(collectionId, field.Key.ToHash(), out keyId))
-                    {
-                        yield return new Query(keyId, model.Tokenize((string)field.Value), and, or, not);
-                    }
-                }
-            }
+            return FromDocument(collectionId, document, and, or, not);
         }
 
-        public IEnumerable<Query> FromDocument(ulong collectionId, IDictionary<string, object> document, IStringModel model, bool and, bool or, bool not)
+        public IEnumerable<Query> FromDocument(ulong collectionId, IDictionary<string, object> document, bool and, bool or, bool not)
         {
-            foreach (var field in document)
-            {
-                if (field.Value is string)
-                {
-                    long keyId;
-
-                    if (_sessionFactory.TryGetKeyId(collectionId, field.Key.ToHash(), out keyId))
-                    {
-                        yield return new Query(keyId, model.Tokenize((string)field.Value), and, or, not);
-                    }
-                }
-            }
+            return _parser.Parse(collectionId, document, and, or, not);
         }
     }
 }

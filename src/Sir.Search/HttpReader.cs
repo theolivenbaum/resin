@@ -70,17 +70,18 @@ namespace Sir.Store
                     _sessionFactory.Write(new Job(newCollectionName.ToHash(), result.Docs, model));
                 }
 
-                var mem = new MemoryStream();
-
-                Serialize(result.Docs, mem);
-
-                return new ResponseModel
+                using (var mem = new MemoryStream())
                 {
-                    MediaType = "application/json",
-                    Documents = result.Docs,
-                    Total = total,
-                    Body = mem.ToArray()
-                };
+                    Serialize(result.Docs, mem);
+
+                    return new ResponseModel
+                    {
+                        MediaType = "application/json",
+                        Documents = result.Docs,
+                        Total = total,
+                        Body = mem.ToArray()
+                    };
+                }
             }
         }
 

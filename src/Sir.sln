@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29326.143
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Core", "Sir\Sir.Core.csproj", "{2002DD08-0083-4184-BB1A-2469B608DE95}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CA96B574-72B3-4954-8B51-4C961A6F6622}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resources", "resources", "{CA96B574-72B3-4954-8B51-4C961A6F6622}"
 	ProjectSection(SolutionItems) = preProject
 		..\README.md = ..\README.md
 	EndProjectSection
@@ -23,6 +23,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.KeyValue", "Sir.KeyValue\Sir.KeyValue.csproj", "{53B25A13-5C26-4344-9AB6-7E998282EF94}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.VectorSpace", "Sir.VectorSpace\Sir.VectorSpace.csproj", "{ABE198C3-16A6-476F-8B4D-FD14F943F632}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apps", "apps", "{B97268C5-0BFA-4022-BA3F-C07C1F239C8D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{35E2693A-1A42-4690-81A8-D424C3D24AD1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,6 +69,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C94C2F5D-AE55-4157-A74A-26D49EE73E96} = {B97268C5-0BFA-4022-BA3F-C07C1F239C8D}
+		{610237D4-15E5-4C9F-9BAE-ACB24F634D2F} = {B97268C5-0BFA-4022-BA3F-C07C1F239C8D}
+		{D267D6FB-6DA5-444F-A628-FC0C3B1C6662} = {B97268C5-0BFA-4022-BA3F-C07C1F239C8D}
+		{03F6B627-A8CC-43A6-9BD0-5A9CE47E7EA6} = {35E2693A-1A42-4690-81A8-D424C3D24AD1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {60BC16EF-AAA7-498C-A62A-56F3F740FC89}

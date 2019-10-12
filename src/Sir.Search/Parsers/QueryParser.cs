@@ -22,13 +22,25 @@ namespace Sir.Store
                 document.Add(field, q);
             }
 
+            return Parse(collectionId, document, and, or, not);
+        }
+
+        public IEnumerable<Query> Parse(ulong collectionId, IDictionary<string, object> document, bool and, bool or, bool not)
+        {
             foreach (var field in document)
             {
                 long keyId;
 
                 if (_sessionFactory.TryGetKeyId(collectionId, field.Key.ToHash(), out keyId))
                 {
-                    yield return new Query(keyId, _model.Tokenize((string)field.Value), and, or, not);
+                    var clauses = new List<Clause>();
+
+                    foreach (var term in _model.Tokenize((string)field.Value))
+                    {
+                        clauses.Add(new Clause(keyId, term, and, or, not));
+                    }
+
+                    yield return new Query(keyId, clauses);
                 }
             }
         }

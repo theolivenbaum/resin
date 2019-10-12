@@ -6,26 +6,59 @@ namespace Sir
     /// <summary>
     /// A boolean query,
     /// </summary>
-    public class Query
+    public class Query : BooleanStatement
+    {
+        public IList<Clause> Clauses { get; private set; }
+
+        public Query(long keyId, IList<Clause> clauses, bool and = false, bool or = true, bool not = false)
+            : base(keyId, and, or, not)
+        {
+            Clauses = clauses;
+        }
+
+        public override string ToString()
+        {
+            var result = new StringBuilder();
+
+            foreach (var clause in Clauses)
+            {
+                result.Append(clause.ToString());
+            }
+
+            var queryop = And ? "+" : Or ? "" : "-";
+
+            return $"{queryop}{result}";
+        }
+    }
+
+    public class Clause : BooleanStatement
+    {
+        public IVector Term { get; }
+        public IList<long> PostingsOffsets { get; set; }
+        public double Score { get; set; }
+
+        public Clause(long keyId, IVector term, bool and = false, bool or = true, bool not = false)
+            : base(keyId, and, or, not)
+        {
+            Term = term;
+            And = and;
+            Or = or;
+            Not = not;
+        }
+
+        public override string ToString()
+        {
+            var queryop = And ? "+" : Or ? "" : "-";
+
+            return $"{queryop}{KeyId}:{Term.ToString()}";
+        }
+    }
+
+    public class BooleanStatement
     {
         private bool _and;
         private bool _or;
         private bool _not;
-
-        public Query(long keyId, AnalyzedData terms, bool and = false, bool or = true, bool not = false)
-        {
-            Terms = terms;
-            PostingsOffsets = new List<long>();
-            And = and;
-            Or = or;
-            Not = not;
-            KeyId = keyId;
-        }
-
-        public Query Copy(IVector vector)
-        {
-            return new Query(KeyId, new AnalyzedData(new IVector[1] { vector }), And, Or, Not);
-        }
 
         public long KeyId { get; }
         public bool And
@@ -70,23 +103,13 @@ namespace Sir
                 }
             }
         }
-        public AnalyzedData Terms { get; private set; }
-        public IList<long> PostingsOffsets { get; set; }
-        public double Score { get; set; }
-        public int TermCount { get { return Terms.Embeddings.Count; } }
 
-        public override string ToString()
+        public BooleanStatement(long keyId, bool and, bool or, bool not)
         {
-            var result = new StringBuilder();
-
-            foreach (var term in Terms.Embeddings)
-            {
-                var queryop = And ? "+" : Or ? "" : "-";
-
-                result.AppendFormat("{0}{1} ", queryop, term.ToString());
-            }
-
-            return result.ToString().TrimEnd();
+            KeyId = keyId;
+            _and = and;
+            _or = or;
+            _not = not;
         }
     }
 }

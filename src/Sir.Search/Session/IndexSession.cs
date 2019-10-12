@@ -45,7 +45,7 @@ namespace Sir.Store
         {
             var tokens = _model.Tokenize(value);
 
-            foreach (var vector in tokens.Embeddings)
+            foreach (var vector in tokens)
             {
                 _workers.Enqueue((docId, keyId, vector));
             }

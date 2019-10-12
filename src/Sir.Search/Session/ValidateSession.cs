@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Sir.Store
 {
@@ -38,7 +39,7 @@ namespace Sir.Store
             var docId = (long)doc["___docid"];
             var body = (string)doc["body"];
             var keyId = SessionFactory.GetKeyId(CollectionId, "body".ToHash());
-            var query = new Query(keyId, _model.Tokenize(body));
+            var query = new Query(keyId, _model.Tokenize(body).Select(x => new Clause(keyId, x)).ToList());
 
             _readSession.EnsureIsValid(query, docId);
         }

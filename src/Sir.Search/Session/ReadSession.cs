@@ -77,13 +77,13 @@ namespace Sir.Store
 
             if (indexReader != null)
             {
-                foreach (var term in query.Terms.Embeddings)
+                foreach (var clause in query.Clauses)
                 {
-                    var hit = indexReader.ClosestTerm(term, _model);
+                    var hit = indexReader.ClosestTerm(clause.Term, _model);
 
                     if (hit == null || hit.Score < _model.IdenticalAngle)
                     {
-                        throw new DataMisalignedException($"term \"{term.ToString()}\" not found.");
+                        throw new DataMisalignedException($"term \"{clause.Term.ToString()}\" not found.");
                     }
 
                     var docIds = _postingsReader.ReadWithScore(hit.Node.PostingsOffsets, _model.IdenticalAngle);
@@ -91,7 +91,7 @@ namespace Sir.Store
                     if (!docIds.ContainsKey(docId))
                     {
                         throw new DataMisalignedException(
-                            $"document {docId} not found in postings list for term \"{term.ToString()}\".");
+                            $"document {docId} not found in postings list for term \"{clause.Term.ToString()}\".");
                     }
                 }
             }
@@ -122,38 +122,32 @@ namespace Sir.Store
         /// Map query terms to index IDs.
         /// </summary>
         /// <param name="query">An un-mapped query</param>
-        public IEnumerable<Query> Map(IEnumerable<Query> query)
+        public IEnumerable<Query> Map(IEnumerable<Query> queries)
         {
             var timer = Stopwatch.StartNew();
 
-            foreach (var clause in query)
+            foreach (var query in queries)
             {
-                var indexReader = GetOrTryCreateIndexReader(clause.KeyId);
+                var indexReader = GetOrTryCreateIndexReader(query.KeyId);
 
                 if (indexReader != null)
                 {
-                    foreach (var term in clause.Terms.Embeddings)
+                    foreach (var clause in query.Clauses)
                     {
-                        var hit = indexReader.ClosestTerm(term, _model);
+                        var hit = indexReader.ClosestTerm(clause.Term, _model);
 
                         if (hit != null && hit.Score > 0)
                         {
-                            var q = clause.Copy(term);
-
-                            q.Score = hit.Score;
-
-                            foreach (var offs in hit.Node.PostingsOffsets)
-                            {
-                                q.PostingsOffsets.Add(offs);
-                            }
-
-                            yield return q;
+                            clause.Score = hit.Score;
+                            clause.PostingsOffsets = hit.Node.PostingsOffsets;
                         }
                     }
+
+                    yield return query;
                 }
             }
 
-            this.Log("mapping {0} took {1}", query, timer.Elapsed);
+            this.Log($"mapping took {timer.Elapsed}");
         }
 
         private static ScoredResult Sort(IDictionary<long, double> documents, int skip, int take)
