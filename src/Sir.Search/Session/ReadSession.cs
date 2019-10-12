@@ -71,7 +71,7 @@ namespace Sir.Store
             return new ReadResult { Total = 0, Docs = new IDictionary<string, object>[0] };
         }
 
-        public bool IsValid(Query query, long docId)
+        public void EnsureIsValid(Query query, long docId)
         {
             var indexReader = CreateIndexReader(query.KeyId);
 
@@ -83,17 +83,18 @@ namespace Sir.Store
 
                     if (hit == null || hit.Score < _model.IdenticalAngle)
                     {
-                        return false;
+                        throw new DataMisalignedException($"term \"{term.ToString()}\" not found.");
                     }
 
                     var docIds = _postingsReader.Read(hit.Node.PostingsOffsets, _model.IdenticalAngle);
 
                     if (!docIds.ContainsKey(docId))
-                        return false;
+                    {
+                        throw new DataMisalignedException(
+                            $"document {docId} not found in postings list for term \"{term.ToString()}\".");
+                    }
                 }
             }
-
-            return true;
         }
 
         private ScoredResult MapReduce(IEnumerable<Query> query, int skip, int take)

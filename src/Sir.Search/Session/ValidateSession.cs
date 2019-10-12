@@ -40,8 +40,7 @@ namespace Sir.Store
             var keyId = SessionFactory.GetKeyId(CollectionId, "body".ToHash());
             var query = new Query(keyId, _model.Tokenize(body));
 
-            if (!_readSession.IsValid(query, docId))
-                throw new DataMisalignedException();
+            _readSession.EnsureIsValid(query, docId);
         }
 
         public void Dispose()
