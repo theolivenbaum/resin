@@ -73,7 +73,7 @@ namespace Sir.Store
 
         public void EnsureIsValid(Query query, long docId)
         {
-            var indexReader = CreateIndexReader(query.KeyId);
+            var indexReader = GetOrTryCreateIndexReader(query.KeyId);
 
             if (indexReader != null)
             {
@@ -128,7 +128,7 @@ namespace Sir.Store
 
             foreach (var clause in query)
             {
-                var indexReader = CreateIndexReader(clause.KeyId);
+                var indexReader = GetOrTryCreateIndexReader(clause.KeyId);
 
                 if (indexReader != null)
                 {
@@ -174,7 +174,7 @@ namespace Sir.Store
             return new ScoredResult { SortedDocuments = sortedByScore.GetRange(index, count), Total = sortedByScore.Count };
         }
 
-        public INodeReader CreateIndexReader(long keyId)
+        public INodeReader GetOrTryCreateIndexReader(long keyId)
         {
             var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
 
