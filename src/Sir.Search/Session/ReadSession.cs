@@ -83,7 +83,7 @@ namespace Sir.Store
 
                     if (hit == null || hit.Score < _model.IdenticalAngle)
                     {
-                        throw new DataMisalignedException($"term \"{clause.Term.ToString()}\" not found.");
+                        throw new DataMisalignedException($"term \"{clause}\" not found.");
                     }
 
                     var docIds = _postingsReader.ReadWithScore(hit.Node.PostingsOffsets, _model.IdenticalAngle);
@@ -91,7 +91,7 @@ namespace Sir.Store
                     if (!docIds.ContainsKey(docId))
                     {
                         throw new DataMisalignedException(
-                            $"document {docId} not found in postings list for term \"{clause.Term.ToString()}\".");
+                            $"document {docId} not found in postings list for term \"{clause}\".");
                     }
                 }
             }

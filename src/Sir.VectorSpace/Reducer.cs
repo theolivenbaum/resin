@@ -166,7 +166,7 @@ namespace Sir.Store
                     {
                         double score;
 
-                        if (queryResult.TryGetValue(doc.Key, out score))
+                        if (result.TryGetValue(doc.Key, out score))
                         {
                             result[doc.Key] = score + doc.Value;
                         }

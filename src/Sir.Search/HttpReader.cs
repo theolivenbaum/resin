@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
@@ -55,8 +56,19 @@ namespace Sir.Store
                     return new ResponseModel { MediaType = "application/json", Total = 0 };
                 }
 
-                var result = readSession.Read(query, skip, take);
-                long total = result.Total;
+                ReadResult result = null;
+
+                if (request.Query.ContainsKey("id"))
+                {
+                    var ids = request.Query["id"].ToDictionary(s => long.Parse(s), x => (double)1);
+                    var docs = readSession.ReadDocs(ids);
+
+                    result = new ReadResult { Docs = docs, Total = docs.Count };
+                }
+                else
+                {
+                    result = readSession.Read(query, skip, take);
+                }
 
                 if (request.Query.ContainsKey("create"))
                 {
@@ -78,7 +90,7 @@ namespace Sir.Store
                     {
                         MediaType = "application/json",
                         Documents = result.Docs,
-                        Total = total,
+                        Total = result.Total,
                         Body = mem.ToArray()
                     };
                 }
