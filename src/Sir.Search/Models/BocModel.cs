@@ -20,7 +20,7 @@ namespace Sir.Store
 
             for (; index < source.Length; index++)
             {
-                char c = char.ToLower(source[index]);
+                char c = char.ToLowerInvariant(source[index]);
 
                 if (word)
                 {
@@ -72,7 +72,7 @@ namespace Sir.Store
             return new AnalyzedData(embeddings);
         }
 
-        public double IdenticalAngle => 0.85;
+        public double IdenticalAngle => 0.99;
         public double FoldAngle => 0.55d;
         public int VectorWidth => int.MaxValue;
 
