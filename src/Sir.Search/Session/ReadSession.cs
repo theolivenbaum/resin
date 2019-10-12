@@ -181,7 +181,8 @@ namespace Sir.Store
             if (!File.Exists(ixFileName))
                 return null;
 
-            return _nodeReaders.GetOrAdd(keyId, new MemoryMappedNodeReader(CollectionId, keyId, SessionFactory, _config, _vectorView));
+            return _nodeReaders.GetOrAdd(
+                keyId, new MemoryMappedNodeReader(CollectionId, keyId, SessionFactory, _config, _vectorView));
         }
 
         public IList<IDictionary<string, object>> ReadDocs(IEnumerable<KeyValuePair<long, double>> docs)
