@@ -7,7 +7,7 @@ namespace Sir.Store
     /// <summary>
     /// Read (reduce) postings.
     /// </summary>
-    public class MemoryMappedPostingsReader : IPostingsReader
+    public class MemoryMappedPostingsReader : Reducer, IPostingsReader
     {
         private readonly MemoryMappedViewAccessor _view;
 
@@ -15,56 +15,8 @@ namespace Sir.Store
         {
             _view = view;
         }
-
-        public void Reduce(IEnumerable<Query> mappedQuery, IDictionary<long, double> result)
-        {
-            foreach (var q in mappedQuery)
-            {
-                var termResult = Read(q.PostingsOffsets);
-
-                if (q.And)
-                {
-                    foreach (var hit in termResult)
-                    {
-                        double score;
-
-                        if (result.TryGetValue(hit, out score))
-                        {
-                            result[hit] = score + q.Score;
-                        }
-                        else
-                        {
-                            result.Remove(hit);
-                        }
-                    }
-                }
-                else if (q.Not)
-                {
-                    foreach (var doc in termResult)
-                    {
-                        result.Remove(doc);
-                    }
-                }
-                else // Or
-                {
-                    foreach (var doc in termResult)
-                    {
-                        double score;
-
-                        if (result.TryGetValue(doc, out score))
-                        {
-                            result[doc] = score + q.Score;
-                        }
-                        else
-                        {
-                            result.Add(doc, q.Score);
-                        }
-                    }
-                }
-            }
-        }
-
-        private IList<long> Read(IList<long> offsets)
+        
+        protected override IList<long> Read(IList<long> offsets)
         {
             var result = new List<long>();
 
@@ -95,7 +47,7 @@ namespace Sir.Store
             _view.Dispose();
         }
 
-        public IDictionary<long, double> Read(IList<long> offsets, double score)
+        public IDictionary<long, double> ReadWithScore(IList<long> offsets, double score)
         {
             var result = new Dictionary<long, double>();
 

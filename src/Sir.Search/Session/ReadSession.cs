@@ -86,7 +86,7 @@ namespace Sir.Store
                         throw new DataMisalignedException($"term \"{term.ToString()}\" not found.");
                     }
 
-                    var docIds = _postingsReader.Read(hit.Node.PostingsOffsets, _model.IdenticalAngle);
+                    var docIds = _postingsReader.ReadWithScore(hit.Node.PostingsOffsets, _model.IdenticalAngle);
 
                     if (!docIds.ContainsKey(docId))
                     {

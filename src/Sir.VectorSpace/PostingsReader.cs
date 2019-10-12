@@ -8,7 +8,7 @@ namespace Sir.Store
     /// <summary>
     /// Read (reduce) postings.
     /// </summary>
-    public class PostingsReader : IPostingsReader
+    public class PostingsReader : Reducer, IPostingsReader
     {
         private readonly Stream _stream;
 
@@ -17,55 +17,7 @@ namespace Sir.Store
             _stream = stream;
         }
 
-        public void Reduce(IEnumerable<Query> mappedQuery, IDictionary<long, double> result)
-        {
-            foreach (var q in mappedQuery)
-            {
-                var termResult = Read(q.PostingsOffsets, q.Score);
-
-                if (q.And)
-                {
-                    foreach (var hit in termResult)
-                    {
-                        double score;
-
-                        if (result.TryGetValue(hit.Key, out score))
-                        {
-                            result[hit.Key] = score + hit.Value;
-                        }
-                        else
-                        {
-                            result.Remove(hit.Key);
-                        }
-                    }
-                }
-                else if (q.Not)
-                {
-                    foreach (var doc in termResult.Keys)
-                    {
-                        result.Remove(doc);
-                    }
-                }
-                else // Or
-                {
-                    foreach (var doc in termResult)
-                    {
-                        double score;
-
-                        if (result.TryGetValue(doc.Key, out score))
-                        {
-                            result[doc.Key] = score + doc.Value;
-                        }
-                        else
-                        {
-                            result.Add(doc);
-                        }
-                    }
-                }
-            }
-        }
-
-        public IDictionary<long, double> Read(IList<long> offsets, double score)
+        public IDictionary<long, double> ReadWithScore(IList<long> offsets, double score)
         {
             var result = new Dictionary<long, double>();
 
@@ -77,23 +29,50 @@ namespace Sir.Store
             return result;
         }
 
+        protected override IList<long> Read(IList<long> offsets)
+        {
+            var list = new List<long>();
+
+            foreach (var postingsOffset in offsets)
+                GetPostingsFromStream(postingsOffset, list);
+
+            return list;
+        }
+
         private void GetPostingsFromStream(long postingsOffset, IDictionary<long, double> result, double score)
+        {
+            var list = new List<long>();
+
+            GetPostingsFromStream(postingsOffset, list);
+
+            foreach (var id in list)
+            {
+                result.Add(id, score);
+            }
+        }
+
+        private void GetPostingsFromStream(long postingsOffset, IList<long> result)
         {
             _stream.Seek(postingsOffset, SeekOrigin.Begin);
 
-            Span<byte> buf = stackalloc byte[sizeof(long)];
+            Span<byte> buf = new byte[sizeof(long)];
 
             _stream.Read(buf);
 
             var numOfPostings = BitConverter.ToInt64(buf);
 
-            Span<byte> listBuf = new byte[sizeof(long) * (int)numOfPostings];
+            var len = sizeof(long) * (int)numOfPostings;
+
+            Span<byte> listBuf = new byte[len];
 
             var read = _stream.Read(listBuf);
 
+            if (read != len)
+                throw new DataMisalignedException();
+
             foreach (var id in MemoryMarshal.Cast<byte, long>(listBuf))
             {
-                result.Add(id, score);
+                result.Add(id);
             }
         }
 
