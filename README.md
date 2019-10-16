@@ -1,9 +1,11 @@
 # &#9084; Resin
 
 Resin is a document database with a search index representation of a vector space. 
-This space is comprised of word embeddings generated from document fields of your choice. 
-If you have only embeddings and no documents you might still find the APIs useful for when you
-want to build and scan indices that represent vector spaces.
+This space is built up from word embeddings generated from document fields of your choice 
+and persisted on disk as bitmaps, scannable in a streaming fashion. 
+
+If you have only embeddings, no documents, you might still find the APIs useful for when you
+want to build and scan indices that represent them.
 
 There is both an in-process and out-of-process (HTTP) API and there are two apps:
 
