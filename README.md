@@ -58,4 +58,4 @@ IdenticalAngle and FoldAngle are properties of IModel.
 
 ## Contribute
 
-If IModel sometimes gets in your way, as I anticipate it might, then please undertand, it is simply an interface, written by some guy. PR's are most welcome.
+If IModel sometimes gets in your way, as I anticipate it might, then please undertand it is only an interface written by some random guy, thus not written in stone. PR's are most welcome.
