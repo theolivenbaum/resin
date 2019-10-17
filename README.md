@@ -1,20 +1,16 @@
 # &#9084; Resin Extensible Search Engine
 
-Resin is a document database paired with a pluggable (extensible) 
-search index that represents a vector space. 
+Resin is a document database that's been paired with a extensible search index that represents a vector space. 
 
-Built from embeddings extracted from document fields through tokenization, spaces are
-persisted on disk as bitmaps that are scannable in a streaming fashion, 
-that brings pressure to memory that amounts to the size of a single graph node, 
-which is usually very small, 
-enabling the possibility to scan indices that are ~~large as hell~~ larger than memory. 
+Built from embeddings that are extracted from document fields through tokenization during the write operation, spaces are
+persisted on disk as bitmaps that are scannable in a streaming fashionvthat brings little pressure to memory, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are ~~really, really big~~ larger than memory. 
 
 If you have only embeddings, no documents, you might still find some of the APIs useful for when you
 want to build searchable spaces, e.g. Sir.VectorSpace.GraphBuilder and Sir.VectorSpace.PathFinder.
 
 Spaces are configured by implementing Sir.IModel or Sir.IStringModel.
 
-There is both an in-proc and out-of-process (HTTP) API.
+There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as JSON-friendly HTTP API.
 
 ## Write, map, materialize and page
 
