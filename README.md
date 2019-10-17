@@ -10,7 +10,7 @@ persisted on disk as bitmaps that are scannable in a streaming fashion, putting 
 Spaces are configured by implementing IModel or IStringModel.
 
 If you have only embeddings, no documents, you might still find some of the APIs useful for when you
-want to build searchable spaces, e.g. (Sir.VectorSpace) GraphBuilder and PathFinder. If you already use MathNet.Numerics your vectors are already fully compatible. 
+want to build searchable spaces, e.g. (Sir.VectorSpace) GraphBuilder and PathFinder. If you use MathNet.Numerics your vectors are already fully compatible. 
 
 ## In- and out-of-proc
 
