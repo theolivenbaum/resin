@@ -3,11 +3,11 @@
 Resin is a document database that is paired with a pluggable (customizable, extensible) 
 search index that represents a vector space. 
 
-Having been built from embeddings generated from document fields of your choice, spaces are
+Built from embeddings generated from document fields of your choice, spaces are
 persisted on disk as bitmaps, scannable in a forward-only streaming fashion. 
 
 If you have only embeddings, no documents, you might still find some of the APIs useful for when you
-want to build and scan indices that represent them.
+want to build and scan indices/spaces.
 
 Spaces are configured by implementing IModel or IStringModel.
 
