@@ -15,16 +15,24 @@ Spaces are configured by implementing Sir.IModel or Sir.IStringModel.
 
 There is both an in-proc and out-of-process (HTTP) API.
 
-Here are the apps:
+## Reading, mapping, reducing
 
-- _Sir.HttpServer_: HTTP search service
-- _Sir.DbUtil_: index, train, validate and query via command-line
+__Write__ data flow: documents turn into vectors that turn into nodes that turn into blocks in a bitmap.
 
-.Net Core 3 apps can embedd and extend these:
+__Map__ data flow is: query turns into a document that turn into a tree of vectors that is compared to the vectors of your space by performing a streaming binary search of bitmap files.
 
-- _Sir.KeyValue_: key/value/document System.IO.Stream-based database
-- _Sir.VectorSpace_: hardware accellerated computations over and stream based storage of vectors and spaces
-- _Sir.Search_: in-proc search engine (SessionFactory, WriteSession, ReadSession)
+__Reduce__ operation: each node in the query tree, which recieved a mapping to one or more posting lists ("document references") during the map step, first materialize their postings lists then join them through intersection, union or deletion, while scoring them, and, finally, sorting them by score and materializing the result as a list of documents.
+
+## Apps
+
+- __Sir.HttpServer__: HTTP search service (read, write, query naturally or w/QL)
+- __Sir.DbUtil__: write, validate and query via command-line
+
+## Libs (.Net Core 3 apps can embedd and extend these)
+
+- __Sir.KeyValue__: key/value/document System.IO.Stream-based database
+- __Sir.VectorSpace__: hardware accellerated computations over and stream based storage of vectors and spaces
+- __Sir.Search__: in-proc search engine (SessionFactory, WriteSession, ReadSession)
 
 ## Roadmap
 
