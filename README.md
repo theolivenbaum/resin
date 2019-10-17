@@ -1,6 +1,6 @@
 # &#9084; Resin Extensible Search Engine
 
-Resin is a document database that's been paired with an extensible search index that happens to represent a vector space, any vector space, as long as it's a (Sir) IModel.
+Resin is a document database that's been paired with an search index that happens to represent a vector space, a quite powerful concept, if you think about it, any vector space, really, as long as it's a (Sir) IModel, which will still feel quite powerful, to some of you. To others, IModel will get in the way. See "Contribute".
 
 ## Spaces
 
@@ -55,3 +55,7 @@ IdenticalAngle and FoldAngle are properties of IModel.
 - [ ] v2.1 - voice-to-text
 - [ ] v2.2 - text-to-image
 - [ ] v3.0 - AGI
+
+## Contribute
+
+If IModel sometimes gets in your way, as I anticipate it might, then please undertand, it is simply an interface, written by some guy. PR's are most welcome.
