@@ -4,6 +4,10 @@ Resin is a document database that's been coupled with a search index. That index
 
 Some folks, not neccessarily you, but some, might be you, will find IModel, instead of being powerful, gets in their way (see "Contribute").
 
+## APIs
+
+There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as JSON-friendly HTTP API that can be extended to support XML or any other document format, if you are one to fully utilize Asp.Net Core 3 MVC's content negotiating capabilities.
+
 ## Spaces
 
 Built from embeddings that were extracted from document fields during the tokenization phase of the write operation, spaces are
@@ -13,10 +17,6 @@ Spaces are configured by implementing IModel or IStringModel.
 
 If you have only embeddings, no documents, you might still find some of the APIs useful for when you
 want to build searchable spaces, e.g. (Sir.VectorSpace) GraphBuilder and PathFinder. If you use MathNet.Numerics your vectors are already fully compatible. 
-
-## APIs
-
-There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as JSON-friendly HTTP API that can be extended to support XML or any other document format, if you are one to fully utilize Asp.Net Core 3 MVC's content negotiating capabilities.
 
 ## Write, map, materialize and page
 
