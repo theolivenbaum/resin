@@ -44,7 +44,7 @@ If some `type` gets in your way, as I anticipate sometimes they might then, fork
 
 ## Code Of Conduct
 
-If you feel like contributing in some form, adhere to the current zeitgeist of what is currently considered the appropriate, human behaviour, or, be funny. Attempts at being funny however, whilst failing, or, if you're not even trying to be funny, instead, you're being overly appropriate or, underly, or, too much in the middle, y'know, too "average", are very much frowned upon, they are, so basically, always try to be the "correct" way, or funny.
+If you feel like contributing in some form, adhere to the zeitgeist of what is considered the appropriate, human behaviour, or, be funny. Attempts at being funny however, whilst failing, or, if you're not even trying to be funny, instead, you're being overly appropriate or, underly, or, too much in the middle, y'know, too "average", are very much frowned upon, they are, so basically, always try to be the "correct" way, or funny.
 
 ## Apps
 
