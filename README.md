@@ -1,6 +1,6 @@
 # &#9084; Resin Extensible Search Engine
 
-Resin is a document database that's been paired with a extensible search index that represents a vector space. 
+Resin is a document database that's been paired with an extensible search index that represents a vector space. 
 
 Built from embeddings that are extracted from document fields during the tokenization phase of the write operation, spaces are
 persisted on disk as bitmaps that are scannable in a streaming fashionvthat brings little pressure to memory, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are ~~really, really big~~ larger than memory. 
