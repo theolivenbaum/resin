@@ -7,7 +7,7 @@ Some folks, not neccessarily you, but some, might be you, will find IModel gets 
 ## Spaces
 
 Built from embeddings that were extracted from document fields during the tokenization phase of the write operation, spaces are
-persisted on disk as bitmaps, scannable, in a streaming fashion, so there's only little pressure on memory while querying, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are larger than memory. 
+persisted on disk as bitmaps, scannable in a streaming fashion, so there's only little pressure on memory while querying, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are larger than memory. 
 
 Spaces are configured by implementing IModel or IStringModel.
 
