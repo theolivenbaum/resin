@@ -16,7 +16,7 @@ want to build searchable spaces, e.g. (Sir.VectorSpace) GraphBuilder and PathFin
 
 ## APIs
 
-There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as _JSON-friendly HTTP API_ that can be extended to support XML _or any other document format_, if you are one to fully utilize Asp.Net Core 3 MVC's content negotiating capabilities.
+There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as JSON-friendly HTTP API that can be extended to support XML or any other document format, if you are one to fully utilize Asp.Net Core 3 MVC's content negotiating capabilities.
 
 ## Write, map, materialize and page
 
