@@ -28,7 +28,7 @@ __Materialize operation__: each node in the query tree that recieved a mapping t
 
 Balancing the binary tree that represents your space is done by adjusting the merge factor ("IdenticalAngle") and the fold factor ("FoldAngle"). 
 
-The location in the index, of each vector, is determined by calculating its angle to the node it most resembles. If the angle is greater than or equal to IdenticalAngle, the two nodes merge. If it is not identical a new node is added to the binary tree. If the angle is greater than FoldAngle, it is added as a left child to the node or, if that slot is taken, to the next left node that has a empty left slot, otherwise as a right child.
+The location in the index, of each vector, is determined by calculating its angle to the node it most resembles. If the angle is greater than or equal to IdenticalAngle the two nodes merge. If it is not a new node is added to the binary tree. If the angle is greater than FoldAngle it is added as a left child to the node or, if that slot is taken, to the next left node that has a empty left slot, otherwise as a right child.
 
 IdenticalAngle and FoldAngle are properties of IModel.
 
