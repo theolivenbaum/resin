@@ -8,7 +8,7 @@ There is both an in-proc, NHibernate-like API in that there are sessions, a fact
 
 ## Vector spaces
 
-Built from embeddings extracted from document fields during the tokenization phase of the write session, spaces, are
+Built from embeddings extracted from document fields during the tokenization phase of the write session, spaces are
 persisted on disk as bitmaps, made scannable in a streaming fashion, meaning, only little pressure will be put on memory while querying, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are larger than memory. 
 
 Spaces are configured by implementing `IModel` or `IStringModel`.
