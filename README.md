@@ -64,4 +64,4 @@ If some `type` gets in your way, as I anticipate sometimes they might then, fork
 
 ## Code Of Conduct
 
-If you feel like contributing, adhere to the current zeitgeist of what is, currently, the appropriate behaviour, or, be funny. Attempts at being funny while miserably failing, or, while not even trying to be funny, being overly appropriate, or underly or, too much in the middle, is frowned upon, heavily.
+If you feel like contributing, adhere to the current zeitgeist of what is, currently, the appropriate behaviour, or, be funny. Attempts at being funny while miserably failing, or, while not even trying to be funny instead, being overly appropriate, or underly or, too much in the middle, is very much frowned upon.
