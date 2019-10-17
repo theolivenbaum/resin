@@ -26,7 +26,7 @@ __Map data flow__: a query that represents one or more terms, each term identify
 
 How often more and how many more depends to some degree on how you balanced your tree and to another, hopefully much smaller degree, and this goes for all probabilistic models, and we're probabilistic because two vectors that are not identical to another can be merged (see "Balancing"), on pure chance.
 
-__Materialize operation__: each node in the query tree that recieved a mapping to one or more postings lists ("lists of document references") during the map step now materializes their postings and so we can join them with those of their parent, through intersection, union or deletion while also scoring them and, once the tree's been materialized all the way down to the root and we have reduced the tree to a single list of references, we can __sort__ them by relevance and get on with what it is we really want, which is to materialize a list of __paged__ documents sorted by relevance.
+__Materialize operation__: each node in the query tree that recieved a mapping to one or more postings lists ("lists of document references") during the map step now materializes their postings and so we can join them with those of their parent, through intersection, union or deletion while also scoring them and, once the tree's been materialized all the way down to the root and we have reduced the tree to a single list of references, we can __sort__ them by relevance and get on with what it is we really want, which is to materialize a __page__ from a list of those sorted documents.
 
 ## Balancing (algorithm)
 
