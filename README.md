@@ -9,20 +9,22 @@ an operation with a memory pressure that amounts to the size of a graph node,
 enabling the possibility to scan indices that are larger than memory. 
 
 If you have only embeddings, no documents, you might still find some of the APIs useful for when you
-want to build searchable spaces.
+want to build searchable spaces, e.g. Sir.VectorSpace.GraphBuilder and Sir.VectorSpace.PathFinder.
 
-Spaces are configured by implementing IModel or IStringModel.
+Spaces are configured by implementing Sir.IModel or Sir.IStringModel.
 
-There is both an in-process and out-of-process (HTTP) API and there are two apps:
+There is both an in-proc and out-of-process (HTTP) API.
+
+Here are the apps:
 
 - _Sir.HttpServer_: HTTP search service
 - _Sir.DbUtil_: index, train, validate and query via command-line
 
 .Net Core 3 apps can embedd and extend these:
 
-- _Sir.KeyValue_: a key/value/document stream based database
+- _Sir.KeyValue_: key/value/document System.IO.Stream-based database
 - _Sir.VectorSpace_: hardware accellerated computations over and stream based storage of vectors and spaces
-- _Sir.Search_: search engine
+- _Sir.Search_: in-proc search engine (SessionFactory, WriteSession, ReadSession)
 
 ## Roadmap
 
