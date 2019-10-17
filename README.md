@@ -36,6 +36,16 @@ A node's placement in the index is determined by calculating its angle to the no
 
 IdenticalAngle and FoldAngle are properties of IModel.
 
+## Contribute
+
+Error reports of any kind are most welcome. So are suggestions.
+
+If some `type` gets in your way, as I anticipate sometimes they might then, fork or, understand, they, are simply stories written by some (random) guy thus, not, written in stone so, PR's are most welcome, too. 
+
+## Code Of Conduct
+
+If you feel like contributing in some form, adhere to the current zeitgeist of what is currently considered the appropriate, human behaviour, or, be funny. Attempts at being funny however, whilst failing, or, if you're not even trying to be funny, instead, you're being overly appropriate or, underly, or, too much in the middle, y'know, too "average", are very much frowned upon, they are, so basically, always try to be the "correct" way, or funny.
+
 ## Apps
 
 - __Sir.HttpServer__: HTTP search service (read, write, query naturally or w/QL)
@@ -46,16 +56,6 @@ IdenticalAngle and FoldAngle are properties of IModel.
 - __Sir.KeyValue__: key/value/document System.IO.Stream-based database
 - __Sir.VectorSpace__: hardware accellerated computations over and stream based storage of vectors and spaces
 - __Sir.Search__: in-proc search engine (SessionFactory, WriteSession, ReadSession)
-
-## Contribute
-
-Error reports of any kind are most welcome. So are suggestions.
-
-If some `type` gets in your way, as I anticipate sometimes they might then, fork or, understand, they, are simply stories written by some (random) guy thus, not, written in stone so, PR's are most welcome, too. 
-
-## Code Of Conduct
-
-If you feel like contributing in some form, adhere to the current zeitgeist of what is currently considered the appropriate, human behaviour, or, be funny. Attempts at being funny however, whilst failing, or, if you're not even trying to be funny, instead, you're being overly appropriate or, underly, or, too much in the middle, y'know, too "average", are very much frowned upon, they are, so basically, always try to be the "correct" way, or funny.
 
 ## Roadmap
 
