@@ -3,7 +3,7 @@
 Resin is a document database that's been paired with an extensible search index that happens to represent a vector space, any vector space, really, as long as it's a IModel. 
 
 Built from embeddings that are extracted from document fields during the tokenization phase of the write operation, spaces are
-persisted on disk as bitmaps that are scannable in a streaming fashion, putting little pressure on memory, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are ~~really, really big~~ larger than memory. 
+persisted on disk as bitmaps that are scannable in a streaming fashion, putting little pressure on memory while doing so, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are ~~really, really big~~ larger than memory. 
 
 If you have only embeddings, no documents, you might still find some of the APIs useful for when you
 want to build searchable spaces, e.g. Sir.VectorSpace.GraphBuilder and Sir.VectorSpace.PathFinder.
