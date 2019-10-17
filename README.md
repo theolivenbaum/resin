@@ -2,7 +2,7 @@
 
 Resin is a document database that's been coupled with a search index. 
 
-The index can represent any vector space, however thick, however wide it is, as long as it's a `Sir.IModel`.
+The index can represent any vector space, no matter how thick and however wide, as long as it's a `Sir.IModel`.
 
 ## APIs
 
