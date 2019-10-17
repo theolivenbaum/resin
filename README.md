@@ -1,16 +1,20 @@
 # &#9084; Resin Extensible Search Engine
 
-Resin is a document database that's been paired with an extensible search index that happens to represent a vector space, any vector space, really, as long as it's a IModel. 
+Resin is a document database that's been paired with an extensible search index that happens to represent a vector space, any vector space, as long as it's a (Sir) IModel.
+
+## Spaces
 
 Built from embeddings that are extracted from document fields during the tokenization phase of the write operation, spaces are
 persisted on disk as bitmaps that are scannable in a streaming fashion, putting little pressure on memory while doing so, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are ~~really, really big~~ larger than memory. 
 
+Spaces are configured by implementing IModel or IStringModel.
+
 If you have only embeddings, no documents, you might still find some of the APIs useful for when you
-want to build searchable spaces, e.g. Sir.VectorSpace.GraphBuilder and Sir.VectorSpace.PathFinder.
+want to build searchable spaces, e.g. (Sir.VectorSpace) GraphBuilder and PathFinder. If you already use MathNet.Numerics your vectors are already fully compatible. 
 
-Spaces are configured by implementing Sir.IModel or Sir.IStringModel.
+## In- and out-of-proc
 
-There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as JSON-friendly HTTP API.
+There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as JSON-friendly HTTP API that can be extended to support XML or any other document format, if you which you're one to fully utilize asp.net core 3 mvc's content negotiating capabilities.
 
 ## Write, map, materialize and page
 
