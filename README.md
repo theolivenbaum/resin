@@ -17,11 +17,19 @@ There is both an in-proc and out-of-process (HTTP) API.
 
 ## Writing, mapping, reducing and paging
 
-__Write__ data flow: documents turn into vectors that turn into nodes in a graph that turn into a bitmap.
+__Write__ data flow: documents are persisted, then turned into vectors that turn into nodes in a graph that turn into a bitmap.
 
 __Map__ data flow: query turns into a document that turn into a tree of vectors that is compared to the vectors of your space by performing a streaming binary search of index bitmap files.
 
 __Reduce__ operation: each node in the query tree recieved a mapping to one or more posting lists ("document references") during the map step, now we materialize their postings lists then join them through intersection, union or deletion, while scoring them, and, finally, sort them by score and materialize the resulting document references as a list of scored and sorted documents, paged.
+
+## Balancing
+
+Balancing the binary tree that represents your space is done by adjusting the merge factor ("IdenticalAngle") and the fold factor ("FoldAngle"). 
+
+The location of each vector in the index is determined by calculating its angle to the node it most resembles. If the angle is greater than or equal to IdenticalAngle, the two nodes merge. If it is not identical an new node is added to the binary tree, as a left child if the angle is greater than FoldAngle, otherwise as a right child.
+
+IdenticalAngle and FoldAngle are properties of IModel.
 
 ## Apps
 
