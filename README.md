@@ -1,6 +1,6 @@
 # &#9084; Resin Search
 
-Resin is a document database that is paired with a pluggable (customizable, extensible) 
+Resin is a document database paired with a pluggable (customizable, extensible) 
 search index that represents a vector space. 
 
 Built from embeddings generated from document fields of your choice, spaces are
