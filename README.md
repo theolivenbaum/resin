@@ -20,7 +20,7 @@ There is both an in-proc, NHibernate-like API in that there are sessions, a fact
 
 ## Write, map, materialize and page
 
-__Write data flow__: documents consisting of keys and values, i.e. unnested JSON documents that are mappable to IDictionary<string, object> without corruption where object can be of type "primitive", string, or bit array, are persisted on disk and turned into vectors through tokenization, each embedding placed in a graph (see "Balancing"), each node referencing one or more documents, then appended to a file on disk as part of a segment in a column index that, by the full powers of what is .Net parallelism, will be touched, hopefully very briefly, during mapping of queries that target this column.
+__Write data flow__: documents consisting of keys and values, unnested, mappable to IDictionary<string, object> without corruption where object can be of type "primitive", string, or bit array, e.g. JSON documents, are persisted to disk, fields turned into term vectors through tokenization, each vector placed in a graph (see "Balancing"), each node referencing one or more documents, and appended to a file on disk as part of a segment in a column index that will, by the full powers of what is .Net parallelism, be scanned during mapping of queries that target this column.
 
 Tokenization is configured by implementing IModel.Tokenize.
 
