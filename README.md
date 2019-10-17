@@ -36,6 +36,10 @@ A node's placement in the index is determined by calculating its angle to the no
 
 IdenticalAngle and FoldAngle are properties of IModel.
 
+## Closest matching term vector (algorithm)
+
+A query can consist of many sub queries, each carrying a list of query terms. Finding a query term's closest matching vector inside a space entails finding the correct column index file, finding the boundaries of each segment, querying each segment by finding the root node, represented on disk as the first block in the segment, deserializing it, calculating the cos angle between the query vector and the index vector, determining whether to go left or right based on if the angle is over IModel.FoldAngle or below/equal or whether to call it quits because the angle is 1 and nowhere in the segment can there exist a better match.
+
 ## Contribute
 
 Error reports of any kind are most welcome. So are suggestions.
