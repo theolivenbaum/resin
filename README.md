@@ -9,7 +9,7 @@ an operation with a memory preassure that amounts to the size of a graph node,
 enabling the possibility to scan indices that are larger than memory. 
 
 If you have only embeddings, no documents, you might still find some of the APIs useful for when you
-want to build and scan indices/spaces.
+want to build searchable spaces.
 
 Spaces are configured by implementing IModel or IStringModel.
 
