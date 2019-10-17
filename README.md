@@ -50,7 +50,7 @@ If some `type` gets in your way, as I anticipate sometimes they might then, fork
 
 ## Code Of Conduct
 
-If you feel like contributing in some form, adhere to the zeitgeist of what is considered the appropriate, human behaviour, or, be funny. Attempts at being funny however, whilst failing, or, if you're not even trying to be funny, instead, you're being overly appropriate or, underly, or, too much in the middle, y'know, too "average", are very much frowned upon, they are, so basically, always try to be the "correct" way, or funny.
+If you feel like contributing in some form, adhere to the zeitgeist of what is considered the appropriate, human behaviour, or, be funny. Attempts at being funny however, whilst failing, or, if you're not even trying to be funny, instead, you're being overly appropriate or, underly, or, you're way too close to the middle, y'know, too "average", are very much frowned upon, but also forgiven, so basically, always try to be the "correct" way, or funny or be prepared to be corrected, then forgiven, then pointed in the right direction.
 
 ## Apps
 
