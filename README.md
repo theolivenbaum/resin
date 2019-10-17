@@ -15,7 +15,7 @@ Spaces are configured by implementing Sir.IModel or Sir.IStringModel.
 
 There is both an in-proc and out-of-process (HTTP) API.
 
-## Reading, mapping, reducing and paging
+## Writing, mapping, reducing and paging
 
 __Write__ data flow: documents turn into vectors that turn into nodes in a graph that turn into a bitmap.
 
