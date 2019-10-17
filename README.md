@@ -8,7 +8,7 @@ Some folks, not neccessarily you, but some, might be you, will find IModel, inst
 
 ## APIs
 
-There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as JSON-friendly HTTP API that can be extended to support XML or any other document format, if you are one to fully utilize Asp.Net Core 3 MVC's content negotiating capabilities.
+There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as JSON-friendly HTTP API.
 
 ## Vector spaces
 
