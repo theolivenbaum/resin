@@ -16,7 +16,7 @@ Spaces are configured by implementing `IModel` or `IStringModel`.
 If you have only embeddings, no documents, you might still find some of the APIs useful for when you
 want to build searchable spaces, e.g. `Sir.VectorSpace.GraphBuilder` and `PathFinder`. If you use `MathNet.Numerics` your vectors are already fully compatible. 
 
-## Write, map, materialize and page
+## Write, map, materialize, sort and page
 
 __Write data flow__: documents that consist of keys and values, that are mappable to `IDictionary<string, object>` without corruption, where object is of type "primitive", string, or bit array, e.g. unnested JSON documents, are persisted to disk and fields are turned into term vectors through tokenization, each vector positioned in a graph (see "Balancing"), each referencing one or more documents, each appended to a file on disk as part of a segment in a column index that will, by the full powers of what is .Net parallelism, be scanned during mapping of queries that target this column.
 
@@ -24,7 +24,7 @@ Tokenization is configured by implementing `IModel.Tokenize`.
 
 __Map data flow__: a query that represents one or more terms, each term identifying both a column and a value, turns into a document that turns into a tree of vectors (through tokenization), each node representing a boolean set operation over your space, each compared to the vectors of your space by performing binary search over the nodes of your column bitmap files, so, luckily, not to all vectors, only, but this is not guaranteed to always be the case, log(N) vectors. How often more and how many more depends to some degree on how you balanced your tree and to another, hopefully much smaller degree, and this goes for all probabilistic models, and we're probabilistic because two vectors that are not identical to another can be merged (see "Balancing"), on pure chance.
 
-__Materialize operation__: each node in the query tree that recieved a mapping to one or more postings lists ("lists of document references") during the map step now materializes their postings and so we can join them with those of their parent, through intersection, union or deletion while also scoring them and, once the tree's been materialized all the way down to the root and we have reduced the tree to a single list of references, we can sort them by relevance and get on with what it is we really want, which is to materialize a list of __paged__ documents sorted by relevance.
+__Materialize operation__: each node in the query tree that recieved a mapping to one or more postings lists ("lists of document references") during the map step now materializes their postings and so we can join them with those of their parent, through intersection, union or deletion while also scoring them and, once the tree's been materialized all the way down to the root and we have reduced the tree to a single list of references, we can __sort__ them by relevance and get on with what it is we really want, which is to materialize a list of __paged__ documents sorted by relevance.
 
 ## Balancing (algorithm)
 
