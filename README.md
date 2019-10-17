@@ -1,4 +1,4 @@
-# &#9084; Resin
+# &#9084; Resin Search
 
 Resin is a document database that is paired with a pluggable (customizable, extensible) 
 search index that represents a vector space. 
