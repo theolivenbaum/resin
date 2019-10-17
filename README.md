@@ -18,7 +18,7 @@ There is both an in-proc and out-of-process (HTTP) API.
 
 ## Writing, mapping, reducing and paging
 
-__Write__ data flow: documents that consists of keys and values, are persisted as such, then turned into vectors through tokenization, each embedding placed as a node in a graph that turn into a bitmap that is persisted on disk as a segment in a column file.
+__Write__ data flow: documents that consists of keys and values, are persisted as such, then turned into vectors through tokenization, each embedding placed as a node in a graph, each node referencing one or more documents, that turn into a bitmap that is persisted on disk as a segment in a column file.
 
 __Map__ data flow: a query representing one or more terms, each term identifying both a column and a value, turns into a document that turns into a tree of vectors, each node representing a boolean set operation over your space, that is compared to the vectors in your index by performing a streaming binary search of your column bitmap files.
 
