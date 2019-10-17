@@ -18,7 +18,7 @@ There is both an in-proc and out-of-process (HTTP) API.
 
 ## Writing, mapping, reducing and paging
 
-__Write__ data flow: documents that consists of keys and values, are persisted as such, then turned into vectors through tokenization (IModel.Tokenize), each embedding placed as a node in a graph, each node referencing one or more documents, that we turn into a bitmap that we persist on disk as a segment in a column file.
+__Write__ data flow: documents that consists of keys and values, are persisted as such, then turned into vectors through tokenization (IModel.Tokenize), each embedding placed as a node in a graph (see "Balancing"), each node referencing one or more documents, that we turn into a bitmap that we persist on disk as a segment in a column file.
 
 __Map__ data flow: a query representing one or more terms, each term identifying both a column and a value, turns into a document that turns into a tree of vectors, each node representing a boolean set operation over your space, each compared to the vectors of your space by performing streaming binary search over the nodes of your column bitmap files, so, luckily, not all vectors. Hopefully, but this is not guaranteed, only to log(N) vectors.
 
@@ -28,7 +28,7 @@ __Reduce__ operation: each node in the query tree that recieved a mapping to one
 
 Balancing the binary tree that represents your space is done by adjusting the merge factor ("IdenticalAngle") and the fold factor ("FoldAngle"). 
 
-The location of each vector in the index is determined by calculating its angle to the node it most resembles. If the angle is greater than or equal to IdenticalAngle, the two nodes merge. If it is not identical an new node is added to the binary tree, as a left child if the angle is greater than FoldAngle, otherwise as a right child.
+The location of each vector in the index is determined by calculating its angle to the node it most resembles. If the angle is greater than or equal to IdenticalAngle, the two nodes merge. If it is not identical a new node is added to the binary tree, as a left child to the next node with such an empty slot, if the angle is greater than FoldAngle, otherwise as a right child.
 
 IdenticalAngle and FoldAngle are properties of IModel.
 
