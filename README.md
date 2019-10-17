@@ -17,11 +17,11 @@ There is both an in-proc and out-of-process (HTTP) API.
 
 ## Writing, mapping, reducing and paging
 
-__Write__ data flow: documents are persisted, then turned into vectors that turn into nodes in a graph that turn into a bitmap.
+__Write__ data flow: documents are persisted, then turned into vectors that turn into nodes in a graph that turn into a bitmap that is persisted on disk.
 
-__Map__ data flow: query turns into a document that turn into a tree of vectors that is compared to the vectors of your space by performing a streaming binary search of index bitmap files.
+__Map__ data flow: query turns into a document that turns into a tree of vectors that is compared to the vectors of your space by performing a streaming binary search of your index bitmap files.
 
-__Reduce__ operation: each node in the query tree recieved a mapping to one or more posting lists ("document references") during the map step, now we materialize their postings lists then join them through intersection, union or deletion, while scoring them, and, finally, sort them by score and materialize the resulting document references as a list of scored and sorted documents, paged.
+__Reduce__ operation: each node in the query tree that recieved a mapping to one or more posting lists ("lists of document references") during the map step now materializes their references and we can join them with those of their the parent, through intersection, union or deletion, and, once the tree's been materialized all the way down to the root, we have a list of references that we can sort by relevance so that we can do what we really came here to do, to materialize a list of scored and sorted documents that are paged.
 
 ## Balancing
 
