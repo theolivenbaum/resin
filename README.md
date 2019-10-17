@@ -2,9 +2,7 @@
 
 Resin is a document database that's been coupled with a search index. 
 
-The index can represent a vector space, any vector space, as long as it's a (Sir) IModel. 
-
-Some folks, not neccessarily you, but some, might be you, will find IModel, instead of being powerful, gets in their way (see "Contribute").
+The index can represent any vector space, however thick, however wide it is, as long as it's a `Sir.IModel`.
 
 ## APIs
 
@@ -15,16 +13,16 @@ There is both an in-proc, NHibernate-like API in that there are sessions, a fact
 Built from embeddings extracted from document fields during the tokenization phase of the write session, spaces, are
 persisted on disk as bitmaps, made scannable in a streaming fashion, meaning, only little pressure will be put on memory while querying, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are larger than memory. 
 
-Spaces are configured by implementing IModel or IStringModel.
+Spaces are configured by implementing `IModel` or `IStringModel`.
 
 If you have only embeddings, no documents, you might still find some of the APIs useful for when you
-want to build searchable spaces, e.g. (Sir.VectorSpace) GraphBuilder and PathFinder. If you use MathNet.Numerics your vectors are already fully compatible. 
+want to build searchable spaces, e.g. `Sir.VectorSpace.GraphBuilder` and `PathFinder`. If you use `MathNet.Numerics` your vectors are already fully compatible. 
 
 ## Write, map, materialize and page
 
-__Write data flow__: documents that consist of keys and values, that are mappable to IDictionary<string, object> without corruption, where object can be of type "primitive", string, or bit array, e.g. unnested JSON documents, are persisted to disk and fields are turned into term vectors through tokenization, each vector positioned in a graph (see "Balancing"), each referencing one or more documents, each appended to a file on disk as part of a segment in a column index that will, by the full powers of what is .Net parallelism, be scanned during mapping of queries that target this column.
+__Write data flow__: documents that consist of keys and values, that are mappable to `IDictionary<string, object>` without corruption, where object can be of type "primitive", string, or bit array, e.g. unnested JSON documents, are persisted to disk and fields are turned into term vectors through tokenization, each vector positioned in a graph (see "Balancing"), each referencing one or more documents, each appended to a file on disk as part of a segment in a column index that will, by the full powers of what is .Net parallelism, be scanned during mapping of queries that target this column.
 
-Tokenization is configured by implementing IModel.Tokenize.
+Tokenization is configured by implementing `IModel.Tokenize`.
 
 __Map data flow__: a query, representing one or more terms, each term identifying both a column and a value, turns into a document that turns into a tree of vectors (through tokenization), each node representing a boolean set operation over your space (AND, OR, NOT), each compared to the vectors of your space by performing binary search over the nodes of your column bitmap files, so, luckily, not all vectors, only, but this is not guaranteed to always be the case, log(N) vectors. Sometimes more, but sometimes, not that it matters much, much less. How often more and how many more depends to some degree on how you balanced your tree and to another, hopefully much smaller degree, and this goes for all probabilistic models, and we're probabilistic because two vectors that are not identical to another can be merged (see "Balancing"), on pure chance.
 
@@ -36,7 +34,7 @@ Balancing the binary tree that represents your space is done by adjusting the me
 
 A node's placement in the index is determined by calculating its angle to the node it most resembles. If the angle is greater than or equal to IdenticalAngle the two nodes merge. If it is not a new node is added to the binary tree. If the angle is greater than FoldAngle it is added as a left child to the node or, if that slot is taken, to the next left node that has a empty left slot, otherwise as a right child.
 
-IdenticalAngle and FoldAngle are properties of IModel.
+IdenticalAngle and FoldAngle are properties of `IModel`.
 
 ## Closest matching term vector (algorithm)
 
