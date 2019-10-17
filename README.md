@@ -4,8 +4,8 @@ Resin is a document database paired with a pluggable (extensible)
 search index that represents a vector space. 
 
 Built from embeddings generated from document fields, spaces are
-persisted on disk as bitmaps, scannable in a forward-only streaming fashion, 
-an operation that brings pressure to memory that amounts to the size of a single graph node, 
+persisted on disk as bitmaps that are scannable in a streaming fashion, 
+that brings pressure to memory that amounts to the size of a single graph node, 
 which is usually very small, 
 enabling the possibility to scan indices that are ~~large as hell~~ larger than memory. 
 
