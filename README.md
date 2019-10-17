@@ -6,7 +6,7 @@ search index that represents a vector space.
 Built from embeddings generated from document fields of your choice, spaces are
 persisted on disk as bitmaps, scannable in a forward-only streaming fashion, 
 an operation with a memory pressure that amounts to the size of a graph node, 
-enabling the possibility to scan indices that are larger than memory. 
+enabling the possibility to scan indices that are ~~large as hell~~ larger than memory. 
 
 If you have only embeddings, no documents, you might still find some of the APIs useful for when you
 want to build searchable spaces, e.g. Sir.VectorSpace.GraphBuilder and Sir.VectorSpace.PathFinder.
