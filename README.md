@@ -12,7 +12,7 @@ Spaces are configured by implementing IModel or IStringModel.
 If you have only embeddings, no documents, you might still find some of the APIs useful for when you
 want to build searchable spaces, e.g. (Sir.VectorSpace) GraphBuilder and PathFinder. If you use MathNet.Numerics your vectors are already fully compatible. 
 
-## In- and out-of-proc
+## APIs
 
 There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as __JSON-friendly HTTP API__ that can be extended to support XML __or any other document format__, if you are one to fully utilize Asp.Net Core 3 MVC's content negotiating capabilities.
 
