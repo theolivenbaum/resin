@@ -40,7 +40,7 @@ IdenticalAngle and FoldAngle are properties of IModel.
 
 Error reports of any kind are most welcome. So are suggestions.
 
-If some `type` gets in your way, as I anticipate sometimes they might then, fork or, understand, they, are simply stories written by some (random) guy thus, not, written in stone so, PR's are most welcome, too. 
+If some `type` gets in your way, as I anticipate sometimes they might then, fork or, understand, they, are simply stories written by some (random) guy thus, not, written in stone so, PR's are most welcome, to. 
 
 ## Code Of Conduct
 
