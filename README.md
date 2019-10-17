@@ -8,7 +8,7 @@ Some folks, not neccessarily you, but some, might be you, will find IModel, inst
 
 There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as JSON-friendly HTTP API that can be extended to support XML or any other document format, if you are one to fully utilize Asp.Net Core 3 MVC's content negotiating capabilities.
 
-## Spaces
+## Vector spaces
 
 Built from embeddings that were extracted from document fields during the tokenization phase of the write operation spaces are
 persisted on disk as bitmaps, scannable in a streaming fashion, meaning, there's only little pressure on memory while querying, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are larger than memory. 
