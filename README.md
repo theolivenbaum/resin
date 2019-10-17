@@ -5,7 +5,7 @@ Resin is a document database that wants to be a search engine so it's been paire
 ## Spaces
 
 Built from embeddings that are extracted from document fields during the tokenization phase of the write operation, spaces are
-persisted on disk as bitmaps that are scannable in a streaming fashion putting little pressure on memory while doing so, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are larger than memory. 
+persisted on disk as bitmaps that are scannable in a streaming fashion, while putting little pressure on memory in doing so, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are larger than memory. 
 
 Spaces are configured by implementing IModel or IStringModel.
 
