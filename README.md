@@ -18,7 +18,7 @@ There is both an in-proc and out-of-process (HTTP) API.
 
 ## Writing, mapping, reducing and paging
 
-__Write data flow__: documents that consists of keys and values, are persisted as such, then turned into vectors through tokenization (IModel.Tokenize), each embedding placed as a node in a graph (see "Balancing"), each node referencing one or more documents, that we turn into a bitmap that we persist on disk as a segment in a column file.
+__Write data flow__: documents that consists of keys and values, are persisted on disk and turned into vectors through tokenization (IModel.Tokenize), each embedding placed as a node in a graph (see "Balancing"), each node referencing one or more documents, that we turn into a bitmap that we persist on disk as a segment in a column file.
 
 __Map data flow__: a query representing one or more terms, each term identifying both a column and a value, turns into a document that turns into a tree of vectors, each node representing a boolean set operation over your space, each compared to the vectors of your space by performing streaming binary search over the nodes of your column bitmap files, so, luckily, not all vectors. Hopefully, but this is not guaranteed, only to log(N) vectors.
 
