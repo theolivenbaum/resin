@@ -1,6 +1,8 @@
 # &#9084; Resin Extensible Search Engine
 
-Resin is a document database that's been coupled with a search index. That index can represent a vector space, any vector space, as long as it's a (Sir) IModel. 
+Resin is a document database that's been coupled with a search index. 
+
+The index can represent a vector space, any vector space, as long as it's a (Sir) IModel. 
 
 Some folks, not neccessarily you, but some, might be you, will find IModel, instead of being powerful, gets in their way (see "Contribute").
 
