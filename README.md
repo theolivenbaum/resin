@@ -3,7 +3,7 @@
 Resin is a document database paired with a pluggable (extensible) 
 search index that represents a vector space. 
 
-Built from embeddings generated from document fields, spaces are
+Built from embeddings extracted from document fields through tokenization, spaces are
 persisted on disk as bitmaps that are scannable in a streaming fashion, 
 that brings pressure to memory that amounts to the size of a single graph node, 
 which is usually very small, 
@@ -16,13 +16,13 @@ Spaces are configured by implementing Sir.IModel or Sir.IStringModel.
 
 There is both an in-proc and out-of-process (HTTP) API.
 
-## Writing, mapping, reducing and paging
+## Write, map, materialize and page
 
-__Write data flow__: documents that consists of keys and values, are persisted on disk and turned into vectors through _tokenization_ (IModel.Tokenize), each embedding placed as a node in a graph (see "Balancing"), each node referencing one or more documents, that we turn into a bitmap that we persist on disk as a segment in a column file.
+__Write data flow__: documents that consists of keys and values, are persisted on disk and turned into vectors, through tokenization (IModel.Tokenize), each embedding placed in a graph (see "Balancing"), each node referencing one or more documents, that we turn into a bitmap that we persist on disk as a segment in a column index file.
 
-__Map data flow__: a query representing one or more terms, each term identifying both a column and a value, turns into a document that turns into a tree of vectors (through tokenization), each node representing a boolean set operation over your space (AND, OR, NOT), each compared to the vectors of your space by performing binary search over the nodes of your column bitmap files, so, luckily, not all vectors. Hopefully only, but this is not guaranteed to always be the case, so not neccessarilly, to log(N) vectors, sometimes more. How often and how many more depends to some degree on how you balanced your tree and to another, hopefully much smaller degree, and this goes for all probabilistic models, and we're probabilistic because two vectors that are not identical to another can be merged (see "Balancing"), on pure "chance".
+__Map data flow__: a query, representing one or more terms, each term identifying both a column and a value, turns into a document that turns into a tree of vectors (through tokenization), each node representing a boolean set operation over your space (AND, OR, NOT), each compared to the vectors of your space by performing binary search over the nodes of your column bitmap files, so, luckily, not all vectors. Hopefully only, but this is not guaranteed to always be the case, to log(N) vectors, but sometimes more. How often and how many more depends to some degree on how you balanced your tree and to another, hopefully much smaller degree, and this goes for all probabilistic models, and we're probabilistic because two vectors that are not identical to another can be merged (see "Balancing"), on pure chance.
 
-__Reduce operation__: each node in the query tree that recieved a mapping to one or more postings lists ("lists of document references") during the map step now materializes their references and we can join them with those of their the parent, through intersection, union or deletion, and, once the tree's been materialized all the way down to the root, we have a list of references that we can sort by relevance, so we can get on with what it is we really want, which is to materialize a list of scored and sorted documents that are paged.
+__Materialize operation__: each node in the query tree that recieved a mapping to one or more postings lists ("lists of document references") during the map step now materializes their postings and we can join them with those of their the parent, through intersection, union or deletion, and, once the tree's been materialized all the way down to the root, we have a list of references that we can sort by relevance so we can get on with what it is we really want, which is to materialize a list of scored and sorted documents that are __paged__.
 
 ## Balancing (algorithm)
 
