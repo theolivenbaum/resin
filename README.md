@@ -1,6 +1,6 @@
 # &#9084; Resin Extensible Search Engine
 
-Resin is a document database that wants to be a search engine. Therefore, it's been paired with a search index. That index happens to represent a vector space, a concept can be quite powerful because you can encode any vector space, really, as long as it's a (Sir) IModel, which I still feel will be quite powerful to many, but not to all. Some folk will find IModel gets in their way. See "Contribute".
+Resin is a document database that wants to be a search engine. Therefore, it's been paired with a search index. That index happens to represent a vector space, a concept can be quite powerful because you can encode any vector space, really, as long as it's a (Sir) IModel. Some folk, not neccessarily you, but some, might be you, will find IModel gets in their way. See "Contribute".
 
 ## Spaces
 
@@ -60,8 +60,8 @@ IdenticalAngle and FoldAngle are properties of IModel.
 
 Error reports of any kind are most welcome. So are suggestions.
 
-If some type gets in your way as I anticipate sometimes they might then, fork or, understand they, are simply interfaces written by some (random) guy thus not, written in stone so, don't you worry, PR's are most welcome, too.
+If some `type` gets in your way, as I anticipate sometimes they might then, fork or, understand, they, are simply stories written by some (random) guy thus, not, written in stone so, PR's are most welcome, too. 
 
 ## Code Of Conduct
 
-If you feel like contributing, adhere to the current zeitgeist of what is, currently, appropriate behaviour, or, be funny. Attempts at being funny while failing, is frowned upon.
+If you feel like contributing, adhere to the current zeitgeist of what is, currently, the appropriate behaviour, or, be funny. Attempts at being funny while miserably failing, or, being overly appropriate, or underly, is frowned upon, utterly.
