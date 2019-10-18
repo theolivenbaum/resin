@@ -9,8 +9,10 @@ namespace Sir.VectorSpace
     {
         public static bool TryMerge(
             VectorNode root, 
-            VectorNode node, 
-            IEuclidDistance model, 
+            VectorNode node,
+            IEuclidDistance model,
+            double foldAngle,
+            double identicalAngle,
             out VectorNode parent)
         {
             var cursor = root;
@@ -19,12 +21,12 @@ namespace Sir.VectorSpace
             {
                 var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
 
-                if (angle >= model.IdenticalAngle)
+                if (angle >= identicalAngle)
                 {
                     parent = cursor;
                     return true;
                 }
-                else if (angle > model.FoldAngle)
+                else if (angle > foldAngle)
                 {
                     if (cursor.Left == null)
                     {
@@ -53,7 +55,7 @@ namespace Sir.VectorSpace
             }
         }
 
-        public static long GetOrIncrementIdConcurrent(
+        public static long GetOrIncrementId(
             VectorNode root, 
             VectorNode node,
             IEuclidDistance model, 
@@ -75,19 +77,9 @@ namespace Sir.VectorSpace
                 {
                     if (cursor.Left == null)
                     {
-                        lock (cursor.Sync)
-                        {
-                            if (cursor.Left == null)
-                            {
-                                node.PostingsOffset = identity();
-                                cursor.Left = node;
-                                return node.PostingsOffset;
-                            }
-                            else
-                            {
-                                cursor = cursor.Left;
-                            }
-                        }
+                        node.PostingsOffset = identity();
+                        cursor.Left = node;
+                        return node.PostingsOffset;
                     }
                     else
                     {
@@ -98,19 +90,9 @@ namespace Sir.VectorSpace
                 {
                     if (cursor.Right == null)
                     {
-                        lock (cursor.Sync)
-                        {
-                            if (cursor.Right == null)
-                            {
-                                node.PostingsOffset = identity();
-                                cursor.Right = node;
-                                return node.PostingsOffset;
-                            }
-                            else
-                            {
-                                cursor = cursor.Right;
-                            }
-                        }
+                        node.PostingsOffset = identity();
+                        cursor.Right = node;
+                        return node.PostingsOffset;
                     }
                     else
                     {
@@ -120,7 +102,7 @@ namespace Sir.VectorSpace
             }
         }
 
-        public static bool TryMergeConcurrent(
+        public static bool MergeOrAdd(
             VectorNode root, 
             VectorNode node,
             IEuclidDistance model, 
@@ -135,10 +117,7 @@ namespace Sir.VectorSpace
 
                 if (angle >= identicalAngle)
                 {
-                    lock (cursor.Sync)
-                    {
-                        AddDocId(cursor, node);
-                    }
+                    AddDocId(cursor, node);
 
                     return true;
                 }
@@ -146,18 +125,8 @@ namespace Sir.VectorSpace
                 {
                     if (cursor.Left == null)
                     {
-                        lock (cursor.Sync)
-                        {
-                            if (cursor.Left == null)
-                            {
-                                cursor.Left = node;
-                                return false;
-                            }
-                            else
-                            {
-                                cursor = cursor.Left;
-                            }
-                        }
+                        cursor.Left = node;
+                        return false;
                     }
                     else
                     {
@@ -168,18 +137,8 @@ namespace Sir.VectorSpace
                 {
                     if (cursor.Right == null)
                     {
-                        lock (cursor.Sync)
-                        {
-                            if (cursor.Right == null)
-                            {
-                                cursor.Right = node;
-                                return false;
-                            }
-                            else
-                            {
-                                cursor = cursor.Right;
-                            }
-                        }
+                        cursor.Right = node;
+                        return false;
                     }
                     else
                     {
@@ -191,13 +150,8 @@ namespace Sir.VectorSpace
 
         public static void MergePostings(VectorNode target, VectorNode source)
         {
-            if (target.PostingsOffsets == null)
-                target.PostingsOffsets = new List<long>();
-
-            if (source.PostingsOffsets == null)
-                source.PostingsOffsets = new List<long>();
-
-            ((List<long>)target.PostingsOffsets).AddRange(source.PostingsOffsets);
+            if (source.PostingsOffsets != null)
+                ((List<long>)target.PostingsOffsets).AddRange(source.PostingsOffsets);
         }
 
         public static void AddDocId(VectorNode target, long docId)
@@ -250,6 +204,7 @@ namespace Sir.VectorSpace
         {
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;
+            var length = 0;
 
             if (node.ComponentCount == 0)
             {
@@ -260,10 +215,14 @@ namespace Sir.VectorSpace
             {
                 if (node.PostingsOffset == -1)
                     SerializePostings(node, postingsStream);
+                else
+                    throw new InvalidComObjectException();
 
                 node.VectorOffset = VectorOperations.SerializeVector(node.Vector, vectorStream);
 
                 SerializeNode(node, indexStream);
+
+                length += VectorNode.BlockSize;
 
                 if (node.Right != null)
                 {
@@ -278,8 +237,6 @@ namespace Sir.VectorSpace
                 }
             }
 
-            var length = indexStream.Position - offset;
-
             return (offset, length);
         }
 
@@ -287,7 +244,23 @@ namespace Sir.VectorSpace
         {
             node.PostingsOffset = postingsStream.Position;
 
-            StreamHelper.SerializeHeaderAndPayload(node.DocIds, node.DocIds.Count, postingsStream);
+            SerializeHeaderAndPayload(node.DocIds, node.DocIds.Count, postingsStream);
+        }
+
+        public static void SerializeHeaderAndPayload(IEnumerable<long> items, int itemCount, Stream stream)
+        {
+            var payload = new long[itemCount + 1];
+
+            payload[0] = itemCount;
+
+            var index = 1;
+
+            foreach (var item in items)
+            {
+                payload[index++] = item;
+            }
+
+            stream.Write(MemoryMarshal.Cast<long, byte>(payload));
         }
 
         public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, IEuclidDistance model)
@@ -333,7 +306,7 @@ namespace Sir.VectorSpace
                 var node = DeserializeNode(buf, vectorStream, model);
                 VectorNode parent;
 
-                if (TryMerge(root, node, model, out parent))
+                if (TryMerge(root, node, model, model.FoldAngle, model.IdenticalAngle, out parent))
                 {
                     MergePostings(parent, node);
                 }
@@ -360,7 +333,7 @@ namespace Sir.VectorSpace
                 var node = DeserializeNode(buf, vectorStream, model);
                 VectorNode parent;
 
-                if (TryMerge(root, node, model, out parent))
+                if (TryMerge(root, node, model, model.FoldAngle, model.IdenticalAngle, out parent))
                 {
                     MergePostings(parent, node);
                 }

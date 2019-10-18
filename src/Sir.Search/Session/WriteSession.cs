@@ -9,7 +9,7 @@ namespace Sir.Store
     /// </summary>
     public class WriteSession : CollectionSession, ILogger, IDisposable
     {
-        private readonly IndexSession _termIndexSession;
+        private readonly IndexSession _indexSession;
         private readonly DocumentWriter _streamWriter;
         private readonly IStringModel _model;
 
@@ -21,14 +21,14 @@ namespace Sir.Store
             IStringModel model,
             IndexSession termIndexSession) : base(collectionId, sessionFactory)
         {
-            _termIndexSession = termIndexSession;
+            _indexSession = termIndexSession;
             _streamWriter = streamWriter;
             _model = model;
         }
 
         public void Dispose()
         {
-            _termIndexSession.Dispose();
+            _indexSession.Dispose();
             _streamWriter.Dispose();
         }
 
@@ -71,7 +71,7 @@ namespace Sir.Store
                     // add to index
                     if (dataType == DataType.STRING && key.StartsWith("_") == false)
                     {
-                        _termIndexSession.Put(docId, kvmap.keyId, (string)val);
+                        _indexSession.Put(docId, kvmap.keyId, (string)val);
                     }
                 }
 
@@ -82,7 +82,7 @@ namespace Sir.Store
                 document["___docid"] = docId;
             }
 
-            return _termIndexSession.GetIndexInfo();
+            return _indexSession.GetIndexInfo();
         }
     }
 }

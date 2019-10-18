@@ -27,7 +27,7 @@ namespace Sir.StringCompare
                     }
 
                     var node = new VectorNode(model.Tokenize(command).First());
-                    GraphBuilder.TryMerge(root, node, model, out _);
+                    GraphBuilder.TryMerge(root, node, model, model.FoldAngle, model.IdenticalAngle, out _);
                 }
 
                 Console.WriteLine(root.Visualize());

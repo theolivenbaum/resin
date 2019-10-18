@@ -23,7 +23,7 @@ namespace Sir.Store
 
             foreach (var vector in tokens)
             {
-                _indexSession.Enqueue(docId, keyId, vector);
+                _indexSession.Put(docId, keyId, vector);
 
                 _debugWords.GetOrAdd(keyId, new ConcurrentBag<IVector>()).Add(vector);
             }

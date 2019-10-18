@@ -11,7 +11,7 @@ namespace Sir.Store
     {
         public IEnumerable<IVector> Tokenize(string text)
         {
-            Span<char> source = text.ToCharArray();
+            Span<char> source = text.ToLower().ToCharArray();
             var offset = 0;
             bool word = false;
             int index = 0;
@@ -20,7 +20,7 @@ namespace Sir.Store
 
             for (; index < source.Length; index++)
             {
-                char c = char.ToLowerInvariant(source[index]);
+                char c = source[index];
 
                 if (word)
                 {

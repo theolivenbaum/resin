@@ -62,6 +62,7 @@ namespace Sir.DbUtil
                 var skip = int.Parse(args[4]);
                 var take = int.Parse(args[5]);
                 var batchSize = int.Parse(args[6]);
+                var reportSize = Math.Max(1000, batchSize / 10);
                 var collectionId = collection.ToHash();
                 var batchNo = 0;
                 var payload = ReadFile(fileName)
@@ -81,19 +82,19 @@ namespace Sir.DbUtil
                 {
                     sessionFactory.Truncate(collectionId);
 
-                    foreach (var page in payload.Batch(batchSize*10))
+                    foreach (var page in payload.Batch(batchSize))
                     {
                         using (var writeSession = sessionFactory.CreateWriteSession(collectionId, model))
                         {
                             var time = Stopwatch.StartNew();
 
-                            foreach (var batch in page.Batch(batchSize))
+                            foreach (var batch in page.Batch(reportSize))
                             {
                                 var info = writeSession.Write(batch);
 
                                 var t = time.Elapsed.TotalMilliseconds;
 
-                                var docsPerSecond = (int)(batchSize / t * 1000);
+                                var docsPerSecond = (int)(reportSize / t * 1000);
                                 var segments = 0;
 
                                 foreach (var stat in info.Info)
@@ -104,7 +105,7 @@ namespace Sir.DbUtil
                                     segments++;
                                 }
 
-                                Console.WriteLine($"batch {batchNo++} took {t} ms. {segments} segments. queue length {info.QueueLength}. {docsPerSecond} docs/s");
+                                Console.WriteLine($"batch {batchNo++} took {t} ms. {segments} segments. {docsPerSecond} docs/s");
 
                                 time.Restart();
                             }

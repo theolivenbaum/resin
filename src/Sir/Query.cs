@@ -10,8 +10,8 @@ namespace Sir
     {
         public IList<Clause> Clauses { get; private set; }
 
-        public Query(long keyId, IList<Clause> clauses, bool and = false, bool or = true, bool not = false)
-            : base(keyId, and, or, not)
+        public Query(IList<Clause> clauses, bool and = false, bool or = true, bool not = false)
+            : base(and, or, not)
         {
             Clauses = clauses;
         }
@@ -25,9 +25,9 @@ namespace Sir
                 result.Append(clause.ToString());
             }
 
-            var queryop = And ? "+" : Or ? "" : "-";
+            var queryop = And ? "+" : Or ? " " : "-";
 
-            return $"{queryop}{result}";
+            return $"{queryop}({result})";
         }
     }
 
@@ -36,10 +36,14 @@ namespace Sir
         public IVector Term { get; }
         public IList<long> PostingsOffsets { get; set; }
         public double Score { get; set; }
+        public long KeyId { get; }
+        public string Key { get; }
 
-        public Clause(long keyId, IVector term, bool and = false, bool or = true, bool not = false)
-            : base(keyId, and, or, not)
+        public Clause(long keyId, string key, IVector term, bool and = false, bool or = true, bool not = false)
+            : base(and, or, not)
         {
+            KeyId = keyId;
+            Key = key;
             Term = term;
             And = and;
             Or = or;
@@ -48,9 +52,9 @@ namespace Sir
 
         public override string ToString()
         {
-            var queryop = And ? "+" : Or ? "" : "-";
+            var queryop = And ? "+" : Or ? " " : "-";
 
-            return $"{queryop}{KeyId}:{Term.ToString()}";
+            return $"{queryop}{Key}:{Term.ToString()}";
         }
     }
 
@@ -60,7 +64,6 @@ namespace Sir
         private bool _or;
         private bool _not;
 
-        public long KeyId { get; }
         public bool And
         {
             get { return _and; }
@@ -104,9 +107,8 @@ namespace Sir
             }
         }
 
-        public BooleanStatement(long keyId, bool and, bool or, bool not)
+        public BooleanStatement(bool and, bool or, bool not)
         {
-            KeyId = keyId;
             _and = and;
             _or = or;
             _not = not;

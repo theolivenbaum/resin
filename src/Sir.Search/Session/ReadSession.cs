@@ -73,17 +73,17 @@ namespace Sir.Store
 
         public void EnsureIsValid(Query query, long docId)
         {
-            var indexReader = GetOrTryCreateIndexReader(query.KeyId);
-
-            if (indexReader != null)
+            foreach (var clause in query.Clauses)
             {
-                foreach (var clause in query.Clauses)
+                var indexReader = GetOrTryCreateIndexReader(clause.KeyId);
+
+                if (indexReader != null)
                 {
                     var hit = indexReader.ClosestTerm(clause.Term, _model);
 
                     if (hit == null || hit.Score < _model.IdenticalAngle)
                     {
-                        throw new DataMisalignedException($"term \"{clause}\" not found.");
+                        throw new DataMisalignedException($"\"{clause}\" not found.");
                     }
 
                     var docIds = _postingsReader.ReadWithScore(hit.Node.PostingsOffsets, _model.IdenticalAngle);
@@ -128,11 +128,11 @@ namespace Sir.Store
 
             foreach (var query in queries)
             {
-                var indexReader = GetOrTryCreateIndexReader(query.KeyId);
-
-                if (indexReader != null)
+                foreach (var clause in query.Clauses)
                 {
-                    foreach (var clause in query.Clauses)
+                    var indexReader = GetOrTryCreateIndexReader(clause.KeyId);
+
+                    if (indexReader != null)
                     {
                         var hit = indexReader.ClosestTerm(clause.Term, _model);
 
@@ -142,9 +142,9 @@ namespace Sir.Store
                             clause.PostingsOffsets = hit.Node.PostingsOffsets;
                         }
                     }
-
-                    yield return query;
                 }
+
+                yield return query;
             }
 
             this.Log($"mapping took {timer.Elapsed}");

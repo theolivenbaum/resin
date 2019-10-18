@@ -1,5 +1,4 @@
-﻿using Sir.Core;
-using Sir.VectorSpace;
+﻿using Sir.VectorSpace;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,7 +17,7 @@ namespace Sir.Store
         private readonly ConcurrentDictionary<long, VectorNode> _index;
         private readonly Stream _postingsStream;
         private readonly Stream _vectorStream;
-        private readonly ProducerConsumerQueue<(long docId, long keyId, IVector term)> _workers;
+        private bool _flushed;
 
         public IStringModel Model => _model;
         public ConcurrentDictionary<long, VectorNode> Index => _index;
@@ -38,7 +37,6 @@ namespace Sir.Store
             _index = new ConcurrentDictionary<long, VectorNode>();
             _postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"));
             _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
-            _workers = new ProducerConsumerQueue<(long docId, long keyId, IVector term)>(threadCount, Put);
         }
 
         public void Put(long docId, long keyId, string value)
@@ -47,30 +45,37 @@ namespace Sir.Store
 
             foreach (var vector in tokens)
             {
-                _workers.Enqueue((docId, keyId, vector));
+                Put(docId, keyId, vector);
             }
         }
 
-        public void Enqueue(long docId, long keyId, IVector term)
+        public void Put(long docId, long keyId, IVector vector)
         {
-            _workers.Enqueue((docId, keyId, term));
+            var column = _index.GetOrAdd(keyId, new VectorNode());
+
+            GraphBuilder.MergeOrAdd(
+                column,
+                new VectorNode(vector, docId),
+                _model,
+                _model.FoldAngle,
+                _model.IdenticalAngle);
+
+            //var hit = PathFinder.ClosestMatch(column, vector, _model);
+
+            //if (hit == null || hit.Score < _model.IdenticalAngle)
+            //{
+            //    throw new Exception();
+            //}
+
+            //if (!hit.Node.DocIds.Contains(docId))
+            //{
+            //    throw new ApplicationException();
+            //}
         }
 
         public IndexInfo GetIndexInfo()
         {
-            return new IndexInfo(GetGraphInfo(), _workers.Count);
-        }
-
-        private void Put((long docId, long keyId, IVector term) work)
-        {
-            var column = _index.GetOrAdd(work.keyId, new VectorNode(0));
-
-            GraphBuilder.TryMergeConcurrent(
-                column,
-                new VectorNode(work.term, work.docId),
-                _model,
-                _model.FoldAngle,
-                _model.IdenticalAngle);
+            return new IndexInfo(GetGraphInfo());
         }
 
         private IEnumerable<GraphInfo> GetGraphInfo()
@@ -81,15 +86,14 @@ namespace Sir.Store
             }
         }
 
-        public void Dispose()
+        public void Flush()
         {
+            if (_flushed)
+                return;
+
+            _flushed = true;
+
             var timer = Stopwatch.StartNew();
-
-            this.Log($"waiting for sync. queue length: {_workers.Count}");
-
-            _workers.Dispose();
-
-            this.Log($"awaited sync for {timer.Elapsed}");
 
             foreach (var column in _index)
             {
@@ -104,6 +108,12 @@ namespace Sir.Store
             }
 
             SessionFactory.ClearPageInfo();
+        }
+
+        public void Dispose()
+        {
+            if (!_flushed)
+                Flush();
 
             _postingsStream.Dispose();
             _vectorStream.Dispose();

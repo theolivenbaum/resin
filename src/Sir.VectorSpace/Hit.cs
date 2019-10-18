@@ -1,9 +1,14 @@
-﻿namespace Sir.VectorSpace
+﻿using System.Diagnostics;
+
+namespace Sir.VectorSpace
 {
+    [DebuggerDisplay("{Score} {Node}")]
     public class Hit
     {
         public double Score { get; set; }
         public VectorNode Node { get; set; }
+
+        public Hit() {}
 
         public Hit(VectorNode node, double score)
         {

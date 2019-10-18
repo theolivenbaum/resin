@@ -37,10 +37,10 @@ namespace Sir.Store
 
                     foreach (var term in _model.Tokenize((string)field.Value))
                     {
-                        clauses.Add(new Clause(keyId, term, and, or, not));
+                        clauses.Add(new Clause(keyId, field.Key, term, and, or, not));
                     }
 
-                    yield return new Query(keyId, clauses);
+                    yield return new Query(clauses);
                 }
             }
         }
