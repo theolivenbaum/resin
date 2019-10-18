@@ -63,7 +63,7 @@ namespace Sir.Store
                 {
                     best = hit;
                 }
-                else if (hit.Score == best.Score)
+                else if (hit.Score >= model.IdenticalAngle)
                 {
                     GraphBuilder.MergePostings(best.Node, hit.Node);
                 }
@@ -91,7 +91,7 @@ namespace Sir.Store
                     model.FoldAngle,
                     model.IdenticalAngle);
 
-            if (hit0 != null && hit0.Score > 0)
+            if (hit0.Score > 0)
             {
                 return hit0;
             }
@@ -100,7 +100,7 @@ namespace Sir.Store
         }
 
         private Hit ClosestMatchInSegment(
-            IVector vector,
+            IVector queryVector,
             MemoryMappedViewAccessor indexView,
             MemoryMappedViewAccessor vectorView,
             IEuclidDistance model,
@@ -110,9 +110,7 @@ namespace Sir.Store
         {
             const int blockLength = 5;
             long[] block = ArrayPool<long>.Shared.Rent(blockLength);
-            VectorNode best = null;
-            double highscore = 0;
-
+            var best = new Hit();
             var read = indexView.ReadArray(offset, block, 0, blockLength);
 
             offset += VectorNode.BlockSize;
@@ -123,26 +121,27 @@ namespace Sir.Store
                 var postingsOffset = block[1];
                 var componentCount = block[2];
                 var cursorTerminator = block[4];
-                var cursorVector = VectorOperations.DeserializeVector(vecOffset, (int)componentCount, model.VectorWidth, vectorView);
-                var angle = model.CosAngle(cursorVector, vector);
+                var indexVector = VectorOperations.DeserializeVector(vecOffset, (int)componentCount, model.VectorWidth, vectorView);
+                var angle = model.CosAngle(indexVector, queryVector);
 
                 if (angle >= identicalAngle)
                 {
-                    highscore = angle;
-                    best = new VectorNode(postingsOffset);
+                    best.Score = angle;
+                    var n = new VectorNode(postingsOffset);
+                    best.Node = n;
 
                     break;
                 }
                 else if (angle > foldAngle)
                 {
-                    if (best == null || angle > highscore)
+                    if (best == null || angle > best.Score)
                     {
-                        highscore = angle;
-                        best = new VectorNode(postingsOffset);
+                        best.Score = angle;
+                        best.Node = new VectorNode(postingsOffset);
                     }
-                    else if (angle == highscore)
+                    else if (angle == best.Score)
                     {
-                        best.PostingsOffsets.Add(postingsOffset);
+                        best.Node.PostingsOffsets.Add(postingsOffset);
                     }
 
                     // We need to determine if we can traverse further left.
@@ -166,14 +165,14 @@ namespace Sir.Store
                 }
                 else
                 {
-                    if (best == null || angle > highscore)
+                    if ((best == null && angle > best.Score) || angle > best.Score)
                     {
-                        highscore = angle;
-                        best = new VectorNode(postingsOffset);
+                        best.Score = angle;
+                        best.Node = new VectorNode(postingsOffset);
                     }
-                    else if (angle > 0 && angle == highscore)
+                    else if (angle > 0 && angle == best.Score)
                     {
-                        best.PostingsOffsets.Add(postingsOffset);
+                        best.Node.PostingsOffsets.Add(postingsOffset);
                     }
 
                     // We need to determine if we can traverse further to the right.
@@ -208,7 +207,7 @@ namespace Sir.Store
                 }
             }
 
-            return new Hit(best, highscore);
+            return best;
         }
 
         private void SkipTree(MemoryMappedViewAccessor indexView, ref long offset)
