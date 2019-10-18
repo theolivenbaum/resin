@@ -28,10 +28,6 @@ namespace Sir.Store
             IStringModel model,
             IConfigurationProvider config) : base(collectionId, sessionFactory)
         {
-            var threadCount = int.Parse(config.Get("index_session_thread_count"));
-
-            this.Log($"starting {threadCount} threads");
-
             _config = config;
             _model = model;
             _index = new ConcurrentDictionary<long, VectorNode>();
