@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Sir.Store;
 
 namespace Sir.HttpServer.Controllers
 {
@@ -25,10 +24,12 @@ namespace Sir.HttpServer.Controllers
 
         public override void OnActionExecuted(ActionExecutedContext context)
         {
+            ViewBag.DefaultCollection = _config.Get("default_collection");
+
             ViewData["doc_count"] = context.HttpContext.Request.Query.ContainsKey("collection") ? 
                 _sessionFactory.GetDocCount(context.HttpContext.Request.Query["collection"].ToString()) :
-                0;
-            ViewBag.DefaultCollection = _config.Get("default_collection");
+                _sessionFactory.GetDocCount(ViewBag.DefaultCollection);
+
             ViewBag.Collection = context.HttpContext.Request.Query.ContainsKey("collection") ?
                 context.HttpContext.Request.Query["collection"].ToString() :
                 ViewBag.DefaultCollection;
