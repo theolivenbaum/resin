@@ -71,9 +71,9 @@ namespace Sir.Store
 
         public void Dispose()
         {
-            Debug();
-
             _indexSession.Dispose();
+
+            Debug();
         }
     }
 }
