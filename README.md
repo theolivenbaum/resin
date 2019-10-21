@@ -12,7 +12,7 @@ Spaces are configured by implementing `IModel` or `IStringModel`.
 If you have only embeddings, no documents, you might still find some of the APIs useful for when you
 want to build searchable spaces, e.g. `Sir.VectorSpace.GraphBuilder` and `PathFinder`. If you use `MathNet.Numerics` your vectors are already fully compatible. 
 
-## Write, map, materialize, sort and page
+## Write, map, materialize
 
 __Write algorithm__: documents that consist of keys and values, that are mappable to `IDictionary<string, object>` without corruption, where object is of type "primitive", string, or bit array, e.g. unnested JSON documents, are persisted to disk and fields are turned into term vectors through tokenization, each vector positioned in a graph (see "Balancing"), each referencing one or more documents, each appended to a file on disk as part of a segment in a column index that will, by the powers of your platform's parallellism, be scanned during mapping of queries that target this column.
 
