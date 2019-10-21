@@ -2,10 +2,6 @@
 
 Resin is a document database that's been coupled with a search index. The index can represent any vector space, no matter how thick and however wide, as long as it's a `Sir.IModel`.
 
-## APIs
-
-There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as JSON-friendly HTTP API.
-
 ## Vector spaces
 
 Built from embeddings extracted from document fields during the tokenization phase of the write session, spaces are
@@ -40,11 +36,9 @@ IdenticalAngle and FoldAngle are properties of `IModel`.
 
 A query can consist of many sub queries, each carrying a list of query terms. Finding a query term's closest matching vector inside a space entails finding the correct column index file, finding the boundaries of each segment, querying each segment by finding the root node, represented on disk as the first block in the segment, deserializing it, calculating the cos angle between the query vector and the index vector, determining whether to go left or right based on if the angle is over IModel.FoldAngle or below/equal or whether to call it quits because the angle is 1 and nowhere in the segment can there exist a better match.
 
-## Contribute
+## APIs
 
-Error reports of any kind are most welcome. So are suggestions.
-
-If some `type` gets in your way, as I anticipate sometimes they might then, fork or, understand, they, are simply stories written by some (random) guy thus, not, written in stone so, PR's are most welcome, to. 
+There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as JSON-friendly HTTP API.
 
 ## Apps
 
@@ -56,6 +50,12 @@ If some `type` gets in your way, as I anticipate sometimes they might then, fork
 - __Sir.KeyValue__: key/value/document System.IO.Stream-based database
 - __Sir.VectorSpace__: hardware accellerated computations over and stream based storage of vectors and spaces
 - __Sir.Search__: in-proc search engine (SessionFactory, WriteSession, ReadSession)
+
+## Contribute
+
+Error reports of any kind are most welcome. So are suggestions.
+
+If some `type` gets in your way, as I anticipate sometimes they might then, fork or, understand, they, are simply stories written by some (random) guy thus, not, written in stone so, PR's are most welcome, to. 
 
 ## Roadmap
 
