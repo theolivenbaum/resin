@@ -5,7 +5,7 @@ Resin is a document database that's been coupled with a search index. The index 
 ## Vector spaces
 
 Built from embeddings extracted from document fields during the tokenization phase of the write session, spaces are
-persisted on disk as bitmaps, made scannable in a streaming fashion, meaning, only little pressure will be put on memory while querying, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are larger than memory. 
+persisted on disk as bitmaps, made scannable in a streaming fashion, meaning, only a small amount of pressure will be put on memory while querying, what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are larger than memory. 
 
 Spaces are configured by implementing `IModel` or `IStringModel`.
 
@@ -14,17 +14,19 @@ want to build searchable spaces, e.g. `Sir.VectorSpace.GraphBuilder` and `PathFi
 
 ## Write, map, materialize
 
-__Write algorithm__: documents that consist of keys and values, that are mappable to `IDictionary<string, object>` without corruption, where object is of type "primitive", string, or bit array, e.g. unnested JSON documents, are persisted to disk and fields are turned into term vectors through tokenization, each vector positioned in a graph (see "Balancing"), each referencing one or more documents, each appended to a file on disk as part of a segment in a column index that will, by the powers of your platform's parallellism, be scanned during mapping of queries that target this column.
+These processes are central to Resin.
+
+__Write__: documents that consist of keys and values, that are mappable to `IDictionary<string, object>` without corruption, where object is of type "primitive", string, or bit array, e.g. unnested JSON documents, are persisted to disk, fields turned into term vectors through tokenization, each vector positioned in a graph (see "Balancing"), each referencing one or more documents, each appended to a file on disk as part of a segment in a column index that will, by the powers of your platform's parallellism, be scanned during mapping of queries that target this column.
 
 Tokenization is configured by implementing `IModel.Tokenize`.
 
-__Map algorithm__: a query that represents one or more terms, each term identifying both a column and a value, turns into a document that turns into a tree of vectors (through tokenization), each node representing a boolean set operation over your space, each compared to the vectors of your space by performing binary search over the nodes of your column bitmap files, so, luckily, not to all vectors, only, but this is not guaranteed to always be the case, log(N) vectors. 
+__Map__: a query that represents one or more terms, each term identifying both a column and a value, is converted into a document that, in turn, is converted into a tree of vectors (through tokenization), each node representing a boolean set operation over your space, each compared to the vectors of your space by performing binary search over the nodes from your paged column bitmap files, so, luckily, not to all vectors, only, but this is not guaranteed to always be the case, log(N) x NumOfPages vectors. 
 
 How often more and how many more depends to some degree on how you balanced your tree and to another, hopefully much smaller degree, and this goes for all probabilistic models, and we're probabilistic because two vectors that are not identical to another can be merged (see "Balancing"), on pure chance.
 
-__Materialize algorithm__: each node in the query tree that recieved a mapping to one or more postings lists ("lists of document references") during the map step now materializes their postings and so we can join them with those of their parent, through intersection, union or deletion while also scoring them and, once the tree's been materialized all the way down to the root and we have reduced the tree to a single list of references, we can __sort__ them by relevance and get on with what it is we really want, which is to materialize a __page__ of documents from that sorted list of scored document references.
+__Materialize__: each node in the query tree that recieved a mapping to one or more postings lists ("lists of document references") during the map step now materialize their postings and so we can join them with those of their parent, through intersection, union or deletion while also scoring them and, once the tree's been materialized all the way down to the root and we have reduced the tree to a single list of references, we can __sort__ them by relevance and, finally, materialize a __page__ of documents from that sorted list of scored document references.
 
-## Balancing (algorithm)
+## Balancing
 
 Balancing the binary tree that represents your space is done by adjusting the merge factor ("IdenticalAngle") and the fold factor ("FoldAngle"). 
 
@@ -32,13 +34,13 @@ A node's placement in the index is determined by calculating its angle to the no
 
 IdenticalAngle and FoldAngle are properties of `IModel`.
 
-## Closest matching term vector (algorithm)
+## Closest matching term vector
 
-A query can consist of many sub queries, each carrying a list of query terms. Finding a query term's closest matching vector inside a space entails finding the correct column index file, finding the boundaries of each segment, querying each segment by finding the root node, represented on disk as the first block in the segment, deserializing it, calculating the cos angle between the query vector and the index vector, determining whether to go left or right based on if the angle is over IModel.FoldAngle or below/equal or whether to call it quits because the angle is 1 and nowhere in the segment can there exist a better match.
+A query can consist of many sub queries, each carrying a list of query terms. Finding a query term's closest matching vector inside a space entails finding the correct column index file, finding the boundaries of each segment, querying the segments by finding the root node, represented on disk as the first block in each segment, deserializing it, calculating the cos angle between the query vector and the index vector, and determining whether to go left or right based on if the angle is over IModel.FoldAngle or below/equal or, calling it quits because the angle is 1 and nowhere in the segment can there exist a better match.
 
 ## APIs
 
-There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as JSON-friendly HTTP API.
+There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as JSON-friendly HTTP API following the principle that "what you can do locally your should also be able to do remotely". 
 
 ## Apps
 
@@ -53,9 +55,7 @@ There is both an in-proc, NHibernate-like API in that there are sessions, a fact
 
 ## Contribute
 
-Error reports of any kind are most welcome. So are suggestions.
-
-If some `type` gets in your way, as I anticipate sometimes they might then, fork or, understand, they, are simply stories written by some (random) guy thus, not, written in stone so, PR's are most welcome, to. 
+Code contributions, error reports and suggestions of any kind are most welcome.
 
 ## Roadmap
 
