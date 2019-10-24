@@ -2,6 +2,8 @@
 
 Resin is a document database that's been coupled with a search index. That index can represent any vector space, no matter how thick or wide, as long as it's a `Sir.IModel`, meaning, you can use it to analyze term based spaces as well as semantic ones.
 
+## Traversing spaces
+
 In high dimensions, sparse vectors will enable fast scanning of your space.
 
 In low dimensions, dense vectors will not deteriorate querying speed.
