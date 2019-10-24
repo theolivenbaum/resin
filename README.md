@@ -30,7 +30,7 @@ __Materialize__: each node in the query tree that recieved a mapping to one or m
 
 Balancing the binary tree that represents your space is done by adjusting the merge factor ("IdenticalAngle") and the fold factor ("FoldAngle"). 
 
-A node's placement in the index is determined by calculating its angle to the node it most resembles. If the angle is greater than or equal to IdenticalAngle the two nodes merge. If it is not a new node is added to the binary tree. If the angle is greater than FoldAngle it is added as a left child to the node or, if that slot is taken, to the next left node that has a empty left slot, otherwise as a right child.
+A node's placement in the index is determined by calculating its angle to the node it most resembles. If the angle is greater than or equal to IdenticalAngle the two nodes merge. If it is not then a new node will be added to the binary tree. In that case, if the angle is greater than FoldAngle, it is added as a left child to the node or, if that slot is taken, to the next left node that has a empty left slot, otherwise as a right child.
 
 IdenticalAngle and FoldAngle are properties of `IModel`.
 
@@ -40,7 +40,7 @@ A query can consist of many sub queries, each carrying a list of query terms. Fi
 
 ## APIs
 
-There is both an in-proc, NHibernate-like API in that there are sessions, a factory, and the notion of a unit of work, as well as JSON-friendly HTTP API following the principle that "what you can do locally your should also be able to do remotely". 
+There is both an in-proc, NHibernate-like API, in that there are sessions, a factory, and the notion of a unit of work, as well as fully fledged JSON-friendly HTTP API following the principle that "what you can do locally your should also be able to do remotely". 
 
 ## Apps
 
