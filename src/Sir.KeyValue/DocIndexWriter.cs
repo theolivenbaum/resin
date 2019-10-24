@@ -31,7 +31,7 @@ namespace Sir.KeyValue
         /// Get the next auto-incrementing doc id
         /// </summary>
         /// <returns>The next auto-incrementing doc id</returns>
-        public long GetNextDocId()
+        public long PeekNextDocId()
         {
             return _stream.Position / BlockSize;
         }

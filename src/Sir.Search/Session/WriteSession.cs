@@ -44,7 +44,7 @@ namespace Sir.Store
                 document["_created"] = DateTime.Now.ToBinary();
 
                 var docMap = new List<(long keyId, long valId)>();
-                var docId = _streamWriter.GetNextDocId();
+                var docId = _streamWriter.PeekNextDocId();
 
                 foreach (var key in document.Keys)
                 {

@@ -61,9 +61,9 @@ namespace Sir.KeyValue
             return (keyId, valId);
         }
 
-        public long GetNextDocId()
+        public long PeekNextDocId()
         {
-            return _docIx.GetNextDocId();
+            return _docIx.PeekNextDocId();
         }
 
         public (long offset, int len, byte dataType) PutKey(object value)
