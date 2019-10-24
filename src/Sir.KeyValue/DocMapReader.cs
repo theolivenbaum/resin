@@ -5,7 +5,7 @@ using System.IO;
 namespace Sir.KeyValue
 {
     /// <summary>
-    /// Document map stream reader, for fetching a document maps (key_id/val_id) from the document map stream.
+    /// Fetch document maps (key_id/val_id) from the document map stream.
     /// A document map is needed to re-contruct a complete document.
     /// </summary>
     public class DocMapReader : IDisposable

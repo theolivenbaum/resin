@@ -4,7 +4,7 @@ using System.IO;
 namespace Sir.KeyValue
 {
     /// <summary>
-    /// Find out there in the value stream a value is stored, by supplying a value ID.
+    /// Find out where in the value stream a value is stored, by supplying a value ID.
     /// </summary>
     public class ValueIndexReader : IDisposable
     {
