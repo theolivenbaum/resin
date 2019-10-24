@@ -2,16 +2,6 @@
 
 Resin is a document database that's been coupled with a search index. That index can represent any vector space, no matter how thick or wide, as long as it's a `Sir.IModel`, meaning, you can use it to analyze term based spaces as well as semantic ones.
 
-## Traversing spaces
-
-In high dimensions, sparse vectors will enable fast scanning of your space.
-
-In low dimensions, dense vectors will not deteriorate querying speed.
-
-In a dense space, a high CPU clock frequency is required for decent querying performance.
-
-Very little RAM is needed during querying.
-
 ## Vector spaces
 
 Built from embeddings extracted from document fields during the tokenization phase of the write session, spaces are
@@ -21,6 +11,16 @@ Spaces are configured by implementing `IModel` or `IStringModel`.
 
 If you have only embeddings, no documents, you might still find some of the APIs useful for when you
 want to build searchable spaces, e.g. `Sir.VectorSpace.GraphBuilder` and `PathFinder`. If you use `MathNet.Numerics` your vectors are already fully compatible. 
+
+## Sparse/dense
+
+In high dimensions, sparse vectors will enable fast scanning of your space.
+
+In low dimensions, dense vectors will not deteriorate querying speed.
+
+In a dense space, a high CPU clock frequency is required for decent querying performance.
+
+Very little RAM is needed during querying.
 
 ## Write, map, materialize
 
