@@ -14,17 +14,15 @@ want to build searchable spaces, e.g. `Sir.VectorSpace.GraphBuilder` and `PathFi
 
 ## Sparse/dense
 
-In high dimensions, sparse vectors will enable fast scanning of your space.
+In high dimensions, sparse vectors will enable fast scanning.
 
 In low dimensions, dense vectors will not deteriorate querying speed.
 
-In a dense space, a high CPU clock frequency is required for decent querying performance.
-
-Very little RAM is needed during querying.
+In a dense space, especially a high dimensional one, a high CPU clock frequency is required for decent querying performance.
 
 ## Write, map, materialize
 
-These processes are central to Resin.
+Main processes of the Resin back-end:
 
 __Write__: documents, that consist of keys and values, that are mappable to `IDictionary<string, object>` without corruption, where object is of type int, long, float, datetime, or string, e.g. unnested JSON documents, are persisted to disk, fields turned into term vectors through tokenization, each vector added to a graph (see "Balancing"), each referencing one or more documents, each node appended to a file on disk as part of a segment in a column index that will, by the powers of your platform's parallellism, be scanned during mapping of queries that target this column.
 
