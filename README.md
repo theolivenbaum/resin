@@ -2,9 +2,9 @@
 
 Resin is a document database that's been coupled with a search index. That index can represent any vector space, no matter how thick or wide, as long as it's a `Sir.IModel`, meaning, you can use it to analyze term based spaces as well as semantic ones.
 
-## Vector spaces
+## Build searchable vector spaces
 
-Built from embeddings extracted from document fields during the tokenization phase of the write session, spaces are
+From embeddings extracted from document fields during the tokenization phase of the write session, spaces are
 constructed and persisted on disk as bitmaps, made scannable in a streaming fashion so that only a small amount of pressure is put on memory while querying, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are larger than memory. 
 
 Spaces are configured by implementing `IModel` or `IStringModel`.
