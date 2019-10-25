@@ -22,6 +22,8 @@ In low dimensions, dense vectors will not deteriorate querying speed.
 
 In a dense space, especially a high dimensional one, a high CPU clock frequency is required for decent querying performance.
 
+As well as lots, and lots of cores.
+
 ## Write, map, materialize
 
 Main processes of the Resin back-end:
