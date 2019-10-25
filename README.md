@@ -7,7 +7,7 @@ So, almost any index.
 ## Pluggable, searchable vector spaces
 
 From embeddings extracted from document fields during the tokenization phase of the write session, spaces are
-constructed and persisted on disk as bitmaps, made scannable in a streaming fashion so that only a small amount of pressure is put on memory while querying, only what amounts to the size of a single graph node, which is usually very small, enabling the possibility to scan indices that are larger than memory. 
+constructed and persisted on disk as bitmaps, made scannable in a streaming fashion so that only a small amount of pressure is put on memory while querying, only what amounts to the size of a single graph node (per thread), which is usually very small, enabling the possibility to scan indices that are larger than memory. 
 
 Spaces are configured by implementing `IModel` or `IStringModel`.
 
@@ -30,13 +30,13 @@ Main processes of the Resin back-end:
 
 __Write__: documents that consist of keys and values, that are mappable to `IDictionary<string, object>` without corruption, where object is of type int, long, float, datetime, string *, basically a non-nested JSON document (or XML, or something else, it's your choice. There's no recipe. **), are persisted to disk, fields turned into term vectors through tokenization, each vector added to a graph (see "Balancing") of nodes that each reference one or more documents, each such node appended to a file on disk as part of a segment in a column index that will, by the powers of your platform's parallellism, be scanned during mapping of those queries that target this column.
 
-* or bit array
+*) or bit array
 
-** as long as you use Knorr stockpot.
+**) as long as you use Knorr stockpot.
 
 Tokenization is configured by implementing `IModel.Tokenize`.
 
-__Map__: a query that represents one or more terms, each term identifying both a column (i.e. key) and a value, is converted into a document that, in turn, is converted into a tree of vectors (through tokenization), each node representing a boolean set operation over your space, each compared to the vectors of your space by performing binary search over the nodes of your paged column bitmap files, so, luckily, not all vectors, only, but this is not guaranteed to always be the case, log(N) x NumOfPages. 
+__Map__: a query that represents one or more terms, each term identifying both a column (i.e. key) and a value, is converted into a tree of vectors (through tokenization), each node representing a boolean set operation over your space, each compared to the vectors of your space by performing binary search over the nodes of your paged column bitmap files, so, luckily, not all vectors, only, but this is not guaranteed to always be the case, log(N) x NumOfPages. 
 
 How often more and how many more depends to some degree on how you balanced your tree and to another, hopefully much smaller degree, and this goes for all probabilistic models, and we're probabilistic because two vectors that are not absolutely identical to each other, can be merged (see "Balancing"), on pure chance.
 
