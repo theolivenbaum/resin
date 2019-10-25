@@ -11,9 +11,6 @@ constructed and persisted on disk as bitmaps, made scannable in a streaming fash
 
 Spaces are configured by implementing `IModel` or `IStringModel`.
 
-If you have only embeddings, no documents, you might still find some of the APIs useful for when you
-want to build searchable spaces, e.g. `Sir.VectorSpace.GraphBuilder` and `PathFinder`. If you use `MathNet.Numerics` your vectors are already fully compatible. 
-
 ## Sparse/dense
 
 In high dimensions, sparse vectors will enable fast scanning.
