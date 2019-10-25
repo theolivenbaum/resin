@@ -22,7 +22,7 @@ In low dimensions, dense vectors will not deteriorate querying speed.
 
 In a dense space, especially a high dimensional one, a high CPU clock frequency is required for decent querying performance.
 
-As well as lots, and lots of cores.
+As well as lots, and lotIs of cores.
 
 ## Write, map, materialize
 
@@ -41,6 +41,10 @@ __Map__: a query that represents one or more terms, each term identifying both a
 How often more and how many more depends to some degree on how you balanced your tree and to another, hopefully much smaller degree, and this goes for all probabilistic models, and we're probabilistic because two vectors that are not absolutely identical to each other, can be merged (see "Balancing"), on pure chance.
 
 __Materialize__: each node in the query tree that recieved a mapping to one or more postings lists ("lists of document references") during the mapping step now materializes their postings, so we can join them with those of their parent, through intersection, union or deletion, while also scoring them and, once the tree's been materialized all the way down to the root and we have reduced the tree to a single list of references, we can __sort__ them by relevance and, finally, materialize a __page__ of documents.
+
+## Sorting
+
+Surprisingly to some, (me), once your space approaches big data you find out what is the real problem in search. It's sorting. MF sorting. Who'd have though?
 
 ## Balancing
 
