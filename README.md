@@ -60,7 +60,7 @@ A query can consist of many sub queries, each carrying a list of query terms. Fi
 
 ## APIs
 
-There is both an in-proc, NHibernate-like API, in that there are sessions, a factory, and the notion of a unit of work, as well as fully fledged JSON-friendly HTTP API following the principle that "what you can do locally your should also be able to do remotely". 
+Resin offers both an in-proc, NHibernate-like API, in that there are sessions, a factory, and the notion of a unit of work, as well as fully fledged JSON-friendly HTTP API, in an attempt to follow the principle of what you can do locally your should also be able to do remotely. 
 
 ## Apps
 
