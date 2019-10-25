@@ -37,7 +37,7 @@ __Map__: a query that represents one or more terms, each term identifying both a
 
 How often more and how many more depends to some degree on how you balanced your tree and to another, hopefully much smaller degree, and this goes for all probabilistic models, and we're probabilistic because two vectors that are not absolutely identical to each other, can be merged (see "Balancing"), on pure chance, but also because other reasons that I'm not going to go into now, but that you're of course free to ask me about at any time and I will answer sincerely, but not necessarily accurately.
 
-__Materialize__: each node in the query tree that recieved a mapping to one or more postings lists ("lists of document references") during the mapping step now materializes their postings, so we can join them with those of their parent, through intersection, union or deletion, while also scoring them and, once the tree's been materialized all the way down to the root and we have reduced the tree to a single list of references, we can __sort__ them by relevance and, finally, materialize a __page__ of documents.
+__Materialize__: each node in the query tree that recieved a mapping to one or more postings lists ("lists of document references") during the mapping step now materialize their postings, so we can join them with those of their parent, through intersection, union or deletion, while also scoring them and, once the tree's been materialized all the way down to the root and we have reduced the tree to a single list of references, we can __sort__ them by relevance and, finally, materialize a __page__ of documents.
 
 ## Sorting
 
