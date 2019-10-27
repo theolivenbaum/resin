@@ -29,7 +29,7 @@ __Write__: documents that consist of keys and values, that are mappable to `IDic
 
 *) or bit array
 
-**) but you should always use (Knorr) stockpot.
+**) only a theory.
 
 Tokenization is configured by implementing `IModel.Tokenize`.
 
