@@ -27,7 +27,7 @@ __Write__: documents that consist of keys and values, that are mappable to `IDic
 
 *) or bit array
 
-**) only a theory.
+**) only a method
 
 Tokenization is configured by implementing `IModel.Tokenize`.
 
