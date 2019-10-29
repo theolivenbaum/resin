@@ -23,11 +23,9 @@ As well as lots, and lotIs of cores.
 
 Main processes of the Resin back-end:
 
-__Write__: documents that consist of keys and values, that are mappable to `IDictionary<string, object>` without corruption, where object is of type int, long, float, datetime, string *, basically a non-nested JSON document (or XML, or something else, it's your choice. There's no recipe. **), are persisted to disk, fields turned into vectors through tokenization, each vector added to a graph (see "Balancing") of nodes that each reference one or more documents, each such node appended to a file on disk as part of a segment in a column index that will, by the powers of your platform's parallellism, be scanned during mapping of those queries that target this column.
+__Write__: documents that consist of keys and values, that are mappable to `IDictionary<string, object>` without corruption, where object is of type int, long, float, datetime, string *, basically a non-nested JSON document (or XML, or something else, it's your choice. There's no recipe, only a method), are persisted to disk, fields turned into vectors through tokenization, each vector added to a graph (see "Balancing") of nodes that each reference one or more documents, each such node appended to a file on disk as part of a segment in a column index that will, by the powers of your platform's parallellism, be scanned during mapping of those queries that target this column.
 
 *) or bit array
-
-**) only a method
 
 Tokenization is configured by implementing `IModel.Tokenize`.
 
