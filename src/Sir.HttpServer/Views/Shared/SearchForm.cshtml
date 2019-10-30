@@ -1,21 +1,23 @@
 ﻿@{
     var col = Context.Request.Query["collection"].ToString();
     var query = Context.Request.Query["q"].ToString();
+    var knownFields = Context.Request.Query["field"].ToArray();
+    var titleSelected = knownFields.Contains("title");
+    var bodySelected = knownFields.Contains("body");
 }
 @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
 {
+    <fieldset class="search-fields">
+        <legend>Search fields</legend>
+        <input type="checkbox" name="field" value="title" @(titleSelected ? "checked" : "") /><label for="title">title</label><br />
+        <input type="checkbox" name="field" value="body" @(bodySelected ? "checked" : "") /><label for="body">body</label>
+    </fieldset>
     <input type="text" id="q" name="q" class="q" placeholder="Ask me anything." value="@query" />
     <div class="buttons">
-        <button type="submit" value="OR" name="OR" id="or" title="OR">go <sup>OR</sup></button><button type="submit" value="AND" name="AND" id="and" title="AND">go <sup>AND</sup></button>
-        @if (!string.IsNullOrWhiteSpace(query))
-        {
-            <br /><a class="advanced" href="/queryparser@(Context.Request.QueryString.ToString())">Structured query</a>
-        }
+        <button type="submit" value="OR" name="OR" id="or" title="OR">Go <sup>OR</sup></button><button type="submit" value="AND" name="AND" id="and" title="AND">Go <sup>AND</sup></button>
     </div>
     <div style="clear:both;"></div>
     <input type="hidden" value="0" name="skip" id="skip" />
     <input type="hidden" value="100" name="take" id="take" />
-    <input type="hidden" value="title" name="fields" />
-    <input type="hidden" value="body" name="fields" />
     <input type="hidden" value="@ViewBag.Collection" name="collection" />
 }

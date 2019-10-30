@@ -18,7 +18,7 @@ namespace Sir.Store
 
         public IEnumerable<Query> Parse(ulong collectionId, HttpRequest request)
         {
-            string[] fields = request.Query["fields"].ToArray();
+            string[] fields = request.Query["field"].ToArray();
             bool and = request.Query.ContainsKey("AND");
             bool or = !and;
             const bool not = false;
