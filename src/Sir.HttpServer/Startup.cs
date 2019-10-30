@@ -32,13 +32,14 @@ namespace Sir.HttpServer
                 options.EnableEndpointRouting = false;
             });
 
+            services.AddControllersWithViews().AddRazorRuntimeCompilation();
+
             var dataDir = ServiceProvider.GetService<IConfigurationProvider>().Get("data_dir");
 
             if (!Directory.Exists(dataDir))
             {
                 Directory.CreateDirectory(dataDir);
             }
-
         }
 
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, IWebHostEnvironment env)
