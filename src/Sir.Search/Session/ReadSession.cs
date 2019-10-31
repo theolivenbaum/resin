@@ -1,4 +1,4 @@
-﻿using Sir.KeyValue;
+﻿using Sir.Document;
 using Sir.VectorSpace;
 using System;
 using System.Collections.Concurrent;

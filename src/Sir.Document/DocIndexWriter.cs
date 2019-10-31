@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Sir.KeyValue
+namespace Sir.Document
 {
     /// <summary>
     /// Write offset and length of document map to the document index stream.

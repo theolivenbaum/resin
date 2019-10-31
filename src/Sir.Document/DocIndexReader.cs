@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Sir.KeyValue
+namespace Sir.Document
 {
     /// <summary>
     /// Lookup offset and length of a document map that consists of key IDs and value IDs.

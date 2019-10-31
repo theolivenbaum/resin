@@ -7,7 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using Newtonsoft.Json;
-using Sir.KeyValue;
+using Sir.Document;
 using Sir.Store;
 
 namespace Sir.DbUtil
