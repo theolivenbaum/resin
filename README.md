@@ -9,16 +9,6 @@ constructed and persisted on disk as bitmaps, made scannable in a streaming fash
 
 Spaces are configured by implementing `IModel` or `IStringModel`.
 
-## Sparse/dense
-
-In high dimensions, sparse vectors will enable fast scanning.
-
-In low dimensions, dense vectors will not deteriorate querying speed.
-
-In a dense space, especially a high dimensional one, a high CPU clock frequency is required for decent querying performance.
-
-As well as lots, and lotIs of cores.
-
 ## Write, map, materialize
 
 Main processes of the Resin back-end:
@@ -54,6 +44,28 @@ A query can consist of many sub queries, each can carry a list of query terms.
 Finding a query term's closest matching vector inside a space entails finding the correct column index file, locating the boundaries of each segment, querying those segments by finding the root node, represented on disk as the first block in the segment, deserializing it, calculating the cos angle between the query vector and the index node's vector, determining whether to go left or right based on if the angle is over IModel.FoldAngle or below/equal or calling it because the angle is greater than or equal to IndenticalAngle, which means, nowhere in the segment can there exist a better match than the one we already found.
 
 That's the good news. The bad news is that there are lots of skips. The good news is we can have SSD's. Or if we can't then we can memory map the indices. Like I said, there's no real recipe.
+
+## Read/write performance
+
+The bigger the graph the longer it takes to build, 
+because more nodes will need to be traversed before we can find empty slots for new nodes. 
+We can improve writing speed by creating many index file segments.
+
+When it comes to querying speed, however, one large graph is better than many segments.
+
+Because the shape of my data might not be the shape of yours, 
+you have been given a choice between optimizing for writing or querying. 
+There's hope you'll find a good balance between both.
+
+### Sparse/dense
+
+In high dimensions, sparse vectors will enable fast scanning.
+
+In low dimensions, dense vectors will might not impact querying speed negatively.
+
+In a dense space, especially a high dimensional one, 
+a high CPU clock frequency is required for decent querying performance, 
+as well as lots, and lots of cores.
 
 ## APIs
 

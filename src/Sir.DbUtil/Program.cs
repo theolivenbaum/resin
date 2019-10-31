@@ -61,8 +61,8 @@ namespace Sir.DbUtil
                 var collection = args[3];
                 var skip = int.Parse(args[4]);
                 var take = int.Parse(args[5]);
-                var batchSize = int.Parse(args[6]);
-                var reportSize = Math.Max(1000, batchSize / 10);
+                var pageSize = int.Parse(args[6]);
+                const int reportSize = 1000;
                 var collectionId = collection.ToHash();
                 var batchNo = 0;
                 var payload = ReadFile(fileName)
@@ -82,7 +82,7 @@ namespace Sir.DbUtil
                 {
                     sessionFactory.Truncate(collectionId);
 
-                    foreach (var page in payload.Batch(batchSize))
+                    foreach (var page in payload.Batch(pageSize))
                     {
                         using (var writeSession = sessionFactory.CreateWriteSession(collectionId, model))
                         {
