@@ -69,12 +69,16 @@ as well as lots, and lots of cores.
 
 ## APIs
 
-Resin offers both an in-proc, NHibernate-like API, in that there are sessions, a factory, and the notion of a unit of work, as well as fully fledged JSON-friendly HTTP API, in an attempt to follow the principle of what you can do locally your should also be able to do remotely. 
+Resin offers both an in-proc, NHibernate-like API, in that there are sessions, a factory, and the notion of a unit of work, 
+as well as fully fledged JSON-friendly HTTP API, in an attempt to follow the principle of,
+what you can do locally your should also be able to do remotely. 
+
+[Sir.Search](https://github.com/kreeben/resin/blob/master/src/Sir.Search/README.md)
 
 ## Apps
 
-- __Sir.HttpServer__: HTTP search service (read, write, query naturally or w/QL)
-- __Sir.DbUtil__: write, validate and query via command-line
+- __[Sir.HttpServer](https://github.com/kreeben/resin/blob/master/src/Sir.HttpServer/README.md)__: HTTP search service (read, write, query naturally or w/QL)
+- __[Sir.DbUtil](https://github.com/kreeben/resin/blob/master/src/Sir.DbUtil/README.md)__: write, validate and query via command-line
 
 ## Libs (.Net Core 3 apps can embedd and extend these)
 
