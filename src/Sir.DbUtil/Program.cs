@@ -119,11 +119,10 @@ namespace Sir.DbUtil
             }
             else if (command == "validate")
             {
-                var fileName = args[1];
-                var dir = args[2];
-                var collection = args[3];
-                var skip = int.Parse(args[4]);
-                var take = int.Parse(args[5]);
+                var dir = args[1];
+                var collection = args[2];
+                var skip = int.Parse(args[3]);
+                var take = int.Parse(args[4]);
                 var collectionId = collection.ToHash();
                 var time = Stopwatch.StartNew();
 
