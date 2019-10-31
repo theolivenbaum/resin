@@ -2,6 +2,7 @@
 using Sir.KeyValue;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Sir.Store
 {
@@ -46,6 +47,7 @@ namespace Sir.Store
 
                 var docMap = new List<(long keyId, long valId)>();
                 var docId = _streamWriter.PeekNextDocId();
+                var indexFields = new List<(long docId, long keyId, string val)>();
 
                 foreach (var key in document.Keys)
                 {
@@ -72,9 +74,15 @@ namespace Sir.Store
                     // add to index
                     if (dataType == DataType.STRING && key.StartsWith("_") == false)
                     {
-                        _indexSession.Put(docId, kvmap.keyId, (string)val);
+                        indexFields.Add((docId, kvmap.keyId, (string)val));
                     }
                 }
+
+                Parallel.ForEach(indexFields, field =>
+                //foreach (var field in indexFields)
+                {
+                    _indexSession.Put(field.docId, field.keyId, field.val);
+                });
 
                 var docMeta = _streamWriter.PutDocumentMap(docMap);
 
