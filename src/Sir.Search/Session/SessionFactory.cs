@@ -112,18 +112,18 @@ namespace Sir.Store
 
         public void Write(Job job)
         {
-            WriteSync.WaitOne();
-
             var timer = Stopwatch.StartNew();
+
+            WriteSync.WaitOne();
 
             using (var writeSession = CreateWriteSession(job.CollectionId, job.Model))
             {
                 writeSession.Write(job.Documents);
             }
 
-            this.Log("executed {0} write in {1}", job.CollectionId, timer.Elapsed);
-
             WriteSync.Release();
+
+            this.Log("executed {0} write in {1}", job.CollectionId, timer.Elapsed);
         }
 
         public void ClearPageInfo()
