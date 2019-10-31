@@ -3,9 +3,11 @@
 Sir.DbUtil is a console application for writing and validating local Resin databases.
 
 ## Write
-`cd [path_of_resin_repo]
+```
+cd [path_of_resin_repo]
 
-dbutil write [path_of_local_json_file] [path_of_resin_data_directory] [name_of_collection] [num_of_docs_to_skip] [num_of_docs_to_take] [segment_size]`
+dbutil write [path_of_local_json_file] [path_of_resin_data_directory] [name_of_collection] [num_of_docs_to_skip] [num_of_docs_to_take] [segment_size]
+```
 
 E.g. 
 
@@ -13,9 +15,11 @@ E.g.
 
 ## Validate
 
-`cd [path_of_resin_repo]
+```
+cd [path_of_resin_repo]
 
-dbutil validate [path_of_resin_data_directory] [name_of_collection] [num_of_docs_to_skip] [num_of_docs_to_take]`
+dbutil validate [path_of_resin_data_directory] [name_of_collection] [num_of_docs_to_skip] [num_of_docs_to_take]
+```
 
 E.g. 
 
