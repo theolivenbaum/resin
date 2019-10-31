@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Sir.KeyValue;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Sir.KeyValue
+namespace Sir.Document
 {
     public class DocumentWriter : IDisposable
     {
