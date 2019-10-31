@@ -82,9 +82,10 @@ More information: [Sir.Search](https://github.com/kreeben/resin/blob/master/src/
 
 ## Libs (.Net Core 3 apps can embedd and extend these)
 
-- __Sir.KeyValue__: key/value/document System.IO.Stream-based database
-- __Sir.VectorSpace__: hardware accellerated computations over and stream based storage of vectors and spaces
-- __Sir.Search__: in-proc search engine (SessionFactory, WriteSession, ReadSession)
+- __Sir.KeyValue__: System.IO.Stream-based key/value database.
+- __Sir.Document: System.IO.Stream-based document database.
+- __Sir.VectorSpace__: hardware accellerated computations over and stream based storage of vectors and spaces.
+- __Sir.Search__: in-proc search engine (SessionFactory, WriteSession, ReadSession).
 
 ## Contribute
 
