@@ -27,7 +27,7 @@ __Materialize__: each node in the query tree that recieved a mapping to one or m
 
 ## Sorting
 
-Surprisingly to some, but not all, but certainly to me, once your space approaches big data you find out what is the real problem in search, it's sorting. MF sorting. Who'd have though?
+Surprisingly to some, but not all, but certainly to me, once your space approaches big data you find out what is the real problem in search and it's sorting, MF-ing sorting. Who'd have though?
 
 ## Balancing
 
