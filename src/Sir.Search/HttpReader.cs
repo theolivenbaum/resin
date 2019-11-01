@@ -11,19 +11,22 @@ namespace Sir.Store
     /// <summary>
     /// Query a collection.
     /// </summary>
-    public class HttoReader : IHttpReader
+    public class HttpReader : IHttpReader
     {
         public string ContentType => "application/json";
 
         private readonly SessionFactory _sessionFactory;
         private readonly HttpQueryParser _httpQueryParser;
+        private readonly IConfigurationProvider _config;
 
-        public HttoReader(
+        public HttpReader(
             SessionFactory sessionFactory, 
-            HttpQueryParser httpQueryParser)
+            HttpQueryParser httpQueryParser,
+            IConfigurationProvider config)
         {
             _sessionFactory = sessionFactory;
             _httpQueryParser = httpQueryParser;
+            _config = config;
         }
 
         public void Dispose()
@@ -47,17 +50,17 @@ namespace Sir.Store
             if (request.Query.ContainsKey("skip"))
                 skip = int.Parse(request.Query["skip"]);
 
+            var query = _httpQueryParser.Parse(collectionId, request);
+
+            if (query == null)
+            {
+                return new ResponseModel { MediaType = "application/json", Total = 0 };
+            }
+
+            ReadResult result = null;
+
             using (var readSession = _sessionFactory.CreateReadSession(collectionId))
             {
-                var query = _httpQueryParser.Parse(collectionId, request);
-
-                if (query == null)
-                {
-                    return new ResponseModel { MediaType = "application/json", Total = 0 };
-                }
-
-                ReadResult result = null;
-
                 if (request.Query.ContainsKey("id"))
                 {
                     var ids = request.Query["id"].ToDictionary(s => long.Parse(s), x => (double)1);
@@ -69,31 +72,34 @@ namespace Sir.Store
                 {
                     result = readSession.Read(query, skip, take);
                 }
+            }
 
-                if (request.Query.ContainsKey("create"))
+            string newCollectionName = null;
+
+            if (request.Query.ContainsKey("target"))
+            {
+                newCollectionName = request.Query["target"].ToString();
+
+                if (string.IsNullOrWhiteSpace(newCollectionName))
                 {
-                    var newCollectionName = request.Query["newCollection"].ToString();
-
-                    if (string.IsNullOrWhiteSpace(newCollectionName))
-                    {
-                        newCollectionName = Guid.NewGuid().ToString();
-                    }
-
-                    _sessionFactory.Write(new Job(newCollectionName.ToHash(), result.Docs, model));
+                    newCollectionName = Guid.NewGuid().ToString();
                 }
 
-                using (var mem = new MemoryStream())
-                {
-                    Serialize(result.Docs, mem);
+                _sessionFactory.Write(new Job(newCollectionName.ToHash(), result.Docs, model));
+            }
 
-                    return new ResponseModel
-                    {
-                        MediaType = "application/json",
-                        Documents = result.Docs,
-                        Total = result.Total,
-                        Body = mem.ToArray()
-                    };
-                }
+            using (var mem = new MemoryStream())
+            {
+                Serialize(result.Docs, mem);
+
+                return new ResponseModel
+                {
+                    MediaType = "application/json",
+                    Documents = result.Docs,
+                    Total = result.Total,
+                    Body = mem.ToArray(),
+                    Target = newCollectionName
+                };
             }
         }
 
