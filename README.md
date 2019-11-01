@@ -105,10 +105,6 @@ More information: [Sir.Search](https://github.com/kreeben/resin/blob/master/src/
 - __Sir.VectorSpace__: hardware accellerated computations over and stream based storage of vectors and spaces.
 - __Sir.Search__: in-proc search engine (SessionFactory, WriteSession, ReadSession).
 
-## Contribute
-
-Code contributions, error reports and suggestions of any kind are most welcome.
-
 ## Roadmap
 
 - [x] v0.1a - bag-of-characters vector space language model
@@ -121,3 +117,9 @@ Code contributions, error reports and suggestions of any kind are most welcome.
 - [ ] v2.1 - voice-to-text
 - [ ] v2.2 - text-to-image
 - [ ] v3.0 - AGI
+
+## Contribute
+
+Code contributions, error reports and suggestions of any kind are most welcome.
+
+
