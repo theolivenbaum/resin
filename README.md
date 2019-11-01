@@ -12,7 +12,7 @@ that are needed to solve the query equation.
 Solving the query means reducing it to a list of postings. 
 
 One of the hardest problem to solve in search is sorting postings by relevance, done here during the the materialize process. 
-Luckily, this becomes apparent only once the size of your collection approaches big data.
+Luckily, this only becomes apparent once the size of your collection approaches big data.
 
 Vector spaces are configured through the `Sir.IModel`, `Sir.IStringModel` and `Sir.IEuclidDistance` contracts.
 
