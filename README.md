@@ -1,11 +1,23 @@
 # &#9084; Resin Extensible Search Engine
 
-Resin is a document database that's been coupled with a search index, but not just any index. This index can represent any vector space no matter how thick or wide as long as it's a `Sir.IModel`, which means, you can use it to analyze term based spaces as well as semantic ones, also fictional ones, so, almost any index.
+Resin is a document oriented key/value database with columnar indexing. 
+Its three main units of data are _document_ (a set of keys and values), _vector_ and _query (a tree of vectors).
 
-## Pluggable, searchable vector spaces
+Vector spaces are configured through the `Sir.IModel`, `Sir.IStringModel` and `Sir.IEuclidDistance` contracts.
+
+Resin can be used to analyze term based spaces as well as semantic ones. 
+
+"There's no real recipie, only a method."
+
+- Marco Pierre White
+
+## Big searchable vector spaces
 
 From embeddings extracted from document fields during the tokenization phase of the write session, spaces are
-constructed and persisted on disk as bitmaps, made scannable in a streaming fashion so that only a small amount of pressure is put on memory while querying, only what amounts to the size of a single graph node (per thread), which is usually very small, enabling the possibility to scan indices that are larger than memory. 
+constructed and persisted on disk as bitmaps so that they are scannable in a streaming fashion, 
+so that only a small amount of pressure is put on memory while querying, 
+only what amounts to the size of a single graph node (per thread), which is usually very small, 
+enabling the possibility to scan indices that are larger than memory. 
 
 Spaces are configured by implementing `IModel` or `IStringModel`.
 
