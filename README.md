@@ -1,25 +1,31 @@
 # &#9084; Resin Extensible Search Engine
 
 Resin is a document oriented key/value database with columnar indexing. 
-Its three main units of data are _document_ (a set of keys and values), _vector_ and _query (a tree of vectors).
+Three main units of data are _document_, _vector_, and _query_ (a tree of vectors). 
+Three main units of work are _write_, _validate_, and _query_. 
+
+The main processes of querying are _map_ and _materialize_. 
+
+The main objective of the mapping process is to find all possible candidate document ID's (i.e. "postings") 
+that are needed to solve the query equation. 
+
+Solving the query means reducing it to a list of postings. 
+
+One of the hardest problem to solve in search is sorting postings by relevance, done here during the the materialize process. 
+Luckily, this becomes apparent only once the size of your collection approaches big data.
 
 Vector spaces are configured through the `Sir.IModel`, `Sir.IStringModel` and `Sir.IEuclidDistance` contracts.
 
 Resin can be used to analyze term based spaces as well as semantic ones. 
 
-"There's no real recipie, only a method."
-
-- Marco Pierre White
-
 ## Big searchable vector spaces
 
-From embeddings extracted from document fields during the tokenization phase of the write session, spaces are
+From embeddings extracted from document fields during the tokenization phase of a write session, spaces are
 constructed and persisted on disk as bitmaps so that they are scannable in a streaming fashion, 
 so that only a small amount of pressure is put on memory while querying, 
-only what amounts to the size of a single graph node (per thread), which is usually very small, 
-enabling the possibility to scan indices that are larger than memory. 
-
-Spaces are configured by implementing `IModel` or `IStringModel`.
+only what amounts to the size of a single graph node (per thread), 
+which is usually very small, 
+enabling the possibility to scan indices that are larger than memory.
 
 ## Write, map, materialize
 
