@@ -11,5 +11,6 @@ namespace Sir
         public long Total { get; set; }
         public string MediaType { get; set; }
         public byte[] Body { get; set; }
+        public string Target { get; set; }
     }
 }

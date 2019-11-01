@@ -19,7 +19,7 @@ namespace Sir.Store
             services.AddSingleton(typeof(SessionFactory), sessionFactory);
             services.AddSingleton(typeof(HttpQueryParser), httpParser);
             services.AddSingleton(typeof(IHttpWriter), new HttpWriter(sessionFactory));
-            services.AddSingleton(typeof(IHttpReader), new HttoReader(sessionFactory, httpParser));
+            services.AddSingleton(typeof(IHttpReader), new HttpReader(sessionFactory, httpParser, config));
         }
     }
 }
