@@ -74,15 +74,9 @@ namespace Sir.Store
                     // add to index
                     if (dataType == DataType.STRING && key.StartsWith("_") == false)
                     {
-                        indexFields.Add((docId, kvmap.keyId, (string)val));
+                        _indexSession.Put(docId, kvmap.keyId, (string)val);
                     }
                 }
-
-                Parallel.ForEach(indexFields, field =>
-                //foreach (var field in indexFields)
-                {
-                    _indexSession.Put(field.docId, field.keyId, field.val);
-                });
 
                 var docMeta = _streamWriter.PutDocumentMap(docMap);
 
