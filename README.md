@@ -18,7 +18,7 @@ Vector spaces are configured through the `Sir.IModel`, `Sir.IStringModel` and `S
 
 Resin can be used to analyze term based spaces as well as semantic ones. 
 
-## Big searchable vector spaces
+## Searchable vector spaces
 
 From embeddings extracted from document fields during the tokenization phase of a write session, spaces are
 constructed and persisted on disk as bitmaps so that they are scannable in a streaming fashion, 
