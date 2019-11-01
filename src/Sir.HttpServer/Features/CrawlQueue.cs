@@ -19,7 +19,7 @@ namespace Sir.HttpServer.Features
 
         public CrawlQueue(SessionFactory sessionFactory, IStringModel model)
         {
-            _queue = new ProducerConsumerQueue<(string,Uri)>(1, Submit);
+            _queue = new ProducerConsumerQueue<(string,Uri)>(1, DoWork);
             _sessionFactory = sessionFactory;
             _model = model;
         }
@@ -60,7 +60,7 @@ namespace Sir.HttpServer.Features
             }
         }
 
-        private void Submit((string collection, Uri uri) item)
+        private void DoWork((string collection, Uri uri) item)
         {
             try
             {
@@ -105,8 +105,7 @@ namespace Sir.HttpServer.Features
 
                 if (doc.title == null)
                 {
-                    this.Log(string.Format("error processing {0} (no title)", item.uri));
-                    return;
+                    doc.title = url;
                 }
 
                 var document = new Dictionary<string, object>();
