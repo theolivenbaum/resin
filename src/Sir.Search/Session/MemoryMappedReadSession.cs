@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 
 namespace Sir.Store
@@ -12,35 +13,40 @@ namespace Sir.Store
     /// <summary>
     /// Read session targeting a single collection.
     /// </summary>
-    public class ReadSession : CollectionSession, ILogger, IDisposable, IReadSession
+    public class MemoryMappedReadSession : CollectionSession, ILogger, IDisposable, IReadSession
     {
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
         private readonly IPostingsReader _postingsReader;
-        private readonly Stream _vectorFile;
+        private readonly MemoryMappedViewAccessor _vectorView;
         private readonly DocumentReader _streamReader;
         private readonly ConcurrentDictionary<long, INodeReader> _nodeReaders;
 
-        public ReadSession(ulong collectionId,
-            SessionFactory sessionFactory,
+        public MemoryMappedReadSession(ulong collectionId,
+            SessionFactory sessionFactory, 
             IConfigurationProvider config,
             IStringModel model,
             DocumentReader streamReader,
-            IPostingsReader postingsReader)
+            IPostingsReader postingsReader) 
             : base(collectionId, sessionFactory)
         {
             _config = config;
             _model = model;
             _streamReader = streamReader;
             _postingsReader = postingsReader;
-            _vectorFile = SessionFactory.CreateReadStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
+
+            _vectorView = SessionFactory.OpenMMF(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"))
+                .CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
+
             _nodeReaders = new ConcurrentDictionary<long, INodeReader>();
         }
 
         public void Dispose()
         {
-            _vectorFile.Dispose();
+            _vectorView.Dispose();
+
             _postingsReader.Dispose();
+
             _streamReader.Dispose();
 
             foreach (var reader in _nodeReaders.Values)
@@ -170,13 +176,7 @@ namespace Sir.Store
                 return null;
 
             return _nodeReaders.GetOrAdd(
-                keyId, new NodeReader(
-                    CollectionId,
-                    keyId,
-                    SessionFactory,
-                    _config,
-                    _vectorFile,
-                    SessionFactory.CreateReadStream(ixFileName)));
+                keyId, new MemoryMappedNodeReader(CollectionId, keyId, SessionFactory, _config, _vectorView));
         }
 
         public IList<IDictionary<string, object>> ReadDocs(IEnumerable<KeyValuePair<long, double>> docs)

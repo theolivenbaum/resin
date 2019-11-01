@@ -246,15 +246,28 @@ namespace Sir.Store
             return new IndexSession(collectionId, this, Model, Config);
         }
 
-        public ReadSession CreateReadSession(ulong collectionId)
+        public IReadSession CreateReadSession(ulong collectionId, bool memoryMapped = false)
         {
+            if (memoryMapped)
+            {
+                return new MemoryMappedReadSession(
+                    collectionId,
+                    this,
+                    Config,
+                    Model,
+                    new DocumentReader(collectionId, this),
+                    new MemoryMappedPostingsReader(OpenMMF(Path.Combine(Dir, $"{collectionId}.pos")).CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read))
+                );
+            }
+
             return new ReadSession(
                 collectionId,
                 this,
                 Config,
                 Model,
                 new DocumentReader(collectionId, this),
-                new PostingsReader(CreateReadStream(Path.Combine(Dir, $"{collectionId}.pos"))));
+                new PostingsReader(CreateReadStream(Path.Combine(Dir, $"{collectionId}.pos")))
+            );
         }
 
         public ValidateSession CreateValidateSession(ulong collectionId)

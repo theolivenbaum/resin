@@ -223,6 +223,7 @@ namespace Sir.Store
 
         public void Dispose()
         {
+            _vectorView.Dispose();
         }
     }
 }
