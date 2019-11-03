@@ -12,7 +12,7 @@ namespace Sir.Store
             {
                 var queryResult = new Dictionary<long, double>();
 
-                foreach (var clause in query.Clauses)
+                foreach (var clause in query.Terms)
                 {
                     var clauseResult = Read(clause.PostingsOffsets);
 

@@ -8,19 +8,19 @@ namespace Sir
     /// </summary>
     public class Query : BooleanStatement
     {
-        public IList<Clause> Clauses { get; private set; }
+        public IList<Term> Terms { get; private set; }
 
-        public Query(IList<Clause> clauses, bool and = false, bool or = true, bool not = false)
+        public Query(IList<Term> terms, bool and = false, bool or = true, bool not = false)
             : base(and, or, not)
         {
-            Clauses = clauses;
+            Terms = terms;
         }
 
         public override string ToString()
         {
             var result = new StringBuilder();
 
-            foreach (var clause in Clauses)
+            foreach (var clause in Terms)
             {
                 result.Append(clause.ToString());
             }
@@ -31,20 +31,22 @@ namespace Sir
         }
     }
 
-    public class Clause : BooleanStatement
+    public class Term : BooleanStatement
     {
-        public IVector Term { get; }
+        public IVector Vector { get; }
         public IList<long> PostingsOffsets { get; set; }
         public double Score { get; set; }
         public long KeyId { get; }
         public string Key { get; }
+        public ulong CollectionId { get; }
 
-        public Clause(long keyId, string key, IVector term, bool and = false, bool or = true, bool not = false)
+        public Term(ulong collectionId, long keyId, string key, IVector term, bool and = false, bool or = true, bool not = false)
             : base(and, or, not)
         {
+            CollectionId = collectionId;
             KeyId = keyId;
             Key = key;
-            Term = term;
+            Vector = term;
             And = and;
             Or = or;
             Not = not;
@@ -54,7 +56,7 @@ namespace Sir
         {
             var queryop = And ? "+" : Or ? " " : "-";
 
-            return $"{queryop}{Key}:{Term.ToString()}";
+            return $"{queryop}{Key}:{Vector.ToString()}";
         }
     }
 

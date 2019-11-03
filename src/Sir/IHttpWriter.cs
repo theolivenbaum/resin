@@ -7,6 +7,6 @@ namespace Sir
     /// </summary>
     public interface IHttpWriter : IPlugin
     {
-        void Write(ulong collectionId, IStringModel model, HttpRequest request);
+        void Write(HttpRequest request, IStringModel model);
     }
 }
