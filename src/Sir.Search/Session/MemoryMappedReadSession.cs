@@ -73,13 +73,13 @@ namespace Sir.Store
 
         public void EnsureIsValid(Query query, long docId)
         {
-            foreach (var clause in query.Clauses)
+            foreach (var clause in query.Terms)
             {
                 var indexReader = GetOrTryCreateIndexReader(clause.KeyId);
 
                 if (indexReader != null)
                 {
-                    var hit = indexReader.ClosestTerm(clause.Term, _model);
+                    var hit = indexReader.ClosestTerm(clause.Vector, _model);
 
                     if (hit == null || hit.Score < _model.IdenticalAngle)
                     {
@@ -128,13 +128,13 @@ namespace Sir.Store
 
             foreach (var query in queries)
             {
-                foreach (var clause in query.Clauses)
+                foreach (var clause in query.Terms)
                 {
                     var indexReader = GetOrTryCreateIndexReader(clause.KeyId);
 
                     if (indexReader != null)
                     {
-                        var hit = indexReader.ClosestTerm(clause.Term, _model);
+                        var hit = indexReader.ClosestTerm(clause.Vector, _model);
 
                         if (hit != null && hit.Score > 0)
                         {

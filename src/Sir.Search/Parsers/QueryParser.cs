@@ -13,36 +13,56 @@ namespace Sir.Store
             _model = model;
         }
 
-        public IEnumerable<Query> Parse(ulong collectionId, string q, string[] fields, bool and, bool or, bool not)
+        public IEnumerable<Query> Parse(string collectionName, string q, string[] fields, bool and, bool or, bool not)
         {
-            var document = new Dictionary<string, object>();
-
             foreach (var field in fields)
             {
-                document.Add(field, q);
+                yield return Parse(field, q, and, or, not, collectionName);
             }
-
-            return Parse(collectionId, document, and, or, not);
         }
 
-        public IEnumerable<Query> Parse(ulong collectionId, IDictionary<string, object> document, bool and, bool or, bool not)
+        public IEnumerable<Query> Parse(IDictionary<string, object> document)
         {
-            foreach (var field in document)
+            var dand = document.ContainsKey("operator") ? document["operator"].Equals("and") : false;
+            var dor = document.ContainsKey("operator") ? document["operator"].Equals("or") : false;
+            var dnot = document.ContainsKey("operator") ? document["operator"].Equals("not") : false;
+
+            foreach (var termDoc in (IEnumerable<Dictionary<string, object>>)document["terms"])
             {
-                long keyId;
+                var key = (string)termDoc["key"];
+                var value = (string)termDoc["value"];
+                var operatorString = termDoc.ContainsKey("operator") ? (string)termDoc["operator"] : "or";
+                var and = termDoc.ContainsKey("operator") ? termDoc["operator"].Equals("and") : false;
+                var or = termDoc.ContainsKey("operator") ? termDoc["operator"].Equals("or") : false;
+                var not = termDoc.ContainsKey("operator") ? termDoc["operator"].Equals("not") : false;
 
-                if (_sessionFactory.TryGetKeyId(collectionId, field.Key.ToHash(), out keyId))
+                var query = Parse(key, value, and, or, not);
+
+                query.And = dand;
+                query.Or = dor;
+                query.Not = dnot;
+
+                yield return query;
+            }
+        }
+
+        public Query Parse(string key, string value, bool and, bool or, bool not, string collectionName = null)
+        {
+            var keySegments = key.Split('.', System.StringSplitOptions.RemoveEmptyEntries);
+            var collectionId = collectionName == null ? keySegments[0].ToHash() : collectionName.ToHash();
+            var keyName = keySegments[1];
+            long keyId;
+            var terms = new List<Term>();
+
+            if (_sessionFactory.TryGetKeyId(collectionId, keyName.ToHash(), out keyId))
+            {
+                foreach (var term in _model.Tokenize(value))
                 {
-                    var clauses = new List<Clause>();
-
-                    foreach (var term in _model.Tokenize((string)field.Value))
-                    {
-                        clauses.Add(new Clause(keyId, field.Key, term, and, or, not));
-                    }
-
-                    yield return new Query(clauses);
+                    terms.Add(new Term(collectionId, keyId, key, term, and, or, not));
                 }
             }
+
+            return new Query(terms, and, or, not);
         }
     }
 }

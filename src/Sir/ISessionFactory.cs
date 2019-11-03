@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 
@@ -17,7 +18,7 @@ namespace Sir
         Stream CreateAsyncReadStream(string fileName, int bufferSize = 4096);
         Stream CreateReadStream(string fileName, int bufferSize = 4096, FileOptions fileOptions = FileOptions.RandomAccess);
         void Dispose();
-        System.Collections.Generic.IList<(long offset, long length)> GetAllPages(string pageFileName);
+        IList<(long offset, long length)> GetAllPages(string pageFileName);
         long GetDocCount(string collection);
         long GetKeyId(ulong collectionId, ulong keyHash);
         ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> LoadKeys();
@@ -27,6 +28,7 @@ namespace Sir
         void Truncate(ulong collectionId);
         void TruncateIndex(ulong collectionId);
         bool TryGetKeyId(ulong collectionId, ulong keyHash, out long keyId);
-        void Write(Job job);
+        void WriteConcurrent(Job job);
+        void WriteConcurrent(IEnumerable<IDictionary<string, object>> documents, IStringModel model);
     }
 }

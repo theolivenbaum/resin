@@ -39,7 +39,7 @@ namespace Sir.Store
             var docId = (long)doc["___docid"];
             var body = (string)doc["body"];
             var keyId = SessionFactory.GetKeyId(CollectionId, "body".ToHash());
-            var query = new Query(_model.Tokenize(body).Select(x => new Clause(keyId, "body", x)).ToList());
+            var query = new Query(_model.Tokenize(body).Select(x => new Term(keyId, "body", x)).ToList());
 
             _readSession.EnsureIsValid(query, docId);
         }

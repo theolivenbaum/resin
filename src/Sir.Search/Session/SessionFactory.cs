@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Threading;
+using System.Linq;
 
 namespace Sir.Store
 {
@@ -17,7 +17,6 @@ namespace Sir.Store
     {
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
-        private readonly Semaphore WriteSync = new Semaphore(1, 2);
         private readonly ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
 
         public string Dir { get; }
@@ -43,8 +42,6 @@ namespace Sir.Store
 
             this.Log($"initiated in {time.Elapsed}");
         }
-
-
 
         public MemoryMappedFile OpenMMF(string fileName)
         {
@@ -110,20 +107,30 @@ namespace Sir.Store
             _pageInfo.Clear();
         }
 
-        public void Write(Job job)
+        public void WriteConcurrent(Job job)
         {
-            var timer = Stopwatch.StartNew();
-
-            WriteSync.WaitOne();
-
             using (var writeSession = CreateWriteSession(job.CollectionId, job.Model))
             {
                 writeSession.Write(job.Documents);
             }
+        }
 
-            WriteSync.Release();
+        public void WriteConcurrent(IEnumerable<IDictionary<string, object>> documents, IStringModel model)
+        {
+            foreach (var group in documents.GroupBy(d => (string)d["___collectionid"]))
+            {
+                using (var writeSession = CreateWriteSession(group.Key.ToHash(), model))
+                {
+                    writeSession.Write(group);
+                }
+            }
+        }
 
-            this.Log("executed {0} write in {1}", job.CollectionId, timer.Elapsed);
+        public FileStream CreateLockFile(ulong collectionId)
+        {
+            return new FileStream(Path.Combine(Dir, collectionId + ".lock"),
+                   FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None,
+                   4096, FileOptions.RandomAccess | FileOptions.DeleteOnClose);
         }
 
         public void ClearPageInfo()
@@ -235,7 +242,6 @@ namespace Sir.Store
                 collectionId,
                 this,
                 documentWriter,
-                Config,
                 model,
                 CreateIndexSession(collectionId)
             );
@@ -246,12 +252,11 @@ namespace Sir.Store
             return new IndexSession(collectionId, this, Model, Config);
         }
 
-        public IReadSession CreateReadSession(ulong collectionId, bool memoryMapped = false)
+        public IReadSession CreateReadSession(bool memoryMapped = false)
         {
             if (memoryMapped)
             {
                 return new MemoryMappedReadSession(
-                    collectionId,
                     this,
                     Config,
                     Model,
@@ -261,7 +266,6 @@ namespace Sir.Store
             }
 
             return new ReadSession(
-                collectionId,
                 this,
                 Config,
                 Model,

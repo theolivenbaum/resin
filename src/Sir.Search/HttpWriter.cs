@@ -22,12 +22,19 @@ namespace Sir.Store
             _timer = new Stopwatch();
         }
 
-        public void Write(ulong collectionId, IStringModel model, HttpRequest request)
+        public void Write(HttpRequest request, IStringModel model)
         {
             var documents = Deserialize<IEnumerable<IDictionary<string, object>>>(request.Body);
-            var job = new Job(collectionId, documents, model);
 
-            _sessionFactory.Write(job);
+            if (request.Query.ContainsKey("collectionId"))
+            {
+                var collectionId = request.Query["collectionId"].ToString().ToHash();
+                _sessionFactory.WriteConcurrent(new Job(collectionId, documents, model));
+            }
+            else
+            {
+                _sessionFactory.WriteConcurrent(documents, model);
+            }
         }
 
         private static T Deserialize<T>(Stream stream)
