@@ -2,7 +2,7 @@
 using Sir.KeyValue;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace Sir.Store
 {
@@ -14,24 +14,26 @@ namespace Sir.Store
         private readonly IndexSession _indexSession;
         private readonly DocumentWriter _streamWriter;
         private readonly IStringModel _model;
+        private readonly FileStream _lockFile;
 
         public WriteSession(
             ulong collectionId,
             SessionFactory sessionFactory,
             DocumentWriter streamWriter,
-            IConfigurationProvider config,
             IStringModel model,
             IndexSession termIndexSession) : base(collectionId, sessionFactory)
         {
             _indexSession = termIndexSession;
             _streamWriter = streamWriter;
             _model = model;
+            _lockFile = sessionFactory.CreateLockFile(collectionId);
         }
 
         public void Dispose()
         {
             _indexSession.Dispose();
             _streamWriter.Dispose();
+            _lockFile.Dispose();
         }
 
         /// <summary>

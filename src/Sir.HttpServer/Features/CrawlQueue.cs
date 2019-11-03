@@ -130,7 +130,7 @@ namespace Sir.HttpServer.Features
             {
                 const string key = "_url";
                 var keyId = _sessionFactory.GetKeyId(collectionName.ToHash(), key.ToHash());
-                var urlQuery = new Query(_model.Tokenize(url).Select(x => new Clause(keyId, key, x)).ToList());
+                var urlQuery = new Query(_model.Tokenize(url).Select(x => new Term(keyId, key, x)).ToList());
                 urlQuery.And = true;
 
                 var result = readSession.Read(new Query[1] { urlQuery }, 0, 1).Docs.ToList();
@@ -143,7 +143,7 @@ namespace Sir.HttpServer.Features
 
         public void ExecuteWrite(string collectionName, IDictionary<string, object> doc)
         {
-            _sessionFactory.Write(new Job(collectionName.ToHash(), new[] { doc }, _model));
+            _sessionFactory.WriteConcurrent(new Job(collectionName.ToHash(), new[] { doc }, _model));
         }
 
         private string GetWebString(Uri uri)

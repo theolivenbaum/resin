@@ -33,13 +33,12 @@ namespace Sir.Store
         {
         }
 
-        public ResponseModel Read(string collectionName, IStringModel model, HttpRequest request)
+        public ResponseModel Read(HttpRequest request, IStringModel model)
         {
             var timer = Stopwatch.StartNew();
-            var collectionId = collectionName.ToHash();
-
-            if (!_sessionFactory.CollectionExists(collectionId))
-                return new ResponseModel { Total = 0 };
+            var collectionName = request.Query.ContainsKey("collectionId") ?
+                request.Query["collectionId"].ToString() :
+                null;
 
             var take = 100;
             var skip = 0;
@@ -50,7 +49,7 @@ namespace Sir.Store
             if (request.Query.ContainsKey("skip"))
                 skip = int.Parse(request.Query["skip"]);
 
-            var query = _httpQueryParser.Parse(collectionId, request);
+            var query = _httpQueryParser.Parse(request);
 
             if (query == null)
             {
@@ -85,7 +84,7 @@ namespace Sir.Store
                     newCollectionName = Guid.NewGuid().ToString();
                 }
 
-                _sessionFactory.Write(new Job(newCollectionName.ToHash(), result.Docs, model));
+                _sessionFactory.WriteConcurrent(new Job(newCollectionName.ToHash(), result.Docs, model));
             }
 
             using (var mem = new MemoryStream())
