@@ -13,38 +13,34 @@ namespace Sir.Store
     /// <summary>
     /// Read session targeting a single collection.
     /// </summary>
-    public class MemoryMappedReadSession : CollectionSession, ILogger, IDisposable, IReadSession
+    public class MemoryMappedReadSession : ILogger, IDisposable, IReadSession
     {
+        public ulong CollectionId { get; }
+
+        private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
         private readonly IPostingsReader _postingsReader;
-        private readonly MemoryMappedViewAccessor _vectorView;
         private readonly DocumentReader _streamReader;
         private readonly ConcurrentDictionary<long, INodeReader> _nodeReaders;
 
-        public MemoryMappedReadSession(ulong collectionId,
+        public MemoryMappedReadSession(
             SessionFactory sessionFactory, 
             IConfigurationProvider config,
             IStringModel model,
             DocumentReader streamReader,
             IPostingsReader postingsReader) 
-            : base(collectionId, sessionFactory)
         {
+            _sessionFactory = sessionFactory;
             _config = config;
             _model = model;
             _streamReader = streamReader;
             _postingsReader = postingsReader;
-
-            _vectorView = SessionFactory.OpenMMF(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"))
-                .CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
-
             _nodeReaders = new ConcurrentDictionary<long, INodeReader>();
         }
 
         public void Dispose()
         {
-            _vectorView.Dispose();
-
             _postingsReader.Dispose();
 
             _streamReader.Dispose();
@@ -170,13 +166,20 @@ namespace Sir.Store
 
         public INodeReader GetOrTryCreateIndexReader(long keyId)
         {
-            var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
+            var ixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
 
             if (!File.Exists(ixFileName))
                 return null;
 
             return _nodeReaders.GetOrAdd(
-                keyId, new MemoryMappedNodeReader(CollectionId, keyId, SessionFactory, _config, _vectorView));
+                keyId, 
+                new MemoryMappedNodeReader(
+                    CollectionId, 
+                    keyId, 
+                    _sessionFactory, 
+                    _config, 
+                    _sessionFactory.OpenMMF(Path.Combine(_sessionFactory.Dir, $"{CollectionId}.vec"))
+                        .CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read)));
         }
 
         public IList<IDictionary<string, object>> ReadDocs(IEnumerable<KeyValuePair<long, double>> docs)
