@@ -6,12 +6,12 @@ using System.Text;
 
 namespace Sir.Store
 {
-    public class DebugIndexSession : CollectionSession, IDisposable, ILogger
+    public class DebugIndexSession : IDisposable, ILogger
     {
         private readonly IndexSession _indexSession;
         private readonly ConcurrentDictionary<long, ConcurrentBag<IVector>> _debugWords;
 
-        public DebugIndexSession(ulong collectionId, SessionFactory sessionFactory, IndexSession indexSession) : base(collectionId, sessionFactory)
+        public DebugIndexSession(IndexSession indexSession)
         {
             _indexSession = indexSession;
             _debugWords = new ConcurrentDictionary<long, ConcurrentBag<IVector>>();

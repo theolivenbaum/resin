@@ -9,8 +9,11 @@ namespace Sir.Store
     /// <summary>
     /// Validate a collection.
     /// </summary>
-    public class ValidateSession : CollectionSession, IDisposable, ILogger
+    public class ValidateSession : IDisposable, ILogger
     {
+        public ulong CollectionId { get; }
+
+        private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
         private readonly ReadSession _readSession;
@@ -21,16 +24,18 @@ namespace Sir.Store
             IStringModel model,
             IConfigurationProvider config,
             IPostingsReader postingsReader
-            ) : base(collectionId, sessionFactory)
+            )
         {
+            CollectionId = collectionId;
+
+            _sessionFactory = sessionFactory;
             _config = config;
             _model = model;
             _readSession = new ReadSession(
-                CollectionId,
-                SessionFactory,
-                SessionFactory.Config,
-                SessionFactory.Model,
-                new DocumentReader(CollectionId, SessionFactory),
+                sessionFactory,
+                sessionFactory.Config,
+                sessionFactory.Model,
+                new DocumentReader(collectionId, sessionFactory),
                 postingsReader);
         }
 
@@ -38,8 +43,8 @@ namespace Sir.Store
         {
             var docId = (long)doc["___docid"];
             var body = (string)doc["body"];
-            var keyId = SessionFactory.GetKeyId(CollectionId, "body".ToHash());
-            var query = new Query(_model.Tokenize(body).Select(x => new Term(keyId, "body", x)).ToList());
+            var keyId = _sessionFactory.GetKeyId(CollectionId, "body".ToHash());
+            var query = new Query(_model.Tokenize(body).Select(x => new Term(CollectionId, keyId, "body", x)).ToList());
 
             _readSession.EnsureIsValid(query, docId);
         }

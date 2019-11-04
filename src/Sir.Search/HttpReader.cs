@@ -58,7 +58,7 @@ namespace Sir.Store
 
             ReadResult result = null;
 
-            using (var readSession = _sessionFactory.CreateReadSession(collectionId))
+            using (var readSession = _sessionFactory.CreateReadSession())
             {
                 if (request.Query.ContainsKey("id"))
                 {
