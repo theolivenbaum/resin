@@ -9,8 +9,9 @@ namespace Sir.Store
     /// <summary>
     /// Write session targeting a single collection.
     /// </summary>
-    public class WriteSession : CollectionSession, ILogger, IDisposable
+    public class WriteSession : ILogger, IDisposable
     {
+        private readonly SessionFactory _sessionFactory;
         private readonly IndexSession _indexSession;
         private readonly DocumentWriter _streamWriter;
         private readonly IStringModel _model;
@@ -21,8 +22,9 @@ namespace Sir.Store
             SessionFactory sessionFactory,
             DocumentWriter streamWriter,
             IStringModel model,
-            IndexSession termIndexSession) : base(collectionId, sessionFactory)
+            IndexSession termIndexSession)
         {
+            _sessionFactory = sessionFactory;
             _indexSession = termIndexSession;
             _streamWriter = streamWriter;
             _model = model;

@@ -10,34 +10,37 @@ namespace Sir.Store
     /// <summary>
     /// Indexing session targeting a single collection.
     /// </summary>
-    public class IndexSession : CollectionSession, IDisposable, ILogger
+    public class IndexSession : IDisposable, ILogger
     {
+        private readonly ulong _collectionId;
+        private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
-        private readonly IStringModel _model;
-        private readonly ConcurrentDictionary<long, VectorNode> _index;
         private readonly Stream _postingsStream;
         private readonly Stream _vectorStream;
         private bool _flushed;
 
-        public IStringModel Model => _model;
-        public ConcurrentDictionary<long, VectorNode> Index => _index;
+        public IStringModel Model { get; }
+        public ConcurrentDictionary<long, VectorNode> Index { get; }
 
         public IndexSession(
             ulong collectionId,
             SessionFactory sessionFactory,
             IStringModel model,
-            IConfigurationProvider config) : base(collectionId, sessionFactory)
+            IConfigurationProvider config)
         {
+            _collectionId = collectionId;
+            _sessionFactory = sessionFactory;
             _config = config;
-            _model = model;
-            _index = new ConcurrentDictionary<long, VectorNode>();
-            _postingsStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.pos"));
-            _vectorStream = SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
+            _postingsStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, $"{collectionId}.pos"));
+            _vectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, $"{collectionId}.vec"));
+            
+            Model = model;
+            Index = new ConcurrentDictionary<long, VectorNode>();
         }
 
         public void Put(long docId, long keyId, string value)
         {
-            var tokens = _model.Tokenize(value);
+            var tokens = Model.Tokenize(value);
 
             foreach (var vector in tokens)
             {
@@ -47,14 +50,14 @@ namespace Sir.Store
 
         public void Put(long docId, long keyId, IVector vector)
         {
-            var column = _index.GetOrAdd(keyId, new VectorNode());
+            var column = Index.GetOrAdd(keyId, new VectorNode());
 
             GraphBuilder.MergeOrAdd(
                 column,
                 new VectorNode(vector, docId),
-                _model,
-                _model.FoldAngle,
-                _model.IdenticalAngle);
+                Model,
+                Model.FoldAngle,
+                Model.IdenticalAngle);
 
             //var hit = PathFinder.ClosestMatch(column, vector, _model);
 
@@ -76,7 +79,7 @@ namespace Sir.Store
 
         private IEnumerable<GraphInfo> GetGraphInfo()
         {
-            foreach (var ix in _index)
+            foreach (var ix in Index)
             {
                 yield return new GraphInfo(ix.Key, ix.Value);
             }
@@ -91,19 +94,21 @@ namespace Sir.Store
 
             var timer = Stopwatch.StartNew();
 
-            foreach (var column in _index)
+            foreach (var column in Index)
             {
-                var ixFileName = Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.ix");
+                var ixFileName = Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{column.Key}.ix");
 
-                using (var indexStream = SessionFactory.CreateAppendStream(ixFileName))
-                using (var columnWriter = new ColumnWriter(CollectionId, column.Key, indexStream))
-                using (var pageIndexWriter = new PageIndexWriter(SessionFactory.CreateAppendStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.{column.Key}.ixtp"))))
+                using (var indexStream = _sessionFactory.CreateAppendStream(ixFileName))
+                using (var columnWriter = new ColumnWriter(_collectionId, column.Key, indexStream))
+                using (var pageIndexWriter = new PageIndexWriter(
+                    _sessionFactory.CreateAppendStream(
+                        Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{column.Key}.ixtp"))))
                 {
                     columnWriter.CreatePage(column.Value, _vectorStream, _postingsStream, pageIndexWriter);
                 }
             }
 
-            SessionFactory.ClearPageInfo();
+            _sessionFactory.ClearPageInfo();
         }
 
         public void Dispose()

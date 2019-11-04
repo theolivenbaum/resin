@@ -6,12 +6,11 @@ using System.Linq;
 
 namespace Sir.Store
 {
-    public class DocumentStreamSession : CollectionSession, IDisposable
+    public class DocumentStreamSession : IDisposable
     {
         private readonly DocumentReader _streamReader;
 
-        public DocumentStreamSession(ulong collectionId, SessionFactory sessionFactory, DocumentReader streamReader) 
-            : base(collectionId, sessionFactory)
+        public DocumentStreamSession(DocumentReader streamReader) 
         {
             _streamReader = streamReader;
         }
@@ -21,12 +20,12 @@ namespace Sir.Store
             _streamReader.Dispose();
         }
 
-        public IEnumerable<IDictionary> ReadDocs(int skip = 0, int take = 0)
+        public IEnumerable<IDictionary> ReadDocs(ulong collectionId, int skip = 0, int take = 0)
         {
-            return ReadDocs().Skip(skip).Take(take);
+            return ReadDocs(collectionId).Skip(skip).Take(take);
         }
 
-        public IEnumerable<IDictionary> ReadDocs()
+        public IEnumerable<IDictionary> ReadDocs(ulong collectionId)
         {
             long docId = 1;
             var docCount = _streamReader.DocumentCount();

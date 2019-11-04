@@ -231,7 +231,7 @@ namespace Sir.Store
 
         public DocumentStreamSession CreateDocumentStreamSession(ulong collectionId)
         {
-            return new DocumentStreamSession(collectionId, this, new DocumentReader(collectionId, this));
+            return new DocumentStreamSession(new DocumentReader(collectionId, this));
         }
 
         public WriteSession CreateWriteSession(ulong collectionId, IStringModel model)

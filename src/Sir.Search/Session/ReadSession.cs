@@ -12,34 +12,32 @@ namespace Sir.Store
     /// <summary>
     /// Read session targeting a single collection.
     /// </summary>
-    public class ReadSession : CollectionSession, ILogger, IDisposable, IReadSession
+    public class ReadSession : ILogger, IDisposable, IReadSession
     {
+        private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
         private readonly IPostingsReader _postingsReader;
-        private readonly Stream _vectorFile;
         private readonly DocumentReader _streamReader;
-        private readonly ConcurrentDictionary<long, INodeReader> _nodeReaders;
+        private readonly ConcurrentDictionary<ulong, INodeReader> _nodeReaders;
 
-        public ReadSession(ulong collectionId,
+        public ReadSession(
             SessionFactory sessionFactory,
             IConfigurationProvider config,
             IStringModel model,
             DocumentReader streamReader,
             IPostingsReader postingsReader)
-            : base(collectionId, sessionFactory)
         {
+            _sessionFactory = sessionFactory;
             _config = config;
             _model = model;
             _streamReader = streamReader;
             _postingsReader = postingsReader;
-            _vectorFile = SessionFactory.CreateReadStream(Path.Combine(SessionFactory.Dir, $"{CollectionId}.vec"));
-            _nodeReaders = new ConcurrentDictionary<long, INodeReader>();
+            _nodeReaders = new ConcurrentDictionary<ulong, INodeReader>();
         }
 
         public void Dispose()
         {
-            _vectorFile.Dispose();
             _postingsReader.Dispose();
             _streamReader.Dispose();
 
@@ -67,17 +65,17 @@ namespace Sir.Store
 
         public void EnsureIsValid(Query query, long docId)
         {
-            foreach (var clause in query.Terms)
+            foreach (var term in query.Terms)
             {
-                var indexReader = GetOrTryCreateIndexReader(clause.KeyId);
+                var indexReader = GetOrTryCreateIndexReader(term.CollectionId, term.KeyId);
 
                 if (indexReader != null)
                 {
-                    var hit = indexReader.ClosestTerm(clause.Vector, _model);
+                    var hit = indexReader.ClosestTerm(term.Vector, _model);
 
                     if (hit == null || hit.Score < _model.IdenticalAngle)
                     {
-                        throw new DataMisalignedException($"\"{clause}\" not found.");
+                        throw new DataMisalignedException($"\"{term}\" not found.");
                     }
 
                     var docIds = _postingsReader.ReadWithScore(hit.Node.PostingsOffsets, _model.IdenticalAngle);
@@ -85,7 +83,7 @@ namespace Sir.Store
                     if (!docIds.ContainsKey(docId))
                     {
                         throw new DataMisalignedException(
-                            $"document {docId} not found in postings list for term \"{clause}\".");
+                            $"document {docId} not found in postings list for term \"{term}\".");
                     }
                 }
             }
@@ -122,18 +120,18 @@ namespace Sir.Store
 
             foreach (var query in queries)
             {
-                foreach (var clause in query.Terms)
+                foreach (var term in query.Terms)
                 {
-                    var indexReader = GetOrTryCreateIndexReader(clause.KeyId);
+                    var indexReader = GetOrTryCreateIndexReader(term.CollectionId, term.KeyId);
 
                     if (indexReader != null)
                     {
-                        var hit = indexReader.ClosestTerm(clause.Vector, _model);
+                        var hit = indexReader.ClosestTerm(term.Vector, _model);
 
                         if (hit != null && hit.Score > 0)
                         {
-                            clause.Score = hit.Score;
-                            clause.PostingsOffsets = hit.Node.PostingsOffsets;
+                            term.Score = hit.Score;
+                            term.PostingsOffsets = hit.Node.PostingsOffsets;
                         }
                     }
                 }
@@ -162,21 +160,21 @@ namespace Sir.Store
             return new ScoredResult { SortedDocuments = sortedByScore.GetRange(index, count), Total = sortedByScore.Count };
         }
 
-        public INodeReader GetOrTryCreateIndexReader(long keyId)
+        public INodeReader GetOrTryCreateIndexReader(ulong collectionId, long keyId)
         {
-            var ixFileName = Path.Combine(SessionFactory.Dir, string.Format("{0}.{1}.ix", CollectionId, keyId));
+            var ixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
 
             if (!File.Exists(ixFileName))
                 return null;
 
             return _nodeReaders.GetOrAdd(
-                keyId, new NodeReader(
-                    CollectionId,
+                $"{collectionId}.{keyId}".ToHash(), new NodeReader(
+                    collectionId,
                     keyId,
-                    SessionFactory,
+                    _sessionFactory,
                     _config,
-                    _vectorFile,
-                    SessionFactory.CreateReadStream(ixFileName)));
+                    _sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Dir, $"{collectionId}.vec")),
+                    _sessionFactory.CreateReadStream(ixFileName)));
         }
 
         public IList<IDictionary<string, object>> ReadDocs(IEnumerable<KeyValuePair<long, double>> docs)
