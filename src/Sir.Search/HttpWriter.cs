@@ -26,9 +26,9 @@ namespace Sir.Store
         {
             var documents = Deserialize<IEnumerable<IDictionary<string, object>>>(request.Body);
 
-            if (request.Query.ContainsKey("collectionId"))
+            if (request.Query.ContainsKey("collection"))
             {
-                var collectionId = request.Query["collectionId"].ToString().ToHash();
+                var collectionId = request.Query["collection"].ToString().ToHash();
                 _sessionFactory.WriteConcurrent(new Job(collectionId, documents, model));
             }
             else

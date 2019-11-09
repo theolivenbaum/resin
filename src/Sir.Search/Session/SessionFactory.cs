@@ -252,26 +252,13 @@ namespace Sir.Store
             return new IndexSession(collectionId, this, Model, Config);
         }
 
-        public IReadSession CreateReadSession(bool memoryMapped = false)
+        public IReadSession CreateReadSession()
         {
-            if (memoryMapped)
-            {
-                return new MemoryMappedReadSession(
-                    this,
-                    Config,
-                    Model,
-                    new DocumentReader(collectionId, this),
-                    new MemoryMappedPostingsReader(OpenMMF(Path.Combine(Dir, $"{collectionId}.pos")).CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read))
-                );
-            }
-
             return new ReadSession(
                 this,
                 Config,
                 Model,
-                new DocumentReader(collectionId, this),
-                new PostingsReader(CreateReadStream(Path.Combine(Dir, $"{collectionId}.pos")))
-            );
+                new PostingsReader(this));
         }
 
         public ValidateSession CreateValidateSession(ulong collectionId)
@@ -281,7 +268,7 @@ namespace Sir.Store
                 this,
                 Model,
                 Config,
-                new PostingsReader(CreateReadStream(Path.Combine(Dir, $"{collectionId}.pos"))));
+                new PostingsReader(this));
         }
 
         public Stream CreateAsyncReadStream(string fileName, int bufferSize = 4096)

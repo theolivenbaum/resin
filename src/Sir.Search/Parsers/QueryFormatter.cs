@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 
 namespace Sir.Store
 {
@@ -13,8 +14,8 @@ namespace Sir.Store
 
         public string Format(string collectionName, IStringModel tokenizer, HttpRequest request)
         {
-            return new HttpQueryParser(_sessionFactory, tokenizer)
-                .Parse(collectionName.ToHash(), request).ToString();
+            return JsonConvert.SerializeObject(new HttpQueryParser(_sessionFactory, tokenizer)
+                .Parse(request), Formatting.Indented);
         }
     }
 }

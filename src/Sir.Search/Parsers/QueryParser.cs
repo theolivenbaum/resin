@@ -13,48 +13,152 @@ namespace Sir.Store
             _model = model;
         }
 
-        public IEnumerable<Query> Parse(string collectionName, string q, string[] fields, bool and, bool or, bool not)
+        public Query Parse(string collectionName, string q, string[] fields, bool and, bool or)
         {
-            foreach (var field in fields)
+            var root = new Dictionary<string, object>
             {
-                yield return Parse(field, q, and, or, not, collectionName);
+                { "collection", collectionName },
+                { "operator", and ? "and" : or ? "or": "not" }
+            };
+
+            if (fields.Length == 1)
+            {
+                root[fields[0]] = q;
             }
+            else
+            {
+                var cursor = root;
+
+                foreach (var field in fields)
+                {
+                    cursor[field] = q;
+
+                    var next = new Dictionary<string, object>();
+
+                    if (and)
+                    {
+                        cursor["and"] = next;
+                    }
+                    else if (or)
+                    {
+                        cursor["or"] = next;
+                    }
+                    else
+                    {
+                        cursor["not"] = next;
+                    }
+
+                    cursor = next;
+                }
+            }
+
+            return ParseQuery(root);
         }
 
-        public IEnumerable<Query> Parse(IDictionary<string, object> document)
+        public Query ParseQuery(IDictionary<string, object> document)
         {
-            var dand = document.ContainsKey("operator") ? document["operator"].Equals("and") : false;
-            var dor = document.ContainsKey("operator") ? document["operator"].Equals("or") : false;
-            var dnot = document.ContainsKey("operator") ? document["operator"].Equals("not") : false;
+            Query root = null;
+            Query cursor = null;
+            var rootCollections = ((string)document["collection"])
+                .Split(',', System.StringSplitOptions.RemoveEmptyEntries);
 
-            foreach (var termDoc in (IEnumerable<Dictionary<string, object>>)document["terms"])
+            var operation = document;
+
+            while (operation != null)
             {
-                var key = (string)termDoc["key"];
-                var value = (string)termDoc["value"];
-                var operatorString = termDoc.ContainsKey("operator") ? (string)termDoc["operator"] : "or";
-                var and = termDoc.ContainsKey("operator") ? termDoc["operator"].Equals("and") : false;
-                var or = termDoc.ContainsKey("operator") ? termDoc["operator"].Equals("or") : false;
-                var not = termDoc.ContainsKey("operator") ? termDoc["operator"].Equals("not") : false;
+                var collectionNames = rootCollections;
+                string key = null;
+                string value = null;
+                object next = null;
+                bool and = false;
+                bool or = false;
+                bool not = false;
 
-                var query = Parse(key, value, and, or, not);
+                foreach (var kvp in operation)
+                {
+                    if (kvp.Key == "collection")
+                    {
+                        collectionNames = ((string)kvp.Value)
+                            .Split(',', System.StringSplitOptions.RemoveEmptyEntries);
+                    }
+                    else if (kvp.Key == "and")
+                    {
+                        and = true;
+                        next = kvp.Value;
+                    }
+                    else if (kvp.Key == "or")
+                    {
+                        or = true;
+                        next = kvp.Value;
+                    }
+                    else if (kvp.Key == "not")
+                    {
+                        not = true;
+                        next = kvp.Value;
+                    }
+                    else if (kvp.Key == "operator")
+                    {
+                        and = (string)kvp.Value == "and";
+                        or = (string)kvp.Value == "or";
+                        not = (string)kvp.Value == "not";
+                    }
+                    else
+                    {
+                        key = kvp.Key;
+                        value = (string)kvp.Value;
+                    }
+                }
 
-                query.And = dand;
-                query.Or = dor;
-                query.Not = dnot;
+                operation = next as IDictionary<string, object>;
 
-                yield return query;
+                Query r = null;
+                Query c = null;
+
+                foreach (var collection in collectionNames)
+                {
+                    var q = new Query(ParseTerms(collection, key, value, and, or, not));
+
+                    if (r == null)
+                    {
+                        r = c = q;
+                    }
+                    else
+                    {
+                        c.Or = q;
+
+                        c = q;
+                    }
+                }
+
+                if (root == null)
+                {
+                    root = cursor = r;
+                }
+                else
+                {
+                    if (and)
+                        cursor.And = r;
+                    else if (or)
+                        cursor.Or = r;
+                    else
+                        cursor.Not = r;
+
+                    cursor = r;
+                }
+
+
             }
+
+            return root;
         }
 
-        public Query Parse(string key, string value, bool and, bool or, bool not, string collectionName = null)
+        public IList<Term> ParseTerms(string collectionName, string key, string value, bool and, bool or, bool not)
         {
-            var keySegments = key.Split('.', System.StringSplitOptions.RemoveEmptyEntries);
-            var collectionId = collectionName == null ? keySegments[0].ToHash() : collectionName.ToHash();
-            var keyName = keySegments[1];
+            var collectionId = collectionName.ToHash();
             long keyId;
             var terms = new List<Term>();
 
-            if (_sessionFactory.TryGetKeyId(collectionId, keyName.ToHash(), out keyId))
+            if (_sessionFactory.TryGetKeyId(collectionId, key.ToHash(), out keyId))
             {
                 foreach (var term in _model.Tokenize(value))
                 {
@@ -62,7 +166,7 @@ namespace Sir.Store
                 }
             }
 
-            return new Query(terms, and, or, not);
+            return terms;
         }
     }
 }

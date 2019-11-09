@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Sir.Store;
 
 namespace Sir.HttpServer.Controllers
 {
@@ -43,7 +42,7 @@ namespace Sir.HttpServer.Controllers
             var timer = new Stopwatch();
             timer.Start();
 
-            var result = reader.Read(collection, _model, Request);
+            var result = reader.Read(Request, _model);
 
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
             ViewData["collection"] = collection;

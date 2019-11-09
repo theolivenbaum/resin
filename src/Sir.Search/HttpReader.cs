@@ -36,8 +36,8 @@ namespace Sir.Store
         public ResponseModel Read(HttpRequest request, IStringModel model)
         {
             var timer = Stopwatch.StartNew();
-            var collectionName = request.Query.ContainsKey("collectionId") ?
-                request.Query["collectionId"].ToString() :
+            var collectionName = request.Query.ContainsKey("collection") ?
+                request.Query["collection"].ToString() :
                 null;
 
             var take = 100;
@@ -60,9 +60,10 @@ namespace Sir.Store
 
             using (var readSession = _sessionFactory.CreateReadSession())
             {
-                if (request.Query.ContainsKey("id"))
+                if (request.Query.ContainsKey("id") && request.Query.ContainsKey("collection"))
                 {
-                    var ids = request.Query["id"].ToDictionary(s => long.Parse(s), x => (double)1);
+                    var collectionId = request.Query["collection"].ToString().ToHash();
+                    var ids = request.Query["id"].ToDictionary(s => (collectionId, long.Parse(s)), x => (double)1);
                     var docs = readSession.ReadDocs(ids);
 
                     result = new ReadResult { Docs = docs, Total = docs.Count };
