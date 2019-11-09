@@ -13,12 +13,12 @@ namespace Sir.Store
             _model = model;
         }
 
-        public Query Parse(string collectionName, string q, string[] fields, bool and, bool or)
+        public Query Parse(string collection, string q, string[] fields, bool and, bool or)
         {
             var root = new Dictionary<string, object>();
             var cursor = new Dictionary<string, object>
             {
-                {"collection", collectionName }
+                {"collection", collection }
             };
 
             if (and)
@@ -46,7 +46,7 @@ namespace Sir.Store
 
                     var next = new Dictionary<string, object>
                     {
-                        {"collection", collectionName }
+                        {"collection", collection }
                     };
 
                     if (and)
