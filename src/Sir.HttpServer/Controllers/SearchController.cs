@@ -26,6 +26,9 @@ namespace Sir.HttpServer.Controllers
         {
             if (string.IsNullOrWhiteSpace(q)) return View();
 
+            var timer = new Stopwatch();
+            timer.Start();
+
             ViewData["q"] = q;
 
             var reader = _plugins.Get<IHttpReader>("application/json");
@@ -35,10 +38,7 @@ namespace Sir.HttpServer.Controllers
                 throw new System.NotSupportedException();
             }
 
-            var timer = new Stopwatch();
-            timer.Start();
-
-            var result = reader.Read(collection, _model, Request);
+            var result = reader.Read(Request, _model);
 
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
             ViewData["total"] = result.Total;

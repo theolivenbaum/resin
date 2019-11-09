@@ -92,17 +92,11 @@ namespace Sir.Store
 
             _flushed = true;
 
-            var timer = Stopwatch.StartNew();
-
             foreach (var column in Index)
             {
-                var ixFileName = Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{column.Key}.ix");
-
-                using (var indexStream = _sessionFactory.CreateAppendStream(ixFileName))
+                using (var indexStream = _sessionFactory.CreateAppendStream(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{column.Key}.ix")))
                 using (var columnWriter = new ColumnWriter(_collectionId, column.Key, indexStream))
-                using (var pageIndexWriter = new PageIndexWriter(
-                    _sessionFactory.CreateAppendStream(
-                        Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{column.Key}.ixtp"))))
+                using (var pageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{column.Key}.ixtp"))))
                 {
                     columnWriter.CreatePage(column.Value, _vectorStream, _postingsStream, pageIndexWriter);
                 }
