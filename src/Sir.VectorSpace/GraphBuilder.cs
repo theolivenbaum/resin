@@ -263,7 +263,7 @@ namespace Sir.VectorSpace
             stream.Write(MemoryMarshal.Cast<long, byte>(payload));
         }
 
-        public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, IEuclidDistance model)
+        public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, IEuclidSpace model)
         {
             // Deserialize node
             var vecOffset = BitConverter.ToInt64(nodeBuffer, 0);
@@ -282,7 +282,7 @@ namespace Sir.VectorSpace
             long weight,
             long terminator,
             Stream vectorStream,
-            IEuclidDistance model)
+            IEuclidSpace model)
         {
             var vector = VectorOperations.DeserializeVector(vecOffset, (int)componentCount, model.VectorWidth, vectorStream);
             var node = new VectorNode(postingsOffset, vecOffset, terminator, weight, vector);
@@ -296,7 +296,7 @@ namespace Sir.VectorSpace
             VectorNode root,
             float identicalAngle, 
             float foldAngle,
-            IEuclidDistance model)
+            IEuclidSpace model)
         {
             var buf = new byte[VectorNode.BlockSize];
             int read = indexStream.Read(buf);
@@ -321,7 +321,7 @@ namespace Sir.VectorSpace
             long indexLength,
             VectorNode root,
             (float identicalAngle, float foldAngle) similarity,
-            IEuclidDistance model)
+            IEuclidSpace model)
         {
             int read = 0;
             var buf = new byte[VectorNode.BlockSize];
@@ -342,7 +342,8 @@ namespace Sir.VectorSpace
             }
         }
 
-        public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, long indexLength, IEuclidDistance model)
+        public static VectorNode DeserializeTree(
+            Stream indexStream, Stream vectorStream, long indexLength, IEuclidSpace model)
         {
             VectorNode root = new VectorNode();
             VectorNode cursor = root;
