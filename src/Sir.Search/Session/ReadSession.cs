@@ -177,7 +177,6 @@ namespace Sir.Store
                     collectionId,
                     keyId,
                     _sessionFactory,
-                    _config,
                     _sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Dir, $"{collectionId}.vec")),
                     _sessionFactory.CreateReadStream(ixFileName)));
         }

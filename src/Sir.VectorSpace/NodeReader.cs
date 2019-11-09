@@ -10,26 +10,22 @@ namespace Sir.VectorSpace
     public class NodeReader : ILogger, INodeReader
     {
         private readonly ISessionFactory _sessionFactory;
-        private readonly IConfigurationProvider _config;
         private readonly Stream _vectorFile;
         private readonly Stream _ixFile;
-        private readonly long _keyId;
         private readonly ulong _collectionId;
 
-        public long KeyId { get { return _keyId; } }
+        public long KeyId { get; }
 
         public NodeReader(
             ulong collectionId,
             long keyId,
             ISessionFactory sessionFactory,
-            IConfigurationProvider config,
             Stream vectorFile,
             Stream ixFile)
         {
-            _keyId = keyId;
+            KeyId = keyId;
             _collectionId = collectionId;
             _sessionFactory = sessionFactory;
-            _config = config;
             _vectorFile = vectorFile;
             _ixFile = ixFile;
         }
@@ -38,7 +34,7 @@ namespace Sir.VectorSpace
             IVector vector, IStringModel model)
         {
             var pages = GetAllPages(
-                Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{_keyId}.ixtp"));
+                Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{KeyId}.ixtp"));
 
             var hits = new List<Hit>();
 
@@ -85,9 +81,7 @@ namespace Sir.VectorSpace
                     vector,
                     _ixFile,
                     _vectorFile,
-                    model,
-                    model.FoldAngle,
-                    model.IdenticalAngle);
+                    model);
 
             if (hit0.Score > 0)
             {
@@ -101,9 +95,7 @@ namespace Sir.VectorSpace
             IVector queryVector,
             Stream indexFile,
             Stream vectorFile,
-            IEuclidDistance model,
-            double foldAngle,
-            double identicalAngle)
+            IEuclidSpace model)
         {
             Span<byte> block = stackalloc byte[VectorNode.BlockSize];
             var best = new Hit();
@@ -117,7 +109,7 @@ namespace Sir.VectorSpace
                 var cursorTerminator = BitConverter.ToInt64(block.Slice(sizeof(long) * 4));
                 var angle = model.CosAngle(queryVector, vecOffset, (int)componentCount, vectorFile);
 
-                if (angle >= identicalAngle)
+                if (angle >= model.IdenticalAngle)
                 {
                     best.Score = angle;
                     var n = new VectorNode(postingsOffset);
@@ -125,7 +117,7 @@ namespace Sir.VectorSpace
 
                     break;
                 }
-                else if (angle > foldAngle)
+                else if (angle > model.FoldAngle)
                 {
                     if (best == null || angle > best.Score)
                     {
