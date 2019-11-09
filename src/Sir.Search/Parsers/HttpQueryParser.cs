@@ -35,13 +35,13 @@ namespace Sir.Store
                     throw new InvalidOperationException("collectionId missing from query string");
                 }
 
-                var collectionName = request.Query["collection"].ToString();
+                string[] collections = request.Query["collection"].ToArray();
                 var naturalLanguage = request.Query["q"].ToString();
                 string[] fields = request.Query["field"].ToArray();
                 bool and = request.Query.ContainsKey("AND");
                 bool or = !and && request.Query.ContainsKey("OR");
 
-                return _parser.Parse(collectionName, naturalLanguage, fields, and, or);
+                return _parser.Parse(string.Join(',', collections), naturalLanguage, fields, and, or);
             }
         }
 
