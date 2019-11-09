@@ -61,8 +61,6 @@ A query can consist of many sub queries, each can carry a list of query terms.
 
 Finding a query term's closest matching vector inside a space entails finding the correct column index file, locating the boundaries of each segment, querying those segments by finding the root node, represented on disk as the first block in the segment, deserializing it, calculating the cos angle between the query vector and the index node's vector, determining whether to go left or right based on if the angle is over IModel.FoldAngle or below/equal or calling it because the angle is greater than or equal to IndenticalAngle, which means, nowhere in the segment can there exist a better match than the one we already found.
 
-That's the good news. The bad news is that there are lots of skips. The good news is we can have SSD's. Or if we can't then we can memory map the indices. For more information, see `NodeReader.cs` and `MemoryMappedNodeReader.cs`.
-
 ## Read/write performance
 
 The bigger the graph the longer it takes to build, 
