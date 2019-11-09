@@ -5,14 +5,18 @@ namespace Sir
     /// <summary>
     /// A boolean query,
     /// </summary>
-    public class Query
+    public class Query : BooleanStatement
     {
         public IList<Term> Terms { get; }
         public Query And { get; set; }
         public Query Or { get; set; }
         public Query Not { get; set; }
 
-        public Query(IList<Term> terms)
+        public Query(
+            IList<Term> terms, 
+            bool and,
+            bool or,
+            bool not) : base(and, or, not)
         {
             Terms = terms;
         }
@@ -33,9 +37,9 @@ namespace Sir
             long keyId, 
             string key, 
             IVector term, 
-            bool and = false, 
-            bool or = true, 
-            bool not = false)
+            bool and, 
+            bool or, 
+            bool not)
             : base(and, or, not)
         {
             CollectionId = collectionId;

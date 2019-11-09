@@ -15,25 +15,39 @@ namespace Sir.Store
 
         public Query Parse(string collectionName, string q, string[] fields, bool and, bool or)
         {
-            var root = new Dictionary<string, object>
+            var root = new Dictionary<string, object>();
+            var cursor = new Dictionary<string, object>
             {
-                { "collection", collectionName },
-                { "operator", and ? "and" : or ? "or": "not" }
+                {"collection", collectionName }
             };
 
-            if (fields.Length == 1)
+            if (and)
             {
-                root[fields[0]] = q;
+                root["and"] = cursor;
+            }
+            else if (or)
+            {
+                root["or"] = cursor;
             }
             else
             {
-                var cursor = root;
+                root["not"] = cursor;
+            }
 
+            if (fields.Length == 1)
+            {
+                cursor[fields[0]] = q;
+            }
+            else
+            {
                 foreach (var field in fields)
                 {
                     cursor[field] = q;
 
-                    var next = new Dictionary<string, object>();
+                    var next = new Dictionary<string, object>
+                    {
+                        {"collection", collectionName }
+                    };
 
                     if (and)
                     {
@@ -59,48 +73,41 @@ namespace Sir.Store
         {
             Query root = null;
             Query cursor = null;
-            var rootCollections = ((string)document["collection"])
-                .Split(',', System.StringSplitOptions.RemoveEmptyEntries);
-
+            string[] parentCollections = null;
+            string op = null;
             var operation = document;
 
             while (operation != null)
             {
-                var collectionNames = rootCollections;
+                string[] collections = null;
                 string key = null;
                 string value = null;
                 object next = null;
-                bool and = false;
-                bool or = false;
-                bool not = false;
 
                 foreach (var kvp in operation)
                 {
                     if (kvp.Key == "collection")
                     {
-                        collectionNames = ((string)kvp.Value)
+                        collections = ((string)kvp.Value)
                             .Split(',', System.StringSplitOptions.RemoveEmptyEntries);
+
+                        if (parentCollections == null)
+                            parentCollections = collections;
                     }
                     else if (kvp.Key == "and")
                     {
-                        and = true;
+                        op = "and";
                         next = kvp.Value;
                     }
                     else if (kvp.Key == "or")
                     {
-                        or = true;
+                        op = "or";
                         next = kvp.Value;
                     }
                     else if (kvp.Key == "not")
                     {
-                        not = true;
+                        op = "not";
                         next = kvp.Value;
-                    }
-                    else if (kvp.Key == "operator")
-                    {
-                        and = (string)kvp.Value == "and";
-                        or = (string)kvp.Value == "or";
-                        not = (string)kvp.Value == "not";
                     }
                     else
                     {
@@ -111,12 +118,18 @@ namespace Sir.Store
 
                 operation = next as IDictionary<string, object>;
 
+                if (key == null)
+                    continue;
+
                 Query r = null;
                 Query c = null;
+                bool and = op == "and";
+                bool or = op == "or";
+                bool not = op == "not";
 
-                foreach (var collection in collectionNames)
+                foreach (var collection in collections)
                 {
-                    var q = new Query(ParseTerms(collection, key, value, and, or, not));
+                    var q = new Query(ParseTerms(collection, key, value, and, or, not), and, or, not);
 
                     if (r == null)
                     {
@@ -145,8 +158,6 @@ namespace Sir.Store
 
                     cursor = r;
                 }
-
-
             }
 
             return root;

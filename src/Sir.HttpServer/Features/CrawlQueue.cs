@@ -133,7 +133,12 @@ namespace Sir.HttpServer.Features
             var keyId = _sessionFactory.GetKeyId(collectionName.ToHash(), key.ToHash());
 
             var urlQuery = new Query(
-                _model.Tokenize(url).Select(x => new Term(collectionId, keyId, key, x)).ToList());
+                _model.Tokenize(url)
+                    .Select(x => new Term(collectionId, keyId, key, x, and:true, or:false, not:false)).ToList(),
+                and:true,
+                or:false,
+                not:false
+            );
 
             using (var readSession = _sessionFactory.CreateReadSession())
             {
