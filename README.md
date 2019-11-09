@@ -86,8 +86,7 @@ as well as lots, and lots of cores.
 ## APIs
 
 Resin offers both an in-proc, NHibernate-like API, in that there are sessions, a factory, and the notion of a unit of work, 
-as well as fully fledged JSON-friendly HTTP API, in an attempt to follow the principle of,
-what you can do locally your should also be able to do remotely. 
+as well as fully fledged JSON-friendly read/write HTTP API.
 
 More information: [Sir.Search](https://github.com/kreeben/resin/blob/master/src/Sir.Search/README.md)
 
