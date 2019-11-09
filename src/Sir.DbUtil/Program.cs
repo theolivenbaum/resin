@@ -129,9 +129,9 @@ namespace Sir.DbUtil
                 using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
                 {
                     using (var validateSession = sessionFactory.CreateValidateSession(collectionId))
-                    using (var documents = new DocumentStreamSession(collectionId, sessionFactory, new DocumentReader(collectionId, sessionFactory)))
+                    using (var documents = new DocumentStreamSession(new DocumentReader(collectionId, sessionFactory)))
                     {
-                        foreach (var doc in documents.ReadDocs(skip, take))
+                        foreach (var doc in documents.ReadDocs(collectionId, skip, take))
                         {
                             validateSession.Validate(doc);
 

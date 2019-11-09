@@ -1,5 +1,4 @@
-﻿using Sir.Document;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +34,6 @@ namespace Sir.Store
                 sessionFactory,
                 sessionFactory.Config,
                 sessionFactory.Model,
-                new DocumentReader(collectionId, sessionFactory),
                 postingsReader);
         }
 

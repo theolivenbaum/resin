@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -10,40 +11,51 @@ namespace Sir.Store
     /// </summary>
     public class PostingsReader : Reducer, IPostingsReader
     {
-        private readonly Stream _stream;
+        private readonly ISessionFactory _sessionFactory;
+        private readonly ConcurrentDictionary<ulong, Stream> _streams;
 
-        public PostingsReader(Stream stream)
+        public PostingsReader(ISessionFactory sessionFactory)
         {
-            _stream = stream;
+            _sessionFactory = sessionFactory;
+            _streams = new ConcurrentDictionary<ulong, Stream>();
         }
 
-        public IDictionary<long, double> ReadWithScore(IList<long> offsets, double score)
+        public IDictionary<(ulong, long), double> ReadWithScore(ulong collectionId, IList<long> offsets, double score)
         {
-            var result = new Dictionary<long, double>();
+            var result = new Dictionary<(ulong, long), double>();
 
             foreach (var offset in offsets)
             {
-                GetPostingsFromStream(offset, result, score);
+                GetPostingsFromStream(collectionId, offset, result, score);
             }
 
             return result;
         }
 
-        protected override IList<long> Read(IList<long> offsets)
+        public Stream GetOrTryCreateStream(ulong collectionId)
         {
-            var list = new List<long>();
+            return _streams.GetOrAdd(
+                collectionId,
+                _sessionFactory.CreateReadStream(
+                    Path.Combine(_sessionFactory.Dir, $"{collectionId}.pos"))
+                );
+        }
+
+        protected override IList<(ulong, long)> Read(ulong collectionId, IList<long> offsets)
+        {
+            var list = new List<(ulong, long)>();
 
             foreach (var postingsOffset in offsets)
-                GetPostingsFromStream(postingsOffset, list);
+                GetPostingsFromStream(collectionId, postingsOffset, list);
 
             return list;
         }
 
-        private void GetPostingsFromStream(long postingsOffset, IDictionary<long, double> result, double score)
+        private void GetPostingsFromStream(ulong collectionId, long postingsOffset, IDictionary<(ulong collectionId, long docId), double> result, double score)
         {
-            var list = new List<long>();
+            var list = new List<(ulong, long)>();
 
-            GetPostingsFromStream(postingsOffset, list);
+            GetPostingsFromStream(collectionId, postingsOffset, list);
 
             foreach (var id in list)
             {
@@ -51,13 +63,15 @@ namespace Sir.Store
             }
         }
 
-        private void GetPostingsFromStream(long postingsOffset, IList<long> result)
+        private void GetPostingsFromStream(ulong collectionId, long postingsOffset, IList<(ulong collectionId, long docId)> result)
         {
-            _stream.Seek(postingsOffset, SeekOrigin.Begin);
+            var stream = GetOrTryCreateStream(collectionId);
+
+            stream.Seek(postingsOffset, SeekOrigin.Begin);
 
             Span<byte> buf = new byte[sizeof(long)];
 
-            _stream.Read(buf);
+            stream.Read(buf);
 
             var numOfPostings = BitConverter.ToInt64(buf);
 
@@ -65,20 +79,21 @@ namespace Sir.Store
 
             Span<byte> listBuf = new byte[len];
 
-            var read = _stream.Read(listBuf);
+            var read = stream.Read(listBuf);
 
             if (read != len)
                 throw new DataMisalignedException();
 
-            foreach (var id in MemoryMarshal.Cast<byte, long>(listBuf))
+            foreach (var docId in MemoryMarshal.Cast<byte, long>(listBuf))
             {
-                result.Add(id);
+                result.Add((collectionId, docId));
             }
         }
 
         public void Dispose()
         {
-            _stream.Dispose();
+            foreach (var stream in _streams.Values)
+                stream.Dispose();
         }
     }
 }

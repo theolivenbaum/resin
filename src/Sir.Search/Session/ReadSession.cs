@@ -18,34 +18,37 @@ namespace Sir.Store
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
         private readonly IPostingsReader _postingsReader;
-        private readonly DocumentReader _streamReader;
+        private readonly ConcurrentDictionary<ulong, DocumentReader> _streamReaders;
         private readonly ConcurrentDictionary<ulong, INodeReader> _nodeReaders;
 
         public ReadSession(
             SessionFactory sessionFactory,
             IConfigurationProvider config,
             IStringModel model,
-            DocumentReader streamReader,
             IPostingsReader postingsReader)
         {
             _sessionFactory = sessionFactory;
             _config = config;
             _model = model;
-            _streamReader = streamReader;
+            _streamReaders = new ConcurrentDictionary<ulong, DocumentReader>();
             _postingsReader = postingsReader;
             _nodeReaders = new ConcurrentDictionary<ulong, INodeReader>();
         }
 
         public void Dispose()
         {
-            _postingsReader.Dispose();
-            _streamReader.Dispose();
+            foreach (var reader in _streamReaders.Values)
+            {
+                reader.Dispose();
+            }
 
             foreach (var reader in _nodeReaders.Values)
                 reader.Dispose();
+
+            _postingsReader.Dispose();
         }
 
-        public ReadResult Read(IEnumerable<Query> query, int skip, int take)
+        public ReadResult Read(Query query, int skip, int take)
         {
             var result = MapReduce(query, skip, take);
 
@@ -78,9 +81,10 @@ namespace Sir.Store
                         throw new DataMisalignedException($"\"{term}\" not found.");
                     }
 
-                    var docIds = _postingsReader.ReadWithScore(hit.Node.PostingsOffsets, _model.IdenticalAngle);
+                    var docIds = _postingsReader
+                        .ReadWithScore(term.CollectionId, hit.Node.PostingsOffsets, _model.IdenticalAngle);
 
-                    if (!docIds.ContainsKey(docId))
+                    if (!docIds.ContainsKey((term.CollectionId, docId)))
                     {
                         throw new DataMisalignedException(
                             $"document {docId} not found in postings list for term \"{term}\".");
@@ -89,15 +93,19 @@ namespace Sir.Store
             }
         }
 
-        private ScoredResult MapReduce(IEnumerable<Query> query, int skip, int take)
+        private ScoredResult MapReduce(Query query, int skip, int take)
         {
-            var mapped = Map(query).ToList();
-
             var timer = Stopwatch.StartNew();
 
-            var result = new Dictionary<long, double>();
+            Map(query);
 
-            _postingsReader.Reduce(mapped, result);
+            this.Log($"mapping took {timer.Elapsed}");
+
+            timer.Restart();
+
+            var result = new Dictionary<(ulong, long), double>();
+
+            _postingsReader.Reduce(query, result);
 
             this.Log("reducing took {0}", timer.Elapsed);
 
@@ -111,44 +119,41 @@ namespace Sir.Store
         }
 
         /// <summary>
-        /// Map query terms to index IDs.
+        /// Map query terms to posting list locations.
         /// </summary>
-        /// <param name="query">An un-mapped query</param>
-        public IEnumerable<Query> Map(IEnumerable<Query> queries)
+        public void Map(Query query)
         {
-            var timer = Stopwatch.StartNew();
+            if (query == null)
+                return;
 
-            foreach (var query in queries)
+            foreach (var term in query.Terms)
             {
-                foreach (var term in query.Terms)
+                var indexReader = GetOrTryCreateIndexReader(term.CollectionId, term.KeyId);
+
+                if (indexReader != null)
                 {
-                    var indexReader = GetOrTryCreateIndexReader(term.CollectionId, term.KeyId);
+                    var hit = indexReader.ClosestTerm(term.Vector, _model);
 
-                    if (indexReader != null)
+                    if (hit != null && hit.Score > 0)
                     {
-                        var hit = indexReader.ClosestTerm(term.Vector, _model);
-
-                        if (hit != null && hit.Score > 0)
-                        {
-                            term.Score = hit.Score;
-                            term.PostingsOffsets = hit.Node.PostingsOffsets;
-                        }
+                        term.Score = hit.Score;
+                        term.PostingsOffsets = hit.Node.PostingsOffsets;
                     }
                 }
-
-                yield return query;
             }
 
-            this.Log($"mapping took {timer.Elapsed}");
+            Map(query.And);
+            Map(query.Or);
+            Map(query.Not);
         }
 
-        private static ScoredResult Sort(IDictionary<long, double> documents, int skip, int take)
+        private static ScoredResult Sort(IDictionary<(ulong, long), double> documents, int skip, int take)
         {
-            var sortedByScore = new List<KeyValuePair<long, double>>(documents);
+            var sortedByScore = new List<KeyValuePair<(ulong, long), double>>(documents);
 
             sortedByScore.Sort(
-                delegate (KeyValuePair<long, double> pair1,
-                KeyValuePair<long, double> pair2)
+                delegate (KeyValuePair<(ulong, long), double> pair1,
+                KeyValuePair<(ulong, long), double> pair2)
                 {
                     return pair2.Value.CompareTo(pair1.Value);
                 }
@@ -177,35 +182,45 @@ namespace Sir.Store
                     _sessionFactory.CreateReadStream(ixFileName)));
         }
 
-        public IList<IDictionary<string, object>> ReadDocs(IEnumerable<KeyValuePair<long, double>> docs)
+        public DocumentReader GetOrTryCreateDocumentReader(ulong collectionId)
+        {
+            return _streamReaders.GetOrAdd(
+                collectionId,
+                new DocumentReader(collectionId, _sessionFactory)
+                );
+        }
+
+        public IList<IDictionary<string, object>> ReadDocs(
+            IEnumerable<KeyValuePair<(ulong collectionId, long docId), double>> docs)
         {
             var result = new List<IDictionary<string, object>>();
 
-            foreach (var d in docs)
+            foreach (var dkvp in docs)
             {
-                var docInfo = _streamReader.GetDocumentAddress(d.Key);
+                var streamReader = GetOrTryCreateDocumentReader(dkvp.Key.collectionId);
+                var docInfo = streamReader.GetDocumentAddress(dkvp.Key.docId);
 
                 if (docInfo.offset < 0)
                 {
                     continue;
                 }
 
-                var docMap = _streamReader.GetDocumentMap(docInfo.offset, docInfo.length);
+                var docMap = streamReader.GetDocumentMap(docInfo.offset, docInfo.length);
                 var doc = new Dictionary<string, object>();
 
                 for (int i = 0; i < docMap.Count; i++)
                 {
                     var kvp = docMap[i];
-                    var kInfo = _streamReader.GetAddressOfKey(kvp.keyId);
-                    var vInfo = _streamReader.GetAddressOfValue(kvp.valId);
-                    var key = _streamReader.GetKey(kInfo.offset, kInfo.len, kInfo.dataType);
-                    var val = _streamReader.GetValue(vInfo.offset, vInfo.len, vInfo.dataType);
+                    var kInfo = streamReader.GetAddressOfKey(kvp.keyId);
+                    var vInfo = streamReader.GetAddressOfValue(kvp.valId);
+                    var key = streamReader.GetKey(kInfo.offset, kInfo.len, kInfo.dataType);
+                    var val = streamReader.GetValue(vInfo.offset, vInfo.len, vInfo.dataType);
 
                     doc[key.ToString()] = val;
                 }
 
-                doc["___docid"] = d.Key;
-                doc["___score"] = d.Value;
+                doc["___docid"] = dkvp.Key.docId;
+                doc["___score"] = dkvp.Value;
 
                 result.Add(doc);
             }

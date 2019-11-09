@@ -126,14 +126,18 @@ namespace Sir.HttpServer.Features
 
         private IDictionary<string, object> GetDocument(string collectionName, string url, string title)
         {
-            using (var readSession = _sessionFactory.CreateReadSession(collectionName.ToHash()))
-            {
-                const string key = "_url";
-                var keyId = _sessionFactory.GetKeyId(collectionName.ToHash(), key.ToHash());
-                var urlQuery = new Query(_model.Tokenize(url).Select(x => new Term(keyId, key, x)).ToList());
-                urlQuery.And = true;
+            const string key = "_url";
 
-                var result = readSession.Read(new Query[1] { urlQuery }, 0, 1).Docs.ToList();
+            var collectionId = collectionName.ToHash();
+
+            var keyId = _sessionFactory.GetKeyId(collectionName.ToHash(), key.ToHash());
+
+            var urlQuery = new Query(
+                _model.Tokenize(url).Select(x => new Term(collectionId, keyId, key, x)).ToList());
+
+            using (var readSession = _sessionFactory.CreateReadSession())
+            {
+                var result = readSession.Read(urlQuery, 0, 1).Docs.ToList();
             
                 return result.Count == 0 
                     ? null : (float)result[0]["___score"] >= _model.IdenticalAngle 

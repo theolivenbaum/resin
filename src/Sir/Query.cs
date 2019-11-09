@@ -1,46 +1,41 @@
 ﻿using System.Collections.Generic;
-using System.Text;
 
 namespace Sir
 {
     /// <summary>
     /// A boolean query,
     /// </summary>
-    public class Query : BooleanStatement
+    public class Query
     {
-        public IList<Term> Terms { get; private set; }
+        public IList<Term> Terms { get; }
+        public Query And { get; set; }
+        public Query Or { get; set; }
+        public Query Not { get; set; }
 
-        public Query(IList<Term> terms, bool and = false, bool or = true, bool not = false)
-            : base(and, or, not)
+        public Query(IList<Term> terms)
         {
             Terms = terms;
-        }
-
-        public override string ToString()
-        {
-            var result = new StringBuilder();
-
-            foreach (var clause in Terms)
-            {
-                result.Append(clause.ToString());
-            }
-
-            var queryop = And ? "+" : Or ? " " : "-";
-
-            return $"{queryop}({result})";
         }
     }
 
     public class Term : BooleanStatement
     {
         public IVector Vector { get; }
-        public IList<long> PostingsOffsets { get; set; }
-        public double Score { get; set; }
         public long KeyId { get; }
         public string Key { get; }
         public ulong CollectionId { get; }
 
-        public Term(ulong collectionId, long keyId, string key, IVector term, bool and = false, bool or = true, bool not = false)
+        public IList<long> PostingsOffsets { get; set; }
+        public double Score { get; set; }
+
+        public Term(
+            ulong collectionId,
+            long keyId, 
+            string key, 
+            IVector term, 
+            bool and = false, 
+            bool or = true, 
+            bool not = false)
             : base(and, or, not)
         {
             CollectionId = collectionId;
@@ -50,13 +45,6 @@ namespace Sir
             And = and;
             Or = or;
             Not = not;
-        }
-
-        public override string ToString()
-        {
-            var queryop = And ? "+" : Or ? " " : "-";
-
-            return $"{queryop}{Key}:{Vector.ToString()}";
         }
     }
 

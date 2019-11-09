@@ -18,7 +18,7 @@ namespace Sir.Store
             _parser = new QueryParser(sessionFactory, model);
         }
 
-        public IEnumerable<Query> Parse(HttpRequest request)
+        public Query Parse(HttpRequest request)
         {
             var isFormatted = request.Query.ContainsKey("qf");
 
@@ -30,17 +30,22 @@ namespace Sir.Store
             }
             else
             {
+                if (!request.Query.ContainsKey("collection"))
+                {
+                    throw new InvalidOperationException("collectionId missing from query string");
+                }
+
+                var collectionName = request.Query["collection"].ToString();
                 var naturalLanguage = request.Query["q"].ToString();
                 string[] fields = request.Query["field"].ToArray();
                 bool and = request.Query.ContainsKey("AND");
-                bool or = !and;
-                const bool not = false;
+                bool or = !and && request.Query.ContainsKey("OR");
 
-                return _parser.Parse(request.Query["collectionId"].ToString(), naturalLanguage, fields, and, or, not);
+                return _parser.Parse(collectionName, naturalLanguage, fields, and, or);
             }
         }
 
-        public IEnumerable<Query> FromFormattedString(string formattedQuery)
+        public Query FromFormattedString(string formattedQuery)
         {
             var document = JsonConvert.DeserializeObject<IDictionary<string, object>>(
                 formattedQuery, new JsonConverter[] { new DictionaryConverter() });
@@ -48,9 +53,9 @@ namespace Sir.Store
             return FromDocument(document);
         }
 
-        public IEnumerable<Query> FromDocument(IDictionary<string, object> document)
+        public Query FromDocument(IDictionary<string, object> document)
         {
-            return _parser.Parse(document);
+            return _parser.ParseQuery(document);
         }
     }
 
