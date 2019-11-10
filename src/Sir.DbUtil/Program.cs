@@ -31,25 +31,25 @@ namespace Sir.DbUtil
                 var batchSize = int.Parse(args[4]);
                 var fullTime = Stopwatch.StartNew();
                 var batchNo = 0;
-                var httpClient = new HttpClient();
-                var payload = ReadFile(fileName)
-                    .Skip(0)
-                    .Take(count)
-                    .Select(x => new Dictionary<string, object>
-                            {
+                using (var httpClient = new HttpClient())
+                {
+                    var payload = ReadFile(fileName, 0, count)
+                                            .Select(x => new Dictionary<string, object>
+                                                    {
                                 { "_language", x["language"].ToString() },
                                 { "_url", string.Format("www.wikipedia.org/search-redirect.php?family=wikipedia&language={0}&search={1}", x["language"], x["title"]) },
                                 { "title", x["title"] },
                                 { "body", x["text"] }
-                            });
+                                                    });
 
-                foreach (var batch in payload.Batch(batchSize))
-                {
-                    var time = Stopwatch.StartNew();
-                    Submit(batch, uri, httpClient);
-                    time.Stop();
-                    var docsPerSecond = (int)(batchSize / time.Elapsed.TotalSeconds);
-                    Console.WriteLine($"batch {batchNo++} took {time.Elapsed} {docsPerSecond} docs/s");
+                    foreach (var batch in payload.Batch(batchSize))
+                    {
+                        var time = Stopwatch.StartNew();
+                        Submit(batch, uri, httpClient);
+                        time.Stop();
+                        var docsPerSecond = (int)(batchSize / time.Elapsed.TotalSeconds);
+                        Console.WriteLine($"batch {batchNo++} took {time.Elapsed} {docsPerSecond} docs/s");
+                    }
                 }
 
                 Console.WriteLine("submit took {0}", fullTime.Elapsed);
@@ -65,9 +65,7 @@ namespace Sir.DbUtil
                 const int reportSize = 1000;
                 var collectionId = collection.ToHash();
                 var batchNo = 0;
-                var payload = ReadFile(fileName)
-                    .Skip(skip)
-                    .Take(take)
+                var payload = ReadFile(fileName, skip, take)
                     .Select(x => new Dictionary<string, object>
                             {
                                 { "_language", x["language"].ToString() },
@@ -91,9 +89,7 @@ namespace Sir.DbUtil
                             foreach (var batch in page.Batch(reportSize))
                             {
                                 var info = writeSession.Write(batch);
-
                                 var t = time.Elapsed.TotalMilliseconds;
-
                                 var docsPerSecond = (int)(reportSize / t * 1000);
                                 var segments = 0;
 
@@ -150,8 +146,11 @@ namespace Sir.DbUtil
             }
         }
 
-        private static IEnumerable<IDictionary> ReadFile(string fileName)
+        private static IEnumerable<IDictionary> ReadFile(string fileName, int skip, int take)
         {
+            var skipped = 0;
+            var took = 0;
+
             using (var stream = File.OpenRead(fileName))
             using (var reader = new StreamReader(stream))
             {
@@ -162,11 +161,20 @@ namespace Sir.DbUtil
 
                 while (!string.IsNullOrWhiteSpace(line) && !line.StartsWith("]"))
                 {
+                    if (took == take)
+                        break;
+
+                    if (skipped++ < skip)
+                    {
+                        continue;
+                    }
+
                     var doc = JsonConvert.DeserializeObject<IDictionary>(line);
 
                     if (doc.Contains("title"))
                     {
                         yield return doc;
+                        took++;
                     }
 
                     line = reader.ReadLine();
