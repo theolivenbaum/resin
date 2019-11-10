@@ -2,7 +2,9 @@
 
 Resin is a document oriented key/value database with columnar indexing. 
 Three main units of data are _document_, _vector_, and _query_ (a tree of vectors). 
-Three main units of work are _write_, _validate_, and _query_. 
+Three main units of work are _write_, _validate_, and _query_.
+
+For a description of the "Raeson" query language, see [these release notes](https://github.com/kreeben/resin/releases/tag/v0.33). 
 
 The main processes of querying are _map_ and _materialize_. 
 
