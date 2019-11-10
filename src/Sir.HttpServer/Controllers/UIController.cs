@@ -5,15 +5,14 @@ namespace Sir.HttpServer.Controllers
 {
     public abstract class UIController : Controller
     {
-        private readonly IConfigurationProvider _config;
         private readonly ISessionFactory _sessionFactory;
         private IConfigurationProvider config;
 
-        protected IConfigurationProvider Config { get { return _config; } }
+        protected IConfigurationProvider Config { get; }
 
         public UIController(IConfigurationProvider config, ISessionFactory sessionFactory)
         {
-            _config = config;
+            Config = config;
             _sessionFactory = sessionFactory;
         }
 
@@ -24,11 +23,7 @@ namespace Sir.HttpServer.Controllers
 
         public override void OnActionExecuted(ActionExecutedContext context)
         {
-            ViewBag.DefaultCollection = _config.Get("default_collection");
-
-            ViewData["doc_count"] = context.HttpContext.Request.Query.ContainsKey("collection") ? 
-                _sessionFactory.GetDocCount(context.HttpContext.Request.Query["collection"].ToString()) :
-                _sessionFactory.GetDocCount(ViewBag.DefaultCollection);
+            ViewBag.DefaultCollection = Config.Get("default_collection");
 
             ViewBag.Collection = context.HttpContext.Request.Query.ContainsKey("collection") ?
                 context.HttpContext.Request.Query["collection"].ToString() :
