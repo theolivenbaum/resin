@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Sir.Store
+namespace Sir.Search
 {
     public class IndexInfo
     {

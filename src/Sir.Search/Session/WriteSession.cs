@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Sir.Store
+namespace Sir.Search
 {
     /// <summary>
     /// Write session targeting a single collection.

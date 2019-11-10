@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Sir.Store
+namespace Sir.Search
 {
     /// <summary>
     /// Validate a collection.

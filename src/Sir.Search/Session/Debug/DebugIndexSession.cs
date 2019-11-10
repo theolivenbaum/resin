@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Sir.Store
+namespace Sir.Search
 {
     public class DebugIndexSession : IDisposable, ILogger
     {

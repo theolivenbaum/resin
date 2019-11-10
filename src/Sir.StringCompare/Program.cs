@@ -1,4 +1,4 @@
-﻿using Sir.Store;
+﻿using Sir.Search;
 using Sir.VectorSpace;
 using System;
 using System.Linq;

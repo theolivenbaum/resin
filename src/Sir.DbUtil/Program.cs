@@ -9,7 +9,7 @@ using System.Net.Http;
 using System.Text;
 using Newtonsoft.Json;
 using Sir.Document;
-using Sir.Store;
+using Sir.Search;
 
 namespace Sir.DbUtil
 {

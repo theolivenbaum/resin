@@ -4,7 +4,7 @@ using System.IO;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
-namespace Sir.Store
+namespace Sir.Search
 {
     /// <summary>
     /// Write into a collection.
