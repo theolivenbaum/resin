@@ -1,6 +1,6 @@
 # &#9084; Resin Extensible Search Engine
 
-Resin is a document oriented key/value database with columnar indexing. 
+Resin is a document oriented key/value database with columnar indexing, multi-collection query API and JSON-based query language. 
 Three main units of data are _document_, _vector_, and _query_ (a tree of vectors). 
 Three main units of work are _write_, _validate_, and _query_.
 
