@@ -16,8 +16,14 @@ namespace Sir.HttpServer.Controllers
         }
 
         [HttpPost]
+        [DisableRequestSizeLimit]
         public IActionResult Post()
         {
+            if (string.IsNullOrWhiteSpace(Request.ContentType))
+            {
+                throw new NotSupportedException();
+            }
+
             var writer = _plugins.Get<IHttpWriter>(Request.ContentType);
 
             if (writer == null)
