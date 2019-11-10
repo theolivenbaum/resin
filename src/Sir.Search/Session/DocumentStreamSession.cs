@@ -20,12 +20,12 @@ namespace Sir.Search
             _streamReader.Dispose();
         }
 
-        public IEnumerable<IDictionary> ReadDocs(ulong collectionId, int skip = 0, int take = 0)
+        public IEnumerable<IDictionary> ReadDocs(int skip = 0, int take = 0)
         {
-            return ReadDocs(collectionId).Skip(skip).Take(take);
+            return ReadDocs().Skip(skip).Take(take);
         }
 
-        public IEnumerable<IDictionary> ReadDocs(ulong collectionId)
+        public IEnumerable<IDictionary> ReadDocs()
         {
             long docId = 1;
             var docCount = _streamReader.DocumentCount();
