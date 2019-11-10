@@ -5,7 +5,7 @@ using System.IO;
 namespace Sir.VectorSpace
 {
     /// <summary>
-    /// Index bitmap reader. Each block is a <see cref="Sir.Store.VectorNode"/>.
+    /// Index bitmap reader. Each block is a <see cref="Sir.Search.VectorNode"/>.
     /// </summary>
     public class NodeReader : ILogger, INodeReader
     {

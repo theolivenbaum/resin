@@ -5,7 +5,7 @@ using System.Linq;
 using System.Net;
 using HtmlAgilityPack;
 using Sir.Core;
-using Sir.Store;
+using Sir.Search;
 
 namespace Sir.HttpServer.Features
 {

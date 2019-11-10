@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Sir.Store.Tests
+namespace Sir.Search.Tests
 {
     public class GoogleFeed : IEnumerable<IDictionary<string, object>>
     {

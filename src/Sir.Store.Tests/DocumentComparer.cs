@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Sir.Store.Tests
+namespace Sir.Search.Tests
 {
     public class DocumentComparer : IEqualityComparer<IDictionary<string, object>>
     {

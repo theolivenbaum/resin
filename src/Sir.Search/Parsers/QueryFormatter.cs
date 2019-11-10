@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
-namespace Sir.Store
+namespace Sir.Search
 {
     public class QueryFormatter : IQueryFormatter
     {

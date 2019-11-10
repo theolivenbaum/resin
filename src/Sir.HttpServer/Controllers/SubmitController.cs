@@ -3,7 +3,7 @@ using System.Net;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Mvc;
 using Sir.HttpServer.Features;
-using Sir.Store;
+using Sir.Search;
 
 namespace Sir.HttpServer.Controllers
 {

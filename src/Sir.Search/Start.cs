@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace Sir.Store
+namespace Sir.Search
 {
     /// <summary>
     /// Initialize app.

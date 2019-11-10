@@ -8,7 +8,7 @@ using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 
-namespace Sir.Store
+namespace Sir.Search
 {
     /// <summary>
     /// Dispatcher of sessions.

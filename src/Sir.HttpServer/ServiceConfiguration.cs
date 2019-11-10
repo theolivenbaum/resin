@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Sir.HttpServer.Features;
-using Sir.Store;
+using Sir.Search;
 using System;
 using System.IO;
 using System.Linq;

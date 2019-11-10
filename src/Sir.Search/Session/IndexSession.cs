@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Sir.Store
+namespace Sir.Search
 {
     /// <summary>
     /// Indexing session targeting a single collection.

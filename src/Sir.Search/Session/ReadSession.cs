@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace Sir.Store
+namespace Sir.Search
 {
     /// <summary>
     /// Read session targeting a single collection.

@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using System.Linq;
 
-namespace Sir.Store.Tests
+namespace Sir.Search.Tests
 {
     public class ReadTests
     {

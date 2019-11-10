@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Sir.Store
+namespace Sir.Search
 {
     /// <summary>
     /// Read (reduce) postings.

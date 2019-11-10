@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sir.Store
+namespace Sir.Search
 {
     /// <summary>
     /// Teardown app.

@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Sir.Store
+namespace Sir.Search
 {
     /// <summary>
     /// Parse text from a http request message into a query.
