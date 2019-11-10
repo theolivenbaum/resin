@@ -128,7 +128,7 @@ namespace Sir.DbUtil
                     using (var validateSession = sessionFactory.CreateValidateSession(collectionId))
                     using (var documents = new DocumentStreamSession(new DocumentReader(collectionId, sessionFactory)))
                     {
-                        foreach (var doc in documents.ReadDocs(collectionId, skip, take))
+                        foreach (var doc in documents.ReadDocs(skip, take))
                         {
                             validateSession.Validate(doc);
 
