@@ -21,7 +21,7 @@ namespace Sir.Search
 
         public Query Parse(HttpRequest request)
         {
-            var isFormatted = request.Body != null && request.Body.Length > 0;
+            var isFormatted = request.Method != "GET";
 
             if (isFormatted)
             {
