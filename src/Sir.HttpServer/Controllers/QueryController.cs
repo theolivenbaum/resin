@@ -18,6 +18,7 @@ namespace Sir.HttpServer.Controllers
 
         [HttpGet]
         [HttpPut]
+        [HttpPost]
         public IActionResult Get()
         {
             var mediaType = Request.Headers["Accept"].ToArray()[0];

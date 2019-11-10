@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Sir.Store
 {
@@ -20,13 +21,13 @@ namespace Sir.Store
 
         public Query Parse(HttpRequest request)
         {
-            var isFormatted = request.Query.ContainsKey("qf");
+            var isFormatted = request.Body != null && request.Body.Length > 0;
 
             if (isFormatted)
             {
-                var formattedQuery = request.Query["qf"].ToString();
+                var jsonQuery = DeserializeFromStream(request.Body);
 
-                return FromFormattedString(formattedQuery);
+                return FromDocument(jsonQuery);
             }
             else
             {
@@ -42,6 +43,17 @@ namespace Sir.Store
                 bool or = !and && request.Query.ContainsKey("OR");
 
                 return _parser.Parse(string.Join(',', collections), naturalLanguage, fields, and, or);
+            }
+        }
+
+        public static Dictionary<string, object> DeserializeFromStream(Stream stream)
+        {
+            var serializer = new JsonSerializer();
+
+            using (var sr = new StreamReader(stream))
+            using (var jsonTextReader = new JsonTextReader(sr))
+            {
+                return serializer.Deserialize<Dictionary<string, object>>(jsonTextReader);
             }
         }
 
