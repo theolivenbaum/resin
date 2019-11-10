@@ -28,8 +28,12 @@ namespace Sir.Store
 
             if (request.Query.ContainsKey("collection"))
             {
-                var collectionId = request.Query["collection"].ToString().ToHash();
-                _sessionFactory.WriteConcurrent(new Job(collectionId, documents, model));
+                var collections = request.Query["collection"].ToArray();
+
+                foreach (var collection in collections)
+                {
+                    _sessionFactory.WriteConcurrent(new Job(collection.ToHash(), documents, model));
+                }
             }
             else
             {
