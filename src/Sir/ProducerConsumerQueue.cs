@@ -93,7 +93,7 @@ namespace Sir.Core
             _queue.Add(item);
         }
 
-        public void CompleteAdding()
+        public void Join()
         {
             if (_completing || _queue.IsCompleted || !_started)
                 return;
@@ -101,16 +101,14 @@ namespace Sir.Core
             _completing = true;
 
             _queue.CompleteAdding();
+            Task.WaitAll(_consumers);
 
             _completing = false;
         }
 
         public void Dispose()
         {
-            CompleteAdding();
-
-            Task.WaitAll(_consumers);
-
+            Join();
             _queue.Dispose();
         }
     }

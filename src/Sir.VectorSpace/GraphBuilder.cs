@@ -117,7 +117,10 @@ namespace Sir.VectorSpace
 
                 if (angle >= identicalAngle)
                 {
-                    AddDocId(cursor, node);
+                    lock (cursor)
+                    {
+                        AddDocId(cursor, node);
+                    }
 
                     return true;
                 }
@@ -125,8 +128,18 @@ namespace Sir.VectorSpace
                 {
                     if (cursor.Left == null)
                     {
-                        cursor.Left = node;
-                        return false;
+                        lock (root)
+                        {
+                            if (cursor.Left == null)
+                            {
+                                cursor.Left = node;
+                                return false;
+                            }
+                            else
+                            {
+                                cursor = cursor.Left;
+                            }
+                        }
                     }
                     else
                     {
@@ -137,8 +150,18 @@ namespace Sir.VectorSpace
                 {
                     if (cursor.Right == null)
                     {
-                        cursor.Right = node;
-                        return false;
+                        lock (root)
+                        {
+                            if (cursor.Right == null)
+                            {
+                                cursor.Right = node;
+                                return false;
+                            }
+                            else
+                            {
+                                cursor = cursor.Right;
+                            }
+                        }
                     }
                     else
                     {

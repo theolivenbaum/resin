@@ -8,7 +8,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using Newtonsoft.Json;
-using Sir.Core;
 using Sir.Document;
 using Sir.Search;
 
@@ -105,7 +104,7 @@ namespace Sir.DbUtil
                                 }
 
                                 Console.WriteLine(
-                                    $"batch {batchNo++} took {t} ms. {docsPerSecond} docs/s");
+                                    $"batch {batchNo++} took {t} ms. queue len {info.QueueLength}. {docsPerSecond} docs/s");
                             }
                         }
                     }

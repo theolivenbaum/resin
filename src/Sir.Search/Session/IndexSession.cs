@@ -1,4 +1,5 @@
-﻿using Sir.VectorSpace;
+﻿using Sir.Core;
+using Sir.VectorSpace;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -17,7 +18,7 @@ namespace Sir.Search
         private readonly Stream _postingsStream;
         private readonly Stream _vectorStream;
         private bool _flushed;
-
+        private ProducerConsumerQueue<(long docId, long keyId, IVector vector)> _queue;
         public IStringModel Model { get; }
         public ConcurrentDictionary<long, VectorNode> Index { get; }
 
@@ -27,12 +28,15 @@ namespace Sir.Search
             IStringModel model,
             IConfigurationProvider config)
         {
+            var threadCountStr = config.Get("index_session_thread_count");
+            var threadCount = threadCountStr == null ? 10 : int.Parse(threadCountStr);
+
             _collectionId = collectionId;
             _sessionFactory = sessionFactory;
             _config = config;
             _postingsStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, $"{collectionId}.pos"));
             _vectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, $"{collectionId}.vec"));
-            
+            _queue = new ProducerConsumerQueue<(long docId, long keyId, IVector vector)>(threadCount, Put);
             Model = model;
             Index = new ConcurrentDictionary<long, VectorNode>();
         }
@@ -43,7 +47,8 @@ namespace Sir.Search
 
             foreach (var vector in tokens)
             {
-                Put(docId, keyId, vector);
+                //Put(docId, keyId, vector);
+                _queue.Enqueue((docId, keyId, vector));
             }
         }
 
@@ -71,9 +76,21 @@ namespace Sir.Search
             //}
         }
 
+        public void Put((long docId, long keyId, IVector vector) work)
+        {
+            var column = Index.GetOrAdd(work.keyId, new VectorNode());
+
+            GraphBuilder.MergeOrAdd(
+                column,
+                new VectorNode(work.vector, work.docId),
+                Model,
+                Model.FoldAngle,
+                Model.IdenticalAngle);
+        }
+
         public IndexInfo GetIndexInfo()
         {
-            return new IndexInfo(GetGraphInfo());
+            return new IndexInfo(GetGraphInfo(), _queue.Count);
         }
 
         private IEnumerable<GraphInfo> GetGraphInfo()
@@ -90,6 +107,8 @@ namespace Sir.Search
                 return;
 
             _flushed = true;
+
+            _queue.Join();
 
             foreach (var column in Index)
             {
@@ -111,6 +130,7 @@ namespace Sir.Search
 
             _postingsStream.Dispose();
             _vectorStream.Dispose();
+            _queue.Dispose();
         }
     }
 }

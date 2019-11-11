@@ -12,7 +12,6 @@ namespace Sir.Search
     /// </summary>
     public class WriteSession : ILogger, IDisposable
     {
-        private readonly SessionFactory _sessionFactory;
         private readonly IndexSession _indexSession;
         private readonly DocumentWriter _streamWriter;
         private readonly IStringModel _model;
@@ -25,7 +24,6 @@ namespace Sir.Search
             IStringModel model,
             IndexSession termIndexSession)
         {
-            _sessionFactory = sessionFactory;
             _indexSession = termIndexSession;
             _streamWriter = streamWriter;
             _model = model;
