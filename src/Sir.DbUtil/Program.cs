@@ -34,14 +34,15 @@ namespace Sir.DbUtil
                 var batchNo = 0;
                 using (var httpClient = new HttpClient())
                 {
-                    var payload = ReadFile(fileName, 0, count)
-                                            .Select(x => new Dictionary<string, object>
-                                                    {
-                                { "_language", x["language"].ToString() },
-                                { "_url", string.Format("www.wikipedia.org/search-redirect.php?family=wikipedia&language={0}&search={1}", x["language"], x["title"]) },
-                                { "title", x["title"] },
-                                { "body", x["text"] }
-                                                    });
+                    var payload = ReadFile(fileName)
+                        .Take(count)
+                        .Select(x => new Dictionary<string, object>
+                        {
+                            { "_language", x["language"].ToString() },
+                            { "_url", string.Format("www.wikipedia.org/search-redirect.php?family=wikipedia&language={0}&search={1}", x["language"], x["title"]) },
+                            { "title", x["title"] },
+                            { "body", x["text"] }
+                        });
 
                     foreach (var batch in payload.Batch(batchSize))
                     {
@@ -59,15 +60,16 @@ namespace Sir.DbUtil
             {
                 var fullTime = Stopwatch.StartNew();
                 var fileName = args[1];
-                var dir = args[2];
-                var collection = args[3];
-                var skip = int.Parse(args[4]);
-                var take = int.Parse(args[5]);
-                var pageSize = int.Parse(args[6]);
+                var collection = args[2];
+                var skip = int.Parse(args[3]);
+                var take = int.Parse(args[4]);
+                var pageSize = int.Parse(args[5]);
                 const int reportSize = 1000;
                 var collectionId = collection.ToHash();
                 var batchNo = 0;
-                var payload = ReadFile(fileName, skip, take)
+                var payload = ReadFile(fileName)
+                    .Skip(skip)
+                    .Take(take)
                     .Select(x => new Dictionary<string, object>
                             {
                                 { "_language", x["language"].ToString() },
@@ -88,7 +90,7 @@ namespace Sir.DbUtil
                             {
                                 var time = Stopwatch.StartNew();
 
-                                foreach (var document in page)
+                                foreach (var document in batch)
                                 {
                                     writeSession.Write(document);
                                 }
@@ -147,11 +149,8 @@ namespace Sir.DbUtil
             }
         }
 
-        private static IEnumerable<IDictionary> ReadGZipJsonFile(string fileName, int skip, int take)
+        private static IEnumerable<IDictionary> ReadGZipJsonFile(string fileName)
         {
-            var skipped = 0;
-            var took = 0;
-
             using (var stream = File.OpenRead(fileName))
             using (var zip = new GZipStream(stream, CompressionMode.Decompress))
             using (var reader = new StreamReader(zip))
@@ -163,20 +162,11 @@ namespace Sir.DbUtil
 
                 while (!string.IsNullOrWhiteSpace(line) && !line.StartsWith("]"))
                 {
-                    if (took == take)
-                        break;
-
-                    if (skipped++ < skip)
-                    {
-                        continue;
-                    }
-
                     var doc = JsonConvert.DeserializeObject<IDictionary>(line);
 
                     if (doc.Contains("title"))
                     {
                         yield return doc;
-                        took++;
                     }
 
                     line = reader.ReadLine();
@@ -184,21 +174,18 @@ namespace Sir.DbUtil
             }
         }
 
-        private static IEnumerable<IDictionary> ReadFile(string fileName, int skip, int take)
+        private static IEnumerable<IDictionary> ReadFile(string fileName)
         {
             if (Path.GetExtension(fileName).EndsWith("gz"))
             {
-                return ReadGZipJsonFile(fileName, skip, take);
+                return ReadGZipJsonFile(fileName);
             }
 
-            return ReadJsonFile(fileName, skip, take);
+            return ReadJsonFile(fileName);
         }
 
-        private static IEnumerable<IDictionary> ReadJsonFile(string fileName, int skip, int take)
+        private static IEnumerable<IDictionary> ReadJsonFile(string fileName)
         {
-            var skipped = 0;
-            var took = 0;
-
             using (var stream = File.OpenRead(fileName))
             using (var reader = new StreamReader(stream))
             {
@@ -209,20 +196,11 @@ namespace Sir.DbUtil
 
                 while (!string.IsNullOrWhiteSpace(line) && !line.StartsWith("]"))
                 {
-                    if (took == take)
-                        break;
-
-                    if (skipped++ < skip)
-                    {
-                        continue;
-                    }
-
                     var doc = JsonConvert.DeserializeObject<IDictionary>(line);
 
                     if (doc.Contains("title"))
                     {
                         yield return doc;
-                        took++;
                     }
 
                     line = reader.ReadLine();
