@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 
 namespace Sir.Search
 {
@@ -39,11 +40,19 @@ namespace Sir.Search
             _queue = new ProducerConsumerQueue<(long docId, long keyId, IVector vector)>(threadCount, Put);
             Model = model;
             Index = new ConcurrentDictionary<long, VectorNode>();
+
+            this.Log($"started {threadCount} indexing threads");
         }
 
         public void Put(long docId, long keyId, string value)
         {
             var tokens = Model.Tokenize(value);
+
+            while (_queue.Count > 1000000)
+            {
+                Thread.Sleep(1000);
+                this.Log($"sleeping. queue len {_queue.Count}");
+            }
 
             foreach (var vector in tokens)
             {
