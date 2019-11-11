@@ -54,7 +54,7 @@ h1 {
 }
 
 h3 {
-    margin-top: 10px;
+    margin-top: 20px;
     margin-bottom: 16px;
 }
 
@@ -72,7 +72,7 @@ div.upvote {
 
 h1.logo {
     margin-top: 0px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     letter-spacing: 0.01em;
 }
 
@@ -173,10 +173,8 @@ div.buttons{
 .search-fields {
     font-size: 10px;
     border: none;
-    border-top: 1px solid silver;
-    border-left: 1px solid silver;
     border-right: 1px solid silver;
     border-bottom: 1px solid silver;
-    width: 70px;
+    width: 100px;
     margin-bottom: 10px;
 }

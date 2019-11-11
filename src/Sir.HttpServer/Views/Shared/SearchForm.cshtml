@@ -9,8 +9,8 @@
 {
     <fieldset class="search-fields">
         <legend>Search fields</legend>
-        <input type="checkbox" name="field" value="title" @(titleSelected ? "checked" : "") /><label for="title">title</label><br />
-        <input type="checkbox" name="field" value="body" @(bodySelected ? "checked" : "") /><label for="body">body</label>
+        <input type="checkbox" name="field" value="title" id="title" @(titleSelected ? "checked" : "") /><label for="title">title</label>
+        <input type="checkbox" name="field" value="body" id="body" @(bodySelected ? "checked" : "") /><label for="body">body</label>
     </fieldset>
     <input type="text" id="q" name="q" class="q" placeholder="Ask me anything." value="@query" />
     <div class="buttons">
