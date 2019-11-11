@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using Newtonsoft.Json;
+using Sir.Core;
 using Sir.Document;
 using Sir.Search;
 
@@ -57,6 +58,7 @@ namespace Sir.DbUtil
             }
             else if (command == "write")
             {
+                var fullTime = Stopwatch.StartNew();
                 var fileName = args[1];
                 var dir = args[2];
                 var collection = args[3];
@@ -75,8 +77,6 @@ namespace Sir.DbUtil
                                 { "body", x["text"] }
                             });
 
-                var fullTime = Stopwatch.StartNew();
-
                 using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
                 {
                     sessionFactory.Truncate(collectionId);
@@ -85,26 +85,27 @@ namespace Sir.DbUtil
                     {
                         using (var writeSession = sessionFactory.CreateWriteSession(collectionId, model))
                         {
-                            var time = Stopwatch.StartNew();
-
                             foreach (var batch in page.Batch(reportSize))
                             {
-                                var info = writeSession.Write(batch);
+                                var time = Stopwatch.StartNew();
+
+                                foreach (var document in page)
+                                {
+                                    writeSession.Write(document);
+                                }
+
+                                var info = writeSession.GetIndexInfo();
                                 var t = time.Elapsed.TotalMilliseconds;
-                                var docsPerSecond = (int)(reportSize / t * 1000);
-                                var segments = 0;
+                                var docsPerSecond = (int)(pageSize / t * 1000);
 
                                 foreach (var stat in info.Info)
                                 {
                                     if (stat.Weight > 500)
                                         Console.WriteLine(stat);
-
-                                    segments++;
                                 }
 
-                                Console.WriteLine($"batch {batchNo++} took {t} ms. {segments} segments. {docsPerSecond} docs/s");
-
-                                time.Restart();
+                                Console.WriteLine(
+                                    $"batch {batchNo++} took {t} ms. {docsPerSecond} docs/s");
                             }
                         }
                     }

@@ -111,7 +111,8 @@ namespace Sir.Search
         {
             using (var writeSession = CreateWriteSession(job.CollectionId, job.Model))
             {
-                writeSession.Write(job.Documents);
+                foreach(var document in job.Documents)
+                    writeSession.Write(document);
             }
         }
 
@@ -121,7 +122,8 @@ namespace Sir.Search
             {
                 using (var writeSession = CreateWriteSession(group.Key.ToHash(), model))
                 {
-                    writeSession.Write(group);
+                    foreach(var document in group)
+                        writeSession.Write(document);
                 }
             }
         }
