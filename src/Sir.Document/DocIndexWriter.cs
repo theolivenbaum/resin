@@ -31,9 +31,13 @@ namespace Sir.Document
         /// Get the next auto-incrementing doc id
         /// </summary>
         /// <returns>The next auto-incrementing doc id</returns>
-        public long PeekNextDocId()
+        public long GetNextDocId()
         {
-            return _stream.Position / BlockSize;
+            var id = _stream.Length / BlockSize;
+
+            _stream.SetLength(_stream.Length+BlockSize);
+
+            return id;
         }
 
         /// <summary>
@@ -41,8 +45,9 @@ namespace Sir.Document
         /// </summary>
         /// <param name="offset">offset of doc map</param>
         /// <param name="len">length of doc map</param>
-        public void Put(long offset, int len)
+        public void Put(long id, long offset, int len)
         {
+            _stream.Seek(BlockSize * id, SeekOrigin.Begin);
             _stream.Write(BitConverter.GetBytes(offset));
             _stream.Write(BitConverter.GetBytes(len));
         }

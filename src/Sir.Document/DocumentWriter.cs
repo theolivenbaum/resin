@@ -62,9 +62,9 @@ namespace Sir.Document
             return (keyId, valId);
         }
 
-        public long PeekNextDocId()
+        public long GetNextDocId()
         {
-            return _docIx.PeekNextDocId();
+            return _docIx.GetNextDocId();
         }
 
         public (long offset, int len, byte dataType) PutKey(object value)
@@ -92,9 +92,9 @@ namespace Sir.Document
             return _docs.Put(doc);
         }
 
-        public void PutDocumentAddress(long offset, int len)
+        public void PutDocumentAddress(long id, long offset, int len)
         {
-            _docIx.Put(offset, len);
+            _docIx.Put(id, offset, len);
         }
 
         public void Flush()
