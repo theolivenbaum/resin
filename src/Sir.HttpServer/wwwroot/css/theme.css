@@ -178,3 +178,11 @@ div.buttons{
     width: 100px;
     margin-bottom: 10px;
 }
+
+input[type="text"].collection {
+    padding: 10px 10px 10px 10px;
+    color: orangered;
+    font-size: xx-large;
+    font-weight: 700;
+    border:none;
+}

@@ -7,6 +7,9 @@
 }
 @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
 {
+    <p>
+        <input type="text" id="collection" name="collection" class="collection" value="@ViewBag.Collection" />
+    </p>
     <fieldset class="search-fields">
         <legend>Search fields</legend>
         <input type="checkbox" name="field" value="title" id="title" @(titleSelected ? "checked" : "") /><label for="title">title</label>
@@ -19,5 +22,4 @@
     <div style="clear:both;"></div>
     <input type="hidden" value="0" name="skip" id="skip" />
     <input type="hidden" value="100" name="take" id="take" />
-    <input type="hidden" value="@ViewBag.Collection" name="collection" />
 }
