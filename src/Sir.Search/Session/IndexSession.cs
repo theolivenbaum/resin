@@ -48,10 +48,13 @@ namespace Sir.Search
         {
             var tokens = Model.Tokenize(value);
 
-            while (_queue.Count > 1000000)
+            if (_queue.Count > 1000000)
             {
-                Thread.Sleep(1000);
-                this.Log($"sleeping. queue len {_queue.Count}");
+                while (_queue.Count > 1000)
+                {
+                    Thread.Sleep(1000);
+                    this.Log($"producer waiting. queue len {_queue.Count}");
+                }
             }
 
             foreach (var vector in tokens)
