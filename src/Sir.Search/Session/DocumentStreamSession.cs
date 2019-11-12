@@ -33,12 +33,6 @@ namespace Sir.Search
             while (docId < docCount)
             {
                 var docInfo = _streamReader.GetDocumentAddress(docId);
-
-                if (docInfo.offset < 0)
-                {
-                    continue;
-                }
-
                 var docMap = _streamReader.GetDocumentMap(docInfo.offset, docInfo.length);
                 var doc = new Dictionary<object, object>();
 

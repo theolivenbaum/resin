@@ -36,10 +36,6 @@ namespace Sir.Search
         public ResponseModel Read(HttpRequest request, IStringModel model)
         {
             var timer = Stopwatch.StartNew();
-            var collectionName = request.Query.ContainsKey("collection") ?
-                request.Query["collection"].ToString() :
-                null;
-
             var take = 100;
             var skip = 0;
 

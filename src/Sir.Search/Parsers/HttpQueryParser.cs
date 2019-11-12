@@ -21,9 +21,7 @@ namespace Sir.Search
 
         public Query Parse(HttpRequest request)
         {
-            var isFormatted = request.Method != "GET";
-
-            if (isFormatted)
+            if (request.Method != "GET")
             {
                 var jsonQuery = DeserializeFromStream(request.Body);
 

@@ -198,12 +198,6 @@ namespace Sir.Search
             {
                 var streamReader = GetOrTryCreateDocumentReader(dkvp.Key.collectionId);
                 var docInfo = streamReader.GetDocumentAddress(dkvp.Key.docId);
-
-                if (docInfo.offset < 0)
-                {
-                    continue;
-                }
-
                 var docMap = streamReader.GetDocumentMap(docInfo.offset, docInfo.length);
                 var doc = new Dictionary<string, object>();
 

@@ -16,24 +16,25 @@
                 var url = item.Document.ContainsKey("_url") ? item.Document["_url"].ToString() : item.Document.ContainsKey("__url") ? item.Document["__url"].ToString() : "www.unknownurl.com";
                 var prefix = url.StartsWith("http") ? string.Empty : "https://";
                 var uri = new Uri(prefix + url);
-                var host = uri.Host.ToString();
+                var host = uri.Host.ToString().Replace("www.", string.Empty);
                 var title = item.Document.ContainsKey("title") ? item.Document["title"].ToString() : "Unknown title";
                 var created = (long)item.Document["_created"];
-                <li>
-                    <div>
-                        <div class="document-header">
-                        <a href="/upvote/?url=@System.Web.HttpUtility.UrlEncode(uri.ToString())&q=@ViewData["q"]&collection=@ViewBag.Collection">
-                            <div class="upvote" title="upvote">&#9650;</div> 
-                        </a>
-                        <span><a class="result-link" href="@uri.ToString()">@title</a></span>
-                    </div>
-                    <div class="document-body">
-                        <span style="font-weight:bold;color:black;opacity:0.45;font-size:9pt;">@host</span><br />
-                        <span class="medium-text">Score: @item.Document["___score"]</span><br />
-                        <span class="medium-text">Indexed @DateTime.FromBinary(created)</span>
-                    </div>
+                var lang = (string)item.Document["_language"];
+            <li>
+                <div>
+                    <div class="document-header">
+                    <a href="/upvote/?url=@System.Web.HttpUtility.UrlEncode(uri.ToString())&q=@ViewData["q"]&collection=@ViewBag.Collection">
+                        <div class="upvote" title="upvote">&#9650;</div> 
+                    </a>
+                    <span><a class="result-link" href="@uri.ToString()">@title</a></span>
                 </div>
-            </li>
+                <div class="document-body">
+                    <span style="font-weight:bold;color:black;opacity:0.45;font-size:9pt;">@lang @host</span><br />
+                    <span class="medium-text">Score: @item.Document["___score"]</span><br />
+                    <span class="medium-text">Indexed @DateTime.FromBinary(created)</span>
+                </div>
+            </div>
+        </li>
         }
     </ol>
 </div>
