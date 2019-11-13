@@ -57,12 +57,8 @@ namespace Sir.Search
             {
                 var docs = ReadDocs(result.SortedDocuments);
 
-                this.Log("end read session for query {0}", query);
-
                 return new ReadResult { Total = result.Total, Docs = docs };
             }
-
-            this.Log("zero results for query {0}", query);
 
             return new ReadResult { Total = 0, Docs = new IDictionary<string, object>[0] };
         }
