@@ -8,7 +8,7 @@
 @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
 {
     <p>
-        <input type="text" id="collection" name="collection" class="collection" value="@ViewBag.Collection" />
+        <input type="text" id="collection" name="collection" class="collection" value="@ViewBag.Collection" title="Enter the names of one or more collections here, separated by commas." />
     </p>
     <fieldset class="search-fields">
         <legend>Search fields</legend>
