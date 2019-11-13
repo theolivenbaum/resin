@@ -1,4 +1,5 @@
-﻿using Sir.Document;
+﻿using Microsoft.Extensions.Logging;
+using Sir.Document;
 using Sir.VectorSpace;
 using System;
 using System.Collections.Concurrent;
@@ -13,7 +14,7 @@ namespace Sir.Search
     /// <summary>
     /// Read session targeting a single collection.
     /// </summary>
-    public class ReadSession : ILogger, IDisposable, IReadSession
+    public class ReadSession : IDisposable, IReadSession
     {
         private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
@@ -21,12 +22,14 @@ namespace Sir.Search
         private readonly IPostingsReader _postingsReader;
         private readonly ConcurrentDictionary<ulong, DocumentReader> _streamReaders;
         private readonly ConcurrentDictionary<ulong, INodeReader> _nodeReaders;
+        private readonly ILogger<ReadSession> _logger;
 
         public ReadSession(
             SessionFactory sessionFactory,
             IConfigurationProvider config,
             IStringModel model,
-            IPostingsReader postingsReader)
+            IPostingsReader postingsReader,
+            ILogger<ReadSession> logger)
         {
             _sessionFactory = sessionFactory;
             _config = config;
@@ -34,6 +37,7 @@ namespace Sir.Search
             _streamReaders = new ConcurrentDictionary<ulong, DocumentReader>();
             _postingsReader = postingsReader;
             _nodeReaders = new ConcurrentDictionary<ulong, INodeReader>();
+            _logger = logger;
         }
 
         public void Dispose()
@@ -96,7 +100,7 @@ namespace Sir.Search
 
             Map(query);
 
-            this.Log($"mapping took {timer.Elapsed}");
+            _logger.LogInformation($"mapping took {timer.Elapsed}");
 
             timer.Restart();
 
@@ -104,13 +108,13 @@ namespace Sir.Search
 
             _postingsReader.Reduce(query, result);
 
-            this.Log("reducing took {0}", timer.Elapsed);
+            _logger.LogInformation("reducing took {0}", timer.Elapsed);
 
             timer.Restart();
 
             var sorted = Sort(result, skip, take);
 
-            this.Log("sorting took {0}", timer.Elapsed);
+            _logger.LogInformation("sorting took {0}", timer.Elapsed);
 
             return sorted;
         }

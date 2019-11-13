@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Sir.Document;
 using Sir.Search;
@@ -17,9 +18,19 @@ namespace Sir.DbUtil
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("processing command: {0}", string.Join(" ", args));
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder
+                    .AddFilter("Microsoft", LogLevel.Warning)
+                    .AddFilter("System", LogLevel.Warning)
+                    .AddFilter("Sir.DbUtil.Program", LogLevel.Debug)
+                    .AddConsole()
+                    .AddEventLog();
+            });
 
-            Logging.SendToConsole = true;
+            var logger = loggerFactory.CreateLogger<Program>();
+
+            logger.LogInformation($"processing command: {string.Join(" ", args)}");
 
             var model = new BocModel();
             var command = args[0].ToLower();
@@ -78,7 +89,7 @@ namespace Sir.DbUtil
                                 { "body", x["text"] }
                             });
 
-                using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
+                using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model, loggerFactory))
                 {
                     sessionFactory.Truncate(collectionId);
 
@@ -125,7 +136,7 @@ namespace Sir.DbUtil
                 var collectionId = collection.ToHash();
                 var time = Stopwatch.StartNew();
 
-                using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model))
+                using (var sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), model, loggerFactory))
                 {
                     using (var validateSession = sessionFactory.CreateValidateSession(collectionId))
                     using (var documents = new DocumentStreamSession(new DocumentReader(collectionId, sessionFactory)))

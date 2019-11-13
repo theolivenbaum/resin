@@ -1,5 +1,4 @@
-﻿using Sir.Core;
-using Sir.Document;
+﻿using Sir.Document;
 using Sir.KeyValue;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ namespace Sir.Search
     /// <summary>
     /// Write session targeting a single collection.
     /// </summary>
-    public class WriteSession : ILogger, IDisposable
+    public class WriteSession : IDisposable
     {
         private readonly IndexSession _indexSession;
         private readonly DocumentWriter _streamWriter;

@@ -1,4 +1,5 @@
-﻿using Sir.Document;
+﻿using Microsoft.Extensions.Logging;
+using Sir.Document;
 using Sir.VectorSpace;
 using System;
 using System.Collections.Concurrent;
@@ -13,17 +14,19 @@ namespace Sir.Search
     /// <summary>
     /// Dispatcher of sessions.
     /// </summary>
-    public class SessionFactory : IDisposable, ILogger, ISessionFactory
+    public class SessionFactory : IDisposable, ISessionFactory
     {
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private readonly ConcurrentDictionary<string, MemoryMappedFile> _mmfs;
+        private ILogger<SessionFactory> _logger;
+        private readonly ILoggerFactory _loggerFactory;
 
         public string Dir { get; }
         public IConfigurationProvider Config { get; }
         public IStringModel Model { get; }
 
-        public SessionFactory(IConfigurationProvider config, IStringModel model)
+        public SessionFactory(IConfigurationProvider config, IStringModel model, ILoggerFactory loggerFactory)
         {
             var time = Stopwatch.StartNew();
 
@@ -35,12 +38,16 @@ namespace Sir.Search
                 Directory.CreateDirectory(Dir);
             }
 
-            _keys = LoadKeys();
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _mmfs = new ConcurrentDictionary<string, MemoryMappedFile>();
             Model = model;
 
-            this.Log($"initiated in {time.Elapsed}");
+            _logger = loggerFactory.CreateLogger<SessionFactory>();
+            _loggerFactory = loggerFactory;
+
+            _keys = LoadKeys();
+
+            _logger.LogInformation($"initiated in {time.Elapsed}");
         }
 
         public MemoryMappedFile OpenMMF(string fileName)
@@ -82,7 +89,7 @@ namespace Sir.Search
 
             _keys.Clear();
 
-            this.Log($"truncated {collectionId}");
+            _logger.LogInformation($"truncated {collectionId}");
         }
 
         public void TruncateIndex(ulong collectionId)
@@ -187,7 +194,7 @@ namespace Sir.Search
                 }
             }
 
-            this.Log("loaded keys into memory in {0}", timer.Elapsed);
+            _logger.LogInformation("loaded keys into memory in {0}", timer.Elapsed);
 
             return allkeys;
         }
@@ -251,7 +258,7 @@ namespace Sir.Search
 
         public IndexSession CreateIndexSession(ulong collectionId)
         {
-            return new IndexSession(collectionId, this, Model, Config);
+            return new IndexSession(collectionId, this, Model, Config, _loggerFactory.CreateLogger<IndexSession>());
         }
 
         public IReadSession CreateReadSession()
@@ -260,7 +267,8 @@ namespace Sir.Search
                 this,
                 Config,
                 Model,
-                new PostingsReader(this));
+                new PostingsReader(this),
+                _loggerFactory.CreateLogger<ReadSession>());
         }
 
         public ValidateSession CreateValidateSession(ulong collectionId)

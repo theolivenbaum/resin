@@ -1,18 +1,21 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Sir.HttpServer.Controllers
 {
     [Route("write")]
-    public class WriteController : Controller, ILogger
+    public class WriteController : Controller
     {
         private readonly PluginsCollection _plugins;
         private readonly IStringModel _model;
+        private readonly ILogger<WriteController> _logger;
 
-        public WriteController(PluginsCollection plugins, IStringModel tokenizer)
+        public WriteController(PluginsCollection plugins, IStringModel tokenizer, ILogger<WriteController> logger)
         {
             _plugins = plugins;
             _model = tokenizer;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -44,7 +47,7 @@ namespace Sir.HttpServer.Controllers
             }
             catch (Exception ew)
             {
-                this.Log(ew);
+                _logger.LogError(ew.ToString());
 
                 throw ew;
             }

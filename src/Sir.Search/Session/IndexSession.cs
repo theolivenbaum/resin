@@ -1,4 +1,5 @@
-﻿using Sir.Core;
+﻿using Microsoft.Extensions.Logging;
+using Sir.Core;
 using Sir.VectorSpace;
 using System;
 using System.Collections.Concurrent;
@@ -11,7 +12,7 @@ namespace Sir.Search
     /// <summary>
     /// Indexing session targeting a single collection.
     /// </summary>
-    public class IndexSession : IDisposable, ILogger
+    public class IndexSession : IDisposable
     {
         private readonly ulong _collectionId;
         private readonly SessionFactory _sessionFactory;
@@ -23,11 +24,14 @@ namespace Sir.Search
         public IStringModel Model { get; }
         public ConcurrentDictionary<long, VectorNode> Index { get; }
 
+        private readonly ILogger<IndexSession> _logger;
+
         public IndexSession(
             ulong collectionId,
             SessionFactory sessionFactory,
             IStringModel model,
-            IConfigurationProvider config)
+            IConfigurationProvider config,
+            ILogger<IndexSession> logger)
         {
             var threadCountStr = config.Get("index_session_thread_count");
             var threadCount = threadCountStr == null ? 10 : int.Parse(threadCountStr);
@@ -40,8 +44,9 @@ namespace Sir.Search
             _queue = new ProducerConsumerQueue<(long docId, long keyId, IVector vector)>(threadCount, Put);
             Model = model;
             Index = new ConcurrentDictionary<long, VectorNode>();
+            _logger = logger;
 
-            this.Log($"started {threadCount} indexing threads");
+            _logger.LogInformation($"started {threadCount} indexing threads");
         }
 
         public void Put(long docId, long keyId, string value)
@@ -53,7 +58,7 @@ namespace Sir.Search
                 while (_queue.Count > 1000)
                 {
                     Thread.Sleep(1000);
-                    this.Log($"producer waiting. queue len {_queue.Count}");
+                    _logger.LogInformation($"producer waiting. queue len {_queue.Count}");
                 }
             }
 
@@ -128,7 +133,9 @@ namespace Sir.Search
                 using (var columnWriter = new ColumnWriter(_collectionId, column.Key, indexStream))
                 using (var pageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{column.Key}.ixtp"))))
                 {
-                    columnWriter.CreatePage(column.Value, _vectorStream, _postingsStream, pageIndexWriter);
+                    var size = columnWriter.CreatePage(column.Value, _vectorStream, _postingsStream, pageIndexWriter);
+
+                    _logger.LogInformation($"serialized column {column.Key} weight {column.Value.Weight} {size}");
                 }
             }
 

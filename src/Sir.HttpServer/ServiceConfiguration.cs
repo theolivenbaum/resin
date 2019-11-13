@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Sir.HttpServer.Features;
 using Sir.Search;
 using System;
@@ -10,11 +11,15 @@ namespace Sir.HttpServer
 {
     public static class ServiceConfiguration
     {
-        public static void RegisterComponents(IServiceCollection services, PluginsCollection plugins, IServiceProvider container)
+        public static void RegisterComponents(
+            IServiceCollection services, PluginsCollection plugins, IServiceProvider container)
         {
-            var sessionFactory = container.GetService<SessionFactory>();
-
-            services.Add(new ServiceDescriptor(typeof(CrawlQueue), new CrawlQueue(sessionFactory, container.GetService<IStringModel>())));
+            services.Add(
+                new ServiceDescriptor(typeof(CrawlQueue), 
+                new CrawlQueue(
+                    container.GetService<SessionFactory>(), 
+                    container.GetService<IStringModel>(), 
+                    container.GetService<ILoggerFactory>().CreateLogger<CrawlQueue>())));
         }
 
         public static IServiceProvider Configure(IServiceCollection services)

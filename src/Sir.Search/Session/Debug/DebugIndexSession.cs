@@ -1,4 +1,5 @@
-﻿using Sir.VectorSpace;
+﻿using Microsoft.Extensions.Logging;
+using Sir.VectorSpace;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -6,15 +7,17 @@ using System.Text;
 
 namespace Sir.Search
 {
-    public class DebugIndexSession : IDisposable, ILogger
+    public class DebugIndexSession : IDisposable
     {
         private readonly IndexSession _indexSession;
         private readonly ConcurrentDictionary<long, ConcurrentBag<IVector>> _debugWords;
+        private readonly ILogger<DebugIndexSession> _logger;
 
-        public DebugIndexSession(IndexSession indexSession)
+        public DebugIndexSession(IndexSession indexSession, ILogger<DebugIndexSession> logger)
         {
             _indexSession = indexSession;
             _debugWords = new ConcurrentDictionary<long, ConcurrentBag<IVector>>();
+            _logger = logger;
         }
 
         public void Put(long docId, long keyId, string value)
@@ -66,7 +69,7 @@ namespace Sir.Search
                 }
             }
 
-            this.Log(debugOutput);
+            _logger.LogInformation(debugOutput.ToString());
         }
 
         public void Dispose()

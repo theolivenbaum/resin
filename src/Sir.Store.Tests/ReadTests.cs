@@ -1,5 +1,5 @@
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using System.Linq;
 
 namespace Sir.Search.Tests
 {
@@ -10,7 +10,17 @@ namespace Sir.Search.Tests
         [SetUp]
         public void Setup()
         {
-            _sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), new BocModel());
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder
+                    .AddFilter("Microsoft", LogLevel.Warning)
+                    .AddFilter("System", LogLevel.Warning)
+                    .AddFilter("Sir.DbUtil.Program", LogLevel.Debug)
+                    .AddConsole()
+                    .AddEventLog();
+            });
+
+            _sessionFactory = new SessionFactory(new IniConfiguration("sir.ini"), new BocModel(), loggerFactory);
         }
 
         [TearDown]

@@ -8,14 +8,14 @@ namespace Sir.Search
     /// <summary>
     /// Validate a collection.
     /// </summary>
-    public class ValidateSession : IDisposable, ILogger
+    public class ValidateSession : IDisposable
     {
         public ulong CollectionId { get; }
 
         private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
         private readonly IStringModel _model;
-        private readonly ReadSession _readSession;
+        private readonly IReadSession _readSession;
 
         public ValidateSession(
             ulong collectionId,
@@ -26,15 +26,10 @@ namespace Sir.Search
             )
         {
             CollectionId = collectionId;
-
             _sessionFactory = sessionFactory;
             _config = config;
             _model = model;
-            _readSession = new ReadSession(
-                sessionFactory,
-                sessionFactory.Config,
-                sessionFactory.Model,
-                postingsReader);
+            _readSession = sessionFactory.CreateReadSession();
         }
 
         public void Validate(IDictionary doc)

@@ -2,20 +2,27 @@
 using System.Net;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Sir.HttpServer.Features;
-using Sir.Search;
 
 namespace Sir.HttpServer.Controllers
 {
-    public class SubmitController : UIController, ILogger
+    public class SubmitController : UIController
     {
         private readonly HtmlWeb _htmlParser;
         private readonly CrawlQueue _crawlQueue;
+        private readonly ILogger<SubmitController> _logger;
 
-        public SubmitController(PluginsCollection plugins, CrawlQueue crawlQueue, IConfigurationProvider config, ISessionFactory sessionFactory) : base(config, sessionFactory)
+        public SubmitController(
+            PluginsCollection plugins, 
+            CrawlQueue crawlQueue, 
+            IConfigurationProvider config, 
+            ISessionFactory sessionFactory,
+            ILogger<SubmitController> logger) : base(config, sessionFactory)
         {
             _htmlParser = new HtmlWeb();
             _crawlQueue = crawlQueue;
+            _logger = logger;
         }
 
         public ActionResult Index()
@@ -49,7 +56,7 @@ namespace Sir.HttpServer.Controllers
             }
             catch (Exception ex)
             {
-                this.Log("{0} {1}", WebUtility.UrlEncode(url), ex);
+                _logger.LogError($"{WebUtility.UrlEncode(url)} {ex}");
 
                 return View("Error");
             }

@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Sir.HttpServer.Controllers
 {
     [Route("query")]
-    public class QueryController : Controller, ILogger
+    public class QueryController : Controller
     {
         private readonly PluginsCollection _plugins;
         private readonly IStringModel _model;
+        private readonly ILogger<QueryController> _logger;
 
-        public QueryController(PluginsCollection plugins, IStringModel tokenizer)
+        public QueryController(PluginsCollection plugins, IStringModel tokenizer, ILogger<QueryController> logger)
         {
             _plugins = plugins;
             _model = tokenizer;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -32,7 +35,7 @@ namespace Sir.HttpServer.Controllers
             var timer = Stopwatch.StartNew();
             var result = reader.Read(Request, _model);
 
-            this.Log("processed {0} request in {1}", mediaType, timer.Elapsed);
+            _logger.LogInformation($"processed {mediaType} request in {timer.Elapsed}");
 
             Response.Headers.Add("X-Total", result.Total.ToString());
 

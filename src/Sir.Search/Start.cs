@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Sir.Search
 {
@@ -10,8 +11,9 @@ namespace Sir.Search
         public void OnApplicationStartup(
             IServiceCollection services, ServiceProvider serviceProvider, IConfigurationProvider config)
         {
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
             var model = new BocModel();
-            var sessionFactory = new SessionFactory(config, model);
+            var sessionFactory = new SessionFactory(config, model, loggerFactory);
             var httpParser = new HttpQueryParser(sessionFactory, model);
 
             services.AddSingleton(typeof(IStringModel), model);

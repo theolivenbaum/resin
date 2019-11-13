@@ -4,24 +4,27 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using HtmlAgilityPack;
+using Microsoft.Extensions.Logging;
 using Sir.Core;
 using Sir.Search;
 
 namespace Sir.HttpServer.Features
 {
-    public class CrawlQueue : IDisposable, ILogger
+    public class CrawlQueue : IDisposable
     {
         private readonly ProducerConsumerQueue<(string collection, Uri uri)> _queue;
         private readonly SessionFactory _sessionFactory;
         private readonly IStringModel _model;
+        private readonly ILogger _logger;
 
         public (Uri uri, string title) LastProcessed { get; private set; }
 
-        public CrawlQueue(SessionFactory sessionFactory, IStringModel model)
+        public CrawlQueue(SessionFactory sessionFactory, IStringModel model, ILogger logger)
         {
             _queue = new ProducerConsumerQueue<(string,Uri)>(1, DoWork);
             _sessionFactory = sessionFactory;
             _model = model;
+            _logger = logger;
         }
 
         public void Enqueue(string collection, Uri uri)
@@ -85,7 +88,7 @@ namespace Sir.HttpServer.Features
 
                 if (!allowed)
                 {
-                    this.Log("url forbidden by robot.txt: {0}", item.uri);
+                    _logger.LogInformation("url forbidden by robot.txt: {0}", item.uri);
 
                     return;
                 }
@@ -120,7 +123,7 @@ namespace Sir.HttpServer.Features
             }
             catch (Exception ex)
             {
-                this.Log(string.Format("error processing {0} {1}", item.uri, ex));
+                _logger.LogError(string.Format("error processing {0} {1}", item.uri, ex));
             }
         }
 
@@ -177,19 +180,19 @@ namespace Sir.HttpServer.Features
 
                     if (response.StatusCode != HttpStatusCode.OK)
                     {
-                        this.Log(string.Format("bad request: {0} response: {1}", uri, response.StatusCode));
+                        _logger.LogInformation(string.Format("bad request: {0} response: {1}", uri, response.StatusCode));
 
                         return null;
                     }
 
-                    this.Log(string.Format("requested: {0}", uri));
+                    _logger.LogInformation(string.Format("requested: {0}", uri));
 
                     return reader.ReadToEnd();
                 }
             }
             catch (Exception ex)
             {
-                this.Log(string.Format("request failed: {0} {1}", uri, ex));
+                _logger.LogError(string.Format("request failed: {0} {1}", uri, ex));
 
                 return null;
             }

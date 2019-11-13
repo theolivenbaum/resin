@@ -9,7 +9,7 @@ namespace Sir.Search
     /// <summary>
     /// Write into a collection.
     /// </summary>
-    public class HttpWriter : IHttpWriter, ILogger
+    public class HttpWriter : IHttpWriter
     {
         public string ContentType => "application/json";
 

@@ -7,7 +7,7 @@ namespace Sir.VectorSpace
     /// <summary>
     /// Index bitmap reader. Each block is a <see cref="Sir.Search.VectorNode"/>.
     /// </summary>
-    public class NodeReader : ILogger, INodeReader
+    public class NodeReader : INodeReader
     {
         private readonly ISessionFactory _sessionFactory;
         private readonly Stream _vectorFile;

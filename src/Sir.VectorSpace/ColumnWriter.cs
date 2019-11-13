@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Sir.VectorSpace
 {
-    public class ColumnWriter : ILogger, IDisposable
+    public class ColumnWriter : IDisposable
     {
         private readonly long _keyId;
         private readonly ulong _collectionId;
@@ -20,15 +20,13 @@ namespace Sir.VectorSpace
             _ixStream = indexStream;
         }
 
-        public void CreatePage(VectorNode column, Stream vectorStream, Stream postingsStream, PageIndexWriter pageIndexWriter)
+        public (int depth, int width) CreatePage(VectorNode column, Stream vectorStream, Stream postingsStream, PageIndexWriter pageIndexWriter)
         {
             var page = GraphBuilder.SerializeTree(column, _ixStream, vectorStream, postingsStream);
 
             pageIndexWriter.Put(page.offset, page.length);
 
-            var size = PathFinder.Size(column);
-
-            this.Log($"serialized column {_keyId} weight {column.Weight} {size}");
+            return PathFinder.Size(column);
         }
 
         public void Dispose()
