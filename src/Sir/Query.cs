@@ -8,9 +8,9 @@ namespace Sir
     public class Query : BooleanStatement
     {
         public IList<Term> Terms { get; }
-        public Query And { get; set; }
-        public Query Or { get; set; }
-        public Query Not { get; set; }
+        public Query AndQuery { get; set; }
+        public Query OrQuery { get; set; }
+        public Query NotQuery { get; set; }
 
         public Query(
             IList<Term> terms, 

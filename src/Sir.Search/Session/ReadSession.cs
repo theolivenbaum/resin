@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Sir.Search
 {
@@ -126,7 +127,8 @@ namespace Sir.Search
             if (query == null)
                 return;
 
-            foreach (var term in query.Terms)
+            Parallel.ForEach(query.Terms, term =>
+            //foreach (var term in query.Terms)
             {
                 var indexReader = GetOrTryCreateIndexReader(term.CollectionId, term.KeyId);
 
@@ -140,11 +142,11 @@ namespace Sir.Search
                         term.PostingsOffsets = hit.Node.PostingsOffsets;
                     }
                 }
-            }
+            });
 
-            Map(query.And);
-            Map(query.Or);
-            Map(query.Not);
+            Map(query.AndQuery);
+            Map(query.OrQuery);
+            Map(query.NotQuery);
         }
 
         private static ScoredResult Sort(IDictionary<(ulong, long), double> documents, int skip, int take)
@@ -172,13 +174,20 @@ namespace Sir.Search
             if (!File.Exists(ixFileName))
                 return null;
 
-            return _nodeReaders.GetOrAdd(
-                $"{collectionId}.{keyId}".ToHash(), new NodeReader(
+            //return _nodeReaders.GetOrAdd(
+            //    $"{collectionId}.{keyId}".ToHash(), new NodeReader(
+            //        collectionId,
+            //        keyId,
+            //        _sessionFactory,
+            //        _sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Dir, $"{collectionId}.vec")),
+            //        _sessionFactory.CreateReadStream(ixFileName)));
+
+            return new NodeReader(
                     collectionId,
                     keyId,
                     _sessionFactory,
                     _sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Dir, $"{collectionId}.vec")),
-                    _sessionFactory.CreateReadStream(ixFileName)));
+                    _sessionFactory.CreateReadStream(ixFileName));
         }
 
         public DocumentReader GetOrTryCreateDocumentReader(ulong collectionId)

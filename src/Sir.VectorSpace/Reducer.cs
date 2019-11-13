@@ -94,17 +94,17 @@ namespace Sir.Search
                 }
             }
 
-            if (mappedQuery.And != null)
+            if (mappedQuery.AndQuery != null)
             {
-                Reduce(mappedQuery.And, result);
+                Reduce(mappedQuery.AndQuery, result);
             }
-            if (mappedQuery.Or != null)
+            if (mappedQuery.OrQuery != null)
             {
-                Reduce(mappedQuery.Or, result);
+                Reduce(mappedQuery.OrQuery, result);
             }
-            if (mappedQuery.Not != null)
+            if (mappedQuery.NotQuery != null)
             {
-                Reduce(mappedQuery.Not, result);
+                Reduce(mappedQuery.NotQuery, result);
             }
         }
     }

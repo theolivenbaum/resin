@@ -137,7 +137,7 @@ namespace Sir.Search
                     }
                     else
                     {
-                        c.Or = q;
+                        c.OrQuery = q;
 
                         c = q;
                     }
@@ -150,11 +150,11 @@ namespace Sir.Search
                 else
                 {
                     if (and)
-                        cursor.And = r;
+                        cursor.AndQuery = r;
                     else if (or)
-                        cursor.Or = r;
+                        cursor.OrQuery = r;
                     else
-                        cursor.Not = r;
+                        cursor.NotQuery = r;
 
                     cursor = r;
                 }
