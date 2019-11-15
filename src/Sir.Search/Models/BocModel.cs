@@ -30,7 +30,11 @@ namespace Sir.Search
 
                         if (len > 0)
                         {
-                            embeddings.Add(new IndexedVector(embedding, source.Slice(offset, len).ToArray(), VectorWidth));
+                            embeddings.Add(
+                                new IndexedVector(
+                                    embedding, 
+                                    source.Slice(offset, len).ToArray(), 
+                                    VectorWidth));
 
                             embedding = new SortedList<int, float>();
                         }

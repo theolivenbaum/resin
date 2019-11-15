@@ -144,9 +144,9 @@ namespace Sir.Search
                 }
             });
 
-            Map(query.AndQuery);
-            Map(query.OrQuery);
-            Map(query.NotQuery);
+            Map(query.And);
+            Map(query.Or);
+            Map(query.Not);
         }
 
         private static ScoredResult Sort(IDictionary<(ulong, long), double> documents, int skip, int take)

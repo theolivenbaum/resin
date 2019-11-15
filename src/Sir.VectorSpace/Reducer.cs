@@ -12,7 +12,7 @@ namespace Sir.Search
             {
                 var termResult = Read(term.CollectionId, term.PostingsOffsets);
 
-                if (term.And)
+                if (term.Intersection)
                 {
                     if (result.Count == 0)
                     {
@@ -53,7 +53,7 @@ namespace Sir.Search
                         result.Remove(docId);
                     }
                 }
-                else if (term.Or)
+                else if (term.Union)
                 {
 
                     if (result.Count == 0)
@@ -94,17 +94,17 @@ namespace Sir.Search
                 }
             }
 
-            if (mappedQuery.AndQuery != null)
+            if (mappedQuery.And != null)
             {
-                Reduce(mappedQuery.AndQuery, result);
+                Reduce(mappedQuery.And, result);
             }
-            if (mappedQuery.OrQuery != null)
+            if (mappedQuery.Or != null)
             {
-                Reduce(mappedQuery.OrQuery, result);
+                Reduce(mappedQuery.Or, result);
             }
-            if (mappedQuery.NotQuery != null)
+            if (mappedQuery.Not != null)
             {
-                Reduce(mappedQuery.NotQuery, result);
+                Reduce(mappedQuery.Not, result);
             }
         }
     }

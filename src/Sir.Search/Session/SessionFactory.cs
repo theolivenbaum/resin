@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sir.Document;
+using Sir.KeyValue;
 using Sir.VectorSpace;
 using System;
 using System.Collections.Concurrent;
@@ -194,7 +195,7 @@ namespace Sir.Search
                 }
             }
 
-            _logger.LogInformation("loaded keys into memory in {0}", timer.Elapsed);
+            _logger.LogInformation($"loaded keyHash -> keyId mappings into memory for {allkeys.Count} collections in {timer.Elapsed}");
 
             return allkeys;
         }
@@ -236,6 +237,17 @@ namespace Sir.Search
                 return false;
             }
             return true;
+        }
+
+        public string GetKey(ulong collectionId, long keyId)
+        {
+            using (var indexReader = new ValueIndexReader(CreateReadStream(Path.Combine(Dir, $"{collectionId}.kix"))))
+            using (var reader = new ValueReader(CreateReadStream(Path.Combine(Dir, $"{collectionId}.key"))))
+            {
+                var keyInfo = indexReader.Get(keyId);
+
+                return (string)reader.Get(keyInfo.offset, keyInfo.len, keyInfo.dataType);
+            }
         }
 
         public DocumentStreamSession CreateDocumentStreamSession(ulong collectionId)

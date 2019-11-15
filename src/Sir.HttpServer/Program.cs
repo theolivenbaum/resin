@@ -20,8 +20,8 @@ namespace Sir.HttpServer
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
-                logging.AddConsole();
-                logging.AddEventLog();
+                //logging.AddConsole();
+                logging.AddDebug();
             })
             .ConfigureWebHostDefaults(webBuilder =>
             {

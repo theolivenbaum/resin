@@ -13,57 +13,67 @@ namespace Sir.Search
             _model = model;
         }
 
-        public Query Parse(string collection, string q, string[] fields, bool and, bool or)
+        public Query Parse(string[] collections, string q, string[] fields, bool and, bool or)
         {
             var root = new Dictionary<string, object>();
-            var cursor = new Dictionary<string, object>
-            {
-                {"collection", collection }
-            };
+            var cursor = root;
 
-            if (and)
+            foreach(var collection in collections)
             {
-                root["and"] = cursor;
-            }
-            else if (or)
-            {
-                root["or"] = cursor;
-            }
-            else
-            {
-                root["not"] = cursor;
-            }
-
-            if (fields.Length == 1)
-            {
-                cursor[fields[0]] = q;
-            }
-            else
-            {
-                foreach (var field in fields)
+                var query = new Dictionary<string, object>
                 {
-                    cursor[field] = q;
+                    {"collection", collection }
+                };
 
-                    var next = new Dictionary<string, object>
-                    {
-                        {"collection", collection }
-                    };
-
-                    if (and)
-                    {
-                        cursor["and"] = next;
-                    }
-                    else if (or)
-                    {
-                        cursor["or"] = next;
-                    }
-                    else
-                    {
-                        cursor["not"] = next;
-                    }
-
-                    cursor = next;
+                if (and)
+                {
+                    cursor["and"] = query;
                 }
+                else if (or)
+                {
+                    cursor["or"] = query;
+                }
+                else
+                {
+                    cursor["not"] = query;
+                }
+
+                if (fields.Length == 1)
+                {
+                    query[fields[0]] = q;
+                }
+                else
+                {
+                    for (int i = 0; i < fields.Length; i++)
+                    {
+                        query[fields[i]] = q;
+
+                        if (i < fields.Length - 1)
+                        {
+                            var next = new Dictionary<string, object>
+                            {
+                                {"collection", collection }
+                            };
+
+                            if (and)
+                            {
+                                query["and"] = next;
+                            }
+                            else if (or)
+                            {
+                                query["or"] = next;
+                            }
+                            else
+                            {
+                                query["not"] = next;
+                            }
+
+                            query = next;
+                        }
+                    }
+                }
+
+                cursor = query;
             }
 
             return ParseQuery(root);
@@ -137,7 +147,7 @@ namespace Sir.Search
                     }
                     else
                     {
-                        c.OrQuery = q;
+                        c.Or = q;
 
                         c = q;
                     }
@@ -150,11 +160,11 @@ namespace Sir.Search
                 else
                 {
                     if (and)
-                        cursor.AndQuery = r;
+                        cursor.And = r;
                     else if (or)
-                        cursor.OrQuery = r;
+                        cursor.Or = r;
                     else
-                        cursor.NotQuery = r;
+                        cursor.Not = r;
 
                     cursor = r;
                 }

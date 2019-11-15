@@ -13,7 +13,11 @@ namespace Sir.Search
         {
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
             var model = new BocModel();
-            var sessionFactory = new SessionFactory(config, model, loggerFactory);
+            var sessionFactory = new SessionFactory(
+                config, 
+                model, 
+                loggerFactory);
+
             var httpParser = new HttpQueryParser(sessionFactory, model);
 
             services.AddSingleton(typeof(IStringModel), model);
@@ -21,7 +25,11 @@ namespace Sir.Search
             services.AddSingleton(typeof(SessionFactory), sessionFactory);
             services.AddSingleton(typeof(HttpQueryParser), httpParser);
             services.AddSingleton(typeof(IHttpWriter), new HttpWriter(sessionFactory));
-            services.AddSingleton(typeof(IHttpReader), new HttpReader(sessionFactory, httpParser, config));
+            services.AddSingleton(typeof(IHttpReader), new HttpReader(
+                sessionFactory, 
+                httpParser, 
+                config, 
+                loggerFactory.CreateLogger<HttpReader>()));
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Sir.Search
 {
@@ -12,10 +13,15 @@ namespace Sir.Search
             _sessionFactory = sessionFactory;
         }
 
-        public string Format(string collectionName, IStringModel tokenizer, HttpRequest request)
+        public string Format(HttpRequest request, IStringModel tokenizer)
         {
-            return JsonConvert.SerializeObject(new HttpQueryParser(_sessionFactory, tokenizer)
-                .Parse(request), Formatting.Indented);
+            var parser = new HttpQueryParser(_sessionFactory, tokenizer);
+            var query = parser.ParseRequest(request);
+            var dictionary = new Dictionary<string, object>();
+            
+            parser.ParseQuery(query, dictionary);
+
+            return JsonConvert.SerializeObject(dictionary, Formatting.Indented);
         }
     }
 }

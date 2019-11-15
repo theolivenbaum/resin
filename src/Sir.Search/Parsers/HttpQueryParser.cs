@@ -4,6 +4,7 @@ using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Sir.Search
 {
@@ -13,34 +14,38 @@ namespace Sir.Search
     public class HttpQueryParser
     {
         private readonly QueryParser _parser;
+        private readonly SessionFactory _sessionFactory;
 
         public HttpQueryParser(SessionFactory sessionFactory, IStringModel model)
         {
             _parser = new QueryParser(sessionFactory, model);
+            _sessionFactory = sessionFactory;
         }
 
-        public Query Parse(HttpRequest request)
+        public Query ParseRequest(HttpRequest request)
         {
-            if (request.Method != "GET")
-            {
-                var jsonQuery = DeserializeFromStream(request.Body);
-
-                return FromDocument(jsonQuery);
-            }
-            else
+            if (request.Method == "GET")
             {
                 if (!request.Query.ContainsKey("collection"))
                 {
                     throw new InvalidOperationException("collectionId missing from query string");
                 }
 
-                string[] collections = request.Query["collection"].ToArray();
+                string[] collections = request.Query["collection"].ToArray()
+                    .SelectMany(x=>x.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                    .ToArray();
                 var naturalLanguage = request.Query["q"].ToString();
                 string[] fields = request.Query["field"].ToArray();
                 bool and = request.Query.ContainsKey("AND");
                 bool or = !and && request.Query.ContainsKey("OR");
 
-                return _parser.Parse(string.Join(',', collections), naturalLanguage, fields, and, or);
+                return _parser.Parse(collections, naturalLanguage, fields, and, or);
+            }
+            else
+            {
+                var jsonQuery = DeserializeFromStream(request.Body);
+
+                return ParseDictionary(jsonQuery);
             }
         }
 
@@ -55,17 +60,54 @@ namespace Sir.Search
             }
         }
 
-        public Query FromFormattedString(string formattedQuery)
+        public Query ParseFormattedString(string formattedQuery)
         {
             var document = JsonConvert.DeserializeObject<IDictionary<string, object>>(
                 formattedQuery, new JsonConverter[] { new DictionaryConverter() });
 
-            return FromDocument(document);
+            return ParseDictionary(document);
         }
 
-        public Query FromDocument(IDictionary<string, object> document)
+        public Query ParseDictionary(IDictionary<string, object> document)
         {
             return _parser.ParseQuery(document);
+        }
+
+        public void ParseQuery(Query query, IDictionary<string, object> result)
+        {
+            var dic = new Dictionary<string, object>();
+
+            if (query.Intersection)
+            {
+                result.Add("and", dic);
+            }
+            else if (query.Union)
+            {
+                result.Add("or", dic);
+            }
+            else
+            {
+                result.Add("not", dic);
+            }
+
+            foreach (var term in query.Terms)
+            {
+                dic.Add("collection", term.CollectionId);
+                dic.Add(term.Key, term.Vector.Data.ToString());
+
+                if (query.And != null)
+                {
+                    ParseQuery(query.And, dic);
+                }
+                if (query.Or != null)
+                {
+                    ParseQuery(query.Or, dic);
+                }
+                if (query.Not != null)
+                {
+                    ParseQuery(query.Not, dic);
+                }
+            }
         }
     }
 

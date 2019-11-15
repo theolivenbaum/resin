@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace Sir.Search
@@ -15,6 +16,7 @@ namespace Sir.Search
     {
         public string ContentType => "application/json";
 
+        private readonly ILogger<HttpReader> _logger;
         private readonly SessionFactory _sessionFactory;
         private readonly HttpQueryParser _httpQueryParser;
         private readonly IConfigurationProvider _config;
@@ -22,8 +24,10 @@ namespace Sir.Search
         public HttpReader(
             SessionFactory sessionFactory, 
             HttpQueryParser httpQueryParser,
-            IConfigurationProvider config)
+            IConfigurationProvider config,
+            ILogger<HttpReader> logger)
         {
+            _logger = logger;
             _sessionFactory = sessionFactory;
             _httpQueryParser = httpQueryParser;
             _config = config;
@@ -45,13 +49,22 @@ namespace Sir.Search
             if (request.Query.ContainsKey("skip"))
                 skip = int.Parse(request.Query["skip"]);
 
-            var query = _httpQueryParser.Parse(request);
+            var query = _httpQueryParser.ParseRequest(request);
 
             if (query == null)
             {
                 return new ResponseModel { MediaType = "application/json", Total = 0 };
             }
 
+#if DEBUG
+
+            var debug = new Dictionary<string, object>();
+
+            _httpQueryParser.ParseQuery(query, debug);
+
+            _logger.LogInformation(JsonConvert.SerializeObject(debug));
+
+#endif
             ReadResult result = null;
 
             using (var readSession = _sessionFactory.CreateReadSession())
