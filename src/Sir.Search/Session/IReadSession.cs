@@ -8,6 +8,6 @@ namespace Sir.Search
         void EnsureIsValid(Query query, long docId);
         ReadResult Read(Query query, int skip, int take);
         IList<IDictionary<string, object>> ReadDocs(
-            IEnumerable<KeyValuePair<(ulong collectionId, long docId), double>> docs);
+            IEnumerable<KeyValuePair<(ulong collectionId, long docId), double>> docs, Query query);
     }
 }

@@ -30,7 +30,7 @@
                 </div>
                 <div class="document-body">
                     <span style="font-weight:bold;color:black;opacity:0.45;font-size:9pt;">@lang @host</span><br />
-                    <span class="medium-text">Score: @item.Document["___score"]</span><br />
+                    <span class="medium-text">Score: @(((double)item.Document["___score"]).ToString("N2"))%</span><br />
                     <span class="medium-text">Indexed @DateTime.FromBinary(created)</span>
                 </div>
             </div>

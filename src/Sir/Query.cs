@@ -20,6 +20,58 @@ namespace Sir
         {
             Terms = terms;
         }
+
+        public int GetDivider()
+        {
+            return GetTermCount() / GetCollectionCount();
+        }
+
+        public int GetTermCount()
+        {
+            var count = Terms.Count;
+
+            if (And != null)
+            {
+                count += And.GetTermCount();
+            }
+            if (Or != null)
+            {
+                count += Or.GetTermCount();
+            }
+            if (Not != null)
+            {
+                count += Not.GetTermCount();
+            }
+
+            return count;
+        }
+
+        public int GetCollectionCount()
+        {
+            var dic = new HashSet<ulong>();
+
+            foreach(var term in Terms)
+            {
+                dic.Add(term.CollectionId);
+            }
+
+            var count = dic.Count;
+
+            if (And != null)
+            {
+                count += And.GetCollectionCount();
+            }
+            if (Or != null)
+            {
+                count += Or.GetCollectionCount();
+            }
+            if (Not != null)
+            {
+                count += Not.GetCollectionCount();
+            }
+
+            return count;
+        }
     }
 
     [System.Diagnostics.DebuggerDisplay("{Key}:{StringValue}")]

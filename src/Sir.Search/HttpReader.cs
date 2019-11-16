@@ -63,6 +63,7 @@ namespace Sir.Search
             _httpQueryParser.ParseQuery(query, debug);
 
             _logger.LogInformation(JsonConvert.SerializeObject(debug));
+            _logger.LogInformation($"divider {query.GetDivider()}");
 
 #endif
             ReadResult result = null;
@@ -73,9 +74,9 @@ namespace Sir.Search
                 {
                     var collectionId = request.Query["collection"].ToString().ToHash();
                     var ids = request.Query["id"].ToDictionary(s => (collectionId, long.Parse(s)), x => (double)1);
-                    var docs = readSession.ReadDocs(ids);
+                    var docs = readSession.ReadDocs(ids, query);
 
-                    result = new ReadResult { Docs = docs, Total = docs.Count };
+                    result = new ReadResult { Query = query, Docs = docs, Total = docs.Count };
                 }
                 else
                 {

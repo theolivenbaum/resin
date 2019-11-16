@@ -59,12 +59,12 @@ namespace Sir.Search
 
             if (result != null)
             {
-                var docs = ReadDocs(result.SortedDocuments);
+                var docs = ReadDocs(result.SortedDocuments, query);
 
-                return new ReadResult { Total = result.Total, Docs = docs };
+                return new ReadResult { Query = query, Total = result.Total, Docs = docs };
             }
 
-            return new ReadResult { Total = 0, Docs = new IDictionary<string, object>[0] };
+            return new ReadResult { Query = query, Total = 0, Docs = new IDictionary<string, object>[0] };
         }
 
         public void EnsureIsValid(Query query, long docId)
@@ -199,9 +199,11 @@ namespace Sir.Search
         }
 
         public IList<IDictionary<string, object>> ReadDocs(
-            IEnumerable<KeyValuePair<(ulong collectionId, long docId), double>> docs)
+            IEnumerable<KeyValuePair<(ulong collectionId, long docId), double>> docs,
+            Query query)
         {
             var result = new List<IDictionary<string, object>>();
+            var scoreDivider = query.GetDivider();
 
             foreach (var dkvp in docs)
             {
@@ -222,7 +224,7 @@ namespace Sir.Search
                 }
 
                 doc["___docid"] = dkvp.Key.docId;
-                doc["___score"] = dkvp.Value;
+                doc["___score"] = (dkvp.Value / scoreDivider) * 100;
 
                 result.Add(doc);
             }
