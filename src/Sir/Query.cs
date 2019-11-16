@@ -47,9 +47,9 @@ namespace Sir
             KeyId = keyId;
             Key = key;
             Vector = vector;
-            Intersection = and;
-            Union = or;
-            Subtraction = not;
+            IsIntersection = and;
+            IsUnion = or;
+            IsSubtraction = not;
         }
     }
 
@@ -59,7 +59,7 @@ namespace Sir
         private bool _or;
         private bool _not;
 
-        public bool Intersection
+        public bool IsIntersection
         {
             get { return _and; }
             set
@@ -68,12 +68,12 @@ namespace Sir
 
                 if (value)
                 {
-                    Union = false;
-                    Subtraction = false;
+                    IsUnion = false;
+                    IsSubtraction = false;
                 }
             }
         }
-        public bool Union
+        public bool IsUnion
         {
             get { return _or; }
             set
@@ -82,12 +82,12 @@ namespace Sir
 
                 if (value)
                 {
-                    Intersection = false;
-                    Subtraction = false;
+                    IsIntersection = false;
+                    IsSubtraction = false;
                 }
             }
         }
-        public bool Subtraction
+        public bool IsSubtraction
         {
             get { return _not; }
             set
@@ -96,8 +96,8 @@ namespace Sir
 
                 if (value)
                 {
-                    Intersection = false;
-                    Union = false;
+                    IsIntersection = false;
+                    IsUnion = false;
                 }
             }
         }

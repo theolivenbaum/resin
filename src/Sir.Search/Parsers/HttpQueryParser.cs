@@ -75,38 +75,45 @@ namespace Sir.Search
 
         public void ParseQuery(Query query, IDictionary<string, object> result)
         {
-            var dic = new Dictionary<string, object>();
+            if (result == null)
+                return;
 
-            if (query.Intersection)
-            {
-                result.Add("and", dic);
-            }
-            else if (query.Union)
-            {
-                result.Add("or", dic);
-            }
-            else
-            {
-                result.Add("not", dic);
-            }
+            var parent = result;
 
             foreach (var term in query.Terms)
             {
-                dic.Add("collection", term.CollectionId);
-                dic.Add(term.Key, term.Vector.Data.ToString());
+                var termdic = new Dictionary<string, object>();
 
-                if (query.And != null)
+                termdic.Add("collection", term.CollectionId);
+                termdic.Add(term.Key, term.Vector.Data.ToString());
+
+                if (term.IsIntersection)
                 {
-                    ParseQuery(query.And, dic);
+                    parent.Add("and", termdic);
                 }
-                if (query.Or != null)
+                else if (term.IsUnion)
                 {
-                    ParseQuery(query.Or, dic);
+                    parent.Add("or", termdic);
                 }
-                if (query.Not != null)
+                else
                 {
-                    ParseQuery(query.Not, dic);
+                    parent.Add("not", termdic);
                 }
+
+                parent = termdic;
+            }
+
+            if (query.And != null)
+            {
+                ParseQuery(query.And, parent);
+            }
+            if (query.Or != null)
+            {
+                ParseQuery(query.Or, parent);
+            }
+            if (query.Not != null)
+            {
+                ParseQuery(query.Not, parent);
             }
         }
     }

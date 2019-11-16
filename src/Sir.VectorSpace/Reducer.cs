@@ -12,7 +12,7 @@ namespace Sir.Search
             {
                 var termResult = Read(term.CollectionId, term.PostingsOffsets);
 
-                if (term.Intersection)
+                if (term.IsIntersection)
                 {
                     if (result.Count == 0)
                     {
@@ -53,7 +53,7 @@ namespace Sir.Search
                         result.Remove(docId);
                     }
                 }
-                else if (term.Union)
+                else if (term.IsUnion)
                 {
 
                     if (result.Count == 0)
