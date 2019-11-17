@@ -33,9 +33,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="Views\Submit\Error.cshtml">
-      <Pack>$(IncludeRazorContentInPack)</Pack>
-    </Content>
     <Content Update="Views\QueryParser\Index.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>

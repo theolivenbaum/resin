@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Sir.HttpServer.Features;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -63,9 +62,6 @@ namespace Sir.HttpServer
 
         private void OnShutdown()
         {
-            var crawlQueue = ServiceProvider.GetService<CrawlQueue>();
-            crawlQueue.Dispose();
-
             var plugins = ServiceProvider.GetService<PluginsCollection>();
             plugins.Dispose();
 
