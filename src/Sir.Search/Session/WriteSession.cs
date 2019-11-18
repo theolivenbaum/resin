@@ -3,6 +3,7 @@ using Sir.KeyValue;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Sir.Search
 {

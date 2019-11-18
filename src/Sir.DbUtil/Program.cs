@@ -117,7 +117,7 @@ namespace Sir.DbUtil
                                 }
 
                                 Console.WriteLine(
-                                    $"batch {batchNo++} took {t} ms. queue len {info.QueueLength}. {docsPerSecond} docs/s");
+                                    $"batch {batchNo++} took {t} ms. {docsPerSecond} docs/s");
                             }
                         }
                     }
