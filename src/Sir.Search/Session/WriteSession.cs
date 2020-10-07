@@ -20,7 +20,7 @@ namespace Sir.Search
             _streamWriter = streamWriter;
         }
 
-        public long Write(IDictionary<string, object> document, HashSet<string> storedFieldNames)
+        public long Put(IDictionary<string, object> document, HashSet<string> fieldNamesToStore)
         {
             var docMap = new List<(long keyId, long valId)>();
 
@@ -28,7 +28,7 @@ namespace Sir.Search
             {
                 var val = document[key];
 
-                if (val != null && storedFieldNames.Contains(key))
+                if (val != null && fieldNamesToStore.Contains(key))
                 {
                     Write(key, val, docMap);
                 }

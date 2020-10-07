@@ -175,7 +175,7 @@ namespace Sir.Search
 
             foreach (var document in job.Documents)
             {
-                var docId = writeSession.Write(document, job.FieldNamesToStore);
+                var docId = writeSession.Put(document, job.FieldNamesToStore);
 
                 //Parallel.ForEach(document, kv =>
                 foreach (var kv in document)
@@ -212,7 +212,7 @@ namespace Sir.Search
             HashSet<string> fieldNamesToStore,
             HashSet<string> fieldNamesToIndex)
         {
-            var docId = writeSession.Write(document, fieldNamesToStore);
+            var docId = writeSession.Put(document, fieldNamesToStore);
 
             foreach (var kv in document)
             {

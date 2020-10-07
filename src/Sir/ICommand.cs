@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Sir
 {
-    public interface IUtilPlugin
+    public interface ICommand
     {
         void Run(IDictionary<string, string> args, ILogger logger);
     }

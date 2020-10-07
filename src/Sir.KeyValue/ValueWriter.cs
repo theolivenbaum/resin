@@ -22,65 +22,80 @@ namespace Sir.KeyValue
 
         public (long offset, int len, byte dataType) Put(object value)
         {
-            Span<byte> buffer;
+            var offset = _stream.Position;
             byte dataType;
+            int length;
 
-            if (value is bool)
+            if (value is bool boolValue)
             {
-                buffer = BitConverter.GetBytes((bool)value);
+                _stream.Write(BitConverter.GetBytes(boolValue));
                 dataType = DataType.BOOL;
+                length = sizeof(bool);
             }
-            else if (value is char)
+            else if (value is char charValue)
             {
-                buffer = BitConverter.GetBytes((char)value);
+                _stream.Write(BitConverter.GetBytes(charValue));
                 dataType = DataType.CHAR;
+                length = sizeof(char);
             }
-            else if (value is float)
+            else if (value is float floatValue)
             {
-                buffer = BitConverter.GetBytes((float)value);
+                _stream.Write(BitConverter.GetBytes(floatValue));
                 dataType = DataType.FLOAT;
+                length = sizeof(float);
             }
-            else if (value is int)
+            else if (value is int intValue)
             {
-                buffer = BitConverter.GetBytes((int)value);
+                _stream.Write(BitConverter.GetBytes(intValue));
                 dataType = DataType.INT;
+                length = sizeof(int);
             }
-            else if (value is double)
+            else if (value is double doubleValue)
             {
-                buffer = BitConverter.GetBytes((double)value);
+                _stream.Write(BitConverter.GetBytes(doubleValue));
                 dataType = DataType.DOUBLE;
+                length = sizeof(double);
             }
-            else if (value is long)
+            else if (value is long longValue)
             {
-                buffer = BitConverter.GetBytes((long)value);
+                _stream.Write(BitConverter.GetBytes(longValue));
                 dataType = DataType.LONG;
+                length = sizeof(long);
             }
-            else if (value is ulong)
+            else if (value is ulong ulongValue)
             {
-                buffer = BitConverter.GetBytes((ulong)value);
+                _stream.Write(BitConverter.GetBytes(ulongValue));
                 dataType = DataType.ULONG;
+                length = sizeof(ulong);
             }
-            else if (value is DateTime)
+            else if (value is DateTime dateTimeValue)
             {
-                buffer = BitConverter.GetBytes(((DateTime)value).ToBinary());
+                _stream.Write(BitConverter.GetBytes(dateTimeValue.ToBinary()));
                 dataType = DataType.DATETIME;
+                length = sizeof(long);
             }
-            else if (value is string)
+            else if (value is string stringValue)
             {
-                buffer = System.Text.Encoding.Unicode.GetBytes((string)value);
+                var buf = System.Text.Encoding.Unicode.GetBytes(stringValue);
+                _stream.Write(buf);
                 dataType = DataType.STRING;
+                length = buf.Length;
+            }
+            else if (value is byte byteValue)
+            {
+                _stream.WriteByte(byteValue);
+                dataType = DataType.BYTE;
+                length = sizeof(byte);
             }
             else
             {
-                buffer = (byte[])value;
+                var buf = (byte[])value;
+                _stream.Write(buf);
                 dataType = DataType.STREAM;
+                length = buf.Length;
             }
 
-            var offset = _stream.Position;
-
-            _stream.Write(buffer);
-
-            return (offset, buffer.Length, dataType);
+            return (offset, length, dataType);
         }
 
         public void Dispose()

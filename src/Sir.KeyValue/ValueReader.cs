@@ -73,6 +73,10 @@ namespace Sir.KeyValue
             {
                 return new string(System.Text.Encoding.Unicode.GetChars(buf.ToArray()));
             }
+            else if (DataType.BYTE == typeId)
+            {
+                return buf[0];
+            }
             else
             {
                 return buf.ToArray();

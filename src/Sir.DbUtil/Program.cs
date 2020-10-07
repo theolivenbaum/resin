@@ -34,7 +34,6 @@ namespace Sir.DbUtil
             var model = new BocModel();
             var command = args[0].ToLower();
             var flags = ParseArgs(args);
-
             var plugin = ResolvePlugin(command);
 
             if (plugin != null)
@@ -70,7 +69,7 @@ namespace Sir.DbUtil
             }
             else if (command == "download_wat")
             {
-                // Ex: download_wat --commonCrawlId CC-MAIN-2019-51 workingDirectory d:\ --collection cc_wat --skip 0 --take 1
+                // E.g. download_wat --commonCrawlId CC-MAIN-2019-51 workingDirectory d:\ --collection cc_wat --skip 0 --take 1
 
                 CCHelper.DownloadAndIndexWat(
                     commonCrawlId:flags["commonCrawlId"],
@@ -105,10 +104,13 @@ namespace Sir.DbUtil
             logger.LogInformation($"executed {command}");
         }
 
-        private static IUtilPlugin ResolvePlugin(string command)
+        private static ICommand ResolvePlugin(string command)
         {
             var reader = new PluginReader(Directory.GetCurrentDirectory());
-            var plugins = reader.Read<IUtilPlugin>();
+            var plugins = reader.Read<ICommand>();
+
+            if (!plugins.ContainsKey(command))
+                return null;
 
             return plugins[command];
         }
