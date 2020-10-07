@@ -9,17 +9,17 @@ namespace Sir
         private IDictionary<string, string> _doc;
         private readonly string _fileName;
 
-        public KeyValueConfiguration(string fileName)
+        public KeyValueConfiguration(string readFromFileName = null)
         {
             _doc = new Dictionary<string, string>();
-            _fileName = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+            _fileName = Path.Combine(Directory.GetCurrentDirectory(), readFromFileName);
 
             OnFileChanged(null, null);
 
             FileSystemWatcher watcher = new FileSystemWatcher();
             watcher.Path = Directory.GetCurrentDirectory();
             watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
-            watcher.Filter = $"*{Path.GetExtension(fileName)}";
+            watcher.Filter = $"*{Path.GetExtension(readFromFileName)}";
             watcher.Changed += new FileSystemEventHandler(OnFileChanged);
             watcher.EnableRaisingEvents = true;
         }

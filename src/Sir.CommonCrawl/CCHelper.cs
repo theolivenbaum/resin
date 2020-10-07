@@ -162,7 +162,7 @@ namespace Sir.CommonCrawl
                 "title","description", "url"
             };
 
-            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), model, logger))
+            using (var sessionFactory = new SessionFactory(model, new KeyValueConfiguration("sir.ini"), logger))
             {
                 sessionFactory.Write(
                             new WriteJob(

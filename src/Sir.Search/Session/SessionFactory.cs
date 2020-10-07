@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sir.Search
 {
@@ -26,12 +25,12 @@ namespace Sir.Search
         public IConfigurationProvider Config { get; }
         public IStringModel Model { get; }
 
-        public SessionFactory(IConfigurationProvider config, IStringModel model, ILogger logger)
+        public SessionFactory(IStringModel model, IConfigurationProvider config = null, ILogger logger = null)
         {
             var time = Stopwatch.StartNew();
 
             Dir = config.Get("data_dir");
-            Config = config;
+            Config = config ?? new KeyValueConfiguration();
             Model = model;
 
             if (!Directory.Exists(Dir))
@@ -43,9 +42,14 @@ namespace Sir.Search
             _logger = logger;
             _keys = LoadKeys();
 
-            _logger.LogInformation($"loaded keys in {time.Elapsed}");
+           Log($"loaded keys in {time.Elapsed}");
+           Log($"sessionfactory is initiated.");
+        }
 
-            _logger.LogInformation($"sessionfactory is initiated.");
+        private void Log(string message)
+        {
+            if (_logger != null)
+                _logger.LogInformation(message);
         }
 
         public long GetDocCount(string collection)
@@ -72,7 +76,7 @@ namespace Sir.Search
 
             _keys.Remove(collectionId, out _);
 
-            _logger.LogInformation($"truncated collection {collectionId} ({count} files)");
+            Log($"truncated collection {collectionId} ({count} files)");
         }
 
         public void TruncateIndex(ulong collectionId)
@@ -105,7 +109,7 @@ namespace Sir.Search
                 count++;
             }
 
-            _logger.LogInformation($"truncated index {collectionId} ({count} files)");
+            Log($"truncated index {collectionId} ({count} files)");
 
             _pageInfo.Clear();
         }
@@ -141,11 +145,11 @@ namespace Sir.Search
 
                     Index(job, ref totalCount);
 
-                    _logger.LogInformation($"processed {totalCount} documents");
+                    Log($"processed {totalCount} documents");
                 }
             }
 
-            _logger.LogInformation($"optimized collection {collection}");
+            Log($"optimized collection {collection}");
         }
 
         public void SaveAs(
@@ -164,7 +168,7 @@ namespace Sir.Search
         public void Write(
             WriteJob job, WriteSession writeSession, IndexSession indexSession, int reportSize = 1000)
         {
-            _logger.LogInformation($"writing to collection {job.CollectionId}");
+            Log($"writing to collection {job.CollectionId}");
 
             var time = Stopwatch.StartNew();
 
@@ -194,8 +198,7 @@ namespace Sir.Search
                     var docsPerSecond = (int)(reportSize / t);
                     var debug = string.Join('\n', info.Info.Select(x => x.ToString()));
 
-                    _logger.LogInformation(
-                        $"\n{time.Elapsed}\nbatch {++batchNo}\n{debug}\n{docsPerSecond} docs/s");
+                    Log($"\n{time.Elapsed}\nbatch {++batchNo}\n{debug}\n{docsPerSecond} docs/s");
 
                     count = 0;
                     batchTime.Restart();
@@ -205,10 +208,31 @@ namespace Sir.Search
             _logger.LogInformation($"processed write job (collection {job.CollectionId}), time in total: {time.Elapsed}");
         }
 
+        public void Write(
+            IDictionary<string, object> document, 
+            WriteSession writeSession, 
+            IndexSession indexSession,
+            HashSet<string> fieldNamesToStore,
+            HashSet<string> fieldNamesToIndex)
+        {
+            var docId = writeSession.Write(document, fieldNamesToStore);
+
+            //Parallel.ForEach(document, kv =>
+            foreach (var kv in document)
+            {
+                if (fieldNamesToIndex.Contains(kv.Key) && kv.Value != null)
+                {
+                    var keyId = writeSession.EnsureKeyExists(kv.Key);
+
+                    indexSession.Put(docId, keyId, kv.Value.ToString());
+                }
+            }//);
+        }
+
         public void CreateWordEmbeddings(
             WriteJob job, WriteSession writeSession, WordEmbeddingsSession indexSession, int reportSize = 1000)
         {
-            _logger.LogInformation($"writing embeddings to collection {job.CollectionId}");
+            Log($"writing embeddings to collection {job.CollectionId}");
 
             var time = Stopwatch.StartNew();
 
@@ -237,19 +261,18 @@ namespace Sir.Search
                     var docsPerSecond = (int)(reportSize / t);
                     var debug = string.Join('\n', info.Info.Select(x => x.ToString()));
 
-                    _logger.LogInformation(
-                        $"\n{time.Elapsed}\nbatch {Interlocked.Increment(ref batchNo)}\n{debug}\n{docsPerSecond} docs/s");
+                    Log($"\n{time.Elapsed}\nbatch {Interlocked.Increment(ref batchNo)}\n{debug}\n{docsPerSecond} docs/s");
 
                     batchTime.Restart();
                 }
             }//);
 
-            _logger.LogInformation($"processed embeddings job (collection {job.CollectionId}), time in total: {time.Elapsed}");
+            Log($"processed embeddings job (collection {job.CollectionId}), time in total: {time.Elapsed}");
         }
 
         public void Index(WriteJob job, ref int totalCount, int reportSize = 1000)
         {
-            _logger.LogInformation($"indexing collection {job.CollectionId}");
+            Log($"indexing collection {job.CollectionId}");
 
             var time = Stopwatch.StartNew();
             var batchTime = Stopwatch.StartNew();
@@ -279,7 +302,7 @@ namespace Sir.Search
                         var docsPerSecond = (int)(reportSize / t * 1000);
                         var debug = string.Join('\n', info.Info.Select(x => x.ToString()));
 
-                        _logger.LogInformation($"\n{time.Elapsed}\nbatch {++batchNo}\n{debug}\n{docsPerSecond} docs/s \ntotal {totalCount} docs");
+                        Log($"\n{time.Elapsed}\nbatch {++batchNo}\n{debug}\n{docsPerSecond} docs/s \ntotal {totalCount} docs");
 
                         batchTime.Restart();
                         totalCount += batchCount;
@@ -288,7 +311,7 @@ namespace Sir.Search
                 }
             }
 
-            _logger.LogInformation($"processed write job (collection {job.CollectionId}), time in total: {time.Elapsed}");
+            Log($"processed write job (collection {job.CollectionId}), time in total: {time.Elapsed}");
         }
 
         public void Write(WriteJob job, int reportSize = 1000)
@@ -405,7 +428,7 @@ namespace Sir.Search
                 }
             }
 
-            _logger.LogInformation($"loaded keyHash -> keyId mappings into memory for {allkeys.Count} collections in {timer.Elapsed}");
+            Log($"loaded keyHash -> keyId mappings into memory for {allkeys.Count} collections in {timer.Elapsed}");
 
             return allkeys;
         }

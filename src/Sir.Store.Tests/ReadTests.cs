@@ -21,8 +21,8 @@ namespace Sir.Search.Tests
             });
 
             _sessionFactory = new SessionFactory(
-                new KeyValueConfiguration("sir.ini"), 
                 new BocModel(), 
+                new KeyValueConfiguration("sir.ini"),
                 loggerFactory.CreateLogger<SessionFactory>());
         }
 

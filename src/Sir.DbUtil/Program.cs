@@ -99,7 +99,7 @@ namespace Sir.DbUtil
             var take = int.Parse(args[3]);
             var batchSize = int.Parse(args[4]);
 
-            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), model, logger))
+            using (var sessionFactory = new SessionFactory(model, new KeyValueConfiguration("sir.ini"), logger))
             {
                 sessionFactory.Optimize(
                     collection, 
@@ -125,7 +125,7 @@ namespace Sir.DbUtil
                 storedFieldNames,
                 indexedFieldNames);
 
-            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), model, logger))
+            using (var sessionFactory = new SessionFactory(model, new KeyValueConfiguration("sir.ini"), logger))
             {
                 sessionFactory.Truncate(collectionId);
 
@@ -269,7 +269,7 @@ namespace Sir.DbUtil
             var collection = args[1];
             var collectionId = collection.ToHash();
 
-            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), model, log))
+            using (var sessionFactory = new SessionFactory(model, new KeyValueConfiguration("sir.ini"), log))
             {
                 sessionFactory.Truncate(collectionId);
             }
@@ -280,7 +280,7 @@ namespace Sir.DbUtil
             var collection = args[1];
             var collectionId = collection.ToHash();
 
-            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), model, log))
+            using (var sessionFactory = new SessionFactory(model, new KeyValueConfiguration("sir.ini"), log))
             {
                 sessionFactory.TruncateIndex(collectionId);
             }

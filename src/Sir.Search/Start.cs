@@ -14,8 +14,8 @@ namespace Sir.Search
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
             var model = new BocModel();
             var sessionFactory = new SessionFactory(
-                config, 
-                model, 
+                model,
+                config,
                 loggerFactory.CreateLogger<SessionFactory>());
 
             var qp = new QueryParser(sessionFactory, model, loggerFactory.CreateLogger<QueryParser>());
