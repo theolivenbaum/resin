@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Sir.Core;
 using Sir.Search;
 using System;
 using System.Collections.Generic;
@@ -150,28 +151,29 @@ namespace Sir.CommonCrawl
             ILogger logger,
             string refFileName)
         {
-            var documents = ReadWatFile(fileName, refFileName);
-            var collectionId = collection.ToHash();
             var time = Stopwatch.StartNew();
-            var storedFieldNames = new HashSet<string>
+            var collectionId = collection.ToHash();
+            var storeFieldNames = new HashSet<string>
             {
                 "title","description", "url", "filename"
             };
-            var indexedFieldNames = new HashSet<string>
+            var indexFieldNames = new HashSet<string>
             {
                 "title","description", "url"
             };
 
             using (var sessionFactory = new SessionFactory(model, new KeyValueConfiguration("sir.ini"), logger))
+            using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
+            using (var indexSession = sessionFactory.CreateIndexSession(collectionId))
+            using (var queue = new ProducerConsumerQueue<IDictionary<string, object>>(1, (document =>
             {
-                sessionFactory.Write(
-                            new WriteJob(
-                                collectionId,
-                                documents,
-                                model,
-                                storedFieldNames,
-                                indexedFieldNames),
-                            reportSize: 1000);
+                sessionFactory.Write(document, writeSession, indexSession, storeFieldNames, indexFieldNames);
+            })))
+            {
+                foreach (var document in ReadWatFile(fileName, refFileName))
+                {
+                    queue.Enqueue(document);
+                }
             }
 
             logger.LogInformation($"indexed {fileName} in {time.Elapsed}");

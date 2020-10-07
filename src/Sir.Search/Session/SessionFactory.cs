@@ -217,7 +217,6 @@ namespace Sir.Search
         {
             var docId = writeSession.Write(document, fieldNamesToStore);
 
-            //Parallel.ForEach(document, kv =>
             foreach (var kv in document)
             {
                 if (fieldNamesToIndex.Contains(kv.Key) && kv.Value != null)
@@ -226,7 +225,7 @@ namespace Sir.Search
 
                     indexSession.Put(docId, keyId, kv.Value.ToString());
                 }
-            }//);
+            }
         }
 
         public void CreateWordEmbeddings(
