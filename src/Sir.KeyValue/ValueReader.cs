@@ -4,7 +4,7 @@ using System.IO;
 namespace Sir.KeyValue
 {
     /// <summary>
-    /// Read a value by supplying an offset, length and data type.
+    /// Read a value in a stream by supplying an offset, length and data type.
     /// </summary>
     public class ValueReader : IDisposable
     {

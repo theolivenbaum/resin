@@ -4,7 +4,7 @@ using System.IO;
 namespace Sir.KeyValue
 {
     /// <summary>
-    /// Store a value on the file system.
+    /// Store values in a stream.
     /// </summary>
     public class ValueWriter : IDisposable
     {

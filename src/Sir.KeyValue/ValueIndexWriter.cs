@@ -4,7 +4,7 @@ using System.IO;
 namespace Sir.KeyValue
 {
     /// <summary>
-    /// Store the location of a value.
+    /// Store the address of a value.
     /// </summary>
     public class ValueIndexWriter : IDisposable
     {
