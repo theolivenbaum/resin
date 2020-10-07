@@ -83,7 +83,7 @@ namespace Sir.Search
                 {
                     var size = columnWriter.CreatePage(column.Value, _vectorStream, _postingsStream, pageIndexWriter);
 
-                    _logger.LogInformation($"serialized column {column.Key} weight {column.Value.Weight} {size}");
+                    _logger.LogInformation($"serialized column {column.Key}, weight {column.Value.Weight} {size}");
                 }
             }
 
