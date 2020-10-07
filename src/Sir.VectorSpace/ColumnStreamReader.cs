@@ -16,7 +16,7 @@ namespace Sir.VectorSpace
         private readonly ulong _collectionId;
         private readonly Stream _vectorFile;
         private readonly Stream _ixFile;
-        private readonly IList<(long offset, long length)> _pages;
+        private readonly IList<(long offset, long length)> _segments;
 
         public ColumnStreamReader(
             ulong collectionId,
@@ -33,7 +33,7 @@ namespace Sir.VectorSpace
 
             _vectorFile = _sessionFactory.CreateReadStream(vectorFileName);
             _ixFile = _sessionFactory.CreateReadStream(ixFileName);
-            _pages = GetAllPages(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{keyId}.ixtp"));
+            _segments = GetAllSegments(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{keyId}.ixtp"));
         }
 
         public Hit ClosestMatch(IVector vector, IStringModel model)
@@ -41,15 +41,17 @@ namespace Sir.VectorSpace
             var time = Stopwatch.StartNew();
             var hits = new List<Hit>();
 
-            foreach (var page in _pages)
+            foreach (var segment in _segments)
             {
-                var hit = ClosestMatchInPage(vector, model, page.offset);
+                var hit = ClosestMatchInSegment(vector, model, segment.offset, segment.length);
 
-                if (hit != null)
+                if (hit.Score > 0)
+                {
                     hits.Add(hit);
+                }
             }
 
-            _logger.LogInformation($"scanning all pages took {time.Elapsed}");
+            _logger.LogInformation($"scanning all segments took {time.Elapsed}");
 
             time.Restart();
 
@@ -67,47 +69,26 @@ namespace Sir.VectorSpace
                 }
             }
 
-            _logger.LogInformation($"finding best hit among all page hits took {time.Elapsed}");
+            _logger.LogInformation($"finding the best hit from hits found in all segments took {time.Elapsed}");
 
             return best;
         }
 
-        private Hit ClosestMatchInPage(
-        IVector vector, IStringModel model, long pageOffset)
+        private Hit ClosestMatchInSegment(IVector queryVector, IModel model, long segmentOffset, long segmentSize)
         {
-            _ixFile.Seek(pageOffset, SeekOrigin.Begin);
+            _ixFile.Seek(segmentOffset, SeekOrigin.Begin);
 
-            var hit = ClosestMatchInSegment(
-                    vector,
-                    _ixFile,
-                    _vectorFile,
-                    model);
-
-            if (hit.Score > 0)
-            {
-                return hit;
-            }
-
-            return null;
-        }
-
-        private Hit ClosestMatchInSegment(
-            IVector queryVector,
-            Stream indexFile,
-            Stream vectorFile,
-            IModel model)
-        {
             Span<byte> block = stackalloc byte[VectorNode.BlockSize];
             var best = new Hit();
-            var read = indexFile.Read(block);
+            var read = _ixFile.Read(block);
 
-            while (read > 0)
+            while (read < segmentSize)
             {
                 var vecOffset = BitConverter.ToInt64(block.Slice(0));
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long)));
                 var componentCount = BitConverter.ToInt64(block.Slice(sizeof(long) * 2));
-                var cursorTerminator = BitConverter.ToInt64(block.Slice(sizeof(long) * 4));
-                var angle = model.CosAngle(queryVector, vecOffset, (int)componentCount, vectorFile);
+                var terminator = BitConverter.ToInt64(block.Slice(sizeof(long) * 4));
+                var angle = model.CosAngle(queryVector, vecOffset, (int)componentCount, _vectorFile);
 
                 if (angle >= model.IdenticalAngle)
                 {
@@ -130,14 +111,14 @@ namespace Sir.VectorSpace
                     }
 
                     // We need to determine if we can traverse further left.
-                    bool canGoLeft = cursorTerminator == 0 || cursorTerminator == 1;
+                    bool canGoLeft = terminator == 0 || terminator == 1;
 
                     if (canGoLeft)
                     {
                         // There exists either a left and a right child or just a left child.
                         // Either way, we want to go left and the next node in bitmap is the left child.
 
-                        read = indexFile.Read(block);
+                        read += _ixFile.Read(block);
                     }
                     else
                     {
@@ -160,22 +141,22 @@ namespace Sir.VectorSpace
 
                     // We need to determine if we can traverse further to the right.
 
-                    if (cursorTerminator == 0)
+                    if (terminator == 0)
                     {
                         // There exists a left and a right child.
                         // Next node in bitmap is the left child. 
                         // To find cursor's right child we must skip over the left tree.
 
-                        SkipTree(indexFile);
+                        SkipTree();
 
-                        read = indexFile.Read(block);
+                        read += _ixFile.Read(block);
                     }
-                    else if (cursorTerminator == 2)
+                    else if (terminator == 2)
                     {
                         // Next node in bitmap is the right child,
                         // which is good because we want to go right.
 
-                        read = indexFile.Read(block);
+                        read += _ixFile.Read(block);
                     }
                     else
                     {
@@ -189,24 +170,24 @@ namespace Sir.VectorSpace
             return best;
         }
 
-        private void SkipTree(Stream indexStream)
+        private void SkipTree()
         {
             Span<byte> buf = stackalloc byte[VectorNode.BlockSize];
-            var read = indexStream.Read(buf);
-            var weight = BitConverter.ToInt64(buf.Slice(sizeof(long) * 3));
-            var distance = weight * VectorNode.BlockSize;
+            var read = _ixFile.Read(buf);
+            var sizeOfTree = BitConverter.ToInt64(buf.Slice(sizeof(long) * 3));
+            var distance = sizeOfTree * VectorNode.BlockSize;
 
             if (distance > 0)
             {
-                indexStream.Seek(distance, SeekOrigin.Current);
+                _ixFile.Seek(distance, SeekOrigin.Current);
             }
         }
 
-        private IList<(long offset, long length)> GetAllPages(string pageFileName)
+        private IList<(long offset, long length)> GetAllSegments(string pageFileName)
         {
-            using (var ixpStream = _sessionFactory.CreateReadStream(pageFileName))
+            using (var stream = _sessionFactory.CreateReadStream(pageFileName))
             {
-                return new PageIndexReader(ixpStream).GetAll();
+                return new PageIndexReader(stream).GetAll();
             }
         }
 
