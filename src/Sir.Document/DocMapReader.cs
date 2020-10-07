@@ -5,7 +5,7 @@ using System.IO;
 namespace Sir.Document
 {
     /// <summary>
-    /// Fetch document maps (key_id/val_id) from the document map stream.
+    /// Read document maps (key_id/val_id) from the document map stream.
     /// A document map is needed to re-contruct a complete document.
     /// </summary>
     public class DocMapReader : IDisposable

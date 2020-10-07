@@ -4,7 +4,7 @@ using System.IO;
 namespace Sir.Document
 {
     /// <summary>
-    /// Write offset and length of document map to the document index stream.
+    /// Write offset and length of document map to a stream.
     /// </summary>
     public class DocIndexWriter :IDisposable
     {

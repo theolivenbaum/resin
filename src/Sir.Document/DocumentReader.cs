@@ -5,6 +5,9 @@ using System.IO;
 
 namespace Sir.Document
 {
+    /// <summary>
+    /// Read documents from storage.
+    /// </summary>
     public class DocumentReader : IDisposable
     {
         private readonly ValueReader _vals;

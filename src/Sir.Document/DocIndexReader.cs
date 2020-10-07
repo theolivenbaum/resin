@@ -4,7 +4,7 @@ using System.IO;
 namespace Sir.Document
 {
     /// <summary>
-    /// Lookup offset and length of a document map that consists of key IDs and value IDs.
+    /// Lookup the offset and length of a document map consisting of key IDs and value IDs.
     /// </summary>
     public class DocIndexReader : IDisposable
     {

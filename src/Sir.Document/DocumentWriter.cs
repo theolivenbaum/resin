@@ -5,6 +5,9 @@ using System.IO;
 
 namespace Sir.Document
 {
+    /// <summary>
+    /// Write documents to storage.
+    /// </summary>
     public class DocumentWriter : IDisposable
     {
         private readonly ValueWriter _vals;

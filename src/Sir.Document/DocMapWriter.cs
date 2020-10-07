@@ -5,7 +5,7 @@ using System.IO;
 namespace Sir.Document
 {
     /// <summary>
-    /// Write document maps (key_id/val_id) to the document map stream.
+    /// Write document maps (key_id/val_id) to a stream.
     /// </summary>
     public class DocMapWriter : IDisposable
     {
