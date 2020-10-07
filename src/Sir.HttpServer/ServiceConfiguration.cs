@@ -10,7 +10,7 @@ namespace Sir.HttpServer
     public static class ServiceConfiguration
     {
         public static void RegisterComponents(
-            IServiceCollection services, PluginsCollection plugins, IServiceProvider container)
+            IServiceCollection services, PluginCollection plugins, IServiceProvider container)
         {
             services.AddSingleton(typeof(JobQueue));
             services.AddSingleton(typeof(SaveAsJobQueue));
@@ -55,9 +55,9 @@ namespace Sir.HttpServer
                 }
             }
 
-            var plugins = new PluginsCollection();
+            var plugins = new PluginCollection();
 
-            services.Add(new ServiceDescriptor(typeof(PluginsCollection), plugins));
+            services.Add(new ServiceDescriptor(typeof(PluginCollection), plugins));
 
             var serviceProvider = services.BuildServiceProvider();
 

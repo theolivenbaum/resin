@@ -431,7 +431,7 @@ namespace Sir.VectorSpace
             long weight,
             long terminator,
             Stream vectorStream,
-            IVectorSpaceConfig model)
+            IDistanceCalculator model)
         {
             var vector = VectorOperations.DeserializeVector(vecOffset, (int)componentCount, model.VectorWidth, vectorStream);
             var node = new VectorNode(postingsOffset, vecOffset, terminator, weight, vector);
@@ -443,8 +443,6 @@ namespace Sir.VectorSpace
             Stream indexStream,
             Stream vectorStream,
             VectorNode root,
-            float identicalAngle, 
-            float foldAngle,
             IModel model)
         {
             var buf = new byte[VectorNode.BlockSize];

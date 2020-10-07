@@ -64,7 +64,7 @@ namespace Sir.Search
             _logger.LogInformation(JsonConvert.SerializeObject(debug));
 #endif
 
-            using (var readSession = _sessionFactory.CreateReadSession())
+            using (var readSession = _sessionFactory.CreateReadSession(model))
             {
                 var result = readSession.Read(query, skip, take);
 

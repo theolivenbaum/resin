@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Sir.Core;
 using Sir.Document;
 using Sir.VectorSpace;
 using System;
@@ -23,15 +22,13 @@ namespace Sir.Search
 
         public string Dir { get; }
         public IConfigurationProvider Config { get; }
-        public IStringModel Model { get; }
 
-        public SessionFactory(IStringModel model, IConfigurationProvider config = null, ILogger logger = null)
+        public SessionFactory(IConfigurationProvider config = null, ILogger logger = null)
         {
             var time = Stopwatch.StartNew();
 
             Dir = config.Get("data_dir");
             Config = config ?? new KeyValueConfiguration();
-            Model = model;
 
             if (!Directory.Exists(Dir))
             {
@@ -118,6 +115,7 @@ namespace Sir.Search
             string collection,
             HashSet<string> storeFields, 
             HashSet<string> indexFields,
+            IStringModel model,
             int skip = 0,
             int take = 0,
             int batchSize = 1000000)
@@ -138,7 +136,7 @@ namespace Sir.Search
                     var job = new WriteJob(
                         collectionId,
                         batch,
-                        Model,
+                        model,
                         storeFields,
                         indexFields
                         );
@@ -165,8 +163,7 @@ namespace Sir.Search
             Write(job, reportSize);
         }
 
-        public void Write(
-            WriteJob job, WriteSession writeSession, IndexSession indexSession, int reportSize = 1000)
+        public void Write(WriteJob job, WriteSession writeSession, IndexSession<string> indexSession, int reportSize = 1000)
         {
             Log($"writing to collection {job.CollectionId}");
 
@@ -211,7 +208,7 @@ namespace Sir.Search
         public void Write(
             IDictionary<string, object> document, 
             WriteSession writeSession, 
-            IndexSession indexSession,
+            IndexSession<string> indexSession,
             HashSet<string> fieldNamesToStore,
             HashSet<string> fieldNamesToIndex)
         {
@@ -228,47 +225,6 @@ namespace Sir.Search
             }
         }
 
-        public void CreateWordEmbeddings(
-            WriteJob job, WriteSession writeSession, WordEmbeddingsSession indexSession, int reportSize = 1000)
-        {
-            Log($"writing embeddings to collection {job.CollectionId}");
-
-            var time = Stopwatch.StartNew();
-
-            var batchNo = 0;
-            var count = 0;
-            var batchTime = Stopwatch.StartNew();
-
-            //Parallel.ForEach(job.Documents, document =>
-            foreach (var document in job.Documents)
-            {
-                //Parallel.ForEach(document, kv =>
-                foreach (var kv in document)
-                {
-                    if (job.FieldNamesToIndex.Contains(kv.Key) && kv.Value != null)
-                    {
-                        var keyId = writeSession.EnsureKeyExists(kv.Key);
-
-                        indexSession.Put(keyId, kv.Value.ToString());
-                    }
-                }//);
-
-                if (Interlocked.Increment(ref count)%reportSize == 0)
-                {
-                    var info = indexSession.GetIndexInfo();
-                    var t = batchTime.Elapsed.TotalSeconds;
-                    var docsPerSecond = (int)(reportSize / t);
-                    var debug = string.Join('\n', info.Info.Select(x => x.ToString()));
-
-                    Log($"\n{time.Elapsed}\nbatch {Interlocked.Increment(ref batchNo)}\n{debug}\n{docsPerSecond} docs/s");
-
-                    batchTime.Restart();
-                }
-            }//);
-
-            Log($"processed embeddings job (collection {job.CollectionId}), time in total: {time.Elapsed}");
-        }
-
         public void Index(WriteJob job, ref int totalCount, int reportSize = 1000)
         {
             Log($"indexing collection {job.CollectionId}");
@@ -278,7 +234,7 @@ namespace Sir.Search
             var batchNo = 0;
             var batchCount = 0;
 
-            using (var indexSession = CreateIndexSession(job.CollectionId))
+            using (var indexSession = CreateIndexSession(job.CollectionId, job.Model))
             {
                 foreach (var document in job.Documents)
                 {
@@ -316,22 +272,13 @@ namespace Sir.Search
         public void Write(WriteJob job, int reportSize = 1000)
         {
             using (var writeSession = CreateWriteSession(job.CollectionId))
-            using (var indexSession = CreateIndexSession(job.CollectionId))
+            using (var indexSession = CreateIndexSession(job.CollectionId, job.Model))
             {
                 Write(job, writeSession, indexSession, reportSize);
             }
         }
 
-        public void CreateWordEmbeddings(WriteJob job, int reportSize = 1000)
-        {
-            using (var writeSession = CreateWriteSession(job.CollectionId))
-            using (var indexSession = CreateWordEmbeddingsSession(job.CollectionId))
-            {
-                CreateWordEmbeddings(job, writeSession, indexSession, reportSize);
-            }
-        }
-
-        public void Write(WriteJob job, IndexSession indexSession, int reportSize)
+        public void Write(WriteJob job, IndexSession<string> indexSession, int reportSize)
         {
             using (var writeSession = CreateWriteSession(job.CollectionId))
             {
@@ -352,7 +299,7 @@ namespace Sir.Search
                 var collectionId = group.Key.ToHash();
 
                 using (var writeSession = CreateWriteSession(collectionId))
-                using (var indexSession = CreateIndexSession(collectionId))
+                using (var indexSession = CreateIndexSession(collectionId, model))
                 {
                     Write(
                         new WriteJob(
@@ -487,23 +434,22 @@ namespace Sir.Search
             );
         }
 
-        public IndexSession CreateIndexSession(ulong collectionId)
+        public IndexSession<string> CreateIndexSession(ulong collectionId, IStringModel model)
         {
-            return new IndexSession(collectionId, this, Model, Config, _logger);
+            return new IndexSession<string>(collectionId, this, model, Config, _logger);
         }
 
-        public WordEmbeddingsSession CreateWordEmbeddingsSession(ulong collectionId)
+        public IndexSession<byte[][]> CreateIndexSession(ulong collectionId, IStreamModel model)
         {
-            return new WordEmbeddingsSession(collectionId, this, Model, Config, _logger);
+            return new IndexSession<byte[][]>(collectionId, this, model, Config, _logger);
         }
 
-
-        public IReadSession CreateReadSession()
+        public IReadSession CreateReadSession(IStringModel model)
         {
             return new ReadSession(
                 this,
                 Config,
-                Model,
+                model,
                 new PostingsReader(this),
                 _logger);
         }

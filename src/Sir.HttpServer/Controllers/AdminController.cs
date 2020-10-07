@@ -10,15 +10,18 @@ namespace Sir.HttpServer.Controllers
     {
         private readonly IConfigurationProvider _config;
         private readonly ILogger<AdminController> _logger;
+        private readonly IStringModel _model;
 
         public AdminController(
             IConfigurationProvider config, 
             SessionFactory sessionFactory,
-            ILogger<AdminController> logger) 
+            ILogger<AdminController> logger,
+            IStringModel model) 
             : base(config, sessionFactory)
         {
             _config = config;
             _logger = logger;
+            _model = model;
         }
 
         [Route("/admin")]
@@ -46,7 +49,7 @@ namespace Sir.HttpServer.Controllers
                 collectionName, 
                 skip, 
                 take,
-                SessionFactory.Model,
+                _model,
                 _logger);
 
             return View();

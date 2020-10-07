@@ -10,7 +10,7 @@ namespace Sir.Search
     /// <summary>
     /// Indexing session targeting a single collection.
     /// </summary>
-    public class IndexSession : IDisposable
+    public class IndexSession<T> : IDisposable
     {
         private readonly ulong _collectionId;
         private readonly SessionFactory _sessionFactory;
@@ -18,14 +18,22 @@ namespace Sir.Search
         private readonly Stream _postingsStream;
         private readonly Stream _vectorStream;
         private readonly ILogger _logger;
-        private readonly IStringModel _model;
+        private readonly IModel<T> _model;
         private readonly ConcurrentDictionary<long, VectorNode> _index;
         private bool _flushed;
 
+        /// <summary>
+        /// Creates an instance of an indexing session targeting a single collection.
+        /// </summary>
+        /// <param name="collectionId">A hash of your collection name, e.g. "YourCollectionName".ToHash();</param>
+        /// <param name="sessionFactory">A session factory</param>
+        /// <param name="model">A model</param>
+        /// <param name="config">A configuration provider</param>
+        /// <param name="logger">A logger</param>
         public IndexSession(
             ulong collectionId,
             SessionFactory sessionFactory,
-            IStringModel model,
+            IModel<T> model,
             IConfigurationProvider config,
             ILogger logger)
         {
@@ -39,9 +47,9 @@ namespace Sir.Search
             _logger = logger;
         }
 
-        public void Put(long docId, long keyId, string value)
+        public void Put(long docId, long keyId, T value)
         {
-            var vectors = _model.Tokenize(value.ToCharArray());
+            var vectors = _model.Tokenize(value);
             var column = _index.GetOrAdd(keyId, new VectorNode());
 
             foreach (var vector in vectors)

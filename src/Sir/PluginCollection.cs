@@ -4,11 +4,11 @@ using System.Linq;
 
 namespace Sir
 {
-    public class PluginsCollection : IDisposable
+    public class PluginCollection : IDisposable
     {
         private readonly IDictionary<string, IDictionary<Type, IList<IPlugin>>> _services;
 
-        public PluginsCollection()
+        public PluginCollection()
         {
             _services = new Dictionary<string, IDictionary<Type, IList<IPlugin>>>();
         }

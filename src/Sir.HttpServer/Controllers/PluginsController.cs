@@ -8,9 +8,9 @@ namespace Sir.HttpServer.Controllers
     [Route("plugins")]
     public class PluginsController : Controller
     {
-        private PluginsCollection _plugins;
+        private PluginCollection _plugins;
 
-        public PluginsController(PluginsCollection writeActions)
+        public PluginsController(PluginCollection writeActions)
         {
             _plugins = writeActions;
         }

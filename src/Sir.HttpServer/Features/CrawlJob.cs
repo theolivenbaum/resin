@@ -79,7 +79,7 @@ namespace Sir.HttpServer.Features
                 and: And, 
                 or: Or);
 
-            using (var readSession = _sessionFactory.CreateReadSession())
+            using (var readSession = _sessionFactory.CreateReadSession(_model))
             {
                 var originalResult = readSession.Read(originalQuery, _skip, _take)
                     .Docs

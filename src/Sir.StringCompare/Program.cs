@@ -55,8 +55,8 @@ namespace Sir.StringCompare
 
             var bvector = new IndexedVector(baseVectorComponents, model.VectorWidth);
 
-            var doc1 = new VectorNode(model.Tokenize(first.ToCharArray()).First());
-            var doc2 = new VectorNode(model.Tokenize(second.ToCharArray()).First());
+            var doc1 = new VectorNode(model.Tokenize(first).First());
+            var doc2 = new VectorNode(model.Tokenize(second).First());
             var angles1 = new List<float>();
             var angles2 = new List<float>();
 
@@ -81,8 +81,8 @@ namespace Sir.StringCompare
 
         private static void CompareBaseless(string first, string second, IStringModel model)
         {
-            var doc1 = new VectorNode(model.Tokenize(first.ToCharArray()).First());
-            var doc2 = new VectorNode(model.Tokenize(second.ToCharArray()).First());
+            var doc1 = new VectorNode(model.Tokenize(first).First());
+            var doc2 = new VectorNode(model.Tokenize(second).First());
 
             var angle = model.CosAngle(doc1.Vector, doc2.Vector);
 
@@ -104,7 +104,7 @@ namespace Sir.StringCompare
                     break;
                 }
 
-                var node = new VectorNode(model.Tokenize(command.ToCharArray()).First());
+                var node = new VectorNode(model.Tokenize(command).First());
 
                 GraphBuilder.MergeOrAdd(root, node, model, model.FoldAngle, model.IdenticalAngle);
             }
@@ -122,7 +122,7 @@ namespace Sir.StringCompare
                     break;
                 }
 
-                var hit = PathFinder.ClosestMatch(root, model.Tokenize(command.ToCharArray()).First(), model);
+                var hit = PathFinder.ClosestMatch(root, model.Tokenize(command).First(), model);
 
                 Console.WriteLine($"{hit.Score} {hit.Node}");
             }

@@ -9,11 +9,11 @@ namespace Sir.HttpServer.Controllers
 {
     public class SearchController : UIController
     {
-        private readonly PluginsCollection _plugins;
+        private readonly PluginCollection _plugins;
         private readonly IStringModel _model;
 
         public SearchController(
-            PluginsCollection plugins, 
+            PluginCollection plugins, 
             IConfigurationProvider config, 
             IStringModel model,
             SessionFactory sessionFactory) : base(config, sessionFactory)

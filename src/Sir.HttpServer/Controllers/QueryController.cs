@@ -9,11 +9,11 @@ namespace Sir.HttpServer.Controllers
     [Route("query")]
     public class QueryController : Controller
     {
-        private readonly PluginsCollection _plugins;
+        private readonly PluginCollection _plugins;
         private readonly IStringModel _model;
         private readonly ILogger<QueryController> _logger;
 
-        public QueryController(PluginsCollection plugins, IStringModel tokenizer, ILogger<QueryController> logger)
+        public QueryController(PluginCollection plugins, IStringModel tokenizer, ILogger<QueryController> logger)
         {
             _plugins = plugins;
             _model = tokenizer;

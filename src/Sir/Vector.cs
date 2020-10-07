@@ -9,13 +9,13 @@ namespace Sir
 {
     public class IndexedVector : IVector
     {
-        public Memory<char>? Data { get; }
+        public object Data { get; }
         public Vector<float> Value { get; private set; }
         public int ComponentCount { get; }
 
-        public IndexedVector(IList<float> values, int vectorWidth, Memory<char>? data = null)
+        public IndexedVector(IEnumerable<float> values, int vectorWidth, object data = null)
         {
-            var tuples = new Tuple<int, float>[Math.Min(values.Count, vectorWidth)];
+            var tuples = new Tuple<int, float>[vectorWidth];
             var i = 0;
 
             foreach (var x in values)
@@ -36,7 +36,7 @@ namespace Sir
             Data = data;
         }
 
-        public IndexedVector(SortedList<int, float> dictionary, int vectorWidth, Memory<char>? data = null)
+        public IndexedVector(SortedList<int, float> dictionary, int vectorWidth, object data = null)
         {
             var tuples = new Tuple<int, float>[Math.Min(dictionary.Count, vectorWidth)];
             var i = 0;
@@ -54,7 +54,7 @@ namespace Sir
             Data = data;
         }
 
-        public IndexedVector(int[] index, float[] values, int vectorWidth, Memory<char>? data = null)
+        public IndexedVector(int[] index, float[] values, int vectorWidth, object data = null)
         {
             var tuples = new Tuple<int, float>[Math.Min(index.Length, vectorWidth)];
 
@@ -107,7 +107,7 @@ namespace Sir
 
         public override string ToString()
         {
-            return Data.HasValue ? new string(Data.Value.ToArray()) : Value.ToString();
+            return Value?.ToString();
         }
     }
 
@@ -116,6 +116,6 @@ namespace Sir
         Vector<float> Value { get; }
         void Serialize(Stream stream);
         int ComponentCount { get; }
-        Memory<char>? Data { get; }
+        object Data { get; }
     }
 }

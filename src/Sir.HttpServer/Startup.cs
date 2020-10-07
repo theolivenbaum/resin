@@ -70,7 +70,7 @@ namespace Sir.HttpServer
 
         private void OnShutdown()
         {
-            var plugins = ServiceProvider.GetService<PluginsCollection>();
+            var plugins = ServiceProvider.GetService<PluginCollection>();
             plugins.Dispose();
 
             foreach (var stopper in ServiceProvider.GetServices<IPluginStop>())

@@ -35,7 +35,20 @@ namespace Sir.DbUtil
             var command = args[0].ToLower();
             var flags = ParseArgs(args);
 
-            if (command == "submit")
+            var plugin = ResolvePlugin(command);
+
+            if (plugin != null)
+            {
+                try
+                {
+                    plugin.Run(flags, logger);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, ex.Message);
+                }
+            }
+            else if (command == "submit")
             {
                 var fullTime = Stopwatch.StartNew();
 
@@ -74,11 +87,11 @@ namespace Sir.DbUtil
             }
             else if (command == "truncate")
             {
-                Truncate(flags["collection"], model, logger);
+                Truncate(flags["collection"], logger);
             }
             else if (command == "truncate-index")
             {
-                TruncateIndex(flags["collection"], model, logger);
+                TruncateIndex(flags["collection"], logger);
             }
             else if (command == "optimize")
             {
@@ -90,6 +103,14 @@ namespace Sir.DbUtil
             }
 
             logger.LogInformation($"executed {command}");
+        }
+
+        private static IUtilPlugin ResolvePlugin(string command)
+        {
+            var reader = new PluginReader(Directory.GetCurrentDirectory());
+            var plugins = reader.Read<IUtilPlugin>();
+
+            return plugins[command];
         }
 
         private static IDictionary<string, string> ParseArgs(string[] args)
@@ -114,12 +135,13 @@ namespace Sir.DbUtil
             var take = int.Parse("take");
             var batchSize = int.Parse("batchSize");
 
-            using (var sessionFactory = new SessionFactory(model, new KeyValueConfiguration("sir.ini"), logger))
+            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
             {
                 sessionFactory.Optimize(
                     collection, 
                     new HashSet<string> { "title", "description", "url", "filename" },
                     new HashSet<string> { "title", "description", "url" },
+                    model,
                     skip,
                     take,
                     batchSize);
@@ -139,7 +161,7 @@ namespace Sir.DbUtil
                 storedFieldNames,
                 indexedFieldNames);
 
-            using (var sessionFactory = new SessionFactory(model, new KeyValueConfiguration("sir.ini"), logger))
+            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
             {
                 sessionFactory.Truncate(collectionId);
 
@@ -285,11 +307,11 @@ namespace Sir.DbUtil
         /// <summary>
         /// Required args: collection
         /// </summary>
-        private static void Truncate(string collection, IStringModel model, ILogger log)
+        private static void Truncate(string collection, ILogger log)
         {
             var collectionId = collection.ToHash();
 
-            using (var sessionFactory = new SessionFactory(model, new KeyValueConfiguration("sir.ini"), log))
+            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), log))
             {
                 sessionFactory.Truncate(collectionId);
             }
@@ -298,11 +320,11 @@ namespace Sir.DbUtil
         /// <summary>
         /// Required args: collection
         /// </summary>
-        private static void TruncateIndex(string collection, IStringModel model, ILogger log)
+        private static void TruncateIndex(string collection, ILogger log)
         {
             var collectionId = collection.ToHash();
 
-            using (var sessionFactory = new SessionFactory(model, new KeyValueConfiguration("sir.ini"), log))
+            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), log))
             {
                 sessionFactory.TruncateIndex(collectionId);
             }

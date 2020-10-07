@@ -6,7 +6,6 @@ namespace Sir
     {
         IConfigurationProvider Config { get; }
         string Dir { get; }
-        IStringModel Model { get; }
         Stream CreateAppendStream(string fileName, int bufferSize = 4096);
         Stream CreateAsyncAppendStream(string fileName, int bufferSize = 4096);
         Stream CreateAsyncReadStream(string fileName, int bufferSize = 4096);

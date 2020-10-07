@@ -111,39 +111,6 @@ namespace Sir.CommonCrawl
             }
         }
 
-        private static void WriteEmbeddings(
-            SessionFactory sessionFactory,
-            WriteSession writeSession,
-            WordEmbeddingsSession indexSession,
-            string fileName,
-            string collection,
-            IStringModel model,
-            ILogger logger,
-            string refFileName)
-        {
-            var documents = ReadWatFile(fileName, refFileName);
-            var collectionId = collection.ToHash();
-            var time = Stopwatch.StartNew();
-            var storedFieldNames = new HashSet<string>();
-            var indexedFieldNames = new HashSet<string>
-            {
-                "title","description", "url"
-            };
-
-            sessionFactory.CreateWordEmbeddings(
-                            new WriteJob(
-                                collectionId,
-                                documents,
-                                model,
-                                storedFieldNames,
-                                indexedFieldNames),
-                            writeSession,
-                            indexSession,
-                            reportSize: 1000);
-
-            logger.LogInformation($"indexed {fileName} in {time.Elapsed}");
-        }
-
         private static void WriteWatSegment(
             string fileName,
             string collection,
@@ -162,9 +129,9 @@ namespace Sir.CommonCrawl
                 "title","description", "url"
             };
 
-            using (var sessionFactory = new SessionFactory(model, new KeyValueConfiguration("sir.ini"), logger))
+            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
             using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
-            using (var indexSession = sessionFactory.CreateIndexSession(collectionId))
+            using (var indexSession = sessionFactory.CreateIndexSession(collectionId, model))
             using (var queue = new ProducerConsumerQueue<IDictionary<string, object>>(1, (document =>
             {
                 sessionFactory.Write(document, writeSession, indexSession, storeFieldNames, indexFieldNames);

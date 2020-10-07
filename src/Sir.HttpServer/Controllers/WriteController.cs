@@ -8,13 +8,13 @@ namespace Sir.HttpServer.Controllers
     [Route("write")]
     public class WriteController : Controller
     {
-        private readonly PluginsCollection _plugins;
+        private readonly PluginCollection _plugins;
         private readonly IStringModel _model;
         private readonly ILogger<WriteController> _logger;
         private readonly IConfigurationProvider _config;
 
         public WriteController(
-            PluginsCollection plugins,
+            PluginCollection plugins,
             IStringModel tokenizer, 
             ILogger<WriteController> logger,
             IConfigurationProvider config)
