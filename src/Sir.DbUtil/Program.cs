@@ -31,7 +31,7 @@ namespace Sir.DbUtil
 
             logger.LogInformation($"processing command: {string.Join(" ", args)}");
 
-            var model = new BocModel();
+            var model = new StringModel();
             var command = args[0].ToLower();
             var flags = ParseArgs(args);
             var plugin = ResolvePlugin(command);
@@ -130,7 +130,7 @@ namespace Sir.DbUtil
         /// <summary>
         /// Required args: collection, skip, take, batchSize
         /// </summary>
-        private static void Optimize(IDictionary<string, string> args, BocModel model, ILogger logger)
+        private static void Optimize(IDictionary<string, string> args, StringModel model, ILogger logger)
         {
             var collection = args["collection"];
             var skip = int.Parse("skip");

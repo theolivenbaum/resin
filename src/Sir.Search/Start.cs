@@ -12,7 +12,7 @@ namespace Sir.Search
             IServiceCollection services, ServiceProvider serviceProvider, IConfigurationProvider config)
         {
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-            var model = new BocModel();
+            var model = new StringModel();
             var sessionFactory = new SessionFactory(
                 config,
                 loggerFactory.CreateLogger<SessionFactory>());

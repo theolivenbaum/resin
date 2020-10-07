@@ -10,7 +10,7 @@ namespace Sir.StringCompare
     {
         static void Main(string[] args)
         {
-            var model = new BocModel();
+            var model = new StringModel();
 
             if (args[0] == "--build-graph")
             {

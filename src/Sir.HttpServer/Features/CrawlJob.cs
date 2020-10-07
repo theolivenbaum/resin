@@ -208,7 +208,7 @@ namespace Sir.HttpServer.Features
                     var writeJob = new WriteJob(
                         wetCollectionId,
                         writePayload,
-                        new BocModel(),
+                        new StringModel(),
                         _wetStoredFieldNames,
                         _wetIndexedFieldNames);
 
