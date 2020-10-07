@@ -33,12 +33,13 @@ namespace Sir.DbUtil
 
             var model = new BocModel();
             var command = args[0].ToLower();
+            var flags = ParseArgs(args);
 
             if (command == "submit")
             {
                 var fullTime = Stopwatch.StartNew();
 
-                Submit(args);
+                Submit(flags);
 
                 logger.LogInformation("submit took {0}", fullTime.Elapsed);
             }
@@ -46,43 +47,42 @@ namespace Sir.DbUtil
             {
                 var fullTime = Stopwatch.StartNew();
 
-                WriteWP(args, model, loggerFactory);
+                WriteWP(flags, model, loggerFactory);
 
                 logger.LogInformation("write operation took {0}", fullTime.Elapsed);
             }
             else if ((command == "slice"))
             {
-                Slice(args);
+                Slice(flags);
             }
             else if (command == "download_wat")
             {
-                // Ex: download_wat CC-MAIN-2019-51 d:\ cc_wat 0 1
+                // Ex: download_wat --commonCrawlId CC-MAIN-2019-51 workingDirectory d:\ --collection cc_wat --skip 0 --take 1
 
                 CCHelper.DownloadAndIndexWat(
-                    commonCrawlId:args[1],
-                    workingDirectory:args[2],
-                    collectionName:args[3],
-                    skip: int.Parse(args[4]),
-                    take: int.Parse(args[5]),
+                    commonCrawlId:flags["commonCrawlId"],
+                    workingDirectory: flags["workingDirectory"],
+                    collectionName: flags["collection"],
+                    skip: int.Parse(flags["skip"]),
+                    take: int.Parse(flags["take"]),
                     model, 
                     logger);
             }
             else if (command == "write_wet")
             {
-                // Ex: D:\CC-MAIN-2019-43\segments\1570986647517.11\wet\CC-MAIN-20191013195541-20191013222541-00000.warc.wet.gz
-                WriteWet(args, model, logger);
+                WriteWet(flags["fileName"], model, logger);
             }
             else if (command == "truncate")
             {
-                Truncate(args, model, logger);
+                Truncate(flags["collection"], model, logger);
             }
             else if (command == "truncate-index")
             {
-                TruncateIndex(args, model, logger);
+                TruncateIndex(flags["collection"], model, logger);
             }
             else if (command == "optimize")
             {
-                Optimize(args, model, logger);
+                Optimize(flags, model, logger);
             }
             else
             {
@@ -92,12 +92,27 @@ namespace Sir.DbUtil
             logger.LogInformation($"executed {command}");
         }
 
-        private static void Optimize(string[] args, BocModel model, ILogger logger)
+        private static IDictionary<string, string> ParseArgs(string[] args)
         {
-            var collection = args[1];
-            var skip = int.Parse(args[2]);
-            var take = int.Parse(args[3]);
-            var batchSize = int.Parse(args[4]);
+            var dic = new Dictionary<string, string>();
+
+            for (int i = 1; i < args.Length; i += 2)
+            {
+                dic.Add(args[i].Replace("-", ""), args[i + 1]);
+            }
+
+            return dic;
+        }
+
+        /// <summary>
+        /// Required args: collection, skip, take, batchSize
+        /// </summary>
+        private static void Optimize(IDictionary<string, string> args, BocModel model, ILogger logger)
+        {
+            var collection = args["collection"];
+            var skip = int.Parse("skip");
+            var take = int.Parse("take");
+            var batchSize = int.Parse("batchSize");
 
             using (var sessionFactory = new SessionFactory(model, new KeyValueConfiguration("sir.ini"), logger))
             {
@@ -111,9 +126,8 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void WriteWet(string[] args, IStringModel model, ILogger logger)
+        private static void WriteWet(string fileName, IStringModel model, ILogger logger)
         {
-            var fileName = args[1];
             var collectionId = "cc_wet".ToHash();
             var storedFieldNames = new HashSet<string> { "url" };
             var indexedFieldNames = new HashSet<string> { "description" };
@@ -196,11 +210,15 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void Slice(string[] args)
+        /// <summary>
+        /// Required args: sourceFileName, resultFileName, length
+        /// </summary>
+        private static void Slice(IDictionary<string, string> args)
         {
-            var file = args[1];
-            var slice = args[2];
-            var len = int.Parse(args[3]);
+            var file = args["sourceFileName"];
+            var slice = args["resultFileName"];
+            var len = int.Parse(args["length"]);
+
             Span<byte> buf = new byte[len];
 
             using (var fs = File.OpenRead(file))
@@ -211,7 +229,7 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void WriteWP(string[] args, IStringModel model, ILoggerFactory log)
+        private static void WriteWP(IDictionary<string, string> args, IStringModel model, ILoggerFactory log)
         {
             //var fileName = args[1];
             //var dir = args[2];
@@ -264,9 +282,11 @@ namespace Sir.DbUtil
             //}
         }
 
-        private static void Truncate(string[] args, IStringModel model, ILogger log)
+        /// <summary>
+        /// Required args: collection
+        /// </summary>
+        private static void Truncate(string collection, IStringModel model, ILogger log)
         {
-            var collection = args[1];
             var collectionId = collection.ToHash();
 
             using (var sessionFactory = new SessionFactory(model, new KeyValueConfiguration("sir.ini"), log))
@@ -275,9 +295,11 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void TruncateIndex(string[] args, IStringModel model, ILogger log)
+        /// <summary>
+        /// Required args: collection
+        /// </summary>
+        private static void TruncateIndex(string collection, IStringModel model, ILogger log)
         {
-            var collection = args[1];
             var collectionId = collection.ToHash();
 
             using (var sessionFactory = new SessionFactory(model, new KeyValueConfiguration("sir.ini"), log))
@@ -286,12 +308,15 @@ namespace Sir.DbUtil
             }
         }
 
-        private static void Submit(string[] args)
+        /// <summary>
+        /// Required args: fileName, uri, count, batchSize
+        /// </summary>
+        private static void Submit(IDictionary<string, string> args)
         {
-            var fileName = args[1];
-            var uri = new Uri(args[2]);
-            var count = int.Parse(args[3]);
-            var batchSize = int.Parse(args[4]);
+            var fileName = args["fileName"];
+            var uri = new Uri(args["uri"]);
+            var count = int.Parse(args["count"]);
+            var batchSize = int.Parse(args["batchSize"]);
             var batchNo = 0;
             using (var httpClient = new HttpClient())
             {
