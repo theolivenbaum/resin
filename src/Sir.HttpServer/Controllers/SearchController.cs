@@ -9,16 +9,16 @@ namespace Sir.HttpServer.Controllers
 {
     public class SearchController : UIController
     {
-        private readonly PluginCollection _plugins;
+        private readonly IHttpReader _reader;
         private readonly IStringModel _model;
 
         public SearchController(
-            PluginCollection plugins, 
+            IHttpReader reader, 
             IConfigurationProvider config, 
             IStringModel model,
             SessionFactory sessionFactory) : base(config, sessionFactory)
         {
-            _plugins = plugins;
+            _reader = reader;
             _model = model;
         }
 
@@ -33,14 +33,7 @@ namespace Sir.HttpServer.Controllers
 
             ViewData["q"] = q;
 
-            var reader = _plugins.Get<IHttpReader>("application/json");
-
-            if (reader == null)
-            {
-                throw new System.NotSupportedException();
-            }
-
-            var result = await reader.Read(Request, _model);
+            var result = await _reader.Read(Request, _model);
 
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
             ViewData["total"] = result.Total;

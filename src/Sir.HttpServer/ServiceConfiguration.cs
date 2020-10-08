@@ -10,7 +10,7 @@ namespace Sir.HttpServer
     public static class ServiceConfiguration
     {
         public static void RegisterComponents(
-            IServiceCollection services, PluginCollection plugins, IServiceProvider container)
+            IServiceCollection services, IServiceProvider container)
         {
             services.AddSingleton(typeof(JobQueue));
             services.AddSingleton(typeof(SaveAsJobQueue));
@@ -32,7 +32,7 @@ namespace Sir.HttpServer
             assemblyPath = Path.Combine(assemblyPath, "bin", "Debug", $"netcoreapp{frameworkVersion}");
 #endif
 
-            var files = Directory.GetFiles(assemblyPath, "*.plugin.dll");
+            var files = Directory.GetFiles(assemblyPath, "*.dll");
 
             foreach (var assembly in files.Select(file => AssemblyLoadContext.Default.LoadFromAssemblyPath(file)))
             {
@@ -55,10 +55,6 @@ namespace Sir.HttpServer
                 }
             }
 
-            var plugins = new PluginCollection();
-
-            services.Add(new ServiceDescriptor(typeof(PluginCollection), plugins));
-
             var serviceProvider = services.BuildServiceProvider();
 
             // raise startup event
@@ -66,21 +62,6 @@ namespace Sir.HttpServer
             {
                 service.OnApplicationStartup(services, serviceProvider, config);
             }
-
-            // Fetch one instance each of all plugins and register them with the PluginCollection
-            // so that they can be fetched at runtime by Content-Type and System.Type.
-
-            foreach (var service in services.BuildServiceProvider().GetServices<IHttpWriter>())
-            {
-                plugins.Add(service.ContentType, service);
-            }
-
-            foreach (var service in services.BuildServiceProvider().GetServices<IHttpReader>())
-            {
-                plugins.Add(service.ContentType, service);
-            }
-
-            RegisterComponents(services, plugins, services.BuildServiceProvider());
 
             return services.BuildServiceProvider();
         }
