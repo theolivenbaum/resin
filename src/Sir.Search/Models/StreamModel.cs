@@ -6,8 +6,8 @@ namespace Sir.Search
 {
     public class StreamModel : DistanceCalculator, IStreamModel
     {
-        public double IdenticalAngle => 0.88d;
-        public double FoldAngle => 0.58d;
+        public double IdenticalAngle => 0.9d;
+        public double FoldAngle => 0.5d;
         public override int VectorWidth => 28;
 
         public IEnumerable<IVector> Tokenize(byte[][] data)
