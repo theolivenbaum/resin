@@ -1,8 +1,7 @@
-﻿using Sir.Search;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq;
 
-namespace Sir.Mnist
+namespace Sir.Search
 {
     public class IndexDebugger
     {
