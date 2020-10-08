@@ -13,7 +13,7 @@ namespace Sir.CommonCrawl
     /// <example>
     /// downloadandindexcommoncrawl --commonCrawlId CC-MAIN-2019-51 workingDirectory d:\ --collection cc_wat --skip 0 --take 1
     /// </example>
-    public class DownloadAndIndexCommonCrawlCommand : ICommand
+    public class DownloadAndIndexWatFilesCommand : ICommand
     {
         public void Run(IDictionary<string, string> args, ILogger log)
         {

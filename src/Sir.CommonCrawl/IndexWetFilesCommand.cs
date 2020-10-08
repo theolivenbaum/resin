@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Sir.CommonCrawl
 {
-    public class WriteWetFileCommand : ICommand
+    public class IndexWetFilesCommand : ICommand
     {
         public void Run(IDictionary<string, string> args, ILogger logger)
         {

@@ -9,9 +9,9 @@ namespace Sir.Mnist
     /// Creates a vector index of the MNIST database.
     /// </summary>
     /// <example>
-    /// mnist --imageFileName C:\temp\mnist\t10k-images.idx3-ubyte --labelFileName C:\temp\mnist\t10k-labels.idx1-ubyte --collection mnist
+    /// indexmnist --imageFileName C:\temp\mnist\t10k-images.idx3-ubyte --labelFileName C:\temp\mnist\t10k-labels.idx1-ubyte --collection mnist
     /// </example>
-    public class MnistCommand : ICommand
+    public class IndexMnistCommand : ICommand
     {
         public void Run(IDictionary<string, string> args, ILogger logger)
         {
