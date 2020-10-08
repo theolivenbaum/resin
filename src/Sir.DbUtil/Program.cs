@@ -67,19 +67,6 @@ namespace Sir.DbUtil
             {
                 Slice(flags);
             }
-            else if (command == "download_wat")
-            {
-                // E.g. download_wat --commonCrawlId CC-MAIN-2019-51 workingDirectory d:\ --collection cc_wat --skip 0 --take 1
-
-                CCHelper.DownloadAndIndexWat(
-                    commonCrawlId:flags["commonCrawlId"],
-                    workingDirectory: flags["workingDirectory"],
-                    collectionName: flags["collection"],
-                    skip: int.Parse(flags["skip"]),
-                    take: int.Parse(flags["take"]),
-                    model, 
-                    logger);
-            }
             else if (command == "write_wet")
             {
                 WriteWet(flags["fileName"], model, logger);
@@ -107,7 +94,7 @@ namespace Sir.DbUtil
         private static ICommand ResolvePlugin(string command)
         {
             var reader = new PluginReader(Directory.GetCurrentDirectory());
-            var plugins = reader.Read<ICommand>();
+            var plugins = reader.Read<ICommand>("command");
 
             if (!plugins.ContainsKey(command))
                 return null;

@@ -7,111 +7,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Sir.CommonCrawl
 {
     public static class CCHelper
     {
-        public static void DownloadAndIndexWat(
-            string commonCrawlId,
-            string workingDirectory,
-            string collectionName,
-            int skip,
-            int take,
-            IStringModel model, 
-            ILogger log)
-        {
-            var pathsFileName = $"{commonCrawlId}/wat.paths.gz";
-            var localPathsFileName = Path.Combine(workingDirectory, pathsFileName);
-
-            if (!File.Exists(localPathsFileName))
-            {
-                var url = $"https://commoncrawl.s3.amazonaws.com/crawl-data/{pathsFileName}";
-
-                log.LogInformation($"downloading {url}");
-
-                if (!Directory.Exists(Path.GetDirectoryName(localPathsFileName)))
-                {
-                    Directory.CreateDirectory(Path.GetDirectoryName(localPathsFileName));
-                }
-
-                using (var client = new WebClient())
-                {
-                    client.DownloadFile(url, localPathsFileName);
-                }
-
-                log.LogInformation($"downloaded {localPathsFileName}");
-            }
-
-            log.LogInformation($"processing {localPathsFileName}");
-
-            Task writeTask = null;
-            var took = 0;
-            var skipped = 0;
-
-            foreach (var watFileName in ReadAllLinesGromGz(localPathsFileName))
-            {
-                if (skip > skipped)
-                {
-                    skipped++;
-                    continue;
-                }
-
-                if (took++ == take)
-                {
-                    break;
-                }
-
-                var localWatFileName = Path.Combine(workingDirectory, watFileName);
-
-                if (!File.Exists(localWatFileName))
-                {
-                    var url = $"https://commoncrawl.s3.amazonaws.com/{watFileName}";
-
-                    log.LogInformation($"downloading {url}");
-
-                    if (!Directory.Exists(Path.GetDirectoryName(localWatFileName)))
-                    {
-                        Directory.CreateDirectory(Path.GetDirectoryName(localWatFileName));
-                    }
-
-                    using (var client = new WebClient())
-                    {
-                        client.DownloadFile(url, localWatFileName);
-                    }
-
-                    log.LogInformation($"downloaded {localWatFileName}");
-                }
-
-                var refFileName = watFileName.Replace(".wat", "").Replace("/wat", "/warc");
-
-                if (writeTask != null && !writeTask.IsCompleted)
-                {
-                    log.LogInformation($"awaiting write");
-
-                    writeTask.Wait();
-                }
-
-                writeTask = Task.Run(() =>
-                {
-                    log.LogInformation($"processing {localWatFileName}");
-
-                    WriteWatSegment(localWatFileName, collectionName, model, log, refFileName);
-                });
-            }
-
-            if (writeTask != null && !writeTask.IsCompleted)
-            {
-                log.LogInformation($"synchronizing write");
-
-                writeTask.Wait();
-            }
-        }
-
-        private static void WriteWatSegment(
+        public static void WriteWatSegment(
             string fileName,
             string collection,
             IStringModel model,
@@ -146,7 +48,7 @@ namespace Sir.CommonCrawl
             logger.LogInformation($"indexed {fileName} in {time.Elapsed}");
         }
 
-        private static IEnumerable<IDictionary<string, object>> ReadWatFile(string fileName, string refFileNae)
+        public static IEnumerable<IDictionary<string, object>> ReadWatFile(string fileName, string refFileNae)
         {
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan))
             using (var zip = new GZipStream(fs, CompressionMode.Decompress))
@@ -232,7 +134,7 @@ namespace Sir.CommonCrawl
             }
         }
 
-        private static IEnumerable<string> ReadAllLinesGromGz(string fileName)
+        public static IEnumerable<string> ReadAllLinesGromGz(string fileName)
         {
             using (var stream = File.OpenRead(fileName))
             using (var zip = new GZipStream(stream, CompressionMode.Decompress))

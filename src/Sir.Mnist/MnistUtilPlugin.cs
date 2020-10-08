@@ -11,7 +11,7 @@ namespace Sir.Mnist
     /// <example>
     /// mnist --imageFileName C:\temp\mnist\t10k-images.idx3-ubyte --labelFileName C:\temp\mnist\t10k-labels.idx1-ubyte --collection mnist
     /// </example>
-    public class MnistUtilPlugin : ICommand
+    public class MnistCommand : ICommand
     {
         public void Run(IDictionary<string, string> args, ILogger logger)
         {

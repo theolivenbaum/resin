@@ -15,7 +15,7 @@ namespace Sir
             _directory = directory;
         }
 
-        public IDictionary<string, T> Read<T>()
+        public IDictionary<string, T> Read<T>(string commonTypeName)
         {
             var plugins = new Dictionary<string, T>();
             var files = Directory.GetFiles(_directory, "*.dll");
@@ -31,7 +31,7 @@ namespace Sir
 
                         if (interfaces.Contains(typeof(T)))
                         {
-                            var name = type.Name.Replace("utilplugin", "", StringComparison.OrdinalIgnoreCase).ToLower();
+                            var name = type.Name.Replace(commonTypeName, "", StringComparison.OrdinalIgnoreCase).ToLower();
 
                             plugins.Add(name, (T)Activator.CreateInstance(type));
                         }
