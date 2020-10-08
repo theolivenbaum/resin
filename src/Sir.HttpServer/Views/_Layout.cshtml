@@ -1,6 +1,10 @@
 ﻿@{
-    var progress = ViewBag.DocumentCount == null ? 0 : (double)ViewBag.DocumentCount / ((long)56000 * 44000) * 100;
-    var millionDocs = ViewBag.DocumentCount == null ? 0 : (double)ViewBag.DocumentCount/1000000;
+    var submittedCollections = new HashSet<string>(Context.Request.Query["collection"]
+        .ToArray()
+        .SelectMany(s => s.Split(',', StringSplitOptions.RemoveEmptyEntries))
+        .ToArray());
+
+    var collections = new HashSet<string>(submittedCollections.Concat((IEnumerable<string>)ViewBag.DefaultCollection));
 }
 <!DOCTYPE html>
 <html>
@@ -16,21 +20,12 @@
 </head>
 <body>
     <div class="outer-container">
-        <div class="logo2"><a href="/?collection=cc_wat,cc_wet">Crawl Crawler <sup>BETA</sup></a></div>
+        <div class="logo2"><a href="/?collection=@string.Join(",", collections)">Resin <sup>Extensible Search Engine</sup></a></div>
         @RenderBody()
     </div>
     <footer>
-        <div>
-            <p class="footer-hero">
-                * Crawl Crawler is not affiliated with Common Crawl.
-            </p>
-            <p>
-                Coverage (WAT): @progress.ToString("0.##")% (@millionDocs.ToString("0.##")M documents). 
-                <a href="/donate">Donate</a> to increase capacity. 
-            </p>
-        </div>
         <div class="footer-nav">
-            <p><a href="/about">About</a> | <a href="/faq">FAQ</a> | <a href="/toc">Terms</a> | <a href="/contact">Contact</a> | <a href="https://github.com/didyougogo/commoncrawlcrawler/issues">Report issue</a></p>
+            <p><a href="/instructions">Instructions</a> &bull; <a href="https://github.com/kreeben/resin/blob/master/LICENSE">Terms</a> &bull; <a href="/contact">Contact</a> &bull; <a href="https://github.com/kreeben/resin/issues">Report issue</a></p>
         </div>
     </footer>
 </body>

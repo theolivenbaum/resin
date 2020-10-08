@@ -34,18 +34,7 @@ namespace Sir.HttpServer.Controllers
             ViewBag.Collection = context.HttpContext.Request.Query.ContainsKey("collection") ?
                 context.HttpContext.Request.Query["collection"].ToArray() :
                 ViewBag.DefaultCollection;
-
-            var dixFileName = Path.Combine(_sessionFactory.Dir, $"{"cc_wat".ToHash()}.dix");
-
-            if (System.IO.File.Exists(dixFileName))
-            {
-                using (var dixFile = _sessionFactory.CreateReadStream(dixFileName))
-                using (var dix = new DocIndexReader(dixFile))
-                {
-                    ViewBag.DocumentCount = dix.Count;
-                }
-            }
-            
+           
             base.OnActionExecuted(context);
         }
     }

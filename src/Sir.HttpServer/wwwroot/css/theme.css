@@ -91,18 +91,14 @@ ul.document-list li {
 
 footer {
     font-size: 10pt;
-    margin-top: 15px;
+    margin-top: 25px;
     margin-bottom: 30px;
     max-width: 500px;
 }
 
-footer span {
-    padding-top: 10px;
-}
-
 footer a {
     text-decoration: none;
-    color: gray;
+    color: orangered;
 }
 
 .footer-nav {
@@ -206,16 +202,16 @@ h3.querystats {
 
 .search-fields {
     font-size: 10pt;
-    border: none;
-    width: 90%;
-    margin-left: 1px;
-    margin-right: 0px;
+    border: 1px solid silver;
+    margin-left: 0px;
+    margin-right: 5px;
     margin-top: 0px;
     margin-bottom: 5px;
-    padding-left: 0px;
-    padding-right: 0px;
-    padding-top: 15px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 10px;
     padding-bottom: 5px;
+    float: left;
 }
 
 .search-fields a {
@@ -238,34 +234,34 @@ input[type="text"].collection {
 
 div.q {
     float: left;
-    width: 90%;
+    width: 70%;
     height: 25px;
 }
 
 div.buttons {
     float: left;
-    width: 10%;
+    width: 30%;
     text-align: right;
     height: 25px;
 }
 
 @media only screen and (max-width: 935px) {
     div.q {
-        width: 73%;
+        width: 70%;
     }
 
     div.buttons {
-        width: 27%;
+        width: 30%;
     }
 }
 
 @media only screen and (max-width: 375px) {
     div.q {
-        width: 69%;
+        width: 70%;
     }
 
     div.buttons {
-        width: 31%;
+        width: 30%;
     }
 }
 
