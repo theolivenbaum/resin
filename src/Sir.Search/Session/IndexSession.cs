@@ -10,7 +10,7 @@ namespace Sir.Search
     /// <summary>
     /// Indexing session targeting a single collection.
     /// </summary>
-    public class IndexSession<T> : IDisposable
+    public class IndexSession<T> : IIndexSession, IDisposable
     {
         private readonly ulong _collectionId;
         private readonly SessionFactory _sessionFactory;
@@ -106,5 +106,10 @@ namespace Sir.Search
             _postingsStream.Dispose();
             _vectorStream.Dispose();
         }
+    }
+
+    public interface IIndexSession
+    {
+        IndexInfo GetIndexInfo();
     }
 }

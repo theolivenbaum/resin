@@ -24,6 +24,8 @@ namespace Sir.Mnist
             using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
             using (var indexSession = sessionFactory.CreateIndexSession(collectionId, new StreamModel()))
             {
+                var debugger = new IndexDebugger();
+
                 foreach (var image in images)
                 {
                     var document = new Dictionary<string, object>() { { "label", image.Label } };
@@ -35,9 +37,11 @@ namespace Sir.Mnist
 
                     count++;
 
-                    if (count%100 == 0)
+                    var debugInfo = debugger.GetDebugInfo(indexSession);
+
+                    if (debugInfo != null)
                     {
-                        logger.LogInformation($"indexed {count} images");
+                        logger.LogInformation(debugInfo);
                     }
                 }
             }
