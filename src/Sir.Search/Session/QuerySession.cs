@@ -35,18 +35,18 @@ namespace Sir.Search
             _logger = logger;
         }
 
-        public ReadResult Query(IQuery query, int skip, int take, string primaryKey = "url")
+        public ReadResult Query(IQuery query, int skip, int take, string primaryKey = null)
         {
             var result = MapReduceSort(query, skip, take);
 
             if (result != null)
             {
-                var docs = ReadDocs(result.SortedDocuments, primaryKey, query.Select);
+                var docs = ReadDocs(result.SortedDocuments, query.Select, primaryKey);
 
-                return new ReadResult { Query = query, Total = result.Total, Docs = docs };
+                return new ReadResult { Query = query, Total = result.Total, Documents = docs };
             }
 
-            return new ReadResult { Query = query, Total = 0, Docs = new IDictionary<string, object>[0] };
+            return new ReadResult { Query = query, Total = 0, Documents = new IDictionary<string, object>[0] };
         }
 
         private ScoredResult MapReduceSort(IQuery query, int skip, int take)
@@ -134,10 +134,7 @@ namespace Sir.Search
             };
         }
 
-        private IList<IDictionary<string, object>> ReadDocs(
-            IEnumerable<KeyValuePair<(ulong collectionId, long docId), double>> docIds,
-            string primaryKey,
-            HashSet<string> select)
+        private IList<IDictionary<string, object>> ReadDocs(IEnumerable<KeyValuePair<(ulong collectionId, long docId), double>> docIds, HashSet<string> select, string primaryKey = null)
         {
             if (!select.Contains(primaryKey))
             {
@@ -151,7 +148,7 @@ namespace Sir.Search
             foreach (var d in docIds)
             {
                 var doc = ReadDoc(d.Key, select, d.Value);
-                var docHash = doc[primaryKey].ToString().ToHash();
+                var docHash = primaryKey == null ? Guid.NewGuid().ToString().ToHash() : doc[primaryKey].ToString().ToHash();
                 IDictionary<string, object> existingDoc;
 
                 if (documentsByPrimaryKey.TryGetValue(docHash, out existingDoc))

@@ -70,12 +70,12 @@ namespace Sir.Search
 
                 using (var mem = new MemoryStream())
                 {
-                    Serialize(result.Docs, mem);
+                    Serialize(result.Documents, mem);
 
                     return new ResponseModel
                     {
                         MediaType = "application/json",
-                        Documents = result.Docs,
+                        Documents = result.Documents,
                         Total = result.Total,
                         Body = mem.ToArray()
                     };

@@ -6,6 +6,6 @@ namespace Sir.Search
     {
         public IQuery Query { get; set; }
         public long Total { get; set; }
-        public IEnumerable<IDictionary<string, object>> Docs { get; set; }
+        public IEnumerable<IDictionary<string, object>> Documents { get; set; }
     }
 }

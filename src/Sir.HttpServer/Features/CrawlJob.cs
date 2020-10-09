@@ -82,7 +82,7 @@ namespace Sir.HttpServer.Features
             using (var readSession = _sessionFactory.CreateQuerySession(_model))
             {
                 var originalResult = readSession.Query(originalQuery, _skip, _take)
-                    .Docs
+                    .Documents
                     .ToDictionary(x => (string)x["url"]);
 
                 var wetFileIds = new SortedList<string, object>();

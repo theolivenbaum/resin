@@ -51,9 +51,7 @@ namespace Sir.VectorSpace
                 }
             }
 
-            _logger.LogInformation($"scanning all segments took {time.Elapsed}");
-
-            time.Restart();
+            _logger.LogDebug($"scanning all segments took {time.Elapsed}");
 
             Hit best = null;
 
@@ -68,8 +66,6 @@ namespace Sir.VectorSpace
                     GraphBuilder.MergePostings(best.Node, hit.Node);
                 }
             }
-
-            _logger.LogInformation($"finding the best hit from hits found in all segments took {time.Elapsed}");
 
             return best;
         }

@@ -2,6 +2,7 @@
 using Sir.Search;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Sir.Mnist
 {
@@ -31,15 +32,18 @@ namespace Sir.Mnist
                 {
                     var query = queryParser.Parse(collection, image.Pixels, "image", "label", true, false);
                     var result = querySession.Query(query, 0, 1);
+                    var successful = true;
+                    var documentLabel = result.Total == 0 ? byte.MaxValue : (byte)result.Documents.First()["label"];
 
                     count++;
 
-                    if (result.Total == 0)
+                    if (result.Total == 0 || documentLabel != image.Label)
                     {
                         errors++;
+                        successful = false;
                     }
 
-                    logger.LogInformation($"error rate: {errors / count}");
+                    logger.LogInformation($"successful: {successful}. test label: {image.Label}. document label: {documentLabel}. {result.Total} hits. tot. errors: {errors}. total tests {count}. error rate: {(float)errors / count*100}%");
                 }
             }
 

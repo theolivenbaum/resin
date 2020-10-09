@@ -16,7 +16,7 @@ namespace Sir.DbUtil
                 builder
                     .AddFilter("Microsoft", LogLevel.Warning)
                     .AddFilter("System", LogLevel.Warning)
-                    .AddFilter("Sir.DbUtil.Program", LogLevel.Debug)
+                    .AddFilter("Sir.DbUtil.Program", LogLevel.Information)
                     .AddConsole().AddDebug();
             });
 
