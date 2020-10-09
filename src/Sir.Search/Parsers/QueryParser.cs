@@ -4,13 +4,13 @@ using System.Collections.Generic;
 
 namespace Sir.Search
 {
-    public class QueryParser
+    public class QueryParser<T>
     {
         private readonly SessionFactory _sessionFactory;
-        private readonly IStringModel _model;
+        private readonly IModel<T> _model;
         private readonly ILogger _log;
 
-        public QueryParser(SessionFactory sessionFactory, IStringModel model, ILogger log)
+        public QueryParser(SessionFactory sessionFactory, IModel<T> model, ILogger log)
         {
             _sessionFactory = sessionFactory;
             _model = model;
@@ -18,8 +18,25 @@ namespace Sir.Search
         }
 
         public IQuery Parse(
+            string collection,
+            T q,
+            string field,
+            string select,
+            bool and,
+            bool or)
+        {
+            return Parse(
+                new string[] { collection },
+                q,
+                new string[] { field },
+                new string[] { select },
+                and,
+                or);
+        }
+
+        public IQuery Parse(
             string[] collections,
-            string q, 
+            T q, 
             string[] fields, 
             IEnumerable<string> select, 
             bool and, 
@@ -104,7 +121,7 @@ namespace Sir.Search
             while (operation != null)
             {
                 string[] collections = null;
-                var kvps = new List<(string key, string value)>();
+                var kvps = new List<(string key, T value)>();
                 dynamic next = null;
 
                 foreach (var kvp in operation)
@@ -182,7 +199,7 @@ namespace Sir.Search
             return root;
         }
 
-        private IList<Term> ParseTerms(string collectionName, string key, string value, bool and, bool or, bool not)
+        private IList<Term> ParseTerms(string collectionName, string key, T value, bool and, bool or, bool not)
         {
             var collectionId = collectionName.ToHash();
             long keyId;

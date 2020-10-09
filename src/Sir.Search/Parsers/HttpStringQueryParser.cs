@@ -12,11 +12,11 @@ namespace Sir.Search
     /// <summary>
     /// Parse text from a http request message into a query.
     /// </summary>
-    public class HttpQueryParser
+    public class HttpStringQueryParser
     {
-        private readonly QueryParser _parser;
+        private readonly QueryParser<string> _parser;
 
-        public HttpQueryParser(QueryParser parser)
+        public HttpStringQueryParser(QueryParser<string> parser)
         {
             _parser = parser;
         }

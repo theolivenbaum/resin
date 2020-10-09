@@ -15,7 +15,7 @@ namespace Sir.HttpServer.Features
     public class CrawlJob : AsyncJob
     {
         private readonly SessionFactory _sessionFactory;
-        private readonly QueryParser _queryParser;
+        private readonly QueryParser<string> _queryParser;
         private readonly ILogger _logger;
         private readonly IStringModel _model;
         private readonly HashSet<string> _wetStoredFieldNames;
@@ -25,7 +25,7 @@ namespace Sir.HttpServer.Features
 
         public CrawlJob(
             SessionFactory sessionFactory,
-            QueryParser queryParser,
+            QueryParser<string> queryParser,
             IStringModel model,
             ILogger logger,
             string id, 
@@ -79,9 +79,9 @@ namespace Sir.HttpServer.Features
                 and: And, 
                 or: Or);
 
-            using (var readSession = _sessionFactory.CreateReadSession(_model))
+            using (var readSession = _sessionFactory.CreateQuerySession(_model))
             {
-                var originalResult = readSession.Read(originalQuery, _skip, _take)
+                var originalResult = readSession.Query(originalQuery, _skip, _take)
                     .Docs
                     .ToDictionary(x => (string)x["url"]);
 
@@ -113,7 +113,7 @@ namespace Sir.HttpServer.Features
 
                     if (wetQuery != null)
                     {
-                        wetResult = readSession.Read(wetQuery, 0, 1);
+                        wetResult = readSession.Query(wetQuery, 0, 1);
                     }
 
                     if (wetResult == null || wetResult.Total == 0)

@@ -10,7 +10,7 @@ namespace Sir.HttpServer.Controllers
     public class SaveAsController : UIController
     {
         private readonly IStringModel _model;
-        private readonly QueryParser _queryParser;
+        private readonly QueryParser<string> _queryParser;
         private readonly ILogger<SaveAsController> _log;
         private static readonly HashSet<string> _reservedCollections = new HashSet<string> { "cc_wat", "cc_wet" };
 
@@ -18,7 +18,7 @@ namespace Sir.HttpServer.Controllers
             IConfigurationProvider config,
             SessionFactory sessionFactory,
             IStringModel model,
-            QueryParser queryParser,
+            QueryParser<string> queryParser,
             SaveAsJobQueue queue,
             ILogger<SaveAsController> log) : base(config, sessionFactory)
         {

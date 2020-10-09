@@ -9,7 +9,7 @@ namespace Sir.HttpServer.Features
     public class SaveAsJob : BaseJob
     {
         private readonly SessionFactory _sessionFactory;
-        private readonly QueryParser _queryParser;
+        private readonly QueryParser<string> _queryParser;
         private readonly ILogger _logger;
         private readonly IStringModel _model;
         private readonly HashSet<string> _indexFieldNames;
@@ -21,7 +21,7 @@ namespace Sir.HttpServer.Features
 
         public SaveAsJob(
             SessionFactory sessionFactory,
-            QueryParser queryParser,
+            QueryParser<string> queryParser,
             IStringModel model,
             ILogger logger,
             string target,
@@ -63,9 +63,9 @@ namespace Sir.HttpServer.Features
                 var targetCollectionId = _target.ToHash();
                 IEnumerable<IDictionary<string, object>> documents;
 
-                using (var readSession = _sessionFactory.CreateReadSession(_model))
+                using (var readSession = _sessionFactory.CreateQuerySession(_model))
                 {
-                    documents = readSession.Read(query, _skip, _take).Docs;
+                    documents = readSession.Query(query, _skip, _take).Docs;
                 }
 
                 //TODO: Remove this when cc_wat is rebuilt.

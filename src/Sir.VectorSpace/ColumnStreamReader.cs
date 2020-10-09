@@ -36,7 +36,7 @@ namespace Sir.VectorSpace
             _segments = GetAllSegments(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{keyId}.ixtp"));
         }
 
-        public Hit ClosestMatch(IVector vector, IStringModel model)
+        public Hit ClosestMatch(IVector vector, IModel model)
         {
             var time = Stopwatch.StartNew();
             var hits = new List<Hit>();

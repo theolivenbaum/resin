@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Sir.Search
 {
-    public class StreamModel : DistanceCalculator, IStreamModel
+    public class ImageModel : DistanceCalculator, IImageModel
     {
         public double IdenticalAngle => 0.9d;
         public double FoldAngle => 0.5d;

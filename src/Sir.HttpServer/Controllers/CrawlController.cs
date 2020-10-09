@@ -11,14 +11,14 @@ namespace Sir.HttpServer.Controllers
     {
         private readonly JobQueue _queue;
         private readonly IStringModel _model;
-        private readonly QueryParser _queryParser;
+        private readonly QueryParser<string> _queryParser;
         private readonly ILogger<CrawlController> _log;
 
         public CrawlController(
             IConfigurationProvider config,
             SessionFactory sessionFactory,
             IStringModel model,
-            QueryParser queryParser,
+            QueryParser<string> queryParser,
             JobQueue queue,
             ILogger<CrawlController> log) : base(config, sessionFactory)
         {

@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace Sir.Search
 {
-    public class QueryFormatter : IQueryFormatter
+    public class StringQueryFormatter : IQueryFormatter
     {
         private readonly SessionFactory _sessionFactory;
         private readonly ILogger _log;
 
-        public QueryFormatter(SessionFactory sessionFactory, ILogger log)
+        public StringQueryFormatter(SessionFactory sessionFactory, ILogger log)
         {
             _sessionFactory = sessionFactory;
             _log = log;
@@ -19,7 +19,7 @@ namespace Sir.Search
 
         public async Task<string> Format(HttpRequest request, IStringModel tokenizer)
         {
-            var parser = new HttpQueryParser(new QueryParser(_sessionFactory, tokenizer, _log));
+            var parser = new HttpStringQueryParser(new QueryParser<string>(_sessionFactory, tokenizer, _log));
             var query = await parser.ParseRequest(request);
             var dictionary = new Dictionary<string, object>();
             

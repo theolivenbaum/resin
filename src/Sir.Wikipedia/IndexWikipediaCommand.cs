@@ -16,19 +16,19 @@ namespace Sir.Wikipedia
             var skip = int.Parse(args["skip"]);
             var take = int.Parse(args["take"]);
             var pageSize = int.Parse(args["pageSize"]);
-            const int reportSize = 1000;
+            var reportSize = args.ContainsKey("reportSize") ? int.Parse(args["reportSize"]) : 1000;
             var collectionId = collection.ToHash();
-            var payload = WikipediaHelper.ReadWP(fileName, skip, take)
-                .Select(x => new Dictionary<string, object>
-                        {
-                                { "language", x["language"].ToString() },
-                                { "url", string.Format("www.wikipedia.org/search-redirect.php?family=wikipedia&language={0}&search={1}", x["language"], x["title"]) },
-                                { "title", x["title"] },
-                                { "description", x["text"] }
-                        });
             var fieldsToStore = new HashSet<string> { "language", "url", "title", "description" };
             var fieldsToIndex = new HashSet<string> { "language", "url", "title", "description" };
             var debugger = new IndexDebugger();
+            var payload = WikipediaHelper.ReadWP(fileName, skip, take)
+                .Select(x => new Dictionary<string, object>
+                        {
+                                            { "language", x["language"].ToString() },
+                                            { "url", string.Format("www.wikipedia.org/search-redirect.php?family=wikipedia&language={0}&search={1}", x["language"], x["title"]) },
+                                            { "title", x["title"] },
+                                            { "description", x["text"] }
+                        });
 
             using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
             {

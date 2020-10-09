@@ -18,12 +18,12 @@ namespace Sir.Search
 
         private readonly ILogger<HttpReader> _logger;
         private readonly SessionFactory _sessionFactory;
-        private readonly HttpQueryParser _httpQueryParser;
+        private readonly HttpStringQueryParser _httpQueryParser;
         private readonly IConfigurationProvider _config;
 
         public HttpReader(
             SessionFactory sessionFactory, 
-            HttpQueryParser httpQueryParser,
+            HttpStringQueryParser httpQueryParser,
             IConfigurationProvider config,
             ILogger<HttpReader> logger)
         {
@@ -64,9 +64,9 @@ namespace Sir.Search
             _logger.LogInformation(JsonConvert.SerializeObject(debug));
 #endif
 
-            using (var readSession = _sessionFactory.CreateReadSession(model))
+            using (var readSession = _sessionFactory.CreateQuerySession(model))
             {
-                var result = readSession.Read(query, skip, take);
+                var result = readSession.Query(query, skip, take);
 
                 using (var mem = new MemoryStream())
                 {

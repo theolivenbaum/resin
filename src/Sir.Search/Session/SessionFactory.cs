@@ -439,14 +439,14 @@ namespace Sir.Search
             return new IndexSession<string>(collectionId, this, model, Config, _logger);
         }
 
-        public IndexSession<byte[][]> CreateIndexSession(ulong collectionId, IStreamModel model)
+        public IndexSession<byte[][]> CreateIndexSession(ulong collectionId, IImageModel model)
         {
             return new IndexSession<byte[][]>(collectionId, this, model, Config, _logger);
         }
 
-        public IReadSession CreateReadSession(IStringModel model)
+        public IQuerySession CreateQuerySession(IModel model)
         {
-            return new ReadSession(
+            return new QuerySession(
                 this,
                 Config,
                 model,

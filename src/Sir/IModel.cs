@@ -51,14 +51,14 @@ namespace Sir
     }
 
     /// <summary>
-    /// String vector space model.
+    /// Variable-length tokens become vectors in a word vector space.
     /// </summary>
     public interface IStringModel : IModel<string> {}
 
     /// <summary>
-    /// Stream vector space model.
+    /// Rows of pixles from fixed-size images becomes vectors in a image vector space.
     /// </summary>
-    public interface IStreamModel : IModel<byte[][]> {}
+    public interface IImageModel : IModel<byte[][]> {}
 
     /// <summary>
     /// Vector space model.

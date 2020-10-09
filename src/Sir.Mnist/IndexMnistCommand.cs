@@ -22,7 +22,7 @@ namespace Sir.Mnist
 
             using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
             using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
-            using (var indexSession = sessionFactory.CreateIndexSession(collectionId, new StreamModel()))
+            using (var indexSession = sessionFactory.CreateIndexSession(collectionId, new ImageModel()))
             {
                 var debugger = new IndexDebugger();
 
@@ -31,7 +31,7 @@ namespace Sir.Mnist
                     var document = new Dictionary<string, object>() { { "label", image.Label } };
                     var storeFields = new HashSet<string> { "label" };
                     var documentId = writeSession.Put(document, storeFields);
-                    var keyId = writeSession.EnsureKeyExists("label");
+                    var keyId = writeSession.EnsureKeyExists("image");
 
                     indexSession.Put(documentId, keyId, image.Pixels);
 

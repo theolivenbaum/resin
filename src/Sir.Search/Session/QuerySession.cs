@@ -11,19 +11,20 @@ namespace Sir.Search
     /// <summary>
     /// Read session targeting a single collection.
     /// </summary>
-    public class ReadSession : DocumentStreamSession, IDisposable, IReadSession //TODO: rename to QuerySession.
+    public class QuerySession : DocumentStreamSession, IDisposable, IQuerySession
+
     {
         private readonly SessionFactory _sessionFactory;
         private readonly IConfigurationProvider _config;
-        private readonly IStringModel _model;
+        private readonly IModel _model;
         private readonly IPostingsReader _postingsReader;
 
         private readonly ILogger _logger;
 
-        public ReadSession(
+        public QuerySession(
             SessionFactory sessionFactory,
             IConfigurationProvider config,
-            IStringModel model,
+            IModel model,
             IPostingsReader postingsReader,
             ILogger logger) : base(sessionFactory)
         {
@@ -34,7 +35,7 @@ namespace Sir.Search
             _logger = logger;
         }
 
-        public ReadResult Read(IQuery query, int skip, int take, string primaryKey = "url")
+        public ReadResult Query(IQuery query, int skip, int take, string primaryKey = "url")
         {
             var result = MapReduceSort(query, skip, take);
 
