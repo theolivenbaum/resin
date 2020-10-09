@@ -154,12 +154,6 @@ input[type="checkbox"] {
     vertical-align: sub;
 }
 
-div.buttons button {
-    width: 50%;
-    padding: 0px 0px 0px 0px;
-    margin: 0px 0px 0px 0px;
-}
-
 button, input[type="submit"] {
     font-size: 9pt;
     height: 25px;
@@ -234,29 +228,55 @@ input[type="text"].collection {
 
 div.q {
     float: left;
-    width: 70%;
+    width: 85%;
     height: 25px;
 }
 
 div.buttons {
     float: left;
-    width: 30%;
+    width: 15%;
     text-align: right;
     height: 25px;
 }
 
+div.buttons button {
+    width: 100%;
+    padding: 0px 0px 0px 0px;
+    margin: 0px 0px 0px 0px;
+}
+
 @media only screen and (max-width: 935px) {
     div.q {
-        width: 70%;
+        width: 85%;
     }
 
     div.buttons {
-        width: 30%;
+        width: 15%;
     }
 }
 
 @media only screen and (max-width: 375px) {
     div.q {
+        width: 85%;
+    }
+
+    div.buttons {
+        width: 15%;
+    }
+}
+
+@media only screen and (max-width: 335px) {
+    div.q {
+        width: 80%;
+    }
+
+    div.buttons {
+        width: 20%;
+    }
+}
+
+@media only screen and (max-width: 315px) {
+    div.q {
         width: 70%;
     }
 
@@ -265,43 +285,23 @@ div.buttons {
     }
 }
 
-@media only screen and (max-width: 335px) {
-    div.q {
-        width: 65%;
-    }
-
-    div.buttons {
-        width: 35%;
-    }
-}
-
-@media only screen and (max-width: 315px) {
-    div.q {
-        width: 55%;
-    }
-
-    div.buttons {
-        width: 45%;
-    }
-}
-
 @media only screen and (max-width: 235px) {
     div.q {
-        width: 50%;
+        width: 60%;
     }
 
     div.buttons {
-        width: 50%;
+        width: 40%;
     }
 }
 
 @media only screen and (max-width: 195px) {
     div.q {
-        width: 40%;
+        width: 60%;
     }
 
     div.buttons {
-        width: 60%;
+        width: 40%;
     }
 }
 
