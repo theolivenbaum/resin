@@ -32,18 +32,17 @@ namespace Sir.Mnist
                 {
                     var query = queryParser.Parse(collection, image.Pixels, "image", "label", true, false);
                     var result = querySession.Query(query, 0, 1);
-                    var successful = true;
                     var documentLabel = result.Total == 0 ? byte.MaxValue : (byte)result.Documents.First()["label"];
+                    var score = result.Total == 0 ? 0 : result.Documents.First()[SystemFields.Score];
 
                     count++;
 
                     if (result.Total == 0 || documentLabel != image.Label)
                     {
                         errors++;
-                        successful = false;
                     }
 
-                    logger.LogInformation($"successful: {successful}. test label: {image.Label}. document label: {documentLabel}. {result.Total} hits. tot. errors: {errors}. total tests {count}. error rate: {(float)errors / count*100}%");
+                    logger.LogInformation($"test label: {image.Label}. document label: {documentLabel}. {result.Total} hits. score: {score}. tot. errors: {errors}. total tests {count}. errors: {(float)errors / count*100}%");
                 }
             }
 

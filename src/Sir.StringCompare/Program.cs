@@ -106,7 +106,7 @@ namespace Sir.StringCompare
 
                 var node = new VectorNode(model.Tokenize(command).First());
 
-                GraphBuilder.MergeOrAdd(root, node, model, model.FoldAngle, model.IdenticalAngle);
+                GraphBuilder.MergeOrAdd(root, node, model);
             }
 
             Console.WriteLine(root.Visualize());

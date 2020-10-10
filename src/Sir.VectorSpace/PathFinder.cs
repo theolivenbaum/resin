@@ -10,7 +10,8 @@ namespace Sir.VectorSpace
             var best = root;
             var cursor = root;
             double highscore = 0;
-
+            var path = new List<VectorNode>();
+            
             while (cursor != null)
             {
                 var angle = cursor.Vector == null ? 0 : model.CosAngle(vector, cursor.Vector);
@@ -23,6 +24,13 @@ namespace Sir.VectorSpace
                         best = cursor;
                     }
 
+                    if (angle >= model.IdenticalAngle)
+                    {
+                        break;
+                    }
+
+                    path.Add(cursor);
+                    
                     cursor = cursor.Left;
                 }
                 else
@@ -32,11 +40,14 @@ namespace Sir.VectorSpace
                         highscore = angle;
                         best = cursor;
                     }
+
+                    path.Add(cursor);
+
                     cursor = cursor.Right;
                 }
             }
 
-            return new Hit(best, highscore);
+            return new Hit(best, highscore, path);
         }
 
         public static IEnumerable<VectorNode> All(VectorNode root)

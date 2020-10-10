@@ -13,27 +13,25 @@ namespace Sir.VectorSpace
     {
         private readonly ISessionFactory _sessionFactory;
         private readonly ILogger _logger;
-        private readonly ulong _collectionId;
         private readonly Stream _vectorFile;
         private readonly Stream _ixFile;
         private readonly IList<(long offset, long length)> _segments;
+        private readonly PageIndexReader _pageReader;
 
         public ColumnStreamReader(
-            ulong collectionId,
-            long keyId,
+            PageIndexReader pageReader,
+            Stream indexStream,
+            Stream vectorStream,
             ISessionFactory sessionFactory,
             ILogger logger)
         {
-            _collectionId = collectionId;
             _sessionFactory = sessionFactory;
             _logger = logger;
+            _vectorFile = vectorStream;
+            _ixFile = indexStream;
+            _pageReader = pageReader;
 
-            var vectorFileName = Path.Combine(_sessionFactory.Dir, $"{_collectionId}.vec");
-            var ixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.ix", _collectionId, keyId));
-
-            _vectorFile = _sessionFactory.CreateReadStream(vectorFileName);
-            _ixFile = _sessionFactory.CreateReadStream(ixFileName);
-            _segments = GetAllSegments(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{keyId}.ixtp"));
+            _segments = GetAllSegments();
         }
 
         public Hit ClosestMatch(IVector vector, IModel model)
@@ -72,10 +70,13 @@ namespace Sir.VectorSpace
 
         private Hit ClosestMatchInSegment(IVector queryVector, IModel model, long segmentOffset, long segmentSize)
         {
-            _ixFile.Seek(segmentOffset, SeekOrigin.Begin);
+            if (segmentOffset > 0)
+                _ixFile.Seek(segmentOffset, SeekOrigin.Begin);
 
             Span<byte> block = stackalloc byte[VectorNode.BlockSize];
-            var best = new Hit();
+            VectorNode bestNode = null;
+            double bestScore = 0;
+            var path = new List<VectorNode>();
             var read = _ixFile.Read(block);
 
             while (read < segmentSize)
@@ -84,26 +85,29 @@ namespace Sir.VectorSpace
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long)));
                 var componentCount = BitConverter.ToInt64(block.Slice(sizeof(long) * 2));
                 var terminator = BitConverter.ToInt64(block.Slice(sizeof(long) * 4));
-                var angle = model.CosAngle(queryVector, vecOffset, (int)componentCount, _vectorFile);
+                IVector vectorOnFile;
+                var angle = model.CosAngle(queryVector, vecOffset, (int)componentCount, _vectorFile, out vectorOnFile);
 
                 if (angle >= model.IdenticalAngle)
                 {
-                    best.Score = angle;
+                    bestScore = angle;
                     var n = new VectorNode(postingsOffset);
-                    best.Node = n;
+                    bestNode = n;
 
                     break;
                 }
                 else if (angle > model.FoldAngle)
                 {
-                    if (best == null || angle > best.Score)
+                    path.Add(new VectorNode(vectorOnFile));
+
+                    if (bestNode == null || angle > bestScore)
                     {
-                        best.Score = angle;
-                        best.Node = new VectorNode(postingsOffset);
+                        bestScore = angle;
+                        bestNode = new VectorNode(postingsOffset);
                     }
-                    else if (angle == best.Score)
+                    else if (angle == bestScore)
                     {
-                        best.Node.PostingsOffsets.Add(postingsOffset);
+                        bestNode.PostingsOffsets.Add(postingsOffset);
                     }
 
                     // We need to determine if we can traverse further left.
@@ -125,14 +129,16 @@ namespace Sir.VectorSpace
                 }
                 else
                 {
-                    if ((best == null && angle > best.Score) || angle > best.Score)
+                    path.Add(new VectorNode(vectorOnFile));
+
+                    if ((bestNode == null && angle > bestScore) || angle > bestScore)
                     {
-                        best.Score = angle;
-                        best.Node = new VectorNode(postingsOffset);
+                        bestScore = angle;
+                        bestNode = new VectorNode(postingsOffset);
                     }
-                    else if (angle > 0 && angle == best.Score)
+                    else if (angle > 0 && angle == bestScore)
                     {
-                        best.Node.PostingsOffsets.Add(postingsOffset);
+                        bestNode.PostingsOffsets.Add(postingsOffset);
                     }
 
                     // We need to determine if we can traverse further to the right.
@@ -163,7 +169,7 @@ namespace Sir.VectorSpace
                 }
             }
 
-            return best;
+            return new Hit(bestNode, bestScore, path);
         }
 
         private void SkipTree()
@@ -179,18 +185,16 @@ namespace Sir.VectorSpace
             }
         }
 
-        private IList<(long offset, long length)> GetAllSegments(string pageFileName)
+        private IList<(long offset, long length)> GetAllSegments()
         {
-            using (var stream = _sessionFactory.CreateReadStream(pageFileName))
-            {
-                return new PageIndexReader(stream).GetAll();
-            }
+            return _pageReader.GetAll();
         }
 
         public void Dispose()
         {
             _vectorFile.Dispose();
             _ixFile.Dispose();
+            _pageReader.Dispose();
         }
     }
 }

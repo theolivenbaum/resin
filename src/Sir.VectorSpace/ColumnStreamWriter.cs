@@ -5,19 +5,13 @@ namespace Sir.VectorSpace
 {
     public class ColumnStreamWriter : IDisposable
     {
-        private readonly long _keyId;
-        private readonly ulong _collectionId;
-        private static readonly object _indexFileSync = new object();
         private readonly Stream _ixStream;
+        private readonly bool _keepIndexStreamOpen;
 
-        public ColumnStreamWriter(
-            ulong collectionId, 
-            long keyId,
-            Stream indexStream)
+        public ColumnStreamWriter(Stream indexStream, bool keepStreamOpen = false)
         {
-            _keyId = keyId;
-            _collectionId = collectionId;
             _ixStream = indexStream;
+            _keepIndexStreamOpen = keepStreamOpen;
         }
 
         public (int depth, int width) CreatePage(VectorNode column, Stream vectorStream, Stream postingsStream, PageIndexWriter pageIndexWriter)
@@ -29,9 +23,19 @@ namespace Sir.VectorSpace
             return PathFinder.Size(column);
         }
 
+        public (int depth, int width) CreatePage(VectorNode column, Stream vectorStream, PageIndexWriter pageIndexWriter)
+        {
+            var page = GraphBuilder.SerializeTree(column, _ixStream, vectorStream, null);
+
+            pageIndexWriter.Put(page.offset, page.length);
+
+            return PathFinder.Size(column);
+        }
+
         public void Dispose()
         {
-            _ixStream.Dispose();
+            if (!_keepIndexStreamOpen)
+                _ixStream.Dispose();
         }
     }
 }

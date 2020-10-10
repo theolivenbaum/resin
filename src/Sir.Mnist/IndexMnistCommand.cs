@@ -25,13 +25,13 @@ namespace Sir.Mnist
             using (var indexSession = sessionFactory.CreateIndexSession(collectionId, new ImageModel()))
             {
                 var debugger = new IndexDebugger();
+                var keyId = writeSession.EnsureKeyExists("image");
 
                 foreach (var image in images)
                 {
                     var document = new Dictionary<string, object>() { { "label", image.Label } };
                     var storeFields = new HashSet<string> { "label" };
                     var documentId = writeSession.Put(document, storeFields);
-                    var keyId = writeSession.EnsureKeyExists("image");
 
                     indexSession.Put(documentId, keyId, image.Pixels);
 

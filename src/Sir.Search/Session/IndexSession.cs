@@ -57,9 +57,7 @@ namespace Sir.Search
                 GraphBuilder.MergeOrAdd(
                     column,
                     new VectorNode(vector, docId),
-                    _model,
-                    _model.FoldAngle,
-                    _model.IdenticalAngle);
+                    _model);
             }
         }
 
@@ -86,7 +84,7 @@ namespace Sir.Search
             foreach (var column in _index)
             {
                 using (var indexStream = _sessionFactory.CreateAppendStream(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{column.Key}.ix")))
-                using (var columnWriter = new ColumnStreamWriter(_collectionId, column.Key, indexStream))
+                using (var columnWriter = new ColumnStreamWriter(indexStream))
                 using (var pageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{column.Key}.ixtp"))))
                 {
                     var size = columnWriter.CreatePage(column.Value, _vectorStream, _postingsStream, pageIndexWriter);

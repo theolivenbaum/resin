@@ -12,21 +12,30 @@ namespace Sir
 
         public double CosAngle(IVector vec1, IVector vec2)
         {
-            //var dotProduct = vec1.Value.DotProduct(vec2.Value);
-            //var dotSelf1 = vec1.Value.DotProduct(vec1.Value);
-            //var dotSelf2 = vec2.Value.DotProduct(vec2.Value);
-            //return (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
-
-            var dotProduct = vec1.Value.DotProduct(vec2.Value);
             var dotSelf1 = vec1.Value.Norm(2);
             var dotSelf2 = vec2.Value.Norm(2);
+
+            if (dotSelf1 == 0 && dotSelf2 > 0)
+            {
+                return 0;
+            }
+            else if (dotSelf2 == 0 && dotSelf1 > 0)
+            {
+                return 0;
+            }
+            else if (dotSelf1 == 0 && dotSelf2 == 0)
+            {
+                return 1;
+            }
+
+            var dotProduct = vec1.Value.DotProduct(vec2.Value);
 
             return dotProduct / (dotSelf1 * dotSelf2);
         }
 
-        public double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream)
+        public double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream, out IVector otherVector)
         {
-            Span<byte> buf = new byte[componentCount * 2 * sizeof(float)];
+            Span<byte> buf = new byte[componentCount * 2 * sizeof(int)];
 
             vectorStream.Seek(vectorOffset, SeekOrigin.Begin);
             vectorStream.Read(buf);
@@ -37,16 +46,21 @@ namespace Sir
 
             for (int i = 0; i < componentCount; i++)
             {
-                tuples[i] = new Tuple<int, float>(index[i], values[i]);
+                var val = values[i];
+
+                if (val.Approximates(0))
+                    val = 0;
+
+                tuples[i] = new Tuple<int, float>(index[i], val);
             }
 
-            var otherVector = CreateVector.SparseOfIndexed(VectorWidth, tuples);
+            otherVector = new IndexedVector(CreateVector.SparseOfIndexed(VectorWidth, tuples));
 
-            var dotProduct = vector.Value.DotProduct(otherVector);
-            var dotSelf1 = vector.Value.DotProduct(vector.Value);
-            var dotSelf2 = otherVector.DotProduct(otherVector);
+            var dotSelf1 = vector.Value.Norm(2);
+            var dotSelf2 = otherVector.Value.Norm(2);
+            var dotProduct = vector.Value.DotProduct(otherVector.Value);
 
-            return (dotProduct / (Math.Sqrt(dotSelf1) * Math.Sqrt(dotSelf2)));
+            return dotProduct / (dotSelf1 * dotSelf2);
         }
     }
 
@@ -92,6 +106,6 @@ namespace Sir
     {
         int VectorWidth { get; }
         double CosAngle(IVector vec1, IVector vec2);
-        double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream);
+        double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream, out IVector otherVector);
     }
 }

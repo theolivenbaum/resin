@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Sir.VectorSpace
 {
@@ -7,13 +8,13 @@ namespace Sir.VectorSpace
     {
         public double Score { get; set; }
         public VectorNode Node { get; set; }
+        public IList<VectorNode> Path { get; set; }
 
-        public Hit() {}
-
-        public Hit(VectorNode node, double score)
+        public Hit (VectorNode node, double score, IList<VectorNode> path)
         {
             Score = score;
             Node = node;
+            Path = path;
         }
 
         public override string ToString()

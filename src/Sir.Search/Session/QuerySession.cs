@@ -82,11 +82,11 @@ namespace Sir.Search
             if (query == null)
                 return;
 
-            //foreach (var q in query.All())
-            Parallel.ForEach(query.All(), q =>
+            foreach (var q in query.All())
+            //Parallel.ForEach(query.All(), q =>
             {
-                //foreach (var term in q.Terms)
-                Parallel.ForEach(q.Terms, term =>
+                foreach (var term in q.Terms)
+                //Parallel.ForEach(q.Terms, term =>
                 {
                     var columnReader = CreateColumnReader(term.CollectionId, term.KeyId);
 
@@ -103,8 +103,8 @@ namespace Sir.Search
                             }
                         }
                     }
-                });
-            });
+                }//);
+            }//);
         }
 
         private static ScoredResult Sort(IDictionary<(ulong, long), double> documents, int skip, int take)
@@ -203,9 +203,12 @@ namespace Sir.Search
             if (!File.Exists(ixFileName))
                 return null;
 
+            var vectorFileName = Path.Combine(_sessionFactory.Dir, $"{collectionId}.vec");
+
             return new ColumnStreamReader(
-                    collectionId,
-                    keyId,
+                    new PageIndexReader(_sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Dir, $"{collectionId}.{keyId}.ixtp"))),
+                    _sessionFactory.CreateReadStream(ixFileName),
+                    _sessionFactory.CreateReadStream(vectorFileName),
                     _sessionFactory,
                     _logger);
         }

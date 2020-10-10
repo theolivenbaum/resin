@@ -9,11 +9,14 @@ namespace Sir.VectorSpace
     public class PageIndexWriter : IDisposable
     {
         private readonly Stream _stream;
+        private readonly bool _keepStreamOpen;
+
         public long Position => _stream.Position;
 
-        public PageIndexWriter(Stream stream)
+        public PageIndexWriter(Stream stream, bool keepStreamOpen = false)
         {
             _stream = stream;
+            _keepStreamOpen = keepStreamOpen;
         }
 
         public void Put(long offset, long length)
@@ -24,7 +27,8 @@ namespace Sir.VectorSpace
 
         public void Dispose()
         {
-            _stream.Dispose();
+            if(!_keepStreamOpen)
+                _stream.Dispose();
         }
     }
 }

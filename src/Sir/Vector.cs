@@ -3,6 +3,7 @@ using MathNet.Numerics.LinearAlgebra.Storage;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Sir
@@ -13,10 +14,16 @@ namespace Sir
         public Vector<float> Value { get; private set; }
         public int ComponentCount { get; }
 
+        public IndexedVector(int vectorWidth)
+        {
+            Value = CreateVector.Sparse(SparseVectorStorage<float>.OfEnumerable(new float[vectorWidth]));
+
+            ComponentCount = ((SparseVectorStorage<float>)Value.Storage).Length;
+        }
+
         public IndexedVector(IEnumerable<float> values, object data = null)
         {
-            Value = CreateVector.Sparse(
-                SparseVectorStorage<float>.OfEnumerable(values));
+            Value = CreateVector.Sparse(SparseVectorStorage<float>.OfEnumerable(values));
 
             ComponentCount = ((SparseVectorStorage<float>)Value.Storage).Length;
 
@@ -88,8 +95,10 @@ namespace Sir
 
         public void Serialize(Stream stream)
         {
-            stream.Write(MemoryMarshal.Cast<int, byte>(((SparseVectorStorage<float>)Value.Storage).Indices));
-            stream.Write(MemoryMarshal.Cast<float, byte>(((SparseVectorStorage<float>)Value.Storage).Values));
+            var storage = (SparseVectorStorage<float>)Value.Storage;
+
+            stream.Write(MemoryMarshal.Cast<int, byte>(storage.Indices));
+            stream.Write(MemoryMarshal.Cast<float, byte>(storage.Values));
         }
 
         public override string ToString()
