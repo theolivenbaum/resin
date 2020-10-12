@@ -28,7 +28,6 @@ namespace Sir.Mnist
             using (var querySession = sessionFactory.CreateQuerySession(model))
             {
                 var queryParser = new QueryParser<IImage>(sessionFactory, model, logger);
-                var keyId = sessionFactory.GetKeyId(collection.ToHash(), "image".ToHash());
 
                 foreach (var image in images)
                 {
