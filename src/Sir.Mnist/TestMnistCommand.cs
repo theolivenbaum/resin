@@ -22,27 +22,55 @@ namespace Sir.Mnist
             var count = 0;
             var errors = 0;
             var model = new ImageModel();
+            const int sampleSize = int.MaxValue;
 
             using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
             using (var querySession = sessionFactory.CreateQuerySession(model))
             {
                 var queryParser = new QueryParser<IImage>(sessionFactory, model, logger);
+                var keyId = sessionFactory.GetKeyId(collection.ToHash(), "image".ToHash());
 
                 foreach (var image in images)
                 {
-                    var query = queryParser.Parse(collection, image, "image", "label", true, false);
-                    var result = querySession.Query(query, 0, 1);
-                    object documentLabel = result.Total == 0 ? (object)null : (byte)result.Documents.First()["label"];
-                    var score = result.Total == 0 ? 0 : result.Documents.First()[SystemFields.Score];
+                    var query = queryParser.Parse(collection, image, field: "image", select: "label", and: true, or: false);
+                    var result = querySession.Query(query, 0, sampleSize);
 
                     count++;
 
-                    if (result.Total == 0 || documentLabel != image.DisplayName)
+                    if (result.Total == 0)
                     {
                         errors++;
                     }
+                    else
+                    {
+                        var imageLabel = image.DisplayName.ToString();
+                        var documentLabel = result.Documents.First()["label"].ToString();
 
-                    logger.LogInformation($"test label: {image.DisplayName}. document label: {documentLabel}. {result.Total} hits. score: {score}. tot. errors: {errors}. total tests {count}. errors: {(float)errors / count*100}%");
+                        if (!documentLabel.Equals(imageLabel))
+                        {
+                            bool goodSample = false;
+                            var groups = result.Documents.GroupBy(x => x[SystemFields.Score]).OrderByDescending(x => x.Key);
+                            var group = groups.First();
+
+                            foreach (var document in group)
+                            {
+                                documentLabel = document["label"].ToString();
+
+                                if (documentLabel.Equals(imageLabel))
+                                {
+                                    goodSample = true;
+                                    break;
+                                }
+                            }
+
+                            if (!goodSample)
+                            {
+                                errors++;
+                            }
+                        }
+                    }
+
+                    logger.LogInformation($"total errors: {errors}. total tests {count}. error rate: {(float)errors / count * 100}%");
                 }
             }
 

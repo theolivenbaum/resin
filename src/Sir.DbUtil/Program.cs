@@ -17,7 +17,8 @@ namespace Sir.DbUtil
                     .AddFilter("Microsoft", LogLevel.Warning)
                     .AddFilter("System", LogLevel.Warning)
                     .AddFilter("Sir.DbUtil.Program", LogLevel.Information)
-                    .AddConsole().AddDebug();
+                    .AddConsole()
+                    .AddDebug();
             });
 
             var logger = loggerFactory.CreateLogger("dbutil");

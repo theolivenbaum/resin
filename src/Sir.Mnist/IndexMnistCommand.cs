@@ -9,6 +9,9 @@ namespace Sir.Mnist
     /// Creates a vector index of the MNIST database.
     /// </summary>
     /// <example>
+    /// indexmnist --imageFileName C:\temp\mnist\train-images.idx3-ubyte --labelFileName C:\temp\mnist\train-labels.idx1-ubyte --collection mnist
+    /// </example>
+    /// <example>
     /// indexmnist --imageFileName C:\temp\mnist\t10k-images.idx3-ubyte --labelFileName C:\temp\mnist\t10k-labels.idx1-ubyte --collection mnist
     /// </example>
     public class IndexMnistCommand : ICommand

@@ -448,7 +448,6 @@ namespace Sir.Search
         {
             return new QuerySession(
                 this,
-                Config,
                 model,
                 new PostingsReader(this),
                 _logger);

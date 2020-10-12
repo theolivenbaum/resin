@@ -12,10 +12,8 @@ namespace Sir.Search
     /// Read session targeting a single collection.
     /// </summary>
     public class QuerySession : DocumentStreamSession, IDisposable, IQuerySession
-
     {
         private readonly SessionFactory _sessionFactory;
-        private readonly IConfigurationProvider _config;
         private readonly IModel _model;
         private readonly IPostingsReader _postingsReader;
 
@@ -23,13 +21,11 @@ namespace Sir.Search
 
         public QuerySession(
             SessionFactory sessionFactory,
-            IConfigurationProvider config,
             IModel model,
             IPostingsReader postingsReader,
             ILogger logger) : base(sessionFactory)
         {
             _sessionFactory = sessionFactory;
-            _config = config;
             _model = model;
             _postingsReader = postingsReader;
             _logger = logger;
@@ -49,6 +45,20 @@ namespace Sir.Search
             return new ReadResult { Query = query, Total = 0, Documents = new IDictionary<string, object>[0] };
         }
 
+        public ReadResult Query(Term term, int skip, int take, HashSet<string> select)
+        {
+            var result = MapReduceSort(term, skip, take);
+
+            if (result != null)
+            {
+                var docs = ReadDocs(result.SortedDocuments, select);
+
+                return new ReadResult { QueryTerm = term, Total = result.Total, Documents = docs };
+            }
+
+            return new ReadResult { QueryTerm = term, Total = 0, Documents = new IDictionary<string, object>[0] };
+        }
+
         private ScoredResult MapReduceSort(IQuery query, int skip, int take)
         {
             var timer = Stopwatch.StartNew();
@@ -56,20 +66,45 @@ namespace Sir.Search
             // Map
             Map(query);
 
-            _logger.LogInformation($"mapping took {timer.Elapsed}");
+            _logger.LogDebug($"mapping took {timer.Elapsed}");
             timer.Restart();
 
             // Reduce
             IDictionary<(ulong, long), double> scoredResult = new Dictionary<(ulong, long), double>();
             _postingsReader.Reduce(query, ref scoredResult);
 
-            _logger.LogInformation("reducing took {0}", timer.Elapsed);
+            _logger.LogDebug("reducing took {0}", timer.Elapsed);
             timer.Restart();
 
             // Sort
             var sorted = Sort(scoredResult, skip, take);
 
-            _logger.LogInformation("sorting took {0}", timer.Elapsed);
+            _logger.LogDebug("sorting took {0}", timer.Elapsed);
+
+            return sorted;
+        }
+
+        private ScoredResult MapReduceSort(Term term, int skip, int take)
+        {
+            var timer = Stopwatch.StartNew();
+
+            // Map
+            Map(term);
+
+            _logger.LogDebug($"scanning took {timer.Elapsed}");
+            timer.Restart();
+
+            // Reduce
+            IDictionary<(ulong, long), double> scoredResult = new Dictionary<(ulong, long), double>();
+            _postingsReader.Reduce(term, ref scoredResult);
+
+            _logger.LogDebug("reducing took {0}", timer.Elapsed);
+            timer.Restart();
+
+            // Sort
+            var sorted = Sort(scoredResult, skip, take);
+
+            _logger.LogDebug("sorting took {0}", timer.Elapsed);
 
             return sorted;
         }
@@ -82,11 +117,11 @@ namespace Sir.Search
             if (query == null)
                 return;
 
-            foreach (var q in query.All())
-            //Parallel.ForEach(query.All(), q =>
+            //foreach (var q in query.All())
+            Parallel.ForEach(query.All(), q =>
             {
-                foreach (var term in q.Terms)
-                //Parallel.ForEach(q.Terms, term =>
+                //foreach (var term in q.Terms)
+                Parallel.ForEach(q.Terms, term =>
                 {
                     var columnReader = CreateColumnReader(term.CollectionId, term.KeyId);
 
@@ -99,12 +134,31 @@ namespace Sir.Search
                             if (hit != null)
                             {
                                 term.Score = hit.Score;
-                                term.PostingsOffsets = hit.Node.PostingsOffsets;
+                                term.PostingsOffsets = hit.Node.PostingsOffsets ?? new List<long> { hit.Node.PostingsOffset };
                             }
                         }
                     }
-                }//);
-            }//);
+                });
+            });
+        }
+
+        private void Map(Term term)
+        {
+            var columnReader = CreateColumnReader(term.CollectionId, term.KeyId);
+
+            if (columnReader != null)
+            {
+                using (columnReader)
+                {
+                    var hit = columnReader.ClosestMatch(term.Vector, _model);
+
+                    if (hit != null)
+                    {
+                        term.Score = hit.Score;
+                        term.PostingsOffsets = hit.Node.PostingsOffsets ?? new List<long> { hit.Node.PostingsOffset };
+                    }
+                }
+            }
         }
 
         private static ScoredResult Sort(IDictionary<(ulong, long), double> documents, int skip, int take)
@@ -181,7 +235,7 @@ namespace Sir.Search
                 }
             }
 
-            _logger.LogInformation($"reading documents took {timer.Elapsed}");
+            _logger.LogDebug($"reading documents took {timer.Elapsed}");
             timer.Restart();
 
             result.Sort(
@@ -191,7 +245,7 @@ namespace Sir.Search
                     return ((double)doc2[SystemFields.Score]).CompareTo((double)doc1[SystemFields.Score]);
                 });
 
-            _logger.LogInformation($"second sorting took {timer.Elapsed}");
+            _logger.LogDebug($"second sorting took {timer.Elapsed}");
 
             return result;
         }

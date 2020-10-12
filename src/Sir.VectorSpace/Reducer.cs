@@ -83,73 +83,76 @@ namespace Sir.Search
             }
         }
 
-        private void Reduce(IList<Term> terms, ref IDictionary<(ulong Key, long Value), double> result)
+        public void Reduce(Term term, ref IDictionary<(ulong, long), double> result)
         {
-            foreach (var term in terms)
+            if (term.PostingsOffsets == null)
+                return;
+
+            var termResult = new HashSet<(ulong, long)>(Read(term.CollectionId, term.PostingsOffsets));
+
+            if (term.IsIntersection)
             {
-                if (term.PostingsOffsets == null)
-                    continue;
-
-                var termResult = new HashSet<(ulong, long)>(Read(term.CollectionId, term.PostingsOffsets));
-
-                if (term.IsIntersection)
+                if (result.Count == 0)
                 {
-                    if (result.Count == 0)
+                    foreach (var docId in termResult)
                     {
-                        foreach (var docId in termResult)
-                        {
-                            result.Add(docId, term.Score);
-                        }
-                    }
-                    else
-                    {
-                        var intersection = new Dictionary<(ulong, long), double>();
-
-                        foreach (var doc in termResult)
-                        {
-                            double score;
-
-                            if (result.TryGetValue(doc, out score))
-                            {
-                                intersection.Add(doc, score + term.Score);
-                            }
-                        }
-
-                        result = intersection;
+                        result.Add(docId, term.Score);
                     }
                 }
-                else if (term.IsUnion)
+                else
                 {
-                    if (result.Count == 0)
+                    var intersection = new Dictionary<(ulong, long), double>();
+
+                    foreach (var doc in termResult)
                     {
-                        foreach (var docId in termResult)
+                        double score;
+
+                        if (result.TryGetValue(doc, out score))
                         {
-                            result.Add(docId, term.Score);
+                            intersection.Add(doc, score + term.Score);
                         }
                     }
-                    else
+
+                    result = intersection;
+                }
+            }
+            else if (term.IsUnion)
+            {
+                if (result.Count == 0)
+                {
+                    foreach (var docId in termResult)
                     {
-                        foreach (var doc in termResult)
+                        result.Add(docId, term.Score);
+                    }
+                }
+                else
+                {
+                    foreach (var doc in termResult)
+                    {
+                        if (result.ContainsKey(doc))
                         {
-                            if (result.ContainsKey(doc))
-                            {
-                                result[doc] += term.Score;
-                            }
+                            result[doc] += term.Score;
                         }
                     }
                 }
-                else // Not
+            }
+            else // Not
+            {
+                if (result.Count > 0)
                 {
-                    if (result.Count == 0)
-                    {
-                        continue;
-                    }
-
                     foreach (var doc in termResult)
                     {
                         result.Remove(doc);
                     }
                 }
+            }
+        }
+
+        private void Reduce(IList<Term> terms, ref IDictionary<(ulong Key, long Value), double> result)
+        {
+            foreach (var term in terms)
+            {
+                Reduce(term, ref result);
             }
         }
     }

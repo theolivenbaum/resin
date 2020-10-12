@@ -7,7 +7,7 @@ namespace Sir.Search
 {
     public class ImageModel : DistanceCalculator, IImageModel
     {
-        public double IdenticalAngle => 0.95d;
+        public double IdenticalAngle => 0.99d;
         public double FoldAngle => 0.85d;
         public override int VectorWidth => 28;
 
