@@ -22,7 +22,7 @@ namespace Sir.Search
             _timer = new Stopwatch();
         }
 
-        public void Write(HttpRequest request, IStringModel model)
+        public void Write(HttpRequest request, ITextModel model)
         {
             var documents = Deserialize<IEnumerable<IDictionary<string, object>>>(request.Body);
             var storedFieldNames = new HashSet<string>(request.Query["storedFields"].ToArray());

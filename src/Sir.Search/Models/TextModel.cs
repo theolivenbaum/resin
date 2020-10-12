@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Sir.Search
 {
-    public class StringModel : DistanceCalculator, IStringModel
+    public class TextModel : DistanceCalculator, ITextModel
     {
         public double IdenticalAngle => 0.88d;
         public double FoldAngle => 0.58d;

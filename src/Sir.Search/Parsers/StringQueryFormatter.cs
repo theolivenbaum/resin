@@ -17,7 +17,7 @@ namespace Sir.Search
             _log = log;
         }
 
-        public async Task<string> Format(HttpRequest request, IStringModel tokenizer)
+        public async Task<string> Format(HttpRequest request, ITextModel tokenizer)
         {
             var parser = new HttpStringQueryParser(new QueryParser<string>(_sessionFactory, tokenizer, _log));
             var query = await parser.ParseRequest(request);

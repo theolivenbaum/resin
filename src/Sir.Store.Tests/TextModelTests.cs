@@ -7,22 +7,24 @@ using System.IO;
 
 namespace Sir.Search.Tests
 {
-    public class VectorSpaceTests
+    public class TextModelTests
     {
         private ILoggerFactory _loggerFactory;
         private SessionFactory _sessionFactory;
 
-        private readonly string[] _stringData = new string[] { "apple", "apples", "apricote", "apricots", "avocado", "avocados", "banana", "bananas", "blueberry", "blueberries", "cantalope" };
+        private readonly string[] _data = new string[] { "apple", "apples", "apricote", "apricots", "avocado", "avocados", "banana", "bananas", "blueberry", "blueberries", "cantalope" };
 
         [Test]
-        public void Can_traverse_in_memory_tree()
+        public void Can_traverse_in_memory()
         {
-            var model = new StringModel();
-            var tree = GraphBuilder.CreateTree(model, _stringData);
+            var model = new TextModel();
+            var tree = GraphBuilder.CreateTree(model, _data);
+
+            Debug.WriteLine(PathFinder.Visualize(tree));
 
             Assert.DoesNotThrow(() => 
             {
-                foreach (var word in _stringData)
+                foreach (var word in _data)
                 {
                     foreach (var queryVector in model.Tokenize(word))
                     {
@@ -45,10 +47,10 @@ namespace Sir.Search.Tests
         }
 
         [Test]
-        public void Can_traverse_streamed_tree()
+        public void Can_traverse_streamed()
         {
-            var model = new StringModel();
-            var tree = GraphBuilder.CreateTree(model, _stringData);
+            var model = new TextModel();
+            var tree = GraphBuilder.CreateTree(model, _data);
             var collectionId = "VectorSpaceTests.Can_traverse_streamed_tree".ToHash();
 
             using (var indexStream = new MemoryStream())
@@ -60,15 +62,13 @@ namespace Sir.Search.Tests
                     writer.CreatePage(tree, vectorStream, new PageIndexWriter(pageStream, keepStreamOpen:true));
                 }
 
-                indexStream.Position = 0;
-                vectorStream.Position = 0;
                 pageStream.Position = 0;
 
                 Assert.DoesNotThrow(() =>
                 {
                     using (var reader = new ColumnStreamReader(new PageIndexReader(pageStream), indexStream, vectorStream, _sessionFactory, _loggerFactory.CreateLogger<ColumnStreamReader>()))
                     {
-                        foreach (var word in _stringData)
+                        foreach (var word in _data)
                         {
                             foreach (var queryVector in model.Tokenize(word))
                             {
@@ -89,24 +89,6 @@ namespace Sir.Search.Tests
                         }
                     }
                 });
-            }
-        }
-
-        public void Can_traverse_most_logical_path()
-        {
-            var data = new string[] { "apple", "apples", "apricote", "apricots", "avocado", "avocados", "banana", "bananas", "blueberry", "blueberries", "cantalope" };
-            var model = new StringModel();
-            var tree = GraphBuilder.CreateTree(model, data);
-
-            foreach (var word in data)
-            {
-               foreach (var queryVector in model.Tokenize(word))
-                {
-                    var hit = PathFinder.ClosestMatch(tree, queryVector, model);
-
-                }
-
-
             }
         }
 

@@ -9,10 +9,10 @@ namespace Sir.HttpServer.Controllers
     public class QueryController : Controller
     {
         private readonly IHttpReader _reader;
-        private readonly IStringModel _model;
+        private readonly ITextModel _model;
         private readonly ILogger<QueryController> _logger;
 
-        public QueryController(IHttpReader reader, IStringModel tokenizer, ILogger<QueryController> logger)
+        public QueryController(IHttpReader reader, ITextModel tokenizer, ILogger<QueryController> logger)
         {
             _reader = reader;
             _model = tokenizer;

@@ -14,7 +14,7 @@ namespace Sir.Mnist
             _labelFileName = labelFileName;
         }
 
-        public IEnumerable<MnistImage> Read()
+        public IEnumerable<IImage> Read()
         {
             using (var labelFile = new FileStream(_labelFileName, FileMode.Open))
             using (var imageFile = new FileStream(_imageFileName, FileMode.Open))

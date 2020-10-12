@@ -9,13 +9,13 @@ namespace Sir.HttpServer.Controllers
     public class WriteController : Controller
     {
         private readonly IHttpWriter _writer;
-        private readonly IStringModel _model;
+        private readonly ITextModel _model;
         private readonly ILogger<WriteController> _logger;
         private readonly IConfigurationProvider _config;
 
         public WriteController(
             IHttpWriter writer,
-            IStringModel tokenizer, 
+            ITextModel tokenizer, 
             ILogger<WriteController> logger,
             IConfigurationProvider config)
         {

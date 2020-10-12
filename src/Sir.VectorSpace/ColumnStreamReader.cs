@@ -70,13 +70,11 @@ namespace Sir.VectorSpace
 
         private Hit ClosestMatchInSegment(IVector queryVector, IModel model, long segmentOffset, long segmentSize)
         {
-            if (segmentOffset > 0)
-                _ixFile.Seek(segmentOffset, SeekOrigin.Begin);
+            _ixFile.Seek(segmentOffset, SeekOrigin.Begin);
 
             Span<byte> block = stackalloc byte[VectorNode.BlockSize];
             VectorNode bestNode = null;
             double bestScore = 0;
-            var path = new List<VectorNode>();
             var read = _ixFile.Read(block);
 
             while (read < segmentSize)
@@ -91,19 +89,17 @@ namespace Sir.VectorSpace
                 if (angle >= model.IdenticalAngle)
                 {
                     bestScore = angle;
-                    var n = new VectorNode(postingsOffset);
+                    var n = new VectorNode(vectorOnFile, postingsOffset: postingsOffset);
                     bestNode = n;
 
                     break;
                 }
                 else if (angle > model.FoldAngle)
                 {
-                    path.Add(new VectorNode(vectorOnFile));
-
                     if (bestNode == null || angle > bestScore)
                     {
                         bestScore = angle;
-                        bestNode = new VectorNode(postingsOffset);
+                        bestNode = new VectorNode(vectorOnFile, postingsOffset: postingsOffset);
                     }
                     else if (angle == bestScore)
                     {
@@ -129,12 +125,10 @@ namespace Sir.VectorSpace
                 }
                 else
                 {
-                    path.Add(new VectorNode(vectorOnFile));
-
                     if ((bestNode == null && angle > bestScore) || angle > bestScore)
                     {
                         bestScore = angle;
-                        bestNode = new VectorNode(postingsOffset);
+                        bestNode = new VectorNode(vectorOnFile, postingsOffset: postingsOffset);
                     }
                     else if (angle > 0 && angle == bestScore)
                     {
@@ -169,7 +163,7 @@ namespace Sir.VectorSpace
                 }
             }
 
-            return new Hit(bestNode, bestScore, path);
+            return new Hit(bestNode, bestScore);
         }
 
         private void SkipTree()

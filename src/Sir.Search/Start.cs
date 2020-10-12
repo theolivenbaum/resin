@@ -12,7 +12,7 @@ namespace Sir.Search
             IServiceCollection services, ServiceProvider serviceProvider, IConfigurationProvider config)
         {
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-            var model = new StringModel();
+            var model = new TextModel();
             var sessionFactory = new SessionFactory(
                 config,
                 loggerFactory.CreateLogger<SessionFactory>());
@@ -21,7 +21,7 @@ namespace Sir.Search
 
             var httpParser = new HttpStringQueryParser(qp);
 
-            services.AddSingleton(typeof(IStringModel), model);
+            services.AddSingleton(typeof(ITextModel), model);
             services.AddSingleton(typeof(ISessionFactory), sessionFactory);
             services.AddSingleton(typeof(SessionFactory), sessionFactory);
             services.AddSingleton(typeof(QueryParser<string>), qp);

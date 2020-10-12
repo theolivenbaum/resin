@@ -13,7 +13,7 @@ namespace Sir.CommonCrawl
         public void Run(IDictionary<string, string> args, ILogger logger)
         {
             var fileName = args["fileName"];
-            var model = new StringModel();
+            var model = new TextModel();
             var collectionId = "cc_wet".ToHash();
             var storedFieldNames = new HashSet<string> { "url" };
             var indexedFieldNames = new HashSet<string> { "description" };

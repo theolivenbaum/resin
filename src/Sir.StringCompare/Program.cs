@@ -10,7 +10,7 @@ namespace Sir.StringCompare
     {
         static void Main(string[] args)
         {
-            var model = new StringModel();
+            var model = new TextModel();
 
             if (args[0] == "--build-graph")
             {
@@ -23,7 +23,7 @@ namespace Sir.StringCompare
             }
         }
 
-        private static void Compare(string first, string second, IStringModel model)
+        private static void Compare(string first, string second, ITextModel model)
         {
             var baseVectorComponents = new List<float>(model.VectorWidth);
             var baseVectors = new List<IVector>();
@@ -50,10 +50,10 @@ namespace Sir.StringCompare
                     bvecs.Add(value);
                 }
 
-                baseVectors.Add(new IndexedVector(bvecs, model.VectorWidth));
+                baseVectors.Add(new IndexedVector(bvecs));
             }
 
-            var bvector = new IndexedVector(baseVectorComponents, model.VectorWidth);
+            var bvector = new IndexedVector(baseVectorComponents);
 
             var doc1 = new VectorNode(model.Tokenize(first).First());
             var doc2 = new VectorNode(model.Tokenize(second).First());
@@ -66,8 +66,8 @@ namespace Sir.StringCompare
                 angles2.Add(Convert.ToSingle(model.CosAngle(doc2.Vector, bvec)));
             }
 
-            var docVector1 = new IndexedVector(angles1, model.VectorWidth);
-            var docVector2 = new IndexedVector(angles2, model.VectorWidth);
+            var docVector1 = new IndexedVector(angles1);
+            var docVector2 = new IndexedVector(angles2);
 
             var angle = model.CosAngle(docVector1, docVector2);
             var angle1 = model.CosAngle(docVector1, bvector);
@@ -79,7 +79,7 @@ namespace Sir.StringCompare
             Console.WriteLine($"base vector similarity: {Math.Min(angle1, angle2) / Math.Max(angle1, angle2)}");
         }
 
-        private static void CompareBaseless(string first, string second, IStringModel model)
+        private static void CompareBaseless(string first, string second, ITextModel model)
         {
             var doc1 = new VectorNode(model.Tokenize(first).First());
             var doc2 = new VectorNode(model.Tokenize(second).First());
@@ -89,7 +89,7 @@ namespace Sir.StringCompare
             Console.WriteLine($"similarity (baseless): {angle}");
         }
 
-        private static void RunInteractiveGraphBuilder(IStringModel model)
+        private static void RunInteractiveGraphBuilder(ITextModel model)
         {
             var root = new VectorNode();
 

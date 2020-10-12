@@ -16,7 +16,7 @@ namespace Sir.CommonCrawl
         public static void WriteWatSegment(
             string fileName,
             string collection,
-            IStringModel model,
+            ITextModel model,
             ILogger logger,
             string refFileName)
         {

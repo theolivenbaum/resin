@@ -9,13 +9,13 @@ namespace Sir.HttpServer.Controllers
     public class StatusController : UIController
     {
         private readonly JobQueue _queue;
-        private readonly IStringModel _model;
+        private readonly ITextModel _model;
         private readonly QueryParser<string> _queryParser;
 
         public StatusController(
             IConfigurationProvider config,
             SessionFactory sessionFactory,
-            IStringModel model,
+            ITextModel model,
             QueryParser<string> queryParser,
             JobQueue queue) : base(config, sessionFactory)
         {

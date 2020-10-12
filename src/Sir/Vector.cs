@@ -3,7 +3,6 @@ using MathNet.Numerics.LinearAlgebra.Storage;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Sir
@@ -12,58 +11,50 @@ namespace Sir
     {
         public object Data { get; }
         public Vector<float> Value { get; private set; }
-        public int ComponentCount { get; }
+        public int ComponentCount => ((SparseVectorStorage<float>)Value.Storage).ValueCount;
 
-        public IndexedVector(int vectorWidth)
+        public IndexedVector(int numOfDimensions)
         {
-            Value = CreateVector.Sparse(SparseVectorStorage<float>.OfEnumerable(new float[vectorWidth]));
-
-            ComponentCount = ((SparseVectorStorage<float>)Value.Storage).Length;
+            Value = CreateVector.Sparse(SparseVectorStorage<float>.OfEnumerable(new float[numOfDimensions]));
         }
 
         public IndexedVector(IEnumerable<float> values, object data = null)
         {
             Value = CreateVector.Sparse(SparseVectorStorage<float>.OfEnumerable(values));
-
-            ComponentCount = ((SparseVectorStorage<float>)Value.Storage).Length;
-
             Data = data;
         }
 
-        public IndexedVector(SortedList<int, float> dictionary, int vectorWidth, object data = null)
+        public IndexedVector(SortedList<int, float> dictionary, int numOfDimensions, object data = null)
         {
-            var tuples = new Tuple<int, float>[Math.Min(dictionary.Count, vectorWidth)];
+            var tuples = new Tuple<int, float>[Math.Min(dictionary.Count, numOfDimensions)];
             var i = 0;
 
             foreach (var p in dictionary)
             {
-                if (i == vectorWidth)
+                if (i == numOfDimensions)
                     break;
 
                 tuples[i++] = new Tuple<int, float>(p.Key, p.Value);
             }
 
-            Value = CreateVector.SparseOfIndexed(vectorWidth, tuples);
-            ComponentCount = tuples.Length;
+            Value = CreateVector.SparseOfIndexed(numOfDimensions, tuples);
             Data = data;
         }
 
-        public IndexedVector(int[] index, float[] values, int vectorWidth, object data = null)
+        public IndexedVector(int[] index, float[] values, int numOfDimensions, object data = null)
         {
-            var tuples = new Tuple<int, float>[Math.Min(index.Length, vectorWidth)];
+            var tuples = new Tuple<int, float>[Math.Min(index.Length, numOfDimensions)];
 
             for (int i = 0; i < index.Length; i++)
             {
-                if (i == vectorWidth)
+                if (i == numOfDimensions)
                     break;
 
                 tuples[i] = new Tuple<int, float>(index[i], values[i]);
             }
 
             Value = CreateVector.Sparse(
-                SparseVectorStorage<float>.OfIndexedEnumerable(vectorWidth, tuples));
-
-            ComponentCount = tuples.Length;
+                SparseVectorStorage<float>.OfIndexedEnumerable(numOfDimensions, tuples));
 
             Data = data;
         }
@@ -71,13 +62,11 @@ namespace Sir
         public IndexedVector(Tuple<int, float>[] tuples, int vectorWidth)
         {
             Value = CreateVector.SparseOfIndexed(vectorWidth, tuples);
-            ComponentCount = tuples.Length;
         }
 
         public IndexedVector(Vector<float> vector)
         {
             Value = vector;
-            ComponentCount = ((SparseVectorStorage<float>)Value.Storage).Length;
         }
 
         public IndexedVector(IEnumerable<IVector> vectors)
@@ -89,21 +78,21 @@ namespace Sir
                 else
                     Value.Add(vector.Value);
             }
-
-            ComponentCount = ((SparseVectorStorage<float>)Value.Storage).Length;
         }
 
         public void Serialize(Stream stream)
         {
             var storage = (SparseVectorStorage<float>)Value.Storage;
+            var indices = MemoryMarshal.Cast<int, byte>(storage.Indices);
+            var values = MemoryMarshal.Cast<float, byte>(storage.Values);
 
-            stream.Write(MemoryMarshal.Cast<int, byte>(storage.Indices));
-            stream.Write(MemoryMarshal.Cast<float, byte>(storage.Values));
+            stream.Write(indices);
+            stream.Write(values);
         }
 
         public override string ToString()
         {
-            return Value?.ToString();
+            return Data == null ? Value.ToString() : Data.ToString();
         }
     }
 

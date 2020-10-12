@@ -10,7 +10,6 @@ namespace Sir.VectorSpace
             var best = root;
             var cursor = root;
             double highscore = 0;
-            var path = new List<VectorNode>();
             
             while (cursor != null)
             {
@@ -29,8 +28,6 @@ namespace Sir.VectorSpace
                         break;
                     }
 
-                    path.Add(cursor);
-                    
                     cursor = cursor.Left;
                 }
                 else
@@ -41,13 +38,11 @@ namespace Sir.VectorSpace
                         best = cursor;
                     }
 
-                    path.Add(cursor);
-
                     cursor = cursor.Right;
                 }
             }
 
-            return new Hit(best, highscore, path);
+            return new Hit(best, highscore);
         }
 
         public static IEnumerable<VectorNode> All(VectorNode root)

@@ -86,14 +86,6 @@ namespace Sir.VectorSpace
             VectorOffset = -1;
         }
 
-        public VectorNode(IVector vector)
-        {
-            Vector = vector;
-            ComponentCount = vector.ComponentCount;
-            PostingsOffset = -1;
-            VectorOffset = -1;
-        }
-
         public VectorNode(long postingsOffset)
         {
             PostingsOffset = -1;
@@ -101,14 +93,18 @@ namespace Sir.VectorSpace
             VectorOffset = -1;
         }
 
-        public VectorNode(IVector vector, long docId)
+        public VectorNode(IVector vector, long docId = -1, long postingsOffset = -1)
         {
             Vector = vector;
             ComponentCount = vector.ComponentCount;
-            PostingsOffset = -1;
+            PostingsOffset = postingsOffset;
             VectorOffset = -1;
-            DocIds = new HashSet<long>();
-            DocIds.Add(docId);
+
+            if (docId > -1)
+            {
+                DocIds = new HashSet<long>();
+                DocIds.Add(docId);
+            }
         }
 
         public VectorNode(long postingsOffset, long vecOffset, long terminator, long weight, IVector vector)
@@ -189,7 +185,7 @@ namespace Sir.VectorSpace
 
         public override string ToString()
         {
-            return Vector.ToString();
+            return Vector == null ? "ROOT" : Vector.Data == null ? Vector.ToString() : Vector.Data.ToString();
         }
 
         public VectorNodeData ToData()

@@ -2,23 +2,20 @@
 
 namespace Sir.Mnist
 {
-    public class MnistImage
+    public class MnistImage : IImage
     {
-        public byte[][] Pixels;
+        public byte[][] Pixels { get; }
 
-        public byte Label { get; }
+        public object DisplayName { get; }
 
         public MnistImage(byte[][] pixels, byte label)
         {
             Pixels = pixels;
-            Label = label;
+            DisplayName = label;
         }
 
-        public override string ToString()
+        public string Print()
         {
-            // Pixels are organized row-wise.
-            // Pixel values are 0 to 255. 0 means background(white), 255 means foreground(black). 
-
             var s = new StringBuilder();
 
             for (int i = 0; i < Pixels.Length; ++i)
@@ -38,6 +35,11 @@ namespace Sir.Mnist
             }
 
             return s.ToString();
+        }
+
+        public override string ToString()
+        {
+            return DisplayName?.ToString();
         }
     }
 }

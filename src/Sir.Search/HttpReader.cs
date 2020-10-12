@@ -37,7 +37,7 @@ namespace Sir.Search
         {
         }
 
-        public async Task<ResponseModel> Read(HttpRequest request, IStringModel model)
+        public async Task<ResponseModel> Read(HttpRequest request, ITextModel model)
         {
             var timer = Stopwatch.StartNew();
             var take = 100;

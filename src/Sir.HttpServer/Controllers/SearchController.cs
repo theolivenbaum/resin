@@ -10,12 +10,12 @@ namespace Sir.HttpServer.Controllers
     public class SearchController : UIController
     {
         private readonly IHttpReader _reader;
-        private readonly IStringModel _model;
+        private readonly ITextModel _model;
 
         public SearchController(
             IHttpReader reader, 
             IConfigurationProvider config, 
-            IStringModel model,
+            ITextModel model,
             SessionFactory sessionFactory) : base(config, sessionFactory)
         {
             _reader = reader;

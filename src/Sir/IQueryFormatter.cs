@@ -5,6 +5,6 @@ namespace Sir
 {
     public interface IQueryFormatter
     {
-        Task<string> Format(HttpRequest request, IStringModel model);
+        Task<string> Format(HttpRequest request, ITextModel model);
     }
 }

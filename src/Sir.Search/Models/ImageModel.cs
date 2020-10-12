@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MathNet.Numerics.LinearAlgebra.Storage;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,20 +11,15 @@ namespace Sir.Search
         public double FoldAngle => 0.85d;
         public override int VectorWidth => 28;
 
-        private readonly IVector _emptyVector;
-
-        public ImageModel()
+        public IEnumerable<IVector> Tokenize(IImage data)
         {
-            _emptyVector = new IndexedVector(VectorWidth);
-        }
-
-        public IEnumerable<IVector> Tokenize(byte[][] data)
-        {
-            foreach (var row in data)
+            foreach (var row in data.Pixels)
             {
-                var vector = new IndexedVector(row.Select(x => Convert.ToSingle(x)), row.Length);
+                var vector = new IndexedVector(
+                    row.Select(x => Convert.ToSingle(x)), 
+                    data.DisplayName);
 
-                if (CosAngle(vector, _emptyVector) < 1)
+                if (((SparseVectorStorage<float>)vector.Value.Storage).ValueCount > 0)
                     yield return vector;
             }
         }

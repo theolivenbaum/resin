@@ -29,11 +29,11 @@ namespace Sir.Mnist
 
                 foreach (var image in images)
                 {
-                    var document = new Dictionary<string, object>() { { "label", image.Label } };
+                    var document = new Dictionary<string, object>() { { "label", image.DisplayName } };
                     var storeFields = new HashSet<string> { "label" };
                     var documentId = writeSession.Put(document, storeFields);
 
-                    indexSession.Put(documentId, keyId, image.Pixels);
+                    indexSession.Put(documentId, keyId, image);
 
                     count++;
 

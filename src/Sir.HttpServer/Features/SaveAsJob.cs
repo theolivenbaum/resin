@@ -11,7 +11,7 @@ namespace Sir.HttpServer.Features
         private readonly SessionFactory _sessionFactory;
         private readonly QueryParser<string> _queryParser;
         private readonly ILogger _logger;
-        private readonly IStringModel _model;
+        private readonly ITextModel _model;
         private readonly HashSet<string> _indexFieldNames;
         private readonly string _target;
         private readonly int _skip;
@@ -22,7 +22,7 @@ namespace Sir.HttpServer.Features
         public SaveAsJob(
             SessionFactory sessionFactory,
             QueryParser<string> queryParser,
-            IStringModel model,
+            ITextModel model,
             ILogger logger,
             string target,
             string[] collections,

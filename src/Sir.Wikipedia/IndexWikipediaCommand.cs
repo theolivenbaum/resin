@@ -35,7 +35,7 @@ namespace Sir.Wikipedia
                 foreach (var page in payload.Batch(pageSize))
                 {
                     using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
-                    using (var indexSession = sessionFactory.CreateIndexSession(collectionId, new StringModel()))
+                    using (var indexSession = sessionFactory.CreateIndexSession(collectionId, new TextModel()))
                     {
                         foreach (var batch in page.Batch(reportSize))
                         {

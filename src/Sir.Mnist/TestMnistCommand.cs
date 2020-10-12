@@ -26,23 +26,23 @@ namespace Sir.Mnist
             using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
             using (var querySession = sessionFactory.CreateQuerySession(model))
             {
-                var queryParser = new QueryParser<byte[][]>(sessionFactory, model, logger);
+                var queryParser = new QueryParser<IImage>(sessionFactory, model, logger);
 
                 foreach (var image in images)
                 {
-                    var query = queryParser.Parse(collection, image.Pixels, "image", "label", true, false);
+                    var query = queryParser.Parse(collection, image, "image", "label", true, false);
                     var result = querySession.Query(query, 0, 1);
-                    var documentLabel = result.Total == 0 ? byte.MaxValue : (byte)result.Documents.First()["label"];
+                    object documentLabel = result.Total == 0 ? (object)null : (byte)result.Documents.First()["label"];
                     var score = result.Total == 0 ? 0 : result.Documents.First()[SystemFields.Score];
 
                     count++;
 
-                    if (result.Total == 0 || documentLabel != image.Label)
+                    if (result.Total == 0 || documentLabel != image.DisplayName)
                     {
                         errors++;
                     }
 
-                    logger.LogInformation($"test label: {image.Label}. document label: {documentLabel}. {result.Total} hits. score: {score}. tot. errors: {errors}. total tests {count}. errors: {(float)errors / count*100}%");
+                    logger.LogInformation($"test label: {image.DisplayName}. document label: {documentLabel}. {result.Total} hits. score: {score}. tot. errors: {errors}. total tests {count}. errors: {(float)errors / count*100}%");
                 }
             }
 

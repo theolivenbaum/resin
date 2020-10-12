@@ -10,14 +10,14 @@ namespace Sir.HttpServer.Controllers
     public class CrawlController : UIController
     {
         private readonly JobQueue _queue;
-        private readonly IStringModel _model;
+        private readonly ITextModel _model;
         private readonly QueryParser<string> _queryParser;
         private readonly ILogger<CrawlController> _log;
 
         public CrawlController(
             IConfigurationProvider config,
             SessionFactory sessionFactory,
-            IStringModel model,
+            ITextModel model,
             QueryParser<string> queryParser,
             JobQueue queue,
             ILogger<CrawlController> log) : base(config, sessionFactory)

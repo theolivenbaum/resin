@@ -115,7 +115,7 @@ namespace Sir.Search
             string collection,
             HashSet<string> storeFields, 
             HashSet<string> indexFields,
-            IStringModel model,
+            ITextModel model,
             int skip = 0,
             int take = 0,
             int batchSize = 1000000)
@@ -155,7 +155,7 @@ namespace Sir.Search
             IEnumerable<IDictionary<string, object>> documents,
             HashSet<string> indexFieldNames,
             HashSet<string> storeFieldNames,
-            IStringModel model,
+            ITextModel model,
             int reportSize = 1000)
         {
             var job = new WriteJob(targetCollectionId, documents, model, storeFieldNames, indexFieldNames);
@@ -288,7 +288,7 @@ namespace Sir.Search
 
         public void Write(
             IEnumerable<IDictionary<string, object>> documents, 
-            IStringModel model, 
+            ITextModel model, 
             HashSet<string> storedFieldNames,
             HashSet<string> indexedFieldNames,
             int reportSize = 1000
@@ -434,14 +434,14 @@ namespace Sir.Search
             );
         }
 
-        public IndexSession<string> CreateIndexSession(ulong collectionId, IStringModel model)
+        public IndexSession<string> CreateIndexSession(ulong collectionId, ITextModel model)
         {
             return new IndexSession<string>(collectionId, this, model, Config, _logger);
         }
 
-        public IndexSession<byte[][]> CreateIndexSession(ulong collectionId, IImageModel model)
+        public IndexSession<IImage> CreateIndexSession(ulong collectionId, IImageModel model)
         {
-            return new IndexSession<byte[][]>(collectionId, this, model, Config, _logger);
+            return new IndexSession<IImage>(collectionId, this, model, Config, _logger);
         }
 
         public IQuerySession CreateQuerySession(IModel model)
