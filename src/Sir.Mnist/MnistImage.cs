@@ -30,7 +30,7 @@ namespace Sir.Mnist
                 rows[i] = row;
             }
 
-            for (int i = 0; i < Pixels.Length; ++i)
+            for (int i = 0; i < rows.Length; ++i)
             {
                 for (int j = 0; j < rows[i].Length; ++j)
                 {
