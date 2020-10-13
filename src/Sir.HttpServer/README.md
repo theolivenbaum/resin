@@ -1,14 +1,13 @@
 # Sir.HttpServer
 
-Sir.HttpServer is a Kestrel application that both serves a HTML search (and result) page and provides a HTTP read/write API.
+Sir.HttpServer is a Kestrel application that both serves a HTML search (and result) page as well as providing a HTTP read/write API.
 
 ## HTTP API
 
 ### Write
 
-HTTP POST `[host]/io/[collection]` (e.g. "https://myapp.com/io/mycollection")
-
-Content-Type: application/json
+HTTP POST `[host]/write/[collection]` (e.g. "http://localhost/write/mycollection")  
+Content-Type: application/json  
 `
 [
 	{
@@ -20,10 +19,12 @@ Content-Type: application/json
 
 ### Read
 
-HTTP GET `[host]/io/[collection]?q=[my_query]&field=field1&field=field2`
-
-Accept: application/json
+HTTP GET `[host]/query/?collection=mycollection&q=[my_query]&field=field1&field=field2`  
+Accept: application/json  
 
 ## Web API
 
-Search page designed for humans is here: `[host]/`
+Search page designed for humans is here:  
+
+HTTP GET `[host]/` (e.g. "http://localhost/")  
+Accept: text/html

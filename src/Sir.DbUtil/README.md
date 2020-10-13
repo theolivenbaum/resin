@@ -1,26 +1,29 @@
 # Sir.DbUtil
 
-Sir.DbUtil is a console application for writing and validating local Resin databases.
+Sir.DbUtil is a console application for interacting with Resin databases and indices. It runs built-in command as well as `ICommand` commands 
+that you may write yourself.
 
-## Write
-```
-cd [path_of_resin_repo]
+## Usage
 
-dbutil write [path_of_local_json_file] [path_of_resin_data_directory] [name_of_collection] [num_of_docs_to_skip] [num_of_docs_to_take] [segment_size]
-```
+`cd local_path_to_resin_repo`
 
-E.g. 
+### dbutil.bat truncate --collection [collectionName]
 
-`dbutil write C:\\wikidata\\svwiki-20190624-cirrussearch-content.json\\svwiki-20190624-cirrussearch-content.json c:\\data\\resin www_se 0 10000 1000`
+Removes a collection.
 
-## Validate
+### dbutil.bat truncate-index --collection [collectionName]
 
-```
-cd [path_of_resin_repo]
+Removes the index of a collection.
 
-dbutil validate [path_of_resin_data_directory] [name_of_collection] [num_of_docs_to_skip] [num_of_docs_to_take]
-```
+### dbutil.bat optimize --collection [collectionName] --skip --take --batchSize
 
-E.g. 
+Creates one index segment out of all existing segments and makes querying faster.
 
-`dbutil validate c:\\data\\resin www_se 0 10000`
+### dbutil.bat slice --sourceFileName [sourceFileName] --resultFileName [resultFileName] --length [bytes_to_read]
+
+Help function for investigating big files.
+
+### dbutil.bat your_custom_task --your_args [your_args]
+
+Implement `Sir.ICommand` from the Sir.Core.dll. The name of your command and how you reference it will be the class name minus the word "Command, lowercased". 
+Drop your DLL file into DbUtil's bin folder to run it.
