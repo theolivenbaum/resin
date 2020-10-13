@@ -47,15 +47,15 @@ namespace Sir.Mnist
 
                         if (!documentLabel.Equals(imageLabel))
                         {
+                            Debug.WriteLine($"label: {imageLabel} document label: {documentLabel}\n{((MnistImage)image).Print()}");
+
                             bool goodSample = false;
                             var groups = result.Documents.GroupBy(x => x[SystemFields.Score]).OrderByDescending(x => x.Key);
                             var group = groups.First();
 
                             foreach (var document in group)
                             {
-                                documentLabel = document["label"].ToString();
-
-                                if (documentLabel.Equals(imageLabel))
+                                if (document["label"].ToString().Equals(imageLabel))
                                 {
                                     goodSample = true;
                                     break;

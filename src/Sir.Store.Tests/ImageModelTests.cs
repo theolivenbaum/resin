@@ -67,23 +67,23 @@ namespace Sir.Search.Tests
                 {
                     using (var reader = new ColumnStreamReader(new PageIndexReader(pageStream), indexStream, vectorStream, _sessionFactory, _loggerFactory.CreateLogger<ColumnStreamReader>()))
                     {
-                        foreach (var word in _data)
+                        foreach (var image in _data)
                         {
-                            foreach (var queryVector in model.Tokenize(word))
+                            foreach (var queryVector in model.Tokenize(image))
                             {
                                 var hit = reader.ClosestMatch(queryVector, model);
 
                                 if (hit == null)
                                 {
-                                    throw new Exception($"unable to find {word} in tree.");
+                                    throw new Exception($"unable to find {image} in tree.");
                                 }
 
                                 if (hit.Score < model.IdenticalAngle)
                                 {
-                                    throw new Exception($"unable to score {word}.");
+                                    throw new Exception($"unable to score {image}.");
                                 }
 
-                                Debug.WriteLine($"{word} matched vector in disk with {hit.Score * 100}% certainty.");
+                                Debug.WriteLine($"{image} matched vector in disk with {hit.Score * 100}% certainty.");
                             }
                         }
                     }

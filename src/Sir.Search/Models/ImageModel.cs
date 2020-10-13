@@ -12,11 +12,11 @@ namespace Sir.Search
 
         public IEnumerable<IVector> Tokenize(IImage data)
         {
-            var vector = new IndexedVector(
-                    data.Pixels.Select(x => Convert.ToSingle(x)),
-                    data.DisplayName);
+            var pixels = data.Pixels.Select(x => Convert.ToSingle(x));
 
-            yield return vector;
+            yield return new IndexedVector(
+                    pixels,
+                    data.DisplayName);
         }
     }
 }
