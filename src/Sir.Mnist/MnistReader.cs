@@ -18,33 +18,27 @@ namespace Sir.Mnist
         {
             using (var labelFile = new FileStream(_labelFileName, FileMode.Open))
             using (var imageFile = new FileStream(_imageFileName, FileMode.Open))
-            using (var labels = new BinaryReader(labelFile))
-            using (var images = new BinaryReader(imageFile))
+            using (var labelReader = new BinaryReader(labelFile))
+            using (var imageReader = new BinaryReader(imageFile))
             {
-                int discard1 = images.ReadInt32();
-                int numImages = images.ReadInt32WithCorrectEndianness();
-                int numRows = images.ReadInt32WithCorrectEndianness();
-                int numCols = images.ReadInt32WithCorrectEndianness();
-                int discard2 = labels.ReadInt32WithCorrectEndianness();
-                int numLabels = labels.ReadInt32WithCorrectEndianness();
-
-                byte[][] pixels = new byte[numRows][];
-
-                for (int i = 0; i < pixels.Length; ++i)
-                    pixels[i] = new byte[numCols];
+                int discard1 = imageReader.ReadInt32();
+                int numImages = imageReader.ReadInt32WithCorrectEndianness();
+                int numRows = imageReader.ReadInt32WithCorrectEndianness();
+                int numCols = imageReader.ReadInt32WithCorrectEndianness();
+                int discard2 = labelReader.ReadInt32WithCorrectEndianness();
+                int numLabels = labelReader.ReadInt32WithCorrectEndianness();
+                int numOfDimensions = numRows * numCols;
+                byte[] pixels = new byte[numOfDimensions];
 
                 for (int di = 0; di < numImages; ++di)
                 {
-                    for (int i = 0; i < 28; ++i)
+                    for (int i = 0; i < numOfDimensions; ++i)
                     {
-                        for (int j = 0; j < 28; ++j)
-                        {
-                            byte b = images.ReadByte();
-                            pixels[i][j] = b;
-                        }
+                        byte b = imageReader.ReadByte();
+                        pixels[i] = b;
                     }
 
-                    byte label = labels.ReadByte();
+                    byte label = labelReader.ReadByte();
 
                     yield return new MnistImage(pixels, label);
                 }
