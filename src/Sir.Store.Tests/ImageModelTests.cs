@@ -50,7 +50,6 @@ namespace Sir.Search.Tests
         {
             var model = new ImageModel();
             var tree = GraphBuilder.CreateTree(model, _data);
-            var collectionId = "VectorSpaceTests.Can_traverse_streamed_tree".ToHash();
 
             using (var indexStream = new MemoryStream())
             using (var vectorStream = new MemoryStream())

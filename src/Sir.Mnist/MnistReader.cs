@@ -28,10 +28,11 @@ namespace Sir.Mnist
                 int discard2 = labelReader.ReadInt32WithCorrectEndianness();
                 int numLabels = labelReader.ReadInt32WithCorrectEndianness();
                 int numOfDimensions = numRows * numCols;
-                byte[] pixels = new byte[numOfDimensions];
 
                 for (int di = 0; di < numImages; ++di)
                 {
+                    byte[] pixels = new byte[numOfDimensions];
+
                     for (int i = 0; i < numOfDimensions; ++i)
                     {
                         byte b = imageReader.ReadByte();

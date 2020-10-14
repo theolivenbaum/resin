@@ -14,9 +14,7 @@ namespace Sir.Search
         {
             var pixels = data.Pixels.Select(x => Convert.ToSingle(x));
 
-            yield return new IndexedVector(
-                    pixels,
-                    data.DisplayName);
+            yield return new IndexedVector(pixels, data.DisplayName);
         }
     }
 }
