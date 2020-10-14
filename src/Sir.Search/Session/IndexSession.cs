@@ -14,7 +14,6 @@ namespace Sir.Search
     {
         private readonly ulong _collectionId;
         private readonly SessionFactory _sessionFactory;
-        private readonly IConfigurationProvider _config;
         private readonly Stream _postingsStream;
         private readonly Stream _vectorStream;
         private readonly ILogger _logger;
@@ -34,12 +33,10 @@ namespace Sir.Search
             ulong collectionId,
             SessionFactory sessionFactory,
             IModel<T> model,
-            IConfigurationProvider config,
             ILogger logger)
         {
             _collectionId = collectionId;
             _sessionFactory = sessionFactory;
-            _config = config;
             _postingsStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, $"{collectionId}.pos"));
             _vectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, $"{collectionId}.vec"));
             _model = model;
