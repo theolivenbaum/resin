@@ -18,7 +18,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.StringCompare", "Sir.St
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.DbUtil", "Sir.DbUtil\Sir.DbUtil.csproj", "{D267D6FB-6DA5-444F-A628-FC0C3B1C6662}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Store.Tests", "Sir.Store.Tests\Sir.Store.Tests.csproj", "{03F6B627-A8CC-43A6-9BD0-5A9CE47E7EA6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Tests", "Sir.Store.Tests\Sir.Tests.csproj", "{03F6B627-A8CC-43A6-9BD0-5A9CE47E7EA6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.KeyValue", "Sir.KeyValue\Sir.KeyValue.csproj", "{53B25A13-5C26-4344-9AB6-7E998282EF94}"
 EndProject
@@ -34,7 +34,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.CommonCrawl", "Sir.Comm
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Mnist", "Sir.Mnist\Sir.Mnist.csproj", "{436647C9-EDFF-44AD-AF2F-ABC4EBA70ED7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sir.Wikipedia", "Sir.Wikipedia\Sir.Wikipedia.csproj", "{6F3C960C-7652-430C-A253-081E1506BA81}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Wikipedia", "Sir.Wikipedia\Sir.Wikipedia.csproj", "{6F3C960C-7652-430C-A253-081E1506BA81}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

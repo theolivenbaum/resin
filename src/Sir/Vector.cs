@@ -64,9 +64,10 @@ namespace Sir
             Value = CreateVector.SparseOfIndexed(vectorWidth, tuples);
         }
 
-        public IndexedVector(Vector<float> vector)
+        public IndexedVector(Vector<float> vector, object data = null)
         {
             Value = vector;
+            Data = data;
         }
 
         public IndexedVector(IEnumerable<IVector> vectors)

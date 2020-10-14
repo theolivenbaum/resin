@@ -21,6 +21,8 @@ namespace Sir.Search.Tests
             var model = new ImageModel();
             var tree = GraphBuilder.CreateTree(model, _data);
 
+            Print(tree);
+
             Assert.DoesNotThrow(() => 
             {
                 foreach (var word in _data)
@@ -108,13 +110,20 @@ namespace Sir.Search.Tests
 
             _data = new MnistReader(
                 @"C:\temp\mnist\t10k-images.idx3-ubyte",
-                @"C:\temp\mnist\t10k-labels.idx1-ubyte").Read().Take(100).ToArray();
+                @"C:\temp\mnist\t10k-labels.idx1-ubyte").Read().Take(1000).ToArray();
         }
 
         [TearDown]
         public void TearDown()
         {
             _sessionFactory.Dispose();
+        }
+
+        private static void Print(VectorNode tree)
+        {
+            var diagram = PathFinder.Visualize(tree);
+            File.WriteAllText(@"c:\temp\tree.txt", diagram);
+            Debug.WriteLine(diagram);
         }
     }
 }
