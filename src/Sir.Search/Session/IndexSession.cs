@@ -19,6 +19,7 @@ namespace Sir.Search
         private readonly ILogger _logger;
         private readonly IModel<T> _model;
         private readonly ConcurrentDictionary<long, VectorNode> _index;
+        private readonly Queue<(long keyId, VectorNode node)> _unclassified;
         private bool _flushed;
 
         /// <summary>
@@ -42,6 +43,7 @@ namespace Sir.Search
             _model = model;
             _index = new ConcurrentDictionary<long, VectorNode>();
             _logger = logger;
+            _unclassified = new Queue<(long, VectorNode)>();
         }
 
         public void Put(long docId, long keyId, T value)
@@ -56,6 +58,27 @@ namespace Sir.Search
                     new VectorNode(vector, docId),
                     _model);
             }
+        }
+
+        public void PutSupervised(long docId, long keyId, T value)
+        {
+            var vectors = _model.Tokenize(value);
+            var column = _index.GetOrAdd(keyId, new VectorNode());
+
+            foreach (var vector in vectors)
+            {
+                VectorNode node;
+
+                if (!GraphBuilder.TryMergeOrAddSupervised(column, new VectorNode(vector, docId), _model, out node))
+                {
+                    _unclassified.Enqueue((keyId, node));
+                }
+            }
+        }
+
+        public VectorNode GetInMemoryIndex(long keyId)
+        {
+            return _index[keyId];
         }
 
         public IndexInfo GetIndexInfo()
@@ -77,6 +100,44 @@ namespace Sir.Search
                 return;
 
             _flushed = true;
+
+            if (_unclassified.Count > 0)
+            {
+                _logger.LogInformation($"merging {_unclassified.Count} outliers");
+
+                var batchSize = _unclassified.Count;
+                var numOfIterations = 0;
+                var lastCount = 0;
+
+                while (_unclassified.Count > 0)
+                {
+                    var queueItem = _unclassified.Dequeue();
+
+                    VectorNode node;
+
+                    if (!GraphBuilder.TryMergeOrAddSupervised(_index[queueItem.keyId], queueItem.node, _model, out node))
+                    {
+                        _unclassified.Enqueue(queueItem);
+                    }
+
+                    if (++numOfIterations % batchSize == 0)
+                    {
+                        if (lastCount == _unclassified.Count)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            lastCount = _unclassified.Count;
+                        }
+                    }
+                }
+
+                foreach (var node in _unclassified)
+                {
+                    GraphBuilder.MergeOrAdd(_index[node.keyId], node.node, _model);
+                }
+            }
 
             foreach (var column in _index)
             {

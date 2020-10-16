@@ -22,8 +22,103 @@ namespace Sir.VectorSpace
             return root;
         }
 
-         public static bool TryMerge(
-            VectorNode root, 
+        public static VectorNode Train<T>(IModel<T> model, params T[] data)
+        {
+            var root = new VectorNode();
+            var unclassified = new Queue<VectorNode>();
+
+            foreach (var item in data)
+            {
+                foreach (var vector in model.Tokenize(item))
+                {
+                    VectorNode node;
+
+                    if (!TryMergeOrAddSupervised(root, new VectorNode(vector), model, out node))
+                    {
+                        unclassified.Enqueue(node);
+                    }
+                }
+            }
+
+            var batchSize = unclassified.Count;
+            var numOfIterations = 0;
+            var lastCount = 0;
+
+            while (unclassified.Count > 0)
+            {
+                VectorNode node;
+
+                if (!TryMergeOrAddSupervised(root, unclassified.Dequeue(), model, out node))
+                {
+                    unclassified.Enqueue(node);
+                }
+
+                if (++numOfIterations % batchSize == 0)
+                {
+                    if (lastCount == unclassified.Count)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        lastCount = unclassified.Count;
+                    }
+                }
+            }
+
+            foreach (var node in unclassified)
+            {
+                MergeOrAdd(root, node, model);
+            }
+
+            return root;
+        }
+
+        public static bool TryMergeOrAddSupervised(
+            VectorNode root,
+            VectorNode node,
+            IModel model,
+            out VectorNode unclassified)
+        {
+            var cursor = root;
+
+            while (true)
+            {
+                var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
+                
+                if (angle > model.FoldAngle)
+                {
+                    if (node.Vector.Label.Equals(cursor.Vector.Label))
+                    {
+                        AddDocId(cursor, node);
+                        cursor.Vector.Average(node.Vector);
+                        unclassified = null;
+                        return true;
+                    }
+                    else
+                    {
+                        unclassified = node;
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (cursor.Right == null)
+                    {
+                        cursor.Right = node;
+                        unclassified = null;
+                        return true;
+                    }
+                    else
+                    {
+                        cursor = cursor.Right;
+                    }
+                }
+            }
+        }
+
+        public static void MergeOrAdd(
+            VectorNode root,
             VectorNode node,
             IModel model,
             out VectorNode parent)
@@ -37,7 +132,8 @@ namespace Sir.VectorSpace
                 if (angle >= model.IdenticalAngle)
                 {
                     parent = cursor;
-                    return true;
+
+                    break;
                 }
                 else if (angle > model.FoldAngle)
                 {
@@ -45,7 +141,8 @@ namespace Sir.VectorSpace
                     {
                         cursor.Left = node;
                         parent = cursor;
-                        return false;
+
+                        break;
                     }
                     else
                     {
@@ -58,7 +155,8 @@ namespace Sir.VectorSpace
                     {
                         cursor.Right = node;
                         parent = cursor;
-                        return false;
+
+                        break;
                     }
                     else
                     {
@@ -68,107 +166,7 @@ namespace Sir.VectorSpace
             }
         }
 
-        public static long GetOrIncrementId(
-            VectorNode root, 
-            VectorNode node,
-            IModel model)
-        {
-            var cursor = root;
-
-            while (true)
-            {
-                var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
-
-                if (angle >= model.IdenticalAngle)
-                {
-                    return cursor.PostingsOffset;
-                }
-                else if (angle > model.FoldAngle)
-                {
-                    if (cursor.Left == null)
-                    {
-                        node.PostingsOffset = root.Weight;
-                        cursor.Left = node;
-                        return node.PostingsOffset;
-                    }
-                    else
-                    {
-                        cursor = cursor.Left;
-                    }
-                }
-                else
-                {
-                    if (cursor.Right == null)
-                    {
-                        node.PostingsOffset = root.Weight;
-                        cursor.Right = node;
-                        return node.PostingsOffset;
-                    }
-                    else
-                    {
-                        cursor = cursor.Right;
-                    }
-                }
-            }
-        }
-
-        public static long AppendSynchronized(
-            VectorNode root,
-            VectorNode node,
-            IModel model)
-        {
-            var cursor = root;
-
-            while (true)
-            {
-                var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
-
-                if (angle >= model.IdenticalAngle)
-                {
-                    return cursor.PostingsOffset;
-                }
-                else if (angle > model.FoldAngle)
-                {
-                    if (cursor.Left == null)
-                    {
-                        lock (cursor)
-                        {
-                            if (cursor.Left == null)
-                            {
-                                node.PostingsOffset = root.Weight;
-                                cursor.Left = node;
-                                return node.PostingsOffset;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        cursor = cursor.Left;
-                    }
-                }
-                else
-                {
-                    if (cursor.Right == null)
-                    {
-                        lock (cursor)
-                        {
-                            if (cursor.Right == null)
-                            {
-                                node.PostingsOffset = root.Weight;
-                                cursor.Right = node;
-                                return node.PostingsOffset;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        cursor = cursor.Right;
-                    }
-                }
-            }
-        }
-
-        public static bool MergeOrAdd(
+        public static void MergeOrAdd(
             VectorNode root, 
             VectorNode node,
             IModel model)
@@ -183,14 +181,15 @@ namespace Sir.VectorSpace
                 {
                     AddDocId(cursor, node);
 
-                    return true;
+                    break;
                 }
                 else if (angle > model.FoldAngle)
                 {
                     if (cursor.Left == null)
                     {
                         cursor.Left = node;
-                        return false;
+
+                        break;
                     }
                     else
                     {
@@ -202,7 +201,8 @@ namespace Sir.VectorSpace
                     if (cursor.Right == null)
                     {
                         cursor.Right = node;
-                        return false;
+
+                        break;
                     }
                     else
                     {
@@ -212,7 +212,7 @@ namespace Sir.VectorSpace
             }
         }
 
-        public static bool MergeOrAddConcurrent(
+        public static void MergeOrAddConcurrent(
             VectorNode root,
             VectorNode node,
             IModel model)
@@ -230,7 +230,7 @@ namespace Sir.VectorSpace
                         AddDocId(cursor, node);
                     }
 
-                    return true;
+                    break;
                 }
                 else if (angle > model.FoldAngle)
                 {
@@ -241,7 +241,8 @@ namespace Sir.VectorSpace
                             if (cursor.Left == null)
                             {
                                 cursor.Left = node;
-                                return false;
+
+                                break;
                             }
                             else
                             {
@@ -263,7 +264,8 @@ namespace Sir.VectorSpace
                             if (cursor.Right == null)
                             {
                                 cursor.Right = node;
-                                return false;
+
+                                break;
                             }
                             else
                             {
@@ -277,6 +279,25 @@ namespace Sir.VectorSpace
                     }
                 }
             }
+        }
+
+        public static void InsertRight(VectorNode parent, VectorNode node)
+        {
+            node.Right = parent.Right;
+            parent.Right = node;
+        }
+
+        public static void AddRight(VectorNode parent, VectorNode node)
+        {
+            var target = parent;
+
+            while(target.Right != null)
+            {
+                target = target.Right;
+            }
+
+            node.Right = target.Right;
+            target.Right = node;
         }
 
         public static void MergePostings(VectorNode target, VectorNode source)
@@ -341,7 +362,11 @@ namespace Sir.VectorSpace
         /// <param name="vectorStream">stream to persist vectors in</param>
         /// <param name="postingsStream">optional stream to persist any posting references into</param>
         /// <returns></returns>
-        public static (long offset, long length) SerializeTree(VectorNode node, Stream indexStream, Stream vectorStream, Stream postingsStream = null)
+        public static (long offset, long length) SerializeTree(
+            VectorNode node, 
+            Stream indexStream, 
+            Stream vectorStream, 
+            Stream postingsStream = null)
         {
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;
@@ -429,57 +454,7 @@ namespace Sir.VectorSpace
             return node;
         }
 
-        public static void DeserializeUnorderedFile(
-            Stream indexStream,
-            Stream vectorStream,
-            VectorNode root,
-            IModel model)
-        {
-            var buf = new byte[VectorNode.BlockSize];
-            int read = indexStream.Read(buf);
-
-            while (read == VectorNode.BlockSize)
-            {
-                var node = DeserializeNode(buf, vectorStream, model);
-                VectorNode parent;
-
-                if (TryMerge(root, node, model, out parent))
-                {
-                    MergePostings(parent, node);
-                }
-
-                read = indexStream.Read(buf);
-            }
-        }
-
-        public static void DeserializeTree(
-            Stream indexStream,
-            Stream vectorStream,
-            long indexLength,
-            VectorNode root,
-            IModel model)
-        {
-            int read = 0;
-            var buf = new byte[VectorNode.BlockSize];
-
-            while (read < indexLength)
-            {
-                indexStream.Read(buf);
-
-                var node = DeserializeNode(buf, vectorStream, model);
-                VectorNode parent;
-
-                if (TryMerge(root, node, model, out parent))
-                {
-                    MergePostings(parent, node);
-                }
-
-                read += VectorNode.BlockSize;
-            }
-        }
-
-        public static VectorNode DeserializeTree(
-            Stream indexStream, Stream vectorStream, long indexLength, IModel model)
+        public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, long indexLength, IModel model)
         {
             VectorNode root = new VectorNode();
             VectorNode cursor = root;

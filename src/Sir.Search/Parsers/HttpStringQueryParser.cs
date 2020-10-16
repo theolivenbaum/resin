@@ -80,7 +80,7 @@ namespace Sir.Search
                 var termdic = new Dictionary<string, object>();
 
                 termdic.Add("collection", term.CollectionId);
-                termdic.Add(term.Key, term.Vector.Data.ToString());
+                termdic.Add(term.Key, term.Vector.Label);
 
                 if (term.IsIntersection)
                 {

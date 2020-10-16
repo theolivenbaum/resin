@@ -16,7 +16,51 @@ namespace Sir.Search.Tests
         private IImage[] _data;
 
         [Test]
-        public void Can_traverse_in_memory()
+        public void Can_merge_or_add_supervised_in_memory()
+        {
+            var model = new ImageModel();
+            var tree = GraphBuilder.Train(model, _data);
+
+            Print(tree);
+
+            Assert.DoesNotThrow(() =>
+            {
+                var count = 0;
+                var errors = 0;
+
+                foreach (var word in _data)
+                {
+                    foreach (var queryVector in model.Tokenize(word))
+                    {
+                        var hit = PathFinder.ClosestMatch(tree, queryVector, model);
+
+                        if (hit == null)
+                        {
+                            throw new Exception($"unable to find {word} in tree.");
+                        }
+
+                        if (!hit.Node.Vector.Label.Equals(word.Label))
+                        {
+                            errors++;
+                        }
+
+                        Debug.WriteLine($"{word} matched with {hit.Node.Vector.Label} with {hit.Score * 100}% certainty.");
+
+                        count++;
+                    }
+                }
+
+                var errorRate = (float)errors / count;
+
+                if (errorRate > 0)
+                {
+                    throw new Exception($"error rate: {errorRate * 100}%. too many errors.");
+                }
+            });
+        }
+
+        [Test]
+        public void Can_traverse_index_in_memory()
         {
             var model = new ImageModel();
             var tree = GraphBuilder.CreateTree(model, _data);
@@ -41,7 +85,7 @@ namespace Sir.Search.Tests
                             throw new Exception($"unable to score {word}.");
                         }
 
-                        Debug.WriteLine($"{word} matched with {hit.Node.Vector.Data} with {hit.Score * 100}% certainty.");
+                        Debug.WriteLine($"{word} matched with {hit.Node.Vector.Label} with {hit.Score * 100}% certainty.");
                     }
                 }
             });
@@ -110,7 +154,7 @@ namespace Sir.Search.Tests
 
             _data = new MnistReader(
                 @"C:\temp\mnist\t10k-images.idx3-ubyte",
-                @"C:\temp\mnist\t10k-labels.idx1-ubyte").Read().Take(1000).ToArray();
+                @"C:\temp\mnist\t10k-labels.idx1-ubyte").Read().Take(100).ToArray();
         }
 
         [TearDown]
@@ -122,7 +166,7 @@ namespace Sir.Search.Tests
         private static void Print(VectorNode tree)
         {
             var diagram = PathFinder.Visualize(tree);
-            File.WriteAllText(@"c:\temp\tree.txt", diagram);
+            File.WriteAllText(@"c:\temp\imagemodeltesttree.txt", diagram);
             Debug.WriteLine(diagram);
         }
     }

@@ -46,7 +46,7 @@ namespace Sir.VectorSpace
             if (read < componentCount)
                 throw new Exception("bad");
 
-            return new IndexedVector(index, values, vectorWidth, (Memory<char>)null);
+            return new IndexedVector(index, values, vectorWidth, null);
         }
 
         public static IVector DeserializeVector(long vectorOffset, int componentCount, int vectorWidth, Stream vectorStream)
@@ -120,11 +120,6 @@ namespace Sir.VectorSpace
             }
 
             return product;
-        }
-
-        public static IVector Add(this IVector vec1, IVector vec2)
-        {
-            throw new NotImplementedException();
         }
 
         public static SortedList<long, int> Merge(this SortedList<long, int> vec1, SortedList<long, int> vec2)

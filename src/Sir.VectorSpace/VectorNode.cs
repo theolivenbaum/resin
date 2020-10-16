@@ -23,7 +23,12 @@ namespace Sir.VectorSpace
         public long ComponentCount { get; set; }
         public long VectorOffset { get; set; }
         public long PostingsOffset { get; set; }
+
+        /// <summary>
+        /// The vector of the node. NULL if node is root.
+        /// </summary>
         public IVector Vector { get; set; }
+        
         public object Sync
         {
             get { return _sync; }
@@ -185,7 +190,7 @@ namespace Sir.VectorSpace
 
         public override string ToString()
         {
-            return Vector == null ? "ROOT" : Vector.Data == null ? Vector.ToString() : Vector.Data.ToString();
+            return Vector == null ? "ROOT" : Vector.Label == null ? Vector.ToString() : Vector.Label;
         }
 
         public VectorNodeData ToData()

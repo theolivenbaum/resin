@@ -22,7 +22,6 @@ namespace Sir.Mnist
             var count = 0;
             var errors = 0;
             var model = new ImageModel();
-            const int sampleSize = int.MaxValue;
 
             using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
             using (var querySession = sessionFactory.CreateQuerySession(model))
@@ -32,7 +31,7 @@ namespace Sir.Mnist
                 foreach (var image in images)
                 {
                     var query = queryParser.Parse(collection, image, field: "image", select: "label", and: true, or: false);
-                    var result = querySession.Query(query, 0, sampleSize);
+                    var result = querySession.Query(query, 0, 1);
 
                     count++;
 
@@ -42,34 +41,18 @@ namespace Sir.Mnist
                     }
                     else
                     {
-                        var imageLabel = image.DisplayName.ToString();
+                        var imageLabel = image.Label.ToString();
                         var documentLabel = result.Documents.First()["label"].ToString();
 
                         if (!documentLabel.Equals(imageLabel))
                         {
-                            Debug.WriteLine($"label: {imageLabel} document label: {documentLabel}\n{((MnistImage)image).Print()}");
+                            errors++;
 
-                            bool goodSample = false;
-                            var groups = result.Documents.GroupBy(x => x[SystemFields.Score]).OrderByDescending(x => x.Key);
-                            var group = groups.First();
-
-                            foreach (var document in group)
-                            {
-                                if (document["label"].ToString().Equals(imageLabel))
-                                {
-                                    goodSample = true;
-                                    break;
-                                }
-                            }
-
-                            if (!goodSample)
-                            {
-                                errors++;
-                            }
+                            logger.LogDebug($"error. label: {imageLabel} document label: {documentLabel}\n{((MnistImage)image).Print()}");
                         }
                     }
 
-                    logger.LogInformation($"total errors: {errors}. total tests {count}. error rate: {(float)errors / count * 100}%");
+                    logger.LogInformation($"errors: {errors}. total tests {count}. error rate: {(float)errors / count * 100}%");
                 }
             }
 

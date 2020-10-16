@@ -15,7 +15,7 @@ namespace Sir.Search.Tests
         private readonly string[] _data = new string[] { "apple", "apples", "apricote", "apricots", "avocado", "avocados", "banana", "bananas", "blueberry", "blueberries", "cantalope" };
 
         [Test]
-        public void Can_traverse_in_memory()
+        public void Can_traverse_index_in_memory()
         {
             var model = new TextModel();
             var tree = GraphBuilder.CreateTree(model, _data);
@@ -40,7 +40,7 @@ namespace Sir.Search.Tests
                             throw new Exception($"unable to score {word}.");
                         }
 
-                        Debug.WriteLine($"{word} matched with {hit.Node.Vector.Data} with {hit.Score * 100}% certainty.");
+                        Debug.WriteLine($"{word} matched with {hit.Node.Vector.Label} with {hit.Score * 100}% certainty.");
                     }
                 }
             });

@@ -41,12 +41,11 @@ namespace Sir.Search
                         if (embedding.Count > 0)
                         {
                             var len = index - offset;
-                            var slice = source.Slice(offset, len);
 
                             var vector = new IndexedVector(
                                 embedding,
                                 VectorWidth,
-                                slice);
+                                source.Slice(offset, len).ToString());
 
                             embedding.Clear();
                             tokens.Add(vector);
@@ -63,7 +62,7 @@ namespace Sir.Search
                     var vector = new IndexedVector(
                                 embedding,
                                 VectorWidth,
-                                source.Slice(offset, len));
+                                source.Slice(offset, len).ToString());
 
                     tokens.Add(vector);
                 }

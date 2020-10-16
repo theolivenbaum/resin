@@ -7,12 +7,12 @@ namespace Sir.Mnist
     {
         public byte[] Pixels { get; }
 
-        public object DisplayName { get; }
+        public string Label { get; }
 
         public MnistImage(byte[] pixels, byte label)
         {
             Pixels = pixels;
-            DisplayName = label;
+            Label = label.ToString();
         }
 
         public string Print()
@@ -51,7 +51,7 @@ namespace Sir.Mnist
 
         public override string ToString()
         {
-            return DisplayName?.ToString();
+            return Label?.ToString();
         }
     }
 }

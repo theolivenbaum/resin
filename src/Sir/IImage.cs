@@ -6,6 +6,6 @@
     public interface IImage
     {
         byte[] Pixels { get; }
-        object DisplayName { get; }
+        string Label { get; }
     }
 }
