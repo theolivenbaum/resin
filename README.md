@@ -1,9 +1,9 @@
 # &#9084; Vector database with ML generated indices
 
 Resin is a ML framework and search engine of vector spaces. You customize Resin to your needs by plugging in your own 
-training algorithms into the write and indexing pipelinen. 
-The artefact of a indexing session is a traversable, scannable and deployable index that you may interact ith through 
-the Resin web GUI, its read/write `JSON HTTP API`, creating plugins to run with the `DbUtil.exe` commandline , or programmatically.
+training algorithms into the write and indexing pipelines. 
+The artefact of a indexing session is a traversable, scannable and deployable index that you may interact with through 
+the Resin web GUI, its read/write `JSON HTTP API`, or programmatically.
 
 Resin comes with two built-in models, one bag-of-words `IModel<string>` implementation for text 
 and a IModel<IImage> implementation for [MNIST](http://yann.lecun.com/exdb/mnist/) images. You may provide your own models. 
