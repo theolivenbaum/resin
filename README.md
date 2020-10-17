@@ -1,6 +1,7 @@
 # &#9084; Resin
 
-Resin is a ML framework and search engine of vector spaces. 
+Resin is a ML framework and search engine of vector spaces with hardware accelerated vector operations 
+from [MathNet](https://github.com/mathnet/mathnet-numerics).
 
 Resin comes pre-loaded with two vector space configurations (`models`), one bag-of-words `IModel<string>` implementation for text 
 and one IModel<IImage> implementation for [MNIST](http://yann.lecun.com/exdb/mnist/) images. 
@@ -17,7 +18,7 @@ the built-in web search GUI, or you can:
 - create custom-made commands (`ICommand`) and execute them through the commandline tool DbUtil.exe  
 - write data by HTTP POST-ing JSON formatted data to the built-in HTTP server write endpoints, and query by HTTP GET-ing  
 - write IModel<T> implementations 
-- programatically scan, traverse and manipulate your indices.
+- programatically scan, traverse, perform calculations over and in other ways manipulate your indices.
 
 ## Applications
 
