@@ -1,16 +1,15 @@
-# &#9084; Resin the Extensible Search Engine
+# &#9084; Vector database with machine-learning generated indices
 
-Resin is search engine of vector spaces and comes with two built-in models, a bag-of-words `IModel<string>` implementation for text 
-and a `IModel<IImage>`implementation for [MNIST](http://yann.lecun.com/exdb/mnist/) images. If you have anything else that you need to make 
-searchable then you simply need to implement `IModel<T>` whose principal function is to provide Resin with a way of converting `T` into `IVector`. 
+Resin is search engine of vector spaces. Resin comes with two built-in models, one bag-of-words `IModel<string>` implementation for text 
+and a `IModel<IImage>`implementation for [MNIST](http://yann.lecun.com/exdb/mnist/) images. You may provide your own models. 
+You simply need to implement `IModel<T>` whose principal function is to provide Resin with a way of converting `T` into `IVector`. 
 
-The basic idea of Resin the Extensible Search Engine is to make it easy for you, web shop owner or data scientist, to create a searchable 
-index of your data then provide you with lots of means to query it and also give you an opportunity to experiment with creating your own `IModel<T>` 
-implementation as a way of increasing the accuracy of the search index, e.g. by jacking in your favorite machine-learning algo's into the 
-indexing pipeline.
+Resin is an attempt to make it easy for you, web shop owner or data scientist, to create a searchable 
+index of your data and to provide you with lots of means to query it. It is also an attempt at providing 
+a toolkit for you to experiment with and analyze your data, e.g. by implementing your own `IModel<T>`.
 
 You can populate Resin with your data, query it and in other ways interact with it by using the built-in HTML-based search GUI or by:  
-- executing built-in or custom-made commands (ICommand) through the commandline tool `DbUtil.exe`  
+- creating custom-made commands (ICommand) and executing them through the commandline tool `DbUtil.exe`  
 - writing data by HTTP POST-ing JSON formatted data to the built-in HTTP server write endpoints and querying by HTTP GET-ing  
 - writing IModel<T> implementations 
 
