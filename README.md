@@ -6,7 +6,7 @@ The artefact of a indexing session is a traversable, scannable and deployable in
 the Resin web GUI, its read/write `JSON HTTP API`, or programmatically.
 
 Resin comes with two built-in models, one bag-of-words `IModel<string>` implementation for text 
-and a IModel<IImage> implementation for [MNIST](http://yann.lecun.com/exdb/mnist/) images. You may provide your own models. 
+as well as a IModel<IImage> implementation for [MNIST](http://yann.lecun.com/exdb/mnist/) images. You may provide your own models. 
 You do so by implementing IModel<T>, whose principal function is to provide Resin with a way of converting `T` into `IVector`. 
 
 To summarize, you can populate Resin with your data, query it and in other ways interact with it by using 
@@ -41,4 +41,4 @@ the built-in web search GUI, or you can:
 - [ ] v2.0 - image-to-voice
 - [ ] v2.1 - voice-to-text
 - [ ] v2.2 - text-to-image
-- [ ] v3.0 - AGI
+- [ ] v3.0 - AI
