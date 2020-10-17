@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Sir.Search
 {
     /// <summary>
-    /// Read session targeting a single collection.
+    /// Read session targeting multiple collections.
     /// </summary>
     public class QuerySession : DocumentStreamSession, IDisposable, IQuerySession
     {

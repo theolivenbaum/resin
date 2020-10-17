@@ -40,7 +40,7 @@ namespace Sir.Mnist
                         var storeFields = new HashSet<string> { "label" };
                         var documentId = writeSession.Put(document, storeFields);
 
-                        indexSession.PutSupervised(documentId, keyId, image);
+                        indexSession.Put(documentId, keyId, image);
 
                         count++;
 

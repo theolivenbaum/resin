@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Sir.Search;
+using System.Collections.Generic;
 
 namespace Sir
 {

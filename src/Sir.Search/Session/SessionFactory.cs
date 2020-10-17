@@ -435,12 +435,12 @@ namespace Sir.Search
 
         public IndexSession<string> CreateIndexSession(ulong collectionId, ITextModel model)
         {
-            return new IndexSession<string>(collectionId, this, model, _logger);
+            return new IndexSession<string>(collectionId, this, model, model, _logger);
         }
 
         public IndexSession<IImage> CreateIndexSession(ulong collectionId, IImageModel model)
         {
-            return new IndexSession<IImage>(collectionId, this, model, _logger);
+            return new IndexSession<IImage>(collectionId, this, model, model, _logger);
         }
 
         public IQuerySession CreateQuerySession(IModel model)

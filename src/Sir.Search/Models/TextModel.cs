@@ -11,6 +11,19 @@ namespace Sir.Search
         public int UnicodeStartingPoint => 32;
         public override int VectorWidth => 256;
 
+        public void ExecuteFlush(IDictionary<long, VectorNode> columns, Queue<(long keyId, VectorNode node)> unclassified)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node, IModel<T> model, Queue<(long keyId, VectorNode node)> unclassified)
+        {
+            GraphBuilder.MergeOrAdd(
+                column,
+                node,
+                model);
+        }
+
         public IEnumerable<IVector> Tokenize(string data)
         {
             Memory<char> source = data.ToCharArray();

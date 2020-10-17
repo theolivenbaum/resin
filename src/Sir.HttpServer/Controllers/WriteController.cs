@@ -2,6 +2,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Sir.Search;
 
 namespace Sir.HttpServer.Controllers
 {

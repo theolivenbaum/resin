@@ -20,6 +20,7 @@ namespace Sir.Search
         private readonly IModel<T> _model;
         private readonly ConcurrentDictionary<long, VectorNode> _index;
         private readonly Queue<(long keyId, VectorNode node)> _unclassified;
+        private readonly IIndexingStrategy _indexingStrategy;
         private bool _flushed;
 
         /// <summary>
@@ -34,6 +35,7 @@ namespace Sir.Search
             ulong collectionId,
             SessionFactory sessionFactory,
             IModel<T> model,
+            IIndexingStrategy indexingStrategy,
             ILogger logger)
         {
             _collectionId = collectionId;
@@ -44,35 +46,18 @@ namespace Sir.Search
             _index = new ConcurrentDictionary<long, VectorNode>();
             _logger = logger;
             _unclassified = new Queue<(long, VectorNode)>();
+            _indexingStrategy = indexingStrategy;
         }
 
         public void Put(long docId, long keyId, T value)
         {
             var vectors = _model.Tokenize(value);
             var column = _index.GetOrAdd(keyId, new VectorNode());
+            var unclassified = new Queue<(long, VectorNode)>();
 
             foreach (var vector in vectors)
             {
-                GraphBuilder.MergeOrAdd(
-                    column,
-                    new VectorNode(vector, docId),
-                    _model);
-            }
-        }
-
-        public void PutSupervised(long docId, long keyId, T value)
-        {
-            var vectors = _model.Tokenize(value);
-            var column = _index.GetOrAdd(keyId, new VectorNode());
-
-            foreach (var vector in vectors)
-            {
-                VectorNode node;
-
-                if (!GraphBuilder.TryMergeOrAddSupervised(column, new VectorNode(vector, docId), _model, out node))
-                {
-                    _unclassified.Enqueue((keyId, node));
-                }
+                _indexingStrategy.ExecutePut(column, keyId, new VectorNode(vector, docId), _model, unclassified);
             }
         }
 
@@ -105,38 +90,7 @@ namespace Sir.Search
             {
                 _logger.LogInformation($"merging {_unclassified.Count} outliers");
 
-                var batchSize = _unclassified.Count;
-                var numOfIterations = 0;
-                var lastCount = 0;
-
-                while (_unclassified.Count > 0)
-                {
-                    var queueItem = _unclassified.Dequeue();
-
-                    VectorNode node;
-
-                    if (!GraphBuilder.TryMergeOrAddSupervised(_index[queueItem.keyId], queueItem.node, _model, out node))
-                    {
-                        _unclassified.Enqueue(queueItem);
-                    }
-
-                    if (++numOfIterations % batchSize == 0)
-                    {
-                        if (lastCount == _unclassified.Count)
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            lastCount = _unclassified.Count;
-                        }
-                    }
-                }
-
-                foreach (var node in _unclassified)
-                {
-                    GraphBuilder.MergeOrAdd(_index[node.keyId], node.node, _model);
-                }
+                _indexingStrategy.ExecuteFlush(_index, _unclassified);
             }
 
             foreach (var column in _index)
@@ -162,10 +116,5 @@ namespace Sir.Search
             _postingsStream.Dispose();
             _vectorStream.Dispose();
         }
-    }
-
-    public interface IIndexSession
-    {
-        IndexInfo GetIndexInfo();
     }
 }

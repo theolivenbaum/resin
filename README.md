@@ -31,8 +31,8 @@ the built-in web search GUI, or you can:
 
 - __Sir.CommonCrawl__: `ICommand` implementations for downloading and indexing Common Crawl WAT and WET files.  
 - __Sir.Mnist__: `ICommand` implementations for training and testing the accuracy of a index of MNIST images.  
-- __[Sir.Search](https://github.com/kreeben/resin/blob/master/src/Sir.Search/README.md)__: In-process search engine.  
-- __Sir.Core__: Interfaces and types that need to be shared across libraries and apps, such as the `ICommand` and `IVector` interfaces.
+- __[Sir.Search](https://github.com/kreeben/resin/blob/master/src/Sir.Search/README.md)__: In-process search engine with types for reading (querying) and writing as well as two IModel implementations (`ITextModel`, `IImageModel`).  
+- __Sir.Core__: Interfaces and types that need to be shared across libraries and apps, such as the `IModel`, `ICommand` and `IVector` interfaces.
 
 ## Roadmap
 

@@ -4,16 +4,6 @@ using System.IO;
 namespace Sir
 {
     /// <summary>
-    /// Variable-length tokens become vectors in a word vector space.
-    /// </summary>
-    public interface ITextModel : IModel<string> {}
-
-    /// <summary>
-    /// Rows of pixles from fixed-size images becomes vectors in a image vector space.
-    /// </summary>
-    public interface IImageModel : IModel<IImage> {}
-
-    /// <summary>
     /// Vector space model.
     /// </summary>
     /// <typeparam name="T">The type of data the model should consist of.</typeparam>
