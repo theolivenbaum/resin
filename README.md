@@ -1,15 +1,18 @@
 # &#9084; Vector database with ML generated indices
 
-Resin is a ML framework and search engine of vector spaces. You customize Resin to your needs by plugging in your own 
-training algorithms into the write and indexing pipelines. 
+Resin is a ML framework and search engine of vector spaces. 
+
+Resin comes pre-loaded with two vector space configurations (`models`), one bag-of-words `IModel<string>` implementation for text 
+and one IModel<IImage> implementation for [MNIST](http://yann.lecun.com/exdb/mnist/) images. 
+
+You may plug in your own models. You do so by implementing IModel<T>, whose principal function is to explain to Resin 
+how to convert `T` to `IVector`.  
+
+You customize Resin to your needs by plugging in your own training algorithms into the indexing pipelines. 
 The artefact of a indexing session is a traversable, scannable and deployable index that you may interact with through 
-the Resin web GUI, its read/write `JSON HTTP API`, or programmatically.
+the Resin web GUI, its read/write `JSON HTTP API`, or programmatically through the `VectorNode` API.
 
-Resin comes with two built-in models, one bag-of-words `IModel<string>` implementation for text 
-as well as a IModel<IImage> implementation for [MNIST](http://yann.lecun.com/exdb/mnist/) images. You may provide your own models. 
-You do so by implementing IModel<T>, whose principal function is to provide Resin with a way of converting `T` into `IVector`. 
-
-To summarize, you can populate Resin with your data, query it and in other ways interact with it by using 
+You may populate Resin with your data, query it and in other ways interact with it by using 
 the built-in web search GUI, or you can:  
 - create custom-made commands (`ICommand`) and execute them through the commandline tool DbUtil.exe  
 - write data by HTTP POST-ing JSON formatted data to the built-in HTTP server write endpoints, and query by HTTP GET-ing  
