@@ -3,7 +3,7 @@
 Resin is a ML framework and search engine of vector spaces with hardware accelerated vector operations 
 from [MathNet](https://github.com/mathnet/mathnet-numerics).
 
-Resin comes pre-loaded with two vector space configurations (`models`), one bag-of-words `IModel<string>` implementation for text 
+Resin comes pre-loaded with two vector space configurations (`models`): one bag-of-words `IModel<string>` implementation for text 
 and one IModel<IImage> implementation for [MNIST](http://yann.lecun.com/exdb/mnist/) images. 
 
 You may plug in your own models. You do so by implementing IModel<T>, whose principal function is to explain to Resin 
