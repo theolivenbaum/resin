@@ -1,17 +1,20 @@
-# &#9084; Vector database with machine-learning generated indices
+# &#9084; Vector database with ML generated indices
 
-Resin is search engine of vector spaces. Resin comes with two built-in models, one bag-of-words `IModel<string>` implementation for text 
-and a `IModel<IImage>`implementation for [MNIST](http://yann.lecun.com/exdb/mnist/) images. You may provide your own models. 
-You simply need to implement `IModel<T>` whose principal function is to provide Resin with a way of converting `T` into `IVector`. 
+Resin is a ML framework and search engine of vector spaces. You customize Resin to your needs by plugging in your own 
+training algorithms into the write and indexing pipelinen. 
+The artefact of a indexing session is a traversable, scannable and deployable index that you may interact ith through 
+the Resin web GUI, its read/write `JSON HTTP API`, creating plugins to run with the `DbUtil.exe` commandline , or programmatically.
 
-Resin is an attempt to make it easy for you, web shop owner or data scientist, to create a searchable 
-index of your data and to provide you with lots of means to query it. It is also an attempt at providing 
-a toolkit for you to experiment with and analyze your data, e.g. by implementing your own `IModel<T>`.
+Resin comes with two built-in models, one bag-of-words `IModel<string>` implementation for text 
+and a IModel<IImage> implementation for [MNIST](http://yann.lecun.com/exdb/mnist/) images. You may provide your own models. 
+You do so by implementing IModel<T>, whose principal function is to provide Resin with a way of converting `T` into `IVector`. 
 
-You can populate Resin with your data, query it and in other ways interact with it by using the built-in HTML-based search GUI or by:  
-- creating custom-made commands (ICommand) and executing them through the commandline tool `DbUtil.exe`  
-- writing data by HTTP POST-ing JSON formatted data to the built-in HTTP server write endpoints and querying by HTTP GET-ing  
-- writing IModel<T> implementations 
+To summarize, you can populate Resin with your data, query it and in other ways interact with it by using 
+the built-in web search GUI, or you can:  
+- create custom-made commands (`ICommand`) and execute them through the commandline tool DbUtil.exe  
+- write data by HTTP POST-ing JSON formatted data to the built-in HTTP server write endpoints, and query by HTTP GET-ing  
+- write IModel<T> implementations 
+- programatically scan, traverse and manipulate your indices.
 
 ## Applications
 
