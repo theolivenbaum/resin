@@ -1,13 +1,14 @@
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Sir.Mnist;
+using Sir.Search;
 using Sir.VectorSpace;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace Sir.Search.Tests
+namespace Sir.Tests
 {
     public class ImageModelTests
     {

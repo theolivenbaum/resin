@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Sir.Search;
+using System.Collections.Generic;
 
-namespace Sir.Search.Tests
+namespace Sir.Tests
 {
     public class DocumentComparer : IEqualityComparer<IDictionary<string, object>>
     {
