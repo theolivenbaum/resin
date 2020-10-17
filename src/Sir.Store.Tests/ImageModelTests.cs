@@ -12,11 +12,12 @@ namespace Sir.Search.Tests
     public class ImageModelTests
     {
         private ILoggerFactory _loggerFactory;
+        private ILogger<ImageModelTests> _logger;
         private SessionFactory _sessionFactory;
         private IImage[] _data;
 
         [Test]
-        public void Can_merge_or_add_supervised_in_memory()
+        public void Can_train_in_memory()
         {
             var model = new ImageModel();
             var tree = GraphBuilder.Train(model, _data);
@@ -56,6 +57,8 @@ namespace Sir.Search.Tests
                 {
                     throw new Exception($"error rate: {errorRate * 100}%. too many errors.");
                 }
+
+                Debug.WriteLine($"error rate: {errorRate}");
             });
         }
 
@@ -147,6 +150,8 @@ namespace Sir.Search.Tests
                     .AddFilter("Sir.DbUtil.Program", LogLevel.Debug)
                     .AddDebug();
             });
+
+            _logger = _loggerFactory.CreateLogger<ImageModelTests>();
 
             _sessionFactory = new SessionFactory(
                 new KeyValueConfiguration("sir.ini"),

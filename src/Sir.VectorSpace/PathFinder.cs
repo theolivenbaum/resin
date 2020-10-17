@@ -90,9 +90,9 @@ namespace Sir.VectorSpace
 
         public static (int depth, int width) Size(VectorNode root)
         {
+            var node = root.Right;
             var width = 0;
             var depth = 0;
-            var node = root.Right;
 
             while (node != null)
             {
@@ -113,7 +113,7 @@ namespace Sir.VectorSpace
 
         public static int Depth(VectorNode node)
         {
-            var count = 0;
+            var count = 1;
 
             node = node.Left;
 
@@ -122,6 +122,7 @@ namespace Sir.VectorSpace
                 count++;
                 node = node.Left;
             }
+
             return count;
         }
     }
