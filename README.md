@@ -1,4 +1,4 @@
-# &#9084; Vector database with ML generated indices
+# &#9084; Resin
 
 Resin is a ML framework and search engine of vector spaces. 
 
