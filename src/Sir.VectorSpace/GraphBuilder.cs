@@ -31,11 +31,11 @@ namespace Sir.VectorSpace
             {
                 foreach (var vector in model.Tokenize(item))
                 {
-                    VectorNode node;
+                    VectorNode unclassifiedNode;
 
-                    if (!TryMergeOrAddSupervised(root, new VectorNode(vector), model, out node))
+                    if (!TryMergeOrAddSupervised(root, new VectorNode(vector), model, out unclassifiedNode))
                     {
-                        unclassified.Enqueue(node);
+                        unclassified.Enqueue(unclassifiedNode);
                     }
                 }
             }
@@ -46,11 +46,11 @@ namespace Sir.VectorSpace
 
             while (unclassified.Count > 0)
             {
-                VectorNode node;
+                VectorNode unclassifiedNode;
 
-                if (!TryMergeOrAddSupervised(root, unclassified.Dequeue(), model, out node))
+                if (!TryMergeOrAddSupervised(root, unclassified.Dequeue(), model, out unclassifiedNode))
                 {
-                    unclassified.Enqueue(node);
+                    unclassified.Enqueue(unclassifiedNode);
                 }
 
                 if (++numOfIterations % batchSize == 0)

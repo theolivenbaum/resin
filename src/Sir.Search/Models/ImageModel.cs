@@ -21,10 +21,11 @@ namespace Sir.Search
             {
                 var queueItem = unclassified.Dequeue();
                 var column = columns[queueItem.keyId];
+                VectorNode unclassifiedNode;
 
-                if (!GraphBuilder.TryMergeOrAddSupervised(column, queueItem.node, this, out _))
+                if (!GraphBuilder.TryMergeOrAddSupervised(column, queueItem.node, this, out unclassifiedNode))
                 {
-                    unclassified.Enqueue(queueItem);
+                    unclassified.Enqueue((queueItem.keyId, unclassifiedNode));
                 }
 
                 if (++numOfIterations % batchSize == 0)
@@ -49,11 +50,11 @@ namespace Sir.Search
 
         public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node, IModel<T> model, Queue<(long keyId, VectorNode node)> unclassified)
         {
-            VectorNode x;
+            VectorNode unclassifiedNode;
 
-            if (!GraphBuilder.TryMergeOrAddSupervised(column, node, model, out x))
+            if (!GraphBuilder.TryMergeOrAddSupervised(column, node, model, out unclassifiedNode))
             {
-                unclassified.Enqueue((keyId, x));
+                unclassified.Enqueue((keyId, unclassifiedNode));
             }
         }
 
