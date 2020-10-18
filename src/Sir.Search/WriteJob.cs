@@ -1,7 +1,6 @@
-﻿using Sir.Search;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace Sir
+namespace Sir.Search
 {
     public class WriteJob
     {

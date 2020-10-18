@@ -1,13 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Sir.Search;
 using System.Threading.Tasks;
 
-namespace Sir
+namespace Sir.Search
 {
     /// <summary>
     /// Read data from a collection.
     /// </summary>
-    public interface IHttpReader : IPlugin
+    public interface IHttpReader
     {
        Task<ResponseModel> Read(HttpRequest request, ITextModel model);
     }

@@ -107,8 +107,12 @@ namespace Sir.VectorSpace
 
             if (docId > -1)
             {
-                DocIds = new HashSet<long>();
-                DocIds.Add(docId);
+                DocIds = new HashSet<long> { docId };
+            }
+
+            if (postingsOffset > -1)
+            {
+                PostingsOffsets = new List<long> { postingsOffset };
             }
         }
 

@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Sir.HttpServer.Features;
+using Sir.Search;
 using System;
 using System.IO;
-using System.Linq;
-using System.Runtime.Loader;
 
 namespace Sir.HttpServer
 {
@@ -21,47 +21,25 @@ namespace Sir.HttpServer
             var assemblyPath = Directory.GetCurrentDirectory();
             var config = new KeyValueConfiguration(Path.Combine(assemblyPath, "sir.ini"));
 
-            // register config
             services.Add(new ServiceDescriptor(typeof(IConfigurationProvider), config));
 
-            // register plugin startup and teardown handlers
+            var loggerFactory = services.BuildServiceProvider().GetService<ILoggerFactory>();
+            var model = new TextModel();
+            var sessionFactory = new SessionFactory(config, loggerFactory.CreateLogger<SessionFactory>());
+            var qp = new QueryParser<string>(sessionFactory, model, loggerFactory.CreateLogger<QueryParser<string>>());
+            var httpParser = new HttpStringQueryParser(qp);
 
-#if DEBUG
-            var frameworkVersion = AppContext.TargetFrameworkName.Substring(AppContext.TargetFrameworkName.IndexOf("=v") + 2);
-
-            assemblyPath = Path.Combine(assemblyPath, "bin", "Debug", $"netcoreapp{frameworkVersion}");
-#endif
-
-            var files = Directory.GetFiles(assemblyPath, "*.dll");
-
-            foreach (var assembly in files.Select(file => AssemblyLoadContext.Default.LoadFromAssemblyPath(file)))
-            {
-                foreach (var type in assembly.GetTypes())
-                {
-                    // search for concrete types
-                    if (!type.IsInterface)
-                    {
-                        var interfaces = type.GetInterfaces();
-
-                        if (interfaces.Contains(typeof(IPluginStop)))
-                        {
-                            services.Add(new ServiceDescriptor(typeof(IPluginStop), type, ServiceLifetime.Singleton));
-                        }
-                        else if (interfaces.Contains(typeof(IPluginStart)))
-                        {
-                            services.Add(new ServiceDescriptor(typeof(IPluginStart), type, ServiceLifetime.Singleton));
-                        }
-                    }
-                }
-            }
-
-            var serviceProvider = services.BuildServiceProvider();
-
-            // raise startup event
-            foreach (var service in serviceProvider.GetServices<IPluginStart>())
-            {
-                service.OnApplicationStartup(services, serviceProvider, config);
-            }
+            services.AddSingleton(typeof(ITextModel), model);
+            services.AddSingleton(typeof(ISessionFactory), sessionFactory);
+            services.AddSingleton(typeof(SessionFactory), sessionFactory);
+            services.AddSingleton(typeof(QueryParser<string>), qp);
+            services.AddSingleton(typeof(HttpStringQueryParser), httpParser);
+            services.AddSingleton(typeof(IHttpWriter), new HttpWriter(sessionFactory));
+            services.AddSingleton(typeof(IHttpReader), new HttpReader(
+                sessionFactory,
+                httpParser,
+                config,
+                loggerFactory.CreateLogger<HttpReader>()));
 
             return services.BuildServiceProvider();
         }

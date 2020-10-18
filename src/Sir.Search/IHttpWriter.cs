@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Sir.Search;
 
-namespace Sir
+namespace Sir.Search
 {
     /// <summary>
     /// Write data to a collection.
     /// </summary>
-    public interface IHttpWriter : IPlugin
+    public interface IHttpWriter
     {
         void Write(HttpRequest request, ITextModel model);
     }
