@@ -21,7 +21,7 @@ namespace Sir.Tests
         public void Can_train_in_memory()
         {
             var model = new ImageModel();
-            var tree = GraphBuilder.Train(model, _data);
+            var tree = GraphBuilder.CreateTree(model, model, _data);
 
             Print(tree);
 
@@ -67,9 +67,7 @@ namespace Sir.Tests
         public void Can_traverse_index_in_memory()
         {
             var model = new ImageModel();
-            var tree = GraphBuilder.CreateTree(model, _data);
-
-            Print(tree);
+            var tree = GraphBuilder.CreateTree(model, model, _data);
 
             Assert.DoesNotThrow(() => 
             {
@@ -99,7 +97,7 @@ namespace Sir.Tests
         public void Can_traverse_streamed()
         {
             var model = new ImageModel();
-            var tree = GraphBuilder.CreateTree(model, _data);
+            var tree = GraphBuilder.CreateTree(model, model, _data);
 
             using (var indexStream = new MemoryStream())
             using (var vectorStream = new MemoryStream())

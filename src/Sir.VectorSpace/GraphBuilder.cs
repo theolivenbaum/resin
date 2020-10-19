@@ -7,93 +7,79 @@ namespace Sir.VectorSpace
 {
     public static class GraphBuilder
     {
-        public static VectorNode CreateTree<T>(IModel<T> model, params T[] data)
+        public static VectorNode CreateTree<T>(IModel<T> model, IIndexingStrategy indexingStrategy, params T[] data)
         {
             var root = new VectorNode();
+            var unclassified = new Queue<(long keyId, VectorNode node)>();
+            const long columnId = 0;
 
             foreach (var item in data)
             {
                 foreach (var vector in model.Tokenize(item))
                 {
-                    MergeOrAdd(root, new VectorNode(vector), model);
+                    indexingStrategy.ExecutePut(root, columnId, new VectorNode(vector), model, unclassified);
                 }
             }
+
+            indexingStrategy.ExecuteFlush(new Dictionary<long, VectorNode>() { { columnId, root } }, unclassified);
 
             return root;
         }
 
-        public static VectorNode Train<T>(IModel<T> model, params T[] data)
-        {
-            var root = new VectorNode();
-            var unclassified = new Queue<VectorNode>();
-
-            foreach (var item in data)
-            {
-                foreach (var vector in model.Tokenize(item))
-                {
-                    VectorNode unclassifiedNode;
-
-                    if (!TryMergeOrAddSupervised(root, new VectorNode(vector), model, out unclassifiedNode))
-                    {
-                        unclassified.Enqueue(unclassifiedNode);
-                    }
-                }
-            }
-
-            var batchSize = unclassified.Count;
-            var numOfIterations = 0;
-            var lastCount = 0;
-
-            while (unclassified.Count > 0)
-            {
-                VectorNode unclassifiedNode;
-
-                if (!TryMergeOrAddSupervised(root, unclassified.Dequeue(), model, out unclassifiedNode))
-                {
-                    unclassified.Enqueue(unclassifiedNode);
-                }
-
-                if (++numOfIterations % batchSize == 0)
-                {
-                    if (lastCount == unclassified.Count)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        lastCount = unclassified.Count;
-                    }
-                }
-            }
-
-            foreach (var node in unclassified)
-            {
-                MergeOrAdd(root, node, model);
-            }
-
-            return root;
-        }
-
-        public static bool TryMergeOrAddSupervised(
+        public static bool TryRecalculateVectorOrAdd(
             VectorNode root,
             VectorNode node,
             IModel model,
+            int maxDepth,
             out VectorNode unclassified)
         {
             var cursor = root;
+            var depth = 0;
 
             while (true)
             {
                 var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
-                
-                if (angle > model.FoldAngle)
+
+                if (angle >= model.IdenticalAngle)
                 {
                     if (node.Vector.Label.Equals(cursor.Vector.Label))
                     {
                         AddDocId(cursor, node);
-                        cursor.Vector.Average(node.Vector);
+                        cursor.Vector.AverageInPlace(node.Vector);
                         unclassified = null;
                         return true;
+                    }
+                    else
+                    {
+                        unclassified = node;
+                        return false;
+                    }
+                }
+                else if (angle > model.FoldAngle)
+                {
+                    if (node.Vector.Label.Equals(cursor.Vector.Label))
+                    {
+                        if (depth < maxDepth)
+                        {
+                            if (cursor.Left == null)
+                            {
+                                cursor.Left = node;
+                                unclassified = null;
+                                return true;
+                            }
+                            else
+                            {
+                                cursor = cursor.Left;
+                                depth++;
+                            }
+                        }
+                        else
+                        {
+                            AddDocId(cursor, node);
+                            cursor.Vector.AverageInPlace(node.Vector.Multiply((float)angle/2));
+                            unclassified = null;
+                            return true;
+                        }
                     }
                     else
                     {
@@ -112,41 +98,37 @@ namespace Sir.VectorSpace
                     else
                     {
                         cursor = cursor.Right;
+                        depth = Math.Max(0, depth-1);
                     }
                 }
             }
         }
 
-        public static void MergeOrAdd(
+        public static bool TryRecalculateVectorOrAdd(
             VectorNode root,
             VectorNode node,
             IModel model,
-            out VectorNode parent)
+            out VectorNode unclassified)
         {
             var cursor = root;
 
             while (true)
             {
                 var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
-
-                if (angle >= model.IdenticalAngle)
+                
+                if (angle > model.FoldAngle)
                 {
-                    parent = cursor;
-
-                    break;
-                }
-                else if (angle > model.FoldAngle)
-                {
-                    if (cursor.Left == null)
+                    if (node.Vector.Label.Equals(cursor.Vector.Label))
                     {
-                        cursor.Left = node;
-                        parent = cursor;
-
-                        break;
+                        AddDocId(cursor, node);
+                        cursor.Vector.AverageInPlace(node.Vector);
+                        unclassified = null;
+                        return true;
                     }
                     else
                     {
-                        cursor = cursor.Left;
+                        unclassified = node;
+                        return false;
                     }
                 }
                 else
@@ -154,9 +136,8 @@ namespace Sir.VectorSpace
                     if (cursor.Right == null)
                     {
                         cursor.Right = node;
-                        parent = cursor;
-
-                        break;
+                        unclassified = null;
+                        return true;
                     }
                     else
                     {

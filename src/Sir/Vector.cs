@@ -80,12 +80,12 @@ namespace Sir
             stream.Write(values);
         }
 
-        public void Add(IVector vector)
+        public void AddInPlace(IVector vector)
         {
             Value = Value.Add(vector.Value);
         }
 
-        public void Subtract(IVector vector)
+        public void SubtractInPlace(IVector vector)
         {
             Value = Value.Subtract(vector.Value);
 
@@ -98,7 +98,13 @@ namespace Sir
             return new IndexedVector(newVector);
         }
 
-        public void Average(IVector vector)
+        public IVector Divide(float scalar)
+        {
+            var newVector = Value.Divide(scalar);
+            return new IndexedVector(newVector);
+        }
+
+        public void AverageInPlace(IVector vector)
         {
             Value = Value.Add(vector.Value).Divide(2);
         }
@@ -115,9 +121,10 @@ namespace Sir
         void Serialize(Stream stream);
         int ComponentCount { get; }
         string Label { get; }
-        void Add(IVector vector);
-        void Subtract(IVector vector);
+        void AddInPlace(IVector vector);
+        void SubtractInPlace(IVector vector);
         IVector Multiply(float scalar);
-        void Average(IVector vector);
+        IVector Divide(float scalar);
+        void AverageInPlace(IVector vector);
     }
 }

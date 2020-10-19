@@ -14,12 +14,10 @@ namespace Sir.VectorSpace
 
         private VectorNode _right;
         private VectorNode _left;
-        private VectorNode _ancestor;
         private long _weight;
-        private object _sync = new object();
 
         public HashSet<long> DocIds { get; set; }
-        public VectorNode Ancestor { get { return _ancestor; } }
+        public VectorNode Ancestor { get; private set; }
         public long ComponentCount { get; set; }
         public long VectorOffset { get; set; }
         public long PostingsOffset { get; set; }
@@ -28,11 +26,8 @@ namespace Sir.VectorSpace
         /// The vector of the node. NULL if node is root.
         /// </summary>
         public IVector Vector { get; set; }
-        
-        public object Sync
-        {
-            get { return _sync; }
-        }
+
+        public object Sync { get; } = new object();
 
         public long Weight
         {
@@ -50,7 +45,7 @@ namespace Sir.VectorSpace
 
                 if (value != null)
                 {
-                    _right._ancestor = this;
+                    _right.Ancestor = this;
                     IncrementWeight();
                 }
                 else
@@ -71,7 +66,7 @@ namespace Sir.VectorSpace
 
                 if (value != null)
                 {
-                    _left._ancestor = this;
+                    _left.Ancestor = this;
                     IncrementWeight();
                 }
                 else
@@ -84,6 +79,22 @@ namespace Sir.VectorSpace
         public long Terminator { get; set; }
 
         public IList<long> PostingsOffsets { get; set; }
+
+        public int Depth {
+            get
+            {
+                var ancestor = Ancestor;
+                var depth = 0;
+
+                while (ancestor!= null)
+                {
+                    depth++;
+                    ancestor = ancestor.Ancestor;
+                }
+
+                return depth;
+            }
+        }
 
         public VectorNode()
         {
@@ -130,17 +141,17 @@ namespace Sir.VectorSpace
         {
             Interlocked.Increment(ref _weight);
 
-            var cursor = _ancestor;
+            var cursor = Ancestor;
             while (cursor != null)
             {
                 Interlocked.Increment(ref cursor._weight);
-                cursor = cursor._ancestor;
+                cursor = cursor.Ancestor;
             }
         }
 
         public VectorNode Detach()
         {
-            _ancestor = null;
+            Ancestor = null;
             _left = null;
             _right = null;
             _weight = 0;
@@ -150,7 +161,7 @@ namespace Sir.VectorSpace
 
         public VectorNode DetachFromAncestor()
         {
-            _ancestor = null;
+            Ancestor = null;
             return this;
         }
 
