@@ -72,20 +72,22 @@ namespace Sir.VectorSpace
         public static string Visualize(VectorNode root)
         {
             StringBuilder output = new StringBuilder();
-            Visualize(root, output, 0);
+
+            foreach(var node in All(root))
+            {
+                Visualize(node, output);
+            }
+
             return output.ToString();
         }
 
-        private static void Visualize(VectorNode node, StringBuilder output, int depth)
+        private static void Visualize(VectorNode node, StringBuilder output)
         {
             if (node == null) return;
 
-            output.Append('\t', depth);
+            output.Append('\t',node.Depth);
             output.AppendFormat($"{node} w:{node.Weight}");
             output.AppendLine();
-
-            Visualize(node.Left, output, depth + 1);
-            Visualize(node.Right, output, depth);
         }
 
         public static (int depth, int width) Size(VectorNode root)
@@ -111,7 +113,7 @@ namespace Sir.VectorSpace
             return (depth, width);
         }
 
-        public static int Depth(VectorNode node)
+        private static int Depth(VectorNode node)
         {
             var count = 1;
 
