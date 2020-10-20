@@ -63,81 +63,6 @@ namespace Sir.Tests
             });
         }
 
-        [Test]
-        public void Can_traverse_index_in_memory()
-        {
-            var model = new ImageModel();
-            var tree = GraphBuilder.CreateTree(model, model, _data);
-
-            Assert.DoesNotThrow(() => 
-            {
-                foreach (var word in _data)
-                {
-                    foreach (var queryVector in model.Tokenize(word))
-                    {
-                        var hit = PathFinder.ClosestMatch(tree, queryVector, model);
-
-                        if (hit == null)
-                        {
-                            throw new Exception($"unable to find {word} in tree.");
-                        }
-
-                        if (hit.Score < model.IdenticalAngle)
-                        {
-                            throw new Exception($"unable to score {word}.");
-                        }
-
-                        Debug.WriteLine($"{word} matched with {hit.Node.Vector.Label} with {hit.Score * 100}% certainty.");
-                    }
-                }
-            });
-        }
-
-        [Test]
-        public void Can_traverse_streamed()
-        {
-            var model = new ImageModel();
-            var tree = GraphBuilder.CreateTree(model, model, _data);
-
-            using (var indexStream = new MemoryStream())
-            using (var vectorStream = new MemoryStream())
-            using (var pageStream = new MemoryStream())
-            {
-                using (var writer = new ColumnStreamWriter(indexStream, keepStreamOpen:true))
-                {
-                    writer.CreatePage(tree, vectorStream, new PageIndexWriter(pageStream, keepStreamOpen:true));
-                }
-
-                pageStream.Position = 0;
-
-                Assert.DoesNotThrow(() =>
-                {
-                    using (var reader = new ColumnStreamReader(new PageIndexReader(pageStream), indexStream, vectorStream, _sessionFactory, _loggerFactory.CreateLogger<ColumnStreamReader>()))
-                    {
-                        foreach (var image in _data)
-                        {
-                            foreach (var queryVector in model.Tokenize(image))
-                            {
-                                var hit = reader.ClosestMatch(queryVector, model);
-
-                                if (hit == null)
-                                {
-                                    throw new Exception($"unable to find {image} in tree.");
-                                }
-
-                                if (hit.Score < model.IdenticalAngle)
-                                {
-                                    throw new Exception($"unable to score {image}.");
-                                }
-
-                                Debug.WriteLine($"{image} matched vector in disk with {hit.Score * 100}% certainty.");
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
         [SetUp]
         public void Setup()
         {
@@ -158,7 +83,7 @@ namespace Sir.Tests
 
             _data = new MnistReader(
                 @"C:\temp\mnist\t10k-images.idx3-ubyte",
-                @"C:\temp\mnist\t10k-labels.idx1-ubyte").Read().Take(100).ToArray();
+                @"C:\temp\mnist\t10k-labels.idx1-ubyte").Read().Take(1000).ToArray();
         }
 
         [TearDown]

@@ -92,16 +92,21 @@ namespace Sir
             Value.CoerceZero(0);
         }
 
+        public IVector Subtract(IVector vector)
+        {
+            return new IndexedVector(Value.Subtract(vector.Value), Label);
+        }
+
         public IVector Multiply(float scalar)
         {
             var newVector = Value.Multiply(scalar);
-            return new IndexedVector(newVector);
+            return new IndexedVector(newVector, Label);
         }
 
         public IVector Divide(float scalar)
         {
             var newVector = Value.Divide(scalar);
-            return new IndexedVector(newVector);
+            return new IndexedVector(newVector, Label);
         }
 
         public void AverageInPlace(IVector vector)
@@ -122,6 +127,7 @@ namespace Sir
         int ComponentCount { get; }
         string Label { get; }
         void AddInPlace(IVector vector);
+        IVector Subtract(IVector vector);
         void SubtractInPlace(IVector vector);
         IVector Multiply(float scalar);
         IVector Divide(float scalar);

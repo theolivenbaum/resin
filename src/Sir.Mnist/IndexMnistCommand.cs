@@ -27,32 +27,36 @@ namespace Sir.Mnist
             VectorNode tree;
 
             using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
-            using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
             {
-                var debugger = new IndexDebugger();
-                var keyId = writeSession.EnsureKeyExists("image");
+                sessionFactory.Truncate(collectionId);
 
-                using (var indexSession = sessionFactory.CreateIndexSession(collectionId, new ImageModel()))
+                using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
                 {
-                    foreach (var image in images)
+                    var debugger = new IndexDebugger();
+                    var keyId = writeSession.EnsureKeyExists("image");
+
+                    using (var indexSession = sessionFactory.CreateIndexSession(collectionId, new ImageModel()))
                     {
-                        var document = new Dictionary<string, object>() { { "label", image.Label } };
-                        var storeFields = new HashSet<string> { "label" };
-                        var documentId = writeSession.Put(document, storeFields);
-
-                        indexSession.Put(documentId, keyId, image);
-
-                        count++;
-
-                        var debugInfo = debugger.GetDebugInfo(indexSession);
-
-                        if (debugInfo != null)
+                        foreach (var image in images)
                         {
-                            logger.LogInformation(debugInfo);
-                        }
-                    }
+                            var document = new Dictionary<string, object>() { { "label", image.Label } };
+                            var storeFields = new HashSet<string> { "label" };
+                            var documentId = writeSession.Put(document, storeFields);
 
-                    tree = indexSession.GetInMemoryIndex(keyId);
+                            indexSession.Put(documentId, keyId, image);
+
+                            count++;
+
+                            var debugInfo = debugger.GetDebugInfo(indexSession);
+
+                            if (debugInfo != null)
+                            {
+                                logger.LogInformation(debugInfo);
+                            }
+                        }
+
+                        tree = indexSession.GetInMemoryIndex(keyId);
+                    }
                 }
             }
 

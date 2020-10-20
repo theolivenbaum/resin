@@ -149,60 +149,6 @@ namespace Sir.VectorSpace
             }
         }
 
-        public VectorNode Detach()
-        {
-            Ancestor = null;
-            _left = null;
-            _right = null;
-            _weight = 0;
-
-            return this;
-        }
-
-        public VectorNode DetachFromAncestor()
-        {
-            Ancestor = null;
-            return this;
-        }
-
-        public string Visualize()
-        {
-            StringBuilder output = new StringBuilder();
-            Visualize(this, output, 0);
-            return output.ToString();
-        }
-
-        private void Visualize(VectorNode node, StringBuilder output, int depth)
-        {
-            if (node == null) return;
-            output.Append('\t', depth);
-            output.AppendFormat($"{node.ToDebugString()} w:{node.Weight}");
-            output.AppendLine();
-
-            Visualize(node.Left, output, depth + 1);
-            Visualize(node.Right, output, depth);
-        }
-
-        public string ToDebugString()
-        {
-            var vals = Vector.Value.AsArray();
-
-            var w = new StringBuilder();
-
-            w.Append('|');
-
-            for (int i = 0; i < vals.Length; i++)
-            {
-                w.Append(vals[i]);
-
-                w.Append('|');
-            }
-
-            w.Append(Vector.ToString());
-
-            return w.ToString();
-        }
-
         public override string ToString()
         {
             return Vector == null ? "ROOT" : Vector.Label == null ? Vector.ToString() : Vector.Label;

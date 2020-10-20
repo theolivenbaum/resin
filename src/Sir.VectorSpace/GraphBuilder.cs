@@ -10,31 +10,25 @@ namespace Sir.VectorSpace
         public static VectorNode CreateTree<T>(IModel<T> model, IIndexingStrategy indexingStrategy, params T[] data)
         {
             var root = new VectorNode();
-            var unclassified = new Queue<(long keyId, VectorNode node)>();
             const long columnId = 0;
 
             foreach (var item in data)
             {
                 foreach (var vector in model.Tokenize(item))
                 {
-                    indexingStrategy.ExecutePut(root, columnId, new VectorNode(vector), model, unclassified);
+                    indexingStrategy.ExecutePut(root, columnId, new VectorNode(vector), model);
                 }
             }
-
-            indexingStrategy.ExecuteFlush(new Dictionary<long, VectorNode>() { { columnId, root } }, unclassified);
 
             return root;
         }
 
-        public static bool TryRecalculateVectorOrAdd(
+        public static void MergeOrAddSupervised(
             VectorNode root,
             VectorNode node,
-            IModel model,
-            int maxDepth,
-            out VectorNode unclassified)
+            IModel model)
         {
             var cursor = root;
-            var depth = 0;
 
             while (true)
             {
@@ -42,49 +36,22 @@ namespace Sir.VectorSpace
 
                 if (angle >= model.IdenticalAngle)
                 {
-                    if (node.Vector.Label.Equals(cursor.Vector.Label))
-                    {
-                        AddDocId(cursor, node);
-                        cursor.Vector.AverageInPlace(node.Vector);
-                        unclassified = null;
-                        return true;
-                    }
-                    else
-                    {
-                        unclassified = node;
-                        return false;
-                    }
+                    if (!cursor.Vector.Label.Equals(node.Vector.Label))
+                        throw new InvalidOperationException($"IdenticalAngle {model.IdenticalAngle} is too low. Angle was {angle}");
+
+                    AddDocId(cursor, node);
+                    break;
                 }
                 else if (angle > model.FoldAngle)
                 {
-                    if (node.Vector.Label.Equals(cursor.Vector.Label))
+                    if (cursor.Left == null)
                     {
-                        if (depth < maxDepth)
-                        {
-                            if (cursor.Left == null)
-                            {
-                                cursor.Left = node;
-                                unclassified = null;
-                                return true;
-                            }
-                            else
-                            {
-                                cursor = cursor.Left;
-                                depth++;
-                            }
-                        }
-                        else
-                        {
-                            AddDocId(cursor, node);
-                            cursor.Vector.AverageInPlace(node.Vector.Multiply((float)angle/2));
-                            unclassified = null;
-                            return true;
-                        }
+                        cursor.Left = node;
+                        break;
                     }
                     else
                     {
-                        unclassified = node;
-                        return false;
+                        cursor = cursor.Left;
                     }
                 }
                 else
@@ -92,52 +59,7 @@ namespace Sir.VectorSpace
                     if (cursor.Right == null)
                     {
                         cursor.Right = node;
-                        unclassified = null;
-                        return true;
-                    }
-                    else
-                    {
-                        cursor = cursor.Right;
-                        depth = Math.Max(0, depth-1);
-                    }
-                }
-            }
-        }
-
-        public static bool TryRecalculateVectorOrAdd(
-            VectorNode root,
-            VectorNode node,
-            IModel model,
-            out VectorNode unclassified)
-        {
-            var cursor = root;
-
-            while (true)
-            {
-                var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
-                
-                if (angle > model.FoldAngle)
-                {
-                    if (node.Vector.Label.Equals(cursor.Vector.Label))
-                    {
-                        AddDocId(cursor, node);
-                        cursor.Vector.AverageInPlace(node.Vector);
-                        unclassified = null;
-                        return true;
-                    }
-                    else
-                    {
-                        unclassified = node;
-                        return false;
-                    }
-                }
-                else
-                {
-                    if (cursor.Right == null)
-                    {
-                        cursor.Right = node;
-                        unclassified = null;
-                        return true;
+                        break;
                     }
                     else
                     {
@@ -169,7 +91,6 @@ namespace Sir.VectorSpace
                     if (cursor.Left == null)
                     {
                         cursor.Left = node;
-
                         break;
                     }
                     else
@@ -182,7 +103,6 @@ namespace Sir.VectorSpace
                     if (cursor.Right == null)
                     {
                         cursor.Right = node;
-
                         break;
                     }
                     else
@@ -222,7 +142,6 @@ namespace Sir.VectorSpace
                             if (cursor.Left == null)
                             {
                                 cursor.Left = node;
-
                                 break;
                             }
                             else
@@ -245,7 +164,6 @@ namespace Sir.VectorSpace
                             if (cursor.Right == null)
                             {
                                 cursor.Right = node;
-
                                 break;
                             }
                             else
@@ -292,11 +210,11 @@ namespace Sir.VectorSpace
             target.DocIds.Add(docId);
         }
 
-        public static void AddDocId(VectorNode target, VectorNode node)
+        public static void AddDocId(VectorNode target, VectorNode source)
         {
-            if (target.DocIds != null && node.DocIds != null)
+            if (target.DocIds != null && source.DocIds != null)
             {
-                foreach (var docId in node.DocIds)
+                foreach (var docId in source.DocIds)
                 {
                     target.DocIds.Add(docId);
                 }
@@ -343,11 +261,7 @@ namespace Sir.VectorSpace
         /// <param name="vectorStream">stream to persist vectors in</param>
         /// <param name="postingsStream">optional stream to persist any posting references into</param>
         /// <returns></returns>
-        public static (long offset, long length) SerializeTree(
-            VectorNode node, 
-            Stream indexStream, 
-            Stream vectorStream, 
-            Stream postingsStream = null)
+        public static (long offset, long length) SerializeTree(VectorNode node, Stream indexStream, Stream vectorStream, Stream postingsStream = null)
         {
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;

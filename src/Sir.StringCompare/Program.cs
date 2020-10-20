@@ -109,7 +109,7 @@ namespace Sir.StringCompare
                 GraphBuilder.MergeOrAdd(root, node, model);
             }
 
-            Console.WriteLine(root.Visualize());
+            Console.WriteLine(PathFinder.Visualize(root));
 
             while (true)
             {

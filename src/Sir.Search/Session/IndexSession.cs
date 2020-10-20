@@ -19,9 +19,8 @@ namespace Sir.Search
         private readonly ILogger _logger;
         private readonly IModel<T> _model;
         private readonly ConcurrentDictionary<long, VectorNode> _index;
-        private readonly Queue<(long keyId, VectorNode node)> _unclassified;
         private readonly IIndexingStrategy _indexingStrategy;
-        private bool _flushed;
+        private bool _flushing;
 
         /// <summary>
         /// Creates an instance of an indexing session targeting a single collection.
@@ -45,7 +44,6 @@ namespace Sir.Search
             _model = model;
             _index = new ConcurrentDictionary<long, VectorNode>();
             _logger = logger;
-            _unclassified = new Queue<(long, VectorNode)>();
             _indexingStrategy = indexingStrategy;
         }
 
@@ -53,11 +51,10 @@ namespace Sir.Search
         {
             var vectors = _model.Tokenize(value);
             var column = _index.GetOrAdd(keyId, new VectorNode());
-            var unclassified = new Queue<(long, VectorNode)>();
 
             foreach (var vector in vectors)
             {
-                _indexingStrategy.ExecutePut(column, keyId, new VectorNode(vector, docId), _model, unclassified);
+                _indexingStrategy.ExecutePut(column, keyId, new VectorNode(vector, docId), _model);
             }
         }
 
@@ -81,17 +78,10 @@ namespace Sir.Search
 
         public void Flush()
         {
-            if (_flushed)
+            if (_flushing)
                 return;
 
-            _flushed = true;
-
-            if (_unclassified.Count > 0)
-            {
-                _logger.LogInformation($"merging {_unclassified.Count} outliers");
-
-                _indexingStrategy.ExecuteFlush(_index, _unclassified);
-            }
+            _flushing = true;
 
             foreach (var column in _index)
             {
@@ -110,7 +100,7 @@ namespace Sir.Search
 
         public void Dispose()
         {
-            if (!_flushed)
+            if (!_flushing)
                 Flush();
 
             _postingsStream.Dispose();

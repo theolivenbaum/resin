@@ -47,7 +47,7 @@ namespace Sir.VectorSpace
 
         public static IEnumerable<VectorNode> All(VectorNode root)
         {
-            var node = root.ComponentCount == 0 ? root.Right : root;
+            var node = root.Vector == null ? root.Right : root;
             var stack = new Stack<VectorNode>();
 
             while (node != null)
@@ -73,6 +73,8 @@ namespace Sir.VectorSpace
         {
             StringBuilder output = new StringBuilder();
 
+            Visualize(root, output);
+
             foreach(var node in All(root))
             {
                 Visualize(node, output);
@@ -86,7 +88,13 @@ namespace Sir.VectorSpace
             if (node == null) return;
 
             output.Append('\t',node.Depth);
-            output.AppendFormat($"{node} w:{node.Weight}");
+            output.AppendFormat($"{node} w:{node.Weight} ");
+
+            if (node.Vector == null)
+            {
+                output.AppendFormat($"{Size(node)}");
+            }
+
             output.AppendLine();
         }
 
