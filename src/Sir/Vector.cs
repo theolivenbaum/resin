@@ -13,11 +13,6 @@ namespace Sir
         public Vector<float> Value { get; private set; }
         public int ComponentCount => ((SparseVectorStorage<float>)Value.Storage).ValueCount;
 
-        public IndexedVector(int numOfDimensions)
-        {
-            Value = CreateVector.Sparse(SparseVectorStorage<float>.OfEnumerable(new float[numOfDimensions]));
-        }
-
         public IndexedVector(IEnumerable<float> values, string label = null)
         {
             Value = CreateVector.Sparse(SparseVectorStorage<float>.OfEnumerable(values));
@@ -59,9 +54,10 @@ namespace Sir
             Label = label;
         }
 
-        public IndexedVector(Tuple<int, float>[] tuples, int vectorWidth, string label = null)
+        public IndexedVector(Tuple<int, float>[] tuples, int numOfDimensions, string label = null)
         {
-            Value = CreateVector.SparseOfIndexed(vectorWidth, tuples);
+            Value = CreateVector.SparseOfIndexed(numOfDimensions, tuples);
+            Label = label;
         }
 
         public IndexedVector(Vector<float> vector, string label = null)
@@ -82,12 +78,12 @@ namespace Sir
 
         public void AddInPlace(IVector vector)
         {
-            Value = Value.Add(vector.Value);
+            Value.Add(vector.Value, Value);
         }
 
         public void SubtractInPlace(IVector vector)
         {
-            Value = Value.Subtract(vector.Value);
+            Value.Subtract(vector.Value, Value);
 
             Value.CoerceZero(0);
         }
@@ -111,7 +107,8 @@ namespace Sir
 
         public void AverageInPlace(IVector vector)
         {
-            Value = Value.Add(vector.Value).Divide(2);
+            Value.Add(vector.Value, Value);
+            Value.Divide(2, Value);
         }
 
         public override string ToString()
