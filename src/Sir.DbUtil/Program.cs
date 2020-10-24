@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -16,9 +17,9 @@ namespace Sir.DbUtil
                 builder
                     .AddFilter("Microsoft", LogLevel.Warning)
                     .AddFilter("System", LogLevel.Warning)
-                    .AddFilter("Sir.DbUtil.Program", LogLevel.Debug)
-                    .AddConsole()
-                    .AddDebug();
+                    .AddFilter("Sir.DbUtil.Program", LogLevel.Information)
+                    .AddConsole();
+                    //.AddDebug();
             });
 
             var logger = loggerFactory.CreateLogger("Sir.DbUtil.Program");
@@ -29,6 +30,7 @@ namespace Sir.DbUtil
             var command = args[0].ToLower();
             var flags = ParseArgs(args);
             var plugin = ResolvePlugin(command);
+            var time = Stopwatch.StartNew();
 
             if (plugin != null)
             {
@@ -60,9 +62,11 @@ namespace Sir.DbUtil
             else
             {
                 logger.LogInformation("unknown command: {0}", command);
+
+                return;
             }
 
-            logger.LogInformation($"executed {command}");
+            logger.LogInformation($"executed {command} in {time.Elapsed}");
         }
 
         private static ICommand ResolvePlugin(string command)

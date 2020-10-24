@@ -48,7 +48,7 @@ namespace Sir.Mnist
                         {
                             errors++;
 
-                            logger.LogDebug($"error. label: {imageLabel} document label: {documentLabel}\n{((MnistImage)image).Print()}");
+                            logger.LogDebug($"error. label: {imageLabel} document label: {documentLabel}\n{((MnistImage)image).Print()}\n{((MnistImage)image).Print()}");
                         }
                     }
 
