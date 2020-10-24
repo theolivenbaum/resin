@@ -16,12 +16,12 @@ namespace Sir.DbUtil
                 builder
                     .AddFilter("Microsoft", LogLevel.Warning)
                     .AddFilter("System", LogLevel.Warning)
-                    .AddFilter("Sir.DbUtil.Program", LogLevel.Information)
+                    .AddFilter("Sir.DbUtil.Program", LogLevel.Debug)
                     .AddConsole()
                     .AddDebug();
             });
 
-            var logger = loggerFactory.CreateLogger("dbutil");
+            var logger = loggerFactory.CreateLogger("Sir.DbUtil.Program");
 
             logger.LogInformation($"processing command: {string.Join(" ", args)}");
 
