@@ -10,6 +10,7 @@ namespace Sir.Wikipedia
     {
         public void Run(IDictionary<string, string> args, ILogger logger)
         {
+            var dataDirectory = args["dataDirectory"];
             var fileName = args["fileName"];
             var dir = args["directory"];
             var collection = args["collection"];
@@ -30,7 +31,7 @@ namespace Sir.Wikipedia
                                             { "description", x["text"] }
                         });
 
-            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
+            using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
                 foreach (var page in payload.Batch(pageSize))
                 {

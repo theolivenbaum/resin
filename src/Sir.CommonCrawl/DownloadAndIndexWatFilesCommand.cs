@@ -11,12 +11,13 @@ namespace Sir.CommonCrawl
     /// Download and index Common Crawl WAT files.
     /// </summary>
     /// <example>
-    /// downloadandindexcommoncrawl --commonCrawlId CC-MAIN-2019-51 workingDirectory d:\ --collection cc_wat --skip 0 --take 1
+    /// downloadandindexcommoncrawl --dataDirectory c:\data\resin --commonCrawlId CC-MAIN-2019-51 workingDirectory d:\ --collection cc_wat --skip 0 --take 1
     /// </example>
     public class DownloadAndIndexWatFilesCommand : ICommand
     {
         public void Run(IDictionary<string, string> args, ILogger log)
         {
+            var dataDirectory = args["dataDirectory"];
             var commonCrawlId = args["commonCrawlId"];
             var workingDirectory = args["workingDirectory"];
             var skip = int.Parse(args["skip"]);
@@ -98,7 +99,7 @@ namespace Sir.CommonCrawl
                 {
                     log.LogInformation($"processing {localWatFileName}");
 
-                    CCHelper.WriteWatSegment(localWatFileName, collectionName, new TextModel(), log, refFileName);
+                    CCHelper.WriteWatSegment(dataDirectory, localWatFileName, collectionName, new TextModel(), log, refFileName);
                 });
             }
 

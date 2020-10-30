@@ -4,8 +4,7 @@ namespace Sir
 {
     public interface ISessionFactory
     {
-        IConfigurationProvider Config { get; }
-        string Dir { get; }
+        string Directory { get; }
         Stream CreateAppendStream(string fileName, int bufferSize = 4096);
         Stream CreateAsyncAppendStream(string fileName, int bufferSize = 4096);
         Stream CreateAsyncReadStream(string fileName, int bufferSize = 4096);

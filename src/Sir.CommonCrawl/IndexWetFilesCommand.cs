@@ -12,6 +12,7 @@ namespace Sir.CommonCrawl
     {
         public void Run(IDictionary<string, string> args, ILogger logger)
         {
+            var dataDirectory = args["dataDirectory"];
             var fileName = args["fileName"];
             var model = new TextModel();
             var collectionId = "cc_wet".ToHash();
@@ -25,7 +26,7 @@ namespace Sir.CommonCrawl
                 storedFieldNames,
                 indexedFieldNames);
 
-            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
+            using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
                 sessionFactory.Truncate(collectionId);
 

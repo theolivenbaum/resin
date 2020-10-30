@@ -14,6 +14,7 @@ namespace Sir.CommonCrawl
     public static class CCHelper
     {
         public static void WriteWatSegment(
+            string dataDirectory,
             string fileName,
             string collection,
             ITextModel model,
@@ -31,7 +32,7 @@ namespace Sir.CommonCrawl
                 "title","description", "url"
             };
 
-            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
+            using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
             using (var indexSession = sessionFactory.CreateIndexSession(collectionId, model))
             using (var queue = new ProducerConsumerQueue<IDictionary<string, object>>(1, (document =>

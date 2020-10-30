@@ -10,7 +10,7 @@ namespace Sir.Mnist
     /// Test the accuracy of a MNIST index.
     /// </summary>
     /// <example>
-    /// testmnist --imageFileName C:\temp\mnist\t10k-images.idx3-ubyte --labelFileName C:\temp\mnist\t10k-labels.idx1-ubyte --collection mnist
+    /// testmnist --dataDirectory c:\data\resin --imageFileName C:\temp\mnist\t10k-images.idx3-ubyte --labelFileName C:\temp\mnist\t10k-labels.idx1-ubyte --collection mnist
     /// </example>
     public class TestMnistCommand : ICommand
     {
@@ -23,7 +23,7 @@ namespace Sir.Mnist
             var errors = 0;
             var model = new ImageModel();
 
-            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
+            using (var sessionFactory = new SessionFactory(logger: logger))
             using (var querySession = sessionFactory.CreateQuerySession(model))
             {
                 var queryParser = new QueryParser<IImage>(sessionFactory, model, logger);

@@ -19,27 +19,32 @@ namespace Sir.Search
         private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private ILogger _logger;
 
-        public string Dir { get; }
-        public IConfigurationProvider Config { get; }
+        public string Directory { get; }
 
-        public SessionFactory(IConfigurationProvider config = null, ILogger logger = null)
+        public SessionFactory(string directory = null, ILogger logger = null)
         {
             var time = Stopwatch.StartNew();
 
-            Dir = config.Get("data_dir");
-            Config = config ?? new KeyValueConfiguration();
+            Directory = directory;
 
-            if (!Directory.Exists(Dir))
+            if (Directory != null && !System.IO.Directory.Exists(Directory))
             {
-                Directory.CreateDirectory(Dir);
+                System.IO.Directory.CreateDirectory(Directory);
+            }
+
+            if (Directory == null)
+            {
+                _keys = new ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>>();
+            }
+            else
+            {
+                _keys = LoadKeys();
             }
 
             _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
             _logger = logger;
-            _keys = LoadKeys();
 
-           Log($"loaded keys in {time.Elapsed}");
-           Log($"sessionfactory is initiated.");
+           Log($"sessionfactory initiated in {time.Elapsed}");
         }
 
         private void Log(string message)
@@ -50,7 +55,7 @@ namespace Sir.Search
 
         public long GetDocCount(string collection)
         {
-            var fileName = Path.Combine(Dir, $"{collection.ToHash()}.dix");
+            var fileName = Path.Combine(Directory, $"{collection.ToHash()}.dix");
 
             if (!File.Exists(fileName))
                 return 0;
@@ -62,7 +67,7 @@ namespace Sir.Search
         {
             var count = 0;
 
-            foreach (var file in Directory.GetFiles(Dir, $"{collectionId}*"))
+            foreach (var file in System.IO.Directory.GetFiles(Directory, $"{collectionId}*"))
             {
                 File.Delete(file);
                 count++;
@@ -79,27 +84,27 @@ namespace Sir.Search
         {
             var count = 0;
 
-            foreach (var file in Directory.GetFiles(Dir, $"{collectionId}*.ix"))
+            foreach (var file in System.IO.Directory.GetFiles(Directory, $"{collectionId}*.ix"))
             {
                 File.Delete(file);
                 count++;
             }
-            foreach (var file in Directory.GetFiles(Dir, $"{collectionId}*.ixp"))
+            foreach (var file in System.IO.Directory.GetFiles(Directory, $"{collectionId}*.ixp"))
             {
                 File.Delete(file);
                 count++;
             }
-            foreach (var file in Directory.GetFiles(Dir, $"{collectionId}*.ixtp"))
+            foreach (var file in System.IO.Directory.GetFiles(Directory, $"{collectionId}*.ixtp"))
             {
                 File.Delete(file);
                 count++;
             }
-            foreach (var file in Directory.GetFiles(Dir, $"{collectionId}*.vec"))
+            foreach (var file in System.IO.Directory.GetFiles(Directory, $"{collectionId}*.vec"))
             {
                 File.Delete(file);
                 count++;
             }
-            foreach (var file in Directory.GetFiles(Dir, $"{collectionId}*.pos"))
+            foreach (var file in System.IO.Directory.GetFiles(Directory, $"{collectionId}*.pos"))
             {
                 File.Delete(file);
                 count++;
@@ -316,7 +321,7 @@ namespace Sir.Search
 
         public FileStream CreateLockFile(ulong collectionId)
         {
-            return new FileStream(Path.Combine(Dir, collectionId + ".lock"),
+            return new FileStream(Path.Combine(Directory, collectionId + ".lock"),
                    FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None,
                    4096, FileOptions.RandomAccess | FileOptions.DeleteOnClose);
         }
@@ -347,7 +352,7 @@ namespace Sir.Search
             var timer = Stopwatch.StartNew();
             var allkeys = new ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>>();
 
-            foreach (var keyFile in Directory.GetFiles(Dir, "*.kmap"))
+            foreach (var keyFile in System.IO.Directory.GetFiles(Directory, "*.kmap"))
             {
                 var collectionId = ulong.Parse(Path.GetFileNameWithoutExtension(keyFile));
                 ConcurrentDictionary<ulong, long> keys;
@@ -380,7 +385,7 @@ namespace Sir.Search
 
         public void RegisterKeyMapping(ulong collectionId, ulong keyHash, long keyId)
         {
-            var fileName = Path.Combine(Dir, string.Format("{0}.kmap", collectionId));
+            var fileName = Path.Combine(Directory, string.Format("{0}.kmap", collectionId));
             ConcurrentDictionary<ulong, long> keys;
 
             if (!_keys.TryGetValue(collectionId, out keys))
@@ -485,7 +490,7 @@ namespace Sir.Search
 
         public bool CollectionExists(ulong collectionId)
         {
-            return File.Exists(Path.Combine(Dir, collectionId + ".vec"));
+            return File.Exists(Path.Combine(Directory, collectionId + ".vec"));
         }
 
         public bool CollectionIsIndexOnly(ulong collectionId)
@@ -493,7 +498,7 @@ namespace Sir.Search
             if (!CollectionExists(collectionId))
                 throw new InvalidOperationException($"{collectionId} dows not exist");
 
-            return !File.Exists(Path.Combine(Dir, collectionId + ".docs"));
+            return !File.Exists(Path.Combine(Directory, collectionId + ".docs"));
         }
 
         public void Dispose()

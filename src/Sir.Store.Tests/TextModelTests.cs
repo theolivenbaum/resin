@@ -104,9 +104,7 @@ namespace Sir.Tests
                     .AddDebug();
             });
 
-            _sessionFactory = new SessionFactory(
-                new KeyValueConfiguration("sir.ini"),
-                _loggerFactory.CreateLogger<SessionFactory>());
+            _sessionFactory = new SessionFactory(logger: _loggerFactory.CreateLogger<SessionFactory>());
         }
 
         [TearDown]

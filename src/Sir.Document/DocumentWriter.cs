@@ -24,34 +24,32 @@ namespace Sir.Document
         {
             var valueStream = sessionFactory.CreateAppendStream(
                 Path.Combine(
-                    sessionFactory.Dir, 
-                    string.Format("{0}.val", collectionId)), 
-                int.Parse(sessionFactory.Config.Get("value_stream_write_buffer_size")));
+                    sessionFactory.Directory, 
+                    string.Format("{0}.val", collectionId)));
 
             var keyStream = sessionFactory.CreateAppendStream(
                 Path.Combine(
-                    sessionFactory.Dir, 
+                    sessionFactory.Directory, 
                     string.Format("{0}.key", collectionId)));
 
             var docStream = sessionFactory.CreateAppendStream(
                 Path.Combine(
-                    sessionFactory.Dir, 
-                    string.Format("{0}.docs", collectionId)), 
-                int.Parse(sessionFactory.Config.Get("doc_map_stream_write_buffer_size")));
+                    sessionFactory.Directory, 
+                    string.Format("{0}.docs", collectionId)));
 
             var valueIndexStream = sessionFactory.CreateAppendStream(
                 Path.Combine(
-                    sessionFactory.Dir, 
+                    sessionFactory.Directory, 
                     string.Format("{0}.vix", collectionId)));
 
             var keyIndexStream = sessionFactory.CreateAppendStream(
                 Path.Combine(
-                    sessionFactory.Dir, 
+                    sessionFactory.Directory, 
                     string.Format("{0}.kix", collectionId)));
 
             var docIndexStream = sessionFactory.CreateAppendStream(
                 Path.Combine(
-                    sessionFactory.Dir, 
+                    sessionFactory.Directory, 
                     string.Format("{0}.dix", collectionId)));
 
             _vals = new ValueWriter(valueStream);

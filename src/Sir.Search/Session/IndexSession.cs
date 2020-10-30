@@ -39,8 +39,8 @@ namespace Sir.Search
         {
             _collectionId = collectionId;
             _sessionFactory = sessionFactory;
-            _postingsStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, $"{collectionId}.pos"));
-            _vectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Dir, $"{collectionId}.vec"));
+            _postingsStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Directory, $"{collectionId}.pos"));
+            _vectorStream = sessionFactory.CreateAppendStream(Path.Combine(sessionFactory.Directory, $"{collectionId}.vec"));
             _model = model;
             _index = new ConcurrentDictionary<long, VectorNode>();
             _logger = logger;
@@ -85,9 +85,9 @@ namespace Sir.Search
 
             foreach (var column in _index)
             {
-                using (var indexStream = _sessionFactory.CreateAppendStream(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{column.Key}.ix")))
+                using (var indexStream = _sessionFactory.CreateAppendStream(Path.Combine(_sessionFactory.Directory, $"{_collectionId}.{column.Key}.ix")))
                 using (var columnWriter = new ColumnStreamWriter(indexStream))
-                using (var pageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(Path.Combine(_sessionFactory.Dir, $"{_collectionId}.{column.Key}.ixtp"))))
+                using (var pageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(Path.Combine(_sessionFactory.Directory, $"{_collectionId}.{column.Key}.ixtp"))))
                 {
                     var size = columnWriter.CreatePage(column.Value, _vectorStream, _postingsStream, pageIndexWriter);
 

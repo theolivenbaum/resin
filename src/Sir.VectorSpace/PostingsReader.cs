@@ -88,7 +88,7 @@ namespace Sir.Search
             return _streams.GetOrAdd(
                 collectionId,
                 _sessionFactory.CreateReadStream(
-                    Path.Combine(_sessionFactory.Dir, $"{collectionId}.pos"))
+                    Path.Combine(_sessionFactory.Directory, $"{collectionId}.pos"))
                 );
         }
 

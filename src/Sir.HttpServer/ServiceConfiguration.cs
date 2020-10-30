@@ -25,7 +25,7 @@ namespace Sir.HttpServer
 
             var loggerFactory = services.BuildServiceProvider().GetService<ILoggerFactory>();
             var model = new TextModel();
-            var sessionFactory = new SessionFactory(config, loggerFactory.CreateLogger<SessionFactory>());
+            var sessionFactory = new SessionFactory(@"c:\data\resin", loggerFactory.CreateLogger<SessionFactory>());
             var qp = new QueryParser<string>(sessionFactory, model, loggerFactory.CreateLogger<QueryParser<string>>());
             var httpParser = new HttpStringQueryParser(qp);
 
@@ -38,7 +38,6 @@ namespace Sir.HttpServer
             services.AddSingleton(typeof(IHttpReader), new HttpReader(
                 sessionFactory,
                 httpParser,
-                config,
                 loggerFactory.CreateLogger<HttpReader>()));
 
             return services.BuildServiceProvider();

@@ -252,15 +252,15 @@ namespace Sir.Search
 
         public IColumnReader CreateColumnReader(ulong collectionId, long keyId)
         {
-            var ixFileName = Path.Combine(_sessionFactory.Dir, string.Format("{0}.{1}.ix", collectionId, keyId));
+            var ixFileName = Path.Combine(_sessionFactory.Directory, string.Format("{0}.{1}.ix", collectionId, keyId));
 
             if (!File.Exists(ixFileName))
                 return null;
 
-            var vectorFileName = Path.Combine(_sessionFactory.Dir, $"{collectionId}.vec");
+            var vectorFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.vec");
 
             return new ColumnStreamReader(
-                    new PageIndexReader(_sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Dir, $"{collectionId}.{keyId}.ixtp"))),
+                    new PageIndexReader(_sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.ixtp"))),
                     _sessionFactory.CreateReadStream(ixFileName),
                     _sessionFactory.CreateReadStream(vectorFileName),
                     _sessionFactory,

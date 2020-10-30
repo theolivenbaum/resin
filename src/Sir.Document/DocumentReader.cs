@@ -19,12 +19,12 @@ namespace Sir.Document
 
         public DocumentReader(ulong collectionId, ISessionFactory sessionFactory)
         {
-            var valueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.val", collectionId)), int.Parse(sessionFactory.Config.Get("value_stream_read_buffer_size")));
-            var keyStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.key", collectionId)));
-            var docStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.docs", collectionId)), int.Parse(sessionFactory.Config.Get("doc_map_stream_read_buffer_size")));
-            var valueIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.vix", collectionId)));
-            var keyIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.kix", collectionId)));
-            var docIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Dir, string.Format("{0}.dix", collectionId)));
+            var valueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Directory, string.Format("{0}.val", collectionId)));
+            var keyStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Directory, string.Format("{0}.key", collectionId)));
+            var docStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Directory, string.Format("{0}.docs", collectionId)));
+            var valueIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Directory, string.Format("{0}.vix", collectionId)));
+            var keyIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Directory, string.Format("{0}.kix", collectionId)));
+            var docIndexStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Directory, string.Format("{0}.dix", collectionId)));
 
             _vals = new ValueReader(valueStream);
             _keys = new ValueReader(keyStream);

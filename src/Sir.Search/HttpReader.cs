@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -19,18 +18,15 @@ namespace Sir.Search
         private readonly ILogger<HttpReader> _logger;
         private readonly SessionFactory _sessionFactory;
         private readonly HttpStringQueryParser _httpQueryParser;
-        private readonly IConfigurationProvider _config;
 
         public HttpReader(
             SessionFactory sessionFactory, 
             HttpStringQueryParser httpQueryParser,
-            IConfigurationProvider config,
             ILogger<HttpReader> logger)
         {
             _logger = logger;
             _sessionFactory = sessionFactory;
             _httpQueryParser = httpQueryParser;
-            _config = config;
         }
 
         public void Dispose()

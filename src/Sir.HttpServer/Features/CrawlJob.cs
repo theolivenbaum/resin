@@ -118,8 +118,8 @@ namespace Sir.HttpServer.Features
 
                     if (wetResult == null || wetResult.Total == 0)
                     {
-                        var localFileName = Path.Combine(_sessionFactory.Dir, "wet", fileName);
-                        var tmpFileName = Path.Combine(_sessionFactory.Dir, "tmp", Id, fileName);
+                        var localFileName = Path.Combine(_sessionFactory.Directory, "wet", fileName);
+                        var tmpFileName = Path.Combine(_sessionFactory.Directory, "tmp", Id, fileName);
 
                         if (!File.Exists(localFileName))
                         {

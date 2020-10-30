@@ -77,9 +77,7 @@ namespace Sir.Tests
 
             _logger = _loggerFactory.CreateLogger<ImageModelTests>();
 
-            _sessionFactory = new SessionFactory(
-                new KeyValueConfiguration("sir.ini"),
-                _loggerFactory.CreateLogger<SessionFactory>());
+            _sessionFactory = new SessionFactory(logger: _loggerFactory.CreateLogger<SessionFactory>());
 
             _data = new MnistReader(
                 @"C:\temp\mnist\t10k-images.idx3-ubyte",

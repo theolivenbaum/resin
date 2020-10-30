@@ -49,11 +49,11 @@ namespace Sir.DbUtil
             }
             else if (command == "truncate")
             {
-                Truncate(flags["collection"], logger);
+                Truncate(flags["dataDirectory"], flags["collection"], logger);
             }
             else if (command == "truncate-index")
             {
-                TruncateIndex(flags["collection"], logger);
+                TruncateIndex(flags["dataDirectory"], flags["collection"], logger);
             }
             else if (command == "optimize")
             {
@@ -97,12 +97,13 @@ namespace Sir.DbUtil
         /// </summary>
         private static void Optimize(IDictionary<string, string> args, TextModel model, ILogger logger)
         {
+            var dataDirectory = args["dataDirectory"];
             var collection = args["collection"];
             var skip = int.Parse("skip");
             var take = int.Parse("take");
             var batchSize = int.Parse("batchSize");
 
-            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
+            using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
                 sessionFactory.Optimize(
                     collection, 
@@ -137,11 +138,11 @@ namespace Sir.DbUtil
         /// <summary>
         /// Required args: collection
         /// </summary>
-        private static void Truncate(string collection, ILogger log)
+        private static void Truncate(string dataDirectory, string collection, ILogger log)
         {
             var collectionId = collection.ToHash();
 
-            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), log))
+            using (var sessionFactory = new SessionFactory(dataDirectory, log))
             {
                 sessionFactory.Truncate(collectionId);
             }
@@ -150,11 +151,11 @@ namespace Sir.DbUtil
         /// <summary>
         /// Required args: collection
         /// </summary>
-        private static void TruncateIndex(string collection, ILogger log)
+        private static void TruncateIndex(string dataDirectory, string collection, ILogger log)
         {
             var collectionId = collection.ToHash();
 
-            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), log))
+            using (var sessionFactory = new SessionFactory(dataDirectory, log))
             {
                 sessionFactory.TruncateIndex(collectionId);
             }

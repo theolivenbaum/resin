@@ -11,22 +11,23 @@ namespace Sir.Mnist
     /// Creates a vector index of the MNIST database.
     /// </summary>
     /// <example>
-    /// indexmnist --imageFileName C:\temp\mnist\train-images.idx3-ubyte --labelFileName C:\temp\mnist\train-labels.idx1-ubyte --collection mnist
+    /// indexmnist --dataDirectory c:\data\resin --imageFileName C:\temp\mnist\train-images.idx3-ubyte --labelFileName C:\temp\mnist\train-labels.idx1-ubyte --collection mnist
     /// </example>
     /// <example>
-    /// indexmnist --imageFileName C:\temp\mnist\t10k-images.idx3-ubyte --labelFileName C:\temp\mnist\t10k-labels.idx1-ubyte --collection mnist
+    /// indexmnist --dataDirectory c:\data\resin --imageFileName C:\temp\mnist\t10k-images.idx3-ubyte --labelFileName C:\temp\mnist\t10k-labels.idx1-ubyte --collection mnist
     /// </example>
     public class IndexMnistCommand : ICommand
     {
         public void Run(IDictionary<string, string> args, ILogger logger)
         {
             var time = Stopwatch.StartNew();
+            var dataDirectory = args["dataDirectory"];
             var collectionId = args["collection"].ToHash();
             var images = new MnistReader(args["imageFileName"], args["labelFileName"]).Read();
             var count = 0;
             VectorNode tree;
 
-            using (var sessionFactory = new SessionFactory(new KeyValueConfiguration("sir.ini"), logger))
+            using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
                 sessionFactory.Truncate(collectionId);
 
