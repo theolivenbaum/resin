@@ -17,7 +17,6 @@ namespace Sir.Tests
         public void Can_build_in_memory_index()
         {
             var model = new BagOfCharsModel();
-            var collectionId = "Can_index".ToHash();
             VectorNode tree;
 
             using (var indexSession = _sessionFactory.CreateIndexSession(model))
