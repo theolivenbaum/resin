@@ -8,8 +8,10 @@ namespace Sir.Search
     {
         public double IdenticalAngle => 0.88d;
         public double FoldAngle => 0.58d;
-        public int UnicodeStartingPoint => 32;
         public override int VectorWidth => 256;
+
+        private const int UnicodeStartPoint = 32;
+        private const int UnicodeEndPoint = 300;
 
         public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node, IModel<T> model)
         {
@@ -32,7 +34,7 @@ namespace Sir.Search
                 {
                     char c = char.ToLower(span[index]);
 
-                    if (c < UnicodeStartingPoint || c > UnicodeStartingPoint + VectorWidth)
+                    if (c < UnicodeStartPoint || c > UnicodeEndPoint)
                     {
                         continue;
                     }

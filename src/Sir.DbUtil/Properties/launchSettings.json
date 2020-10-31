@@ -2,7 +2,7 @@
   "profiles": {
     "Sir.DbUtil": {
       "commandName": "Project",
-      "commandLineArgs": "testmnist --imageFileName C:\\temp\\mnist\\t10k-images.idx3-ubyte --labelFileName C:\\temp\\mnist\\t10k-labels.idx1-ubyte --collection mnist"
+      "commandLineArgs": "testmnist --dataDirectory c:\\data\\resin --imageFileName C:\\temp\\mnist\\t10k-images.idx3-ubyte --labelFileName C:\\temp\\mnist\\t10k-labels.idx1-ubyte --collection mnist"
     }
   }
 }
