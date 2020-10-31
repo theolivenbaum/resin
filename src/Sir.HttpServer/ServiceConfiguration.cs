@@ -24,7 +24,7 @@ namespace Sir.HttpServer
             services.Add(new ServiceDescriptor(typeof(IConfigurationProvider), config));
 
             var loggerFactory = services.BuildServiceProvider().GetService<ILoggerFactory>();
-            var model = new TextModel();
+            var model = new BagOfCharsModel();
             var sessionFactory = new SessionFactory(@"c:\data\resin", loggerFactory.CreateLogger<SessionFactory>());
             var qp = new QueryParser<string>(sessionFactory, model, loggerFactory.CreateLogger<QueryParser<string>>());
             var httpParser = new HttpStringQueryParser(qp);

@@ -1,7 +1,6 @@
 ﻿using Sir.KeyValue;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Sir.Document
 {
@@ -22,35 +21,12 @@ namespace Sir.Document
         
         public DocumentWriter(ulong collectionId, ISessionFactory sessionFactory)
         {
-            var valueStream = sessionFactory.CreateAppendStream(
-                Path.Combine(
-                    sessionFactory.Directory, 
-                    string.Format("{0}.val", collectionId)));
-
-            var keyStream = sessionFactory.CreateAppendStream(
-                Path.Combine(
-                    sessionFactory.Directory, 
-                    string.Format("{0}.key", collectionId)));
-
-            var docStream = sessionFactory.CreateAppendStream(
-                Path.Combine(
-                    sessionFactory.Directory, 
-                    string.Format("{0}.docs", collectionId)));
-
-            var valueIndexStream = sessionFactory.CreateAppendStream(
-                Path.Combine(
-                    sessionFactory.Directory, 
-                    string.Format("{0}.vix", collectionId)));
-
-            var keyIndexStream = sessionFactory.CreateAppendStream(
-                Path.Combine(
-                    sessionFactory.Directory, 
-                    string.Format("{0}.kix", collectionId)));
-
-            var docIndexStream = sessionFactory.CreateAppendStream(
-                Path.Combine(
-                    sessionFactory.Directory, 
-                    string.Format("{0}.dix", collectionId)));
+            var valueStream = sessionFactory.CreateAppendStream(collectionId, "val");
+            var keyStream = sessionFactory.CreateAppendStream(collectionId, "key");
+            var docStream = sessionFactory.CreateAppendStream(collectionId, "docs");
+            var valueIndexStream = sessionFactory.CreateAppendStream(collectionId, "vix");
+            var keyIndexStream = sessionFactory.CreateAppendStream(collectionId, "kix");
+            var docIndexStream = sessionFactory.CreateAppendStream(collectionId, "dix");
 
             _vals = new ValueWriter(valueStream);
             _keys = new ValueWriter(keyStream);

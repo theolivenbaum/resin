@@ -99,7 +99,7 @@ namespace Sir.CommonCrawl
                 {
                     log.LogInformation($"processing {localWatFileName}");
 
-                    CCHelper.WriteWatSegment(dataDirectory, localWatFileName, collectionName, new TextModel(), log, refFileName);
+                    CCHelper.WriteWatSegment(dataDirectory, localWatFileName, collectionName, new BagOfCharsModel(), log, refFileName);
                 });
             }
 

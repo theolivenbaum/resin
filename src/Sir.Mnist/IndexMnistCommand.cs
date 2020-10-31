@@ -36,7 +36,7 @@ namespace Sir.Mnist
                     var debugger = new IndexDebugger();
                     var keyId = writeSession.EnsureKeyExists("image");
 
-                    using (var indexSession = sessionFactory.CreateIndexSession(collectionId, new ImageModel()))
+                    using (var indexSession = sessionFactory.CreateIndexSession(new ImageModel()))
                     {
                         foreach (var image in images)
                         {
@@ -57,6 +57,11 @@ namespace Sir.Mnist
                         }
 
                         tree = indexSession.GetInMemoryIndex(keyId);
+
+                        using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger))
+                        {
+                            stream.Flush(indexSession.GetInMemoryIndex());
+                        }
                     }
                 }
             }

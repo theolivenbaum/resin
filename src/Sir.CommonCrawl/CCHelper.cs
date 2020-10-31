@@ -34,15 +34,22 @@ namespace Sir.CommonCrawl
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
-            using (var indexSession = sessionFactory.CreateIndexSession(collectionId, model))
-            using (var queue = new ProducerConsumerQueue<IDictionary<string, object>>(1, (document =>
+            using (var indexSession = sessionFactory.CreateIndexSession(model))
             {
-                sessionFactory.Write(document, writeSession, indexSession, storeFieldNames, indexFieldNames);
-            })))
-            {
-                foreach (var document in ReadWatFile(fileName, refFileName))
+                using (var queue = new ProducerConsumerQueue<IDictionary<string, object>>(1, (document =>
                 {
-                    queue.Enqueue(document);
+                    sessionFactory.Write(document, writeSession, indexSession, storeFieldNames, indexFieldNames);
+                })))
+                {
+                    foreach (var document in ReadWatFile(fileName, refFileName))
+                    {
+                        queue.Enqueue(document);
+                    }
+                }
+
+                using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger))
+                {
+                    stream.Flush(indexSession.GetInMemoryIndex());
                 }
             }
 

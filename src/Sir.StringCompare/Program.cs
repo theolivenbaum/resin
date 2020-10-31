@@ -10,7 +10,7 @@ namespace Sir.StringCompare
     {
         static void Main(string[] args)
         {
-            var model = new TextModel();
+            var model = new BagOfCharsModel();
 
             if (args[0] == "--build-graph")
             {

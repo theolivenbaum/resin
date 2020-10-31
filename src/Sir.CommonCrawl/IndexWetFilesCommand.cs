@@ -14,7 +14,7 @@ namespace Sir.CommonCrawl
         {
             var dataDirectory = args["dataDirectory"];
             var fileName = args["fileName"];
-            var model = new TextModel();
+            var model = new BagOfCharsModel();
             var collectionId = "cc_wet".ToHash();
             var storedFieldNames = new HashSet<string> { "url" };
             var indexedFieldNames = new HashSet<string> { "description" };

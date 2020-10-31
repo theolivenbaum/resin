@@ -36,7 +36,7 @@ namespace Sir.Wikipedia
                 foreach (var page in payload.Batch(pageSize))
                 {
                     using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
-                    using (var indexSession = sessionFactory.CreateIndexSession(collectionId, new TextModel()))
+                    using (var indexSession = sessionFactory.CreateIndexSession(new BagOfCharsModel()))
                     {
                         foreach (var batch in page.Batch(reportSize))
                         {
@@ -63,6 +63,11 @@ namespace Sir.Wikipedia
                             {
                                 logger.LogInformation(debugInfo);
                             }
+                        }
+
+                        using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger))
+                        {
+                            stream.Flush(indexSession.GetInMemoryIndex());
                         }
                     }
                 }

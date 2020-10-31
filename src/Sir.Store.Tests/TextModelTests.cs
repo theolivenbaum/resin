@@ -18,7 +18,7 @@ namespace Sir.Tests
         [Test]
         public void Can_traverse_index_in_memory()
         {
-            var model = new TextModel();
+            var model = new BagOfCharsModel();
             var tree = GraphBuilder.CreateTree(model, model, _data);
 
             Debug.WriteLine(PathFinder.Visualize(tree));
@@ -50,7 +50,7 @@ namespace Sir.Tests
         [Test]
         public void Can_traverse_streamed()
         {
-            var model = new TextModel();
+            var model = new BagOfCharsModel();
             var tree = GraphBuilder.CreateTree(model, model, _data);
 
             using (var indexStream = new MemoryStream())

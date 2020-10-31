@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sir.Document;
-using Sir.VectorSpace;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -16,7 +15,6 @@ namespace Sir.Search
     public class SessionFactory : IDisposable, ISessionFactory
     {
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
-        private readonly ConcurrentDictionary<string, IList<(long offset, long length)>> _pageInfo;
         private ILogger _logger;
 
         public string Directory { get; }
@@ -32,16 +30,7 @@ namespace Sir.Search
                 System.IO.Directory.CreateDirectory(Directory);
             }
 
-            if (Directory == null)
-            {
-                _keys = new ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>>();
-            }
-            else
-            {
-                _keys = LoadKeys();
-            }
-
-            _pageInfo = new ConcurrentDictionary<string, IList<(long offset, long length)>>();
+            _keys = LoadKeys();
             _logger = logger;
 
            Log($"sessionfactory initiated in {time.Elapsed}");
@@ -72,8 +61,6 @@ namespace Sir.Search
                 File.Delete(file);
                 count++;
             }
-
-            _pageInfo.Clear();
 
             _keys.Remove(collectionId, out _);
 
@@ -111,8 +98,6 @@ namespace Sir.Search
             }
 
             Log($"truncated index {collectionId} ({count} files)");
-
-            _pageInfo.Clear();
         }
 
         public void Optimize(
@@ -238,7 +223,7 @@ namespace Sir.Search
             var batchNo = 0;
             var batchCount = 0;
 
-            using (var indexSession = CreateIndexSession(job.CollectionId, job.Model))
+            using (var indexSession = CreateIndexSession(job.Model))
             {
                 foreach (var document in job.Documents)
                 {
@@ -268,6 +253,11 @@ namespace Sir.Search
                         batchCount = 0;
                     }
                 }
+
+                using (var stream = new IndexFileStreamProvider(job.CollectionId, this, _logger))
+                {
+                    stream.Flush(indexSession.GetInMemoryIndex());
+                }
             }
 
             Log($"processed write job (collection {job.CollectionId}), time in total: {time.Elapsed}");
@@ -276,17 +266,14 @@ namespace Sir.Search
         public void Write(WriteJob job, int reportSize = 1000)
         {
             using (var writeSession = CreateWriteSession(job.CollectionId))
-            using (var indexSession = CreateIndexSession(job.CollectionId, job.Model))
+            using (var indexSession = CreateIndexSession(job.Model))
             {
                 Write(job, writeSession, indexSession, reportSize);
-            }
-        }
 
-        public void Write(WriteJob job, IndexSession<string> indexSession, int reportSize)
-        {
-            using (var writeSession = CreateWriteSession(job.CollectionId))
-            {
-                Write(job, writeSession, indexSession, reportSize);
+                using (var stream = new IndexFileStreamProvider(job.CollectionId, this, _logger))
+                {
+                    stream.Flush(indexSession.GetInMemoryIndex());
+                }
             }
         }
 
@@ -303,7 +290,7 @@ namespace Sir.Search
                 var collectionId = group.Key.ToHash();
 
                 using (var writeSession = CreateWriteSession(collectionId))
-                using (var indexSession = CreateIndexSession(collectionId, model))
+                using (var indexSession = CreateIndexSession(model))
                 {
                     Write(
                         new WriteJob(
@@ -315,6 +302,11 @@ namespace Sir.Search
                         writeSession, 
                         indexSession,
                         reportSize);
+
+                    using (var stream = new IndexFileStreamProvider(collectionId, this, _logger))
+                    {
+                        stream.Flush(indexSession.GetInMemoryIndex());
+                    }
                 }
             }
         }
@@ -326,23 +318,7 @@ namespace Sir.Search
                    4096, FileOptions.RandomAccess | FileOptions.DeleteOnClose);
         }
 
-        public void ClearPageInfo()
-        {
-            _pageInfo.Clear();
-        }
-
-        public IList<(long offset, long length)> GetAllPages(string pageFileName)
-        {
-            return _pageInfo.GetOrAdd(pageFileName, key =>
-            {
-                using (var ixpStream = CreateReadStream(key))
-                {
-                    return new PageIndexReader(ixpStream).GetAll();
-                }
-            });
-        }
-
-        public void Refresh()
+        public void RefreshKeys()
         {
             _keys = LoadKeys();
         }
@@ -351,6 +327,11 @@ namespace Sir.Search
         {
             var timer = Stopwatch.StartNew();
             var allkeys = new ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>>();
+
+            if (Directory == null)
+            {
+                return allkeys;
+            }
 
             foreach (var keyFile in System.IO.Directory.GetFiles(Directory, "*.kmap"))
             {
@@ -385,7 +366,6 @@ namespace Sir.Search
 
         public void RegisterKeyMapping(ulong collectionId, ulong keyHash, long keyId)
         {
-            var fileName = Path.Combine(Directory, string.Format("{0}.kmap", collectionId));
             ConcurrentDictionary<ulong, long> keys;
 
             if (!_keys.TryGetValue(collectionId, out keys))
@@ -398,7 +378,7 @@ namespace Sir.Search
             {
                 keys.GetOrAdd(keyHash, keyId);
 
-                using (var stream = CreateAppendStream(fileName))
+                using (var stream = CreateAppendStream(collectionId, "kmap"))
                 {
                     stream.Write(BitConverter.GetBytes(keyHash), 0, sizeof(ulong));
                 }
@@ -438,14 +418,14 @@ namespace Sir.Search
             );
         }
 
-        public IndexSession<string> CreateIndexSession(ulong collectionId, ITextModel model)
+        public IndexSession<string> CreateIndexSession(ITextModel model)
         {
-            return new IndexSession<string>(collectionId, this, model, model, _logger);
+            return new IndexSession<string>(model, model);
         }
 
-        public IndexSession<IImage> CreateIndexSession(ulong collectionId, IImageModel model)
+        public IndexSession<IImage> CreateIndexSession(IImageModel model)
         {
-            return new IndexSession<IImage>(collectionId, this, model, model, _logger);
+            return new IndexSession<IImage>(model, model);
         }
 
         public IQuerySession CreateQuerySession(IModel model)
@@ -457,35 +437,51 @@ namespace Sir.Search
                 _logger);
         }
 
-        public Stream CreateAsyncReadStream(string fileName, int bufferSize = 4096)
+        public Stream CreateAsyncReadStream(string fileName)
         {
             return File.Exists(fileName)
-            ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize, FileOptions.Asynchronous)
+            ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, FileOptions.Asynchronous)
             : null;
         }
 
-        public Stream CreateReadStream(string fileName, int bufferSize = 4096, FileOptions fileOptions = FileOptions.RandomAccess)
+        public Stream CreateReadStream(string fileName)
         {
             return File.Exists(fileName)
-                ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize, fileOptions)
+                ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
                 : null;
         }
 
-        public Stream CreateAsyncAppendStream(string fileName, int bufferSize = 4096)
+        public Stream CreateAsyncAppendStream(string fileName)
         {
-            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, bufferSize, FileOptions.Asynchronous);
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 4096, FileOptions.Asynchronous);
         }
 
-        public Stream CreateAppendStream(string fileName, int bufferSize = 4096)
+        public Stream CreateAppendStream(ulong collectionId, string fileExtension)
         {
+            var fileName = Path.Combine(Directory, $"{collectionId}.{fileExtension}");
+
             if (!File.Exists(fileName))
             {
-                using (var fs = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, bufferSize))
+                using (var fs = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
                 {
                 }
             }
 
-            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, bufferSize);
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+        }
+
+        public Stream CreateAppendStream(ulong collectionId, long keyId, string fileExtension)
+        {
+            var fileName = Path.Combine(Directory, $"{collectionId}.{keyId}.{fileExtension}");
+
+            if (!File.Exists(fileName))
+            {
+                using (var fs = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                {
+                }
+            }
+
+            return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         }
 
         public bool CollectionExists(ulong collectionId)
