@@ -23,7 +23,7 @@ namespace Sir.Search
         {
         }
 
-        public void Flush(IDictionary<long, VectorNode> index)
+        public void Write(IDictionary<long, VectorNode> index)
         {
             using (var postingsStream = _sessionFactory.CreateAppendStream(_collectionId, "pos"))
             using (var vectorStream = _sessionFactory.CreateAppendStream(_collectionId, "vec"))
@@ -38,6 +38,23 @@ namespace Sir.Search
 
                         if (_logger != null)
                             _logger.LogInformation($"serialized column {column.Key}, weight {column.Value.Weight} {size}");
+                    }
+                }
+            }
+        }
+
+        public void WriteOneHotVectors(IDictionary<long, VectorNode> index)
+        {
+            foreach (var column in index)
+            {
+                var matrix = PathFinder.AsOneHotMatrix(column.Value);
+
+                using (var vectorStream = _sessionFactory.CreateAppendStream(_collectionId, column.Key, "1h.vec"))
+                {
+                    foreach (var row in matrix)
+                    {
+                        var vector = new IndexedVector(row);
+                        vector.Serialize(vectorStream);
                     }
                 }
             }

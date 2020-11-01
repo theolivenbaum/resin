@@ -60,7 +60,7 @@ namespace Sir.Mnist
 
                         using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger))
                         {
-                            stream.Flush(indexSession.GetInMemoryIndex());
+                            stream.Write(indexSession.GetInMemoryIndex());
                         }
                     }
                 }

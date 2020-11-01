@@ -19,7 +19,7 @@ namespace Sir.Search
         {
         }
 
-        public void Flush(IDictionary<long, VectorNode> index)
+        public void Write(IDictionary<long, VectorNode> index)
         {
             using (var postingsStream = new MemoryStream())
             using (var vectorStream = new MemoryStream())

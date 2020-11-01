@@ -69,6 +69,39 @@ namespace Sir.VectorSpace
             }
         }
 
+        public static float[][] AsOneHotMatrix(VectorNode root)
+        {
+            var node = root.Vector == null ? root.Right : root;
+            var stack = new Stack<VectorNode>();
+            var matrix = new float[root.Weight][];
+            var index = 0;
+
+            while (node != null)
+            {
+                var vector = new float[root.Weight];
+
+                vector[index] = 1;
+                matrix[index] = vector;
+
+                index++;
+
+                if (node.Right != null)
+                {
+                    stack.Push(node.Right);
+                }
+
+                node = node.Left;
+
+                if (node == null)
+                {
+                    if (stack.Count > 0)
+                        node = stack.Pop();
+                }
+            }
+
+            return matrix;
+        }
+
         public static string Visualize(VectorNode root)
         {
             StringBuilder output = new StringBuilder();
