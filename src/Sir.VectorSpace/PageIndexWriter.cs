@@ -4,14 +4,12 @@ using System.IO;
 namespace Sir.VectorSpace
 {
     /// <summary>
-    /// Index segment writer.
+    /// Index segment address writer.
     /// </summary>
     public class PageIndexWriter : IDisposable
     {
         private readonly Stream _stream;
         private readonly bool _keepStreamOpen;
-
-        public long Position => _stream.Position;
 
         public PageIndexWriter(Stream stream, bool keepStreamOpen = false)
         {

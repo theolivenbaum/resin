@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace Sir.VectorSpace
 {
     /// <summary>
-    /// Index bitmap segment reader.
+    /// Index segment address reader.
     /// </summary>
     public class PageIndexReader : IDisposable
     {
@@ -20,11 +20,6 @@ namespace Sir.VectorSpace
         public void Dispose()
         {
             _stream.Dispose();
-        }
-
-        public (long offset, long length) ReadAt(long startingPoint, long id)
-        {
-            return ReadAt(startingPoint + (id * sizeof(long) * 2));
         }
 
         public (long offset, long length) ReadAt(long offset)

@@ -22,7 +22,7 @@ namespace Sir.Mnist
             var collection = args["collection"];
             var count = 0;
             var errors = 0;
-            var model = new ImageModel();
+            var model = new LinearClassifierImageModel();
 
             using (var sessionFactory = new SessionFactory(directory: dataDirectory, logger: logger))
             using (var querySession = sessionFactory.CreateQuerySession(model))

@@ -20,7 +20,7 @@ namespace Sir.Tests
         [Test]
         public void Can_train_in_memory()
         {
-            var model = new ImageModel();
+            var model = new LinearClassifierImageModel();
             var tree = GraphBuilder.CreateTree(model, model, _data);
 
             Print(tree);

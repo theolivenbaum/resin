@@ -36,7 +36,7 @@ namespace Sir.Mnist
                     var debugger = new IndexDebugger();
                     var keyId = writeSession.EnsureKeyExists("image");
 
-                    using (var indexSession = sessionFactory.CreateIndexSession(new ImageModel()))
+                    using (var indexSession = sessionFactory.CreateIndexSession(new LinearClassifierImageModel()))
                     {
                         foreach (var image in images)
                         {
