@@ -139,7 +139,7 @@ namespace Sir.VectorSpace
 
             while (node != null)
             {
-                var d = node.Depth;
+                var d = Depth(node);
 
                 if (d > depth)
                 {
@@ -154,19 +154,19 @@ namespace Sir.VectorSpace
             return (depth, width);
         }
 
-        //private static int Depth(VectorNode node)
-        //{
-        //    var count = 1;
+        private static int Depth(VectorNode node)
+        {
+            var count = 1;
 
-        //    node = node.Left;
+            node = node.Left;
 
-        //    while (node != null)
-        //    {
-        //        count++;
-        //        node = node.Left;
-        //    }
+            while (node != null)
+            {
+                count++;
+                node = node.Left;
+            }
 
-        //    return count;
-        //}
+            return count;
+        }
     }
 }
