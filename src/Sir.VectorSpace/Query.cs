@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Sir
+namespace Sir.VectorSpace
 {
     /// <summary>
     /// A boolean query.

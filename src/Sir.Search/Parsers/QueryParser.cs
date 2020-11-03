@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Sir.VectorSpace;
 using System.Collections.Generic;
 
 namespace Sir.Search

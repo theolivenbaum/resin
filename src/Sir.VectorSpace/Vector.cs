@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Sir
+namespace Sir.VectorSpace
 {
     public class IndexedVector : IVector
     {

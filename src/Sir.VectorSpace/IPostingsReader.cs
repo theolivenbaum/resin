@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Sir
+namespace Sir.VectorSpace
 {
     public interface IPostingsReader : IDisposable
     {

@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Sir.Search;
 using System.Threading.Tasks;
 
-namespace Sir.Search
+namespace Sir.HttpServer
 {
     /// <summary>
     /// Read data from a collection.

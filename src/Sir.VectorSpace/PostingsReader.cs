@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Sir.Search
+namespace Sir.VectorSpace
 {
     /// <summary>
     /// Read (reduce) postings.

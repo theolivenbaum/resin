@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Sir.Search
+namespace Sir.VectorSpace
 {
     public abstract class Reducer
     {

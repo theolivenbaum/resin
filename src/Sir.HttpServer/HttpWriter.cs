@@ -3,8 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using Sir.Search;
 
-namespace Sir.Search
+namespace Sir.HttpServer
 {
     /// <summary>
     /// Write into a collection.

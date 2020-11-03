@@ -1,9 +1,10 @@
 ﻿using MathNet.Numerics.LinearAlgebra;
+using Sir.VectorSpace;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Sir
+namespace Sir.Search
 {
     public abstract class DistanceCalculator : IDistanceCalculator
     {
@@ -13,20 +14,6 @@ namespace Sir
         {
             var dotSelf1 = vec1.Value.Norm(2);
             var dotSelf2 = vec2.Value.Norm(2);
-
-            //if (dotSelf1 == 0 && dotSelf2 > 0)
-            //{
-            //    return 0;
-            //}
-            //else if (dotSelf2 == 0 && dotSelf1 > 0)
-            //{
-            //    return 0;
-            //}
-            //else if (dotSelf1 == 0 && dotSelf2 == 0)
-            //{
-            //    return 1;
-            //}
-
             var dotProduct = vec1.Value.DotProduct(vec2.Value);
 
             return dotProduct / (dotSelf1 * dotSelf2);

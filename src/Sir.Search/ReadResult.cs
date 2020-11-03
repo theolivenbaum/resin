@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Sir.VectorSpace;
+using System.Collections.Generic;
 
 namespace Sir.Search
 {

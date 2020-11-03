@@ -7,8 +7,6 @@ namespace Sir.Search
         private readonly long _keyId;
         private readonly VectorNode _graph;
 
-        public long Weight => _graph.Weight;
-
         public GraphInfo(long keyId, VectorNode graph)
         {
             _keyId = keyId;

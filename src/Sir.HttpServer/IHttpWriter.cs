@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Sir.Search;
 
-namespace Sir.Search
+namespace Sir.HttpServer
 {
     /// <summary>
     /// Write data to a collection.

@@ -3,6 +3,7 @@ using Sir.Search;
 using Sir.VectorSpace;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace Sir.Wikipedia
@@ -42,18 +43,20 @@ namespace Sir.Wikipedia
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
+                sessionFactory.Truncate(collectionId);
+
                 IDictionary<long, VectorNode> index;
 
-                foreach (var page in payload.Batch(pageSize))
+                foreach (var batch in payload.Batch(pageSize))
                 {
                     using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
                     using (var indexSession = sessionFactory.CreateIndexSession(new BagOfCharsModel()))
                     {
-                        foreach (var batch in page.Batch(reportSize))
+                        foreach (var reportBatch in batch.Batch(reportSize))
                         {
                             var time = Stopwatch.StartNew();
 
-                            foreach (var document in page)
+                            foreach (var document in reportBatch)
                             {
                                 var documentId = writeSession.Put(document, fieldsToStore);
 
@@ -81,11 +84,21 @@ namespace Sir.Wikipedia
                         using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger))
                         {
                             stream.Write(index);
-                            stream.WriteOneHotVectors(index);
+                        }
+
+                        foreach (var column in index)
+                        {
+                            Print($"wikipedia.{column.Key}", column.Value);
                         }
                     }
                 }
             }
+        }
+
+        private static void Print(string name, VectorNode tree)
+        {
+            var diagram = PathFinder.Visualize(tree);
+            File.WriteAllText($@"c:\temp\{name}.txt", diagram);
         }
     }
 }
