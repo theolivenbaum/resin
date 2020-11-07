@@ -4,7 +4,7 @@ using System.IO;
 namespace Sir.Document
 {
     /// <summary>
-    /// Write offset and length of document map to a stream.
+    /// Stores offset and length of document map to a stream.
     /// </summary>
     public class DocIndexWriter :IDisposable
     {
@@ -14,12 +14,6 @@ namespace Sir.Document
         public DocIndexWriter(Stream stream)
         {
             _stream = stream;
-
-            if (_stream.Length == 0)
-            {
-                _stream.SetLength(BlockSize);
-                _stream.Seek(0, SeekOrigin.End);
-            }
         }
 
         public void Flush()
@@ -45,9 +39,9 @@ namespace Sir.Document
         /// </summary>
         /// <param name="offset">offset of doc map</param>
         /// <param name="len">length of doc map</param>
-        public void Put(long id, long offset, int len)
+        public void Put(long docId, long offset, int len)
         {
-            _stream.Seek(BlockSize * id, SeekOrigin.Begin);
+            _stream.Seek(BlockSize * docId, SeekOrigin.Begin);
             _stream.Write(BitConverter.GetBytes(offset));
             _stream.Write(BitConverter.GetBytes(len));
         }

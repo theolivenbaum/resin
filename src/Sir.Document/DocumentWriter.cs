@@ -128,9 +128,9 @@ namespace Sir.Document
             return _docs.Put(doc);
         }
 
-        public void PutDocumentAddress(long id, long offset, int len)
+        public void PutDocumentAddress(long docId, long offset, int len)
         {
-            _docIx.Put(id, offset, len);
+            _docIx.Put(docId, offset, len);
         }
 
         public void Flush()
