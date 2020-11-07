@@ -11,11 +11,11 @@ namespace Sir.Search
         private readonly IModel<T> _model;
         private readonly ILogger _log;
 
-        public QueryParser(SessionFactory sessionFactory, IModel<T> model, ILogger log)
+        public QueryParser(SessionFactory sessionFactory, IModel<T> model, ILogger log = null)
         {
             _sessionFactory = sessionFactory;
             _model = model;
-            _log = log;
+            _log = log ?? sessionFactory.Logger;
         }
 
         public IQuery Parse(
@@ -104,7 +104,8 @@ namespace Sir.Search
                 cursor = query;
             }
 
-            _log.LogDebug(JsonConvert.SerializeObject(root));
+            if (_log!=null)
+                _log.LogDebug(JsonConvert.SerializeObject(root));
 
             return Parse(root, select);
         }
@@ -195,7 +196,8 @@ namespace Sir.Search
                 }
             }
 
-            _log.LogDebug(JsonConvert.SerializeObject(root));
+            if (_log != null)
+                _log.LogDebug(JsonConvert.SerializeObject(root));
 
             return root;
         }

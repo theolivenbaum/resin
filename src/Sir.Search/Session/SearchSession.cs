@@ -11,7 +11,7 @@ namespace Sir.Search
     /// <summary>
     /// Read session targeting multiple collections.
     /// </summary>
-    public class QuerySession : DocumentStreamSession, IDisposable, IQuerySession
+    public class SearchSession : DocumentStreamSession, IDisposable, IQuerySession
     {
         private readonly SessionFactory _sessionFactory;
         private readonly IModel _model;
@@ -19,19 +19,19 @@ namespace Sir.Search
 
         private readonly ILogger _logger;
 
-        public QuerySession(
+        public SearchSession(
             SessionFactory sessionFactory,
             IModel model,
             IPostingsReader postingsReader,
-            ILogger logger) : base(sessionFactory)
+            ILogger logger = null) : base(sessionFactory)
         {
             _sessionFactory = sessionFactory;
             _model = model;
             _postingsReader = postingsReader;
-            _logger = logger;
+            _logger = logger ?? sessionFactory.Logger;
         }
 
-        public ReadResult Query(IQuery query, int skip, int take, string primaryKey = null)
+        public SearchResult Search(IQuery query, int skip, int take, string primaryKey = null)
         {
             var result = MapReduceSort(query, skip, take);
 
@@ -39,13 +39,13 @@ namespace Sir.Search
             {
                 var docs = ReadDocs(result.SortedDocuments, query.Select, primaryKey);
 
-                return new ReadResult { Query = query, Total = result.Total, Documents = docs };
+                return new SearchResult { Query = query, Total = result.Total, Documents = docs };
             }
 
-            return new ReadResult { Query = query, Total = 0, Documents = new IDictionary<string, object>[0] };
+            return new SearchResult { Query = query, Total = 0, Documents = new IDictionary<string, object>[0] };
         }
 
-        public ReadResult Query(Term term, int skip, int take, HashSet<string> select)
+        public SearchResult Search(Term term, int skip, int take, HashSet<string> select)
         {
             var result = MapReduceSort(term, skip, take);
 
@@ -53,10 +53,10 @@ namespace Sir.Search
             {
                 var docs = ReadDocs(result.SortedDocuments, select);
 
-                return new ReadResult { QueryTerm = term, Total = result.Total, Documents = docs };
+                return new SearchResult { QueryTerm = term, Total = result.Total, Documents = docs };
             }
 
-            return new ReadResult { QueryTerm = term, Total = 0, Documents = new IDictionary<string, object>[0] };
+            return new SearchResult { QueryTerm = term, Total = 0, Documents = new IDictionary<string, object>[0] };
         }
 
         private ScoredResult MapReduceSort(IQuery query, int skip, int take)
@@ -117,11 +117,11 @@ namespace Sir.Search
             if (query == null)
                 return;
 
-            //foreach (var q in query.All())
-            Parallel.ForEach(query.All(), q =>
+            foreach (var q in query.All())
+            //Parallel.ForEach(query.All(), q =>
             {
-                //foreach (var term in q.Terms)
-                Parallel.ForEach(q.Terms, term =>
+                foreach (var term in q.Terms)
+                //Parallel.ForEach(q.Terms, term =>
                 {
                     var columnReader = CreateColumnReader(term.CollectionId, term.KeyId);
 
@@ -138,8 +138,8 @@ namespace Sir.Search
                             }
                         }
                     }
-                });
-            });
+                }//);
+            }//);
         }
 
         private void Map(Term term)

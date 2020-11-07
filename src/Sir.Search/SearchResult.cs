@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Sir.Search
 {
-    public class ReadResult
+    public class SearchResult
     {
         public IQuery Query { get; set; }
         public Term QueryTerm { get; set; }

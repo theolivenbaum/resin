@@ -65,7 +65,7 @@ namespace Sir.HttpServer.Features
 
                 using (var readSession = _sessionFactory.CreateQuerySession(_model))
                 {
-                    documents = readSession.Query(query, _skip, _take).Documents;
+                    documents = readSession.Search(query, _skip, _take).Documents;
                 }
 
                 //TODO: Remove this when cc_wat is rebuilt.

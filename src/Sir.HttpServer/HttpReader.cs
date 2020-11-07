@@ -64,7 +64,7 @@ namespace Sir.HttpServer
 
             using (var readSession = _sessionFactory.CreateQuerySession(model))
             {
-                var result = readSession.Query(query, skip, take);
+                var result = readSession.Search(query, skip, take);
 
                 using (var mem = new MemoryStream())
                 {

@@ -81,12 +81,12 @@ namespace Sir.HttpServer.Features
 
             using (var readSession = _sessionFactory.CreateQuerySession(_model))
             {
-                var originalResult = readSession.Query(originalQuery, _skip, _take)
+                var originalResult = readSession.Search(originalQuery, _skip, _take)
                     .Documents
                     .ToDictionary(x => (string)x["url"]);
 
                 var wetFileIds = new SortedList<string, object>();
-                ReadResult wetResult = null;
+                SearchResult wetResult = null;
                 var wetCollectionId = "cc_wet".ToHash();
 
                 foreach (var doc in originalResult.Values)
@@ -113,7 +113,7 @@ namespace Sir.HttpServer.Features
 
                     if (wetQuery != null)
                     {
-                        wetResult = readSession.Query(wetQuery, 0, 1);
+                        wetResult = readSession.Search(wetQuery, 0, 1);
                     }
 
                     if (wetResult == null || wetResult.Total == 0)

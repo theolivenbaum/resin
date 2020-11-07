@@ -16,9 +16,9 @@ namespace Sir.Search
     public class SessionFactory : IDisposable, ISessionFactory
     {
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
-        private ILogger _logger;
 
         public string Directory { get; }
+        public ILogger Logger { get; }
 
         public SessionFactory(string directory = null, ILogger logger = null)
         {
@@ -32,15 +32,15 @@ namespace Sir.Search
             }
 
             _keys = LoadKeys();
-            _logger = logger;
+            Logger = logger;
 
            Log($"sessionfactory initiated in {time.Elapsed}");
         }
 
         private void Log(string message)
         {
-            if (_logger != null)
-                _logger.LogInformation(message);
+            if (Logger != null)
+                Logger.LogInformation(message);
         }
 
         public long GetDocCount(string collection)
@@ -192,7 +192,7 @@ namespace Sir.Search
                 }
             }
 
-            _logger.LogInformation($"processed write job (collection {job.CollectionId}), time in total: {time.Elapsed}");
+            Logger.LogInformation($"processed write job (collection {job.CollectionId}), time in total: {time.Elapsed}");
         }
 
         public void Write(
@@ -255,7 +255,7 @@ namespace Sir.Search
                     }
                 }
 
-                using (var stream = new IndexFileStreamProvider(job.CollectionId, this, _logger))
+                using (var stream = new IndexFileStreamProvider(job.CollectionId, this, Logger))
                 {
                     stream.Write(indexSession.GetInMemoryIndex());
                 }
@@ -271,7 +271,7 @@ namespace Sir.Search
             {
                 Write(job, writeSession, indexSession, reportSize);
 
-                using (var stream = new IndexFileStreamProvider(job.CollectionId, this, _logger))
+                using (var stream = new IndexFileStreamProvider(job.CollectionId, this, Logger))
                 {
                     stream.Write(indexSession.GetInMemoryIndex());
                 }
@@ -304,7 +304,7 @@ namespace Sir.Search
                         indexSession,
                         reportSize);
 
-                    using (var stream = new IndexFileStreamProvider(collectionId, this, _logger))
+                    using (var stream = new IndexFileStreamProvider(collectionId, this, Logger))
                     {
                         stream.Write(indexSession.GetInMemoryIndex());
                     }
@@ -431,11 +431,11 @@ namespace Sir.Search
 
         public IQuerySession CreateQuerySession(IModel model)
         {
-            return new QuerySession(
+            return new SearchSession(
                 this,
                 model,
                 new PostingsReader(this),
-                _logger);
+                Logger);
         }
 
         public Stream CreateAsyncReadStream(string fileName)

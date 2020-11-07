@@ -63,10 +63,29 @@ namespace Sir.Search
             return docId;
         }
 
+        public long Put(long keyId, object value)
+        {
+            var docMap = new List<(long keyId, long valId)>();
+
+            Write(keyId, value, docMap);
+
+            var docMeta = _streamWriter.PutDocumentMap(docMap);
+            var docId = _streamWriter.IncrementDocId();
+
+            _streamWriter.PutDocumentAddress(docId, docMeta.offset, docMeta.length);
+
+            return docId;
+        }
+
         private void Write(string key, object val, IList<(long, long)> docMap)
         {
             var keyId = EnsureKeyExists(key);
 
+            Write(keyId, val, docMap);
+        }
+
+        private void Write(long keyId, object val, IList<(long, long)> docMap)
+        {
             // store k/v
             var kvmap = _streamWriter.Put(keyId, val, out _);
 

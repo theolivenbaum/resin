@@ -11,12 +11,11 @@ namespace Sir.Search
         private readonly SessionFactory _sessionFactory;
         private readonly ILogger _logger;
 
-        public IndexFileStreamProvider(ulong collectionId, SessionFactory sessionFactory, ILogger logger)
+        public IndexFileStreamProvider(ulong collectionId, SessionFactory sessionFactory, ILogger logger = null)
         {
             _collectionId = collectionId;
             _sessionFactory = sessionFactory;
-            
-            _logger = logger;
+            _logger = logger??sessionFactory.Logger;
         }
 
         public void Dispose()
@@ -30,7 +29,7 @@ namespace Sir.Search
             {
                 foreach (var column in index)
                 {
-                    using (var indexStream = _sessionFactory.CreateAppendStream(_collectionId, column.Key, ".ix"))
+                    using (var indexStream = _sessionFactory.CreateAppendStream(_collectionId, column.Key, "ix"))
                     using (var columnWriter = new ColumnStreamWriter(indexStream))
                     using (var pageIndexWriter = new PageIndexWriter(_sessionFactory.CreateAppendStream(_collectionId, column.Key, "ixtp")))
                     {
