@@ -39,24 +39,12 @@ namespace Sir.Search
                 }
             }
 
-            ulong collectionId = _collectionId;
-
-            Field collectionIdField;
-
-            if (document.TryGetValue(SystemFields.CollectionId, out collectionIdField))
+            if (!document.TryGetValue(SystemFields.CollectionId, out _))
             {
-                collectionId = (ulong)collectionIdField.Value;
-            }
-
-            Field sourceDocId;
-
-            if (document.TryGetValue(SystemFields.DocumentId, out sourceDocId))
-            {
-                Write(SystemFields.DocumentId, (long)sourceDocId.Value, docMap);
+                Write(SystemFields.CollectionId, _collectionId, docMap);
             }
 
             Write(SystemFields.Created, DateTime.Now.ToBinary(), docMap);
-            Write(SystemFields.CollectionId, collectionId, docMap);
 
             var docMeta = _streamWriter.PutDocumentMap(docMap);
             var docId = _streamWriter.IncrementDocId();
@@ -143,26 +131,6 @@ namespace Sir.Search
 
             value = null;
             return false;
-        }
-
-        public void AddOrOverwrite(Field f)
-        {
-            bool found = false;
-
-            foreach (var field in Fields)
-            {
-                if (field.Key == f.Key)
-                {
-                    field.Value = f.Value;
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found)
-            {
-                Fields.Add(f);
-            }
         }
     }
 
