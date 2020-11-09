@@ -24,7 +24,47 @@ namespace Sir.Wikipedia
             using (var zip = new GZipStream(stream, CompressionMode.Decompress))
             using (var reader = new StreamReader(zip))
             {
-                return ReadFile(reader, skip, take, fieldsToStore, fieldsToIndex);
+                var skipped = 0;
+                var took = 0;
+
+                //skip first line
+                reader.ReadLine();
+
+                var line = reader.ReadLine();
+
+                while (!string.IsNullOrWhiteSpace(line) && !line.StartsWith("]"))
+                {
+                    if (took == take)
+                        break;
+
+                    if (skipped++ < skip)
+                    {
+                        continue;
+                    }
+
+                    var jobject = JObject.Parse(line);
+
+                    if (jobject.ContainsKey("title"))
+                    {
+                        var fields = new List<Field>();
+
+                        foreach (var kvp in jobject)
+                        {
+                            var store = fieldsToStore.Contains(kvp.Key);
+                            var index = fieldsToIndex.Contains(kvp.Key);
+
+                            if (store || index)
+                                fields.Add(new Field(kvp.Key, kvp.Value.ToString(), index, store));
+                        }
+
+                        fields.Add(new Field("url", $"https://www.wikidata.org/wiki/{jobject["wikibase_item"]}"));
+
+                        yield return new Search.Document(fields);
+                        took++;
+                    }
+
+                    line = reader.ReadLine();
+                }
             }
         }
 
@@ -33,50 +73,45 @@ namespace Sir.Wikipedia
             using (var stream = File.OpenRead(fileName))
             using (var reader = new StreamReader(stream))
             {
-                return ReadFile(reader, skip, take, fieldsToStore, fieldsToIndex);
-            }
-        }
+                var skipped = 0;
+                var took = 0;
 
-        private static IEnumerable<Search.Document> ReadFile(StreamReader reader, int skip, int take, HashSet<string> fieldsToStore, HashSet<string> fieldsToIndex)
-        {
-            var skipped = 0;
-            var took = 0;
+                //skip first line
+                reader.ReadLine();
 
-            //skip first line
-            reader.ReadLine();
+                var line = reader.ReadLine();
 
-            var line = reader.ReadLine();
-
-            while (!string.IsNullOrWhiteSpace(line) && !line.StartsWith("]"))
-            {
-                if (took == take)
-                    break;
-
-                if (skipped++ < skip)
+                while (!string.IsNullOrWhiteSpace(line) && !line.StartsWith("]"))
                 {
-                    continue;
-                }
+                    if (took == take)
+                        break;
 
-                var jobject = JObject.Parse(line);
-
-                if (jobject.ContainsKey("title"))
-                {
-                    var fields = new List<Field>();
-
-                    foreach (var kvp in jobject)
+                    if (skipped++ < skip)
                     {
-                        var store = fieldsToStore.Contains(kvp.Key);
-                        var index = fieldsToIndex.Contains(kvp.Key);
-
-                        if (store||index)
-                            fields.Add(new Field(kvp.Key, kvp.Value.Value<object>(), index, store));
+                        continue;
                     }
 
-                    yield return new Search.Document(fields);
-                    took++;
-                }
+                    var jobject = JObject.Parse(line);
 
-                line = reader.ReadLine();
+                    if (jobject.ContainsKey("title"))
+                    {
+                        var fields = new List<Field>();
+
+                        foreach (var kvp in jobject)
+                        {
+                            var store = fieldsToStore.Contains(kvp.Key);
+                            var index = fieldsToIndex.Contains(kvp.Key);
+
+                            if (store || index)
+                                fields.Add(new Field(kvp.Key, kvp.Value.Value<object>(), index, store));
+                        }
+
+                        yield return new Search.Document(fields);
+                        took++;
+                    }
+
+                    line = reader.ReadLine();
+                }
             }
         }
     }
