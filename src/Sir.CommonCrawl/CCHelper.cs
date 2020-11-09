@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 
 namespace Sir.CommonCrawl
@@ -23,11 +24,11 @@ namespace Sir.CommonCrawl
         {
             var time = Stopwatch.StartNew();
             var collectionId = collection.ToHash();
-            var storeFieldNames = new HashSet<string>
+            var storeFields = new HashSet<string>
             {
                 "title","description", "url", "filename"
             };
-            var indexFieldNames = new HashSet<string>
+            var indexFields = new HashSet<string>
             {
                 "title","description", "url"
             };
@@ -36,18 +37,24 @@ namespace Sir.CommonCrawl
             using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
             using (var indexSession = sessionFactory.CreateIndexSession(model))
             {
-                using (var queue = new ProducerConsumerQueue<IDictionary<string, object>>(1, (document =>
+                using (var queue = new ProducerConsumerQueue<Search.Document>(1, (document =>
                 {
-                    sessionFactory.Write(document, writeSession, indexSession, storeFieldNames, indexFieldNames);
+                    sessionFactory.Write(document, writeSession, indexSession);
                 })))
                 {
-                    foreach (var document in ReadWatFile(fileName, refFileName))
+                    foreach (var document in ReadWatFile(fileName, refFileName).Select(dic =>
+                            new Search.Document(
+                                dic.Select(kvp => new Field(
+                                    kvp.Key,
+                                    kvp.Value,
+                                    index: indexFields.Contains(kvp.Key),
+                                    store: storeFields.Contains(kvp.Key))).ToList())))
                     {
                         queue.Enqueue(document);
                     }
                 }
 
-                using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger))
+                using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger: logger))
                 {
                     stream.Write(indexSession.GetInMemoryIndex());
                 }

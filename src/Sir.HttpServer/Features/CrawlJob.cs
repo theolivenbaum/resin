@@ -207,10 +207,15 @@ namespace Sir.HttpServer.Features
 
                     var writeJob = new WriteJob(
                         wetCollectionId,
-                        writePayload,
-                        new BagOfCharsModel(),
-                        _wetStoredFieldNames,
-                        _wetIndexedFieldNames);
+                        writePayload
+                            .Select(dic =>
+                                        new Search.Document(
+                                            dic.Select(kvp => new Field(
+                                                kvp.Key,
+                                                kvp.Value,
+                                                index: _wetIndexedFieldNames.Contains(kvp.Key),
+                                                store: _wetStoredFieldNames.Contains(kvp.Key))).ToList())),
+                        new BagOfCharsModel());
 
                     _sessionFactory.Write(writeJob, reportSize: 1000);
 

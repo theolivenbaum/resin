@@ -16,7 +16,7 @@ namespace Sir.Tests
         private readonly string[] _data = new string[] { "apple", "apples", "apricote", "apricots", "avocado", "avocados", "banana", "bananas", "blueberry", "blueberries", "cantalope" };
 
         [Test]
-        public void Can_traverse_in_memory_index()
+        public void Can_produce_traversable_in_memory_index()
         {
             var model = new BagOfCharsModel();
             VectorNode tree;
@@ -58,7 +58,7 @@ namespace Sir.Tests
         }
 
         [Test]
-        public void Can_traverse_streamed()
+        public void Can_search_streamed()
         {
             var model = new BagOfCharsModel();
             VectorNode index;
@@ -78,7 +78,7 @@ namespace Sir.Tests
                 {
                     var data = _data[i];
 
-                    writeSession.Put(keyId, data);
+                    writeSession.Put(new Search.Document(new Field[] { new Field(fieldName, data, index: true, store: true) }));
 
                     indexSession.Put(i, keyId, data);
                 }

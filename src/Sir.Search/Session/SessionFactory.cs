@@ -125,11 +125,14 @@ namespace Sir.Search
                 {
                     var job = new WriteJob(
                         collectionId,
-                        batch,
-                        model,
-                        storeFields,
-                        indexFields
-                        );
+                        batch.Select(dic => 
+                            new Document(
+                                dic.Select(kvp=>new Field(
+                                    kvp.Key, 
+                                    kvp.Value, 
+                                    index: indexFields.Contains(kvp.Key), 
+                                    store: storeFields.Contains(kvp.Key))).ToList())),
+                        model);
 
                     Index(job, ref totalCount);
 
@@ -142,13 +145,11 @@ namespace Sir.Search
 
         public void SaveAs(
             ulong targetCollectionId, 
-            IEnumerable<IDictionary<string, object>> documents,
-            HashSet<string> indexFieldNames,
-            HashSet<string> storeFieldNames,
+            IEnumerable<Document> documents,
             ITextModel model,
             int reportSize = 1000)
         {
-            var job = new WriteJob(targetCollectionId, documents, model, storeFieldNames, indexFieldNames);
+            var job = new WriteJob(targetCollectionId, documents, model);
 
             Write(job, reportSize);
         }
@@ -165,16 +166,14 @@ namespace Sir.Search
 
             foreach (var document in job.Documents)
             {
-                var docId = writeSession.Put(document, job.FieldNamesToStore);
+                var docId = writeSession.Put(document);
 
                 //Parallel.ForEach(document, kv =>
-                foreach (var kv in document)
+                foreach (var field in document.Fields)
                 {
-                    if (job.FieldNamesToIndex.Contains(kv.Key) && kv.Value != null)
+                    if (field.Value != null && field.Index)
                     {
-                        var keyId = writeSession.EnsureKeyExists(kv.Key);
-
-                        indexSession.Put(docId, keyId, kv.Value.ToString());
+                        indexSession.Put(docId, field.Id, field.Value.ToString());
                     }
                 }//);
 
@@ -196,21 +195,17 @@ namespace Sir.Search
         }
 
         public void Write(
-            IDictionary<string, object> document, 
+            Document document, 
             WriteSession writeSession, 
-            IndexSession<string> indexSession,
-            HashSet<string> fieldNamesToStore,
-            HashSet<string> fieldNamesToIndex)
+            IndexSession<string> indexSession)
         {
-            var docId = writeSession.Put(document, fieldNamesToStore);
+            var docId = writeSession.Put(document);
 
-            foreach (var kv in document)
+            foreach (var field in document.Fields)
             {
-                if (fieldNamesToIndex.Contains(kv.Key) && kv.Value != null)
+                if (field.Value != null && field.Index)
                 {
-                    var keyId = writeSession.EnsureKeyExists(kv.Key);
-
-                    indexSession.Put(docId, keyId, kv.Value.ToString());
+                    indexSession.Put(docId, field.Id, field.Value.ToString());
                 }
             }
         }
@@ -228,15 +223,13 @@ namespace Sir.Search
             {
                 foreach (var document in job.Documents)
                 {
-                    var docId = (long)document[SystemFields.DocumentId];
+                    var docId = (long)document.Get(SystemFields.DocumentId).Value;
 
-                    foreach (var kv in document)
+                    foreach (var field in document.Fields)
                     {
-                        if (job.FieldNamesToIndex.Contains(kv.Key) && kv.Value != null)
+                        if (field.Value != null && field.Index)
                         {
-                            var keyId = GetKeyId(job.CollectionId, kv.Key.ToHash());
-
-                            indexSession.Put(docId, keyId, kv.Value.ToString());
+                            indexSession.Put(docId, field.Id, field.Value.ToString());
                         }
                     }
 
@@ -255,7 +248,7 @@ namespace Sir.Search
                     }
                 }
 
-                using (var stream = new IndexFileStreamProvider(job.CollectionId, this, Logger))
+                using (var stream = new IndexFileStreamProvider(job.CollectionId, this, logger: Logger))
                 {
                     stream.Write(indexSession.GetInMemoryIndex());
                 }
@@ -271,7 +264,7 @@ namespace Sir.Search
             {
                 Write(job, writeSession, indexSession, reportSize);
 
-                using (var stream = new IndexFileStreamProvider(job.CollectionId, this, Logger))
+                using (var stream = new IndexFileStreamProvider(job.CollectionId, this, logger: Logger))
                 {
                     stream.Write(indexSession.GetInMemoryIndex());
                 }
@@ -281,8 +274,8 @@ namespace Sir.Search
         public void Write(
             IEnumerable<IDictionary<string, object>> documents, 
             ITextModel model, 
-            HashSet<string> storedFieldNames,
-            HashSet<string> indexedFieldNames,
+            HashSet<string> storeFields,
+            HashSet<string> indexFields,
             int reportSize = 1000
             )
         {
@@ -296,15 +289,20 @@ namespace Sir.Search
                     Write(
                         new WriteJob(
                             collectionId, 
-                            group, 
-                            model, 
-                            storedFieldNames, 
-                            indexedFieldNames), 
+                            group
+                            .Select(dic =>
+                                new Document(
+                                    dic.Select(kvp => new Field(
+                                        kvp.Key,
+                                        kvp.Value,
+                                        index: indexFields.Contains(kvp.Key),
+                                        store: storeFields.Contains(kvp.Key))).ToList())), 
+                            model), 
                         writeSession, 
                         indexSession,
                         reportSize);
 
-                    using (var stream = new IndexFileStreamProvider(collectionId, this, Logger))
+                    using (var stream = new IndexFileStreamProvider(collectionId, this, logger: Logger))
                     {
                         stream.Write(indexSession.GetInMemoryIndex());
                     }
@@ -415,7 +413,8 @@ namespace Sir.Search
 
             return new WriteSession(
                 collectionId,
-                documentWriter
+                documentWriter,
+                this
             );
         }
 

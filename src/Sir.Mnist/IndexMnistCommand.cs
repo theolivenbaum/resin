@@ -40,9 +40,8 @@ namespace Sir.Mnist
                     {
                         foreach (var image in images)
                         {
-                            var document = new Dictionary<string, object>() { { "label", image.Label } };
-                            var storeFields = new HashSet<string> { "label" };
-                            var documentId = writeSession.Put(document, storeFields);
+                            var document = new Search.Document(new Field[] { new Field("image", image.Label, index: false, store: true) });
+                            var documentId = writeSession.Put(document);
 
                             indexSession.Put(documentId, keyId, image);
 
@@ -58,7 +57,7 @@ namespace Sir.Mnist
 
                         tree = indexSession.GetInMemoryIndex(keyId);
 
-                        using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger))
+                        using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger:logger))
                         {
                             stream.Write(indexSession.GetInMemoryIndex());
                         }

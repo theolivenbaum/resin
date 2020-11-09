@@ -10,16 +10,34 @@ namespace Sir.Search
         private readonly ulong _collectionId;
         private readonly SessionFactory _sessionFactory;
         private readonly ILogger _logger;
+        private readonly System.IO.Stream _postingsStream;
+        private readonly System.IO.Stream _vectorStream;
+        private readonly bool _keepStreamsOpen;
 
-        public IndexFileStreamProvider(ulong collectionId, SessionFactory sessionFactory, ILogger logger = null)
+        public IndexFileStreamProvider(
+            ulong collectionId, 
+            SessionFactory sessionFactory, 
+            bool keepStreamsOpen = false, 
+            ILogger logger = null)
         {
             _collectionId = collectionId;
             _sessionFactory = sessionFactory;
             _logger = logger??sessionFactory.Logger;
+            _postingsStream = _sessionFactory.CreateAppendStream(_collectionId, "pos");
+            _vectorStream = _sessionFactory.CreateAppendStream(_collectionId, "vec");
+            _keepStreamsOpen = keepStreamsOpen;
         }
 
         public void Dispose()
         {
+            _postingsStream.Flush();
+            _vectorStream.Flush();
+
+            if (!_keepStreamsOpen)
+            {
+                _postingsStream.Dispose();
+                _vectorStream.Dispose();
+            }
         }
 
         public void Write(IDictionary<long, VectorNode> index)

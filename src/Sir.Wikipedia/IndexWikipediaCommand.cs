@@ -4,7 +4,6 @@ using Sir.VectorSpace;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 
 namespace Sir.Wikipedia
 {
@@ -25,70 +24,64 @@ namespace Sir.Wikipedia
             var reportSize = args.ContainsKey("reportSize") ? int.Parse(args["reportSize"]) : 1000;
 
             var collectionId = collection.ToHash();
-            var fieldsToStore = new HashSet<string> { "language", "url", "title", "description" };
-            var fieldsToIndex = new HashSet<string> { "language", "title", "description" };
+            var fieldsToStore = new HashSet<string> { "language", "wikibase_item", "title", "text" };
+            var fieldsToIndex = new HashSet<string> { "language", "title", "text" };
 
             if (take == 0)
                 take = int.MaxValue;
 
             var debugger = new IndexDebugger();
-            var payload = WikipediaHelper.ReadWP(fileName, skip, take)
-                .Select(x => new Dictionary<string, object>
-                        {
-                                            { "language", x["language"].ToString() },
-                                            { "url", string.Format("www.wikipedia.org/search-redirect.php?family=wikipedia&language={0}&search={1}", x["language"], x["title"]) },
-                                            { "title", x["title"] },
-                                            { "description", x["text"] }
-                        });
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
                 sessionFactory.Truncate(collectionId);
 
-                IDictionary<long, VectorNode> index;
-
-                foreach (var batch in payload.Batch(pageSize))
+                using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
                 {
-                    using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
-                    using (var indexSession = sessionFactory.CreateIndexSession(new BagOfCharsModel()))
+                    var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsToStore, fieldsToIndex);
+
+                    IDictionary<long, VectorNode> index;
+
+                    foreach (var batch in payload.Batch(pageSize))
                     {
-                        foreach (var reportBatch in batch.Batch(reportSize))
+                        using (var indexSession = sessionFactory.CreateIndexSession(new BagOfCharsModel()))
                         {
-                            var time = Stopwatch.StartNew();
-
-                            foreach (var document in reportBatch)
+                            foreach (var reportBatch in batch.Batch(reportSize))
                             {
-                                var documentId = writeSession.Put(document, fieldsToStore);
+                                var time = Stopwatch.StartNew();
 
-                                foreach (var kv in document)
+                                foreach (var document in reportBatch)
                                 {
-                                    if (fieldsToIndex.Contains(kv.Key) && kv.Value != null)
-                                    {
-                                        var keyId = writeSession.EnsureKeyExists(kv.Key);
+                                    var documentId = writeSession.Put(document);
 
-                                        indexSession.Put(documentId, keyId, kv.Value.ToString());
+                                    foreach (var field in document.Fields)
+                                    {
+                                        if (field.Value != null && field.Index)
+                                        {
+                                            indexSession.Put(documentId, field.Id, field.Value.ToString());
+                                        }
                                     }
+                                }
+
+                                var debugInfo = debugger.GetDebugInfo(indexSession);
+
+                                if (debugInfo != null)
+                                {
+                                    logger.LogInformation(debugInfo);
                                 }
                             }
 
-                            var debugInfo = debugger.GetDebugInfo(indexSession);
+                            index = indexSession.GetInMemoryIndex();
 
-                            if (debugInfo != null)
+                            using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger:logger))
                             {
-                                logger.LogInformation(debugInfo);
+                                stream.Write(index);
                             }
-                        }
 
-                        index = indexSession.GetInMemoryIndex();
-
-                        using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger))
-                        {
-                            stream.Write(index);
-                        }
-
-                        foreach (var column in index)
-                        {
-                            Print($"wikipedia.{column.Key}", column.Value);
+                            foreach (var column in index)
+                            {
+                                Print($"wikipedia.{column.Key}", column.Value);
+                            }
                         }
                     }
                 }

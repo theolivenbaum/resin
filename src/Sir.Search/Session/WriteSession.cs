@@ -11,26 +11,27 @@ namespace Sir.Search
     {
         private readonly ulong _collectionId;
         private readonly DocumentWriter _streamWriter;
+        private readonly SessionFactory _sessionFactory;
 
         public WriteSession(
             ulong collectionId,
-            DocumentWriter streamWriter)
+            DocumentWriter streamWriter,
+            SessionFactory sessionFactory)
         {
             _collectionId = collectionId;
             _streamWriter = streamWriter;
+            _sessionFactory = sessionFactory;
         }
 
-        public long Put(IDictionary<string, object> document, HashSet<string> fieldNamesToStore)
+        public long Put(Document document)
         {
             var docMap = new List<(long keyId, long valId)>();
 
-            foreach (var key in document.Keys)
+            foreach (var field in document.Fields)
             {
-                var val = document[key];
-
-                if (val != null && fieldNamesToStore.Contains(key))
+                if (field.Value != null && field.Store)
                 {
-                    Write(key, val, docMap);
+                    Write(field, docMap);
                 }
                 else
                 {
@@ -38,18 +39,20 @@ namespace Sir.Search
                 }
             }
 
-            object collectionId;
+            ulong collectionId = _collectionId;
 
-            if (!document.TryGetValue(SystemFields.CollectionId, out collectionId))
+            Field collectionIdField;
+
+            if (document.TryGetValue(SystemFields.CollectionId, out collectionIdField))
             {
-                collectionId = _collectionId;
+                collectionId = (ulong)collectionIdField.Value;
             }
 
-            object sourceDocId;
+            Field sourceDocId;
 
             if (document.TryGetValue(SystemFields.DocumentId, out sourceDocId))
             {
-                Write(SystemFields.DocumentId, (long)sourceDocId, docMap);
+                Write(SystemFields.DocumentId, (long)sourceDocId.Value, docMap);
             }
 
             Write(SystemFields.Created, DateTime.Now.ToBinary(), docMap);
@@ -63,18 +66,13 @@ namespace Sir.Search
             return docId;
         }
 
-        public long Put(long keyId, object value)
+        private void Write(Field field, IList<(long, long)> docMap)
         {
-            var docMap = new List<(long keyId, long valId)>();
+            var keyId = EnsureKeyExists(field.Key);
 
-            Write(keyId, value, docMap);
+            Write(keyId, field.Value, docMap);
 
-            var docMeta = _streamWriter.PutDocumentMap(docMap);
-            var docId = _streamWriter.IncrementDocId();
-
-            _streamWriter.PutDocumentAddress(docId, docMeta.offset, docMeta.length);
-
-            return docId;
+            field.Id = keyId;
         }
 
         private void Write(string key, object val, IList<(long, long)> docMap)
@@ -106,6 +104,85 @@ namespace Sir.Search
         public void Dispose()
         {
             _streamWriter.Dispose();
+        }
+    }
+
+    public class Document
+    {
+        public double Score { get; set; }
+        public IList<Field> Fields { get; }
+
+        public Document(IList<Field> fields)
+        {
+            Fields = fields;
+        }
+
+        public Field Get(string key)
+        {
+            foreach (var field in Fields)
+            {
+                if (field.Key == key)
+                {
+                    return field;
+                }
+            }
+
+            throw new ArgumentException($"key {key} not found");
+        }
+
+        public bool TryGetValue(string key, out Field value)
+        {
+            foreach (var field in Fields)
+            {
+                if (field.Key == key)
+                {
+                    value = field;
+                    return true;
+                }
+            }
+
+            value = null;
+            return false;
+        }
+
+        public void AddOrOverwrite(Field f)
+        {
+            bool found = false;
+
+            foreach (var field in Fields)
+            {
+                if (field.Key == f.Key)
+                {
+                    field.Value = f.Value;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                Fields.Add(f);
+            }
+        }
+    }
+
+    public class Field
+    {
+        public long Id { get; set; }
+        public string Key { get; }
+        public object Value { get; set; }
+        public bool Index { get; }
+        public bool Store { get; }
+
+        public Field(string key, object value, bool index = true, bool store = true)
+        {
+            if (key is null) throw new ArgumentNullException(nameof(key));
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
+            Key = key;
+            Value = value;
+            Index = index;
+            Store = store;
         }
     }
 }

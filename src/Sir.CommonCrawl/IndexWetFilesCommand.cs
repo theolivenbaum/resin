@@ -16,19 +16,24 @@ namespace Sir.CommonCrawl
             var fileName = args["fileName"];
             var model = new BagOfCharsModel();
             var collectionId = "cc_wet".ToHash();
-            var storedFieldNames = new HashSet<string> { "url" };
-            var indexedFieldNames = new HashSet<string> { "description" };
-
-            var writeJob = new WriteJob(
-                collectionId,
-                ReadWetFile(fileName),
-                model,
-                storedFieldNames,
-                indexedFieldNames);
+            var storeFields = new HashSet<string> { "url" };
+            var indexFields = new HashSet<string> { "description" };
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
                 sessionFactory.Truncate(collectionId);
+
+                var writeJob = new WriteJob(
+                    collectionId,
+                    ReadWetFile(fileName)
+                                .Select(dic =>
+                                    new Search.Document(
+                                        dic.Select(kvp => new Field(
+                                            kvp.Key,
+                                            kvp.Value,
+                                            index: indexFields.Contains(kvp.Key),
+                                            store: storeFields.Contains(kvp.Key))).ToList())),
+                    model);
 
                 sessionFactory.Write(writeJob, reportSize: 1000);
             }

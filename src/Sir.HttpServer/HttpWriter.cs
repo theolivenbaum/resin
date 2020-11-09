@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Sir.Search;
@@ -35,13 +36,20 @@ namespace Sir.HttpServer
                 
                 foreach (var collection in collections)
                 {
+                    var collectionId = collection.ToHash();
+
                     _sessionFactory.Write(
                         new WriteJob(
-                            collection.ToHash(), 
-                            documents, 
-                            model,
-                            storedFieldNames,
-                            indexedFieldNames));
+                            collectionId, 
+                            documents
+                                .Select(dic =>
+                                            new Search.Document(
+                                                dic.Select(kvp => new Field(
+                                                    kvp.Key,
+                                                    kvp.Value,
+                                                    index: indexedFieldNames.Contains(kvp.Key),
+                                                    store: storedFieldNames.Contains(kvp.Key))).ToList())),
+                            model));
                 }
             }
             else

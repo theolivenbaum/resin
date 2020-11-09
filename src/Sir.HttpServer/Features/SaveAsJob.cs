@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using Sir.Document;
 using Sir.Search;
@@ -90,9 +91,13 @@ namespace Sir.HttpServer.Features
 
                 _sessionFactory.SaveAs(
                         targetCollectionId,
-                        documents,
-                        _indexFieldNames,
-                        new HashSet<string>(),
+                        documents.Select(dic =>
+                            new Search.Document(
+                                dic.Select(kvp => new Field(
+                                    kvp.Key,
+                                    kvp.Value,
+                                    index: _indexFieldNames.Contains(kvp.Key),
+                                    store: false)).ToList())),
                         _model);
             }
             catch (Exception ex)
