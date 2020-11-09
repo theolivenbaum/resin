@@ -18,7 +18,7 @@ namespace Sir.Wikipedia
             var dataDirectory = args["dataDirectory"];
             var fileName = args["fileName"];
             var collection = args["collection"];
-            var skip = int.Parse(args["skip"]);
+            var skip = args.ContainsKey("skip") ? int.Parse(args["skip"]) : 0;
             var take = args.ContainsKey("take") ? int.Parse(args["take"]) : int.MaxValue;
             var pageSize = int.Parse(args["pageSize"]);
             var reportSize = args.ContainsKey("reportSize") ? int.Parse(args["reportSize"]) : 1000;
@@ -42,15 +42,15 @@ namespace Sir.Wikipedia
 
                     IDictionary<long, VectorNode> index;
 
-                    foreach (var batch in payload.Batch(pageSize))
+                    foreach (var page in payload.Batch(pageSize))
                     {
                         using (var indexSession = sessionFactory.CreateIndexSession(new BagOfCharsModel()))
                         {
-                            foreach (var reportBatch in batch.Batch(reportSize))
+                            foreach (var batch in page.Batch(reportSize))
                             {
                                 var time = Stopwatch.StartNew();
 
-                                foreach (var document in reportBatch)
+                                foreach (var document in batch)
                                 {
                                     var documentId = writeSession.Put(document);
 
