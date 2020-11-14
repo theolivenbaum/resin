@@ -7,6 +7,17 @@ namespace Sir.Search
     {
         public double Score { get; set; }
         public IList<Field> Fields { get; }
+        public IEnumerable<Field> IndexableFields
+        {
+            get
+            {
+                foreach (var field in Fields)
+                {
+                    if (field.Index && field.Value != null)
+                        yield return field;
+                }
+            }
+        }
 
         public Document(IList<Field> fields)
         {
