@@ -259,7 +259,7 @@ namespace Sir.Search
 
             var vectorFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.vec");
 
-            return new ColumnStreamReader(
+            return new ColumnReader(
                     new PageIndexReader(_sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.ixtp"))),
                     _sessionFactory.CreateReadStream(ixFileName),
                     _sessionFactory.CreateReadStream(vectorFileName),

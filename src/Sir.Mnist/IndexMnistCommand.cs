@@ -55,11 +55,11 @@ namespace Sir.Mnist
                             }
                         }
 
-                        tree = indexSession.GetInMemoryIndex(keyId);
+                        tree = indexSession.InMemoryIndex[keyId];
 
                         using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger:logger))
                         {
-                            stream.Write(indexSession.GetInMemoryIndex());
+                            stream.Write(indexSession.InMemoryIndex);
                         }
                     }
                 }

@@ -27,7 +27,7 @@ namespace Sir.Search
                 foreach (var column in index)
                 {
                     using (var indexStream = new MemoryStream())
-                    using (var columnWriter = new ColumnStreamWriter(indexStream))
+                    using (var columnWriter = new ColumnWriter(indexStream))
                     using (var pageIndexWriter = new PageIndexWriter(new MemoryStream()))
                     {
                         var size = columnWriter.CreatePage(column.Value, vectorStream, postingsStream, pageIndexWriter);

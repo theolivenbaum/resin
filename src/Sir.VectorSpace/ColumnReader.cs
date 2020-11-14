@@ -9,7 +9,7 @@ namespace Sir.VectorSpace
     /// <summary>
     /// Index bitmap reader. Each block is a <see cref="Sir.Search.VectorNode"/>.
     /// </summary>
-    public class ColumnStreamReader : IColumnReader
+    public class ColumnReader : IColumnReader
     {
         private readonly ISessionFactory _sessionFactory;
         private readonly ILogger _logger;
@@ -18,7 +18,7 @@ namespace Sir.VectorSpace
         private readonly IList<(long offset, long length)> _segments;
         private readonly PageIndexReader _pageReader;
 
-        public ColumnStreamReader(
+        public ColumnReader(
             PageIndexReader pageReader,
             Stream indexStream,
             Stream vectorStream,
@@ -77,7 +77,7 @@ namespace Sir.VectorSpace
             double bestScore = 0;
             var read = _ixFile.Read(block);
 
-            while (read < segmentSize)
+            while (true)
             {
                 var vecOffset = BitConverter.ToInt64(block.Slice(0));
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long)));

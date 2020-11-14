@@ -14,6 +14,8 @@ namespace Sir.Search
         private readonly IIndexingStrategy _indexingStrategy;
         private readonly ConcurrentDictionary<long, VectorNode> _index;
 
+        public IDictionary<long, VectorNode> InMemoryIndex => _index;
+
         /// <summary>
         /// Creates an instance of an indexing session targeting a single collection.
         /// </summary>
@@ -39,16 +41,6 @@ namespace Sir.Search
             {
                 _indexingStrategy.ExecutePut(column, keyId, new VectorNode(vector, docId), _model);
             }
-        }
-
-        public VectorNode GetInMemoryIndex(long keyId)
-        {
-            return _index[keyId];
-        }
-
-        public IDictionary<long, VectorNode> GetInMemoryIndex()
-        {
-            return _index;
         }
 
         public IndexInfo GetIndexInfo()

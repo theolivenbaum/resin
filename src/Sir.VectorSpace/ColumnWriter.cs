@@ -3,12 +3,12 @@ using System.IO;
 
 namespace Sir.VectorSpace
 {
-    public class ColumnStreamWriter : IDisposable
+    public class ColumnWriter : IDisposable
     {
         private readonly Stream _ixStream;
         private readonly bool _keepIndexStreamOpen;
 
-        public ColumnStreamWriter(Stream indexStream, bool keepStreamOpen = false)
+        public ColumnWriter(Stream indexStream, bool keepStreamOpen = false)
         {
             _ixStream = indexStream;
             _keepIndexStreamOpen = keepStreamOpen;

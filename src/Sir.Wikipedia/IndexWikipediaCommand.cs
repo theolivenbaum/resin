@@ -71,7 +71,7 @@ namespace Sir.Wikipedia
                                 }
                             }
 
-                            index = indexSession.GetInMemoryIndex();
+                            index = indexSession.InMemoryIndex;
 
                             using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger:logger))
                             {

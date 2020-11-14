@@ -28,7 +28,7 @@ namespace Sir.Tests
                     indexSession.Put(i, 0, _data[i]);
                 }
 
-                tree = indexSession.GetInMemoryIndex(0);
+                tree = indexSession.InMemoryIndex[0];
             }
 
             Debug.WriteLine(PathFinder.Visualize(tree));
@@ -58,6 +58,64 @@ namespace Sir.Tests
         }
 
         [Test]
+        public void Can_search_streamed_multiple_pages()
+        {
+            var model = new BagOfCharsModel();
+            const string collection = "Can_search_streamed_with_one_page_per_document";
+            var collectionId = collection.ToHash();
+            const string fieldName = "description";
+
+            _sessionFactory.Truncate(collectionId);
+
+            using (var stream = new IndexFileStreamProvider(collectionId, _sessionFactory))
+            using (var writeSession = _sessionFactory.CreateWriteSession(collectionId))
+            {
+                var keyId = writeSession.EnsureKeyExists(fieldName);
+
+                for (long i = 0; i < _data.Length; i++)
+                {
+                    var data = _data[i];
+
+                    using (var indexSession = _sessionFactory.CreateIndexSession(model))
+                    {
+                        var docId = writeSession.Put(new Search.Document(new Field[] { new Field(fieldName, data, index: true, store: true) }));
+                        indexSession.Put(docId, keyId, data);
+                        stream.Write(indexSession.InMemoryIndex);
+                    }
+                }
+            }
+
+            var queryParser = new QueryParser<string>(_sessionFactory, model);
+
+            using (var searchSession = new SearchSession(_sessionFactory, model, new PostingsReader(_sessionFactory)))
+            {
+                Assert.DoesNotThrow(() =>
+                {
+                    foreach (var word in _data)
+                    {
+                        var query = queryParser.Parse(collection, word, fieldName, fieldName, and: true, or: false);
+                        var result = searchSession.Search(query, 0, 1);
+                        var document = result.Documents.FirstOrDefault();
+
+                        if (document == null)
+                        {
+                            throw new Exception($"unable to find {word}.");
+                        }
+
+                        var score = (double)document[SystemFields.Score];
+
+                        if (score < model.IdenticalAngle)
+                        {
+                            throw new Exception($"unable to score {word}.");
+                        }
+
+                        Debug.WriteLine($"{word} matched with {score * 100}% certainty.");
+                    }
+                });
+            }
+        }
+
+        [Test]
         public void Can_search_streamed()
         {
             var model = new BagOfCharsModel();
@@ -77,16 +135,16 @@ namespace Sir.Tests
                 {
                     var data = _data[i];
 
-                    writeSession.Put(new Search.Document(new Field[] { new Field(fieldName, data, index: true, store: true) }));
+                    var docId = writeSession.Put(new Search.Document(new Field[] { new Field(fieldName, data, index: true, store: true) }));
 
-                    indexSession.Put(i, keyId, data);
+                    indexSession.Put(docId, keyId, data);
                 }
 
-                index = indexSession.GetInMemoryIndex(keyId);
+                index = indexSession.InMemoryIndex[keyId];
 
                 using (var stream = new IndexFileStreamProvider(collectionId, _sessionFactory))
                 {
-                    stream.Write(indexSession.GetInMemoryIndex());
+                    stream.Write(indexSession.InMemoryIndex);
                 }
             }
 

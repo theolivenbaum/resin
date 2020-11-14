@@ -57,7 +57,7 @@ namespace Sir.Tests
             using (var vectorStream = new MemoryStream())
             using (var pageStream = new MemoryStream())
             {
-                using (var writer = new ColumnStreamWriter(indexStream, keepStreamOpen:true))
+                using (var writer = new ColumnWriter(indexStream, keepStreamOpen:true))
                 {
                     writer.CreatePage(tree, vectorStream, new PageIndexWriter(pageStream, keepStreamOpen:true));
                 }
@@ -66,7 +66,7 @@ namespace Sir.Tests
 
                 Assert.DoesNotThrow(() =>
                 {
-                    using (var reader = new ColumnStreamReader(new PageIndexReader(pageStream), indexStream, vectorStream, _sessionFactory, _loggerFactory.CreateLogger<ColumnStreamReader>()))
+                    using (var reader = new ColumnReader(new PageIndexReader(pageStream), indexStream, vectorStream, _sessionFactory, _loggerFactory.CreateLogger<ColumnReader>()))
                     {
                         foreach (var word in _data)
                         {

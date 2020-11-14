@@ -81,7 +81,7 @@ namespace Sir.Tests
 
             _data = new MnistReader(
                 @"C:\temp\mnist\t10k-images.idx3-ubyte",
-                @"C:\temp\mnist\t10k-labels.idx1-ubyte").Read().Take(1000).ToArray();
+                @"C:\temp\mnist\t10k-labels.idx1-ubyte").Read().Take(100).ToArray();
         }
 
         [TearDown]
