@@ -22,7 +22,7 @@ namespace Sir.Search
         {
             _collectionId = collectionId;
             _sessionFactory = sessionFactory;
-            _logger = logger??sessionFactory.Logger;
+            _logger = logger;
             _postingsStream = _sessionFactory.CreateAppendStream(_collectionId, "pos");
             _vectorStream = _sessionFactory.CreateAppendStream(_collectionId, "vec");
             _streams = new Dictionary<(long, string), Stream>();

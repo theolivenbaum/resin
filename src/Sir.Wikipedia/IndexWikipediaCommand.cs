@@ -29,6 +29,7 @@ namespace Sir.Wikipedia
             if (take == 0)
                 take = int.MaxValue;
 
+            var model = new BagOfCharsModel();
             var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsToStore, fieldsToIndex);
             var debugger = new IndexDebugger(sampleSize);
 
@@ -36,11 +37,12 @@ namespace Sir.Wikipedia
             {
                 sessionFactory.Truncate(collectionId);
 
+                using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory))
                 using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
                 {
-                    using (var indexSession = sessionFactory.CreateIndexSession(new BagOfCharsModel()))
+                    foreach (var document in payload)
                     {
-                        foreach (var document in payload)
+                        using (var indexSession = sessionFactory.CreateIndexSession(model))
                         {
                             var documentId = writeSession.Put(document);
 
@@ -58,16 +60,8 @@ namespace Sir.Wikipedia
                             {
                                 logger.LogInformation(debugInfo);
                             }
-                        }
 
-                        using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger: logger))
-                        {
                             stream.Write(indexSession.InMemoryIndex);
-                        }
-
-                        foreach (var column in indexSession.InMemoryIndex)
-                        {
-                            Print($"wikipedia.{column.Key}", column.Value);
                         }
                     }
                 }
