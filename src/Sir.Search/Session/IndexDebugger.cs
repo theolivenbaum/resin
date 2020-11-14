@@ -8,25 +8,30 @@ namespace Sir.Search
         private readonly Stopwatch _time;
         private readonly int _sampleSize;
         private int _batchNo;
+        private int _steps;
 
         public IndexDebugger(int sampleSize = 1000)
         {
-            _time = Stopwatch.StartNew();
-            _batchNo = 0;
             _sampleSize = sampleSize;
+            _time = Stopwatch.StartNew();
         }
 
-        public string GetDebugInfo(IIndexSession indexSession)
+        public string Step(IIndexSession indexSession)
         {
-            var info = indexSession.GetIndexInfo();
-            var t = _time.Elapsed.TotalSeconds;
-            var docsPerSecond = (int)(_sampleSize / t);
-            var debug = string.Join('\n', info.Info.Select(x => x.ToString()));
-            var message = $"\n{_time.Elapsed}\nbatch {++_batchNo}\n{debug}\n{docsPerSecond} docs/s";
+            if (_steps++ % _sampleSize == 0)
+            {
+                var info = indexSession.GetIndexInfo();
+                var t = _time.Elapsed.TotalSeconds;
+                var docsPerSecond = (int)(_sampleSize / t);
+                var debug = string.Join('\n', info.Info.Select(x => x.ToString()));
+                var message = $"\n{_time.Elapsed}\nbatch {_batchNo++}\n{debug}\n{docsPerSecond} docs/s";
 
-            _time.Restart();
+                _time.Restart();
 
-            return message;
+                return message;
+            }
+
+            return null;
         }
     }
 }

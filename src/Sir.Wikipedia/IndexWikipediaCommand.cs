@@ -20,8 +20,7 @@ namespace Sir.Wikipedia
             var collection = args["collection"];
             var skip = args.ContainsKey("skip") ? int.Parse(args["skip"]) : 0;
             var take = args.ContainsKey("take") ? int.Parse(args["take"]) : int.MaxValue;
-            var pageSize = int.Parse(args["pageSize"]);
-            var reportSize = args.ContainsKey("reportSize") ? int.Parse(args["reportSize"]) : 1000;
+            var sampleSize = args.ContainsKey("sampleSize") ? int.Parse(args["sampleSize"]) : 1000;
 
             var collectionId = collection.ToHash();
             var fieldsToStore = new HashSet<string> { "language", "wikibase_item", "title", "text" };
@@ -30,7 +29,8 @@ namespace Sir.Wikipedia
             if (take == 0)
                 take = int.MaxValue;
 
-            var debugger = new IndexDebugger();
+            var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsToStore, fieldsToIndex);
+            var debugger = new IndexDebugger(sampleSize);
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
@@ -38,50 +38,36 @@ namespace Sir.Wikipedia
 
                 using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
                 {
-                    var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsToStore, fieldsToIndex);
-
-                    IDictionary<long, VectorNode> index;
-
-                    foreach (var page in payload.Batch(pageSize))
+                    using (var indexSession = sessionFactory.CreateIndexSession(new BagOfCharsModel()))
                     {
-                        using (var indexSession = sessionFactory.CreateIndexSession(new BagOfCharsModel()))
+                        foreach (var document in payload)
                         {
-                            foreach (var batch in page.Batch(reportSize))
+                            var documentId = writeSession.Put(document);
+
+                            foreach (var field in document.Fields)
                             {
-                                var time = Stopwatch.StartNew();
-
-                                foreach (var document in batch)
+                                if (field.Value != null && field.Index)
                                 {
-                                    var documentId = writeSession.Put(document);
-
-                                    foreach (var field in document.Fields)
-                                    {
-                                        if (field.Value != null && field.Index)
-                                        {
-                                            indexSession.Put(documentId, field.Id, field.Value.ToString());
-                                        }
-                                    }
-                                }
-
-                                var debugInfo = debugger.GetDebugInfo(indexSession);
-
-                                if (debugInfo != null)
-                                {
-                                    logger.LogInformation(debugInfo);
+                                    indexSession.Put(documentId, field.Id, field.Value.ToString());
                                 }
                             }
 
-                            index = indexSession.InMemoryIndex;
+                            var debugInfo = debugger.Step(indexSession);
 
-                            using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger:logger))
+                            if (debugInfo != null)
                             {
-                                stream.Write(index);
+                                logger.LogInformation(debugInfo);
                             }
+                        }
 
-                            foreach (var column in index)
-                            {
-                                Print($"wikipedia.{column.Key}", column.Value);
-                            }
+                        using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger: logger))
+                        {
+                            stream.Write(indexSession.InMemoryIndex);
+                        }
+
+                        foreach (var column in indexSession.InMemoryIndex)
+                        {
+                            Print($"wikipedia.{column.Key}", column.Value);
                         }
                     }
                 }

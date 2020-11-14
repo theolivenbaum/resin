@@ -47,7 +47,7 @@ namespace Sir.Mnist
 
                             count++;
 
-                            var debugInfo = debugger.GetDebugInfo(indexSession);
+                            var debugInfo = debugger.Step(indexSession);
 
                             if (debugInfo != null)
                             {
