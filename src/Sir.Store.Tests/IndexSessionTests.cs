@@ -62,17 +62,16 @@ namespace Sir.Tests
         {
             var model = new BagOfCharsModel();
             VectorNode index;
-            const string collection = "Can_traverse_streamed";
+            const string collection = "Can_search_streamed";
             var collectionId = collection.ToHash();
             const string fieldName = "description";
 
             _sessionFactory.Truncate(collectionId);
 
-            using (var documentWriter = new DocumentWriter(collectionId, _sessionFactory))
             using (var writeSession = _sessionFactory.CreateWriteSession(collectionId))
             using (var indexSession = _sessionFactory.CreateIndexSession(model))
             {
-                var keyId = documentWriter.EnsureKeyExists(fieldName);
+                var keyId = writeSession.EnsureKeyExists(fieldName);
 
                 for (long i = 0; i < _data.Length; i++)
                 {
