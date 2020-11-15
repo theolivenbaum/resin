@@ -20,7 +20,7 @@ namespace Sir.Search
 
         public IEnumerable<IVector> Tokenize(string data)
         {
-            Memory<char> source = data.ToCharArray();
+            Span<char> source = data.ToCharArray();
             var tokens = new List<IVector>();
             
             if (source.Length > 0)
@@ -28,11 +28,10 @@ namespace Sir.Search
                 var embedding = new SortedList<int, float>();
                 var offset = 0;
                 int index = 0;
-                var span = source.Span;
 
                 for (; index < source.Length; index++)
                 {
-                    char c = char.ToLower(span[index]);
+                    char c = char.ToLower(source[index]);
 
                     if (c < UnicodeStartPoint || c > UnicodeEndPoint)
                     {
