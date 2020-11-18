@@ -52,14 +52,14 @@ namespace Sir.Wikipedia
                             {
                                 var documentId = writeSession.Put(document);
 
-                                //Parallel.ForEach(document.IndexableFields, field =>
-                                //{
-                                //    indexSession.Put(documentId, field.Id, field.Value.ToString());
-                                //});
-                                foreach (var field in document.IndexableFields)
+                                Parallel.ForEach(document.IndexableFields, field =>
                                 {
                                     indexSession.Put(documentId, field.Id, field.Value.ToString());
-                                }
+                                });
+                                //foreach (var field in document.IndexableFields)
+                                //{
+                                //    indexSession.Put(documentId, field.Id, field.Value.ToString());
+                                //}
 
                                 debugger.Step(indexSession);
                             }

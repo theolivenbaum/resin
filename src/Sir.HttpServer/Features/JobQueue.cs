@@ -16,7 +16,7 @@ namespace Sir.HttpServer.Features
         public JobQueue(
             ILogger<JobQueue> logger)
         {
-            _queue = new ProducerConsumerQueue<AsyncJob>(1, DispatchJob);
+            _queue = new ProducerConsumerQueue<AsyncJob>(DispatchJob);
             _logger = logger;
             _enqueued = new ConcurrentDictionary<string, AsyncJob>();
         }
