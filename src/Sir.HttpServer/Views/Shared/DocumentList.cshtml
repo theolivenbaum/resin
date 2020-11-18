@@ -29,7 +29,7 @@
                 var host = uri.Host.ToString();
                 var path = $"{host}{uri.LocalPath}";
                 var title = string.IsNullOrWhiteSpace((string)item.Document.GetFirstValue("title")) ? "[Unknown title]" : (string)item.Document.GetFirstValue("title");
-                var score = (double)item.Document[Sir.Search.SystemFields.Score];
+                var score = (double)item.Document[Sir.Search.SystemFields.Score]*100;
                 var warcFileName = item.Document.ContainsKey("filename") ? item.Document["filename"].ToString() : null;
                 var wetFileName = warcFileName == null ? null : warcFileName.Replace("/warc", "/wet").Replace(".gz", ".wet.gz");
                 var wetUrlFileName = wetFileName == null ? null : "https://commoncrawl.s3.amazonaws.com/" + Html.Raw(wetFileName);
@@ -66,7 +66,7 @@
                                 <a class="warc-link" href="@warcUrl">WARC</a>
                             </span>
                             }
-                            <span class="medium-text">Score: @score.ToString("N0")</span>
+                            <span class="medium-text">Score: @score.ToString("0.##")%</span>
                         </div>
                     </div>
                 </li>
