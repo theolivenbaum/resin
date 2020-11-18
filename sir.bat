@@ -1,4 +1,4 @@
 setlocal
-cd src\Sir.DbUtil\bin\Release\netcoreapp3.1\
-dotnet Sir.DbUtil.dll %*
+cd src\Sir\bin\Release\net5.0\
+dotnet Sir.dll %*
 endlocal
