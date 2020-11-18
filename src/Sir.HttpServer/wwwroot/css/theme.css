@@ -91,7 +91,7 @@ ul.document-list li {
 
 footer {
     font-size: 10pt;
-    margin-top: 25px;
+    margin-top: 15px;
     margin-bottom: 30px;
     max-width: 500px;
 }
@@ -145,11 +145,6 @@ a.document-subtitle:visited {
     color: gray;
 }
 
-input[type="text"].q {
-    width: 100%;
-    padding-left: 0px;
-}
-
 input[type="checkbox"] {
     vertical-align: sub;
 }
@@ -196,7 +191,7 @@ h3.querystats {
 
 .search-fields {
     font-size: 10pt;
-    border: 1px solid gray;
+    border: 1px solid silver;
     margin-left: 0px;
     margin-right: 5px;
     margin-top: 0px;
@@ -226,6 +221,22 @@ input[type="text"].collection {
     width: 100%;
 }
 
+input[type="text"].q {
+    width: 100%;
+    padding: 0px 0px 0px 5px;
+    margin: 0px 0px 0px 0px;
+    border: solid 1px #CCC;
+    height: 21px;
+}
+
+div.buttons button {
+    width: 100%;
+    padding: 0px 0px 0px 0px;
+    margin: 0px 0px 0px 0px;
+    border: solid 1px #CCC;
+    height: 23px;
+}
+
 div.q {
     float: left;
     width: 85%;
@@ -235,14 +246,7 @@ div.q {
 div.buttons {
     float: left;
     width: 15%;
-    text-align: right;
     height: 25px;
-}
-
-div.buttons button {
-    width: 100%;
-    padding: 0px 0px 0px 0px;
-    margin: 0px 0px 0px 0px;
 }
 
 @media only screen and (max-width: 935px) {
@@ -308,7 +312,7 @@ div.buttons button {
 .toolbar-wrapper {
     margin-left: 0px;
     margin-bottom: 10px;
-    margin-top: 20px;
+    margin-top: 10px;
     color: black;
     font-size:10pt;
 }
