@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Diagnostics;
 using System.Linq;
 
@@ -10,16 +11,18 @@ namespace Sir.Search
         private readonly int _sampleSize;
         private int _batchNo;
         private int _steps;
+        private readonly ILogger _logger;
 
-        public IndexDebugger(int sampleSize = 1000)
+        public IndexDebugger(ILogger logger, int sampleSize = 1000)
         {
             _sampleSize = sampleSize;
             _time = Stopwatch.StartNew();
+            _logger = logger;
         }
 
-        public string Step(IIndexSession indexSession)
+        public void Step(IIndexSession indexSession)
         {
-            if (_steps++ % _sampleSize == 0)
+            if (++_steps % _sampleSize == 0)
             {
                 var info = indexSession.GetIndexInfo();
                 var t = _time.Elapsed.TotalSeconds;
@@ -27,12 +30,9 @@ namespace Sir.Search
                 var debug = string.Join('\n', info.Info.Select(x => x.ToString()));
                 var message = $"\n{_time.Elapsed}\nbatch {_batchNo++}\n{debug}\n{docsPerSecond} docs/s";
 
+                _logger.LogInformation(message);
                 _time.Restart();
-
-                return message;
             }
-
-            return null;
         }
     }
 
@@ -54,7 +54,7 @@ namespace Sir.Search
 
         public string Step()
         {
-            if (_steps++ % _sampleSize == 0)
+            if (++_steps % _sampleSize == 0)
             {
                 var t = _time.Elapsed.TotalSeconds;
                 var itemsPerSecond = (int)(_sampleSize / t);

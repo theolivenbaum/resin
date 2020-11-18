@@ -25,16 +25,16 @@ namespace Sir.StringCompare
 
         private static void Compare(string first, string second, ITextModel model)
         {
-            var baseVectorComponents = new List<float>(model.VectorWidth);
+            var baseVectorComponents = new List<float>(model.NumOfDimensions);
             var baseVectors = new List<IVector>();
 
-            for (int i = 0; i < model.VectorWidth; i++)
+            for (int i = 0; i < model.NumOfDimensions; i++)
             {
                 baseVectorComponents.Add(i == 0 ? 1 : Convert.ToSingle(Math.Log10(i)));
 
-                var bvecs = new List<float>(model.VectorWidth);
+                var bvecs = new List<float>(model.NumOfDimensions);
 
-                for (int y = 0; y< model.VectorWidth; y++)
+                for (int y = 0; y< model.NumOfDimensions; y++)
                 {
                     float value;
 

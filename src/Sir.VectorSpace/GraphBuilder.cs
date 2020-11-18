@@ -16,7 +16,7 @@ namespace Sir.VectorSpace
             {
                 foreach (var vector in model.Tokenize(item))
                 {
-                    indexingStrategy.ExecutePut(root, columnId, new VectorNode(vector), model);
+                    indexingStrategy.ExecutePut<T>(root, columnId, new VectorNode(vector));
                 }
             }
 
@@ -343,7 +343,7 @@ namespace Sir.VectorSpace
             Stream vectorStream,
             IDistanceCalculator model)
         {
-            var vector = VectorOperations.DeserializeVector(vecOffset, (int)componentCount, model.VectorWidth, vectorStream);
+            var vector = VectorOperations.DeserializeVector(vecOffset, (int)componentCount, model.NumOfDimensions, vectorStream);
             var node = new VectorNode(postingsOffset, vecOffset, terminator, weight, vector);
 
             return node;

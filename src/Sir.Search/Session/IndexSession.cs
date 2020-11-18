@@ -5,9 +5,6 @@ using System.Collections.Generic;
 
 namespace Sir.Search
 {
-    /// <summary>
-    /// Indexing session targeting a single collection.
-    /// </summary>
     public class IndexSession<T> : IIndexSession, IDisposable
     {
         private readonly IModel<T> _model;
@@ -16,13 +13,6 @@ namespace Sir.Search
 
         public IDictionary<long, VectorNode> InMemoryIndex => _index;
 
-        /// <summary>
-        /// Creates an instance of an indexing session targeting a single collection.
-        /// </summary>
-        /// <param name="sessionFactory">A session factory</param>
-        /// <param name="model">A model</param>
-        /// <param name="config">A configuration provider</param>
-        /// <param name="logger">A logger</param>
         public IndexSession(
             IModel<T> model,
             IIndexingStrategy indexingStrategy)
@@ -39,7 +29,7 @@ namespace Sir.Search
 
             foreach (var vector in vectors)
             {
-                _indexingStrategy.ExecutePut(column, keyId, new VectorNode(vector, docId), _model);
+                _indexingStrategy.ExecutePut<T>(column, keyId, new VectorNode(vector, docId));
             }
         }
 

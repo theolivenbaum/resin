@@ -8,14 +8,14 @@ namespace Sir.Search
     {
         public double IdenticalAngle => 0.88d;
         public double FoldAngle => 0.58d;
-        public override int VectorWidth => 268;
+        public override int NumOfDimensions => 300;
 
-        private const int UnicodeStartPoint = 32;
-        private const int UnicodeEndPoint = 300;
+        public const int UnicodeStartPoint = 32;
+        public const int UnicodeEndPoint = 331;
 
-        public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node, IModel<T> model)
+        public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node)
         {
-            GraphBuilder.MergeOrAdd(column, node, model);
+            GraphBuilder.MergeOrAdd(column, node, this);
         }
 
         public IEnumerable<IVector> Tokenize(string data)
@@ -50,7 +50,7 @@ namespace Sir.Search
 
                             var vector = new IndexedVector(
                                 embedding,
-                                VectorWidth,
+                                NumOfDimensions,
                                 source.Slice(offset, len).ToString());
 
                             embedding.Clear();
@@ -67,7 +67,7 @@ namespace Sir.Search
 
                     var vector = new IndexedVector(
                                 embedding,
-                                VectorWidth,
+                                NumOfDimensions,
                                 source.Slice(offset, len).ToString());
 
                     tokens.Add(vector);
@@ -78,23 +78,55 @@ namespace Sir.Search
         }
     }
 
-    public class SkipGramModel : DistanceCalculator, ITextModel
+    public class ContinuousBagOfWordsModel : DistanceCalculator, ITextModel
     {
-        public double IdenticalAngle => 0.88d;
-        public double FoldAngle => 0.58d;
-        public override int VectorWidth => 268;
+        public double IdenticalAngle => 0.95d;
+        public double FoldAngle => 0.75d;
+        public override int NumOfDimensions { get; }
 
-        public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node, IModel<T> model)
+        private readonly BagOfCharsModel _wordTokenizer;
+
+        public ContinuousBagOfWordsModel(BagOfCharsModel wordTokenizer)
         {
-            GraphBuilder.MergeOrAdd(column, node, model);
+            _wordTokenizer = wordTokenizer;
+            NumOfDimensions = wordTokenizer.NumOfDimensions*3;
+        }
+
+        public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node)
+        {
+            GraphBuilder.MergeOrAdd(column, node, this);
         }
 
         public IEnumerable<IVector> Tokenize(string data)
         {
-            var tokens = new List<IVector>();
+            var tokens = (IList<IVector>)_wordTokenizer.Tokenize(data);
 
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                var context0 = i - 1;
+                var context1 = i + 1;
+                var token = tokens[i];
+                var vector = new IndexedVector(NumOfDimensions, token.Label);
 
-            return tokens;
+                if (context0 >= 0)
+                {
+                    vector.AddInPlace(tokens[context0].Shift(0, NumOfDimensions));
+                }
+
+                if (context1 < tokens.Count)
+                {
+                    vector.AddInPlace(tokens[context1].Shift(_wordTokenizer.NumOfDimensions * 2, NumOfDimensions));
+                }
+
+                if (vector.ComponentCount == 0)
+                {
+                    yield return token.Shift(_wordTokenizer.NumOfDimensions, NumOfDimensions);
+                }
+                else
+                {
+                    yield return vector;
+                }
+            }
         }
     }
 }

@@ -33,7 +33,7 @@ namespace Sir.Mnist
 
                 using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
                 {
-                    var debugger = new IndexDebugger();
+                    var debugger = new IndexDebugger(logger);
                     var keyId = writeSession.EnsureKeyExists("image");
 
                     using (var indexSession = sessionFactory.CreateIndexSession(new LinearClassifierImageModel()))
@@ -47,12 +47,7 @@ namespace Sir.Mnist
 
                             count++;
 
-                            var debugInfo = debugger.Step(indexSession);
-
-                            if (debugInfo != null)
-                            {
-                                logger.LogInformation(debugInfo);
-                            }
+                            debugger.Step(indexSession);
                         }
 
                         tree = indexSession.InMemoryIndex[keyId];

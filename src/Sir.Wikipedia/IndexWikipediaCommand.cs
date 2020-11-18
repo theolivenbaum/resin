@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sir.Search;
 using Sir.VectorSpace;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -25,15 +26,14 @@ namespace Sir.Wikipedia
             var pageSize = args.ContainsKey("pageSize") ? int.Parse(args["pageSize"]) : 100000;
 
             var collectionId = collection.ToHash();
-            var fieldsToStore = new HashSet<string> { "language", "wikibase_item", "title", "text" };
-            var fieldsToIndex = new HashSet<string> { "language", "title", "text" };
+            var fieldsToStore = new HashSet<string> { "language", "wikibase_item", "title", "text", "url" };
+            var fieldsToIndex = new HashSet<string> { "title", "text" };
 
             if (take == 0)
                 take = int.MaxValue;
 
             var model = new BagOfCharsModel();
             var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsToStore, fieldsToIndex);
-            var debugger = new IndexDebugger(sampleSize);
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
@@ -42,6 +42,8 @@ namespace Sir.Wikipedia
                 using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger: logger))
                 using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
                 {
+                    var debugger = new IndexDebugger(logger, sampleSize);
+
                     foreach (var page in payload.Batch(pageSize))
                     {
                         using (var indexSession = sessionFactory.CreateIndexSession(model))
@@ -50,21 +52,16 @@ namespace Sir.Wikipedia
                             {
                                 var documentId = writeSession.Put(document);
 
-                                Parallel.ForEach(document.IndexableFields, field =>
-                                {
-                                    indexSession.Put(documentId, field.Id, field.Value.ToString());
-                                });
-                                //foreach (var field in document.IndexableFields)
+                                //Parallel.ForEach(document.IndexableFields, field =>
                                 //{
                                 //    indexSession.Put(documentId, field.Id, field.Value.ToString());
-                                //}
-
-                                var debugInfo = debugger.Step(indexSession);
-
-                                if (debugInfo != null)
+                                //});
+                                foreach (var field in document.IndexableFields)
                                 {
-                                    logger.LogInformation(debugInfo);
+                                    indexSession.Put(documentId, field.Id, field.Value.ToString());
                                 }
+
+                                debugger.Step(indexSession);
                             }
 
                             stream.Write(indexSession.InMemoryIndex);

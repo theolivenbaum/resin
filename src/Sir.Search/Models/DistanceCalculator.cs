@@ -8,7 +8,7 @@ namespace Sir.Search
 {
     public abstract class DistanceCalculator : IDistanceCalculator
     {
-        public abstract int VectorWidth { get; }
+        public abstract int NumOfDimensions { get; }
 
         public double CosAngle(IVector vec1, IVector vec2)
         {
@@ -35,7 +35,7 @@ namespace Sir.Search
                 tuples[i] = new Tuple<int, float>(index[i], values[i]);
             }
 
-            otherVector = new IndexedVector(CreateVector.SparseOfIndexed(VectorWidth, tuples));
+            otherVector = new IndexedVector(CreateVector.SparseOfIndexed(NumOfDimensions, tuples));
 
             var dotSelf1 = vector.Value.Norm(2);
             var dotSelf2 = otherVector.Value.Norm(2);

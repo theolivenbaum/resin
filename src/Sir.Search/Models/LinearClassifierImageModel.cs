@@ -9,11 +9,11 @@ namespace Sir.Search
     {
         public double IdenticalAngle => 0.95d;
         public double FoldAngle => 0.75d;
-        public override int VectorWidth => 784; 
+        public override int NumOfDimensions => 784; 
 
-        public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node, IModel<T> model)
+        public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node)
         {
-            GraphBuilder.MergeOrAddSupervised(column, node, model);
+            GraphBuilder.MergeOrAddSupervised(column, node, this);
         }
 
         public IEnumerable<IVector> Tokenize(IImage data)

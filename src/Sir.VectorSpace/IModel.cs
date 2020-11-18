@@ -33,7 +33,7 @@ namespace Sir.VectorSpace
     /// </summary>
     public interface IDistanceCalculator
     {
-        int VectorWidth { get; }
+        int NumOfDimensions { get; }
         double CosAngle(IVector vec1, IVector vec2);
         double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream, out IVector otherVector);
     }

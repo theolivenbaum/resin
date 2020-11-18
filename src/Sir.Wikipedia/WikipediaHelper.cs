@@ -10,15 +10,11 @@ namespace Sir.Wikipedia
     {
         public static IEnumerable<Search.Document> ReadWP(string fileName, int skip, int take, HashSet<string> fieldsToStore, HashSet<string> fieldsToIndex)
         {
-            if (Path.GetExtension(fileName).EndsWith("gz"))
-            {
-                return ReadGZipJsonFile(fileName, skip, take, fieldsToStore, fieldsToIndex);
-            }
-
-            return ReadJsonFile(fileName, skip, take, fieldsToStore, fieldsToIndex);
+            return ReadGZipJsonFile(fileName, skip, take, fieldsToStore, fieldsToIndex);
         }
 
-        public static IEnumerable<Search.Document> ReadGZipJsonFile(string fileName, int skip, int take, HashSet<string> fieldsToStore, HashSet<string> fieldsToIndex)
+        public static IEnumerable<Search.Document> ReadGZipJsonFile(
+            string fileName, int skip, int take, HashSet<string> fieldsToStore, HashSet<string> fieldsToIndex)
         {
             using (var stream = File.OpenRead(fileName))
             using (var zip = new GZipStream(stream, CompressionMode.Decompress))
@@ -57,7 +53,12 @@ namespace Sir.Wikipedia
                                 fields.Add(new Field(kvp.Key, kvp.Value.ToString(), index, store));
                         }
 
-                        fields.Add(new Field("url", $"https://www.wikidata.org/wiki/{jobject["wikibase_item"]}"));
+                        fields.Add(
+                            new Field(
+                                "url", 
+                                $"https://www.wikidata.org/wiki/{jobject["wikibase_item"]}", 
+                                index:false, 
+                                store:true));
 
                         yield return new Search.Document(fields);
                         took++;
