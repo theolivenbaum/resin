@@ -23,7 +23,7 @@ namespace Sir.Search
             _sessionFactory = sessionFactory;
         }
 
-        public long Put(Document document)
+        public void Put(Document document)
         {
             var docMap = new List<(long keyId, long valId)>();
 
@@ -47,20 +47,16 @@ namespace Sir.Search
             Write(SystemFields.Created, DateTime.Now.ToBinary(), docMap);
 
             var docMeta = _streamWriter.PutDocumentMap(docMap);
-            var docId = _streamWriter.IncrementDocId();
+            document.Id = _streamWriter.IncrementDocId();
 
-            _streamWriter.PutDocumentAddress(docId, docMeta.offset, docMeta.length);
-            
-            return docId;
+            _streamWriter.PutDocumentAddress(document.Id, docMeta.offset, docMeta.length);
         }
 
         private void Write(Field field, IList<(long, long)> docMap)
         {
-            var keyId = EnsureKeyExists(field.Key);
+            field.Id = EnsureKeyExists(field.Key);
 
-            Write(keyId, field.Value, docMap);
-
-            field.Id = keyId;
+            Write(field.Id, field.Value, docMap);
         }
 
         private void Write(string key, object val, IList<(long, long)> docMap)

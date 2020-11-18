@@ -40,7 +40,7 @@ namespace Sir.Wikipedia
                         {
                             foreach (var document in page)
                             {
-                                var documentId = writeSession.Put(document);
+                                writeSession.Put(document);
 
                                 foreach (var field in document.IndexableFields)
                                 {

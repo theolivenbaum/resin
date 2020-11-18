@@ -166,14 +166,14 @@ namespace Sir.Search
 
             foreach (var document in job.Documents)
             {
-                var docId = writeSession.Put(document);
+                writeSession.Put(document);
 
                 //Parallel.ForEach(document, kv =>
                 foreach (var field in document.Fields)
                 {
                     if (field.Value != null && field.Index)
                     {
-                        indexSession.Put(docId, field.Id, field.Value.ToString());
+                        indexSession.Put(document.Id, field.Id, field.Value.ToString());
                     }
                 }//);
 
@@ -199,13 +199,13 @@ namespace Sir.Search
             WriteSession writeSession, 
             IndexSession<string> indexSession)
         {
-            var docId = writeSession.Put(document);
+            writeSession.Put(document);
 
             foreach (var field in document.Fields)
             {
                 if (field.Value != null && field.Index)
                 {
-                    indexSession.Put(docId, field.Id, field.Value.ToString());
+                    indexSession.Put(document.Id, field.Id, field.Value.ToString());
                 }
             }
         }

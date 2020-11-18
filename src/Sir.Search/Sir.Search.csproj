@@ -23,9 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Sir.Core\Sir.Core.csproj" />
     <ProjectReference Include="..\Sir.Document\Sir.Document.csproj" />
     <ProjectReference Include="..\Sir.VectorSpace\Sir.VectorSpace.csproj" />
-    <ProjectReference Include="..\Sir\Sir.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

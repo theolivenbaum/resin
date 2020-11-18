@@ -24,6 +24,7 @@ namespace Sir.Wikipedia
             var take = args.ContainsKey("take") ? int.Parse(args["take"]) : int.MaxValue;
             var sampleSize = args.ContainsKey("sampleSize") ? int.Parse(args["sampleSize"]) : 1000;
             var pageSize = args.ContainsKey("pageSize") ? int.Parse(args["pageSize"]) : 100000;
+            var truncate = args.ContainsKey("truncate");
 
             var collectionId = collection.ToHash();
             var fieldsToStore = new HashSet<string> { "language", "wikibase_item", "title", "text", "url" };
@@ -37,24 +38,25 @@ namespace Sir.Wikipedia
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
-                sessionFactory.Truncate(collectionId);
+                if (truncate)
+                    sessionFactory.Truncate(collectionId);
 
-                using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger: logger))
                 using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
                 {
                     var debugger = new IndexDebugger(logger, sampleSize);
 
                     foreach (var page in payload.Batch(pageSize))
                     {
+                        using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger: logger))
                         using (var indexSession = sessionFactory.CreateIndexSession(model))
                         {
                             foreach (var document in page)
                             {
-                                var documentId = writeSession.Put(document);
+                                writeSession.Put(document);
 
                                 Parallel.ForEach(document.IndexableFields, field =>
                                 {
-                                    indexSession.Put(documentId, field.Id, field.Value.ToString());
+                                    indexSession.Put(document.Id, field.Id, field.Value.ToString());
                                 });
                                 //foreach (var field in document.IndexableFields)
                                 //{

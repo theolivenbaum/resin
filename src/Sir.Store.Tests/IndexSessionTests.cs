@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using Sir.Document;
 using Sir.Search;
 using Sir.VectorSpace;
 using System;
@@ -78,8 +77,9 @@ namespace Sir.Tests
 
                     using (var indexSession = _sessionFactory.CreateIndexSession(model))
                     {
-                        var docId = writeSession.Put(new Search.Document(new Field[] { new Field(fieldName, data, index: true, store: true) }));
-                        indexSession.Put(docId, keyId, data);
+                        var doc = new Search.Document(new Field[] { new Field(fieldName, data, index: true, store: true) });
+                        writeSession.Put(doc);
+                        indexSession.Put(doc.Id, keyId, data);
                         stream.Write(indexSession.InMemoryIndex);
                     }
                 }
@@ -134,10 +134,10 @@ namespace Sir.Tests
                 for (long i = 0; i < _data.Length; i++)
                 {
                     var data = _data[i];
+                    var doc = new Search.Document(new Field[] { new Field(fieldName, data, index: true, store: true) });
 
-                    var docId = writeSession.Put(new Search.Document(new Field[] { new Field(fieldName, data, index: true, store: true) }));
-
-                    indexSession.Put(docId, keyId, data);
+                    writeSession.Put(doc);
+                    indexSession.Put(doc.Id, keyId, data);
                 }
 
                 index = indexSession.InMemoryIndex[keyId];

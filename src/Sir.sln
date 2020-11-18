@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29326.143
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Core", "Sir\Sir.Core.csproj", "{2002DD08-0083-4184-BB1A-2469B608DE95}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Core", "Sir.Core\Sir.Core.csproj", "{2002DD08-0083-4184-BB1A-2469B608DE95}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resources", "resources", "{CA96B574-72B3-4954-8B51-4C961A6F6622}"
 	ProjectSection(SolutionItems) = preProject
@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Search", "Sir.Search\Si
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.StringCompare", "Sir.StringCompare\Sir.StringCompare.csproj", "{610237D4-15E5-4C9F-9BAE-ACB24F634D2F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.DbUtil", "Sir.DbUtil\Sir.DbUtil.csproj", "{D267D6FB-6DA5-444F-A628-FC0C3B1C6662}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir", "Sir\Sir.csproj", "{D267D6FB-6DA5-444F-A628-FC0C3B1C6662}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Tests", "Sir.Store.Tests\Sir.Tests.csproj", "{03F6B627-A8CC-43A6-9BD0-5A9CE47E7EA6}"
 EndProject

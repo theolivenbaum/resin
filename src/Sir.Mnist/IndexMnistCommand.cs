@@ -41,9 +41,9 @@ namespace Sir.Mnist
                         foreach (var image in images)
                         {
                             var document = new Search.Document(new Field[] { new Field("image", image.Label, index: false, store: true) });
-                            var documentId = writeSession.Put(document);
+                            writeSession.Put(document);
 
-                            indexSession.Put(documentId, keyId, image);
+                            indexSession.Put(document.Id, keyId, image);
 
                             count++;
 

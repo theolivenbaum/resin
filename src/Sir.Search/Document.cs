@@ -5,6 +5,7 @@ namespace Sir.Search
 {
     public class Document
     {
+        public long Id { get; set; }
         public double Score { get; set; }
         public IList<Field> Fields { get; }
         public IEnumerable<Field> IndexableFields
