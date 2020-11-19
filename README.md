@@ -25,7 +25,7 @@ the built-in web search GUI, or you can:
 ### Executables
 
 - __[Sir.HttpServer](https://github.com/kreeben/resin/blob/master/src/Sir.HttpServer/README.md)__: HTTP search service with HTML GUI and HTTP JSON API for reading and writing.  
-- __[Sir.DbUtil](https://github.com/kreeben/resin/blob/master/src/Sir.DbUtil/README.md)__: Executes commands that implement `Sir.ICommand`. Write, validate, query and more via command-line.
+- __[Sir](https://github.com/kreeben/resin/blob/master/src/Sir/README.md)__: Command line tool that executes commands that implement `Sir.ICommand`. Write, validate, query and more via command-line.
 
 ### Libraries
 
