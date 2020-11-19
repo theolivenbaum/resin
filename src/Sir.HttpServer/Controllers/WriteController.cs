@@ -50,7 +50,7 @@ namespace Sir.HttpServer.Controllers
             {
                 _logger.LogError(ew.ToString());
 
-                throw ew;
+                return Problem(detail:ew.ToString());
             }
         }
 
