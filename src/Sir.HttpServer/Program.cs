@@ -25,11 +25,7 @@ namespace Sir.HttpServer
                     Directory.CreateDirectory("AppData");
 
                 logging.ClearProviders();
-                logging.AddDebug();
-
-#if !DEBUG
                 logging.AddFile("AppData/sirhttpserver-log-{Date}.txt");
-#endif
             })
             .ConfigureWebHostDefaults(webBuilder =>
             {

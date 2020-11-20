@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Sir.HttpServer.Features;
 using Sir.Search;
 using System;
 using System.IO;
@@ -9,13 +8,6 @@ namespace Sir.HttpServer
 {
     public static class ServiceConfiguration
     {
-        public static void RegisterComponents(
-            IServiceCollection services, IServiceProvider container)
-        {
-            services.AddSingleton(typeof(JobQueue));
-            services.AddSingleton(typeof(SaveAsJobQueue));
-        }
-
         public static IServiceProvider Configure(IServiceCollection services)
         {
             var assemblyPath = Directory.GetCurrentDirectory();

@@ -29,9 +29,6 @@ namespace Sir.Wikipedia
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
-                sessionFactory.Truncate(collectionId);
-
-                using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger: logger))
                 using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
                 {
                     foreach (var page in payload.Batch(pageSize))
