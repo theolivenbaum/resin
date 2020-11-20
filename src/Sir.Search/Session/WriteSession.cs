@@ -11,16 +11,13 @@ namespace Sir.Search
     {
         private readonly ulong _collectionId;
         private readonly DocumentWriter _streamWriter;
-        private readonly SessionFactory _sessionFactory;
 
         public WriteSession(
             ulong collectionId,
-            DocumentWriter streamWriter,
-            SessionFactory sessionFactory)
+            DocumentWriter streamWriter)
         {
             _collectionId = collectionId;
             _streamWriter = streamWriter;
-            _sessionFactory = sessionFactory;
         }
 
         public void Put(Document document)

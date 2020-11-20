@@ -413,8 +413,7 @@ namespace Sir.Search
 
             return new WriteSession(
                 collectionId,
-                documentWriter,
-                this
+                documentWriter
             );
         }
 

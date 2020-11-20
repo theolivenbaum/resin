@@ -24,7 +24,6 @@ namespace Sir.Wikipedia
             var take = args.ContainsKey("take") ? int.Parse(args["take"]) : int.MaxValue;
             var sampleSize = args.ContainsKey("sampleSize") ? int.Parse(args["sampleSize"]) : 1000;
             var pageSize = args.ContainsKey("pageSize") ? int.Parse(args["pageSize"]) : 100000;
-            var truncate = args.ContainsKey("truncate");
 
             var collectionId = collection.ToHash();
             var fieldsToStore = new HashSet<string> { "language", "wikibase_item", "title", "text", "url" };
@@ -38,9 +37,6 @@ namespace Sir.Wikipedia
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
-                if (truncate)
-                    sessionFactory.Truncate(collectionId);
-
                 using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
                 {
                     var debugger = new IndexDebugger(logger, sampleSize);

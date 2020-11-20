@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Sir.Search;
 
-namespace Sir.DbUtil
+namespace Sir.Cmd
 {
     class Program
     {
@@ -17,7 +17,7 @@ namespace Sir.DbUtil
                 builder
                     .AddFilter("Microsoft", LogLevel.Warning)
                     .AddFilter("System", LogLevel.Warning)
-                    .AddFilter("Sir.DbUtil.Program", LogLevel.Information)
+                    .AddFilter("Sir.Cmd.Program", LogLevel.Information)
                     .AddConsole();
                     //.AddDebug();
             });

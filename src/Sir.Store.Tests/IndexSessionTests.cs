@@ -57,7 +57,7 @@ namespace Sir.Tests
         }
 
         [Test]
-        public void Can_search_streamed_multiple_pages()
+        public void Can_search_filestreamed_with_multiple_pages()
         {
             var model = new BagOfCharsModel();
             const string collection = "Can_search_streamed_with_one_page_per_document";
