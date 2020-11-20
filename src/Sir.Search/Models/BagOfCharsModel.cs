@@ -7,10 +7,7 @@ namespace Sir.Search
     {
         public double IdenticalAngle => 0.88d;
         public double FoldAngle => 0.5d;
-        public override int NumOfDimensions => 300;
-
-        public const int UnicodeStartPoint = 32;
-        public const int UnicodeEndPoint = 331;
+        public override int NumOfDimensions => char.MaxValue*2;
 
         public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node)
         {
@@ -30,11 +27,6 @@ namespace Sir.Search
                 for (; index < source.Length; index++)
                 {
                     char c = char.ToLower(source[index]);
-
-                    if (c < UnicodeStartPoint || c > UnicodeEndPoint)
-                    {
-                        continue;
-                    }
 
                     if (char.IsLetterOrDigit(c))
                     {

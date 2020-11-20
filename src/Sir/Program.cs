@@ -22,7 +22,7 @@ namespace Sir.Cmd
                     //.AddDebug();
             });
 
-            var logger = loggerFactory.CreateLogger("Sir.DbUtil.Program");
+            var logger = loggerFactory.CreateLogger("Sir.Cmd.Program");
 
             logger.LogInformation($"processing command: {string.Join(" ", args)}");
 

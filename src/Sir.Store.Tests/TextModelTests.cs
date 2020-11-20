@@ -5,6 +5,7 @@ using Sir.VectorSpace;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace Sir.Tests
 {
@@ -90,6 +91,18 @@ namespace Sir.Tests
                     }
                 });
             }
+        }
+
+        [Test]
+        public void Can_tokenize()
+        {
+            var model = new BagOfCharsModel();
+            var tokens = model.Tokenize("Ferriman–Gallwey score"); // NOTE: string contains "En dash" character: https://unicode-table.com/en/#2013
+            var labels = tokens.Select(x => x.Label);
+
+            Assert.IsTrue(labels.Contains("Ferriman"));
+            Assert.IsTrue(labels.Contains("Gallwey"));
+            Assert.IsTrue(labels.Contains("score"));
         }
 
         [SetUp]
