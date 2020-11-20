@@ -1,4 +1,5 @@
 ﻿using Sir.VectorSpace;
+using System;
 using System.Collections.Generic;
 
 namespace Sir.Search
@@ -16,7 +17,7 @@ namespace Sir.Search
 
         public IEnumerable<IVector> Tokenize(string data)
         {
-            var source = data.ToCharArray();
+            Memory<char> source = data.ToCharArray();
             
             if (source.Length > 0)
             {
@@ -26,7 +27,7 @@ namespace Sir.Search
 
                 for (; index < source.Length; index++)
                 {
-                    char c = char.ToLower(source[index]);
+                    char c = char.ToLower(source.Span[index]);
 
                     if (char.IsLetterOrDigit(c))
                     {
@@ -41,7 +42,7 @@ namespace Sir.Search
                             var vector = new IndexedVector(
                                 embedding,
                                 NumOfDimensions,
-                                data.Substring(offset, len));
+                                source.Slice(offset, len));
 
                             embedding.Clear();
                             yield return vector;
@@ -58,7 +59,7 @@ namespace Sir.Search
                     var vector = new IndexedVector(
                                 embedding,
                                 NumOfDimensions,
-                                data.Substring(offset, len).ToString());
+                                source.Slice(offset, len));
 
                     yield return vector;
                 }

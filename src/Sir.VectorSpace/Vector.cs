@@ -9,13 +9,13 @@ namespace Sir.VectorSpace
 {
     public class IndexedVector : IVector
     {
-        public string Label { get; }
+        public object Label { get; }
         public Vector<float> Value { get; private set; }
         public int ComponentCount => ((SparseVectorStorage<float>)Value.Storage).ValueCount;
         public int[] Indices { get { return ((SparseVectorStorage<float>)Value.Storage).Indices; } }
         public float[] Values { get { return ((SparseVectorStorage<float>)Value.Storage).Values; } }
 
-        public IndexedVector(int numOfDimensions, string label = null)
+        public IndexedVector(int numOfDimensions, object label = null)
         {
             Value = CreateVector.Sparse<float>(numOfDimensions);
             Label = label;
@@ -27,7 +27,7 @@ namespace Sir.VectorSpace
             Label = label;
         }
 
-        public IndexedVector(SortedList<int, float> dictionary, int numOfDimensions, string label = null)
+        public IndexedVector(SortedList<int, float> dictionary, int numOfDimensions, object label = null)
         {
             var tuples = new Tuple<int, float>[Math.Min(dictionary.Count, numOfDimensions)];
             var i = 0;
@@ -44,7 +44,7 @@ namespace Sir.VectorSpace
             Label = label;
         }
 
-        public IndexedVector(int[] index, float[] values, int numOfDimensions, string label = null)
+        public IndexedVector(int[] index, float[] values, int numOfDimensions, object label = null)
         {
             var tuples = new Tuple<int, float>[Math.Min(index.Length, numOfDimensions)];
 
@@ -62,13 +62,13 @@ namespace Sir.VectorSpace
             Label = label;
         }
 
-        public IndexedVector(Tuple<int, float>[] tuples, int numOfDimensions, string label = null)
+        public IndexedVector(Tuple<int, float>[] tuples, int numOfDimensions, object label = null)
         {
             Value = CreateVector.SparseOfIndexed(numOfDimensions, tuples);
             Label = label;
         }
 
-        public IndexedVector(Vector<float> vector, string label = null)
+        public IndexedVector(Vector<float> vector, object label = null)
         {
             Value = vector;
             Label = label;
@@ -87,30 +87,6 @@ namespace Sir.VectorSpace
         public void AddInPlace(IVector vector)
         {
             Value = Value.Add(vector.Value);
-
-            //var storage = (SparseVectorStorage<float>)sum.Storage;
-            //var indices = storage.Indices;
-            //var values = storage.Values;
-            //int i = 0;
-
-            //for (; i < indices.Length; i++)
-            //{
-            //    if (indices[i] == 0)
-            //        break;
-
-            //}
-
-            //var len = i;
-            //var ix = new int[len];
-            //var vals = new float[len];
-
-            //for (i = 0; i < len; i++)
-            //{
-            //    ix[i] = indices[i];
-            //    vals[i] = values[i];
-            //}
-
-            //Value = new IndexedVector(ix, vals, Value.Count).Value;
         }
 
         public IVector Add(IVector vector)
@@ -193,7 +169,7 @@ namespace Sir.VectorSpace
         Vector<float> Value { get; }
         void Serialize(Stream stream);
         int ComponentCount { get; }
-        string Label { get; }
+        object Label { get; }
         void AddInPlace(IVector vector);
         IVector Add(IVector vector);
         IVector Subtract(IVector vector);

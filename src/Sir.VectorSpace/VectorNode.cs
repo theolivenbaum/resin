@@ -151,7 +151,7 @@ namespace Sir.VectorSpace
 
         public override string ToString()
         {
-            return Vector == null ? "ROOT" : Vector.Label == null ? Vector.ToString() : Vector.Label;
+            return Vector == null ? "ROOT" : Vector.Label == null ? Vector.ToString() : Vector.Label.ToString();
         }
 
         public VectorNodeData ToData()

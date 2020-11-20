@@ -113,7 +113,6 @@ namespace Sir.VectorSpace
         public ulong CollectionId { get; }
         public IList<long> PostingsOffsets { get; set; }
         public double Score { get; set; }
-        public string StringValue { get { return Vector.Label; } }
 
         public Term(
             ulong collectionId,
