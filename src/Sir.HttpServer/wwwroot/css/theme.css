@@ -191,7 +191,7 @@ h3.querystats {
 
 .search-fields {
     font-size: 10pt;
-    border: 1px solid silver;
+    border: 1px solid #f0f0f0;
     margin-left: 0px;
     margin-right: 5px;
     margin-top: 0px;
@@ -201,6 +201,7 @@ h3.querystats {
     padding-top: 10px;
     padding-bottom: 5px;
     float: left;
+    background-color: #fafafa;
 }
 
 .search-fields a {
