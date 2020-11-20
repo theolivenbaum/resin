@@ -5,6 +5,7 @@ using System.IO;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Sir.Search;
+using Sir.VectorSpace;
 
 namespace Sir.Cmd
 {
@@ -169,6 +170,41 @@ namespace Sir.Cmd
                 JsonSerializer ser = new JsonSerializer();
                 ser.Serialize(jsonWriter, docs);
                 jsonWriter.Flush();
+            }
+        }
+    }
+
+    public class AnalyzeDocumentCommand : ICommand
+    {
+        public void Run(IDictionary<string, string> args, ILogger logger)
+        {
+            var dataDirectory = args["dataDirectory"];
+            var collection = args["collection"];
+            var documentId = long.Parse(args["documentId"]);
+            var select = new HashSet<string>(args["select"].Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries));
+            var collectionId = collection.ToHash();
+            var model = new BagOfCharsModel();
+
+            using (var sessionFactory = new SessionFactory(dataDirectory, logger))
+            using (var documents = new DocumentStreamSession(sessionFactory))
+            {
+                var doc = documents.ReadDoc((collectionId, documentId), select);
+
+                foreach (var key in select)
+                {
+                    var tokens = model.Tokenize(doc[key].ToString());
+                    var tree = new VectorNode();
+
+                    foreach (var token in tokens)
+                    {
+                        GraphBuilder.MergeOrAdd(tree, new VectorNode(token), model);
+                    }
+
+                    Console.WriteLine(key);
+                    Console.WriteLine(PathFinder.Visualize(tree));
+                    Console.WriteLine(string.Join('\n', tokens));
+                }
+                
             }
         }
     }
