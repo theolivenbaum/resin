@@ -13,10 +13,10 @@
 {
     <div class="toolbar-wrapper">
         <span>@docs.Count hits of @ViewData["total"] in @ViewData["time_ms"] ms.</span>
-        <div class="toolbar">
+        <span class="toolbar">
             <a href="@jsonDownloadLink" title="Use a HTTP client to GET result as Content-Type application/json">Download</a> as JSON.
             <a href="@saveAsLink" title="Save as">Save as</a> collection.
-        </div>
+        </span>
     </div>
     <div class="result-list">
         <ul class="document-list">
