@@ -59,7 +59,7 @@ namespace Sir.VectorSpace
                 {
                     best = hit;
                 }
-                else if (hit.Score.Approximates(best.Score))
+                else if (hit.Score >= model.IdenticalAngle || hit.Score.Approximates(best.Score))
                 {
                     GraphBuilder.MergePostings(best.Node, hit.Node);
                 }
@@ -83,13 +83,12 @@ namespace Sir.VectorSpace
                 var postingsOffset = BitConverter.ToInt64(block.Slice(sizeof(long)));
                 var componentCount = BitConverter.ToInt64(block.Slice(sizeof(long) * 2));
                 var terminator = BitConverter.ToInt64(block.Slice(sizeof(long) * 4));
-                IVector vectorOnFile;
-                var angle = model.CosAngle(queryVector, vecOffset, (int)componentCount, _vectorFile, out vectorOnFile);
+                var angle = model.CosAngle(queryVector, vecOffset, (int)componentCount, _vectorFile);
 
                 if (angle >= model.IdenticalAngle)
                 {
                     bestScore = angle;
-                    var n = new VectorNode(vectorOnFile, postingsOffset: postingsOffset);
+                    var n = new VectorNode(postingsOffset);
                     bestNode = n;
 
                     break;
@@ -99,7 +98,7 @@ namespace Sir.VectorSpace
                     if (bestNode == null || angle > bestScore)
                     {
                         bestScore = angle;
-                        bestNode = new VectorNode(vectorOnFile, postingsOffset: postingsOffset);
+                        bestNode = new VectorNode(postingsOffset);
                     }
                     else if (angle == bestScore)
                     {
@@ -128,7 +127,7 @@ namespace Sir.VectorSpace
                     if ((bestNode == null && angle > bestScore) || angle > bestScore)
                     {
                         bestScore = angle;
-                        bestNode = new VectorNode(vectorOnFile, postingsOffset: postingsOffset);
+                        bestNode = new VectorNode(postingsOffset);
                     }
                     else if (angle > 0 && angle == bestScore)
                     {

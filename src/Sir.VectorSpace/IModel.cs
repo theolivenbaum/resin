@@ -35,6 +35,6 @@ namespace Sir.VectorSpace
     {
         int NumOfDimensions { get; }
         double CosAngle(IVector vec1, IVector vec2);
-        double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream, out IVector otherVector);
+        double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream);
     }
 }

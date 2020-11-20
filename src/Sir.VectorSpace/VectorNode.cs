@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
 namespace Sir.VectorSpace
 {
     /// <summary>
     /// Binary tree that consists of nodes that carry vectors as their payload. 
-    /// Nodes are balanced according to the cosine similarity of their vectors.
+    /// Nodes are balanced by taking into account the cosine similarity of their neighbouring vectors.
     /// </summary>
     public class VectorNode
     {
@@ -21,10 +20,6 @@ namespace Sir.VectorSpace
         public long ComponentCount { get; set; }
         public long VectorOffset { get; set; }
         public long PostingsOffset { get; set; }
-
-        /// <summary>
-        /// The vector of the node. NULL if node is root.
-        /// </summary>
         public IVector Vector { get; set; }
 
         public object Sync { get; } = new object();
@@ -151,7 +146,7 @@ namespace Sir.VectorSpace
 
         public override string ToString()
         {
-            return Vector == null ? "ROOT" : Vector.Label == null ? Vector.ToString() : Vector.Label.ToString();
+            return Vector == null ? string.Empty : Vector.Label == null ? Vector.ToString() : Vector.Label.ToString();
         }
 
         public VectorNodeData ToData()

@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 namespace Sir.Search
 {
-    public interface IQuerySession : IDisposable
+    public interface ISearchSession : IDisposable
     {
-        SearchResult Search(IQuery query, int skip, int take, string primaryKey = null);
+        SearchResult Search(Query query, int skip, int take, string primaryKey = null);
         SearchResult Search(Term term, int skip, int take, HashSet<string> select);
     }
 }

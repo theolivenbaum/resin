@@ -22,7 +22,7 @@ namespace Sir.Search
             _parser = parser;
         }
 
-        public async Task<IQuery> ParseRequest(HttpRequest request)
+        public async Task<Query> ParseRequest(HttpRequest request)
         {
             string[] select = request.Query["select"].ToArray();
 
@@ -55,7 +55,7 @@ namespace Sir.Search
             }
         }
 
-        public IQuery ParseFormattedString(string formattedQuery, string[] select)
+        public Query ParseFormattedString(string formattedQuery, string[] select)
         {
             var document = JsonConvert.DeserializeObject<IDictionary<string, object>>(
                 formattedQuery, new JsonConverter[] { new DictionaryConverter() });
@@ -63,7 +63,7 @@ namespace Sir.Search
             return ParseDictionary(document, select);
         }
 
-        public IQuery ParseDictionary(IDictionary<string, object> document, string[] select)
+        public Query ParseDictionary(IDictionary<string, object> document, string[] select)
         {
             return _parser.Parse(document, select);
         }
@@ -113,9 +113,9 @@ namespace Sir.Search
             }
         }
 
-        public void ParseQuery(IQuery query, IDictionary<string, object> result)
+        public void ParseQuery(Query query, IDictionary<string, object> result)
         {
-            DoParseQuery((Query)query, result);
+            DoParseQuery(query, result);
         }
     }
 

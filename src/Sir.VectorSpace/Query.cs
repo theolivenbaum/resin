@@ -8,12 +8,12 @@ namespace Sir.VectorSpace
     /// <example>
     /// {
     ///	        "or":{
-    ///		        "collection":"cc_wat",
-    ///		        "title":"prom dresses bride"
+    ///		        "collection":"wikipedia",
+    ///		        "title":"ferriman gallwey score"
     ///     }
     /// }
     /// </example>
-    public class Query : BooleanStatement, IQuery
+    public class Query : BooleanStatement
     {
         public IList<Term> Terms { get; }
         public HashSet<string> Select { get; }
@@ -104,36 +104,6 @@ namespace Sir.VectorSpace
         }
     }
 
-    [System.Diagnostics.DebuggerDisplay("{Key}:{StringValue}")]
-    public class Term : BooleanStatement
-    {
-        public IVector Vector { get; }
-        public long KeyId { get; }
-        public string Key { get; }
-        public ulong CollectionId { get; }
-        public IList<long> PostingsOffsets { get; set; }
-        public double Score { get; set; }
-
-        public Term(
-            ulong collectionId,
-            long keyId, 
-            string key, 
-            IVector vector, 
-            bool and, 
-            bool or, 
-            bool not)
-            : base(and, or, not)
-        {
-            CollectionId = collectionId;
-            KeyId = keyId;
-            Key = key;
-            Vector = vector;
-            IsIntersection = and;
-            IsUnion = or;
-            IsSubtraction = not;
-        }
-    }
-
     public class BooleanStatement
     {
         private bool _and;
@@ -189,19 +159,5 @@ namespace Sir.VectorSpace
             _or = or;
             _not = not;
         }
-    }
-
-    public interface IQuery
-    {
-        bool IsIntersection { get; }
-        bool IsUnion { get; }
-        bool IsSubtraction { get; }
-        Query And { get; set; }
-        Query Or { get; set; }
-        Query Not { get; set; }
-        IList<Term> Terms { get; }
-        HashSet<string> Select { get; }
-        IEnumerable<Query> All();
-        int TotalNumberOfTerms();
     }
 }

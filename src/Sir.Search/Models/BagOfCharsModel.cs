@@ -6,7 +6,7 @@ namespace Sir.Search
 {
     public class BagOfCharsModel : DistanceCalculator, ITextModel
     {
-        public double IdenticalAngle => 0.88d;
+        public double IdenticalAngle => 0.9d;
         public double FoldAngle => 0.5d;
         public override int NumOfDimensions => char.MaxValue*2;
 

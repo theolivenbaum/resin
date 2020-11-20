@@ -6,7 +6,7 @@ namespace Sir.VectorSpace
     {
         protected abstract IList<(ulong, long)> Read(ulong collectionId, IList<long> postingsOffsets);
 
-        public void Reduce(IQuery query, ref IDictionary<(ulong, long), double> result)
+        public void Reduce(Query query, ref IDictionary<(ulong, long), double> result)
         {
             IDictionary<(ulong, long), double> queryResult = new Dictionary<(ulong, long), double>();
 

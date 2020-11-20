@@ -19,7 +19,7 @@ namespace Sir.Search
             return dotProduct / (dotSelf1 * dotSelf2);
         }
 
-        public double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream, out IVector otherVector)
+        public double CosAngle(IVector vector, long vectorOffset, int componentCount, Stream vectorStream)
         {
             Span<byte> buf = new byte[componentCount * 2 * sizeof(int)];
 
@@ -35,11 +35,11 @@ namespace Sir.Search
                 tuples[i] = new Tuple<int, float>(index[i], values[i]);
             }
 
-            otherVector = new IndexedVector(CreateVector.SparseOfIndexed(NumOfDimensions, tuples));
+            var vectorOnFile = CreateVector.SparseOfIndexed(NumOfDimensions, tuples);
 
             var dotSelf1 = vector.Value.Norm(2);
-            var dotSelf2 = otherVector.Value.Norm(2);
-            var dotProduct = vector.Value.DotProduct(otherVector.Value);
+            var dotSelf2 = vectorOnFile.Norm(2);
+            var dotProduct = vector.Value.DotProduct(vectorOnFile);
 
             return dotProduct / (dotSelf1 * dotSelf2);
         }

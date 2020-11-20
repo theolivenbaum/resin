@@ -11,7 +11,7 @@ namespace Sir.Search
     /// <summary>
     /// Read session targeting multiple collections.
     /// </summary>
-    public class SearchSession : DocumentStreamSession, IDisposable, IQuerySession
+    public class SearchSession : DocumentStreamSession, IDisposable, ISearchSession
     {
         private readonly SessionFactory _sessionFactory;
         private readonly IModel _model;
@@ -31,7 +31,7 @@ namespace Sir.Search
             _logger = logger ?? sessionFactory.Logger;
         }
 
-        public SearchResult Search(IQuery query, int skip, int take, string primaryKey = null)
+        public SearchResult Search(Query query, int skip, int take, string primaryKey = null)
         {
             var result = MapReduceSort(query, skip, take);
 
@@ -59,7 +59,7 @@ namespace Sir.Search
             return new SearchResult { QueryTerm = term, Total = 0, Documents = new IDictionary<string, object>[0] };
         }
 
-        private ScoredResult MapReduceSort(IQuery query, int skip, int take)
+        private ScoredResult MapReduceSort(Query query, int skip, int take)
         {
             var timer = Stopwatch.StartNew();
 
@@ -112,7 +112,7 @@ namespace Sir.Search
         /// <summary>
         /// Map query terms to posting list locations.
         /// </summary>
-        private void Map(IQuery query)
+        private void Map(Query query)
         {
             if (query == null)
                 return;

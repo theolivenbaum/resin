@@ -18,7 +18,7 @@ namespace Sir.Search
             _log = log ?? sessionFactory.Logger;
         }
 
-        public IQuery Parse(
+        public Query Parse(
             string collection,
             T q,
             string field,
@@ -35,7 +35,7 @@ namespace Sir.Search
                 or);
         }
 
-        public IQuery Parse(
+        public Query Parse(
             string[] collections,
             T q, 
             string[] fields, 
@@ -110,7 +110,7 @@ namespace Sir.Search
             return Parse(root, select);
         }
 
-        public IQuery Parse(dynamic document, IEnumerable<string> select)
+        public Query Parse(dynamic document, IEnumerable<string> select)
         {
             Query root = null;
             Query cursor = null;

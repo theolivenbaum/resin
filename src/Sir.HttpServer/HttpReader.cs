@@ -47,7 +47,7 @@ namespace Sir.HttpServer
             if (request.Query.ContainsKey("skip"))
                 skip = int.Parse(request.Query["skip"]);
 
-            IQuery query = await _httpQueryParser.ParseRequest(request);
+            var query = await _httpQueryParser.ParseRequest(request);
 
             if (query == null)
             {

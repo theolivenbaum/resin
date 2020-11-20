@@ -427,7 +427,7 @@ namespace Sir.Search
             return new IndexSession<IImage>(model, model);
         }
 
-        public IQuerySession CreateQuerySession(IModel model)
+        public ISearchSession CreateQuerySession(IModel model)
         {
             return new SearchSession(
                 this,
