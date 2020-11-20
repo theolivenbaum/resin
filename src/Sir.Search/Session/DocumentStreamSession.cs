@@ -45,7 +45,7 @@ namespace Sir.Search
             }
         }
 
-        protected IDictionary<string, object> ReadDoc(
+        public IDictionary<string, object> ReadDoc(
             (ulong collectionId, long docId) docId,
             HashSet<string> select,
             double? score = null
