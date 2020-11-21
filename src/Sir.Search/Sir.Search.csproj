@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Sir.Core\Sir.Core.csproj" />
-    <ProjectReference Include="..\Sir.Document\Sir.Document.csproj" />
+    <ProjectReference Include="..\Sir.Document\Sir.Documents.csproj" />
     <ProjectReference Include="..\Sir.VectorSpace\Sir.VectorSpace.csproj" />
   </ItemGroup>
 

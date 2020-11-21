@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Sir.Document
+namespace Sir.Documents
 {
     /// <summary>
     /// Read documents from storage.

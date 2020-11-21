@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using Sir.Document;
+using Sir.Documents;
 using Sir.VectorSpace;
 using System;
 using System.Collections.Concurrent;

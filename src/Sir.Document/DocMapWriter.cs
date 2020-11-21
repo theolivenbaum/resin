@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Sir.Document
+namespace Sir.Documents
 {
     /// <summary>
     /// Write document maps (key_id/val_id) to a stream.

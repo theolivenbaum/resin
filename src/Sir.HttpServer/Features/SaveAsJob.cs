@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using Sir.Document;
+using Sir.Documents;
 using Sir.Search;
 
 namespace Sir.HttpServer.Features

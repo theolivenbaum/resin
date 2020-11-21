@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Sir.Document
+namespace Sir.Documents
 {
     /// <summary>
     /// Write documents to storage.

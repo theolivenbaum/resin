@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Sir.Document;
+using Sir.Documents;
 using Sir.Search;
 using System.IO;
 

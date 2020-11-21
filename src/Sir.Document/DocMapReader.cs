@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Sir.Document
+namespace Sir.Documents
 {
     /// <summary>
     /// Read document maps (key_id/val_id) from the document map stream.
