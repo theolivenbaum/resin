@@ -96,13 +96,18 @@ namespace Sir.Tests
         [Test]
         public void Can_tokenize()
         {
+            const string data = "Ferriman–Gallwey score"; // NOTE: string contains "En dash" character: https://unicode-table.com/en/#2013
             var model = new BagOfCharsModel();
-            var tokens = model.Tokenize("Ferriman–Gallwey score"); // NOTE: string contains "En dash" character: https://unicode-table.com/en/#2013
-            var labels = tokens.Select(x => x.Label);
+            var tokens = model.Tokenize(data);
+            var labels = tokens.Select(x => x.Label.ToString()).ToList();
 
-            Assert.IsTrue(labels.Contains("Ferriman"));
-            Assert.IsTrue(labels.Contains("Gallwey"));
-            Assert.IsTrue(labels.Contains("score"));
+            var t0 = data.Substring(0, 8);
+            var t1 = data.Substring(9, 7);
+            var t2 = data.Substring(17, 5);
+
+            Assert.IsTrue(labels.Contains(t0));
+            Assert.IsTrue(labels.Contains(t1));
+            Assert.IsTrue(labels.Contains(t2));
         }
 
         [SetUp]
