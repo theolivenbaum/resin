@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 using Sir.Documents;
 using Sir.Search;
@@ -62,18 +61,11 @@ namespace Sir.HttpServer.Features
                     or: Or);
 
                 var targetCollectionId = _target.ToHash();
-                IEnumerable<IDictionary<string, object>> documents;
+                IEnumerable<Document> documents;
 
                 using (var readSession = _sessionFactory.CreateQuerySession(_model))
                 {
                     documents = readSession.Search(query, _skip, _take).Documents;
-                }
-
-                //TODO: Remove this when cc_wat is rebuilt.
-                var c = "cc_wat".ToHash();
-                foreach (var d in documents)
-                {
-                    d.TryAdd(SystemFields.CollectionId, c);
                 }
 
                 if (_truncate)
@@ -91,13 +83,7 @@ namespace Sir.HttpServer.Features
 
                 _sessionFactory.SaveAs(
                         targetCollectionId,
-                        documents.Select(dic =>
-                            new Search.Document(
-                                dic.Select(kvp => new Field(
-                                    kvp.Key,
-                                    kvp.Value,
-                                    index: _indexFieldNames.Contains(kvp.Key),
-                                    store: false)).ToList())),
+                        documents,
                         _model);
             }
             catch (Exception ex)

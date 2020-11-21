@@ -120,21 +120,12 @@ namespace Sir.Search
                 foreach (var batch in docStream.ReadDocs(
                         collectionId,
                         storeFields,
+                        storeFields,
+                        indexFields,
                         skip,
                         take).Batch(batchSize))
                 {
-                    var job = new WriteJob(
-                        collectionId,
-                        batch.Select(dic => 
-                            new Document(
-                                dic.Select(kvp=>new Field(
-                                    kvp.Key, 
-                                    kvp.Value, 
-                                    index: indexFields.Contains(kvp.Key), 
-                                    store: storeFields.Contains(kvp.Key))).ToList())),
-                        model);
-
-                    Index(job, ref totalCount);
+                    Index(new WriteJob(collectionId, batch, model), ref totalCount);
 
                     Log($"processed {totalCount} documents");
                 }

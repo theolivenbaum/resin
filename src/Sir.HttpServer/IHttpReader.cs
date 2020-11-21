@@ -9,6 +9,6 @@ namespace Sir.HttpServer
     /// </summary>
     public interface IHttpReader
     {
-       Task<ResponseModel> Read(HttpRequest request, ITextModel model);
+       Task<SearchResult> Read(HttpRequest request, ITextModel model);
     }
 }

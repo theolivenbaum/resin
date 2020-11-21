@@ -102,14 +102,12 @@ namespace Sir.Tests
                             throw new Exception($"unable to find {word}.");
                         }
 
-                        var score = (double)document[SystemFields.Score];
-
-                        if (score < model.IdenticalAngle)
+                        if (document.Score < model.IdenticalAngle)
                         {
                             throw new Exception($"unable to score {word}.");
                         }
 
-                        Debug.WriteLine($"{word} matched with {score * 100}% certainty.");
+                        Debug.WriteLine($"{word} matched with {document.Score * 100}% certainty.");
                     }
                 });
             }
@@ -167,14 +165,12 @@ namespace Sir.Tests
                             throw new Exception($"unable to find {word}.");
                         }
 
-                        var score = (double)document[SystemFields.Score];
-
-                        if (score < model.IdenticalAngle)
+                        if (document.Score < model.IdenticalAngle)
                         {
                             throw new Exception($"unable to score {word}.");
                         }
 
-                        Debug.WriteLine($"{word} matched with {score * 100}% certainty.");
+                        Debug.WriteLine($"{word} matched with {document.Score * 100}% certainty.");
                     }
                 });
             }

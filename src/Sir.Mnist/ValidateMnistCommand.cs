@@ -43,7 +43,7 @@ namespace Sir.Mnist
                     else
                     {
                         var imageLabel = image.Label.ToString();
-                        var documentLabel = result.Documents.First()["label"].ToString();
+                        var documentLabel = result.Documents.First().Get("label").Value.ToString();
 
                         if (!documentLabel.Equals(imageLabel))
                         {

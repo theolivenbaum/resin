@@ -12,7 +12,7 @@ namespace Sir.Search
         public bool Index { get; }
         public bool Store { get; }
 
-        public Field(string key, object value, bool index = true, bool store = true)
+        public Field(string key, object value, long keyId = -1, bool index = true, bool store = true)
         {
             if (key is null) throw new ArgumentNullException(nameof(key));
             if (value == null) throw new ArgumentNullException(nameof(value));
@@ -21,6 +21,7 @@ namespace Sir.Search
             Value = value;
             Index = index;
             Store = store;
+            Id = keyId;
         }
     }
 }

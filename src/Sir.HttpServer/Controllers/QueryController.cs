@@ -1,7 +1,10 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Sir.Search;
 
 namespace Sir.HttpServer.Controllers
@@ -35,7 +38,23 @@ namespace Sir.HttpServer.Controllers
             if (result.Total == 0)
                 return new EmptyResult();
 
-            return new FileContentResult(result.Body, result.MediaType);
+            using (var mem = new MemoryStream())
+            {
+                Serialize(result.Documents, mem);
+
+                return new FileContentResult(mem.ToArray(), "application/json");
+            }
+        }
+
+        private void Serialize(IEnumerable<Document> docs, Stream stream)
+        {
+            using (StreamWriter writer = new StreamWriter(stream))
+            using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
+            {
+                JsonSerializer ser = new JsonSerializer();
+                ser.Serialize(jsonWriter, docs);
+                jsonWriter.Flush();
+            }
         }
     }
 }

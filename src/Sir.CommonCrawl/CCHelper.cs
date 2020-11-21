@@ -37,13 +37,13 @@ namespace Sir.CommonCrawl
             using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
             using (var indexSession = sessionFactory.CreateIndexSession(model))
             {
-                using (var queue = new ProducerConsumerQueue<Search.Document>(document =>
+                using (var queue = new ProducerConsumerQueue<Document>(document =>
                 {
                     sessionFactory.Write(document, writeSession, indexSession);
                 }))
                 {
                     foreach (var document in ReadWatFile(fileName, refFileName).Select(dic =>
-                            new Search.Document(
+                            new Document(
                                 dic.Select(kvp => new Field(
                                     kvp.Key,
                                     kvp.Value,

@@ -1,18 +1,15 @@
 ﻿@using Sir;
-@model IEnumerable<Sir.HttpServer.Controllers.SearchResultModel>
+@model Sir.Search.SearchResult
 @{
-    IList<Sir.HttpServer.Controllers.SearchResultModel> docs = Model == null ?
-        new Sir.HttpServer.Controllers.SearchResultModel[0].ToList() : Model.ToList();
-
     var jsonDownloadLink = $"{Context.Request.Path.Value.ToLower().Replace("/search", "/query")}{Context.Request.QueryString}";
     var crawlLink = $"{Context.Request.Path.Value.ToLower().Replace("/search", "/crawl")}{Context.Request.QueryString}";
     var saveAsLink = $"{Context.Request.Path.Value.ToLower().Replace("/search", "/saveas")}{Context.Request.QueryString}";
     var ccWetId = "cc_wet".ToHash();
 }
-@if (docs.Count > 0)
+@if (Model.Total > 0)
 {
     <div class="toolbar-wrapper">
-        <span>@docs.Count hits of @ViewData["total"] in @ViewData["time_ms"] ms.</span>
+        <span>@Model.Count hits of @ViewData["total"] in @ViewData["time_ms"] ms.</span>
         <span class="toolbar">
             <a href="@jsonDownloadLink" title="Use a HTTP client to GET result as Content-Type application/json">Download</a> as JSON.
             <a href="@saveAsLink" title="Save as">Save as</a> collection.
@@ -20,51 +17,27 @@
     </div>
     <div class="result-list">
         <ul class="document-list">
-            @foreach (var item in docs)
+            @foreach (var document in Model.Documents)
             {
-                var url = item.Document["url"].ToString();
+                var url = document.Get("url").Value.ToString();
                 var prefix = url.StartsWith("http") ? string.Empty : "https://";
                 var uri = new Uri(prefix + url);
                 var host = uri.Host.ToString();
                 var path = $"{host}{uri.LocalPath}";
-                var title = string.IsNullOrWhiteSpace((string)item.Document.GetFirstValue("title")) ? "[Unknown title]" : (string)item.Document.GetFirstValue("title");
-                var score = (double)item.Document[Sir.Search.SystemFields.Score]*100;
-                var warcFileName = item.Document.ContainsKey("filename") ? item.Document["filename"].ToString() : null;
-                var wetFileName = warcFileName == null ? null : warcFileName.Replace("/warc", "/wet").Replace(".gz", ".wet.gz");
-                var wetUrlFileName = wetFileName == null ? null : "https://commoncrawl.s3.amazonaws.com/" + Html.Raw(wetFileName);
-                var warcUrlFileName = warcFileName == null ? null : "https://commoncrawl.s3.amazonaws.com/" + Html.Raw(warcFileName);
-                var wetUrl = wetUrlFileName == null ? null : "/wet" + Context.Request.QueryString + "&fileName=" + wetFileName;
-                var warcUrl = warcUrlFileName == null ? null : "/warc" + Context.Request.QueryString + "&fileName=" + warcFileName;
-                var isEnriched = item.Document.ContainsKey(Sir.Search.SystemFields.CollectionId) &&
-                    (ulong)item.Document[Sir.Search.SystemFields.CollectionId] == ccWetId;
+                var title = document.Get("title")?.Value;
+                var score = document.Score * 100;
 
                 <li>
                     <div class="document-header">
-                        @if (isEnriched)
-                        {
-                            <span style="color:orangered;" title="Enriched!">&star;</span>
-                        }
-                    <span>
-                        <a class="result-link" href="@Html.Raw(uri.ToString())">@Html.Raw(title)</a>
-                    </span>
+                        <span>
+                            <a class="result-link" href="@Html.Raw(uri.ToString())">@Html.Raw(title)</a>
+                        </span>
                     </div>
                     <div class="document-body">
                         <div>
                             <a class="document-subtitle" href="@uri.Scheme://@host"><span class="medium-text">@Html.Raw(host)</span></a><a class="document-subtitle" href="@uri.Scheme://@path"><span class="medium-text">@Html.Raw(uri.LocalPath)</span></a>
                         </div>
                         <div class="document-stats">
-                            @if (wetUrl != null)
-                            {
-                            <span class="medium-text">
-                                <a class="warc-link" href="@wetUrl">WET</a>
-                            </span>
-                            }
-                            @if (warcUrl != null)
-                            {
-                            <span class="medium-text">
-                                <a class="warc-link" href="@warcUrl">WARC</a>
-                            </span>
-                            }
                             <span class="medium-text">Score: @score.ToString("0.##")%</span>
                         </div>
                     </div>

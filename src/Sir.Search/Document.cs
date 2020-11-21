@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Sir.Search
 {
@@ -20,9 +19,11 @@ namespace Sir.Search
             }
         }
 
-        public Document(IList<Field> fields)
+        public Document(IList<Field> fields, long documentId = -1, double score = -1)
         {
             Fields = fields;
+            Id = documentId;
+            Score = score;
         }
 
         public Field Get(string key)
@@ -35,7 +36,7 @@ namespace Sir.Search
                 }
             }
 
-            throw new ArgumentException($"key {key} not found");
+            return null;
         }
 
         public bool TryGetValue(string key, out Field value)

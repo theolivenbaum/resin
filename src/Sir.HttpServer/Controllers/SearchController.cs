@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Sir.Search;
@@ -38,19 +36,7 @@ namespace Sir.HttpServer.Controllers
             ViewData["time_ms"] = timer.ElapsedMilliseconds;
             ViewData["total"] = result.Total;
 
-            if (result.Total == 0)
-            {
-                return View(new SearchResultModel[0]);
-            }
-
-            var documents = result.Documents.Select(x => new SearchResultModel { Document = x });
-
-            return View(documents);
+            return View(result);
         }
-    }
-
-    public class SearchResultModel
-    {
-        public IDictionary<string, object> Document { get; set; }
     }
 }

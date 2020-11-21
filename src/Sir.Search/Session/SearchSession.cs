@@ -39,24 +39,10 @@ namespace Sir.Search
             {
                 var docs = ReadDocs(result.SortedDocuments, query.Select, (double)1/query.TotalNumberOfTerms(), primaryKey);
 
-                return new SearchResult { Query = query, Total = result.Total, Documents = docs };
+                return new SearchResult(query, result.Total, docs.Count, docs);
             }
 
-            return new SearchResult { Query = query, Total = 0, Documents = new IDictionary<string, object>[0] };
-        }
-
-        public SearchResult Search(Term term, int skip, int take, HashSet<string> select)
-        {
-            var result = MapReduceSort(term, skip, take);
-
-            if (result != null)
-            {
-                var docs = ReadDocs(result.SortedDocuments, select);
-
-                return new SearchResult { QueryTerm = term, Total = result.Total, Documents = docs };
-            }
-
-            return new SearchResult { QueryTerm = term, Total = 0, Documents = new IDictionary<string, object>[0] };
+            return new SearchResult(query, 0, 0, new Document[0]);
         }
 
         private ScoredResult MapReduceSort(Query query, int skip, int take)
@@ -188,7 +174,7 @@ namespace Sir.Search
             };
         }
 
-        private IList<IDictionary<string, object>> ReadDocs(
+        private IList<Document> ReadDocs(
             IEnumerable<KeyValuePair<(ulong collectionId, long docId), double>> docIds, 
             HashSet<string> select,
             double scoreMultiplier = 1,
@@ -199,41 +185,40 @@ namespace Sir.Search
                 select.Add(primaryKey);
             }
 
-            var result = new List<IDictionary<string, object>>();
-            var documentsByPrimaryKey = new Dictionary<ulong, IDictionary<string, object>>();
+            var result = new List<Document>();
+            var documentsByPrimaryKey = new Dictionary<ulong, Document>();
             var timer = Stopwatch.StartNew();
 
             foreach (var d in docIds)
             {
-                var doc = ReadDoc(d.Key, select, d.Value);
-                var docHash = primaryKey == null ? Guid.NewGuid().ToString().ToHash() : doc[primaryKey].ToString().ToHash();
-                IDictionary<string, object> existingDoc;
+                var doc = ReadDoc(d.Key, select, select, select, d.Value * scoreMultiplier);
+                var docHash = primaryKey == null ? Guid.NewGuid().ToString().ToHash() : doc.Get(primaryKey).Value.ToString().ToHash();
+                Document existingDoc;
 
                 if (documentsByPrimaryKey.TryGetValue(docHash, out existingDoc))
                 {
-                    foreach (var field in doc)
-                    {
-                        // TODO: add condition for when there are two doc versions with different created dates.
-                        if (field.Key != primaryKey && select.Contains(field.Key))
-                        {
-                            object existingValue;
+                    //foreach (var field in doc.Fields)
+                    //{
+                    //    if (field.Key != primaryKey && select.Contains(field.Key))
+                    //    {
+                    //        Field existingValue;
 
-                            if (existingDoc.TryGetValue(field.Key, out existingValue))
-                            {
-                                existingDoc[field.Key] = new object[] { existingValue, field.Value };
-                            }
-                            else
-                            {
-                                existingDoc[field.Key] = field.Value;
-                            }
-                        }
-                    }
+                    //        if (existingDoc.TryGetValue(field.Key, out existingValue))
+                    //        {
+                    //            existingValue.Value = new object[] { existingValue, field.Value };
+                    //        }
+                    //        else
+                    //        {
+                    //            existingDoc.Fields.Add(new Field(field.Key, field.Value));
+                    //        }
+                    //    }
+                    //}
 
-                    existingDoc[SystemFields.Score] = ((double)existingDoc[SystemFields.Score] + (double)doc[SystemFields.Score]) * scoreMultiplier; 
+                    existingDoc.Score = (double)existingDoc.Score + d.Value; 
+
                 }
                 else
                 {
-                    doc[SystemFields.Score] = (double)doc[SystemFields.Score] * scoreMultiplier;
                     result.Add(doc);
                     documentsByPrimaryKey.Add(docHash, doc);
                 }
@@ -243,10 +228,9 @@ namespace Sir.Search
             timer.Restart();
 
             result.Sort(
-                delegate (IDictionary<string, object> doc1,
-                IDictionary<string, object> doc2)
+                delegate (Document doc1, Document doc2)
                 {
-                    return ((double)doc2[SystemFields.Score]).CompareTo((double)doc1[SystemFields.Score]);
+                    return doc2.Score.CompareTo(doc1.Score);
                 });
 
             _logger.LogDebug($"second sorting took {timer.Elapsed}");

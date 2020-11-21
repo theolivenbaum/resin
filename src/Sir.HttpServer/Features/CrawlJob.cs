@@ -69,7 +69,7 @@ namespace Sir.HttpServer.Features
 
         private void DownloadAndIndexWetFile()
         {
-            var writePayload = new List<IDictionary<string, object>>();
+            var writePayload = new List<Document>();
 
             var originalQuery = _queryParser.Parse(
                 Collections, 
@@ -83,7 +83,7 @@ namespace Sir.HttpServer.Features
             {
                 var originalResult = readSession.Search(originalQuery, _skip, _take)
                     .Documents
-                    .ToDictionary(x => (string)x["url"]);
+                    .ToDictionary(x => (string)x.Get("url").Value);
 
                 var wetFileIds = new SortedList<string, object>();
                 SearchResult wetResult = null;
@@ -91,10 +91,8 @@ namespace Sir.HttpServer.Features
 
                 foreach (var doc in originalResult.Values)
                 {
-                    if (doc["filename"] is object[])
-                        continue;
-
-                    var wetFileId = ((string)doc["filename"]).Replace("/warc", "/wet").Replace(".gz", ".wet.gz");
+                    var fileName = (string)doc.Get("filename").Value;
+                    var wetFileId = fileName.Replace("/warc", "/wet").Replace(".gz", ".wet.gz");
 
                     wetFileIds.TryAdd(wetFileId, null);
 
@@ -185,13 +183,13 @@ namespace Sir.HttpServer.Features
 
                         foreach (var document in ReadWetFile(localFileName, fileName))
                         {
-                            IDictionary<string, object> originalDoc;
-                            var key = (string)document["url"];
+                            Document originalDoc;
+                            var key = (string)document.Get("url").Value;
 
                             if (originalResult.TryGetValue(key, out originalDoc))
                             {
-                                document["title"] = originalDoc["title"];
-                                document["filename"] = originalDoc["filename"];
+                                document.Get("title").Value = originalDoc.Get("title").Value;
+                                document.Get("filename").Value = originalDoc.Get("filename").Value;
 
                                 writePayload.Add(document);
                             }
@@ -207,14 +205,7 @@ namespace Sir.HttpServer.Features
 
                     var writeJob = new WriteJob(
                         wetCollectionId,
-                        writePayload
-                            .Select(dic =>
-                                        new Search.Document(
-                                            dic.Select(kvp => new Field(
-                                                kvp.Key,
-                                                kvp.Value,
-                                                index: _wetIndexedFieldNames.Contains(kvp.Key),
-                                                store: _wetStoredFieldNames.Contains(kvp.Key))).ToList())),
+                        writePayload,
                         new BagOfCharsModel());
 
                     _sessionFactory.Write(writeJob, reportSize: 1000);
@@ -236,7 +227,7 @@ namespace Sir.HttpServer.Features
             public bool Completed { get; set; }
         }
 
-        private static IEnumerable<IDictionary<string, object>> ReadWetFile(string fileName, string warcId)
+        private static IEnumerable<Document> ReadWetFile(string fileName, string warcId)
         {
             const string uriLabel = "WARC-Target-URI: ";
             const string contentLabel = "Content-Length: ";
@@ -262,12 +253,15 @@ namespace Sir.HttpServer.Features
 
                     if (content.Length > 0)
                     {
-                        yield return new Dictionary<string, object>
-                    {
-                        { "url", url},
-                        { "description", content.ToString() },
-                        { "filename", warcId }
-                    };
+                        yield return new Document
+                            (
+                                new List<Field>
+                                {
+                                    new Field("url", url, index:false, store:true),
+                                    new Field("text", content.ToString(), index:true, store:true),
+                                    new Field("filename", warcId, index:false, store:true)
+                                }
+                            );
 
                         content = new StringBuilder();
                     }

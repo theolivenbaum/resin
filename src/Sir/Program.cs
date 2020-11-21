@@ -188,11 +188,11 @@ namespace Sir.Cmd
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             using (var documents = new DocumentStreamSession(sessionFactory))
             {
-                var doc = documents.ReadDoc((collectionId, documentId), select);
+                var doc = documents.ReadDoc((collectionId, documentId), select, select, select);
 
-                foreach (var key in select)
+                foreach (var field in doc.Fields)
                 {
-                    var tokens = model.Tokenize(doc[key].ToString());
+                    var tokens = model.Tokenize(field.Value.ToString());
                     var tree = new VectorNode();
 
                     foreach (var token in tokens)
@@ -200,13 +200,11 @@ namespace Sir.Cmd
                         GraphBuilder.MergeOrAdd(tree, new VectorNode(token), model);
                     }
 
-                    Console.WriteLine(key);
+                    Console.WriteLine(field.Key);
                     Console.WriteLine(PathFinder.Visualize(tree));
                     Console.WriteLine(string.Join('\n', tokens));
                 }
-                
             }
         }
     }
 }
-

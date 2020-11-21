@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Sir.Search;
-using Sir.VectorSpace;
 
 namespace Sir.HttpServer
 {
@@ -35,7 +34,7 @@ namespace Sir.HttpServer
         {
         }
 
-        public async Task<ResponseModel> Read(HttpRequest request, ITextModel model)
+        public async Task<SearchResult> Read(HttpRequest request, ITextModel model)
         {
             var timer = Stopwatch.StartNew();
             var take = 100;
@@ -51,7 +50,7 @@ namespace Sir.HttpServer
 
             if (query == null)
             {
-                return new ResponseModel { MediaType = "application/json", Total = 0 };
+                return new SearchResult(null, 0, 0, new Document[0]);
             }
 
 #if DEBUG
@@ -64,31 +63,7 @@ namespace Sir.HttpServer
 
             using (var readSession = _sessionFactory.CreateQuerySession(model))
             {
-                var result = readSession.Search(query, skip, take);
-
-                using (var mem = new MemoryStream())
-                {
-                    Serialize(result.Documents, mem);
-
-                    return new ResponseModel
-                    {
-                        MediaType = "application/json",
-                        Documents = result.Documents,
-                        Total = result.Total,
-                        Body = mem.ToArray()
-                    };
-                }
-            }
-        }
-
-        private void Serialize(IEnumerable<IDictionary<string, object>> docs, Stream stream)
-        {
-            using (StreamWriter writer = new StreamWriter(stream))
-            using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
-            {
-                JsonSerializer ser = new JsonSerializer();
-                ser.Serialize(jsonWriter, docs);
-                jsonWriter.Flush();
+                return readSession.Search(query, skip, take);
             }
         }
     }

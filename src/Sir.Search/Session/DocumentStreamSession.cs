@@ -24,9 +24,11 @@ namespace Sir.Search
             }
         }
 
-        public IEnumerable<IDictionary<string, object>> ReadDocs(
+        public IEnumerable<Document> ReadDocs(
             ulong collectionId, 
-            HashSet<string> select, 
+            HashSet<string> select,
+            HashSet<string> store,
+            HashSet<string> index,
             int skip = 0, 
             int take = 0)
         {
@@ -41,13 +43,15 @@ namespace Sir.Search
 
             while (docId <= docCount && took < take++)
             {
-                yield return ReadDoc((collectionId, docId++), select);
+                yield return ReadDoc((collectionId, docId++), select, store, index);
             }
         }
 
-        public IDictionary<string, object> ReadDoc(
+        public Document ReadDoc(
             (ulong collectionId, long docId) docId,
             HashSet<string> select,
+            HashSet<string> store,
+            HashSet<string> index,
             double? score = null
             )
         {
@@ -57,7 +61,7 @@ namespace Sir.Search
             var indexCollectionId = docId.collectionId;
             ulong? sourceCollectionId = null;
             long? sourceDocId = null;
-            var doc = new Dictionary<string, object>();
+            var fields = new List<Field>();
 
             for (int i = 0; i < docMap.Count; i++)
             {
@@ -70,7 +74,7 @@ namespace Sir.Search
                     var vInfo = streamReader.GetAddressOfValue(kvp.valId);
                     var val = streamReader.GetValue(vInfo.offset, vInfo.len, vInfo.dataType);
 
-                    doc[key] = val;
+                    fields.Add(new Field(key, val, kvp.keyId, index:index.Contains(key), store: store.Contains(key)));
 
                     if (key == SystemFields.CollectionId)
                     {
@@ -90,19 +94,14 @@ namespace Sir.Search
 
             if (sourceCollectionId.HasValue)
             {
-                return ReadDoc((sourceCollectionId.Value, sourceDocId.Value), select, score);
+                return ReadDoc((sourceCollectionId.Value, sourceDocId.Value), select, store, index, score);
             }
             else
             {
-                doc[SystemFields.DocumentId] = docId.docId;
+                fields.Add(new Field(SystemFields.DocumentId, docId.docId, index: false, store: false));
 
-                if (score.HasValue)
-                    doc[SystemFields.Score] = score;
-
-                return doc;
+                return new Document(fields, docId.docId, score.HasValue ? score.Value : -1);
             }
-
-            
         }
 
         private DocumentReader GetOrCreateDocumentReader(ulong collectionId)

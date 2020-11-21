@@ -8,12 +8,12 @@ namespace Sir.Wikipedia
 {
     public static class WikipediaHelper
     {
-        public static IEnumerable<Search.Document> ReadWP(string fileName, int skip, int take, HashSet<string> fieldsToStore, HashSet<string> fieldsToIndex)
+        public static IEnumerable<Document> ReadWP(string fileName, int skip, int take, HashSet<string> fieldsToStore, HashSet<string> fieldsToIndex)
         {
             return ReadGZipJsonFile(fileName, skip, take, fieldsToStore, fieldsToIndex);
         }
 
-        public static IEnumerable<Search.Document> ReadGZipJsonFile(
+        public static IEnumerable<Document> ReadGZipJsonFile(
             string fileName, int skip, int take, HashSet<string> fieldsToStore, HashSet<string> fieldsToIndex)
         {
             using (var stream = File.OpenRead(fileName))
@@ -50,7 +50,7 @@ namespace Sir.Wikipedia
                             var index = fieldsToIndex.Contains(kvp.Key);
 
                             if (store || index)
-                                fields.Add(new Field(kvp.Key, kvp.Value.ToString(), index, store));
+                                fields.Add(new Field(kvp.Key, kvp.Value.ToString(), index:index, store:store));
                         }
 
                         fields.Add(
@@ -60,7 +60,7 @@ namespace Sir.Wikipedia
                                 index:false, 
                                 store:true));
 
-                        yield return new Search.Document(fields);
+                        yield return new Document(fields);
                         took++;
                     }
 
@@ -69,7 +69,7 @@ namespace Sir.Wikipedia
             }
         }
 
-        public static IEnumerable<Search.Document> ReadJsonFile(string fileName, int skip, int take, HashSet<string> fieldsToStore, HashSet<string> fieldsToIndex)
+        public static IEnumerable<Document> ReadJsonFile(string fileName, int skip, int take, HashSet<string> fieldsToStore, HashSet<string> fieldsToIndex)
         {
             using (var stream = File.OpenRead(fileName))
             using (var reader = new StreamReader(stream))
@@ -104,10 +104,10 @@ namespace Sir.Wikipedia
                             var index = fieldsToIndex.Contains(kvp.Key);
 
                             if (store || index)
-                                fields.Add(new Field(kvp.Key, kvp.Value.Value<object>(), index, store));
+                                fields.Add(new Field(kvp.Key, kvp.Value.Value<object>(), index:index, store:store));
                         }
 
-                        yield return new Search.Document(fields);
+                        yield return new Document(fields);
                         took++;
                     }
 
