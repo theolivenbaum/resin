@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sir.VectorSpace;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 
@@ -13,7 +14,7 @@ namespace Sir.Search
         private readonly ILogger _logger;
         private readonly Stream _postingsStream;
         private readonly Stream _vectorStream;
-        private readonly IDictionary<(long keyId, string fileExtension), Stream> _streams;
+        private readonly ConcurrentDictionary<(long keyId, string fileExtension), Stream> _streams;
 
         public WritableIndexStream(
             ulong collectionId, 
@@ -25,7 +26,7 @@ namespace Sir.Search
             _logger = logger;
             _postingsStream = _sessionFactory.CreateAppendStream(_collectionId, "pos");
             _vectorStream = _sessionFactory.CreateAppendStream(_collectionId, "vec");
-            _streams = new Dictionary<(long, string), Stream>();
+            _streams = new ConcurrentDictionary<(long, string), Stream>();
         }
 
         public void Dispose()
@@ -56,16 +57,9 @@ namespace Sir.Search
 
         private Stream GetOrCreateAppendStream(long keyId, string fileExtension)
         {
-            var key = (keyId, fileExtension);
-            Stream stream;
-
-            if (!_streams.TryGetValue(key, out stream))
-            {
-                stream = _sessionFactory.CreateAppendStream(_collectionId, keyId, fileExtension);
-                _streams.Add(key, stream);
-            }
-
-            return stream;
+            return _streams.GetOrAdd(
+                (keyId, fileExtension), 
+                _sessionFactory.CreateAppendStream(_collectionId, keyId, fileExtension));
         }
     }
 }
