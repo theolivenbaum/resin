@@ -42,7 +42,7 @@ namespace Sir.Wikipedia
                 foreach (var page in payload.Batch(pageSize))
                 {
                     using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
-                    using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger: logger))
+                    using (var stream = new WritableIndexStream(collectionId, sessionFactory, logger: logger))
                     using (var indexSession = sessionFactory.CreateIndexSession(model))
                     {
                         foreach (var document in page)

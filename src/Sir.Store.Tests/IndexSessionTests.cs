@@ -66,7 +66,7 @@ namespace Sir.Tests
 
             _sessionFactory.Truncate(collectionId);
 
-            using (var stream = new IndexFileStreamProvider(collectionId, _sessionFactory))
+            using (var stream = new WritableIndexStream(collectionId, _sessionFactory))
             using (var writeSession = _sessionFactory.CreateWriteSession(collectionId))
             {
                 var keyId = writeSession.EnsureKeyExists(fieldName);
@@ -142,7 +142,7 @@ namespace Sir.Tests
 
                 index = indexSession.InMemoryIndex[keyId];
 
-                using (var stream = new IndexFileStreamProvider(collectionId, _sessionFactory))
+                using (var stream = new WritableIndexStream(collectionId, _sessionFactory))
                 {
                     stream.Write(indexSession.InMemoryIndex);
                 }

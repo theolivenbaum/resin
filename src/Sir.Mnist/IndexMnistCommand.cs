@@ -52,7 +52,7 @@ namespace Sir.Mnist
 
                         tree = indexSession.InMemoryIndex[keyId];
 
-                        using (var stream = new IndexFileStreamProvider(collectionId, sessionFactory, logger:logger))
+                        using (var stream = new WritableIndexStream(collectionId, sessionFactory, logger:logger))
                         {
                             stream.Write(indexSession.InMemoryIndex);
                         }
