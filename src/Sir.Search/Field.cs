@@ -6,7 +6,7 @@ namespace Sir.Search
     [DebuggerDisplay("{Key}:{Value}")]
     public class Field
     {
-        public long Id { get; set; }
+        public long KeyId { get; set; }
         public string Key { get; }
         public object Value { get; set; }
         public bool Index { get; }
@@ -21,7 +21,7 @@ namespace Sir.Search
             Value = value;
             Index = index;
             Store = store;
-            Id = keyId;
+            KeyId = keyId;
         }
     }
 }

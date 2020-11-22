@@ -24,45 +24,42 @@ namespace Sir.Mnist
             var dataDirectory = args["dataDirectory"];
             var collectionId = args["collection"].ToHash();
             var images = new MnistReader(args["imageFileName"], args["labelFileName"]).Read();
-            var count = 0;
             VectorNode tree;
+            var debugger = new IndexDebugger(logger);
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
                 sessionFactory.Truncate(collectionId);
 
                 using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
+                using (var indexSession = sessionFactory.CreateIndexSession(new LinearClassifierImageModel()))
                 {
-                    var debugger = new IndexDebugger(logger);
-                    var keyId = writeSession.EnsureKeyExists("image");
+                    var imageIndexId = writeSession.EnsureKeyExists("image");
 
-                    using (var indexSession = sessionFactory.CreateIndexSession(new LinearClassifierImageModel()))
+                    foreach (var image in images)
                     {
-                        foreach (var image in images)
-                        {
-                            var document = new Search.Document(new Field[] { new Field("image", image.Label, index: false, store: true) });
-                            writeSession.Put(document);
+                        var imageField = new Field("image", image.Pixels, index: true, store: true);
+                        var labelField = new Field("label", image.Label, index: false, store: true);
+                        var document = new Document(new Field[] { imageField, labelField });
 
-                            indexSession.Put(document.Id, keyId, image);
+                        writeSession.Put(document);
+                        indexSession.Put(document.Id, imageField.KeyId, image);
 
-                            count++;
+                        debugger.Step(indexSession);
+                    }
 
-                            debugger.Step(indexSession);
-                        }
+                    tree = indexSession.InMemoryIndex[imageIndexId];
 
-                        tree = indexSession.InMemoryIndex[keyId];
-
-                        using (var stream = new WritableIndexStream(collectionId, sessionFactory, logger:logger))
-                        {
-                            stream.Write(indexSession.InMemoryIndex);
-                        }
+                    using (var stream = new WritableIndexStream(collectionId, sessionFactory, logger: logger))
+                    {
+                        stream.Write(indexSession.InMemoryIndex);
                     }
                 }
             }
 
-            Print(tree);
+            logger.LogInformation($"indexed {debugger.Steps} mnist images in {time.Elapsed}");
 
-            logger.LogInformation($"indexed {count} mnist images in {time.Elapsed}");
+            Print(tree);
         }
 
         private static void Print(VectorNode tree)

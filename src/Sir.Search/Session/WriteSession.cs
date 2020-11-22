@@ -36,10 +36,10 @@ namespace Sir.Search
                 }
             }
 
-            if (!document.TryGetValue(SystemFields.CollectionId, out _))
-            {
-                Write(SystemFields.CollectionId, _collectionId, docMap);
-            }
+            //if (!document.TryGetValue(SystemFields.CollectionId, out _))
+            //{
+            //    Write(SystemFields.CollectionId, _collectionId, docMap);
+            //}
 
             Write(SystemFields.Created, DateTime.Now.ToBinary(), docMap);
 
@@ -51,9 +51,9 @@ namespace Sir.Search
 
         private void Write(Field field, IList<(long, long)> docMap)
         {
-            field.Id = EnsureKeyExists(field.Key);
+            field.KeyId = EnsureKeyExists(field.Key);
 
-            Write(field.Id, field.Value, docMap);
+            Write(field.KeyId, field.Value, docMap);
         }
 
         private void Write(string key, object val, IList<(long, long)> docMap)

@@ -164,7 +164,7 @@ namespace Sir.Search
                 {
                     if (field.Value != null && field.Index)
                     {
-                        indexSession.Put(document.Id, field.Id, field.Value.ToString());
+                        indexSession.Put(document.Id, field.KeyId, field.Value.ToString());
                     }
                 }//);
 
@@ -196,7 +196,7 @@ namespace Sir.Search
             {
                 if (field.Value != null && field.Index)
                 {
-                    indexSession.Put(document.Id, field.Id, field.Value.ToString());
+                    indexSession.Put(document.Id, field.KeyId, field.Value.ToString());
                 }
             }
         }
@@ -220,7 +220,7 @@ namespace Sir.Search
                     {
                         if (field.Value != null && field.Index)
                         {
-                            indexSession.Put(docId, field.Id, field.Value.ToString());
+                            indexSession.Put(docId, field.KeyId, field.Value.ToString());
                         }
                     }
 

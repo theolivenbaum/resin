@@ -136,7 +136,7 @@ namespace Sir.Search
             double scoreMultiplier = 1,
             string primaryKey = null)
         {
-            if (!select.Contains(primaryKey))
+            if (primaryKey != null && !select.Contains(primaryKey))
             {
                 select.Add(primaryKey);
             }

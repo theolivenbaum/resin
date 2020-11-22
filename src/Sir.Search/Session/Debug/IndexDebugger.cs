@@ -13,6 +13,8 @@ namespace Sir.Search
         private int _steps;
         private readonly ILogger _logger;
 
+        public int Steps => _steps;
+
         public IndexDebugger(ILogger logger, int sampleSize = 1000)
         {
             _sampleSize = sampleSize;

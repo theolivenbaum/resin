@@ -42,14 +42,13 @@ namespace Sir.Mnist
                     }
                     else
                     {
-                        var imageLabel = image.Label.ToString();
-                        var documentLabel = result.Documents.First().Get("label").Value.ToString();
+                        var documentLabel = (string)result.Documents.First().Get("label").Value;
 
-                        if (!documentLabel.Equals(imageLabel))
+                        if (!documentLabel.Equals(image.Label))
                         {
                             errors++;
 
-                            logger.LogDebug($"error. label: {imageLabel} document label: {documentLabel}\n{((MnistImage)image).Print()}\n{((MnistImage)image).Print()}");
+                            logger.LogDebug($"error. label: {image.Label} document label: {documentLabel}\n{((MnistImage)image).Print()}\n{((MnistImage)image).Print()}");
                         }
                     }
 

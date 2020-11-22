@@ -51,7 +51,7 @@ namespace Sir.Wikipedia
 
                             Parallel.ForEach(document.IndexableFields, field =>
                             {
-                                indexSession.Put(document.Id, field.Id, field.Value.ToString());
+                                indexSession.Put(document.Id, field.KeyId, field.Value.ToString());
                             });
                             //foreach (var field in document.IndexableFields)
                             //{
