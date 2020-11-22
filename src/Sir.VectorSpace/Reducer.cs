@@ -4,7 +4,7 @@ namespace Sir.VectorSpace
 {
     public abstract class Reducer
     {
-        protected abstract IList<(ulong, long)> Read(ulong collectionId, IList<long> postingsOffsets);
+        protected abstract IList<(ulong, long)> Read(ulong collectionId, long keyId, IList<long> postingsOffsets);
 
         public void Reduce(Query query, ref IDictionary<(ulong, long), double> result)
         {
@@ -88,7 +88,7 @@ namespace Sir.VectorSpace
             if (term.PostingsOffsets == null)
                 return;
 
-            var termResult = new HashSet<(ulong, long)>(Read(term.CollectionId, term.PostingsOffsets));
+            var termResult = new HashSet<(ulong, long)>(Read(term.CollectionId, term.KeyId, term.PostingsOffsets));
 
             if (term.IsIntersection)
             {

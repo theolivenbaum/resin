@@ -20,45 +20,19 @@ namespace Sir.VectorSpace
             _streams = new ConcurrentDictionary<ulong, Stream>();
         }
 
-        protected override IList<(ulong, long)> Read(ulong collectionId, IList<long> offsets)
+        protected override IList<(ulong, long)> Read(ulong collectionId, long keyId, IList<long> offsets)
         {
             var list = new List<(ulong, long)>();
 
             foreach (var postingsOffset in offsets)
-                GetPostingsFromStream(collectionId, postingsOffset, list);
+                GetPostingsFromStream(collectionId, keyId, postingsOffset, list);
 
             return list;
         }
 
-        //public IDictionary<(ulong, long), double> ReadWithPredefinedScore(ulong collectionId, IList<long> offsets, double score)
-        //{
-        //    var collectionRef = _sessionFactory.GetCollectionReference(collectionId);
-
-        //    var result = new Dictionary<(ulong, long), double>();
-
-        //    foreach (var offset in offsets)
-        //    {
-        //        GetPostingsFromStream(collectionRef, offset, result, score);
-        //    }
-
-        //    return result;
-        //}
-
-        private void GetPostingsFromStream(ulong collectionId, long postingsOffset, IDictionary<(ulong collectionId, long docId), double> result, double score)
+        private void GetPostingsFromStream(ulong collectionId, long keyId, long postingsOffset, IList<(ulong collectionId, long docId)> result)
         {
-            var list = new List<(ulong, long)>();
-
-            GetPostingsFromStream(collectionId, postingsOffset, list);
-
-            foreach (var id in list)
-            {
-                result.Add(id, score);
-            }
-        }
-
-        private void GetPostingsFromStream(ulong collectionId, long postingsOffset, IList<(ulong collectionId, long docId)> result)
-        {
-            var stream = GetOrCreateStream(collectionId);
+            var stream = GetOrCreateStream(collectionId, keyId);
 
             stream.Seek(postingsOffset, SeekOrigin.Begin);
 
@@ -83,12 +57,12 @@ namespace Sir.VectorSpace
             }
         }
 
-        private Stream GetOrCreateStream(ulong collectionId)
+        private Stream GetOrCreateStream(ulong collectionId, long keyId)
         {
             return _streams.GetOrAdd(
                 collectionId,
                 _sessionFactory.CreateReadStream(
-                    Path.Combine(_sessionFactory.Directory, $"{collectionId}.pos"))
+                    Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.pos"))
                 );
         }
 

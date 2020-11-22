@@ -70,31 +70,6 @@ namespace Sir.Search
             return sorted;
         }
 
-        private ScoredResult MapReduceSort(Term term, int skip, int take)
-        {
-            var timer = Stopwatch.StartNew();
-
-            // Map
-            Map(term);
-
-            _logger.LogDebug($"scanning took {timer.Elapsed}");
-            timer.Restart();
-
-            // Reduce
-            IDictionary<(ulong, long), double> scoredResult = new Dictionary<(ulong, long), double>();
-            _postingsReader.Reduce(term, ref scoredResult);
-
-            _logger.LogDebug("reducing took {0}", timer.Elapsed);
-            timer.Restart();
-
-            // Sort
-            var sorted = Sort(scoredResult, skip, take);
-
-            _logger.LogDebug("sorting took {0}", timer.Elapsed);
-
-            return sorted;
-        }
-
         /// <summary>
         /// Map query terms to posting list locations.
         /// </summary>
@@ -126,25 +101,6 @@ namespace Sir.Search
                     }
                 }//);
             }//);
-        }
-
-        private void Map(Term term)
-        {
-            var columnReader = CreateColumnReader(term.CollectionId, term.KeyId);
-
-            if (columnReader != null)
-            {
-                using (columnReader)
-                {
-                    var hit = columnReader.ClosestMatch(term.Vector, _model);
-
-                    if (hit != null)
-                    {
-                        term.Score = hit.Score;
-                        term.PostingsOffsets = hit.Node.PostingsOffsets ?? new List<long> { hit.Node.PostingsOffset };
-                    }
-                }
-            }
         }
 
         private static ScoredResult Sort(IDictionary<(ulong, long), double> documents, int skip, int take)
@@ -245,7 +201,7 @@ namespace Sir.Search
             if (!File.Exists(ixFileName))
                 return null;
 
-            var vectorFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.vec");
+            var vectorFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.vec");
 
             return new ColumnReader(
                     new PageIndexReader(_sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.ixtp"))),
