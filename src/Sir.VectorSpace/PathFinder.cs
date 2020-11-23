@@ -69,6 +69,30 @@ namespace Sir.VectorSpace
             }
         }
 
+        public static IEnumerable<VectorNode> RightList(VectorNode root)
+        {
+            var node = root.Right;
+
+            while (node != null)
+            {
+                yield return node;
+
+                node = node.Right;
+            }
+        }
+
+        public static IEnumerable<VectorNode> LeftList(VectorNode root)
+        {
+            var node = root.Left;
+
+            while (node != null)
+            {
+                yield return node;
+
+                node = node.Left;
+            }
+        }
+
         public static float[][] AsOneHotMatrix(VectorNode root)
         {
             var node = root.Vector == null ? root.Right : root;
