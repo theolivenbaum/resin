@@ -1,7 +1,6 @@
 ﻿using Sir.Search;
 using Sir.VectorSpace;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Sir.StringCompare
@@ -18,75 +17,38 @@ namespace Sir.StringCompare
             }
             else
             {
-                CompareBaseless(args[0], args[1], model);
-                Compare(args[0], args[1], model);
+                Similarity(args[0], args[1], model);
+                CompareToBaseVector(args[0], args[1], model);
             }
         }
 
-        private static void Compare(string first, string second, ITextModel model)
+        private static void CompareToBaseVector(string first, string second, ITextModel model)
         {
-            var baseVectorComponents = new List<float>(model.NumOfDimensions);
-            var baseVectors = new List<IVector>();
+            var baseVectorStorage = new float[model.NumOfDimensions];
 
-            for (int i = 0; i < model.NumOfDimensions; i++)
+            for (int i = 0; i < baseVectorStorage.Length; i++)
             {
-                baseVectorComponents.Add(i == 0 ? 1 : Convert.ToSingle(Math.Log10(i)));
-
-                var bvecs = new List<float>(model.NumOfDimensions);
-
-                for (int y = 0; y< model.NumOfDimensions; y++)
-                {
-                    float value;
-
-                    if (y == i)
-                    {
-                        value = 1;
-                    }
-                    else
-                    {
-                        value = 0;
-                    }
-
-                    bvecs.Add(value);
-                }
-
-                baseVectors.Add(new IndexedVector(bvecs));
+                baseVectorStorage[i] = (float)i + 1;
             }
 
-            var bvector = new IndexedVector(baseVectorComponents);
+            var baseVector = new IndexedVector(baseVectorStorage);
+            var firstVector = model.Tokenize(first).First();
+            var secondVector = model.Tokenize(second).First();
+            var angle1 = model.CosAngle(baseVector, firstVector);
+            var angle2 = model.CosAngle(baseVector, secondVector);
 
-            var doc1 = new VectorNode(model.Tokenize(first).First());
-            var doc2 = new VectorNode(model.Tokenize(second).First());
-            var angles1 = new List<float>();
-            var angles2 = new List<float>();
-
-            foreach (var bvec in baseVectors)
-            {
-                angles1.Add(Convert.ToSingle(model.CosAngle(doc1.Vector, bvec)));
-                angles2.Add(Convert.ToSingle(model.CosAngle(doc2.Vector, bvec)));
-            }
-
-            var docVector1 = new IndexedVector(angles1);
-            var docVector2 = new IndexedVector(angles2);
-
-            var angle = model.CosAngle(docVector1, docVector2);
-            var angle1 = model.CosAngle(docVector1, bvector);
-            var angle2 = model.CosAngle(docVector2, bvector);
-
-            Console.WriteLine($"similarity: {angle}");
-            Console.WriteLine($"bvector similarity 1: {angle1}");
-            Console.WriteLine($"bvector similarity 2: {angle2}");
+            Console.WriteLine($"first angle to base vector: {angle1}");
+            Console.WriteLine($"second angle to base vector: {angle2}");
             Console.WriteLine($"base vector similarity: {Math.Min(angle1, angle2) / Math.Max(angle1, angle2)}");
         }
 
-        private static void CompareBaseless(string first, string second, ITextModel model)
+        private static void Similarity(string first, string second, ITextModel model)
         {
-            var doc1 = new VectorNode(model.Tokenize(first).First());
-            var doc2 = new VectorNode(model.Tokenize(second).First());
+            var vec1 = model.Tokenize(first).First();
+            var vec2 = model.Tokenize(second).First();
+            var angle = model.CosAngle(vec1, vec2);
 
-            var angle = model.CosAngle(doc1.Vector, doc2.Vector);
-
-            Console.WriteLine($"similarity (baseless): {angle}");
+            Console.WriteLine($"similarity: {angle}");
         }
 
         private static void RunInteractiveGraphBuilder(ITextModel model)
