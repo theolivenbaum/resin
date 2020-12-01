@@ -75,21 +75,7 @@ namespace Sir.VectorSpace
 
         public IList<long> PostingsOffsets { get; set; }
 
-        public int Depth {
-            get
-            {
-                var ancestor = Ancestor;
-                var depth = 0;
-
-                while (ancestor!= null)
-                {
-                    depth++;
-                    ancestor = ancestor.Ancestor;
-                }
-
-                return depth;
-            }
-        }
+        public bool IsRoot => Ancestor == null;
 
         public VectorNode()
         {
@@ -146,7 +132,7 @@ namespace Sir.VectorSpace
 
         public override string ToString()
         {
-            return Vector == null ? string.Empty : Vector.Label == null ? Vector.ToString() : Vector.Label.ToString();
+            return IsRoot ? "*" : Vector.Label == null ? Vector.ToString() : Vector.Label.ToString();
         }
 
         public VectorNodeData ToData()

@@ -129,28 +129,51 @@ namespace Sir.VectorSpace
         public static string Visualize(VectorNode root)
         {
             StringBuilder output = new StringBuilder();
+            var depth = 0;
 
-            Visualize(root, output);
+            Visualize(root, depth, output);
 
-            foreach(var node in All(root))
+            var node = root.Right;
+            var stack = new Stack<(VectorNode node, int depth)>();
+
+            while (node != null)
             {
-                Visualize(node, output);
+                Visualize(node, depth, output);
+
+                if (node.Right != null)
+                {
+                    stack.Push((node.Right, depth));
+                }
+
+                node = node.Left;
+
+                if (node == null)
+                {
+                    if (stack.Count > 0)
+                    {
+                        var n = stack.Pop();
+                        node = n.node;
+                        depth = n.depth;
+                    }
+                }
+                else
+                {
+                    depth++;
+                }
             }
 
             return output.ToString();
         }
 
-        private static void Visualize(VectorNode node, StringBuilder output)
+        private static void Visualize(VectorNode node, int depth, StringBuilder output)
         {
             if (node == null) return;
 
-            output.Append('\t',node.Depth);
+            output.Append('\t', depth);
             output.AppendFormat($"{node} w:{node.Weight} ");
 
-            if (node.Vector == null)
-            {
+            if (node.IsRoot)
                 output.AppendFormat($"{Size(node)}");
-            }
 
             output.AppendLine();
         }
@@ -180,7 +203,7 @@ namespace Sir.VectorSpace
 
         private static int Depth(VectorNode node)
         {
-            var count = 1;
+            var count = 0;
 
             node = node.Left;
 
