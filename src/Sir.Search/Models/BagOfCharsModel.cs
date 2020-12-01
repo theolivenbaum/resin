@@ -8,7 +8,7 @@ namespace Sir.Search
     {
         public double IdenticalAngle => 0.99d;
         public double FoldAngle => 0.55d;
-        public override int NumOfDimensions => char.MaxValue*2;
+        public override int NumOfDimensions => System.Text.Unicode.UnicodeRanges.All.Length;
 
         public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node)
         {
