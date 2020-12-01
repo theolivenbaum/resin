@@ -4,6 +4,8 @@ using Sir.VectorSpace;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace Sir.Mnist
 {
@@ -64,8 +66,7 @@ namespace Sir.Mnist
 
         private static void Print(VectorNode tree)
         {
-            var diagram = PathFinder.Visualize(tree);
-            File.WriteAllText(@"c:\temp\mnisttree.txt", diagram);
+            File.WriteAllText(@"c:\temp\mnisttree.txt", PathFinder.Visualize(tree));
         }
     }
 }
