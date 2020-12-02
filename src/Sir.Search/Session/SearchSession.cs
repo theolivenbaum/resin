@@ -31,13 +31,13 @@ namespace Sir.Search
             _logger = logger ?? sessionFactory.Logger;
         }
 
-        public SearchResult Search(Query query, int skip, int take, string primaryKey = null)
+        public SearchResult Search(Query query, int skip, int take)
         {
             var result = MapReduceSort(query, skip, take);
 
             if (result != null)
             {
-                var docs = ReadDocs(result.SortedDocuments, query.Select, (double)1/query.TotalNumberOfTerms(), primaryKey);
+                var docs = ReadDocs(result.SortedDocuments, query.Select, (double)1/query.TotalNumberOfTerms());
 
                 return new SearchResult(query, result.Total, docs.Count, docs);
             }
@@ -133,63 +133,18 @@ namespace Sir.Search
         private IList<Document> ReadDocs(
             IEnumerable<KeyValuePair<(ulong collectionId, long docId), double>> docIds, 
             HashSet<string> select,
-            double scoreMultiplier = 1,
-            string primaryKey = null)
+            double scoreMultiplier = 1)
         {
-            if (primaryKey != null && !select.Contains(primaryKey))
-            {
-                select.Add(primaryKey);
-            }
-
             var result = new List<Document>();
-            var documentsByPrimaryKey = new Dictionary<ulong, Document>();
             var timer = Stopwatch.StartNew();
 
             foreach (var d in docIds)
             {
                 var doc = ReadDoc(d.Key, select, select, select, d.Value * scoreMultiplier);
-                var docHash = primaryKey == null ? Guid.NewGuid().ToString().ToHash() : doc.Get(primaryKey).Value.ToString().ToHash();
-                Document existingDoc;
-
-                if (documentsByPrimaryKey.TryGetValue(docHash, out existingDoc))
-                {
-                    //foreach (var field in doc.Fields)
-                    //{
-                    //    if (field.Key != primaryKey && select.Contains(field.Key))
-                    //    {
-                    //        Field existingValue;
-
-                    //        if (existingDoc.TryGetValue(field.Key, out existingValue))
-                    //        {
-                    //            existingValue.Value = new object[] { existingValue, field.Value };
-                    //        }
-                    //        else
-                    //        {
-                    //            existingDoc.Fields.Add(new Field(field.Key, field.Value));
-                    //        }
-                    //    }
-                    //}
-
-                    existingDoc.Score = (double)existingDoc.Score + d.Value; 
-
-                }
-                else
-                {
-                    result.Add(doc);
-                    documentsByPrimaryKey.Add(docHash, doc);
-                }
+                result.Add(doc);
             }
 
             _logger.LogDebug($"reading documents took {timer.Elapsed}");
-            timer.Restart();
-
-            result.Sort(
-                delegate (Document doc1, Document doc2)
-                {
-                    return doc2.Score.CompareTo(doc1.Score);
-                });
-
-            _logger.LogDebug($"second sorting took {timer.Elapsed}");
 
             return result;
         }

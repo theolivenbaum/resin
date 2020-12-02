@@ -5,6 +5,6 @@ namespace Sir.Search
 {
     public interface ISearchSession : IDisposable
     {
-        SearchResult Search(Query query, int skip, int take, string primaryKey = null);
+        SearchResult Search(Query query, int skip, int take);
     }
 }

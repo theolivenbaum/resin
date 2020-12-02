@@ -7,17 +7,17 @@ namespace Sir.Search
     public class Field
     {
         public long KeyId { get; set; }
-        public string Key { get; }
+        public string Name { get; }
         public object Value { get; set; }
         public bool Index { get; }
         public bool Store { get; }
 
-        public Field(string key, object value, long keyId = -1, bool index = true, bool store = true)
+        public Field(string name, object value, long keyId = -1, bool index = true, bool store = true)
         {
-            if (key is null) throw new ArgumentNullException(nameof(key));
+            if (name is null) throw new ArgumentNullException(nameof(name));
             if (value == null) throw new ArgumentNullException(nameof(value));
 
-            Key = key;
+            Name = name;
             Value = value;
             Index = index;
             Store = store;

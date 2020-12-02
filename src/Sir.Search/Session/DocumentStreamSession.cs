@@ -58,9 +58,6 @@ namespace Sir.Search
             var streamReader = GetOrCreateDocumentReader(docId.collectionId);
             var docInfo = streamReader.GetDocumentAddress(docId.docId);
             var docMap = streamReader.GetDocumentMap(docInfo.offset, docInfo.length);
-            //var indexCollectionId = docId.collectionId;
-            //ulong? sourceCollectionId = null;
-            //long? sourceDocId = null;
             var fields = new List<Field>();
 
             for (int i = 0; i < docMap.Count; i++)
@@ -69,39 +66,16 @@ namespace Sir.Search
                 var kInfo = streamReader.GetAddressOfKey(kvp.keyId);
                 var key = (string)streamReader.GetKey(kInfo.offset, kInfo.len, kInfo.dataType);
 
-                if (select.Contains(key) || key.StartsWith("___"))
+                if (select.Contains(key))
                 {
                     var vInfo = streamReader.GetAddressOfValue(kvp.valId);
                     var val = streamReader.GetValue(vInfo.offset, vInfo.len, vInfo.dataType);
 
                     fields.Add(new Field(key, val, kvp.keyId, index:index.Contains(key), store: store.Contains(key)));
-
-                    //if (key == SystemFields.CollectionId)
-                    //{
-                    //    var docCollectionId = (ulong)val;
-
-                    //    if (docCollectionId != indexCollectionId)
-                    //    {
-                    //        sourceCollectionId = docCollectionId;
-                    //    }
-                    //}
-                    //else if (key == SystemFields.DocumentId)
-                    //{
-                    //    sourceDocId = (long)val;
-                    //}
                 }
             }
 
-            //if (sourceCollectionId.HasValue)
-            //{
-            //    return ReadDoc((sourceCollectionId.Value, sourceDocId.Value), select, store, index, score);
-            //}
-            //else
-            //{
-                fields.Add(new Field(SystemFields.DocumentId, docId.docId, index: false, store: false));
-
-                return new Document(fields, docId.docId, score.HasValue ? score.Value : -1);
-            //}
+            return new Document(fields, docId.docId, score.HasValue ? score.Value : 0);
         }
 
         private DocumentReader GetOrCreateDocumentReader(ulong collectionId)

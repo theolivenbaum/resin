@@ -1,9 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sir.Search;
 using Sir.VectorSpace;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -13,6 +11,9 @@ namespace Sir.Wikipedia
     /// Download JSON search index dump here: 
     /// https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20201026-cirrussearch-content.json.gz
     /// </summary>
+    /// <example>
+    /// indexwikipedia --dataDirectory c:\data\resin --fileName d:\enwiki-20201026-cirrussearch-content.json.gz --collection wikipedia
+    /// </example>
     public class IndexWikipediaCommand : ICommand
     {
         public void Run(IDictionary<string, string> args, ILogger logger)

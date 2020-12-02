@@ -51,7 +51,7 @@ namespace Sir.Search
 
         private void Write(Field field, IList<(long, long)> docMap)
         {
-            field.KeyId = EnsureKeyExists(field.Key);
+            field.KeyId = EnsureKeyExists(field.Name);
 
             Write(field.KeyId, field.Value, docMap);
         }

@@ -200,7 +200,7 @@ namespace Sir.Cmd
                         GraphBuilder.MergeOrAdd(tree, new VectorNode(token), model);
                     }
 
-                    Console.WriteLine(field.Key);
+                    Console.WriteLine(field.Name);
                     Console.WriteLine(PathFinder.Visualize(tree));
                     Console.WriteLine(string.Join('\n', tokens));
                 }
