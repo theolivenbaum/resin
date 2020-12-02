@@ -14,23 +14,11 @@ namespace Sir
             _doc = new Dictionary<string, string>();
             _fileName = Path.Combine(Directory.GetCurrentDirectory(), readFromFileName);
 
-            OnFileChanged(null, null);
-
-            FileSystemWatcher watcher = new FileSystemWatcher();
-            watcher.Path = Directory.GetCurrentDirectory();
-            watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
-            watcher.Filter = $"*{Path.GetExtension(readFromFileName)}";
-            watcher.Changed += new FileSystemEventHandler(OnFileChanged);
-            watcher.EnableRaisingEvents = true;
+            OnFileChanged();
         }
 
-        private void OnFileChanged(object sender, FileSystemEventArgs e)
+        private void OnFileChanged()
         {
-            if (e != null && e.FullPath != _fileName)
-            {
-                return;
-            }
-
             var dic = new Dictionary<string, string>();
 
             string text;
