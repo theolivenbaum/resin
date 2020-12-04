@@ -19,13 +19,13 @@ namespace Sir.HttpServer
             var model = new BagOfCharsModel();
             var sessionFactory = new SessionFactory(@"c:\data\resin", loggerFactory.CreateLogger<SessionFactory>());
             var qp = new QueryParser<string>(sessionFactory, model, loggerFactory.CreateLogger<QueryParser<string>>());
-            var httpParser = new HttpStringQueryParser(qp);
+            var httpParser = new HttpQueryParser(qp);
 
             services.AddSingleton(typeof(ITextModel), model);
             services.AddSingleton(typeof(ISessionFactory), sessionFactory);
             services.AddSingleton(typeof(SessionFactory), sessionFactory);
             services.AddSingleton(typeof(QueryParser<string>), qp);
-            services.AddSingleton(typeof(HttpStringQueryParser), httpParser);
+            services.AddSingleton(typeof(HttpQueryParser), httpParser);
             services.AddSingleton(typeof(IHttpWriter), new HttpWriter(sessionFactory));
             services.AddSingleton(typeof(IHttpReader), new HttpReader(
                 sessionFactory,

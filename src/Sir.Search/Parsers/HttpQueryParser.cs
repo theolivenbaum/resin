@@ -11,13 +11,13 @@ using System.Threading.Tasks;
 namespace Sir.Search
 {
     /// <summary>
-    /// Parse text from a http request message into a query.
+    /// Parse http request query or body into a <see cref="Query"/>.
     /// </summary>
-    public class HttpStringQueryParser
+    public class HttpQueryParser
     {
         private readonly QueryParser<string> _parser;
 
-        public HttpStringQueryParser(QueryParser<string> parser)
+        public HttpQueryParser(QueryParser<string> parser)
         {
             _parser = parser;
         }

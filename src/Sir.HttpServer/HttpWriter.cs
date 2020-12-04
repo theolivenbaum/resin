@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
@@ -9,57 +8,27 @@ using Sir.Search;
 namespace Sir.HttpServer
 {
     /// <summary>
-    /// Write into a collection.
+    /// Write to a collection.
     /// </summary>
     public class HttpWriter : IHttpWriter
     {
-        public string ContentType => "application/json";
-
         private readonly SessionFactory _sessionFactory;
-        private readonly Stopwatch _timer;
 
         public HttpWriter(SessionFactory sessionFactory)
         {
             _sessionFactory = sessionFactory;
-            _timer = new Stopwatch();
         }
 
         public void Write(HttpRequest request, ITextModel model)
         {
-            var documents = Deserialize<IEnumerable<IDictionary<string, object>>>(request.Body);
-            var storedFieldNames = new HashSet<string>(request.Query["storedFields"].ToArray());
-            var indexedFieldNames = new HashSet<string>(request.Query["indexedFields"].ToArray());
+            var documents = Deserialize<IEnumerable<Document>>(request.Body);
+            var collectionId = request.Query["collection"].First().ToHash();
 
-            if (request.Query.ContainsKey("collection"))
-            {
-                var collections = request.Query["collection"].ToArray();
-                
-                foreach (var collection in collections)
-                {
-                    var collectionId = collection.ToHash();
-
-                    _sessionFactory.Write(
-                        new WriteJob(
-                            collectionId, 
-                            documents
-                                .Select(dic =>
-                                            new Search.Document(
-                                                dic.Select(kvp => new Field(
-                                                    kvp.Key,
-                                                    kvp.Value,
-                                                    index: indexedFieldNames.Contains(kvp.Key),
-                                                    store: storedFieldNames.Contains(kvp.Key))).ToList())),
-                            model));
-                }
-            }
-            else
-            {
-                _sessionFactory.Write(
-                    documents, 
-                    model, 
-                    storedFieldNames, 
-                    indexedFieldNames);
-            }
+            _sessionFactory.Write(
+                new WriteJob(
+                    collectionId,
+                    documents,
+                    model));
         }
 
         private static T Deserialize<T>(Stream stream)
@@ -70,10 +39,6 @@ namespace Sir.HttpServer
                 JsonSerializer ser = new JsonSerializer();
                 return ser.Deserialize<T>(jsonReader);
             }
-        }
-
-        public void Dispose()
-        {
         }
     }
 }

@@ -59,6 +59,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="AppData\" />
     <Folder Include="Properties\PublishProfiles\" />
   </ItemGroup>
 

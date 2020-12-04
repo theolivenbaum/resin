@@ -18,11 +18,11 @@ namespace Sir.HttpServer
 
         private readonly ILogger<HttpReader> _logger;
         private readonly SessionFactory _sessionFactory;
-        private readonly HttpStringQueryParser _httpQueryParser;
+        private readonly HttpQueryParser _httpQueryParser;
 
         public HttpReader(
             SessionFactory sessionFactory, 
-            HttpStringQueryParser httpQueryParser,
+            HttpQueryParser httpQueryParser,
             ILogger<HttpReader> logger)
         {
             _logger = logger;

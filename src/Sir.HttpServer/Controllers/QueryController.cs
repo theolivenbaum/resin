@@ -27,13 +27,12 @@ namespace Sir.HttpServer.Controllers
         [HttpPost]
         public async Task<IActionResult> Get()
         {
-            var mediaType = Request.Headers["Accept"].ToArray()[0];
             var timer = Stopwatch.StartNew();
             var result = await _reader.Read(Request, _model);
 
-            _logger.LogInformation($"processed {mediaType} request in {timer.Elapsed}");
+            _logger.LogInformation($"processed request in {timer.Elapsed}");
 
-            Response.Headers.Add("X-Total", result.Total.ToString());
+            Response.Headers.Add("X-TotalDocumentCount", result.Total.ToString());
 
             if (result.Total == 0)
                 return new EmptyResult();

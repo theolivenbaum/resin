@@ -150,10 +150,7 @@ namespace Sir.Search
             Log($"writing to collection {job.CollectionId}");
 
             var time = Stopwatch.StartNew();
-
-            var batchNo = 0;
-            var count = 0;
-            var batchTime = Stopwatch.StartNew();
+            var debugger = new IndexDebugger(Logger, reportSize);
 
             foreach (var document in job.Documents)
             {
@@ -168,18 +165,7 @@ namespace Sir.Search
                     }
                 }//);
 
-                if (count++ == reportSize)
-                {
-                    var info = indexSession.GetIndexInfo();
-                    var t = batchTime.Elapsed.TotalSeconds;
-                    var docsPerSecond = (int)(reportSize / t);
-                    var debug = string.Join('\n', info.Info.Select(x => x.ToString()));
-
-                    Log($"\n{time.Elapsed}\nbatch {++batchNo}\n{debug}\n{docsPerSecond} docs/s");
-
-                    count = 0;
-                    batchTime.Restart();
-                }
+                debugger.Step(indexSession);
             }
 
             Logger.LogInformation($"processed write job (collection {job.CollectionId}), time in total: {time.Elapsed}");
@@ -263,40 +249,27 @@ namespace Sir.Search
         }
 
         public void Write(
-            IEnumerable<IDictionary<string, object>> documents, 
+            ulong collectionId,
+            IEnumerable<Document> documents, 
             ITextModel model, 
-            HashSet<string> storeFields,
-            HashSet<string> indexFields,
             int reportSize = 1000
             )
         {
-            foreach (var group in documents.GroupBy(d => (string)d[SystemFields.CollectionId]))
+            using (var writeSession = CreateWriteSession(collectionId))
+            using (var indexSession = CreateIndexSession(model))
             {
-                var collectionId = group.Key.ToHash();
+                Write(
+                    new WriteJob(
+                        collectionId,
+                        documents,
+                        model),
+                    writeSession,
+                    indexSession,
+                    reportSize);
 
-                using (var writeSession = CreateWriteSession(collectionId))
-                using (var indexSession = CreateIndexSession(model))
+                using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
                 {
-                    Write(
-                        new WriteJob(
-                            collectionId, 
-                            group
-                            .Select(dic =>
-                                new Document(
-                                    dic.Select(kvp => new Field(
-                                        kvp.Key,
-                                        kvp.Value,
-                                        index: indexFields.Contains(kvp.Key),
-                                        store: storeFields.Contains(kvp.Key))).ToList())), 
-                            model), 
-                        writeSession, 
-                        indexSession,
-                        reportSize);
-
-                    using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
-                    {
-                        stream.Write(indexSession.InMemoryIndex);
-                    }
+                    stream.Write(indexSession.InMemoryIndex);
                 }
             }
         }

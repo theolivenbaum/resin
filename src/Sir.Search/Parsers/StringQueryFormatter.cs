@@ -19,7 +19,7 @@ namespace Sir.Search
 
         public async Task<string> Format(HttpRequest request, ITextModel tokenizer)
         {
-            var parser = new HttpStringQueryParser(new QueryParser<string>(_sessionFactory, tokenizer, _log));
+            var parser = new HttpQueryParser(new QueryParser<string>(_sessionFactory, tokenizer, _log));
             var query = await parser.ParseRequest(request);
             var dictionary = new Dictionary<string, object>();
             

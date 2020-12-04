@@ -10,7 +10,7 @@ namespace Sir.Search
     {
         public long Id { get; set; }
         public double Score { get; set; }
-        public IList<Field> Fields { get; }
+        public IList<Field> Fields { get; set; }
 
         public IEnumerable<Field> IndexableFields
         {
@@ -22,6 +22,11 @@ namespace Sir.Search
                         yield return field;
                 }
             }
+        }
+
+        public Document() 
+        {
+            Fields = new List<Field>();
         }
 
         public Document(IList<Field> fields, long documentId = -1, double score = -1)
@@ -78,14 +83,50 @@ namespace Sir.Search
             jo.WriteTo(writer);
         }
 
+        /// <summary>
+        /// https://dotnetfiddle.net/zzlzH4
+        /// </summary>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            if (reader.TokenType == JsonToken.StartArray)
+            {
+                reader.Read();
+                if (reader.TokenType == JsonToken.EndArray)
+                    return new Document();
+                else
+                    throw new JsonSerializationException("Non-empty JSON array does not make a valid Dictionary!");
+            }
+            else if (reader.TokenType == JsonToken.Null)
+            {
+                return null;
+            }
+            else if (reader.TokenType == JsonToken.StartObject)
+            {
+                var ret = new Document();
+                reader.Read();
+                while (reader.TokenType != JsonToken.EndObject)
+                {
+                    if (reader.TokenType != JsonToken.PropertyName)
+                        throw new JsonSerializationException("Unexpected token!");
+                    string key = (string)reader.Value;
+                    reader.Read();
+                    if (reader.TokenType != JsonToken.String)
+                        throw new JsonSerializationException("Unexpected token!");
+                    string value = (string)reader.Value;
+                    ret.Fields.Add(new Field(key, value));
+                    reader.Read();
+                }
+                return ret;
+            }
+            else
+            {
+                throw new JsonSerializationException("Unexpected token!");
+            }
         }
 
         public override bool CanRead
         {
-            get { return false; }
+            get { return true; }
         }
 
         public override bool CanConvert(Type objectType)
