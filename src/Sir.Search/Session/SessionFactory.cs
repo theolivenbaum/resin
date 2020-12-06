@@ -154,7 +154,7 @@ namespace Sir.Search
 
             foreach (var document in job.Documents)
             {
-                writeSession.Put(document);
+                document.Id = writeSession.Put(document);
 
                 //Parallel.ForEach(document, kv =>
                 foreach (var field in document.Fields)
@@ -176,7 +176,7 @@ namespace Sir.Search
             WriteSession writeSession, 
             IndexSession<string> indexSession)
         {
-            writeSession.Put(document);
+            document.Id = writeSession.Put(document);
 
             foreach (var field in document.Fields)
             {

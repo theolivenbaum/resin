@@ -20,7 +20,7 @@ namespace Sir.Search
             _streamWriter = streamWriter;
         }
 
-        public void Put(Document document)
+        public long Put(Document document)
         {
             var docMap = new List<(long keyId, long valId)>();
 
@@ -44,9 +44,11 @@ namespace Sir.Search
             Write(SystemFields.Created, DateTime.Now.ToBinary(), docMap);
 
             var docMeta = _streamWriter.PutDocumentMap(docMap);
-            document.Id = _streamWriter.IncrementDocId();
+            var documentId = _streamWriter.IncrementDocId();
 
-            _streamWriter.PutDocumentAddress(document.Id, docMeta.offset, docMeta.length);
+            _streamWriter.PutDocumentAddress(documentId, docMeta.offset, docMeta.length);
+
+            return documentId;
         }
 
         private void Write(Field field, IList<(long, long)> docMap)

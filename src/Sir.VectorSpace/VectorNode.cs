@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
 
 namespace Sir.VectorSpace
 {
@@ -34,19 +33,9 @@ namespace Sir.VectorSpace
             get => _right;
             set
             {
-                var old = _right;
-
                 _right = value;
-
-                if (value != null)
-                {
-                    _right.Ancestor = this;
-                    IncrementWeight();
-                }
-                else
-                {
-                    _weight = _weight - old.Weight - 1;
-                }
+                _right.Ancestor = this;
+                IncrementWeight();
             }
         }
 
@@ -55,19 +44,9 @@ namespace Sir.VectorSpace
             get => _left;
             set
             {
-                var old = _left;
-
                 _left = value;
-
-                if (value != null)
-                {
-                    _left.Ancestor = this;
-                    IncrementWeight();
-                }
-                else
-                {
-                    _weight = _weight - old.Weight - 1;
-                }
+                _left.Ancestor = this;
+                IncrementWeight();
             }
         }
 
@@ -119,13 +98,14 @@ namespace Sir.VectorSpace
         }
 
         public void IncrementWeight()
-        {
-            Interlocked.Increment(ref _weight);
+        { 
+            _weight++;
 
             var cursor = Ancestor;
+
             while (cursor != null)
             {
-                Interlocked.Increment(ref cursor._weight);
+                cursor._weight++;
                 cursor = cursor.Ancestor;
             }
         }

@@ -33,6 +33,24 @@ namespace Sir.Search
             }
         }
 
+        //public void Put(long docId, long keyId, T value)
+        //{
+        //    var vectors = _model.Tokenize(value);
+        //    var document = new VectorNode();
+
+        //    foreach (var vector in vectors)
+        //    {
+        //        _indexingStrategy.ExecutePut<T>(document, keyId, new VectorNode(vector, docId));
+        //    }
+
+        //    var column = _index.GetOrAdd(keyId, new VectorNode());
+
+        //    foreach (var node in PathFinder.All(document))
+        //    {
+        //        _indexingStrategy.ExecutePut<T>(column, keyId, new VectorNode(node.Vector, docId));
+        //    }
+        //}
+
         public IndexInfo GetIndexInfo()
         {
             return new IndexInfo(GetGraphInfo());

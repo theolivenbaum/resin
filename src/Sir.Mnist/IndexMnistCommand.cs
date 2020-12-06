@@ -44,7 +44,7 @@ namespace Sir.Mnist
                         var labelField = new Field("label", image.Label, index: false, store: true);
                         var document = new Document(new Field[] { imageField, labelField });
 
-                        writeSession.Put(document);
+                        document.Id = writeSession.Put(document);
                         indexSession.Put(document.Id, imageField.KeyId, image);
 
                         debugger.Step(indexSession);

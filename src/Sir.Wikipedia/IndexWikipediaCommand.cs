@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Sir.Core;
 using Sir.Search;
 using Sir.VectorSpace;
 using System.Collections.Generic;
@@ -38,35 +39,35 @@ namespace Sir.Wikipedia
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
+                sessionFactory.Truncate(collectionId);
+
                 var debugger = new IndexDebugger(logger, sampleSize);
 
-                foreach (var page in payload.Batch(pageSize))
+                using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
                 {
-                    using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
-                    using (var stream = new WritableIndexStream(collectionId, sessionFactory, logger: logger))
-                    using (var indexSession = sessionFactory.CreateIndexSession(model))
+                    foreach (var page in payload.Batch(pageSize))
                     {
-                        foreach (var document in page)
+                        using (var indexStream = new WritableIndexStream(collectionId, sessionFactory, logger: logger))
+                        using (var indexSession = sessionFactory.CreateIndexSession(model))
                         {
-                            writeSession.Put(document);
-
-                            Parallel.ForEach(document.IndexableFields, field =>
+                            foreach (var document in page)
                             {
-                                indexSession.Put(document.Id, field.KeyId, field.Value.ToString());
-                            });
-                            //foreach (var field in document.IndexableFields)
+                                document.Id = writeSession.Put(document);
+
+                                foreach (var field in document.IndexableFields)
+                                {
+                                    indexSession.Put(document.Id, field.KeyId, field.Value.ToString());
+                                }
+
+                                debugger.Step(indexSession);
+                            }
+
+                            indexStream.Write(indexSession.InMemoryIndex);
+
+                            //foreach (var column in indexSession.InMemoryIndex)
                             //{
-                            //    indexSession.Put(documentId, field.Id, field.Value.ToString());
+                            //    Print($"wikipedia.{column.Key}", column.Value);
                             //}
-
-                            debugger.Step(indexSession);
-                        }
-
-                        stream.Write(indexSession.InMemoryIndex);
-
-                        foreach (var column in indexSession.InMemoryIndex)
-                        {
-                            Print($"wikipedia.{column.Key}", column.Value);
                         }
                     }
                 }

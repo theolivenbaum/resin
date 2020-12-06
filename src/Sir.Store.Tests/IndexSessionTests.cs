@@ -77,8 +77,8 @@ namespace Sir.Tests
 
                     using (var indexSession = _sessionFactory.CreateIndexSession(model))
                     {
-                        var doc = new Search.Document(new Field[] { new Field(fieldName, data, index: true, store: true) });
-                        writeSession.Put(doc);
+                        var doc = new Document(new Field[] { new Field(fieldName, data, index: true, store: true) });
+                        doc.Id = writeSession.Put(doc);
                         indexSession.Put(doc.Id, keyId, data);
                         stream.Write(indexSession.InMemoryIndex);
                     }
@@ -132,9 +132,9 @@ namespace Sir.Tests
                 for (long i = 0; i < _data.Length; i++)
                 {
                     var data = _data[i];
-                    var doc = new Search.Document(new Field[] { new Field(fieldName, data, index: true, store: true) });
+                    var doc = new Document(new Field[] { new Field(fieldName, data, index: true, store: true) });
 
-                    writeSession.Put(doc);
+                    doc.Id = writeSession.Put(doc);
                     indexSession.Put(doc.Id, keyId, data);
                 }
 
