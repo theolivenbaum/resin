@@ -22,7 +22,7 @@ namespace Sir.Core
 
         public bool IsCompleted { get { return _queue == null || _queue.IsCompleted; } }
 
-        public ProducerConsumerQueue(Action<T> consumingAction = null, int numOfConsumers = 1)
+        public ProducerConsumerQueue(Action<T> consumingAction, int numOfConsumers = 1)
         {
             if (consumingAction == null)
             {
@@ -77,8 +77,6 @@ namespace Sir.Core
 
             _queue.CompleteAdding();
             Task.WaitAll(_consumers);
-
-            _joining = false;
         }
 
         public void Dispose()
