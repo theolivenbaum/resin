@@ -3,6 +3,7 @@ using Sir.Core;
 using Sir.Search;
 using Sir.VectorSpace;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -52,17 +53,21 @@ namespace Sir.Wikipedia
                         {
                             foreach (var document in page)
                             {
-                                document.Id = writeSession.Put(document);
+                                writeSession.Put(document);
 
                                 foreach (var field in document.IndexableFields)
                                 {
-                                    indexSession.Put(document.Id, field.KeyId, field.Value.ToString());
+                                    indexSession.Put(document.Id, field.KeyId, (string)field.Value);
                                 }
 
                                 debugger.Step(indexSession);
                             }
 
-                            indexStream.Write(indexSession.InMemoryIndex);
+                            var time = Stopwatch.StartNew();
+
+                            indexStream.Write(indexSession.GetInMemoryIndex());
+
+                            logger.LogInformation($"waited for index threads for {time.Elapsed}");
 
                             //foreach (var column in indexSession.InMemoryIndex)
                             //{

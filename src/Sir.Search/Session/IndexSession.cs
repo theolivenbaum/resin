@@ -11,15 +11,13 @@ namespace Sir.Search
         private readonly IIndexingStrategy _indexingStrategy;
         private readonly ConcurrentDictionary<long, VectorNode> _index;
 
-        public IDictionary<long, VectorNode> InMemoryIndex => _index;
-
         public IndexSession(
             IModel<T> model,
             IIndexingStrategy indexingStrategy)
         {
             _model = model;
-            _index = new ConcurrentDictionary<long, VectorNode>();
             _indexingStrategy = indexingStrategy;
+            _index = new ConcurrentDictionary<long, VectorNode>();
         }
 
         public void Put(long docId, long keyId, T value)
@@ -36,24 +34,26 @@ namespace Sir.Search
         //public void Put(long docId, long keyId, T value)
         //{
         //    var vectors = _model.Tokenize(value);
-        //    var document = new VectorNode();
+        //    var tree = new VectorNode();
 
         //    foreach (var vector in vectors)
         //    {
-        //        _indexingStrategy.ExecutePut<T>(document, keyId, new VectorNode(vector, docId));
+        //        _indexingStrategy.ExecutePut<T>(tree, keyId, new VectorNode(vector, docId));
         //    }
 
-        //    var column = _index.GetOrAdd(keyId, new VectorNode());
+        //    var indexQueue = _indexQueue.GetOrAdd(keyId, new ProducerConsumerQueue<(long, long, VectorNode)>(TreeConsumer));
 
-        //    foreach (var node in PathFinder.All(document))
-        //    {
-        //        _indexingStrategy.ExecutePut<T>(column, keyId, new VectorNode(node.Vector, docId));
-        //    }
+        //    indexQueue.Enqueue((docId, keyId, tree));
         //}
 
         public IndexInfo GetIndexInfo()
         {
             return new IndexInfo(GetGraphInfo());
+        }
+
+        public IDictionary<long, VectorNode> GetInMemoryIndex()
+        {
+            return _index;
         }
 
         private IEnumerable<GraphInfo> GetGraphInfo()

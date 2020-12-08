@@ -44,17 +44,19 @@ namespace Sir.Mnist
                         var labelField = new Field("label", image.Label, index: false, store: true);
                         var document = new Document(new Field[] { imageField, labelField });
 
-                        document.Id = writeSession.Put(document);
+                        writeSession.Put(document);
                         indexSession.Put(document.Id, imageField.KeyId, image);
 
                         debugger.Step(indexSession);
                     }
 
-                    tree = indexSession.InMemoryIndex[imageIndexId];
+                    var indices = indexSession.GetInMemoryIndex();
+
+                    tree = indices[imageIndexId];
 
                     using (var stream = new WritableIndexStream(collectionId, sessionFactory, logger: logger))
                     {
-                        stream.Write(indexSession.InMemoryIndex);
+                        stream.Write(indices);
                     }
                 }
             }

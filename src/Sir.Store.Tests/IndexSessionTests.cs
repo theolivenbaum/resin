@@ -27,7 +27,7 @@ namespace Sir.Tests
                     indexSession.Put(i, 0, _data[i]);
                 }
 
-                tree = indexSession.InMemoryIndex[0];
+                tree = indexSession.GetInMemoryIndex()[0];
             }
 
             Debug.WriteLine(PathFinder.Visualize(tree));
@@ -78,9 +78,10 @@ namespace Sir.Tests
                     using (var indexSession = _sessionFactory.CreateIndexSession(model))
                     {
                         var doc = new Document(new Field[] { new Field(fieldName, data, index: true, store: true) });
-                        doc.Id = writeSession.Put(doc);
+                        
+                        writeSession.Put(doc);
                         indexSession.Put(doc.Id, keyId, data);
-                        stream.Write(indexSession.InMemoryIndex);
+                        stream.Write(indexSession.GetInMemoryIndex());
                     }
                 }
             }
@@ -134,15 +135,17 @@ namespace Sir.Tests
                     var data = _data[i];
                     var doc = new Document(new Field[] { new Field(fieldName, data, index: true, store: true) });
 
-                    doc.Id = writeSession.Put(doc);
+                    writeSession.Put(doc);
                     indexSession.Put(doc.Id, keyId, data);
                 }
 
-                index = indexSession.InMemoryIndex[keyId];
+                var indices = indexSession.GetInMemoryIndex();
+
+                index = indices[keyId];
 
                 using (var stream = new WritableIndexStream(collectionId, _sessionFactory))
                 {
-                    stream.Write(indexSession.InMemoryIndex);
+                    stream.Write(indices);
                 }
             }
 

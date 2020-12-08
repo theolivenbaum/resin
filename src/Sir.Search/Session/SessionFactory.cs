@@ -154,7 +154,7 @@ namespace Sir.Search
 
             foreach (var document in job.Documents)
             {
-                document.Id = writeSession.Put(document);
+                writeSession.Put(document);
 
                 //Parallel.ForEach(document, kv =>
                 foreach (var field in document.Fields)
@@ -176,7 +176,7 @@ namespace Sir.Search
             WriteSession writeSession, 
             IndexSession<string> indexSession)
         {
-            document.Id = writeSession.Put(document);
+            writeSession.Put(document);
 
             foreach (var field in document.Fields)
             {
@@ -227,7 +227,7 @@ namespace Sir.Search
 
                 using (var stream = new WritableIndexStream(job.CollectionId, this, logger: Logger))
                 {
-                    stream.Write(indexSession.InMemoryIndex);
+                    stream.Write(indexSession.GetInMemoryIndex());
                 }
             }
 
@@ -243,7 +243,7 @@ namespace Sir.Search
 
                 using (var stream = new WritableIndexStream(job.CollectionId, this, logger: Logger))
                 {
-                    stream.Write(indexSession.InMemoryIndex);
+                    stream.Write(indexSession.GetInMemoryIndex());
                 }
             }
         }
@@ -269,7 +269,7 @@ namespace Sir.Search
 
                 using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
                 {
-                    stream.Write(indexSession.InMemoryIndex);
+                    stream.Write(indexSession.GetInMemoryIndex());
                 }
             }
         }
