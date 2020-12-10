@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Sir.Documents;
 using Sir.Search;
 using Sir.VectorSpace;
 using System.Collections.Generic;
@@ -28,13 +29,13 @@ namespace Sir.Mnist
             var images = new MnistReader(args["imageFileName"], args["labelFileName"]).Read();
             VectorNode tree;
             var debugger = new IndexDebugger(logger);
-
+            var model = new LinearClassifierImageModel();
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
                 sessionFactory.Truncate(collectionId);
 
-                using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
-                using (var indexSession = sessionFactory.CreateIndexSession(new LinearClassifierImageModel()))
+                using (var writeSession = new WriteSession(new DocumentWriter(collectionId, sessionFactory)))
+                using (var indexSession = new IndexSession<IImage>(model, model))
                 {
                     var imageIndexId = writeSession.EnsureKeyExists("image");
 

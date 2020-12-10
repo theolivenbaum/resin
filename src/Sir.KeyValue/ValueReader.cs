@@ -71,7 +71,8 @@ namespace Sir.KeyValue
             }
             else if (DataType.STRING == typeId)
             {
-                return new string(System.Text.Encoding.Unicode.GetChars(buf.ToArray()));
+                var decompressed = QuickLZ.decompress(buf.ToArray());
+                return new string(System.Text.Encoding.Unicode.GetChars(decompressed));
             }
             else if (DataType.BYTE == typeId)
             {
@@ -79,7 +80,8 @@ namespace Sir.KeyValue
             }
             else
             {
-                return buf.ToArray();
+                var decompressed = QuickLZ.decompress(buf.ToArray());
+                return decompressed;
             }
         }
     }

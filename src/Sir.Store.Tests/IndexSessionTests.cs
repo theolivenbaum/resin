@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
+using Sir.Documents;
 using Sir.Search;
 using Sir.VectorSpace;
 using System;
@@ -20,7 +21,7 @@ namespace Sir.Tests
             var model = new BagOfCharsModel();
             VectorNode tree;
 
-            using (var indexSession = _sessionFactory.CreateIndexSession(model))
+            using (var indexSession = new IndexSession<string>(model, model))
             {
                 for (long i = 0; i < _data.Length; i++)
                 {
@@ -67,7 +68,7 @@ namespace Sir.Tests
             _sessionFactory.Truncate(collectionId);
 
             using (var stream = new WritableIndexStream(collectionId, _sessionFactory))
-            using (var writeSession = _sessionFactory.CreateWriteSession(collectionId))
+            using (var writeSession = new WriteSession(new DocumentWriter(collectionId, _sessionFactory)))
             {
                 var keyId = writeSession.EnsureKeyExists(fieldName);
 
@@ -75,7 +76,7 @@ namespace Sir.Tests
                 {
                     var data = _data[i];
 
-                    using (var indexSession = _sessionFactory.CreateIndexSession(model))
+                    using (var indexSession = new IndexSession<string>(model, model))
                     {
                         var doc = new Document(new Field[] { new Field(fieldName, data, index: true, store: true) });
                         
@@ -125,8 +126,8 @@ namespace Sir.Tests
 
             _sessionFactory.Truncate(collectionId);
 
-            using (var writeSession = _sessionFactory.CreateWriteSession(collectionId))
-            using (var indexSession = _sessionFactory.CreateIndexSession(model))
+            using (var writeSession = new WriteSession(new DocumentWriter(collectionId, _sessionFactory)))
+            using (var indexSession = new IndexSession<string>(model, model))
             {
                 var keyId = writeSession.EnsureKeyExists(fieldName);
 

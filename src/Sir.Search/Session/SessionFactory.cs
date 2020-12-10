@@ -196,7 +196,7 @@ namespace Sir.Search
             var batchNo = 0;
             var batchCount = 0;
 
-            using (var indexSession = CreateIndexSession(job.Model))
+            using (var indexSession = new IndexSession<string>(job.Model, job.Model))
             {
                 foreach (var document in job.Documents)
                 {
@@ -236,8 +236,8 @@ namespace Sir.Search
 
         public void Write(WriteJob job, int reportSize = 1000)
         {
-            using (var writeSession = CreateWriteSession(job.CollectionId))
-            using (var indexSession = CreateIndexSession(job.Model))
+            using (var writeSession = new WriteSession(new DocumentWriter(job.CollectionId, this)))
+            using (var indexSession = new IndexSession<string>(job.Model, job.Model))
             {
                 Write(job, writeSession, indexSession, reportSize);
 
@@ -255,8 +255,8 @@ namespace Sir.Search
             int reportSize = 1000
             )
         {
-            using (var writeSession = CreateWriteSession(collectionId))
-            using (var indexSession = CreateIndexSession(model))
+            using (var writeSession = new WriteSession(new DocumentWriter(collectionId, this)))
+            using (var indexSession = new IndexSession<string>(model, model))
             {
                 Write(
                     new WriteJob(
@@ -364,31 +364,6 @@ namespace Sir.Search
             }
 
             return true;
-        }
-        
-        public DocumentStreamSession CreateDocumentStreamSession()
-        {
-            return new DocumentStreamSession(this);
-        }
-
-        public WriteSession CreateWriteSession(ulong collectionId)
-        {
-            var documentWriter = new DocumentWriter(collectionId, this);
-
-            return new WriteSession(
-                collectionId,
-                documentWriter
-            );
-        }
-
-        public IndexSession<string> CreateIndexSession(ITextModel model)
-        {
-            return new IndexSession<string>(model, model);
-        }
-
-        public IndexSession<IImage> CreateIndexSession(IImageModel model)
-        {
-            return new IndexSession<IImage>(model, model);
         }
 
         public ISearchSession CreateQuerySession(IModel model)

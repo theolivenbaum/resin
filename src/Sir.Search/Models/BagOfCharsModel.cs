@@ -18,7 +18,7 @@ namespace Sir.Search
         public IEnumerable<IVector> Tokenize(string data)
         {
             Memory<char> source = data.ToCharArray();
-            
+
             if (source.Length > 0)
             {
                 var embedding = new SortedList<int, float>();
@@ -67,7 +67,7 @@ namespace Sir.Search
         }
     }
 
-    public class ContinuousBagOfWordsModel : DistanceCalculator, ITextModel
+    public class BocEmbeddingsModel : DistanceCalculator, ITextModel
     {
         public double IdenticalAngle => 0.95d;
         public double FoldAngle => 0.75d;
@@ -75,45 +75,70 @@ namespace Sir.Search
 
         private readonly BagOfCharsModel _wordTokenizer;
 
-        public ContinuousBagOfWordsModel(BagOfCharsModel wordTokenizer)
+        public BocEmbeddingsModel(BagOfCharsModel wordTokenizer)
         {
             _wordTokenizer = wordTokenizer;
-            NumOfDimensions = wordTokenizer.NumOfDimensions*3;
+            NumOfDimensions = wordTokenizer.NumOfDimensions;
         }
 
         public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node)
         {
-            GraphBuilder.MergeOrAdd(column, node, this);
+            GraphBuilder.Build(column, node, this);
         }
 
         public IEnumerable<IVector> Tokenize(string data)
         {
-            var tokens = (IList<IVector>)_wordTokenizer.Tokenize(data);
+            return _wordTokenizer.Tokenize(data);
+        }
 
-            for (int i = 0; i < tokens.Count; i++)
+        public class ContinuousBagOfWordsModel : DistanceCalculator, ITextModel
+        {
+            public double IdenticalAngle => 0.95d;
+            public double FoldAngle => 0.75d;
+            public override int NumOfDimensions { get; }
+
+            private readonly BagOfCharsModel _wordTokenizer;
+
+            public ContinuousBagOfWordsModel(BagOfCharsModel wordTokenizer)
             {
-                var context0 = i - 1;
-                var context1 = i + 1;
-                var token = tokens[i];
-                var vector = new IndexedVector(NumOfDimensions, token.Label);
+                _wordTokenizer = wordTokenizer;
+                NumOfDimensions = wordTokenizer.NumOfDimensions * 3;
+            }
 
-                if (context0 >= 0)
-                {
-                    vector.AddInPlace(tokens[context0].Shift(0, NumOfDimensions));
-                }
+            public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node)
+            {
+                GraphBuilder.MergeOrAdd(column, node, this);
+            }
 
-                if (context1 < tokens.Count)
-                {
-                    vector.AddInPlace(tokens[context1].Shift(_wordTokenizer.NumOfDimensions * 2, NumOfDimensions));
-                }
+            public IEnumerable<IVector> Tokenize(string data)
+            {
+                var tokens = (IList<IVector>)_wordTokenizer.Tokenize(data);
 
-                if (vector.ComponentCount == 0)
+                for (int i = 0; i < tokens.Count; i++)
                 {
-                    yield return token.Shift(_wordTokenizer.NumOfDimensions, NumOfDimensions);
-                }
-                else
-                {
-                    yield return vector;
+                    var context0 = i - 1;
+                    var context1 = i + 1;
+                    var token = tokens[i];
+                    var vector = new IndexedVector(NumOfDimensions, token.Label);
+
+                    if (context0 >= 0)
+                    {
+                        vector.AddInPlace(tokens[context0].Shift(0, NumOfDimensions));
+                    }
+
+                    if (context1 < tokens.Count)
+                    {
+                        vector.AddInPlace(tokens[context1].Shift(_wordTokenizer.NumOfDimensions * 2, NumOfDimensions));
+                    }
+
+                    if (vector.ComponentCount == 0)
+                    {
+                        yield return token.Shift(_wordTokenizer.NumOfDimensions, NumOfDimensions);
+                    }
+                    else
+                    {
+                        yield return vector;
+                    }
                 }
             }
         }

@@ -9,14 +9,11 @@ namespace Sir.Search
     /// </summary>
     public class WriteSession : IDisposable
     {
-        private readonly ulong _collectionId;
         private readonly DocumentWriter _streamWriter;
 
         public WriteSession(
-            ulong collectionId,
             DocumentWriter streamWriter)
         {
-            _collectionId = collectionId;
             _streamWriter = streamWriter;
         }
 

@@ -30,7 +30,7 @@ namespace Sir.Search
                 var t = _time.Elapsed.TotalSeconds;
                 var docsPerSecond = (int)(_sampleSize / t);
                 var debug = string.Join('\n', info.Info.Select(x => x.ToString()));
-                var message = $"\n{_time.Elapsed}\nbatch {_batchNo++}\n{debug}\n{docsPerSecond} docs/s";
+                var message = $"\n{_time.Elapsed}\ntotal {_sampleSize * _batchNo++}\n{debug}\n{docsPerSecond} docs/s";
 
                 _logger.LogInformation(message);
                 _time.Restart();
@@ -60,7 +60,7 @@ namespace Sir.Search
             {
                 var t = _time.Elapsed.TotalSeconds;
                 var itemsPerSecond = (int)(_sampleSize / t);
-                var message = $"\n{_time.Elapsed}\nbatch {_batchNo++}\n{itemsPerSecond} items/s";
+                var message = $"\n{_time.Elapsed}\ntotal {_sampleSize * _batchNo++}\n{itemsPerSecond} items/s";
 
                 _time.Restart();
 

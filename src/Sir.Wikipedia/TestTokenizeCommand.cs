@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Sir.Documents;
 using Sir.Search;
 using System.Collections.Generic;
 
@@ -29,11 +30,11 @@ namespace Sir.Wikipedia
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
-                using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
+                using (var writeSession = new WriteSession(new DocumentWriter(collectionId, sessionFactory)))
                 {
                     foreach (var page in payload.Batch(pageSize))
                     {
-                        using (var indexSession = sessionFactory.CreateIndexSession(model))
+                        using (var indexSession = new IndexSession<string>(model, model))
                         {
                             foreach (var document in page)
                             {

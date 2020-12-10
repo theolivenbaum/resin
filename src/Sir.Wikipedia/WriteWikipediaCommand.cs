@@ -1,12 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
-using Sir.Core;
 using Sir.Documents;
 using Sir.Search;
 using Sir.VectorSpace;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Wikipedia
 {
@@ -15,9 +12,9 @@ namespace Sir.Wikipedia
     /// https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20201026-cirrussearch-content.json.gz
     /// </summary>
     /// <example>
-    /// indexwikipedia --dataDirectory c:\data\resin --fileName d:\enwiki-20201026-cirrussearch-content.json.gz --collection wikipedia
+    /// writewikipedia --dataDirectory c:\data\resin --fileName d:\enwiki-20201026-cirrussearch-content.json.gz --collection wikipedia
     /// </example>
-    public class IndexWikipediaCommand : ICommand
+    public class WriteWikipediaCommand : ICommand
     {
         public void Run(IDictionary<string, string> args, ILogger logger)
         {
@@ -36,39 +33,21 @@ namespace Sir.Wikipedia
             if (take == 0)
                 take = int.MaxValue;
 
-            var model = new BagOfCharsModel();
             var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsToStore, fieldsToIndex);
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
-                var debugger = new IndexDebugger(logger, sampleSize);
+                sessionFactory.Truncate(collectionId);
+
+                var debugger = new BatchDebugger(sampleSize);
 
                 using (var writeSession = new WriteSession(new DocumentWriter(collectionId, sessionFactory)))
                 {
-                    foreach (var page in payload.Batch(pageSize))
+                    foreach (var document in payload)
                     {
-                        using (var indexStream = new WritableIndexStream(collectionId, sessionFactory, logger: logger))
-                        using (var indexSession = new IndexSession<string>(model, model))
-                        {
-                            foreach (var document in page)
-                            {
-                                writeSession.Put(document);
+                        writeSession.Put(document);
 
-                                foreach (var field in document.IndexableFields)
-                                {
-                                    indexSession.Put(document.Id, field.KeyId, (string)field.Value);
-                                }
-
-                                debugger.Step(indexSession);
-                            }
-
-                            indexStream.Write(indexSession.GetInMemoryIndex());
-
-                            //foreach (var column in indexSession.InMemoryIndex)
-                            //{
-                            //    Print($"wikipedia.{column.Key}", column.Value);
-                            //}
-                        }
+                        debugger.Step();
                     }
                 }
             }

@@ -113,6 +113,48 @@ namespace Sir.VectorSpace
             }
         }
 
+        public static void Build(
+            VectorNode root,
+            VectorNode node,
+            IModel model)
+        {
+            var cursor = root;
+
+            while (true)
+            {
+                var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
+
+                if (angle >= model.IdenticalAngle)
+                {
+                    break;
+                }
+                else if (angle > model.FoldAngle)
+                {
+                    if (cursor.Left == null)
+                    {
+                        cursor.Left = node;
+                        break;
+                    }
+                    else
+                    {
+                        cursor = cursor.Left;
+                    }
+                }
+                else
+                {
+                    if (cursor.Right == null)
+                    {
+                        cursor.Right = node;
+                        break;
+                    }
+                    else
+                    {
+                        cursor = cursor.Right;
+                    }
+                }
+            }
+        }
+
         public static void MergeOrAddConcurrent(
             VectorNode root,
             VectorNode node,

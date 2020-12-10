@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Sir.Core;
+using Sir.Documents;
 using Sir.Search;
 using System;
 using System.Collections.Generic;
@@ -34,8 +35,8 @@ namespace Sir.CommonCrawl
             };
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
-            using (var writeSession = sessionFactory.CreateWriteSession(collectionId))
-            using (var indexSession = sessionFactory.CreateIndexSession(model))
+            using (var writeSession = new WriteSession(new DocumentWriter(collectionId, sessionFactory)))
+            using (var indexSession = new IndexSession<string>(model, model))
             {
                 using (var queue = new ProducerConsumerQueue<Document>(document =>
                 {
