@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sir.Documents;
 using Sir.Search;
-using Sir.VectorSpace;
+using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Sir.Wikipedia
 {
@@ -38,7 +37,7 @@ namespace Sir.Wikipedia
             {
                 sessionFactory.Truncate(collectionId);
 
-                var debugger = new BatchDebugger(sampleSize);
+                var debugger = new BatchDebugger(logger, sampleSize);
 
                 using (var writeSession = new WriteSession(new DocumentWriter(collectionId, sessionFactory)))
                 {

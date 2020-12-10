@@ -26,7 +26,7 @@ namespace Sir.Wikipedia
 
             var model = new BagOfCharsModel();
             var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsToStore, fieldsToIndex);
-            var debugger = new BatchDebugger(sampleSize);
+            var debugger = new BatchDebugger(logger, sampleSize);
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
@@ -44,10 +44,7 @@ namespace Sir.Wikipedia
                                 {
                                     foreach (var token in model.Tokenize((string)field.Value))
                                     {
-                                        var debugInfo = debugger.Step();
-
-                                        if (debugInfo != null)
-                                            logger.LogInformation(debugInfo);
+                                        debugger.Step();
                                     }
                                 }
                             }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace Sir.Search
@@ -41,6 +42,7 @@ namespace Sir.Search
     public class BatchDebugger
     {
         private readonly Stopwatch _time;
+        private readonly ILogger _logger;
         private readonly int _sampleSize;
         private int _batchNo;
         private int _steps;
@@ -48,13 +50,14 @@ namespace Sir.Search
         public int StepCount => _steps;
         public TimeSpan Time => _time.Elapsed;
 
-        public BatchDebugger(int sampleSize = 1000)
+        public BatchDebugger(ILogger logger, int sampleSize = 1000)
         {
             _sampleSize = sampleSize;
             _time = Stopwatch.StartNew();
+            _logger = logger;
         }
 
-        public string Step()
+        public void Step()
         {
             if (++_steps % _sampleSize == 0)
             {
@@ -62,12 +65,9 @@ namespace Sir.Search
                 var itemsPerSecond = (int)(_sampleSize / t);
                 var message = $"\n{_time.Elapsed}\ntotal {_sampleSize * _batchNo++}\n{itemsPerSecond} items/s";
 
+                _logger.LogInformation(message);
                 _time.Restart();
-
-                return message;
             }
-
-            return null;
         }
     }
 }
