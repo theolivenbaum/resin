@@ -24,7 +24,6 @@ namespace Sir.Wikipedia
             var skip = args.ContainsKey("skip") ? int.Parse(args["skip"]) : 0;
             var take = args.ContainsKey("take") ? int.Parse(args["take"]) : int.MaxValue;
             var sampleSize = args.ContainsKey("sampleSize") ? int.Parse(args["sampleSize"]) : 1000;
-            var pageSize = args.ContainsKey("pageSize") ? int.Parse(args["pageSize"]) : 100000;
 
             var collectionId = collection.ToHash();
             var fieldsToStore = new HashSet<string> { "language", "wikibase_item", "title", "text", "url" };
@@ -51,12 +50,6 @@ namespace Sir.Wikipedia
                     }
                 }
             }
-        }
-
-        private static void Print(string name, VectorNode tree)
-        {
-            var diagram = PathFinder.Visualize(tree);
-            File.WriteAllText($@"c:\temp\{name}.txt", diagram);
         }
     }
 }
