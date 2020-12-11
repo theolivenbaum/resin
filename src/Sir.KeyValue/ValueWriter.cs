@@ -77,10 +77,9 @@ namespace Sir.KeyValue
             else if (value is string stringValue)
             {
                 var buf = System.Text.Encoding.Unicode.GetBytes(stringValue);
-                var compressed = QuickLZ.compress(buf, 1);
-                _stream.Write(compressed);
+                _stream.Write(buf);
                 dataType = DataType.STRING;
-                length = compressed.Length;
+                length = buf.Length;
             }
             else if (value is byte byteValue)
             {
@@ -91,10 +90,9 @@ namespace Sir.KeyValue
             else
             {
                 var buf = (byte[])value;
-                var compressed = QuickLZ.compress(buf, 1);
-                _stream.Write(compressed);
+                _stream.Write(buf);
                 dataType = DataType.STREAM;
-                length = compressed.Length;
+                length = buf.Length;
             }
 
             return (offset, length, dataType);

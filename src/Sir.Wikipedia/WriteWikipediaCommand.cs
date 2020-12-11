@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sir.Documents;
 using Sir.Search;
-using System;
 using System.Collections.Generic;
 
 namespace Sir.Wikipedia
