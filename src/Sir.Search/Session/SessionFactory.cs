@@ -203,7 +203,7 @@ namespace Sir.Search
         {
             using (var indexSession = new IndexSession<string>(job.Model, job.Model))
             {
-                Index(job, indexSession, reportSize);
+                Index(job, indexSession);
 
                 using (var stream = new WritableIndexStream(job.CollectionId, this, logger: Logger))
                 {
@@ -212,7 +212,7 @@ namespace Sir.Search
             }
         }
 
-        public void Index<T>(TextJob job, IndexSession<T> indexSession, int reportSize = 1000)
+        public void Index<T>(TextJob job, IndexSession<T> indexSession)
         {
             Log($"indexing collection {job.CollectionId}");
 
@@ -224,23 +224,24 @@ namespace Sir.Search
                 {
                     if (field.Value != null && field.Index)
                     {
-                        indexSession.Put(document.Id, field.KeyId, (T)field.Value);
+                        indexSession.Put(document.Id, field.KeyId, field.Tokens);
                     }
                 }
             }))
             {
-                Parallel.ForEach(job.Documents, document =>
+                foreach (var document in job.Documents)
                 {
-                    foreach (var field in document.Fields)
+                    Parallel.ForEach(document.Fields, field =>
+                    //foreach (var field in document.Fields)
                     {
                         if (field.Value != null && field.Index)
                         {
                             field.Analyze(job.Model);
                         }
-                    }
+                    });
 
                     queue.Enqueue(document);
-                });
+                }
             }
 
             Log($"processed indexing job (collection {job.CollectionId}) in {time.Elapsed}");

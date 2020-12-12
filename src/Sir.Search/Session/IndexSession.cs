@@ -22,12 +22,18 @@ namespace Sir.Search
 
         public void Put(long docId, long keyId, T value)
         {
-            var vectors = _model.Tokenize(value);
+            var tokens = _model.Tokenize(value);
+
+            Put(docId, keyId, tokens);
+        }
+
+        public void Put(long docId, long keyId, IEnumerable<IVector> tokens)
+        {
             var column = _index.GetOrAdd(keyId, new VectorNode());
 
-            foreach (var vector in vectors)
+            foreach (var token in tokens)
             {
-                _indexingStrategy.ExecutePut<T>(column, keyId, new VectorNode(vector, docId));
+                _indexingStrategy.ExecutePut<T>(column, keyId, new VectorNode(token, docId));
             }
         }
 

@@ -78,11 +78,11 @@ namespace Sir.Search
             if (query == null)
                 return;
 
-            foreach (var q in query.All())
-            //Parallel.ForEach(query.All(), q =>
+            //foreach (var q in query.All())
+            Parallel.ForEach(query.All(), q =>
             {
-                foreach (var term in q.Terms)
-                //Parallel.ForEach(q.Terms, term =>
+                //foreach (var term in q.Terms)
+                Parallel.ForEach(q.Terms, term =>
                 {
                     var columnReader = CreateColumnReader(term.CollectionId, term.KeyId);
 
@@ -99,8 +99,8 @@ namespace Sir.Search
                             }
                         }
                     }
-                }//);
-            }//);
+                });
+            });
         }
 
         private static ScoredResult Sort(IDictionary<(ulong, long), double> documents, int skip, int take)
