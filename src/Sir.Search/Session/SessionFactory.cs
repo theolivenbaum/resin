@@ -224,7 +224,7 @@ namespace Sir.Search
                 {
                     if (field.Value != null && field.Index)
                     {
-                        indexSession.Put(document.Id, field.KeyId, field.Tokens);
+                        indexSession.Put(document.Id, field.KeyId, field.GetTokens());
                     }
                 }
             }))

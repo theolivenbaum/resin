@@ -8,12 +8,13 @@ namespace Sir.Search
     [DebuggerDisplay("{Name}")]
     public class Field
     {
+        private VectorNode _tree;
+
         public long KeyId { get; set; }
         public string Name { get; }
         public object Value { get; set; }
         public bool Index { get; }
         public bool Store { get; }
-        public IEnumerable<IVector> Tokens { get; private set; }
 
         public Field(string name, object value, long keyId = -1, bool index = true, bool store = true)
         {
@@ -27,9 +28,22 @@ namespace Sir.Search
             KeyId = keyId;
         }
 
-        public void Analyze<T>(IModel<T> model)
+        public IEnumerable<IVector> GetTokens()
         {
-            Tokens = model.Tokenize((T)Value);
+            foreach (var node in PathFinder.All(_tree))
+                yield return node.Vector;
+        }
+
+        public void Analyze(ITextModel model)
+        {
+            var tokens = model.Tokenize((string)Value);
+            
+            _tree = new VectorNode();
+
+            foreach (var token in tokens)
+            {
+                model.ExecutePut<string>(_tree, KeyId, new VectorNode(token));
+            }
         }
     }
 }
