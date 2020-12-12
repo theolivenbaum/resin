@@ -2,13 +2,13 @@
 
 namespace Sir.Search
 {
-    public class WriteJob
+    public class TextJob
     {
         public ITextModel Model { get; }
         public ulong CollectionId { get; private set; }
         public IEnumerable<Document> Documents { get; private set; }
 
-        public WriteJob(
+        public TextJob(
             ulong collectionId, 
             IEnumerable<Document> documents, 
             ITextModel model)

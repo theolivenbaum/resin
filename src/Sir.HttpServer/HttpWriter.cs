@@ -25,7 +25,7 @@ namespace Sir.HttpServer
             var collectionId = request.Query["collection"].First().ToHash();
 
             _sessionFactory.Write(
-                new WriteJob(
+                new TextJob(
                     collectionId,
                     documents,
                     model));

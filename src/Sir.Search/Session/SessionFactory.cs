@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Sir.Core;
 using Sir.Documents;
 using Sir.VectorSpace;
 using System;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Sir.Search
 {
@@ -103,31 +105,41 @@ namespace Sir.Search
 
         public void Optimize(
             string collection,
-            HashSet<string> storeFields, 
+            HashSet<string> selectFields, 
             HashSet<string> indexFields,
             ITextModel model,
             int skip = 0,
             int take = 0,
-            int batchSize = 1000000)
+            int reportFrequency = 1000)
         {
             var collectionId = collection.ToHash();
-            var totalCount = 0;
+            var debugger = new IndexDebugger(Logger, reportFrequency);
 
             TruncateIndex(collectionId);
 
             using (var docStream = new DocumentStreamSession(this))
+            using (var documentReader = new DocumentReader(collectionId, this))
+            using (var indexSession = new IndexSession<string>(model, model))
             {
-                foreach (var batch in docStream.ReadDocs(
-                        collectionId,
-                        storeFields,
-                        storeFields,
+                var payload = docStream.ReadDocs(
+                        selectFields,
                         indexFields,
+                        documentReader,
                         skip,
-                        take).Batch(batchSize))
-                {
-                    Index(new WriteJob(collectionId, batch, model), ref totalCount);
+                        take);
 
-                    Log($"processed {totalCount} documents");
+                var batches = payload.Batch(reportFrequency);
+
+                foreach (var batch in batches)
+                {
+                    Index(new TextJob(collectionId, batch, model), indexSession);
+
+                    debugger.Step(indexSession, reportFrequency);
+                }
+
+                using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
+                {
+                    stream.Write(indexSession.GetInMemoryIndex());
                 }
             }
 
@@ -140,12 +152,12 @@ namespace Sir.Search
             ITextModel model,
             int reportSize = 1000)
         {
-            var job = new WriteJob(targetCollectionId, documents, model);
+            var job = new TextJob(targetCollectionId, documents, model);
 
             Write(job, reportSize);
         }
 
-        public void Write(WriteJob job, WriteSession writeSession, IndexSession<string> indexSession, int reportSize = 1000)
+        public void Write(TextJob job, WriteSession writeSession, IndexSession<string> indexSession, int reportSize = 1000)
         {
             Log($"writing to collection {job.CollectionId}");
 
@@ -168,7 +180,7 @@ namespace Sir.Search
                 debugger.Step(indexSession);
             }
 
-            Logger.LogInformation($"processed write job (collection {job.CollectionId}), time in total: {time.Elapsed}");
+            Logger.LogInformation($"processed write&index job (collection {job.CollectionId}) in {time.Elapsed}");
         }
 
         public void Write(
@@ -187,54 +199,54 @@ namespace Sir.Search
             }
         }
 
-        public void Index(WriteJob job, ref int totalCount, int reportSize = 1000)
+        public void Index(TextJob job, int reportSize = 1000)
         {
-            Log($"indexing collection {job.CollectionId}");
-
-            var time = Stopwatch.StartNew();
-            var batchTime = Stopwatch.StartNew();
-            var batchNo = 0;
-            var batchCount = 0;
-
             using (var indexSession = new IndexSession<string>(job.Model, job.Model))
             {
-                foreach (var document in job.Documents)
-                {
-                    var docId = (long)document.Get(SystemFields.DocumentId).Value;
-
-                    foreach (var field in document.Fields)
-                    {
-                        if (field.Value != null && field.Index)
-                        {
-                            indexSession.Put(docId, field.KeyId, field.Value.ToString());
-                        }
-                    }
-
-                    if (batchCount++ == reportSize)
-                    {
-                        var info = indexSession.GetIndexInfo();
-                        var t = batchTime.Elapsed.TotalMilliseconds;
-                        var docsPerSecond = (int)(reportSize / t * 1000);
-                        var debug = string.Join('\n', info.Info.Select(x => x.ToString()));
-
-                        Log($"\n{time.Elapsed}\nbatch {++batchNo}\n{debug}\n{docsPerSecond} docs/s \ntotal {totalCount} docs");
-
-                        batchTime.Restart();
-                        totalCount += batchCount;
-                        batchCount = 0;
-                    }
-                }
+                Index(job, indexSession, reportSize);
 
                 using (var stream = new WritableIndexStream(job.CollectionId, this, logger: Logger))
                 {
                     stream.Write(indexSession.GetInMemoryIndex());
                 }
             }
-
-            Log($"processed write job (collection {job.CollectionId}), time in total: {time.Elapsed}");
         }
 
-        public void Write(WriteJob job, int reportSize = 1000)
+        public void Index<T>(TextJob job, IndexSession<T> indexSession, int reportSize = 1000)
+        {
+            Log($"indexing collection {job.CollectionId}");
+
+            var time = Stopwatch.StartNew();
+
+            using (var queue = new ProducerConsumerQueue<Document>(document =>
+            {
+                foreach (var field in document.Fields)
+                {
+                    if (field.Value != null && field.Index)
+                    {
+                        indexSession.Put(document.Id, field.KeyId, (T)field.Value);
+                    }
+                }
+            }))
+            {
+                Parallel.ForEach(job.Documents, document =>
+                {
+                    foreach (var field in document.Fields)
+                    {
+                        if (field.Value != null && field.Index)
+                        {
+                            field.Analyze(job.Model);
+                        }
+                    }
+
+                    queue.Enqueue(document);
+                });
+            }
+
+            Log($"processed indexing job (collection {job.CollectionId}) in {time.Elapsed}");
+        }
+
+        public void Write(TextJob job, int reportSize = 1000)
         {
             using (var writeSession = new WriteSession(new DocumentWriter(job.CollectionId, this)))
             using (var indexSession = new IndexSession<string>(job.Model, job.Model))
@@ -259,7 +271,7 @@ namespace Sir.Search
             using (var indexSession = new IndexSession<string>(model, model))
             {
                 Write(
-                    new WriteJob(
+                    new TextJob(
                         collectionId,
                         documents,
                         model),

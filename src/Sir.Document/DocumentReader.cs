@@ -17,6 +17,8 @@ namespace Sir.Documents
         private readonly ValueIndexReader _keyIx;
         private readonly DocIndexReader _docIx;
 
+        public ulong CollectionId { get; }
+
         public DocumentReader(ulong collectionId, ISessionFactory sessionFactory)
         {
             var valueStream = sessionFactory.CreateReadStream(Path.Combine(sessionFactory.Directory, string.Format("{0}.val", collectionId)));
@@ -32,6 +34,8 @@ namespace Sir.Documents
             _valIx = new ValueIndexReader(valueIndexStream);
             _keyIx = new ValueIndexReader(keyIndexStream);
             _docIx = new DocIndexReader(docIndexStream);
+
+            CollectionId = collectionId;
         }
 
         public (long offset, int length) GetDocumentAddress(long docId)

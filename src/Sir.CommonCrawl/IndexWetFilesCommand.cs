@@ -23,7 +23,7 @@ namespace Sir.CommonCrawl
             {
                 sessionFactory.Truncate(collectionId);
 
-                var writeJob = new WriteJob(
+                var writeJob = new TextJob(
                     collectionId,
                     ReadWetFile(fileName)
                                 .Select(dic =>

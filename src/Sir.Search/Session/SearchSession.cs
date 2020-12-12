@@ -140,7 +140,7 @@ namespace Sir.Search
 
             foreach (var d in docIds)
             {
-                var doc = ReadDoc(d.Key, select, select, select, d.Value * scoreMultiplier);
+                var doc = ReadDoc(d.Key, select, select, d.Value * scoreMultiplier);
                 result.Add(doc);
             }
 

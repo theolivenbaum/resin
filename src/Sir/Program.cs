@@ -94,26 +94,27 @@ namespace Sir.Cmd
         }
 
         /// <summary>
-        /// Required args: collection, skip, take, batchSize
+        /// Required args: collection, skip, take, reportFrequency, fields
         /// </summary>
         private static void Optimize(IDictionary<string, string> args, BagOfCharsModel model, ILogger logger)
         {
             var dataDirectory = args["dataDirectory"];
             var collection = args["collection"];
-            var skip = int.Parse("skip");
-            var take = int.Parse("take");
-            var batchSize = int.Parse("batchSize");
+            var skip = int.Parse(args["skip"]);
+            var take = int.Parse(args["take"]);
+            var reportFrequency = int.Parse(args["reportFrequency"]);
+            var fields = new HashSet<string>(args["fields"].Split(','));
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
                 sessionFactory.Optimize(
                     collection, 
-                    new HashSet<string> { "title", "description", "url", "filename" },
-                    new HashSet<string> { "title", "description", "url" },
+                    fields,
+                    fields,
                     model,
                     skip,
                     take,
-                    batchSize);
+                    reportFrequency);
             }
         }
 
@@ -188,7 +189,7 @@ namespace Sir.Cmd
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             using (var documents = new DocumentStreamSession(sessionFactory))
             {
-                var doc = documents.ReadDoc((collectionId, documentId), select, select, select);
+                var doc = documents.ReadDoc((collectionId, documentId), select, select);
 
                 foreach (var field in doc.Fields)
                 {

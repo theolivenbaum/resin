@@ -203,7 +203,7 @@ namespace Sir.HttpServer.Features
                 {
                     var time = Stopwatch.StartNew();
 
-                    var writeJob = new WriteJob(
+                    var writeJob = new TextJob(
                         wetCollectionId,
                         writePayload,
                         new BagOfCharsModel());

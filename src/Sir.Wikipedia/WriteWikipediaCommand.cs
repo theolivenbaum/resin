@@ -25,7 +25,7 @@ namespace Sir.Wikipedia
 
             var collectionId = collection.ToHash();
             var fieldsToStore = new HashSet<string> { "language", "wikibase_item", "title", "text", "url" };
-            var fieldsToIndex = new HashSet<string> { "title", "text" };
+            var fieldsToIndex = new HashSet<string>();
 
             if (take == 0)
                 take = int.MaxValue;

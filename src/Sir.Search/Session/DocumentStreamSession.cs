@@ -27,7 +27,6 @@ namespace Sir.Search
         public IEnumerable<Document> ReadDocs(
             ulong collectionId, 
             HashSet<string> select,
-            HashSet<string> store,
             HashSet<string> index,
             int skip = 0, 
             int take = 0)
@@ -43,19 +42,39 @@ namespace Sir.Search
 
             while (docId <= docCount && took < take++)
             {
-                yield return ReadDoc((collectionId, docId++), select, store, index);
+                yield return ReadDoc((collectionId, docId++), select, index);
+            }
+        }
+
+        public IEnumerable<Document> ReadDocs(
+            HashSet<string> select,
+            HashSet<string> index,
+            DocumentReader documentReader,
+            int skip = 0,
+            int take = 0)
+        {
+            var docCount = documentReader.DocumentCount();
+
+            if (take == 0)
+                take = docCount;
+
+            var took = 0;
+            long docId = 1 + skip;
+
+            while (docId <= docCount && took++ < take)
+            {
+                yield return ReadDoc((documentReader.CollectionId, docId++), select, index);
             }
         }
 
         public Document ReadDoc(
             (ulong collectionId, long docId) docId,
             HashSet<string> select,
-            HashSet<string> store,
             HashSet<string> index,
+            DocumentReader streamReader,
             double? score = null
             )
         {
-            var streamReader = GetOrCreateDocumentReader(docId.collectionId);
             var docInfo = streamReader.GetDocumentAddress(docId.docId);
             var docMap = streamReader.GetDocumentMap(docInfo.offset, docInfo.length);
             var fields = new List<Field>();
@@ -71,11 +90,23 @@ namespace Sir.Search
                     var vInfo = streamReader.GetAddressOfValue(kvp.valId);
                     var val = streamReader.GetValue(vInfo.offset, vInfo.len, vInfo.dataType);
 
-                    fields.Add(new Field(key, val, kvp.keyId, index:index.Contains(key), store: store.Contains(key)));
+                    fields.Add(new Field(key, val, kvp.keyId, index:index.Contains(key), store: select.Contains(key)));
                 }
             }
 
             return new Document(fields, docId.docId, score.HasValue ? score.Value : 0);
+        }
+
+        public Document ReadDoc(
+            (ulong collectionId, long docId) docId,
+            HashSet<string> select,
+            HashSet<string> index,
+            double? score = null
+            )
+        {
+            var streamReader = GetOrCreateDocumentReader(docId.collectionId);
+
+            return ReadDoc(docId, select, index, streamReader, score);
         }
 
         private DocumentReader GetOrCreateDocumentReader(ulong collectionId)
