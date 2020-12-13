@@ -21,8 +21,12 @@ namespace Sir.Search
         {
             var docMap = new List<(long keyId, long valId)>();
 
+            document.Id = _streamWriter.IncrementDocId();
+
             foreach (var field in document.Fields)
             {
+                field.DocumentId = document.Id;
+
                 if (field.Value != null && field.Store)
                 {
                     Write(field, docMap);
@@ -41,8 +45,6 @@ namespace Sir.Search
             Write(SystemFields.Created, DateTime.Now.ToBinary(), docMap);
 
             var docMeta = _streamWriter.PutDocumentMap(docMap);
-            
-            document.Id = _streamWriter.IncrementDocId();
 
             _streamWriter.PutDocumentAddress(document.Id, docMeta.offset, docMeta.length);
         }

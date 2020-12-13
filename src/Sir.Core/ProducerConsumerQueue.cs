@@ -85,4 +85,37 @@ namespace Sir.Core
             _queue.Dispose();
         }
     }
+
+    public class ProducerConsumerQueueCollection<T> : IDisposable
+    {
+        private readonly ConcurrentDictionary<long, ProducerConsumerQueue<T>> _queues;
+        private readonly int _numOfConsumers;
+        private readonly Action<T> _consumingAction;
+
+        public ProducerConsumerQueueCollection(Action<T> consumingAction, int numOfConsumers = 1)
+        {
+            if (consumingAction == null)
+            {
+                throw new ArgumentNullException(nameof(consumingAction));
+            }
+
+            _numOfConsumers = numOfConsumers;
+            _consumingAction = consumingAction;
+            _queues = new ConcurrentDictionary<long, ProducerConsumerQueue<T>>();
+        }
+
+        public void Enqueue(long keyId, T item)
+        {
+            var queue = _queues.GetOrAdd(keyId, new ProducerConsumerQueue<T>(_consumingAction, _numOfConsumers));
+            queue.Enqueue(item);
+        }
+
+        public void Dispose()
+        {
+            foreach (var queue in _queues.Values)
+            {
+                queue.Dispose();
+            }
+        }
+    }
 }

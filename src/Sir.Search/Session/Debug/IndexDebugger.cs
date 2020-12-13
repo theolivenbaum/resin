@@ -23,9 +23,11 @@ namespace Sir.Search
             _logger = logger;
         }
 
-        public void Step(IIndexSession indexSession)
+        public void Step(IIndexSession indexSession, string message = null)
         {
-            if (++_steps % _sampleSize == 0)
+            Interlocked.Increment(ref _steps);
+
+            if (_steps % _sampleSize == 0)
             {
                 var info = indexSession.GetIndexInfo();
                 var t = _time.Elapsed.TotalSeconds;
@@ -34,9 +36,9 @@ namespace Sir.Search
 
                 Interlocked.Increment(ref _batchNo);
 
-                var message = $"\n{_time.Elapsed}\ntotal {_sampleSize * _batchNo}\n{debug}\n{docsPerSecond} docs/s";
+                var record = $"\n{_time.Elapsed}\ntotal {_sampleSize * _batchNo}\n{debug}\n{docsPerSecond} docs/s\n{message}";
 
-                _logger.LogInformation(message);
+                _logger.LogInformation(record);
                 _time.Restart();
             }
         }
@@ -52,7 +54,7 @@ namespace Sir.Search
                 var docsPerSecond = (int)(_sampleSize / t);
                 var debug = string.Join('\n', info.Info.Select(x => x.ToString()));
 
-                Interlocked.Increment(ref _batchNo);
+                _batchNo++;
 
                 var message = $"\n{_time.Elapsed}\ntotal {_sampleSize * _batchNo}\n{debug}\n{docsPerSecond} docs/s";
 
@@ -82,7 +84,9 @@ namespace Sir.Search
 
         public void Step()
         {
-            if (++_steps % _sampleSize == 0)
+            Interlocked.Increment(ref _steps);
+
+            if (_steps % _sampleSize == 0)
             {
                 var t = _time.Elapsed.TotalSeconds;
                 var itemsPerSecond = (int)(_sampleSize / t);
@@ -105,7 +109,7 @@ namespace Sir.Search
                 var t = _time.Elapsed.TotalSeconds;
                 var itemsPerSecond = (int)(_sampleSize / t);
 
-                Interlocked.Increment(ref _batchNo);
+                _batchNo++;
 
                 var message = $"\n{_time.Elapsed}\ntotal {_sampleSize * _batchNo}\n{itemsPerSecond} items/s";
 

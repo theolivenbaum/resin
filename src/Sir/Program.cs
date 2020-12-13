@@ -103,6 +103,7 @@ namespace Sir.Cmd
             var skip = int.Parse(args["skip"]);
             var take = int.Parse(args["take"]);
             var reportFrequency = int.Parse(args["reportFrequency"]);
+            var pageSize = int.Parse(args["pageSize"]);
             var fields = new HashSet<string>(args["fields"].Split(','));
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
@@ -114,7 +115,8 @@ namespace Sir.Cmd
                     model,
                     skip,
                     take,
-                    reportFrequency);
+                    reportFrequency,
+                    pageSize);
             }
         }
 

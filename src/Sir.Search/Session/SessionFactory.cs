@@ -110,16 +110,18 @@ namespace Sir.Search
             ITextModel model,
             int skip = 0,
             int take = 0,
-            int reportFrequency = 1000)
+            int reportFrequency = 1000,
+            int pageSize = 100000,
+            bool truncateIndex = true)
         {
             var collectionId = collection.ToHash();
             var debugger = new IndexDebugger(Logger, reportFrequency);
 
-            TruncateIndex(collectionId);
+            if (truncateIndex)
+                TruncateIndex(collectionId);
 
             using (var docStream = new DocumentStreamSession(this))
             using (var documentReader = new DocumentReader(collectionId, this))
-            using (var indexSession = new IndexSession<string>(model, model))
             {
                 var payload = docStream.ReadDocs(
                         selectFields,
@@ -128,18 +130,48 @@ namespace Sir.Search
                         skip,
                         take);
 
-                var batches = payload.Batch(reportFrequency);
-
-                foreach (var batch in batches)
+                using (var writeQueue = new ProducerConsumerQueue<IndexSession<string>>(indexSession =>
                 {
-                    Index(new TextJob(collectionId, batch, model), indexSession);
-
-                    debugger.Step(indexSession, reportFrequency);
-                }
-
-                using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
+                    using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
+                    {
+                        stream.Write(indexSession.GetInMemoryIndex());
+                    }
+                }))
                 {
-                    stream.Write(indexSession.GetInMemoryIndex());
+                    foreach (var page in payload.Batch(pageSize))
+                    {
+                        using (var indexSession = new IndexSession<string>(model, model))
+                        {
+                            using (var indexQueue = new ProducerConsumerQueue<Document>(document =>
+                            {
+                                foreach (var field in document.Fields)
+                                {
+                                    indexSession.Put(field.DocumentId, field.KeyId, field.GetTokens());
+                                }
+
+                                debugger.Step(indexSession);
+                            }))
+                            { 
+                                using (var analyzeQueue = new ProducerConsumerQueue<Document>(document =>
+                                {
+                                    foreach (var field in document.Fields)
+                                    {
+                                        field.Analyze(model);
+                                    }
+
+                                    indexQueue.Enqueue(document);
+                                }))
+                                {
+                                    foreach (var document in page)
+                                    {
+                                        analyzeQueue.Enqueue(document);
+                                    }
+                                }
+                            }
+                            
+                            writeQueue.Enqueue(indexSession);
+                        }
+                    }
                 }
             }
 
@@ -220,13 +252,14 @@ namespace Sir.Search
 
             using (var queue = new ProducerConsumerQueue<Document>(document =>
             {
-                foreach (var field in document.Fields)
+                Parallel.ForEach(document.Fields, field =>
+                //foreach (var field in document.Fields)
                 {
                     if (field.Value != null && field.Index)
                     {
-                        indexSession.Put(document.Id, field.KeyId, field.GetTokens());
+                        indexSession.Put(field.DocumentId, field.KeyId, field.GetTokens());
                     }
-                }
+                });
             }))
             {
                 foreach (var document in job.Documents)

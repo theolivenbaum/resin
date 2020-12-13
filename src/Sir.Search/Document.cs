@@ -8,7 +8,9 @@ namespace Sir.Search
     [JsonConverter(typeof(DocumentJsonConverter))]
     public class Document
     {
-        public long Id { get; set; }
+        private long _id;
+
+        public long Id { get; set; } 
         public double Score { get; set; }
         public IList<Field> Fields { get; set; }
 
@@ -24,7 +26,7 @@ namespace Sir.Search
             }
         }
 
-        public Document() 
+        public Document()
         {
             Fields = new List<Field>();
         }
@@ -34,6 +36,15 @@ namespace Sir.Search
             Fields = fields;
             Id = documentId;
             Score = score;
+            _id = documentId;
+
+            if (_id > -1)
+            {
+                foreach (var field in Fields)
+                {
+                    field.DocumentId = _id;
+                }
+            }
         }
 
         public Field Get(string key)
