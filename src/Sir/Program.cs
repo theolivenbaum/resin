@@ -111,7 +111,6 @@ namespace Sir.Cmd
                 sessionFactory.Optimize(
                     collection, 
                     fields,
-                    fields,
                     model,
                     skip,
                     take,
@@ -191,7 +190,7 @@ namespace Sir.Cmd
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             using (var documents = new DocumentStreamSession(sessionFactory))
             {
-                var doc = documents.ReadDoc((collectionId, documentId), select, select);
+                var doc = documents.ReadDoc((collectionId, documentId), select);
 
                 foreach (var field in doc.Fields)
                 {

@@ -27,7 +27,6 @@ namespace Sir.Search
         public IEnumerable<Document> ReadDocs(
             ulong collectionId, 
             HashSet<string> select,
-            HashSet<string> index,
             int skip = 0, 
             int take = 0)
         {
@@ -42,13 +41,12 @@ namespace Sir.Search
 
             while (docId <= docCount && took < take++)
             {
-                yield return ReadDoc((collectionId, docId++), select, index);
+                yield return ReadDoc((collectionId, docId++), select);
             }
         }
 
         public IEnumerable<Document> ReadDocs(
             HashSet<string> select,
-            HashSet<string> index,
             DocumentReader documentReader,
             int skip = 0,
             int take = 0)
@@ -63,14 +61,13 @@ namespace Sir.Search
 
             while (docId <= docCount && took++ < take)
             {
-                yield return ReadDoc((documentReader.CollectionId, docId++), select, index);
+                yield return ReadDoc((documentReader.CollectionId, docId++), select);
             }
         }
 
         public Document ReadDoc(
             (ulong collectionId, long docId) docId,
             HashSet<string> select,
-            HashSet<string> index,
             DocumentReader streamReader,
             double? score = null
             )
@@ -90,7 +87,7 @@ namespace Sir.Search
                     var vInfo = streamReader.GetAddressOfValue(kvp.valId);
                     var val = streamReader.GetValue(vInfo.offset, vInfo.len, vInfo.dataType);
 
-                    fields.Add(new Field(key, val, kvp.keyId, index:index.Contains(key), store: select.Contains(key)));
+                    fields.Add(new Field(key, val, kvp.keyId, index: select.Contains(key), store: select.Contains(key)));
                 }
             }
 
@@ -100,13 +97,12 @@ namespace Sir.Search
         public Document ReadDoc(
             (ulong collectionId, long docId) docId,
             HashSet<string> select,
-            HashSet<string> index,
             double? score = null
             )
         {
             var streamReader = GetOrCreateDocumentReader(docId.collectionId);
 
-            return ReadDoc(docId, select, index, streamReader, score);
+            return ReadDoc(docId, select, streamReader, score);
         }
 
         private DocumentReader GetOrCreateDocumentReader(ulong collectionId)

@@ -17,8 +17,10 @@ namespace Sir.Core
         private Task[] _consumers;
         private bool _started;
         private bool _joining;
+        private int _enqueued;
 
-        public int Count { get { return _queue.Count; } }
+        public int QueueLength { get { return _queue.Count; } }
+        public int EnqueuedCount { get { return _enqueued; } }
 
         public bool IsCompleted { get { return _queue == null || _queue.IsCompleted; } }
 
@@ -66,6 +68,8 @@ namespace Sir.Core
         public void Enqueue(T item)
         {
             _queue.Add(item);
+
+            _enqueued++;
         }
 
         public void Join()
@@ -86,13 +90,13 @@ namespace Sir.Core
         }
     }
 
-    public class ProducerConsumerQueueCollection<T> : IDisposable
+    public class KeyedProducerConsumerQueue<TKeyType, IValueType> : IDisposable
     {
-        private readonly ConcurrentDictionary<long, ProducerConsumerQueue<T>> _queues;
+        private readonly ConcurrentDictionary<TKeyType, ProducerConsumerQueue<IValueType>> _queues;
         private readonly int _numOfConsumers;
-        private readonly Action<T> _consumingAction;
+        private readonly Action<IValueType> _consumingAction;
 
-        public ProducerConsumerQueueCollection(Action<T> consumingAction, int numOfConsumers = 1)
+        public KeyedProducerConsumerQueue(Action<IValueType> consumingAction, int numOfConsumers = 1)
         {
             if (consumingAction == null)
             {
@@ -101,12 +105,12 @@ namespace Sir.Core
 
             _numOfConsumers = numOfConsumers;
             _consumingAction = consumingAction;
-            _queues = new ConcurrentDictionary<long, ProducerConsumerQueue<T>>();
+            _queues = new ConcurrentDictionary<TKeyType, ProducerConsumerQueue<IValueType>>();
         }
 
-        public void Enqueue(long keyId, T item)
+        public void Enqueue(TKeyType key, IValueType item)
         {
-            var queue = _queues.GetOrAdd(keyId, new ProducerConsumerQueue<T>(_consumingAction, _numOfConsumers));
+            var queue = _queues.GetOrAdd(key, new ProducerConsumerQueue<IValueType>(_consumingAction, _numOfConsumers));
             queue.Enqueue(item);
         }
 

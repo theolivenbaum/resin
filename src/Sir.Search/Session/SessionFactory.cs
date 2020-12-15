@@ -106,7 +106,6 @@ namespace Sir.Search
         public void Optimize(
             string collection,
             HashSet<string> selectFields, 
-            HashSet<string> indexFields,
             ITextModel model,
             int skip = 0,
             int take = 0,
@@ -125,7 +124,6 @@ namespace Sir.Search
             {
                 var payload = docStream.ReadDocs(
                         selectFields,
-                        indexFields,
                         documentReader,
                         skip,
                         take);
@@ -142,29 +140,23 @@ namespace Sir.Search
                     {
                         using (var indexSession = new IndexSession<string>(model, model))
                         {
-                            using (var indexQueue = new ProducerConsumerQueue<Document>(document =>
+                            using (var indexQueue = new IndexProducerConsumerQueue(field =>
                             {
-                                foreach (var field in document.Fields)
-                                {
-                                    indexSession.Put(field.DocumentId, field.KeyId, field.GetTokens());
-                                }
-
-                                debugger.Step(indexSession);
+                                indexSession.Put(field.DocumentId, field.KeyId, field.Tokens);
                             }))
-                            { 
-                                using (var analyzeQueue = new ProducerConsumerQueue<Document>(document =>
+                            {
+                                using (var analyzeQueue = new ProducerConsumerQueue<Field>(field =>
                                 {
-                                    foreach (var field in document.Fields)
-                                    {
-                                        field.Analyze(model);
-                                    }
-
-                                    indexQueue.Enqueue(document);
+                                    field.Analyze(model);
+                                    indexQueue.Enqueue(field);
                                 }))
                                 {
                                     foreach (var document in page)
                                     {
-                                        analyzeQueue.Enqueue(document);
+                                        foreach (var field in document.Fields)
+                                        {
+                                            analyzeQueue.Enqueue(field);
+                                        }
                                     }
                                 }
                             }
@@ -252,26 +244,24 @@ namespace Sir.Search
 
             using (var queue = new ProducerConsumerQueue<Document>(document =>
             {
-                Parallel.ForEach(document.Fields, field =>
-                //foreach (var field in document.Fields)
+                foreach (var field in document.Fields)
                 {
                     if (field.Value != null && field.Index)
                     {
-                        indexSession.Put(field.DocumentId, field.KeyId, field.GetTokens());
+                        indexSession.Put(field.DocumentId, field.KeyId, field.Tokens);
                     }
-                });
+                }
             }))
             {
                 foreach (var document in job.Documents)
                 {
-                    Parallel.ForEach(document.Fields, field =>
-                    //foreach (var field in document.Fields)
+                    foreach (var field in document.Fields)
                     {
                         if (field.Value != null && field.Index)
                         {
                             field.Analyze(job.Model);
                         }
-                    });
+                    }
 
                     queue.Enqueue(document);
                 }
@@ -483,6 +473,40 @@ namespace Sir.Search
 
         public void Dispose()
         {
+        }
+    }
+
+    public class IndexProducerConsumerQueue : IDisposable
+    {
+        private readonly ConcurrentDictionary<long, ProducerConsumerQueue<Field>> _queues;
+        private readonly int _numOfConsumers;
+        private readonly Action<Field> _consumingAction;
+
+        public IndexProducerConsumerQueue(Action<Field> consumingAction, int numOfConsumers = 1)
+        {
+            if (consumingAction == null)
+            {
+                throw new ArgumentNullException(nameof(consumingAction));
+            }
+
+            _numOfConsumers = numOfConsumers;
+            _consumingAction = consumingAction;
+            _queues = new ConcurrentDictionary<long, ProducerConsumerQueue<Field>>();
+        }
+
+        public void Enqueue(Field field)
+        {
+            var queue = _queues.GetOrAdd(field.KeyId, new ProducerConsumerQueue<Field>(_consumingAction, _numOfConsumers));
+            
+            queue.Enqueue(field);
+        }
+
+        public void Dispose()
+        {
+            foreach (var queue in _queues.Values)
+            {
+                queue.Dispose();
+            }
         }
     }
 }

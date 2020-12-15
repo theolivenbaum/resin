@@ -8,6 +8,8 @@ namespace Sir.Search
     [DebuggerDisplay("{Name}")]
     public class Field
     {
+        private IEnumerable<IVector> _tokens;
+
         public VectorNode Tree { get; private set; }
         public long KeyId { get; set; }
         public long DocumentId { get; set; }
@@ -15,6 +17,7 @@ namespace Sir.Search
         public object Value { get; set; }
         public bool Index { get; }
         public bool Store { get; }
+        public IEnumerable<IVector> Tokens { get { return _tokens; } }
 
         public Field(string name, object value, long keyId = -1, bool index = true, bool store = true, long documentId = -1)
         {
@@ -29,7 +32,7 @@ namespace Sir.Search
             DocumentId = documentId;
         }
 
-        public IEnumerable<IVector> GetTokens()
+        private IEnumerable<IVector> GetTokens()
         {
             foreach (var node in PathFinder.All(Tree))
                 yield return node.Vector;
@@ -45,6 +48,8 @@ namespace Sir.Search
             {
                 model.ExecutePut<string>(Tree, KeyId, new VectorNode(token));
             }
+
+            _tokens = GetTokens();
         }
     }
 }
