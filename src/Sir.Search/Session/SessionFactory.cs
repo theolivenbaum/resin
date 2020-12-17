@@ -114,7 +114,7 @@ namespace Sir.Search
             bool truncateIndex = true)
         {
             var collectionId = collection.ToHash();
-            var debugger = new IndexDebugger(Logger, reportFrequency);
+            var debugger = new IndexDebugger(Logger, pageSize);
 
             if (truncateIndex)
                 TruncateIndex(collectionId);
@@ -123,8 +123,8 @@ namespace Sir.Search
             using (var documentReader = new DocumentReader(collectionId, this))
             {
                 var payload = docStream.ReadDocs(
-                        selectFields,
                         documentReader,
+                        selectFields,
                         skip,
                         take);
 
@@ -404,7 +404,7 @@ namespace Sir.Search
             return true;
         }
 
-        public ISearchSession CreateQuerySession(IModel model)
+        public ISearchSession CreateSearchSession(IModel model)
         {
             return new SearchSession(
                 this,

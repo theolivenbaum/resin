@@ -61,7 +61,7 @@ namespace Sir.HttpServer
             _logger.LogInformation(JsonConvert.SerializeObject(debug));
 #endif
 
-            using (var readSession = _sessionFactory.CreateQuerySession(model))
+            using (var readSession = _sessionFactory.CreateSearchSession(model))
             {
                 return readSession.Search(query, skip, take);
             }

@@ -41,13 +41,13 @@ namespace Sir.Search
 
             while (docId <= docCount && took < take++)
             {
-                yield return ReadDoc((collectionId, docId++), select);
+                yield return ReadDoc((collectionId, docId++), select, documentReader);
             }
         }
 
         public IEnumerable<Document> ReadDocs(
-            HashSet<string> select,
             DocumentReader documentReader,
+            HashSet<string> select,
             int skip = 0,
             int take = 0)
         {
@@ -61,7 +61,7 @@ namespace Sir.Search
 
             while (docId <= docCount && took++ < take)
             {
-                yield return ReadDoc((documentReader.CollectionId, docId++), select);
+                yield return ReadDoc((documentReader.CollectionId, docId++), select, documentReader);
             }
         }
 
@@ -97,8 +97,7 @@ namespace Sir.Search
         public Document ReadDoc(
             (ulong collectionId, long docId) docId,
             HashSet<string> select,
-            double? score = null
-            )
+            double? score = null)
         {
             var streamReader = GetOrCreateDocumentReader(docId.collectionId);
 

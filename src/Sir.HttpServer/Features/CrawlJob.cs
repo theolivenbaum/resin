@@ -79,7 +79,7 @@ namespace Sir.HttpServer.Features
                 and: And, 
                 or: Or);
 
-            using (var readSession = _sessionFactory.CreateQuerySession(_model))
+            using (var readSession = _sessionFactory.CreateSearchSession(_model))
             {
                 var originalResult = readSession.Search(originalQuery, _skip, _take)
                     .Documents

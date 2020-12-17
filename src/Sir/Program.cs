@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Sir.Documents;
 using Sir.Search;
 using Sir.VectorSpace;
 
@@ -189,8 +190,9 @@ namespace Sir.Cmd
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             using (var documents = new DocumentStreamSession(sessionFactory))
+            using (var documentReader = new DocumentReader(collectionId, sessionFactory))
             {
-                var doc = documents.ReadDoc((collectionId, documentId), select);
+                var doc = documents.ReadDoc((collectionId, documentId), select, documentReader);
 
                 foreach (var field in doc.Fields)
                 {

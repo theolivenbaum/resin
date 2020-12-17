@@ -63,7 +63,7 @@ namespace Sir.HttpServer.Features
                 var targetCollectionId = _target.ToHash();
                 IEnumerable<Document> documents;
 
-                using (var readSession = _sessionFactory.CreateQuerySession(_model))
+                using (var readSession = _sessionFactory.CreateSearchSession(_model))
                 {
                     documents = readSession.Search(query, _skip, _take).Documents;
                 }
