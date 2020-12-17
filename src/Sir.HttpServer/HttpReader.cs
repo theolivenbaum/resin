@@ -58,7 +58,9 @@ namespace Sir.HttpServer
 
             _httpQueryParser.ParseQuery(query, debug);
 
-            _logger.LogInformation(JsonConvert.SerializeObject(debug));
+            var queryLog = JsonConvert.SerializeObject(debug);
+
+            _logger.LogDebug($"incoming query: {queryLog}");
 #endif
 
             using (var readSession = _sessionFactory.CreateSearchSession(model))

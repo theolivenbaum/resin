@@ -104,8 +104,11 @@ namespace Sir.Search
                 cursor = query;
             }
 
-            if (_log!=null)
-                _log.LogDebug(JsonConvert.SerializeObject(root));
+            if (_log != null)
+            {
+                var queryLog = JsonConvert.SerializeObject(root);
+                _log.LogDebug($"parsed query: {queryLog}");
+            }
 
             return Parse(root, select);
         }
@@ -195,10 +198,7 @@ namespace Sir.Search
                     }
                 }
             }
-
-            if (_log != null)
-                _log.LogDebug(JsonConvert.SerializeObject(root));
-
+                
             return root;
         }
 
