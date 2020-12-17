@@ -87,7 +87,7 @@ namespace Sir.Search
                     var vInfo = streamReader.GetAddressOfValue(kvp.valId);
                     var val = streamReader.GetValue(vInfo.offset, vInfo.len, vInfo.dataType);
 
-                    fields.Add(new Field(key, val, kvp.keyId, index: select.Contains(key), store: select.Contains(key)));
+                    fields.Add(new Field(key, val, kvp.keyId));
                 }
             }
 
