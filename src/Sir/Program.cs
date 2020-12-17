@@ -19,12 +19,12 @@ namespace Sir.Cmd
                 builder
                     .AddFilter("Microsoft", LogLevel.Warning)
                     .AddFilter("System", LogLevel.Warning)
-                    .AddFilter("Sir.Cmd.Program", LogLevel.Information)
+                    .AddFilter("Sir", LogLevel.Information)
                     .AddConsole();
                     //.AddDebug();
             });
 
-            var logger = loggerFactory.CreateLogger("Sir.Cmd.Program");
+            var logger = loggerFactory.CreateLogger("Sir");
 
             logger.LogInformation($"processing command: {string.Join(" ", args)}");
 

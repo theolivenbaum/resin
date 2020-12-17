@@ -16,9 +16,10 @@ namespace Sir.HttpServer
             services.Add(new ServiceDescriptor(typeof(IConfigurationProvider), config));
 
             var loggerFactory = services.BuildServiceProvider().GetService<ILoggerFactory>();
+            var logger = loggerFactory.CreateLogger("Sir");
             var model = new BagOfCharsModel();
-            var sessionFactory = new SessionFactory(@"c:\data\resin", loggerFactory.CreateLogger<SessionFactory>());
-            var qp = new QueryParser<string>(sessionFactory, model, loggerFactory.CreateLogger<QueryParser<string>>());
+            var sessionFactory = new SessionFactory(@"c:\data\resin", logger);
+            var qp = new QueryParser<string>(sessionFactory, model, logger);
             var httpParser = new HttpQueryParser(qp);
 
             services.AddSingleton(typeof(ITextModel), model);

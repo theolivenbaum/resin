@@ -42,7 +42,7 @@ namespace Sir.Search
                             var vector = new IndexedVector(
                                 embedding,
                                 NumOfDimensions,
-                                source.Slice(offset, len));
+                                new string(source.Slice(offset, len).Span));
 
                             embedding.Clear();
                             yield return vector;
@@ -59,7 +59,7 @@ namespace Sir.Search
                     var vector = new IndexedVector(
                                 embedding,
                                 NumOfDimensions,
-                                source.Slice(offset, len));
+                                new string(source.Slice(offset, len).Span));
 
                     yield return vector;
                 }

@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace Sir.VectorSpace
 {
+    [System.Diagnostics.DebuggerDisplay("{Label}")]
     public class IndexedVector : IVector
     {
         public object Label { get; }
@@ -158,7 +159,7 @@ namespace Sir.VectorSpace
 
         public override string ToString()
         {
-            return Label == null ? Value.ToString() : Label.ToString();
+            return Label.ToString();
         }
     }
 

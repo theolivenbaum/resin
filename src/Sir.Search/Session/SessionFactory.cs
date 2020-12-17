@@ -36,13 +36,19 @@ namespace Sir.Search
             _keys = LoadKeys();
             Logger = logger;
 
-           Log($"sessionfactory initiated in {time.Elapsed}");
+           LogInformation($"sessionfactory initiated in {time.Elapsed}");
         }
 
-        private void Log(string message)
+        private void LogInformation(string message)
         {
             if (Logger != null)
                 Logger.LogInformation(message);
+        }
+
+        private void LogDebug(string message)
+        {
+            if (Logger != null)
+                Logger.LogDebug(message);
         }
 
         public long GetDocCount(string collection)
@@ -67,7 +73,7 @@ namespace Sir.Search
 
             _keys.Remove(collectionId, out _);
 
-            Log($"truncated collection {collectionId} ({count} files)");
+            LogInformation($"truncated collection {collectionId} ({count} files)");
         }
 
         public void TruncateIndex(ulong collectionId)
@@ -100,7 +106,7 @@ namespace Sir.Search
                 count++;
             }
 
-            Log($"truncated index {collectionId} ({count} files)");
+            LogInformation($"truncated index {collectionId} ({count} files)");
         }
 
         public void Optimize(
@@ -169,7 +175,7 @@ namespace Sir.Search
                 }
             }
 
-            Log($"optimized collection {collection}");
+            LogInformation($"optimized collection {collection}");
         }
 
         public void SaveAs(
@@ -185,7 +191,7 @@ namespace Sir.Search
 
         public void Write(TextJob job, WriteSession writeSession, IndexSession<string> indexSession, int reportSize = 1000)
         {
-            Log($"writing to collection {job.CollectionId}");
+            LogInformation($"writing to collection {job.CollectionId}");
 
             var time = Stopwatch.StartNew();
             var debugger = new IndexDebugger(Logger, reportSize);
@@ -240,7 +246,7 @@ namespace Sir.Search
 
         public void Index<T>(TextJob job, IndexSession<T> indexSession)
         {
-            Log($"indexing collection {job.CollectionId}");
+            LogInformation($"indexing collection {job.CollectionId}");
 
             var time = Stopwatch.StartNew();
 
@@ -269,7 +275,7 @@ namespace Sir.Search
                 }
             }
 
-            Log($"processed indexing job (collection {job.CollectionId}) in {time.Elapsed}");
+            LogInformation($"processed indexing job (collection {job.CollectionId}) in {time.Elapsed}");
         }
 
         public void Write(TextJob job, int reportSize = 1000)
@@ -360,7 +366,7 @@ namespace Sir.Search
                 }
             }
 
-            Log($"loaded keyHash -> keyId mappings into memory for {allkeys.Count} collections in {timer.Elapsed}");
+            LogInformation($"loaded keyHash -> keyId mappings into memory for {allkeys.Count} collections in {timer.Elapsed}");
 
             return allkeys;
         }
@@ -415,16 +421,14 @@ namespace Sir.Search
 
         public Stream CreateAsyncReadStream(string fileName)
         {
-            return File.Exists(fileName)
-            ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, FileOptions.Asynchronous)
-            : null;
+            return new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, FileOptions.Asynchronous);
         }
 
         public Stream CreateReadStream(string fileName)
         {
-            return File.Exists(fileName)
-                ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
-                : null;
+            LogDebug($"opened {fileName}");
+
+            return new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         }
 
         public Stream CreateAsyncAppendStream(string fileName)

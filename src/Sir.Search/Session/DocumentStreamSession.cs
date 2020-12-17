@@ -108,7 +108,7 @@ namespace Sir.Search
         {
             return _streamReaders.GetOrAdd(
                 collectionId,
-                new DocumentReader(collectionId, SessionFactory)
+                key => new DocumentReader(key, SessionFactory)
                 );
         }
     }
