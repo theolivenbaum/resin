@@ -133,6 +133,8 @@ namespace Sir.Search
                     using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
                     {
                         stream.Write(indexSession.GetInMemoryIndex());
+
+                        debugger.Step(indexSession, pageSize);
                     }
                 }))
                 {
