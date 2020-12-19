@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Search", "Sir.Search\Si
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.StringCompare", "Sir.StringCompare\Sir.StringCompare.csproj", "{610237D4-15E5-4C9F-9BAE-ACB24F634D2F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Cmd", "Sir\Sir.Cmd.csproj", "{D267D6FB-6DA5-444F-A628-FC0C3B1C6662}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Cmd", "Sir.Cmd\Sir.Cmd.csproj", "{D267D6FB-6DA5-444F-A628-FC0C3B1C6662}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Tests", "Sir.Store.Tests\Sir.Tests.csproj", "{03F6B627-A8CC-43A6-9BD0-5A9CE47E7EA6}"
 EndProject

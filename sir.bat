@@ -1,4 +1,1 @@
-setlocal
-cd src\Sir\bin\Release\net5.0\
-dotnet Sir.dll %*
-endlocal
+dotnet src\Sir.Cmd\bin\Release\net5.0\Sir.dll %*

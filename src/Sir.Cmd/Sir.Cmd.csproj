@@ -27,7 +27,7 @@
 
   <PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <AssemblyName>Sir</AssemblyName>
+    <AssemblyName>Sir.Cmd</AssemblyName>
     <RootNamespace>Sir.Cmd</RootNamespace>
   </PropertyGroup>
 

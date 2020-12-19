@@ -125,9 +125,9 @@ namespace Sir.Search
                 TruncateIndex(collectionId);
 
             using (var debugger = new IndexDebugger(Logger, Math.Min(takeDocuments, pageSize)))
-            using (var docStream = new DocumentStreamSession(this))
+            using (var documents = new DocumentStreamSession(this))
             {
-                var payload = docStream.ReadDocumentVectors(
+                var payload = documents.ReadDocumentVectors(
                         collectionId,
                         selectFields,
                         model,
