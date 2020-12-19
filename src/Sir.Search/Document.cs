@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Sir.VectorSpace;
 using System;
 using System.Collections.Generic;
 
@@ -73,6 +74,21 @@ namespace Sir.Search
 
             value = null;
             return false;
+        }
+    }
+
+    public class AnalyzedDocument
+    {
+        public IList<VectorNode> Nodes { get; }
+
+        public AnalyzedDocument(params VectorNode[] nodes)
+        {
+            Nodes = nodes;
+        }
+
+        public AnalyzedDocument(IList<VectorNode> nodes)
+        {
+            Nodes = nodes;
         }
     }
 

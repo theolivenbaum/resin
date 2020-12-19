@@ -29,12 +29,27 @@ namespace Sir.Search
 
         public void Put(long docId, long keyId, IEnumerable<IVector> tokens)
         {
-            var column = _index.GetOrAdd(keyId, new VectorNode());
+            var column = _index.GetOrAdd(keyId, key => new VectorNode());
 
             foreach (var token in tokens)
             {
-                _indexingStrategy.ExecutePut<T>(column, keyId, new VectorNode(token, docId));
+                _indexingStrategy.ExecutePut<T>(column, new VectorNode(token, docId));
             }
+        }
+
+        public void Put(VectorNode tree)
+        {
+            var column = _index.GetOrAdd(tree.KeyId.Value, key => new VectorNode());
+
+            foreach (var node in PathFinder.All(tree))
+            {
+                _indexingStrategy.ExecutePut<T>(column, new VectorNode(node.Vector, docIds:node.DocIds));
+            }
+        }
+
+        public VectorNode GetColumn(long keyId)
+        {
+            return _index.GetOrAdd(keyId, key => new VectorNode());
         }
 
         public IndexInfo GetIndexInfo()
@@ -82,7 +97,7 @@ namespace Sir.Search
 
             foreach (var vector in vectors)
             {
-                _indexingStrategy.ExecutePut<T>(column, keyId, new VectorNode(vector, docId));
+                _indexingStrategy.ExecutePut<T>(column, new VectorNode(vector, docId));
             }
 
             var size = PathFinder.Size(column);

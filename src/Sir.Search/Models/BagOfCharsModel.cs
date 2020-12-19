@@ -10,7 +10,7 @@ namespace Sir.Search
         public double FoldAngle => 0.55d;
         public override int NumOfDimensions => System.Text.Unicode.UnicodeRanges.All.Length;
 
-        public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node)
+        public void ExecutePut<T>(VectorNode column, VectorNode node)
         {
             GraphBuilder.MergeOrAdd(column, node, this);
         }
@@ -81,7 +81,7 @@ namespace Sir.Search
             NumOfDimensions = wordTokenizer.NumOfDimensions;
         }
 
-        public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node)
+        public void ExecutePut<T>(VectorNode column, VectorNode node)
         {
             GraphBuilder.Build(column, node, this);
         }
@@ -105,7 +105,7 @@ namespace Sir.Search
                 NumOfDimensions = wordTokenizer.NumOfDimensions * 3;
             }
 
-            public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node)
+            public void ExecutePut<T>(VectorNode column, VectorNode node)
             {
                 GraphBuilder.MergeOrAdd(column, node, this);
             }

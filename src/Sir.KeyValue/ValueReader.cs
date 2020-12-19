@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Sir.KeyValue
@@ -19,6 +20,68 @@ namespace Sir.KeyValue
         {
             if (_stream != null)
                 _stream.Dispose();
+        }
+
+        public IEnumerable<IVector> GetVectors(long offset, int len, byte dataType, Func<string, IEnumerable<IVector>> tokenizer)
+        {
+            int read;
+            Span<byte> buf = new byte[len];
+
+            _stream.Seek(offset, SeekOrigin.Begin);
+
+            read = _stream.Read(buf);
+
+            if (read != len)
+            {
+                throw new InvalidDataException();
+            }
+
+            var typeId = Convert.ToInt32(dataType);
+
+            if (DataType.BOOL == typeId)
+            {
+                throw new NotImplementedException();
+            }
+            else if (DataType.CHAR == typeId)
+            {
+                throw new NotImplementedException();
+            }
+            else if (DataType.FLOAT == typeId)
+            {
+                throw new NotImplementedException();
+            }
+            else if (DataType.INT == typeId)
+            {
+                throw new NotImplementedException();
+            }
+            else if (DataType.DOUBLE == typeId)
+            {
+                throw new NotImplementedException();
+            }
+            else if (DataType.LONG == typeId)
+            {
+                throw new NotImplementedException();
+            }
+            else if (DataType.ULONG == typeId)
+            {
+                throw new NotImplementedException();
+            }
+            else if (DataType.DATETIME == typeId)
+            {
+                throw new NotImplementedException();
+            }
+            else if (DataType.STRING == typeId)
+            {
+                return tokenizer(new string(System.Text.Encoding.Unicode.GetChars(buf.ToArray())));
+            }
+            else if (DataType.BYTE == typeId)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public object Get(long offset, int len, byte dataType)

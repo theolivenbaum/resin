@@ -10,13 +10,12 @@ namespace Sir.VectorSpace
         public static VectorNode CreateTree<T>(IModel<T> model, IIndexingStrategy indexingStrategy, params T[] data)
         {
             var root = new VectorNode();
-            const long columnId = 0;
 
             foreach (var item in data)
             {
                 foreach (var vector in model.Tokenize(item))
                 {
-                    indexingStrategy.ExecutePut<T>(root, columnId, new VectorNode(vector));
+                    indexingStrategy.ExecutePut<T>(root, new VectorNode(vector));
                 }
             }
 
@@ -104,6 +103,50 @@ namespace Sir.VectorSpace
                     {
                         cursor.Right = node;
                         break;
+                    }
+                    else
+                    {
+                        cursor = cursor.Right;
+                    }
+                }
+            }
+        }
+
+        public static bool TryAdd(
+            VectorNode root,
+            VectorNode node,
+            IModel model)
+        {
+            var cursor = root;
+
+            while (true)
+            {
+                var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
+
+                if (angle >= model.IdenticalAngle)
+                {
+                    return false;
+                }
+                else if (angle > model.FoldAngle)
+                {
+                    if (cursor.Left == null)
+                    {
+                        cursor.Left = node;
+
+                        return true;
+                    }
+                    else
+                    {
+                        cursor = cursor.Left;
+                    }
+                }
+                else
+                {
+                    if (cursor.Right == null)
+                    {
+                        cursor.Right = node;
+
+                        return true;
                     }
                     else
                     {
@@ -254,7 +297,11 @@ namespace Sir.VectorSpace
 
         public static void AddDocId(VectorNode target, VectorNode source)
         {
-            if (target.DocIds != null && source.DocIds != null)
+            if (target.DocIds == null)
+            {
+                target.DocIds = source.DocIds;
+            }
+            else if (source.DocIds != null)
             {
                 foreach (var docId in source.DocIds)
                 {

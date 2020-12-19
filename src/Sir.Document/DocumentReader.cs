@@ -68,6 +68,11 @@ namespace Sir.Documents
             return _vals.Get(offset, len, dataType);
         }
 
+        public IEnumerable<IVector> GetValueVectors(long offset, int len, byte dataType, Func<string, IEnumerable<IVector>> tokenizer)
+        {
+            return _vals.GetVectors(offset, len, dataType, tokenizer);
+        }
+
         public int DocumentCount()
         {
             return _docIx.Count;

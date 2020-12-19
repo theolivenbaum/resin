@@ -46,7 +46,7 @@ namespace Sir.Search
 
             foreach (var token in tokens)
             {
-                model.ExecutePut<string>(Tree, KeyId, new VectorNode(token));
+                model.ExecutePut<string>(Tree, new VectorNode(token, keyId:KeyId));
             }
 
             _tokens = GetTokens();

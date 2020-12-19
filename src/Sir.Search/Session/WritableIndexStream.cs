@@ -3,6 +3,7 @@ using Sir.VectorSpace;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace Sir.Search
@@ -37,6 +38,7 @@ namespace Sir.Search
         {
             foreach (var column in index)
             {
+                var time = Stopwatch.StartNew();
                 var vectorStream = GetOrCreateAppendStream(column.Key, "vec");
                 var postingsStream = GetOrCreateAppendStream(column.Key, "pos");
 
@@ -46,7 +48,7 @@ namespace Sir.Search
                     var size = columnWriter.CreatePage(column.Value, vectorStream, postingsStream, pageIndexWriter);
 
                     if (_logger != null)
-                        _logger.LogInformation($"serialized column {column.Key}, weight {column.Value.Weight} {size}");
+                        _logger.LogInformation($"serialized column {column.Key}, weight {column.Value.Weight} {size} in {time.Elapsed}");
                 }
             }
         }

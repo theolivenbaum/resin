@@ -56,6 +56,8 @@ namespace Sir.VectorSpace
 
         public bool IsRoot => Ancestor == null;
 
+        public long? KeyId { get; set; }
+
         public VectorNode()
         {
             PostingsOffset = -1;
@@ -69,16 +71,25 @@ namespace Sir.VectorSpace
             VectorOffset = -1;
         }
 
-        public VectorNode(IVector vector, long docId = -1, long postingsOffset = -1)
+        public VectorNode(IVector vector = null, long docId = -1, long postingsOffset = -1, long? keyId = null, HashSet<long> docIds = null)
         {
             Vector = vector;
-            ComponentCount = vector.ComponentCount;
+            ComponentCount = vector == null ? 0 : vector.ComponentCount;
             PostingsOffset = postingsOffset;
             VectorOffset = -1;
+            DocIds = docIds;
+            KeyId = keyId;
 
             if (docId > -1)
             {
-                DocIds = new HashSet<long> { docId };
+                if (DocIds == null)
+                {
+                    DocIds = new HashSet<long> { docId };
+                }
+                else
+                {
+                    DocIds.Add(docId);
+                }
             }
 
             if (postingsOffset > -1)
@@ -113,48 +124,6 @@ namespace Sir.VectorSpace
         public override string ToString()
         {
             return IsRoot ? "*" : Vector.Label == null ? Vector.ToString() : Vector.Label.ToString();
-        }
-
-        public VectorNodeData ToData()
-        {
-            long terminator;
-
-            if (Left == null && Right == null) // there are no children
-            {
-                terminator = 3;
-            }
-            else if (Left == null) // there is a right but no left
-            {
-                terminator = 2;
-            }
-            else if (Right == null) // there is a left but no right
-            {
-                terminator = 1;
-            }
-            else // there is a left and a right
-            {
-                terminator = 0;
-            }
-
-            return new VectorNodeData(VectorOffset, PostingsOffset, ComponentCount, Weight, terminator);
-        }
-    }
-
-    public struct VectorNodeData
-    {
-        public long VectorOffset { get; }
-        public long PostingsOffset { get; }
-        public long ComponentCount { get; }
-        public long Weight { get; }
-        public long Terminator { get; }
-
-        public VectorNodeData(long vectorOffset, long postingsOffset, long componentCount, long weight, long terminator)
-        {
-            VectorOffset = vectorOffset;
-            PostingsOffset = postingsOffset;
-            ComponentCount = componentCount;
-            Weight = weight;
-            Terminator = terminator;
         }
     }
 }

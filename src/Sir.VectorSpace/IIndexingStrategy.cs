@@ -2,6 +2,6 @@
 {
     public interface IIndexingStrategy
     {
-        void ExecutePut<T>(VectorNode column, long keyId, VectorNode node);
+        void ExecutePut<T>(VectorNode column, VectorNode node);
     }
 }

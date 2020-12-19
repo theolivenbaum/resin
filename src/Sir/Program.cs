@@ -21,7 +21,6 @@ namespace Sir.Cmd
                     .AddFilter("System", LogLevel.Warning)
                     .AddFilter("Sir", LogLevel.Information)
                     .AddConsole();
-                    //.AddDebug();
             });
 
             var logger = loggerFactory.CreateLogger("Sir");
@@ -106,6 +105,7 @@ namespace Sir.Cmd
             var reportFrequency = int.Parse(args["reportFrequency"]);
             var pageSize = int.Parse(args["pageSize"]);
             var fields = new HashSet<string>(args["fields"].Split(','));
+            var truncate = args.ContainsKey("no-truncate") ? false : true;
 
             using (var sessionFactory = new SessionFactory(dataDirectory, logger))
             {
@@ -116,7 +116,8 @@ namespace Sir.Cmd
                     skip,
                     take,
                     reportFrequency,
-                    pageSize);
+                    pageSize,
+                    truncate);
             }
         }
 
@@ -192,7 +193,7 @@ namespace Sir.Cmd
             using (var documents = new DocumentStreamSession(sessionFactory))
             using (var documentReader = new DocumentReader(collectionId, sessionFactory))
             {
-                var doc = documents.ReadDoc((collectionId, documentId), select, documentReader);
+                var doc = documents.ReadDocument((collectionId, documentId), select, documentReader);
 
                 foreach (var field in doc.Fields)
                 {

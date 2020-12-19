@@ -6,8 +6,9 @@ using System.Threading;
 
 namespace Sir.Search
 {
-    public class IndexDebugger
+    public class IndexDebugger : IDisposable
     {
+        private readonly Stopwatch _runTime;
         private readonly Stopwatch _time;
         private readonly int _sampleSize;
         private int _batchNo;
@@ -20,6 +21,7 @@ namespace Sir.Search
         {
             _sampleSize = sampleSize;
             _time = Stopwatch.StartNew();
+            _runTime = Stopwatch.StartNew();
             _logger = logger;
         }
 
@@ -27,7 +29,7 @@ namespace Sir.Search
         {
             Interlocked.Increment(ref _steps);
 
-            if (_steps % _sampleSize == 0)
+            if (_steps % _sampleSize >= 0)
             {
                 var info = indexSession.GetIndexInfo();
                 var t = _time.Elapsed.TotalSeconds;
@@ -47,7 +49,7 @@ namespace Sir.Search
         {
             _steps += steps;
 
-            if (_steps % _sampleSize == 0)
+            if (_steps % _sampleSize >= 0)
             {
                 var info = indexSession.GetIndexInfo();
                 var t = _time.Elapsed.TotalSeconds;
@@ -61,6 +63,11 @@ namespace Sir.Search
                 _logger.LogInformation(message);
                 _time.Restart();
             }
+        }
+
+        public void Dispose()
+        {
+            _logger.LogInformation($"session ran for {_runTime.Elapsed}");
         }
     }
 
@@ -86,7 +93,7 @@ namespace Sir.Search
         {
             Interlocked.Increment(ref _steps);
 
-            if (_steps % _sampleSize == 0)
+            if (_steps % _sampleSize >= 0)
             {
                 var t = _time.Elapsed.TotalSeconds;
                 var itemsPerSecond = (int)(_sampleSize / t);
@@ -104,7 +111,7 @@ namespace Sir.Search
         {
             _steps += steps;
 
-            if (_steps % _sampleSize == 0)
+            if (_steps % _sampleSize >= 0)
             {
                 var t = _time.Elapsed.TotalSeconds;
                 var itemsPerSecond = (int)(_sampleSize / t);

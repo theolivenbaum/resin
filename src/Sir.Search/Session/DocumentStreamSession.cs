@@ -1,4 +1,5 @@
 ﻿using Sir.Documents;
+using Sir.VectorSpace;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -24,7 +25,7 @@ namespace Sir.Search
             }
         }
 
-        public IEnumerable<Document> ReadDocs(
+        public IEnumerable<Document> ReadDocuments(
             ulong collectionId, 
             HashSet<string> select,
             int skip = 0, 
@@ -37,15 +38,46 @@ namespace Sir.Search
                 take = docCount;
 
             var took = 0;
-            long docId = 1 + skip;
+            long docId = skip;
 
-            while (docId <= docCount && took < take++)
+            while (docId < docCount && took++ < take)
             {
-                yield return ReadDoc((collectionId, docId++), select, documentReader);
+                yield return ReadDocument((collectionId, docId++), select, documentReader);
             }
         }
 
-        public IEnumerable<Document> ReadDocs(
+        public IEnumerable<AnalyzedDocument> ReadDocumentVectors(
+            ulong collectionId,
+            HashSet<string> select,
+            ITextModel model,
+            int skip = 0,
+            int take = 0)
+        {
+            var documentReader = GetOrCreateDocumentReader(collectionId);
+            var docCount = documentReader.DocumentCount();
+
+            if (take == 0)
+                take = docCount;
+
+            var took = 0;
+            long docId = skip;
+
+            while (docId < docCount && took++ < take)
+            {
+                var columns = new List<VectorNode>();
+
+                foreach (var node in ReadDocumentVectors((collectionId, docId), select, documentReader, model))
+                {
+                    columns.Add(node);
+                }
+
+                yield return new AnalyzedDocument(columns);
+
+                docId++;
+            }
+        }
+
+        public IEnumerable<Document> ReadDocuments(
             DocumentReader documentReader,
             HashSet<string> select,
             int skip = 0,
@@ -57,22 +89,22 @@ namespace Sir.Search
                 take = docCount;
 
             var took = 0;
-            long docId = 1 + skip;
+            long docId = skip;
 
             while (docId <= docCount && took++ < take)
             {
-                yield return ReadDoc((documentReader.CollectionId, docId++), select, documentReader);
+                yield return ReadDocument((documentReader.CollectionId, docId++), select, documentReader);
             }
         }
 
-        public Document ReadDoc(
-            (ulong collectionId, long docId) docId,
+        public Document ReadDocument(
+            (ulong collectionId, long docId) doc,
             HashSet<string> select,
             DocumentReader streamReader,
             double? score = null
             )
         {
-            var docInfo = streamReader.GetDocumentAddress(docId.docId);
+            var docInfo = streamReader.GetDocumentAddress(doc.docId);
             var docMap = streamReader.GetDocumentMap(docInfo.offset, docInfo.length);
             var fields = new List<Field>();
 
@@ -91,7 +123,37 @@ namespace Sir.Search
                 }
             }
 
-            return new Document(fields, docId.docId, score.HasValue ? score.Value : 0);
+            return new Document(fields, doc.docId, score.HasValue ? score.Value : 0);
+        }
+
+        public IEnumerable<VectorNode> ReadDocumentVectors(
+            (ulong collectionId, long docId) doc,
+            HashSet<string> select,
+            DocumentReader streamReader,
+            ITextModel model)
+        {
+            var docInfo = streamReader.GetDocumentAddress(doc.docId);
+            var docMap = streamReader.GetDocumentMap(docInfo.offset, docInfo.length);
+
+            for (int i = 0; i < docMap.Count; i++)
+            {
+                var kvp = docMap[i];
+                var kInfo = streamReader.GetAddressOfKey(kvp.keyId);
+                var key = (string)streamReader.GetKey(kInfo.offset, kInfo.len, kInfo.dataType);
+                var tree = new VectorNode(keyId:kvp.keyId);
+
+                if (select.Contains(key))
+                {
+                    var vInfo = streamReader.GetAddressOfValue(kvp.valId);
+
+                    foreach (var vector in streamReader.GetValueVectors(vInfo.offset, vInfo.len, vInfo.dataType, value => model.Tokenize(value)))
+                    {
+                        GraphBuilder.MergeOrAdd(tree, new VectorNode(vector, docId:doc.docId, keyId:kvp.keyId), model);
+                    }
+
+                    yield return tree;
+                }
+            }
         }
 
         public Document ReadDoc(
@@ -101,15 +163,14 @@ namespace Sir.Search
         {
             var streamReader = GetOrCreateDocumentReader(docId.collectionId);
 
-            return ReadDoc(docId, select, streamReader, score);
+            return ReadDocument(docId, select, streamReader, score);
         }
 
         private DocumentReader GetOrCreateDocumentReader(ulong collectionId)
         {
             return _streamReaders.GetOrAdd(
                 collectionId,
-                key => new DocumentReader(key, SessionFactory)
-                );
+                key => new DocumentReader(key, SessionFactory));
         }
     }
 }

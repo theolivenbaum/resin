@@ -11,7 +11,7 @@ namespace Sir.Search
         public double FoldAngle => 0.75d;
         public override int NumOfDimensions => 784; 
 
-        public void ExecutePut<T>(VectorNode column, long keyId, VectorNode node)
+        public void ExecutePut<T>(VectorNode column, VectorNode node)
         {
             GraphBuilder.MergeOrAddSupervised(column, node, this);
         }

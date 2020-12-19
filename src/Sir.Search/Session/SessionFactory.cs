@@ -113,26 +113,26 @@ namespace Sir.Search
             string collection,
             HashSet<string> selectFields, 
             ITextModel model,
-            int skip = 0,
-            int take = 0,
+            int skipDocuments = 0,
+            int takeDocuments = 0,
             int reportFrequency = 1000,
             int pageSize = 100000,
             bool truncateIndex = true)
         {
             var collectionId = collection.ToHash();
-            var debugger = new IndexDebugger(Logger, pageSize);
 
             if (truncateIndex)
                 TruncateIndex(collectionId);
 
+            using (var debugger = new IndexDebugger(Logger, Math.Min(takeDocuments, pageSize)))
             using (var docStream = new DocumentStreamSession(this))
-            using (var documentReader = new DocumentReader(collectionId, this))
             {
-                var payload = docStream.ReadDocs(
-                        documentReader,
+                var payload = docStream.ReadDocumentVectors(
+                        collectionId,
                         selectFields,
-                        skip,
-                        take);
+                        model,
+                        skipDocuments,
+                        takeDocuments);
 
                 using (var writeQueue = new ProducerConsumerQueue<IndexSession<string>>(indexSession =>
                 {
@@ -144,33 +144,20 @@ namespace Sir.Search
                     }
                 }))
                 {
-                    foreach (var page in payload.Batch(pageSize))
+                    using (var indexSession = new IndexSession<string>(model, model))
                     {
-                        using (var indexSession = new IndexSession<string>(model, model))
+                        using (var indexQueue = new IndexProducerConsumerQueue(vectorNode =>
                         {
-                            using (var indexQueue = new IndexProducerConsumerQueue(field =>
+                            indexSession.Put(vectorNode);
+                        }))
+                        {
+                            foreach (var document in payload)
                             {
-                                indexSession.Put(field.DocumentId, field.KeyId, field.Tokens);
-                            }))
-                            {
-                                using (var analyzeQueue = new ProducerConsumerQueue<Field>(field =>
-                                {
-                                    field.Analyze(model);
-                                    indexQueue.Enqueue(field);
-                                }))
-                                {
-                                    foreach (var document in page)
-                                    {
-                                        foreach (var field in document.Fields)
-                                        {
-                                            analyzeQueue.Enqueue(field);
-                                        }
-                                    }
-                                }
+                                indexQueue.Enqueue(document);
                             }
-                            
-                            writeQueue.Enqueue(indexSession);
                         }
+
+                        writeQueue.Enqueue(indexSession);
                     }
                 }
             }
@@ -484,11 +471,11 @@ namespace Sir.Search
 
     public class IndexProducerConsumerQueue : IDisposable
     {
-        private readonly ConcurrentDictionary<long, ProducerConsumerQueue<Field>> _queues;
+        private readonly ConcurrentDictionary<long, ProducerConsumerQueue<VectorNode>> _queues;
         private readonly int _numOfConsumers;
-        private readonly Action<Field> _consumingAction;
+        private readonly Action<VectorNode> _consumingAction;
 
-        public IndexProducerConsumerQueue(Action<Field> consumingAction, int numOfConsumers = 1)
+        public IndexProducerConsumerQueue(Action<VectorNode> consumingAction, int numOfConsumers = 1)
         {
             if (consumingAction == null)
             {
@@ -497,14 +484,17 @@ namespace Sir.Search
 
             _numOfConsumers = numOfConsumers;
             _consumingAction = consumingAction;
-            _queues = new ConcurrentDictionary<long, ProducerConsumerQueue<Field>>();
+            _queues = new ConcurrentDictionary<long, ProducerConsumerQueue<VectorNode>>();
         }
 
-        public void Enqueue(Field field)
+        public void Enqueue(AnalyzedDocument item)
         {
-            var queue = _queues.GetOrAdd(field.KeyId, new ProducerConsumerQueue<Field>(_consumingAction, _numOfConsumers));
-            
-            queue.Enqueue(field);
+            foreach (var node in item.Nodes)
+            {
+                var queue = _queues.GetOrAdd(node.KeyId.Value, key => new ProducerConsumerQueue<VectorNode>(_consumingAction, _numOfConsumers));
+
+                queue.Enqueue(node);
+            }
         }
 
         public void Dispose()
