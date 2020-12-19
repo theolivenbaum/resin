@@ -87,7 +87,7 @@ namespace Sir.Cmd
 
             for (int i = 1; i < args.Length; i += 2)
             {
-                dic.Add(args[i].Replace("-", ""), args[i + 1]);
+                dic.Add(args[i].Replace("--", ""), i==args.Length-1?null:args[i + 1]);
             }
 
             return dic;
