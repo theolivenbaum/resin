@@ -88,7 +88,7 @@ namespace Sir.VectorSpace
             if (term.PostingsOffsets == null)
                 return;
 
-            var termResult = new HashSet<(ulong, long)>(Read(term.CollectionId, term.KeyId, term.PostingsOffsets));
+            var termResult = Read(term.CollectionId, term.KeyId, term.PostingsOffsets);
 
             if (term.IsIntersection)
             {
