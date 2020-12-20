@@ -12,5 +12,7 @@ namespace Sir
         Stream CreateReadStream(string fileName);
         void RegisterKeyMapping(ulong collectionId, ulong keyHash, long keyId);
         bool TryGetKeyId(ulong collectionId, ulong keyHash, out long keyId);
+        void LogDebug(string message);
+        void LogInformation(string message);
     }
 }

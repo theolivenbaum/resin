@@ -39,13 +39,13 @@ namespace Sir.Search
            LogInformation($"sessionfactory initiated in {time.Elapsed}");
         }
 
-        private void LogInformation(string message)
+        public void LogInformation(string message)
         {
             if (Logger != null)
                 Logger.LogInformation(message);
         }
 
-        private void LogDebug(string message)
+        public void LogDebug(string message)
         {
             if (Logger != null)
                 Logger.LogDebug(message);

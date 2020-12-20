@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -22,10 +23,13 @@ namespace Sir.VectorSpace
 
         protected override IList<(ulong, long)> Read(ulong collectionId, long keyId, IList<long> offsets)
         {
+            var time = Stopwatch.StartNew();
             var list = new List<(ulong, long)>();
 
             foreach (var postingsOffset in offsets)
                 GetPostingsFromStream(collectionId, keyId, postingsOffset, list);
+
+            _sessionFactory.LogDebug($"read {list.Count} postings from {offsets.Count} terms into memory in {time.Elapsed}");
 
             return list;
         }
