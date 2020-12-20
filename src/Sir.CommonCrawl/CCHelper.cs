@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Sir.Core;
 using Sir.Documents;
 using Sir.Search;
+using Sir.VectorSpace;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,7 +20,7 @@ namespace Sir.CommonCrawl
             string dataDirectory,
             string fileName,
             string collection,
-            ITextModel model,
+            IModel<string> model,
             ILogger logger,
             string refFileName)
         {

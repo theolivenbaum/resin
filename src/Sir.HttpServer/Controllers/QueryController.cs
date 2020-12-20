@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Sir.Search;
+using Sir.VectorSpace;
 
 namespace Sir.HttpServer.Controllers
 {
@@ -13,13 +14,13 @@ namespace Sir.HttpServer.Controllers
     public class QueryController : Controller
     {
         private readonly IHttpReader _reader;
-        private readonly ITextModel _model;
+        private readonly IModel<string> _model;
         private readonly ILogger<QueryController> _logger;
 
-        public QueryController(IHttpReader reader, ITextModel tokenizer, ILogger<QueryController> logger)
+        public QueryController(IHttpReader reader, IModel<string> model, ILogger<QueryController> logger)
         {
             _reader = reader;
-            _model = tokenizer;
+            _model = model;
             _logger = logger;
         }
 

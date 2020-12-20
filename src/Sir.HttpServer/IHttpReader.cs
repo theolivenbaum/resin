@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Sir.Search;
+using Sir.VectorSpace;
 using System.Threading.Tasks;
 
 namespace Sir.HttpServer
@@ -9,6 +10,6 @@ namespace Sir.HttpServer
     /// </summary>
     public interface IHttpReader
     {
-       Task<SearchResult> Read(HttpRequest request, ITextModel model);
+       Task<SearchResult> Read(HttpRequest request, IModel<string> model);
     }
 }

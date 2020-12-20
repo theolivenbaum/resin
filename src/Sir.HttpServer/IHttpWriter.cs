@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Sir.Search;
+using Sir.VectorSpace;
 
 namespace Sir.HttpServer
 {
@@ -8,6 +8,6 @@ namespace Sir.HttpServer
     /// </summary>
     public interface IHttpWriter
     {
-        void Write(HttpRequest request, ITextModel model);
+        void Write(HttpRequest request, IModel<string> model);
     }
 }

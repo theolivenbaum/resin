@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Sir.HttpServer.Features;
 using Sir.Search;
+using Sir.VectorSpace;
 using System;
 
 namespace Sir.HttpServer.Controllers
@@ -9,13 +10,13 @@ namespace Sir.HttpServer.Controllers
     public class StatusController : UIController
     {
         private readonly JobQueue _queue;
-        private readonly ITextModel _model;
+        private readonly IModel<string> _model;
         private readonly QueryParser<string> _queryParser;
 
         public StatusController(
             IConfigurationProvider config,
             SessionFactory sessionFactory,
-            ITextModel model,
+            IModel<string> model,
             QueryParser<string> queryParser,
             JobQueue queue) : base(config, sessionFactory)
         {

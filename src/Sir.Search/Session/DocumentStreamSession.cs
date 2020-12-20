@@ -46,10 +46,10 @@ namespace Sir.Search
             }
         }
 
-        public IEnumerable<AnalyzedDocument> ReadDocumentVectors(
+        public IEnumerable<AnalyzedDocument> ReadDocumentVectors<T>(
             ulong collectionId,
             HashSet<string> select,
-            ITextModel model,
+            IModel<T> model,
             int skip = 0,
             int take = 0)
         {
@@ -126,11 +126,11 @@ namespace Sir.Search
             return new Document(fields, doc.docId, score.HasValue ? score.Value : 0);
         }
 
-        public IEnumerable<VectorNode> ReadDocumentVectors(
+        public IEnumerable<VectorNode> ReadDocumentVectors<T>(
             (ulong collectionId, long docId) doc,
             HashSet<string> select,
             DocumentReader streamReader,
-            ITextModel model)
+            IModel<T> model)
         {
             var docInfo = streamReader.GetDocumentAddress(doc.docId);
             var docMap = streamReader.GetDocumentMap(docInfo.offset, docInfo.length);
@@ -146,7 +146,7 @@ namespace Sir.Search
                 {
                     var vInfo = streamReader.GetAddressOfValue(kvp.valId);
 
-                    foreach (var vector in streamReader.GetValueVectors(vInfo.offset, vInfo.len, vInfo.dataType, value => model.Tokenize(value)))
+                    foreach (var vector in streamReader.GetVectors<T>(vInfo.offset, vInfo.len, vInfo.dataType, value => model.Tokenize(value)))
                     {
                         GraphBuilder.MergeOrAdd(tree, new VectorNode(vector, docId:doc.docId, keyId:kvp.keyId), model);
                     }

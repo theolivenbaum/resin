@@ -109,10 +109,10 @@ namespace Sir.Search
             LogInformation($"truncated index {collectionId} ({count} files)");
         }
 
-        public void Optimize(
+        public void Optimize<T>(
             string collection,
             HashSet<string> selectFields, 
-            ITextModel model,
+            IModel<T> model,
             int skipDocuments = 0,
             int takeDocuments = 0,
             int reportFrequency = 1000,
@@ -134,7 +134,7 @@ namespace Sir.Search
                         skipDocuments,
                         takeDocuments);
 
-                using (var writeQueue = new ProducerConsumerQueue<IndexSession<string>>(indexSession =>
+                using (var writeQueue = new ProducerConsumerQueue<IndexSession<T>>(indexSession =>
                 {
                     using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
                     {
@@ -144,7 +144,7 @@ namespace Sir.Search
                     }
                 }))
                 {
-                    using (var indexSession = new IndexSession<string>(model, model))
+                    using (var indexSession = new IndexSession<T>(model, model))
                     {
                         using (var indexQueue = new IndexProducerConsumerQueue(vectorNode =>
                         {
@@ -165,18 +165,18 @@ namespace Sir.Search
             LogInformation($"optimized collection {collection}");
         }
 
-        public void SaveAs(
+        public void SaveAs<T>(
             ulong targetCollectionId, 
             IEnumerable<Document> documents,
-            ITextModel model,
+            IModel<T> model,
             int reportSize = 1000)
         {
-            var job = new TextJob(targetCollectionId, documents, model);
+            var job = new WriteJob<T>(targetCollectionId, documents, model);
 
             Write(job, reportSize);
         }
 
-        public void Write(TextJob job, WriteSession writeSession, IndexSession<string> indexSession, int reportSize = 1000)
+        public void Write<T>(WriteJob<T> job, WriteSession writeSession, IndexSession<T> indexSession, int reportSize = 1000)
         {
             LogInformation($"writing to collection {job.CollectionId}");
 
@@ -192,7 +192,7 @@ namespace Sir.Search
                 {
                     if (field.Value != null && field.Index)
                     {
-                        indexSession.Put(document.Id, field.KeyId, field.Value.ToString());
+                        indexSession.Put(document.Id, field.KeyId, (T)field.Value);
                     }
                 }//);
 
@@ -202,10 +202,10 @@ namespace Sir.Search
             Logger.LogInformation($"processed write&index job (collection {job.CollectionId}) in {time.Elapsed}");
         }
 
-        public void Write(
+        public void Write<T>(
             Document document, 
             WriteSession writeSession, 
-            IndexSession<string> indexSession)
+            IndexSession<T> indexSession)
         {
             writeSession.Put(document);
 
@@ -213,14 +213,14 @@ namespace Sir.Search
             {
                 if (field.Value != null && field.Index)
                 {
-                    indexSession.Put(document.Id, field.KeyId, field.Value.ToString());
+                    indexSession.Put(document.Id, field.KeyId, (T)field.Value);
                 }
             }
         }
 
-        public void Index(TextJob job, int reportSize = 1000)
+        public void Index<T>(WriteJob<T> job, int reportSize = 1000)
         {
-            using (var indexSession = new IndexSession<string>(job.Model, job.Model))
+            using (var indexSession = new IndexSession<T>(job.Model, job.Model))
             {
                 Index(job, indexSession);
 
@@ -231,7 +231,7 @@ namespace Sir.Search
             }
         }
 
-        public void Index<T>(TextJob job, IndexSession<T> indexSession)
+        public void Index<T>(WriteJob<T> job, IndexSession<T> indexSession)
         {
             LogInformation($"indexing collection {job.CollectionId}");
 
@@ -265,10 +265,10 @@ namespace Sir.Search
             LogInformation($"processed indexing job (collection {job.CollectionId}) in {time.Elapsed}");
         }
 
-        public void Write(TextJob job, int reportSize = 1000)
+        public void Write<T>(WriteJob<T> job, int reportSize = 1000)
         {
             using (var writeSession = new WriteSession(new DocumentWriter(job.CollectionId, this)))
-            using (var indexSession = new IndexSession<string>(job.Model, job.Model))
+            using (var indexSession = new IndexSession<T>(job.Model, job.Model))
             {
                 Write(job, writeSession, indexSession, reportSize);
 
@@ -279,18 +279,18 @@ namespace Sir.Search
             }
         }
 
-        public void Write(
+        public void Write<T>(
             ulong collectionId,
             IEnumerable<Document> documents, 
-            ITextModel model, 
+            IModel<T> model, 
             int reportSize = 1000
             )
         {
             using (var writeSession = new WriteSession(new DocumentWriter(collectionId, this)))
-            using (var indexSession = new IndexSession<string>(model, model))
+            using (var indexSession = new IndexSession<T>(model, model))
             {
                 Write(
-                    new TextJob(
+                    new WriteJob<T>(
                         collectionId,
                         documents,
                         model),

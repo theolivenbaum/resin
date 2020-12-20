@@ -38,9 +38,9 @@ namespace Sir.Search
                 yield return node.Vector;
         }
 
-        public void Analyze(ITextModel model)
+        public void Analyze<T>(IModel<T> model)
         {
-            var tokens = model.Tokenize((string)Value);
+            var tokens = model.Tokenize((T)Value);
 
             Tree = new VectorNode();
 

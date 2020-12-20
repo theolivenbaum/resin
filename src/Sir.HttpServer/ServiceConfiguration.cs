@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sir.Search;
+using Sir.VectorSpace;
 using System;
 using System.IO;
 
@@ -22,7 +23,7 @@ namespace Sir.HttpServer
             var qp = new QueryParser<string>(sessionFactory, model, logger);
             var httpParser = new HttpQueryParser(qp);
 
-            services.AddSingleton(typeof(ITextModel), model);
+            services.AddSingleton(typeof(IModel<string>), model);
             services.AddSingleton(typeof(ISessionFactory), sessionFactory);
             services.AddSingleton(typeof(SessionFactory), sessionFactory);
             services.AddSingleton(typeof(QueryParser<string>), qp);

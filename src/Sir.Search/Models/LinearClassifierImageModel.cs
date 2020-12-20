@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Sir.Search
 {
-    public class LinearClassifierImageModel : DistanceCalculator, IImageModel
+    public class LinearClassifierImageModel : DistanceCalculator, IModel<IImage>
     {
         public double IdenticalAngle => 0.95d;
         public double FoldAngle => 0.75d;

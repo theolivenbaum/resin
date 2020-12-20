@@ -15,7 +15,7 @@ namespace Sir.VectorSpace
     /// <summary>
     /// Vector space model.
     /// </summary>
-    public interface IModel : IVectorSpaceConfig, IDistanceCalculator
+    public interface IModel : IVectorSpaceConfig, IDistanceCalculator, IIndexingStrategy
     {
     }
 

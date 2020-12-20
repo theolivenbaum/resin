@@ -22,7 +22,7 @@ namespace Sir.StringCompare
             }
         }
 
-        private static void CompareToBaseVector(string first, string second, ITextModel model)
+        private static void CompareToBaseVector(string first, string second, IModel<string> model)
         {
             var baseVectorStorage = new float[model.NumOfDimensions];
 
@@ -42,7 +42,7 @@ namespace Sir.StringCompare
             Console.WriteLine($"base vector similarity: {Math.Min(angle1, angle2) / Math.Max(angle1, angle2)}");
         }
 
-        private static void Similarity(string first, string second, ITextModel model)
+        private static void Similarity(string first, string second, IModel<string> model)
         {
             var vec1 = model.Tokenize(first).First();
             var vec2 = model.Tokenize(second).First();
@@ -51,7 +51,7 @@ namespace Sir.StringCompare
             Console.WriteLine($"similarity: {angle}");
         }
 
-        private static void RunInteractiveGraphBuilder(ITextModel model)
+        private static void RunInteractiveGraphBuilder(IModel<string> model)
         {
             var root = new VectorNode();
 

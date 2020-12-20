@@ -2,18 +2,19 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Sir.Search;
+using Sir.VectorSpace;
 
 namespace Sir.HttpServer.Controllers
 {
     public class SearchController : UIController
     {
         private readonly IHttpReader _reader;
-        private readonly ITextModel _model;
+        private readonly IModel<string> _model;
 
         public SearchController(
             IHttpReader reader, 
-            IConfigurationProvider config, 
-            ITextModel model,
+            IConfigurationProvider config,
+            IModel<string> model,
             SessionFactory sessionFactory) : base(config, sessionFactory)
         {
             _reader = reader;

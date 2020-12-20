@@ -2,7 +2,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Sir.Search;
+using Sir.VectorSpace;
 
 namespace Sir.HttpServer.Controllers
 {
@@ -10,13 +10,13 @@ namespace Sir.HttpServer.Controllers
     public class WriteController : Controller
     {
         private readonly IHttpWriter _writer;
-        private readonly ITextModel _model;
+        private readonly IModel<string> _model;
         private readonly ILogger<WriteController> _logger;
         private readonly IConfigurationProvider _config;
 
         public WriteController(
             IHttpWriter writer,
-            ITextModel tokenizer, 
+            IModel<string> tokenizer, 
             ILogger<WriteController> logger,
             IConfigurationProvider config)
         {

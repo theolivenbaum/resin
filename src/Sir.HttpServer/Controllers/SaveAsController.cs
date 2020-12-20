@@ -3,13 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using Sir.HttpServer.Features;
 using Sir.Search;
 using System.Collections.Generic;
+using Sir.VectorSpace;
 
 namespace Sir.HttpServer.Controllers
 {
     [Route("saveas")]
     public class SaveAsController : UIController
     {
-        private readonly ITextModel _model;
+        private readonly IModel<string> _model;
         private readonly QueryParser<string> _queryParser;
         private readonly ILogger<SaveAsController> _log;
         private static readonly HashSet<string> _reservedCollections = new HashSet<string> { "cc_wat", "cc_wet" };
@@ -17,7 +18,7 @@ namespace Sir.HttpServer.Controllers
         public SaveAsController(
             IConfigurationProvider config,
             SessionFactory sessionFactory,
-            ITextModel model,
+            IModel<string> model,
             QueryParser<string> queryParser,
             SaveAsJobQueue queue,
             ILogger<SaveAsController> log) : base(config, sessionFactory)
@@ -70,7 +71,7 @@ namespace Sir.HttpServer.Controllers
                 return View("Index");
             }
 
-            new SaveAsJob
+            new SaveAsJob<string>
                 (
                     sessionFactory: SessionFactory,
                     queryParser: _queryParser,

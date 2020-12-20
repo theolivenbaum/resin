@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Sir.Search;
+using Sir.VectorSpace;
 
 namespace Sir.HttpServer.Features
 {
@@ -17,7 +18,7 @@ namespace Sir.HttpServer.Features
         private readonly SessionFactory _sessionFactory;
         private readonly QueryParser<string> _queryParser;
         private readonly ILogger _logger;
-        private readonly ITextModel _model;
+        private readonly IModel<string> _model;
         private readonly HashSet<string> _wetStoredFieldNames;
         private readonly HashSet<string> _wetIndexedFieldNames;
         private readonly int _skip;
@@ -26,7 +27,7 @@ namespace Sir.HttpServer.Features
         public CrawlJob(
             SessionFactory sessionFactory,
             QueryParser<string> queryParser,
-            ITextModel model,
+            IModel<string> model,
             ILogger logger,
             string id, 
             string[] collection, 
@@ -203,7 +204,7 @@ namespace Sir.HttpServer.Features
                 {
                     var time = Stopwatch.StartNew();
 
-                    var writeJob = new TextJob(
+                    var writeJob = new WriteJob<string>(
                         wetCollectionId,
                         writePayload,
                         new BagOfCharsModel());

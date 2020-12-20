@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Sir.Search;
+using Sir.VectorSpace;
 
 namespace Sir.HttpServer
 {
@@ -34,7 +34,7 @@ namespace Sir.HttpServer
         {
         }
 
-        public async Task<SearchResult> Read(HttpRequest request, ITextModel model)
+        public async Task<SearchResult> Read(HttpRequest request, IModel<string> model)
         {
             var timer = Stopwatch.StartNew();
             var take = 100;

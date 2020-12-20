@@ -68,7 +68,7 @@ namespace Sir.Documents
             return _vals.Get(offset, len, dataType);
         }
 
-        public IEnumerable<IVector> GetValueVectors(long offset, int len, byte dataType, Func<string, IEnumerable<IVector>> tokenizer)
+        public IEnumerable<IVector> GetVectors<T>(long offset, int len, byte dataType, Func<T, IEnumerable<IVector>> tokenizer)
         {
             return _vals.GetVectors(offset, len, dataType, tokenizer);
         }

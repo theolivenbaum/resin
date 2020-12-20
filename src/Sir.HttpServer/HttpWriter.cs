@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Sir.Search;
+using Sir.VectorSpace;
 
 namespace Sir.HttpServer
 {
@@ -19,13 +20,13 @@ namespace Sir.HttpServer
             _sessionFactory = sessionFactory;
         }
 
-        public void Write(HttpRequest request, ITextModel model)
+        public void Write(HttpRequest request, IModel<string> model)
         {
             var documents = Deserialize<IEnumerable<Document>>(request.Body);
             var collectionId = request.Query["collection"].First().ToHash();
 
             _sessionFactory.Write(
-                new TextJob(
+                new WriteJob<string>(
                     collectionId,
                     documents,
                     model));

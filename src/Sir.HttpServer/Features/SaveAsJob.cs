@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Sir.Documents;
 using Sir.Search;
+using Sir.VectorSpace;
 
 namespace Sir.HttpServer.Features
 {
-    public class SaveAsJob : BaseJob
+    public class SaveAsJob<T> : BaseJob
     {
         private readonly SessionFactory _sessionFactory;
         private readonly QueryParser<string> _queryParser;
         private readonly ILogger _logger;
-        private readonly ITextModel _model;
+        private readonly IModel<T> _model;
         private readonly HashSet<string> _indexFieldNames;
         private readonly string _target;
         private readonly int _skip;
@@ -22,7 +23,7 @@ namespace Sir.HttpServer.Features
         public SaveAsJob(
             SessionFactory sessionFactory,
             QueryParser<string> queryParser,
-            ITextModel model,
+            IModel<T> model,
             ILogger logger,
             string target,
             string[] collections,

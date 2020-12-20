@@ -22,10 +22,10 @@ namespace Sir.KeyValue
                 _stream.Dispose();
         }
 
-        public IEnumerable<IVector> GetVectors(long offset, int len, byte dataType, Func<string, IEnumerable<IVector>> tokenizer)
+        public IEnumerable<IVector> GetVectors<T>(long offset, int len, byte dataType, Func<T, IEnumerable<IVector>> tokenizer)
         {
             int read;
-            Span<byte> buf = new byte[len];
+            var buf = new byte[len];
 
             _stream.Seek(offset, SeekOrigin.Begin);
 
@@ -72,7 +72,7 @@ namespace Sir.KeyValue
             }
             else if (DataType.STRING == typeId)
             {
-                return tokenizer(new string(System.Text.Encoding.Unicode.GetChars(buf.ToArray())));
+                return tokenizer((T)(object)new string(System.Text.Encoding.Unicode.GetChars(buf)));
             }
             else if (DataType.BYTE == typeId)
             {

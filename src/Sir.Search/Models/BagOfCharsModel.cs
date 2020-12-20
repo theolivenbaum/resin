@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Sir.Search
 {
-    public class BagOfCharsModel : DistanceCalculator, ITextModel
+    public class BagOfCharsModel : DistanceCalculator, IModel<string>
     {
         public double IdenticalAngle => 0.99d;
         public double FoldAngle => 0.55d;
@@ -67,7 +67,7 @@ namespace Sir.Search
         }
     }
 
-    public class BocEmbeddingsModel : DistanceCalculator, ITextModel
+    public class BocEmbeddingsModel : DistanceCalculator, IModel<string>
     {
         public double IdenticalAngle => 0.95d;
         public double FoldAngle => 0.75d;
@@ -91,7 +91,7 @@ namespace Sir.Search
             return _wordTokenizer.Tokenize(data);
         }
 
-        public class ContinuousBagOfWordsModel : DistanceCalculator, ITextModel
+        public class ContinuousBagOfWordsModel : DistanceCalculator, IModel<string>
         {
             public double IdenticalAngle => 0.95d;
             public double FoldAngle => 0.75d;

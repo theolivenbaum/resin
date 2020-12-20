@@ -1,17 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using Sir.VectorSpace;
+using System.Collections.Generic;
 
 namespace Sir.Search
 {
-    public class TextJob
+    public class WriteJob<T>
     {
-        public ITextModel Model { get; }
+        public IModel<T> Model { get; }
         public ulong CollectionId { get; private set; }
         public IEnumerable<Document> Documents { get; private set; }
 
-        public TextJob(
+        public WriteJob(
             ulong collectionId, 
-            IEnumerable<Document> documents, 
-            ITextModel model)
+            IEnumerable<Document> documents,
+            IModel<T> model)
         {
             Model = model;
             CollectionId = collectionId;
