@@ -1,1 +1,1 @@
-dotnet src\Sir.Cmd\bin\Release\net5.0\Sir.dll %*
+dotnet src\Sir.Cmd\bin\Release\net5.0\Sir.Cmd.dll %*
