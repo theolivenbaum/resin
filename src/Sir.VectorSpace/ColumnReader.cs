@@ -49,7 +49,7 @@ namespace Sir.VectorSpace
                 }
             }
 
-            _logger.LogDebug($"scanning all segments took {time.Elapsed}");
+            _logger.LogDebug($"scanning {_segments.Count} segments took {time.Elapsed}");
 
             Hit best = null;
 

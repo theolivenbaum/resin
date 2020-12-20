@@ -124,16 +124,9 @@ namespace Sir.Search
             if (truncateIndex)
                 TruncateIndex(collectionId);
 
-            using (var debugger = new IndexDebugger(Logger, Math.Min(takeDocuments, pageSize)))
+            using (var debugger = new IndexDebugger(Logger,pageSize))
             using (var documents = new DocumentStreamSession(this))
             {
-                var payload = documents.ReadDocumentVectors(
-                        collectionId,
-                        selectFields,
-                        model,
-                        skipDocuments,
-                        takeDocuments);
-
                 using (var writeQueue = new ProducerConsumerQueue<IndexSession<T>>(indexSession =>
                 {
                     using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
@@ -144,20 +137,42 @@ namespace Sir.Search
                     }
                 }))
                 {
-                    using (var indexSession = new IndexSession<T>(model, model))
+                    var took = 0;
+                    var skip = skipDocuments;
+
+                    while (took < takeDocuments)
                     {
-                        using (var indexQueue = new IndexProducerConsumerQueue(vectorNode =>
+                        var payload = documents.ReadDocumentVectors(
+                            collectionId,
+                            selectFields,
+                            model,
+                            skip,
+                            pageSize);
+
+                        var count = 0;
+
+                        using (var indexSession = new IndexSession<T>(model, model))
                         {
-                            indexSession.Put(vectorNode);
-                        }))
-                        {
-                            foreach (var document in payload)
+                            using (var indexQueue = new IndexProducerConsumerQueue(vectorNode =>
                             {
-                                indexQueue.Enqueue(document);
+                                indexSession.Put(vectorNode);
+                            }))
+                            {
+                                foreach (var document in payload)
+                                {
+                                    indexQueue.Enqueue(document);
+                                    count++;
+                                }
                             }
+
+                            writeQueue.Enqueue(indexSession);
                         }
 
-                        writeQueue.Enqueue(indexSession);
+                        if (count == 0)
+                            break;
+
+                        took += count;
+                        skip += pageSize;
                     }
                 }
             }
