@@ -2,7 +2,6 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 
 namespace Sir.Search
 {
@@ -12,7 +11,7 @@ namespace Sir.Search
         private readonly Stopwatch _time;
         private readonly int _sampleSize;
         private int _batchNo;
-        private int _steps;
+        private volatile int _steps;
         private readonly ILogger _logger;
 
         public int Steps => _steps;
@@ -27,16 +26,16 @@ namespace Sir.Search
 
         public void Step(IIndexSession indexSession, string message = null)
         {
-            Interlocked.Increment(ref _steps);
+            _steps++;
 
-            if (_steps % _sampleSize >= 0)
+            if (_steps % _sampleSize == 0)
             {
                 var info = indexSession.GetIndexInfo();
                 var t = _time.Elapsed.TotalSeconds;
                 var docsPerSecond = (int)(_sampleSize / t);
                 var debug = string.Join('\n', info.Info.Select(x => x.ToString()));
 
-                Interlocked.Increment(ref _batchNo);
+                _batchNo++;
 
                 var record = $"\n{_time.Elapsed}\ntotal {_sampleSize * _batchNo}\n{debug}\n{docsPerSecond} docs/s\n{message}";
 
@@ -49,7 +48,7 @@ namespace Sir.Search
         {
             _steps += steps;
 
-            if (_steps % _sampleSize >= 0)
+            if (_steps % _sampleSize == 0)
             {
                 var info = indexSession.GetIndexInfo();
                 var t = _time.Elapsed.TotalSeconds;
@@ -77,7 +76,7 @@ namespace Sir.Search
         private readonly ILogger _logger;
         private readonly int _sampleSize;
         private int _batchNo;
-        private int _steps;
+        private volatile int _steps;
 
         public int StepCount => _steps;
         public TimeSpan Time => _time.Elapsed;
@@ -91,14 +90,14 @@ namespace Sir.Search
 
         public void Step()
         {
-            Interlocked.Increment(ref _steps);
+            _steps++;
 
-            if (_steps % _sampleSize >= 0)
+            if (_steps % _sampleSize == 0)
             {
                 var t = _time.Elapsed.TotalSeconds;
                 var itemsPerSecond = (int)(_sampleSize / t);
 
-                Interlocked.Increment(ref _batchNo);
+                _batchNo++;
 
                 var message = $"\n{_time.Elapsed}\ntotal {_sampleSize * _batchNo}\n{itemsPerSecond} items/s";
 
@@ -111,7 +110,7 @@ namespace Sir.Search
         {
             _steps += steps;
 
-            if (_steps % _sampleSize >= 0)
+            if (_steps % _sampleSize == 0)
             {
                 var t = _time.Elapsed.TotalSeconds;
                 var itemsPerSecond = (int)(_sampleSize / t);

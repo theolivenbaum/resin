@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace Sir.VectorSpace
 {
@@ -14,7 +16,7 @@ namespace Sir.VectorSpace
         private VectorNode _left;
         private long _weight;
 
-        public HashSet<long> DocIds { get; set; }
+        public List<long> DocIds { get; set; }
         public VectorNode Ancestor { get; private set; }
         public long ComponentCount { get; set; }
         public long VectorOffset { get; set; }
@@ -54,7 +56,7 @@ namespace Sir.VectorSpace
 
         public IList<long> PostingsOffsets { get; set; }
 
-        public bool IsRoot => Ancestor == null;
+        public bool IsRoot => Ancestor == null && Vector == null;
 
         public long? KeyId { get; set; }
 
@@ -71,7 +73,7 @@ namespace Sir.VectorSpace
             VectorOffset = -1;
         }
 
-        public VectorNode(IVector vector = null, long docId = -1, long postingsOffset = -1, long? keyId = null, HashSet<long> docIds = null)
+        public VectorNode(IVector vector = null, long docId = -1, long postingsOffset = -1, long? keyId = null, List<long> docIds = null)
         {
             Vector = vector;
             ComponentCount = vector == null ? 0 : vector.ComponentCount;
@@ -84,7 +86,7 @@ namespace Sir.VectorSpace
             {
                 if (DocIds == null)
                 {
-                    DocIds = new HashSet<long> { docId };
+                    DocIds = new List<long> { docId };
                 }
                 else
                 {
@@ -108,15 +110,76 @@ namespace Sir.VectorSpace
             Vector = vector;
         }
 
+        public static void MergeOrAddLockFree(
+            VectorNode root,
+            VectorNode node,
+            IModel model)
+        {
+            var cursor = root;
+
+            while (true)
+            {
+                var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
+
+                if (angle >= model.IdenticalAngle)
+                {
+                    GraphBuilder.MergeDocIdsConcurrent(cursor, node.DocIds);
+
+                    break;
+                }
+                else if (angle > model.FoldAngle)
+                {
+                    if (cursor.Left == null)
+                    {
+                        if (Interlocked.CompareExchange(ref cursor._left, node, null) == null)
+                        {
+                            node.Ancestor = cursor;
+                            cursor.IncrementWeight();
+                            break;
+                        }
+                        else
+                        {
+                            MergeOrAddLockFree(cursor, node, model);
+                        }
+                    }
+                    else
+                    {
+                        cursor = cursor.Left;
+                    }
+                }
+                else
+                {
+                    if (cursor.Right == null)
+                    {
+                        if (Interlocked.CompareExchange(ref cursor._right, node, null) == null)
+                        {
+                            node.Ancestor = cursor;
+                            cursor.IncrementWeight();
+                            break;
+                        }
+                        else
+                        {
+                            MergeOrAddLockFree(cursor, node, model);
+                        }
+                    }
+                    else
+                    {
+                        cursor = cursor.Right;
+                    }
+                }
+            }
+        }
+
         public void IncrementWeight()
-        { 
-            _weight++;
+        {
+            Interlocked.Increment(ref _weight);
 
             var cursor = Ancestor;
 
             while (cursor != null)
             {
-                cursor._weight++;
+                Interlocked.Increment(ref cursor._weight);
+
                 cursor = cursor.Ancestor;
             }
         }

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Sir.VectorSpace
 {
@@ -38,7 +40,7 @@ namespace Sir.VectorSpace
                     if (!cursor.Vector.Label.Equals(node.Vector.Label))
                         throw new InvalidOperationException($"IdenticalAngle {model.IdenticalAngle} is too low. Angle was {angle}");
 
-                    AddDocId(cursor, node);
+                    MergeDocIds(cursor, node);
                     break;
                 }
                 else if (angle > model.FoldAngle)
@@ -81,7 +83,7 @@ namespace Sir.VectorSpace
 
                 if (angle >= model.IdenticalAngle)
                 {
-                    AddDocId(cursor, node);
+                    MergeDocIds(cursor, node);
 
                     break;
                 }
@@ -213,7 +215,7 @@ namespace Sir.VectorSpace
                 {
                     lock (cursor.Sync)
                     {
-                        AddDocId(cursor, node);
+                        MergeDocIds(cursor, node);
                     }
 
                     break;
@@ -290,12 +292,7 @@ namespace Sir.VectorSpace
                 ((List<long>)target.PostingsOffsets).AddRange(source.PostingsOffsets);
         }
 
-        public static void AddDocId(VectorNode target, long docId)
-        {
-            target.DocIds.Add(docId);
-        }
-
-        public static void AddDocId(VectorNode target, VectorNode source)
+        public static void MergeDocIds(VectorNode target, VectorNode source)
         {
             if (target.DocIds == null)
             {
@@ -307,6 +304,14 @@ namespace Sir.VectorSpace
                 {
                     target.DocIds.Add(docId);
                 }
+            }
+        }
+
+        public static void MergeDocIdsConcurrent(VectorNode target, List<long> documentIds)
+        {
+            lock (target.Sync)
+            {
+                target.DocIds.AddRange(documentIds);
             }
         }
 

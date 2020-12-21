@@ -47,11 +47,6 @@ namespace Sir.Search
             }
         }
 
-        public VectorNode GetColumn(long keyId)
-        {
-            return _index.GetOrAdd(keyId, key => new VectorNode());
-        }
-
         public IndexInfo GetIndexInfo()
         {
             return new IndexInfo(GetGraphInfo());

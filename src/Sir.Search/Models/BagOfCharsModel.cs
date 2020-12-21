@@ -12,7 +12,7 @@ namespace Sir.Search
 
         public void ExecutePut<T>(VectorNode column, VectorNode node)
         {
-            GraphBuilder.MergeOrAdd(column, node, this);
+            VectorNode.MergeOrAddLockFree(column, node, this);
         }
 
         public IEnumerable<IVector> Tokenize(string data)

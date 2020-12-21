@@ -7,7 +7,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sir.Search
@@ -124,7 +124,7 @@ namespace Sir.Search
             if (truncateIndex)
                 TruncateIndex(collectionId);
 
-            using (var debugger = new IndexDebugger(Logger,pageSize))
+            using (var debugger = new IndexDebugger(Logger, reportFrequency))
             using (var documents = new DocumentStreamSession(this))
             {
                 using (var writeQueue = new ProducerConsumerQueue<IndexSession<T>>(indexSession =>
@@ -132,8 +132,6 @@ namespace Sir.Search
                     using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
                     {
                         stream.Write(indexSession.GetInMemoryIndex());
-
-                        debugger.Step(indexSession, pageSize);
                     }
                 }))
                 {
@@ -153,17 +151,28 @@ namespace Sir.Search
 
                         using (var indexSession = new IndexSession<T>(model, model))
                         {
-                            using (var indexQueue = new IndexProducerConsumerQueue(vectorNode =>
+                            Parallel.ForEach(payload, document =>
                             {
-                                indexSession.Put(vectorNode);
-                            }))
-                            {
-                                foreach (var document in payload)
+                                foreach (var node in document.Nodes)
                                 {
-                                    indexQueue.Enqueue(document);
-                                    count++;
+                                    indexSession.Put(node);
                                 }
-                            }
+
+                                Interlocked.Increment(ref count);
+
+                                debugger.Step(indexSession);
+                            });
+                            //foreach (var document in payload)
+                            //{
+                            //    foreach (var node in document.Nodes)
+                            //    {
+                            //        indexSession.Put(node);
+                            //    }
+
+                            //    count++;
+
+                            //    debugger.Step(indexSession);
+                            //}
 
                             writeQueue.Enqueue(indexSession);
                         }
@@ -481,43 +490,6 @@ namespace Sir.Search
 
         public void Dispose()
         {
-        }
-    }
-
-    public class IndexProducerConsumerQueue : IDisposable
-    {
-        private readonly ConcurrentDictionary<long, ProducerConsumerQueue<VectorNode>> _queues;
-        private readonly int _numOfConsumers;
-        private readonly Action<VectorNode> _consumingAction;
-
-        public IndexProducerConsumerQueue(Action<VectorNode> consumingAction, int numOfConsumers = 1)
-        {
-            if (consumingAction == null)
-            {
-                throw new ArgumentNullException(nameof(consumingAction));
-            }
-
-            _numOfConsumers = numOfConsumers;
-            _consumingAction = consumingAction;
-            _queues = new ConcurrentDictionary<long, ProducerConsumerQueue<VectorNode>>();
-        }
-
-        public void Enqueue(AnalyzedDocument item)
-        {
-            foreach (var node in item.Nodes)
-            {
-                var queue = _queues.GetOrAdd(node.KeyId.Value, key => new ProducerConsumerQueue<VectorNode>(_consumingAction, _numOfConsumers));
-
-                queue.Enqueue(node);
-            }
-        }
-
-        public void Dispose()
-        {
-            foreach (var queue in _queues.Values)
-            {
-                queue.Dispose();
-            }
         }
     }
 }
