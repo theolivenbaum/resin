@@ -17,7 +17,7 @@ namespace Sir.Search
 
         public IEnumerable<IVector> Tokenize(string data)
         {
-            Memory<char> source = data.ToCharArray();
+            ReadOnlyMemory<char> source = data.AsMemory();
 
             if (source.Length > 0)
             {
@@ -42,7 +42,7 @@ namespace Sir.Search
                             var vector = new IndexedVector(
                                 embedding,
                                 NumOfDimensions,
-                                new string(source.Slice(offset, len).Span));
+                                new string(source.Span.Slice(offset, len)));
 
                             embedding.Clear();
                             yield return vector;
@@ -59,7 +59,7 @@ namespace Sir.Search
                     var vector = new IndexedVector(
                                 embedding,
                                 NumOfDimensions,
-                                new string(source.Slice(offset, len).Span));
+                                new string(source.Span.Slice(offset, len)));
 
                     yield return vector;
                 }

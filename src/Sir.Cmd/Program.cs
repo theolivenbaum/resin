@@ -96,7 +96,7 @@ namespace Sir.Cmd
         /// <summary>
         /// Required args: collection, skip, take, reportFrequency, fields
         /// </summary>
-        private static void Optimize(IDictionary<string, string> args, BagOfCharsModel model, ILogger logger)
+        private static void Optimize<T>(IDictionary<string, string> args, IModel<T> model, ILogger logger)
         {
             var dataDirectory = args["dataDirectory"];
             var collection = args["collection"];

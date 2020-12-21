@@ -135,6 +135,7 @@ namespace Sir.Search
             var docInfo = streamReader.GetDocumentAddress(doc.docId);
             var docMap = streamReader.GetDocumentMap(docInfo.offset, docInfo.length);
 
+            // for each key, create a tree
             for (int i = 0; i < docMap.Count; i++)
             {
                 var kvp = docMap[i];
