@@ -33,7 +33,7 @@ namespace Sir.Search
 
         public SearchResult Search(Query query, int skip, int take)
         {
-            var result = MapReduceSort(query, skip, take);
+            var result = MapReduce(query, skip, take);
 
             if (result != null)
             {
@@ -45,7 +45,7 @@ namespace Sir.Search
             return new SearchResult(query, 0, 0, new Document[0]);
         }
 
-        private ScoredResult MapReduceSort(Query query, int skip, int take)
+        private ScoredResult MapReduce(Query query, int skip, int take)
         {
             var timer = Stopwatch.StartNew();
 

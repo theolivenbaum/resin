@@ -114,6 +114,48 @@ namespace Sir.VectorSpace
             }
         }
 
+        public static void AddIfUnique(
+            VectorNode root,
+            VectorNode node,
+            IModel model)
+        {
+            var cursor = root;
+
+            while (true)
+            {
+                var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
+
+                if (angle >= model.IdenticalAngle)
+                {
+                    break;
+                }
+                else if (angle > model.FoldAngle)
+                {
+                    if (cursor.Left == null)
+                    {
+                        cursor.Left = node;
+                        break;
+                    }
+                    else
+                    {
+                        cursor = cursor.Left;
+                    }
+                }
+                else
+                {
+                    if (cursor.Right == null)
+                    {
+                        cursor.Right = node;
+                        break;
+                    }
+                    else
+                    {
+                        cursor = cursor.Right;
+                    }
+                }
+            }
+        }
+
         public static bool TryAdd(
             VectorNode root,
             VectorNode node,
@@ -294,24 +336,20 @@ namespace Sir.VectorSpace
 
         public static void MergeDocIds(VectorNode target, VectorNode source)
         {
-            if (target.DocIds == null)
+            if (source.DocIds != null)
             {
-                target.DocIds = source.DocIds;
-            }
-            else if (source.DocIds != null)
-            {
-                foreach (var docId in source.DocIds)
-                {
-                    target.DocIds.Add(docId);
-                }
+                target.DocIds.AddRange(source.DocIds);
             }
         }
 
-        public static void MergeDocIdsConcurrent(VectorNode target, List<long> documentIds)
+        public static void MergeDocIdsConcurrent(VectorNode target, VectorNode source)
         {
             lock (target.Sync)
             {
-                target.DocIds.AddRange(documentIds);
+                if (source.DocIds != null)
+                {
+                    target.DocIds.AddRange(source.DocIds);
+                }
             }
         }
 

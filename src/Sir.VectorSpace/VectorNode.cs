@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -123,7 +124,7 @@ namespace Sir.VectorSpace
 
                 if (angle >= model.IdenticalAngle)
                 {
-                    GraphBuilder.MergeDocIdsConcurrent(cursor, node.DocIds);
+                    GraphBuilder.MergeDocIdsConcurrent(cursor, node);
 
                     break;
                 }

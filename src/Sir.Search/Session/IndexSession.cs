@@ -43,7 +43,7 @@ namespace Sir.Search
 
             foreach (var node in PathFinder.All(tree))
             {
-                _indexingStrategy.ExecutePut<T>(column, new VectorNode(node.Vector, docIds:node.DocIds));
+                _indexingStrategy.ExecutePut<T>(column, new VectorNode(node.Vector, docIds: node.DocIds));
             }
         }
 

@@ -6,7 +6,7 @@ namespace Sir.Search
 {
     public class BagOfCharsModel : DistanceCalculator, IModel<string>
     {
-        public double IdenticalAngle => 0.99d;
+        public double IdenticalAngle => 0.998d;
         public double FoldAngle => 0.55d;
         public override int NumOfDimensions => System.Text.Unicode.UnicodeRanges.All.Length;
 

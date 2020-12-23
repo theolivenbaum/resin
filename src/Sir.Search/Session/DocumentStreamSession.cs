@@ -149,7 +149,7 @@ namespace Sir.Search
 
                     foreach (var vector in streamReader.GetVectors<T>(vInfo.offset, vInfo.len, vInfo.dataType, value => model.Tokenize(value)))
                     {
-                        GraphBuilder.MergeOrAdd(tree, new VectorNode(vector, docId:doc.docId, keyId:kvp.keyId), model);
+                        GraphBuilder.AddIfUnique(tree, new VectorNode(vector, docId:doc.docId, keyId:kvp.keyId), model);
                     }
 
                     yield return tree;
