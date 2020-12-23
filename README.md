@@ -1,21 +1,21 @@
 # &#9084; Resin
 
-Resin is a search engine of vector spaces that uses hardware accelerated vector operations 
-from [MathNet](https://github.com/mathnet/mathnet-numerics) when building and scanning indices.
+Resin is a search engine that can search through any vector space. It uses hardware accelerated vector operations from 
+[MathNet](https://github.com/mathnet/mathnet-numerics) for building and scanning indices.
 
 Resin includes a web query GUI, a HTTP JSON API and an embeddable API for reading, writing and analyzing your data.
 
-Resin comes pre-loaded with two vector space configurations (`models`), one for [text](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/BagOfCharsModel.cs) 
+Resin comes pre-loaded with two vector space configurations: one for [text](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/BagOfCharsModel.cs) 
 and [another](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/LinearClassifierImageModel.cs) for [MNIST](http://yann.lecun.com/exdb/mnist/) images. 
-The latter is included mostly as an example of how to use machine-learning techniques to build custom-made search indices.
+The latter is included mostly as an example of how to implement machine-learning techniques for building custom-made search indices.
 
 You may plug in your own models into Resin's read and write pipelines. You do so by implementing IModel<T>. Regardless of which model you use the write pipeline produces 
-a traversable, scannable and deployable index that you may interact with through the Resin web GUI, its read/write `JSON HTTP API`, or programmatically.
+a traversable index that you may interact with through the Resin web GUI, its read/write `JSON HTTP API`, or programmatically.
 
 You may also:  
 - build, validate and optimize indices using the command-line tool [Sir.Cmd](https://github.com/kreeben/resin/blob/master/src/Sir.Cmd/README.md)
 - write data by HTTP POST-ing JSON formatted data to the built-in HTTP server write endpoints
-- read efficiently by specifying with fields to return in the JSON result  
+- read efficiently by specifying which fields to return in the JSON result  
 - write IModel<T> implementations 
 - programatically scan, traverse, perform calculations over and in other ways manipulate your indices.
 
