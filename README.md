@@ -8,8 +8,8 @@ Resin includes a web query GUI, a HTTP JSON API and an embeddable API for readin
 Resin comes pre-loaded with two vector space configurations: one for [text](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/BagOfCharsModel.cs) 
 and [another](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/LinearClassifierImageModel.cs) for [MNIST](http://yann.lecun.com/exdb/mnist/) images. 
 The former has been tested by validating indices generated from Wikipedia search engine dumps as well as by parsing Common Crawl WAT, WET and WARC files, 
-to determine at which scale Resin may operate in and at what accuracy. All of those data sets produce indices capable of sub-second phrase searching. 
-The latter is included mostly as an example of how to implement your own prefered machine-learning algorith for building custom-made search indices. 
+to determine at which scale Resin may operate in and at what accuracy. Currently, Wikipedia size data sets produce indices capable of sub-second phrase searching. 
+The image model is included mostly as an example of how to implement your own prefered machine-learning algorithm for building custom-made search indices. 
 The error rate of the image classifier is ~5%. 
 
 You may plug in your own vector space configurations into Resin's read and write pipelines. You do so by implementing IModel<T>. 
