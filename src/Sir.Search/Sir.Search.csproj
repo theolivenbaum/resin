@@ -34,6 +34,9 @@
 
   <PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <PackageId>Resin</PackageId>
+    <Authors>Marcus Lager</Authors>
+    <PackageTags>search,search engine,machine-learning,information retrieval</PackageTags>
   </PropertyGroup>
 
 </Project>

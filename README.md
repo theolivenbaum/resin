@@ -1,7 +1,7 @@
 # &#9084; Resin
 
-Resin is a search engine that can search through any vector space. It uses hardware accelerated vector operations from 
-[MathNet](https://github.com/mathnet/mathnet-numerics) for building and scanning indices.
+Resin is a search engine library and service that can search through any vector space. It uses hardware accelerated vector operations from 
+[MathNet](https://github.com/mathnet/mathnet-numerics) to build and scan indices.
 
 Resin includes a web query GUI, a HTTP JSON API and an embeddable API for reading, writing and analyzing your data.
 
@@ -15,7 +15,7 @@ The error rate of the image classifier is ~5%.
 You may plug in your own vector space configurations into Resin's read and write pipelines. You do so by implementing IModel<T>. 
 
 Resin stores data as document collections. It applies your prefered IModel<T> onto your data when writing and querying. 
-The write pipeline produces a set of indices, one for each document field, that you may interact with by using the Resin web GUI, 
+The write pipeline produces a set of indices (graphs), one for each document field, that you may interact with by using the Resin web GUI, 
 the Resin read/write JSON HTTP API, or programmatically.
 
 You may also:  
