@@ -7,17 +7,22 @@ Resin includes a web query GUI, a HTTP JSON API and an embeddable API for readin
 
 Resin comes pre-loaded with two vector space configurations: one for [text](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/BagOfCharsModel.cs) 
 and [another](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/LinearClassifierImageModel.cs) for [MNIST](http://yann.lecun.com/exdb/mnist/) images. 
-The latter is included mostly as an example of how to implement machine-learning techniques for building custom-made search indices.
+The former has been tested by validating indices generated from Wikipedia search engine dumps as well as by parsing Common Crawl WAT, WET and WARC files, 
+to determine at which scale Resin may operate in and at what accuracy. All of those data sets produce indices capable of sub-second phrase searching. 
+The latter is included mostly as an example of how to implement your own prefered machine-learning algorith for building custom-made search indices. 
+The error rate of the image classifier is ~5%. 
 
-You may plug in your own models into Resin's read and write pipelines. You do so by implementing IModel<T>. Regardless of which model you use the write pipeline produces 
-a traversable index that you may interact with through the Resin web GUI, its read/write `JSON HTTP API`, or programmatically.
+You may plug in your own vector space configurations into Resin's read and write pipelines. You do so by implementing IModel<T>. 
+
+Resin stores data as document collections. It applies your prefered IModel<T> onto your data when writing and querying. 
+The write pipeline produces a set of indices, one for each document field, that you may interact with by using the Resin web GUI, 
+the Resin read/write JSON HTTP API, or programmatically.
 
 You may also:  
 - build, validate and optimize indices using the command-line tool [Sir.Cmd](https://github.com/kreeben/resin/blob/master/src/Sir.Cmd/README.md)
-- write data by HTTP POST-ing JSON formatted data to the built-in HTTP server write endpoints
-- read efficiently by specifying which fields to return in the JSON result  
-- write IModel<T> implementations 
-- programatically scan, traverse, perform calculations over and in other ways manipulate your indices.
+- read efficiently by specifying which fields to return in the JSON result
+- implement messaging formats such as XML (or any other, really) if JSON is not suitable for your use case
+- construct queries that join between fields and even between collections, that you may post to the write endpoint as JSON or create programatically.
 
 ## Applications
 
@@ -45,4 +50,4 @@ You may also:
 - [ ] v2.0 - image-to-voice
 - [ ] v2.1 - voice-to-text
 - [ ] v2.2 - text-to-image
-- [ ] v3.0 - AI
+- [ ] v2.3 - AI
