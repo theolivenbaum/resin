@@ -2,11 +2,14 @@
 
 Resin is a search library and service that can help you search through any vector space. It uses hardware accelerated vector operations from 
 [MathNet](https://github.com/mathnet/mathnet-numerics) to build indices of your data that you may then scan with ease, progammatically or 
-by using the built-in HTTP API. Vector spaces are configured by implementing [IModel<T>](https://github.com/kreeben/resin/blob/master/src/Sir.VectorSpace/IModel.cs).
+by using the built-in HTTP API. Vector spaces are configured by implementing [IModel<T>](https://github.com/kreeben/resin/blob/master/src/Sir.VectorSpace/IModel.cs). 
 
-Resin stores data as document collections. It applies your prefered IModel<T> onto your data when writing and querying. 
+Resin stores data as document collections. It applies your prefered IModel<T> onto your data while you write and query it. 
 The write pipeline produces a set of indices (graphs), one for each document field, that you may interact with by using the Resin web GUI, 
 the Resin read/write JSON HTTP API, or programmatically.
+
+Resin indices are unbalanced binary search trees that cluster those vectors that are similar to each other, as you populate them. 
+When a node is added to the graph its (cosine angle) similarity to other nodes determine its position (path) within the graph.
 
 Resin comes pre-loaded with two IModel vector space configurations: one for [text](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/BagOfCharsModel.cs) 
 and [another](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/LinearClassifierImageModel.cs) for [MNIST](http://yann.lecun.com/exdb/mnist/) images. 
@@ -21,6 +24,7 @@ You may also:
 - read efficiently by specifying which fields to return in the JSON result
 - implement messaging formats such as XML (or any other, really) if JSON is not suitable for your use case
 - construct queries that join between fields and even between collections, that you may post to the write endpoint as JSON or create programatically.
+- construct any type of indexing scheme that produces any type of embeddings with any dimensionality using either sparse or dense vectors.
 
 ## Applications
 
