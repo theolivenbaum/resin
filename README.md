@@ -1,17 +1,21 @@
 # &#9084; Resin
 
+## HTTP search engine/embedded library
 Resin is a search library and service that can help you search through any vector space. It uses hardware accelerated vector operations from 
 [MathNet](https://github.com/mathnet/mathnet-numerics) to build indices of your data that you may then scan with ease, progammatically or 
 by using the built-in HTTP API. Vector spaces are configured by implementing [IModel<T>](https://github.com/kreeben/resin/blob/master/src/Sir.VectorSpace/IModel.cs). 
 
+## Document database
 Resin stores data as document collections. It applies your prefered IModel<T> onto your data while you write and query it. 
 The write pipeline produces a set of indices (graphs), one for each document field, that you may interact with by using the Resin web GUI, 
 the Resin read/write JSON HTTP API, or programmatically.
 
+## Vector-based indices
 Resin indices are unbalanced binary search trees that cluster those vectors that are similar to each other, as you populate them with your data. 
 Graph nodes are created in the [Tokenize](https://github.com/kreeben/resin/blob/master/src/Sir.VectorSpace/IModel.cs#L12) method of your model. 
 When a node is added to the graph its cosine angle, i.e. its similarity to other nodes, determine its position (path) within the graph.
 
+## Customizable vector spaces
 Resin comes pre-loaded with two IModel vector space configurations: one for [text](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/BagOfCharsModel.cs) 
 and [another](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/LinearClassifierImageModel.cs) for [MNIST](http://yann.lecun.com/exdb/mnist/) images. 
 The former has been tested by validating indices generated from Wikipedia search engine dumps as well as by parsing Common Crawl WAT, WET and WARC files, 
@@ -20,7 +24,7 @@ to determine at which scale Resin may operate in and at what accuracy. Currently
 The image model is included mostly as an example of how to implement your own prefered machine-learning algorithm for building custom-made search indices. 
 The error rate of the image classifier is ~5%. 
 
-You may also:  
+## You may also  
 - build, validate and optimize indices using the command-line tool [Sir.Cmd](https://github.com/kreeben/resin/blob/master/src/Sir.Cmd/README.md)
 - read efficiently by specifying which fields to return in the JSON result
 - implement messaging formats such as XML (or any other, really) if JSON is not suitable for your use case
