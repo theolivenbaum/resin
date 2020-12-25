@@ -2,13 +2,13 @@
 
 Resin is a search library and service that can help you search through any vector space. It uses hardware accelerated vector operations from 
 [MathNet](https://github.com/mathnet/mathnet-numerics) to build indices of your data that you may then scan with ease, progammatically or 
-by using the built-in HTTP API. 
+by using the built-in HTTP API. Vector spaces are configured by implementing [IModel<T>](https://github.com/kreeben/resin/blob/master/src/Sir.VectorSpace/IModel.cs).
 
 Resin stores data as document collections. It applies your prefered IModel<T> onto your data when writing and querying. 
 The write pipeline produces a set of indices (graphs), one for each document field, that you may interact with by using the Resin web GUI, 
 the Resin read/write JSON HTTP API, or programmatically.
 
-Resin comes pre-loaded with two vector space configurations: one for [text](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/BagOfCharsModel.cs) 
+Resin comes pre-loaded with two IModel vector space configurations: one for [text](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/BagOfCharsModel.cs) 
 and [another](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/LinearClassifierImageModel.cs) for [MNIST](http://yann.lecun.com/exdb/mnist/) images. 
 The former has been tested by validating indices generated from Wikipedia search engine dumps as well as by parsing Common Crawl WAT, WET and WARC files, 
 to determine at which scale Resin may operate in and at what accuracy. Currently, Wikipedia size data sets produce indices capable of sub-second phrase searching. 
