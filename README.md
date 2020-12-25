@@ -1,7 +1,8 @@
 # &#9084; Resin
 
-Resin is a search engine library and service that can search through any vector space. It uses hardware accelerated vector operations from 
-[MathNet](https://github.com/mathnet/mathnet-numerics) to build and scan indices.
+Resin is a search library and service that can help you search through any vector space. It uses hardware accelerated vector operations from 
+[MathNet](https://github.com/mathnet/mathnet-numerics) to build indices of your data that you may then scan with ease, progammatically or 
+by using the built-in HTTP API. 
 
 Resin includes a web query GUI, a HTTP JSON API and an embeddable API for reading, writing and analyzing your data.
 
