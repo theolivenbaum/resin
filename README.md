@@ -1,5 +1,7 @@
 # &#9084; Resin
 
+[![NuGet version (Newtonsoft.Json)](https://img.shields.io/nuget/v/Resin.Search.svg?style=flat-square)](https://www.nuget.org/packages/Resin.Search/) 
+
 ## HTTP search engine/embedded library
 Resin is a search library and service that can help you search through any vector space. It uses hardware accelerated vector operations from 
 [MathNet](https://github.com/mathnet/mathnet-numerics) to build indices of your data that you may then scan with ease, progammatically or 
