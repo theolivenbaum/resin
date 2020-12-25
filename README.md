@@ -8,8 +8,9 @@ Resin stores data as document collections. It applies your prefered IModel<T> on
 The write pipeline produces a set of indices (graphs), one for each document field, that you may interact with by using the Resin web GUI, 
 the Resin read/write JSON HTTP API, or programmatically.
 
-Resin indices are unbalanced binary search trees that cluster those vectors that are similar to each other, as you populate them. 
-When a node is added to the graph its (cosine angle) similarity to other nodes determine its position (path) within the graph.
+Resin indices are unbalanced binary search trees that cluster those vectors that are similar to each other, as you populate them with your data. 
+Graph nodes are created in the [Tokenize](https://github.com/kreeben/resin/blob/master/src/Sir.VectorSpace/IModel.cs#L12) method of your model. 
+When a node is added to the graph its cosine angle, i.e. its similarity to other nodes, determine its position (path) within the graph.
 
 Resin comes pre-loaded with two IModel vector space configurations: one for [text](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/BagOfCharsModel.cs) 
 and [another](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/LinearClassifierImageModel.cs) for [MNIST](http://yann.lecun.com/exdb/mnist/) images. 
