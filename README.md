@@ -12,10 +12,9 @@ Resin comes pre-loaded with two IModel vector space configurations: one for [tex
 and [another](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/LinearClassifierImageModel.cs) for [MNIST](http://yann.lecun.com/exdb/mnist/) images. 
 The former has been tested by validating indices generated from Wikipedia search engine dumps as well as by parsing Common Crawl WAT, WET and WARC files, 
 to determine at which scale Resin may operate in and at what accuracy. Currently, Wikipedia size data sets produce indices capable of sub-second phrase searching. 
+
 The image model is included mostly as an example of how to implement your own prefered machine-learning algorithm for building custom-made search indices. 
 The error rate of the image classifier is ~5%. 
-
-You may plug in your own vector space configurations into Resin's read and write pipelines. You do so by implementing IModel<T>. 
 
 You may also:  
 - build, validate and optimize indices using the command-line tool [Sir.Cmd](https://github.com/kreeben/resin/blob/master/src/Sir.Cmd/README.md)
