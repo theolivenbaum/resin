@@ -16,9 +16,11 @@ Download a [pre-built package for Windows x64](https://github.com/kreeben/resin/
 Extract zip file or, if you used `git clone`, now run the following commands:  
 
 `cd resin\src\sir.httpserver  
+
 dotnet publish -p:PublishProfile=FolderProfile`
 
 ### Launch server
 
 `cd resin\src\sir.httpserver\bin\release\net5.0\publish  
+
 dotnet run`
