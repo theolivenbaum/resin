@@ -13,19 +13,15 @@
     <title>@ViewBag.Title</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="/css/theme.css">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
 </head>
 <body>
     <div class="outer-container">
-        <div class="logo2"><a href="/?collection=@string.Join(",", collections)">Search</a></div>
+        <div class="logo2"><a href="/?collection=@string.Join(",", collections)">Resin.Search</a></div>
         @RenderBody()
     </div>
     <footer>
         <div class="footer-nav">
-            <p><a href="/instructions">Instructions</a> | <a href="https://github.com/kreeben/resin/blob/master/LICENSE">Terms</a> | <a href="/contact">Contact</a> | <a href="https://github.com/kreeben/resin/issues">Report issue</a></p>
+            <p><a href="/instructions">Instructions</a> | <a href="https://github.com/kreeben/resin/discussions">Discuss</a> | <a href="https://github.com/kreeben/resin/issues">Report issue</a> | <a href="https://github.com/kreeben/resin/blob/master/LICENSE">Terms</a></p>
         </div>
     </footer>
 </body>
