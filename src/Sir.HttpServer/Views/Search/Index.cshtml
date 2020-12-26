@@ -1,7 +1,7 @@
 ﻿@model Sir.Search.SearchResult
 
 @{
-    ViewBag.Title = Context.Request.Query["q"] + " - Crawl Crawler";
+    ViewBag.Title = Context.Request.Query["q"] + " - Resin.Search";
     Layout = "~/Views/_Layout.cshtml";
 }
 @{await Html.RenderPartialAsync("SearchForm");}

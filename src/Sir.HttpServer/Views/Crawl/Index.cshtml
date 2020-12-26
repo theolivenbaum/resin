@@ -8,7 +8,7 @@
     var fields = (ViewBag.Field ?? Context.Request.Query["field"]).ToString();
     var job = (string)ViewBag.Job??"CCC";
 
-    ViewBag.Title = $"Enrich - {q} - Crawl Crawler";
+    ViewBag.Title = $"Enrich - {q} - Resin.Search";
 } 
     <form action="/crawl/@Context.Request.QueryString" method="post">
         <div class="blog-wrapper">
