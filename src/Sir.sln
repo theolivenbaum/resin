@@ -8,7 +8,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resources", "resources", "{CA96B574-72B3-4954-8B51-4C961A6F6622}"
 	ProjectSection(SolutionItems) = preProject
 		AssemblyInfo.cs = AssemblyInfo.cs
+		..\INSTALL.md = ..\INSTALL.md
 		..\README.md = ..\README.md
+		..\USER-GUIDE.md = ..\USER-GUIDE.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.HttpServer", "Sir.HttpServer\Sir.HttpServer.csproj", "{C94C2F5D-AE55-4157-A74A-26D49EE73E96}"
