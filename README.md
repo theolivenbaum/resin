@@ -33,8 +33,8 @@ The error rate of the image classifier is ~5%.
 - build, validate and optimize indices using the command-line tool [Sir.Cmd](https://github.com/kreeben/resin/blob/master/src/Sir.Cmd/README.md)
 - read efficiently by specifying which fields to return in the JSON result
 - implement messaging formats such as XML (or any other, really) if JSON is not suitable for your use case
-- construct queries that join between fields and even between collections, that you may post to the write endpoint as JSON or create programatically.
-- construct any type of indexing scheme that produces any type of embeddings with any dimensionality using either sparse or dense vectors.
+- construct queries that join between fields and even between collections, that you may post as JSON to the read endpoint or create programatically.
+- construct any type of indexing scheme that produces any type of embeddings with virtually any dimensionality using either sparse or dense vectors.
 
 ## Applications
 
