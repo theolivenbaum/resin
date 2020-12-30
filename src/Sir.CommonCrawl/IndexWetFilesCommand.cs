@@ -23,19 +23,18 @@ namespace Sir.CommonCrawl
             {
                 sessionFactory.Truncate(collectionId);
 
-                var writeJob = new WriteJob<string>(
+                sessionFactory.Write(
                     collectionId,
                     ReadWetFile(fileName)
                                 .Select(dic =>
-                                    new Search.Document(
+                                    new Document(
                                         dic.Select(kvp => new Field(
                                             kvp.Key,
                                             kvp.Value,
                                             index: indexFields.Contains(kvp.Key),
                                             store: storeFields.Contains(kvp.Key))).ToList())),
-                    model);
-
-                sessionFactory.Write(writeJob, reportSize: 1000);
+                    model,
+                    reportSize: 1000);
             }
         }
 

@@ -26,10 +26,9 @@ namespace Sir.HttpServer
             var collectionId = request.Query["collection"].First().ToHash();
 
             _sessionFactory.Write(
-                new WriteJob<string>(
-                    collectionId,
-                    documents,
-                    model));
+                collectionId,
+                documents,
+                model);
         }
 
         private static T Deserialize<T>(Stream stream)

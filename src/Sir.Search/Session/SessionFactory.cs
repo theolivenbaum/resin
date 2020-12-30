@@ -195,19 +195,17 @@ namespace Sir.Search
             IModel<T> model,
             int reportSize = 1000)
         {
-            var job = new WriteJob<T>(targetCollectionId, documents, model);
-
-            Write(job, reportSize);
+            Write(targetCollectionId, documents, model, reportSize);
         }
 
-        public void Write<T>(WriteJob<T> job, WriteSession writeSession, IndexSession<T> indexSession, int reportSize = 1000)
+        public void Write<T>(ulong collectionId, IEnumerable<Document> job, IModel<T> model, WriteSession writeSession, IndexSession<T> indexSession, int reportSize = 1000)
         {
-            LogInformation($"writing to collection {job.CollectionId}");
+            LogInformation($"writing to collection {collectionId}");
 
             var time = Stopwatch.StartNew();
             var debugger = new IndexDebugger(Logger, reportSize);
 
-            foreach (var document in job.Documents)
+            foreach (var document in job)
             {
                 writeSession.Put(document);
 
@@ -223,7 +221,7 @@ namespace Sir.Search
                 debugger.Step(indexSession);
             }
 
-            Logger.LogInformation($"processed write&index job (collection {job.CollectionId}) in {time.Elapsed}");
+            Logger.LogInformation($"processed write&index job (collection {collectionId}) in {time.Elapsed}");
         }
 
         public void Write<T>(
@@ -242,22 +240,22 @@ namespace Sir.Search
             }
         }
 
-        public void Index<T>(WriteJob<T> job, int reportSize = 1000)
+        public void Index<T>(ulong collectionId, IEnumerable<Document> job, IModel<T> model, int reportSize = 1000)
         {
-            using (var indexSession = new IndexSession<T>(job.Model, job.Model))
+            using (var indexSession = new IndexSession<T>(model, model))
             {
-                Index(job, indexSession);
+                Index(collectionId, job, model, indexSession);
 
-                using (var stream = new WritableIndexStream(job.CollectionId, this, logger: Logger))
+                using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
                 {
                     stream.Write(indexSession.GetInMemoryIndex());
                 }
             }
         }
 
-        public void Index<T>(WriteJob<T> job, IndexSession<T> indexSession)
+        public void Index<T>(ulong collectionId, IEnumerable<Document> job, IModel<T> model, IndexSession<T> indexSession)
         {
-            LogInformation($"indexing collection {job.CollectionId}");
+            LogInformation($"indexing collection {collectionId}");
 
             var time = Stopwatch.StartNew();
 
@@ -272,13 +270,13 @@ namespace Sir.Search
                 }
             }))
             {
-                foreach (var document in job.Documents)
+                foreach (var document in job)
                 {
                     foreach (var field in document.Fields)
                     {
                         if (field.Value != null && field.Index)
                         {
-                            field.Analyze(job.Model);
+                            field.Analyze(model);
                         }
                     }
 
@@ -286,41 +284,15 @@ namespace Sir.Search
                 }
             }
 
-            LogInformation($"processed indexing job (collection {job.CollectionId}) in {time.Elapsed}");
+            LogInformation($"processed indexing job (collection {collectionId}) in {time.Elapsed}");
         }
 
-        public void Write<T>(WriteJob<T> job, int reportSize = 1000)
-        {
-            using (var writeSession = new WriteSession(new DocumentWriter(job.CollectionId, this)))
-            using (var indexSession = new IndexSession<T>(job.Model, job.Model))
-            {
-                Write(job, writeSession, indexSession, reportSize);
-
-                using (var stream = new WritableIndexStream(job.CollectionId, this, logger: Logger))
-                {
-                    stream.Write(indexSession.GetInMemoryIndex());
-                }
-            }
-        }
-
-        public void Write<T>(
-            ulong collectionId,
-            IEnumerable<Document> documents, 
-            IModel<T> model, 
-            int reportSize = 1000
-            )
+        public void Write<T>(ulong collectionId, IEnumerable<Document> job, IModel<T> model, int reportSize = 1000)
         {
             using (var writeSession = new WriteSession(new DocumentWriter(collectionId, this)))
             using (var indexSession = new IndexSession<T>(model, model))
             {
-                Write(
-                    new WriteJob<T>(
-                        collectionId,
-                        documents,
-                        model),
-                    writeSession,
-                    indexSession,
-                    reportSize);
+                Write(collectionId, job, model, writeSession, indexSession, reportSize);
 
                 using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
                 {
