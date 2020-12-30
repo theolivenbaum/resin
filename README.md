@@ -16,7 +16,7 @@ The write pipeline produces a set of indices (graphs), one for each document fie
 the Resin read/write JSON HTTP API, or programmatically.
 
 ## Vector-based indices
-Resin indices are binary search trees that cluster those vectors that are similar to each other, as you populate them with your data. 
+Resin indices are binary search trees and creates clusters of those vectors that are similar to each other, as you populate them with your data. 
 Graph nodes are created in the [Tokenize](https://github.com/kreeben/resin/blob/master/src/Sir.VectorSpace/IModel.cs#L12) method of your model. 
 When a node is added to the graph its cosine angle, i.e. its similarity to other nodes, determine its position (path) within the graph.
 
