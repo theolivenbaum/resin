@@ -2,13 +2,13 @@
 
 [![NuGet version (Newtonsoft.Json)](https://img.shields.io/nuget/v/Resin.Search.svg?style=flat-square)](https://www.nuget.org/packages/Resin.Search/) 
 
-[Installation instructions](https://github.com/kreeben/resin/blob/master/INSTALL.md)  
-[User guide](https://github.com/kreeben/resin/blob/master/USER-GUIDE.md) 
+Overview | [How to install](https://github.com/kreeben/resin/blob/master/INSTALL.md) | [User guide](https://github.com/kreeben/resin/blob/master/USER-GUIDE.md) 
 
 ## HTTP search engine/embedded library
-Resin is a search library and service that can help you search through any vector space. It uses hardware accelerated vector operations from 
-[MathNet](https://github.com/mathnet/mathnet-numerics) to build indices of your data that you may then scan with ease, progammatically or 
-by using the built-in HTTP API. Vector spaces are configured by implementing [IModel<T>](https://github.com/kreeben/resin/blob/master/src/Sir.VectorSpace/IModel.cs). 
+Launch a HTTP server or use the search library to search through any vector space. With hardware accelerated vector operations from 
+[MathNet](https://github.com/mathnet/mathnet-numerics) Resin is especially well suited for problem spaces that can be defined as vector spaces.
+
+Vector spaces are configured by implementing [IModel<T>](https://github.com/kreeben/resin/blob/master/src/Sir.VectorSpace/IModel.cs). 
 
 ## Document database
 Resin stores data as document collections. It applies your prefered IModel<T> onto your data while you write and query it. 
@@ -23,11 +23,15 @@ When a node is added to the graph its cosine angle, i.e. its similarity to other
 ## Customizable vector spaces
 Resin comes pre-loaded with two IModel vector space configurations: one for [text](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/BagOfCharsModel.cs) 
 and [another](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/LinearClassifierImageModel.cs) for [MNIST](http://yann.lecun.com/exdb/mnist/) images. 
-The former has been tested by validating indices generated from Wikipedia search engine dumps as well as by parsing Common Crawl WAT, WET and WARC files, 
-to determine at which scale Resin may operate in and at what accuracy. Currently, Wikipedia size data sets produce indices capable of sub-second phrase searching. 
+The text model has been tested by validating indices generated from [Wikipedia search engine dumps](https://dumps.wikimedia.org/other/cirrussearch/current/) as well as by parsing 
+[Common Crawl](http://commoncrawl.org/) [WAT](https://commoncrawl.org/the-data/get-started/#WAT-Format), [WET](https://commoncrawl.org/the-data/get-started/#WET-Format) 
+and [WARC](https://commoncrawl.org/the-data/get-started/#WARC-Format) files, to determine at which scale Resin may operate in and at what accuracy. 
 
 The image model is included mostly as an example of how to implement your own prefered machine-learning algorithm for building custom-made search indices. 
 The error rate of the image classifier is ~5%. 
+
+## Performance
+Currently, Wikipedia size data sets produce indices capable of sub-second phrase searching. 
 
 ## You may also  
 - build, validate and optimize indices using the command-line tool [Sir.Cmd](https://github.com/kreeben/resin/blob/master/src/Sir.Cmd/README.md)

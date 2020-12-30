@@ -1,7 +1,6 @@
 # &#9084; Resin
 
-[Introduction](https://github.com/kreeben/resin/blob/master/README.md)  
-[User guide](https://github.com/kreeben/resin/blob/master/USER-GUIDE.md) 
+[Overview](https://github.com/kreeben/resin/blob/master/README.md) | How to install | [User guide](https://github.com/kreeben/resin/blob/master/USER-GUIDE.md) 
 
 ## Installation of HTTP server
 

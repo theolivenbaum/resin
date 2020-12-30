@@ -1,5 +1,7 @@
 # Sir.Cmd
 
+[Overview](https://github.com/kreeben/resin/blob/master/README.md) | [Install manual](https://github.com/kreeben/resin/blob/master/INSTALL.md) | [User guide](https://github.com/kreeben/resin/blob/master/USER-GUIDE.md) 
+
 Sir.Cmd is a console application for interacting with Resin databases and indices. It runs built-in commands as well as `ICommand` commands 
 that you may write yourself.
 

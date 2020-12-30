@@ -1,8 +1,3 @@
 # Sir.Search
 
-Use `SessionFactory` to dispatch `QuerySession` for reading, `WriteSession` for writing and `IndexSession` for indexing (training).
-Plug in your own `IModel` and `IIndexingStrategy` or use the built-in ones for text and images. 
-
-## TODO
-
-Plug in your own query parser.
+[Overview](https://github.com/kreeben/resin/blob/master/README.md) | [Install manual](https://github.com/kreeben/resin/blob/master/INSTALL.md) | [User guide](https://github.com/kreeben/resin/blob/master/USER-GUIDE.md) 
