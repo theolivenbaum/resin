@@ -12,7 +12,7 @@ namespace Sir.Search
 
         public void ExecutePut<T>(VectorNode column, VectorNode node)
         {
-            VectorNode.MergeOrAddLockFree(column, node, this);
+            column.MergeOrAddConcurrent(node, this);
         }
 
         public IEnumerable<IVector> Tokenize(string data)
@@ -83,7 +83,7 @@ namespace Sir.Search
 
         public void ExecutePut<T>(VectorNode column, VectorNode node)
         {
-            GraphBuilder.Build(column, node, this);
+            column.Build(node, this);
         }
 
         public IEnumerable<IVector> Tokenize(string data)
@@ -107,7 +107,7 @@ namespace Sir.Search
 
             public void ExecutePut<T>(VectorNode column, VectorNode node)
             {
-                GraphBuilder.MergeOrAdd(column, node, this);
+                column.MergeOrAdd(node, this);
             }
 
             public IEnumerable<IVector> Tokenize(string data)

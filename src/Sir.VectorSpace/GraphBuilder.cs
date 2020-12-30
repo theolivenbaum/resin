@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 namespace Sir.VectorSpace
 {
     public static class GraphBuilder
     {
-        public static VectorNode CreateTree<T>(IModel<T> model, IIndexingStrategy indexingStrategy, params T[] data)
+        public static VectorNode CreateTree<T>(this IModel<T> model, IIndexingStrategy indexingStrategy, params T[] data)
         {
             var root = new VectorNode();
 
@@ -25,7 +23,7 @@ namespace Sir.VectorSpace
         }
 
         public static void MergeOrAddSupervised(
-            VectorNode root,
+            this VectorNode root,
             VectorNode node,
             IModel model)
         {
@@ -71,7 +69,7 @@ namespace Sir.VectorSpace
         }
 
         public static void MergeOrAdd(
-            VectorNode root, 
+            this VectorNode root, 
             VectorNode node,
             IModel model)
         {
@@ -115,7 +113,7 @@ namespace Sir.VectorSpace
         }
 
         public static void AddIfUnique(
-            VectorNode root,
+            this VectorNode root,
             VectorNode node,
             IModel model)
         {
@@ -157,7 +155,7 @@ namespace Sir.VectorSpace
         }
 
         public static bool TryAdd(
-            VectorNode root,
+            this VectorNode root,
             VectorNode node,
             IModel model)
         {
@@ -201,7 +199,7 @@ namespace Sir.VectorSpace
         }
 
         public static void Build(
-            VectorNode root,
+            this VectorNode root,
             VectorNode node,
             IModel model)
         {
@@ -242,99 +240,13 @@ namespace Sir.VectorSpace
             }
         }
 
-        public static void MergeOrAddConcurrent(
-            VectorNode root,
-            VectorNode node,
-            IModel model)
-        {
-            var cursor = root;
-
-            while (true)
-            {
-                var angle = cursor.Vector == null ? 0 : model.CosAngle(node.Vector, cursor.Vector);
-
-                if (angle >= model.IdenticalAngle)
-                {
-                    lock (cursor.Sync)
-                    {
-                        MergeDocIds(cursor, node);
-                    }
-
-                    break;
-                }
-                else if (angle > model.FoldAngle)
-                {
-                    if (cursor.Left == null)
-                    {
-                        lock (cursor.Sync)
-                        {
-                            if (cursor.Left == null)
-                            {
-                                cursor.Left = node;
-                                break;
-                            }
-                            else
-                            {
-                                cursor = cursor.Left;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        cursor = cursor.Left;
-                    }
-                }
-                else
-                {
-                    if (cursor.Right == null)
-                    {
-                        lock (cursor.Sync)
-                        {
-                            if (cursor.Right == null)
-                            {
-                                cursor.Right = node;
-                                break;
-                            }
-                            else
-                            {
-                                cursor = cursor.Right;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        cursor = cursor.Right;
-                    }
-                }
-            }
-        }
-
-        public static void InsertRight(VectorNode parent, VectorNode node)
-        {
-            node.Right = parent.Right;
-            parent.Right = node;
-        }
-
-        public static void AddRight(VectorNode parent, VectorNode node)
-        {
-            var target = parent;
-
-            while(target.Right != null)
-            {
-                target = target.Right;
-            }
-
-            node.Right = target.Right;
-            target.Right = node;
-        }
-
-        public static void MergePostings(VectorNode target, VectorNode source)
+        public static void MergePostings(this VectorNode target, VectorNode source)
         {
             if (source.PostingsOffsets != null)
                 ((List<long>)target.PostingsOffsets).AddRange(source.PostingsOffsets);
         }
 
-        public static void MergeDocIds(VectorNode target, VectorNode source)
+        public static void MergeDocIds(this VectorNode target, VectorNode source)
         {
             if (source.DocIds != null)
             {
@@ -342,7 +254,7 @@ namespace Sir.VectorSpace
             }
         }
 
-        public static void MergeDocIdsConcurrent(VectorNode target, VectorNode source)
+        public static void MergeDocIdsConcurrent(this VectorNode target, VectorNode source)
         {
             lock (target.Sync)
             {
@@ -353,7 +265,7 @@ namespace Sir.VectorSpace
             }
         }
 
-        public static void SerializeNode(VectorNode node, Stream stream)
+        public static void Serialize(this VectorNode node, Stream stream)
         {
             long terminator = 1;
 
@@ -393,7 +305,7 @@ namespace Sir.VectorSpace
         /// <param name="vectorStream">stream to persist vectors in</param>
         /// <param name="postingsStream">optional stream to persist any posting references into</param>
         /// <returns></returns>
-        public static (long offset, long length) SerializeTree(VectorNode node, Stream indexStream, Stream vectorStream, Stream postingsStream = null)
+        public static (long offset, long length) SerializeTree(this VectorNode node, Stream indexStream, Stream vectorStream, Stream postingsStream = null)
         {
             var stack = new Stack<VectorNode>();
             var offset = indexStream.Position;
@@ -411,7 +323,7 @@ namespace Sir.VectorSpace
 
                 node.VectorOffset = VectorOperations.SerializeVector(node.Vector, vectorStream);
 
-                SerializeNode(node, indexStream);
+                Serialize(node, indexStream);
 
                 length += VectorNode.BlockSize;
 
@@ -431,7 +343,7 @@ namespace Sir.VectorSpace
             return (offset, length);
         }
 
-        public static void SerializePostings(VectorNode node, Stream postingsStream)
+        public static void SerializePostings(this VectorNode node, Stream postingsStream)
         {
             node.PostingsOffset = postingsStream.Position;
 

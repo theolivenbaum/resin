@@ -202,7 +202,7 @@ namespace Sir.Cmd
 
                     foreach (var token in tokens)
                     {
-                        GraphBuilder.MergeOrAdd(tree, new VectorNode(token), model);
+                        tree.MergeOrAdd(new VectorNode(token), model);
                     }
 
                     Console.WriteLine(field.Name);

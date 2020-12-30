@@ -16,7 +16,7 @@ namespace Sir.VectorSpace
 
         public (int depth, int width) CreatePage(VectorNode column, Stream vectorStream, Stream postingsStream, PageIndexWriter pageIndexWriter)
         {
-            var page = GraphBuilder.SerializeTree(column, _ixStream, vectorStream, postingsStream);
+            var page = column.SerializeTree(_ixStream, vectorStream, postingsStream);
 
             pageIndexWriter.Put(page.offset, page.length);
 
@@ -25,7 +25,7 @@ namespace Sir.VectorSpace
 
         public (int depth, int width) CreatePage(VectorNode column, Stream vectorStream, PageIndexWriter pageIndexWriter)
         {
-            var page = GraphBuilder.SerializeTree(column, _ixStream, vectorStream, null);
+            var page = column.SerializeTree(_ixStream, vectorStream, null);
 
             pageIndexWriter.Put(page.offset, page.length);
 
