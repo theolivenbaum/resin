@@ -1,6 +1,6 @@
 # &#9084; Resin
 
-[![NuGet version (Newtonsoft.Json)](https://img.shields.io/nuget/v/Resin.Search.svg?style=flat-square)](https://www.nuget.org/packages/Resin.Search/) 
+[![NuGet version (Resin.Search)](https://img.shields.io/nuget/v/Resin.Search.svg?style=flat-square)](https://www.nuget.org/packages/Resin.Search/) 
 
 Overview | [How to install](https://github.com/kreeben/resin/blob/master/INSTALL.md) | [User guide](https://github.com/kreeben/resin/blob/master/USER-GUIDE.md) 
 
