@@ -68,7 +68,7 @@ namespace Sir.StringCompare
 
                 var node = new VectorNode(model.Tokenize(command).First());
 
-                GraphBuilder.MergeOrAdd(root, node, model);
+                root.MergeOrAdd(node, model);
             }
 
             Console.WriteLine(PathFinder.Visualize(root));

@@ -111,12 +111,11 @@ namespace Sir.VectorSpace
             Vector = vector;
         }
 
-        public static void MergeOrAddLockFree(
-            VectorNode root,
+        public void MergeOrAddConcurrent(
             VectorNode node,
             IModel model)
         {
-            var cursor = root;
+            var cursor = this;
 
             while (true)
             {
@@ -124,7 +123,7 @@ namespace Sir.VectorSpace
 
                 if (angle >= model.IdenticalAngle)
                 {
-                    GraphBuilder.MergeDocIdsConcurrent(cursor, node);
+                    cursor.MergeDocIdsConcurrent(node);
 
                     break;
                 }
@@ -140,7 +139,7 @@ namespace Sir.VectorSpace
                         }
                         else
                         {
-                            MergeOrAddLockFree(cursor, node, model);
+                            cursor.MergeOrAddConcurrent(node, model);
                         }
                     }
                     else
@@ -160,7 +159,7 @@ namespace Sir.VectorSpace
                         }
                         else
                         {
-                            MergeOrAddLockFree(cursor, node, model);
+                            cursor.MergeOrAddConcurrent(node, model);
                         }
                     }
                     else

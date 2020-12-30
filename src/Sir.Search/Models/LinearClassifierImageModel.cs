@@ -13,7 +13,7 @@ namespace Sir.Search
 
         public void ExecutePut<T>(VectorNode column, VectorNode node)
         {
-            GraphBuilder.MergeOrAddSupervised(column, node, this);
+            column.MergeOrAddSupervised(node, this);
         }
 
         public IEnumerable<IVector> Tokenize(IImage data)

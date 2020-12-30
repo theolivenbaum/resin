@@ -61,7 +61,7 @@ namespace Sir.VectorSpace
                 }
                 else if (hit.Score >= model.IdenticalAngle || hit.Score.Approximates(best.Score))
                 {
-                    GraphBuilder.MergePostings(best.Node, hit.Node);
+                    best.Node.MergePostings(hit.Node);
                 }
             }
 
