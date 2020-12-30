@@ -204,12 +204,7 @@ namespace Sir.HttpServer.Features
                 {
                     var time = Stopwatch.StartNew();
 
-                    var writeJob = new WriteJob<string>(
-                        wetCollectionId,
-                        writePayload,
-                        new BagOfCharsModel());
-
-                    _sessionFactory.Write(writeJob, reportSize: 1000);
+                    _sessionFactory.Write(wetCollectionId, writePayload, _model, reportSize: 1000);
 
                     Status["index"] = 100;
 
