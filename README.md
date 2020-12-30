@@ -6,7 +6,7 @@ Overview | [How to install](https://github.com/kreeben/resin/blob/master/INSTALL
 
 ## HTTP search engine/embedded library
 Launch a Resin HTTP server or use the Resin search library to search through any vector space. With hardware accelerated vector operations from 
-[MathNet](https://github.com/mathnet/mathnet-numerics) Resin is especially well suited for problem spaces that can be defined as vector spaces.
+[MathNet](https://github.com/mathnet/mathnet-numerics) Resin is especially well suited for problem spaces that can be defined as such.
 
 Vector spaces are configured by implementing [IModel<T>](https://github.com/kreeben/resin/blob/master/src/Sir.VectorSpace/IModel.cs). 
 
