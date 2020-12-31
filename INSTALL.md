@@ -26,6 +26,10 @@ Extract zip file or, if you used `git clone`, now run the following commands:
 
 Your search server is now available at **http://localhost:54866**.
 
+### How to use Sir.HttpServer
+
+[Here](https://github.com/kreeben/resin/blob/master/src/Sir.HttpServer/README.md) are instructions for Sir.HttpServer.
+
 ## Installation of Sir.Cmd command-line utility
 
 ### Download
@@ -44,6 +48,6 @@ Extract zip file or, if you used `git clone`, now run the following commands:
 
 `cd ..\\..\\`
 
-### Use the Sir.Cmd command-line utility
+### How to use Sir.Cmd command-line utility
 
 [Here](https://github.com/kreeben/resin/blob/master/src/Sir.Cmd/README.md) are instructions on the commands you may issue through Sir.Cmd.
