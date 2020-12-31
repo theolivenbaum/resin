@@ -1,4 +1,4 @@
-# &#9084; Resin
+# &#9084; Resin.Search
 
 [![NuGet version (Resin.Search)](https://img.shields.io/nuget/v/Resin.Search.svg?style=flat-square)](https://www.nuget.org/packages/Resin.Search/) 
 
@@ -23,7 +23,7 @@ When a node is added to the graph its cosine angle, i.e. its similarity to other
 ## Customizable vector spaces
 Resin comes pre-loaded with two IModel vector space configurations: one for [text](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/BagOfCharsModel.cs) 
 and [another](https://github.com/kreeben/resin/blob/master/src/Sir.Search/Models/LinearClassifierImageModel.cs) for [MNIST](http://yann.lecun.com/exdb/mnist/) images. 
-The text model has been tested by validating indices generated from [Wikipedia search engine dumps](https://dumps.wikimedia.org/other/cirrussearch/current/) as well as by parsing 
+The text model has been tested by validating indices generated from [Wikipedia search engine backup files](https://dumps.wikimedia.org/other/cirrussearch/current/) as well as by parsing 
 [Common Crawl](http://commoncrawl.org/) [WAT](https://commoncrawl.org/the-data/get-started/#WAT-Format), [WET](https://commoncrawl.org/the-data/get-started/#WET-Format) 
 and [WARC](https://commoncrawl.org/the-data/get-started/#WARC-Format) files, to determine at which scale Resin may operate in and at what accuracy. 
 

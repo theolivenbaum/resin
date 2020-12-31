@@ -1,4 +1,4 @@
-# &#9084; Resin
+# &#9084; Resin.Search
 
 [Overview](https://github.com/kreeben/resin/blob/master/README.md) | How to install | [User guide](https://github.com/kreeben/resin/blob/master/USER-GUIDE.md) 
 

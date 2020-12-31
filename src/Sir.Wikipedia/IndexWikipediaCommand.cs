@@ -1,12 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
-using Sir.Core;
 using Sir.Documents;
 using Sir.Search;
 using Sir.VectorSpace;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Sir.Wikipedia
 {
