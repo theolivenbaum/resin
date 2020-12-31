@@ -8,8 +8,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resources", "resources", "{CA96B574-72B3-4954-8B51-4C961A6F6622}"
 	ProjectSection(SolutionItems) = preProject
 		AssemblyInfo.cs = AssemblyInfo.cs
+		..\build.bat = ..\build.bat
+		..\compare.bat = ..\compare.bat
 		..\INSTALL.md = ..\INSTALL.md
+		..\push-to-nuget.bat = ..\push-to-nuget.bat
 		..\README.md = ..\README.md
+		..\sir.bat = ..\sir.bat
 		..\USER-GUIDE.md = ..\USER-GUIDE.md
 	EndProjectSection
 EndProject
