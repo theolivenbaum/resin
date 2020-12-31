@@ -25,14 +25,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Resin.Search" Version="0.4.0.7" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0-dev-00037" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Sir.CommonCrawl\Sir.CommonCrawl.csproj" />
-    <ProjectReference Include="..\Sir.Core\Sir.Core.csproj" />
-    <ProjectReference Include="..\Sir.Document\Sir.Documents.csproj" />
-    <ProjectReference Include="..\Sir.Search\Sir.Search.csproj" />
   </ItemGroup>
 
   <ItemGroup>

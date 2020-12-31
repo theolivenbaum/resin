@@ -5,12 +5,6 @@
     <TargetFramework>net5.0</TargetFramework>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Sir.Core\Sir.Core.csproj" />
-    <ProjectReference Include="..\Sir.Search\Sir.Search.csproj" />
-    <ProjectReference Include="..\Sir.VectorSpace\Sir.VectorSpace.csproj" />
-  </ItemGroup>
   
   <PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -18,6 +12,10 @@
 
   <ItemGroup>
     <Compile Include="..\AssemblyInfo.cs" Link="AssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Resin.Search" Version="0.4.0.7" />
   </ItemGroup>
 
 </Project>
