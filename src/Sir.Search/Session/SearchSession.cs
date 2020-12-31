@@ -16,7 +16,7 @@ namespace Sir.Search
         private readonly SessionFactory _sessionFactory;
         private readonly IModel _model;
         private readonly IPostingsReader _postingsReader;
-
+        private readonly IDictionary<(ulong, long), IColumnReader> _readers;
         private readonly ILogger _logger;
 
         public SearchSession(
@@ -29,6 +29,7 @@ namespace Sir.Search
             _model = model;
             _postingsReader = postingsReader;
             _logger = logger ?? sessionFactory.Logger;
+            _readers = new Dictionary<(ulong, long), IColumnReader>();
         }
 
         public SearchResult Search(Query query, int skip, int take)
@@ -78,29 +79,21 @@ namespace Sir.Search
             if (query == null)
                 return;
 
-            //foreach (var q in query.All())
-            Parallel.ForEach(query.All(), q =>
+            foreach (var term in query.AllTerms())
             {
-                //foreach (var term in q.Terms)
-                Parallel.ForEach(q.Terms, term =>
+                var columnReader = CreateColumnReader(term.CollectionId, term.KeyId);
+
+                if (columnReader != null)
                 {
-                    var columnReader = CreateColumnReader(term.CollectionId, term.KeyId);
+                    var hit = columnReader.ClosestMatch(term.Vector, _model);
 
-                    if (columnReader != null)
+                    if (hit != null)
                     {
-                        using (columnReader)
-                        {
-                            var hit = columnReader.ClosestMatch(term.Vector, _model);
-
-                            if (hit != null)
-                            {
-                                term.Score = hit.Score;
-                                term.PostingsOffsets = hit.Node.PostingsOffsets ?? new List<long> { hit.Node.PostingsOffset };
-                            }
-                        }
+                        term.Score = hit.Score;
+                        term.PostingsOffsets = hit.Node.PostingsOffsets ?? new List<long> { hit.Node.PostingsOffset };
                     }
-                });
-            });
+                }
+            }
         }
 
         private static ScoredResult Sort(IDictionary<(ulong, long), double> documents, int skip, int take)
@@ -156,14 +149,28 @@ namespace Sir.Search
             if (!File.Exists(ixFileName))
                 return null;
 
-            var vectorFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.vec");
+            IColumnReader reader;
+            var key = (collectionId, keyId);
 
-            return new ColumnReader(
-                    new PageIndexReader(_sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.ixtp"))),
-                    _sessionFactory.CreateReadStream(ixFileName),
-                    _sessionFactory.CreateReadStream(vectorFileName),
-                    _sessionFactory,
-                    _logger);
+            if (!_readers.TryGetValue(key, out reader))
+            {
+                var vectorFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.vec");
+                var pageIndexFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.ixtp");
+
+                using (var pageIndexReader = new PageIndexReader(_sessionFactory.CreateReadStream(pageIndexFileName)))
+                {
+                    reader = new ColumnReader(
+                        pageIndexReader.ReadAll(),
+                        _sessionFactory.CreateReadStream(ixFileName),
+                        _sessionFactory.CreateReadStream(vectorFileName),
+                        _sessionFactory,
+                        _logger);
+                }
+
+                _readers.Add(key, reader);
+            }
+
+            return reader;
         }
 
         public override void Dispose()

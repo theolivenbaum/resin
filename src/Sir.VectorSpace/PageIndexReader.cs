@@ -43,7 +43,7 @@ namespace Sir.VectorSpace
             return ReadAt(id * sizeof(long) * 2);
         }
 
-        public IList<(long offset, long length)> GetAll()
+        public IList<(long offset, long length)> ReadAll()
         {
             var mem = new MemoryStream();
             _stream.CopyTo(mem);

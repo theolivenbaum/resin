@@ -13,7 +13,7 @@ namespace Sir.VectorSpace
     public class PostingsReader : Reducer, IPostingsReader
     {
         private readonly ISessionFactory _sessionFactory;
-        private readonly ConcurrentDictionary<(ulong collectionId, long keyId), Stream> _streams;
+        private readonly IDictionary<(ulong collectionId, long keyId), Stream> _streams;
 
         public PostingsReader(ISessionFactory sessionFactory)
         {
@@ -40,7 +40,7 @@ namespace Sir.VectorSpace
 
             stream.Seek(postingsOffset, SeekOrigin.Begin);
 
-            Span<byte> buf = new byte[sizeof(long)];
+            Span<byte> buf = stackalloc byte[sizeof(long)];
 
             stream.Read(buf);
 
@@ -63,9 +63,16 @@ namespace Sir.VectorSpace
 
         private Stream GetOrCreateStream(ulong collectionId, long keyId)
         {
-            return _streams.GetOrAdd(
-                (collectionId, keyId), 
-                key => _sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.pos")));
+            Stream stream;
+            var key = (collectionId, keyId);
+
+            if (!_streams.TryGetValue(key, out stream))
+            {
+                stream = _sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.pos"));
+                _streams.Add(key, stream);
+            }
+
+            return stream;
         }
 
         public void Dispose()

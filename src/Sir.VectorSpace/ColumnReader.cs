@@ -15,11 +15,10 @@ namespace Sir.VectorSpace
         private readonly ILogger _logger;
         private readonly Stream _vectorFile;
         private readonly Stream _ixFile;
-        private readonly IList<(long offset, long length)> _segments;
-        private readonly PageIndexReader _pageReader;
+        private readonly IList<(long offset, long length)> _pages;
 
         public ColumnReader(
-            PageIndexReader pageReader,
+            IList<(long offset, long length)> pages,
             Stream indexStream,
             Stream vectorStream,
             ISessionFactory sessionFactory,
@@ -29,9 +28,7 @@ namespace Sir.VectorSpace
             _logger = logger;
             _vectorFile = vectorStream;
             _ixFile = indexStream;
-            _pageReader = pageReader;
-
-            _segments = GetAllSegments();
+            _pages = pages;
         }
 
         public Hit ClosestMatch(IVector vector, IModel model)
@@ -39,9 +36,9 @@ namespace Sir.VectorSpace
             var time = Stopwatch.StartNew();
             var hits = new List<Hit>();
 
-            foreach (var segment in _segments)
+            foreach (var page in _pages)
             {
-                var hit = ClosestMatchInSegment(vector, model, segment.offset, segment.length);
+                var hit = ClosestMatchInPage(vector, model, page.offset, page.length);
 
                 if (hit.Score > 0)
                 {
@@ -49,7 +46,7 @@ namespace Sir.VectorSpace
                 }
             }
 
-            _logger.LogDebug($"scanning {_segments.Count} segments took {time.Elapsed}");
+            _logger.LogDebug($"scanning {_pages.Count} segments took {time.Elapsed}");
 
             Hit best = null;
 
@@ -68,9 +65,9 @@ namespace Sir.VectorSpace
             return best;
         }
 
-        private Hit ClosestMatchInSegment(IVector queryVector, IModel model, long segmentOffset, long segmentSize)
+        private Hit ClosestMatchInPage(IVector queryVector, IModel model, long pageOffset, long pageSize)
         {
-            _ixFile.Seek(segmentOffset, SeekOrigin.Begin);
+            _ixFile.Seek(pageOffset, SeekOrigin.Begin);
 
             Span<byte> block = stackalloc byte[VectorNode.BlockSize];
             VectorNode bestNode = null;
@@ -178,16 +175,10 @@ namespace Sir.VectorSpace
             }
         }
 
-        private IList<(long offset, long length)> GetAllSegments()
-        {
-            return _pageReader.GetAll();
-        }
-
         public void Dispose()
         {
             _vectorFile.Dispose();
             _ixFile.Dispose();
-            _pageReader.Dispose();
         }
     }
 }

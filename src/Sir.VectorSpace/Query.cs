@@ -82,6 +82,13 @@ namespace Sir.VectorSpace
             }
         }
 
+        public IEnumerable<Term> AllTerms()
+        {
+            foreach (var q in All())
+                foreach (var term in q.Terms)
+                    yield return term;
+        }
+
         public IEnumerable<Query> All()
         {
             yield return this;
