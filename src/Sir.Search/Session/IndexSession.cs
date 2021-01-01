@@ -1,6 +1,5 @@
 ﻿using Sir.VectorSpace;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Sir.Search
@@ -9,7 +8,7 @@ namespace Sir.Search
     {
         private readonly IModel<T> _model;
         private readonly IIndexingStrategy _indexingStrategy;
-        private readonly ConcurrentDictionary<long, VectorNode> _index;
+        private readonly IDictionary<long, VectorNode> _index;
 
         public IndexSession(
             IModel<T> model,
@@ -17,7 +16,7 @@ namespace Sir.Search
         {
             _model = model;
             _indexingStrategy = indexingStrategy;
-            _index = new ConcurrentDictionary<long, VectorNode>();
+            _index = new Dictionary<long, VectorNode>();
         }
 
         public void Put(long docId, long keyId, T value)
@@ -29,7 +28,13 @@ namespace Sir.Search
 
         public void Put(long docId, long keyId, IEnumerable<IVector> tokens)
         {
-            var column = _index.GetOrAdd(keyId, key => new VectorNode());
+            VectorNode column;
+
+            if (!_index.TryGetValue(keyId, out column))
+            {
+                column = new VectorNode();
+                _index.Add(keyId, column);
+            }
 
             foreach (var token in tokens)
             {
@@ -39,7 +44,13 @@ namespace Sir.Search
 
         public void Put(VectorNode tree)
         {
-            var column = _index.GetOrAdd(tree.KeyId.Value, key => new VectorNode());
+            VectorNode column;
+
+            if (!_index.TryGetValue(tree.KeyId.Value, out column))
+            {
+                column = new VectorNode();
+                _index.Add(tree.KeyId.Value, column);
+            }
 
             foreach (var node in PathFinder.All(tree))
             {
@@ -74,7 +85,7 @@ namespace Sir.Search
     {
         private readonly IModel<T> _model;
         private readonly IIndexingStrategy _indexingStrategy;
-        private readonly ConcurrentDictionary<long, VectorNode> _index;
+        private readonly IDictionary<long, VectorNode> _index;
 
         public EmbeddSession(
             IModel<T> model,
@@ -82,13 +93,19 @@ namespace Sir.Search
         {
             _model = model;
             _indexingStrategy = indexingStrategy;
-            _index = new ConcurrentDictionary<long, VectorNode>();
+            _index = new Dictionary<long, VectorNode>();
         }
 
         public void Put(long docId, long keyId, T value)
         {
             var vectors = _model.Tokenize(value);
-            var column = _index.GetOrAdd(keyId, new VectorNode());
+            VectorNode column;
+
+            if (!_index.TryGetValue(keyId, out column))
+            {
+                column = new VectorNode();
+                _index.Add(keyId, column);
+            }
 
             foreach (var vector in vectors)
             {

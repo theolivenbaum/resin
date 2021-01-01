@@ -1,7 +1,6 @@
 ﻿using Sir.Documents;
 using Sir.VectorSpace;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Sir.Search
@@ -9,12 +8,12 @@ namespace Sir.Search
     public class DocumentStreamSession : IDisposable
     {
         protected readonly SessionFactory SessionFactory;
-        private readonly ConcurrentDictionary<ulong, DocumentReader> _streamReaders;
+        private readonly IDictionary<ulong, DocumentReader> _streamReaders;
 
         public DocumentStreamSession(SessionFactory sessionFactory) 
         {
             SessionFactory = sessionFactory;
-            _streamReaders = new ConcurrentDictionary<ulong, DocumentReader>();
+            _streamReaders = new Dictionary<ulong, DocumentReader>();
         }
 
         public virtual void Dispose()
@@ -169,9 +168,15 @@ namespace Sir.Search
 
         private DocumentReader GetOrCreateDocumentReader(ulong collectionId)
         {
-            return _streamReaders.GetOrAdd(
-                collectionId,
-                key => new DocumentReader(key, SessionFactory));
+            DocumentReader reader;
+
+            if (!_streamReaders.TryGetValue(collectionId, out reader))
+            {
+                reader = new DocumentReader(collectionId, SessionFactory);
+                _streamReaders.Add(collectionId, reader);
+            }
+
+            return reader;
         }
     }
 }

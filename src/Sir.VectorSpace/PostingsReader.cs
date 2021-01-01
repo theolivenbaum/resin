@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -18,7 +17,7 @@ namespace Sir.VectorSpace
         public PostingsReader(ISessionFactory sessionFactory)
         {
             _sessionFactory = sessionFactory;
-            _streams = new ConcurrentDictionary<(ulong collectionId, long keyId), Stream>();
+            _streams = new Dictionary<(ulong collectionId, long keyId), Stream>();
         }
 
         protected override IList<(ulong, long)> Read(ulong collectionId, long keyId, IList<long> offsets)
@@ -46,7 +45,7 @@ namespace Sir.VectorSpace
 
             var numOfPostings = BitConverter.ToInt64(buf);
 
-            var len = sizeof(long) * (int)numOfPostings;
+            var len = sizeof(long) * numOfPostings;
 
             Span<byte> listBuf = new byte[len];
 

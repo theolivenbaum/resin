@@ -79,6 +79,7 @@ namespace Sir.Search
             if (query == null)
                 return;
 
+            //Parallel.ForEach(query.AllTerms(), term =>
             foreach (var term in query.AllTerms())
             {
                 var columnReader = CreateColumnReader(term.CollectionId, term.KeyId);
@@ -93,7 +94,7 @@ namespace Sir.Search
                         term.PostingsOffsets = hit.Node.PostingsOffsets ?? new List<long> { hit.Node.PostingsOffset };
                     }
                 }
-            }
+            }//);
         }
 
         private static ScoredResult Sort(IDictionary<(ulong, long), double> documents, int skip, int take)
@@ -149,28 +150,41 @@ namespace Sir.Search
             if (!File.Exists(ixFileName))
                 return null;
 
-            IColumnReader reader;
-            var key = (collectionId, keyId);
+            //IColumnReader reader;
+            //var key = (collectionId, keyId);
 
-            if (!_readers.TryGetValue(key, out reader))
+            //if (!_readers.TryGetValue(key, out reader))
+            //{
+            //    var vectorFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.vec");
+            //    var pageIndexFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.ixtp");
+
+            //    using (var pageIndexReader = new PageIndexReader(_sessionFactory.CreateReadStream(pageIndexFileName)))
+            //    {
+            //        reader = new ColumnReader(
+            //            pageIndexReader.ReadAll(),
+            //            _sessionFactory.CreateReadStream(ixFileName),
+            //            _sessionFactory.CreateReadStream(vectorFileName),
+            //            _sessionFactory,
+            //            _logger);
+            //    }
+
+            //    _readers.Add(key, reader);
+            //}
+
+            //return reader;
+
+            var vectorFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.vec");
+            var pageIndexFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.ixtp");
+
+            using (var pageIndexReader = new PageIndexReader(_sessionFactory.CreateReadStream(pageIndexFileName)))
             {
-                var vectorFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.vec");
-                var pageIndexFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.ixtp");
-
-                using (var pageIndexReader = new PageIndexReader(_sessionFactory.CreateReadStream(pageIndexFileName)))
-                {
-                    reader = new ColumnReader(
-                        pageIndexReader.ReadAll(),
-                        _sessionFactory.CreateReadStream(ixFileName),
-                        _sessionFactory.CreateReadStream(vectorFileName),
-                        _sessionFactory,
-                        _logger);
-                }
-
-                _readers.Add(key, reader);
+                return new ColumnReader(
+                    pageIndexReader.ReadAll(),
+                    _sessionFactory.CreateReadStream(ixFileName),
+                    _sessionFactory.CreateReadStream(vectorFileName),
+                    _sessionFactory,
+                    _logger);
             }
-
-            return reader;
         }
 
         public override void Dispose()
