@@ -16,7 +16,6 @@ namespace Sir.Search
         private readonly SessionFactory _sessionFactory;
         private readonly IModel _model;
         private readonly IPostingsReader _postingsReader;
-        private readonly IDictionary<(ulong, long), IColumnReader> _readers;
         private readonly ILogger _logger;
 
         public SearchSession(
@@ -29,7 +28,6 @@ namespace Sir.Search
             _model = model;
             _postingsReader = postingsReader;
             _logger = logger ?? sessionFactory.Logger;
-            _readers = new Dictionary<(ulong, long), IColumnReader>();
         }
 
         public SearchResult Search(Query query, int skip, int take)
@@ -81,22 +79,25 @@ namespace Sir.Search
             if (query == null)
                 return;
 
-            //Parallel.ForEach(query.AllTerms(), term =>
-            foreach (var term in query.AllTerms())
+            Parallel.ForEach(query.AllTerms(), term =>
+            //foreach (var term in query.AllTerms())
             {
-                var columnReader = CreateColumnReader(term.CollectionId, term.KeyId);
+                var columnReader = GetColumnReader(term.CollectionId, term.KeyId);
 
                 if (columnReader != null)
                 {
-                    var hit = columnReader.ClosestMatch(term.Vector, _model);
-
-                    if (hit != null)
+                    using (columnReader)
                     {
-                        term.Score = hit.Score;
-                        term.PostingsOffsets = hit.Node.PostingsOffsets ?? new List<long> { hit.Node.PostingsOffset };
+                        var hit = columnReader.ClosestMatch(term.Vector, _model);
+
+                        if (hit != null)
+                        {
+                            term.Score = hit.Score;
+                            term.PostingsOffsets = hit.Node.PostingsOffsets ?? new List<long> { hit.Node.PostingsOffset };
+                        }
                     }
                 }
-            }//);
+            });
         }
 
         private static ScoredResult Sort(IDictionary<(ulong, long), double> documents, int skip, int take)
@@ -145,35 +146,12 @@ namespace Sir.Search
             return result;
         }
 
-        public IColumnReader CreateColumnReader(ulong collectionId, long keyId)
+        public IColumnReader GetColumnReader(ulong collectionId, long keyId)
         {
             var ixFileName = Path.Combine(_sessionFactory.Directory, string.Format("{0}.{1}.ix", collectionId, keyId));
 
             if (!File.Exists(ixFileName))
                 return null;
-
-            //IColumnReader reader;
-            //var key = (collectionId, keyId);
-
-            //if (!_readers.TryGetValue(key, out reader))
-            //{
-            //    var vectorFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.vec");
-            //    var pageIndexFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.ixtp");
-
-            //    using (var pageIndexReader = new PageIndexReader(_sessionFactory.CreateReadStream(pageIndexFileName)))
-            //    {
-            //        reader = new ColumnReader(
-            //            pageIndexReader.ReadAll(),
-            //            _sessionFactory.CreateReadStream(ixFileName),
-            //            _sessionFactory.CreateReadStream(vectorFileName),
-            //            _sessionFactory,
-            //            _logger);
-            //    }
-
-            //    _readers.Add(key, reader);
-            //}
-
-            //return reader;
 
             var vectorFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.vec");
             var pageIndexFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.ixtp");
