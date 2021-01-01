@@ -69,7 +69,7 @@ namespace Sir.Search
         }
 
         /// <summary>
-        /// Map query terms to posting list locations.
+        /// Map posting list locations to query terms.
         /// </summary>
         private void Scan(Query query)
         {

@@ -4,6 +4,9 @@ namespace Sir.VectorSpace
 {
     public static class Reducer
     {
+        /// <summary>
+        /// Reduce query tree into a list of document IDs.
+        /// </summary>
         public static void Reduce(Query query, ref IDictionary<(ulong, long), double> result)
         {
             IDictionary<(ulong, long), double> queryResult = new Dictionary<(ulong, long), double>();

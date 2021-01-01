@@ -4,6 +4,9 @@ namespace Sir.VectorSpace
 {
     public static class Mapper
     {
+        /// <summary>
+        /// Resolve posting lists and map document IDs to query terms.
+        /// </summary>
         public static void Map(Query query, ISessionFactory sessionFactory)
         {
             Parallel.ForEach(query.AllTerms(), term =>
